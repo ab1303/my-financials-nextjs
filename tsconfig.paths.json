@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@/components/*": ["components/*"],
+      "@/config/*": ["config/*"],
+      "@/data/*": ["data/*"],
+      "@/features/*": ["features/*"],
+      "@/helpers/*": ["helpers/*"],
+      "@/models/*": ["models/*"],
+      "@/store/*": ["store/*"],
+      "@/styles/*": ["styles/*"],
+      "@/types/*": ["types/*"],
+      "@/utils/*": ["utils/*"],
+      "@/static-props/*": ["static-props/*"]
+    }
+  }
+}
