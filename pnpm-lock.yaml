@@ -38,6 +38,7 @@ specifiers:
   react: 18.2.0
   react-dom: 18.2.0
   react-hook-form: ^7.39.4
+  react-icons: ^4.7.1
   react-phone-input-2: ^2.15.1
   react-select: ^5.6.1
   react-table: ^7.8.0
@@ -66,6 +67,7 @@ dependencies:
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   react-hook-form: 7.39.4_react@18.2.0
+  react-icons: 4.7.1_react@18.2.0
   react-phone-input-2: 2.15.1_biqbaboplfbrettd7655fr4n2y
   react-select: 5.6.1_o6ujcdmwt6ni5mv4wdf5n6tg3y
   react-table: 7.8.0_react@18.2.0
@@ -3074,6 +3076,14 @@ packages:
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18
+    dependencies:
+      react: 18.2.0
+    dev: false
+
+  /react-icons/4.7.1_react@18.2.0:
+    resolution: {integrity: sha512-yHd3oKGMgm7zxo3EA7H2n7vxSoiGmHk5t6Ou4bXsfcgWyhfDKMpyKfhHR6Bjnn63c+YXBLBPUql9H4wPJM6sXw==}
+    peerDependencies:
+      react: '*'
     dependencies:
       react: 18.2.0
     dev: false
