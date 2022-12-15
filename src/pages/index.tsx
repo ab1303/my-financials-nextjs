@@ -92,11 +92,12 @@ const Home: NextPage = () => {
                   Login to your account
                 </button>
                 <div className='text-sm font-medium text-gray-500'>
-                  Not registered?{" "}
-                  <Link href='/auth/register'>
-                    <a className='text-teal-500 hover:underline'>
-                      Create account
-                    </a>
+                  Not registered?{' '}
+                  <Link
+                    href='/auth/register'
+                    className='text-teal-500 hover:underline'
+                  >
+                    Create account
                   </Link>
                 </div>
               </form>

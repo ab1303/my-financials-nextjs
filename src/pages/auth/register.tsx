@@ -1,8 +1,46 @@
+import type { FormEvent } from 'react';
 import { type NextPage } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
+
+import { trpc } from '@/utils/trpc';
 
 const Register: NextPage = () => {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+
+  const registerMutation = trpc.auth.register.useMutation({
+    onError(err) {
+      toast.error(err.message);
+    },
+
+    onSuccess() {
+      toast.success('Registration successful!');
+    },
+  });
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (password !== passwordConfirm) {
+      toast.error('password does not match confirm password');
+      return;
+    }
+
+    registerMutation.mutate({
+      email,
+      password,
+      passwordConfirm,
+    });
+
+    router.push('/auth/login');
+  };
+
   return (
     <>
       <Head>
@@ -13,19 +51,20 @@ const Register: NextPage = () => {
 
       <main className='bg-gray-50'>
         <div className='pt:mt-0 mx-auto flex flex-col items-center justify-center px-6 pt-8 md:h-screen'>
-          <Link href='/'>
-            <a className='mb-8 flex items-center justify-center text-2xl font-semibold lg:mb-10'>
-              <span className='self-center whitespace-nowrap text-2xl font-bold'>
-                Financials App
-              </span>
-            </a>
+          <Link
+            href='/'
+            className='mb-8 flex items-center justify-center text-2xl font-semibold lg:mb-10'
+          >
+            <span className='self-center whitespace-nowrap text-2xl font-bold'>
+              Financials App
+            </span>
           </Link>
           <div className='w-full rounded-lg bg-white shadow sm:max-w-screen-sm md:mt-0 xl:p-0'>
             <div className='space-y-8 p-6 sm:p-8 lg:p-16'>
               <h2 className='text-2xl font-bold text-gray-900 lg:text-3xl'>
                 Create a Free Account
               </h2>
-              <form className='mt-8 space-y-6' action='#'>
+              <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
                 <div>
                   <label
                     htmlFor='email'
@@ -38,8 +77,9 @@ const Register: NextPage = () => {
                     name='email'
                     id='email'
                     className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-cyan-600 focus:ring-cyan-600 sm:text-sm'
-                    placeholder='name@company.com'
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div>
@@ -53,9 +93,10 @@ const Register: NextPage = () => {
                     type='password'
                     name='password'
                     id='password'
-                    placeholder='••••••••'
                     className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-cyan-600 focus:ring-cyan-600 sm:text-sm'
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
                 <div>
@@ -69,9 +110,10 @@ const Register: NextPage = () => {
                     type='password'
                     name='confirm-password'
                     id='confirm-password'
-                    placeholder='••••••••'
                     className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-cyan-600 focus:ring-cyan-600 sm:text-sm'
                     required
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
                   />
                 </div>
                 <div className='flex items-start'>
@@ -105,8 +147,8 @@ const Register: NextPage = () => {
                 </button>
                 <div className='text-sm font-medium text-gray-500'>
                   Already have an account?{' '}
-                  <Link href='/'>
-                    <a className='text-teal-500 hover:underline'>Login here</a>
+                  <Link href='/' className='text-teal-500 hover:underline'>
+                    Login here
                   </Link>
                 </div>
               </form>
