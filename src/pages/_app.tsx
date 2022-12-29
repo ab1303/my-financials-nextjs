@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { trpc } from '@/utils/trpc';
 
 import '@/styles/globals.css';
+import 'react-toastify/dist/ReactToastify.css';
 import Layout from '@/layouts/Layout';
 import { ToastContainer } from 'react-toastify';
 

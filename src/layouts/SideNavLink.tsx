@@ -38,7 +38,7 @@ export default function SideNavLink({
         className: clsx(
           children.media.props.className,
           'w-5 h-5 mx-5',
-          router.asPath === href ? 'text-orange-600' : 'text-gray-600'
+          router.asPath === href ? 'text-cyan-600' : 'text-gray-600'
         ),
       })
     : Children.map(children, (child: React.ReactElement) => {
@@ -46,7 +46,7 @@ export default function SideNavLink({
           className: clsx(
             child.props.className,
             'w-5 h-5 mx-5',
-            router.asPath === href ? 'text-orange-600' : 'text-gray-600'
+            router.asPath === href ? 'text-cyan-600' : 'text-gray-600'
           ),
         });
       });
@@ -54,7 +54,7 @@ export default function SideNavLink({
   return (
     <li
       className={clsx(
-        'flex h-14 items-center justify-between rounded-sm hover:border-orange-300 hover:bg-gray-100',
+        'flex h-14 items-center justify-between rounded-sm hover:border-cyan-300 hover:bg-gray-100',
         className
       )}
     >
@@ -64,7 +64,7 @@ export default function SideNavLink({
           <span
             className={clsx(
               'text-lg font-bold',
-              router.asPath === href ? 'text-orange-600' : 'text-gray-600'
+              router.asPath === href ? 'text-cyan-600' : 'text-gray-600'
             )}
           >
             {name}

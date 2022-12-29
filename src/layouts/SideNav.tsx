@@ -130,7 +130,7 @@ export default function SideNav({
         {userRole === "admin" && (
           <li>
             <Disclosure>
-              <Disclosure.Button className="flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-orange-300 hover:bg-gray-100">
+              <Disclosure.Button className="flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-cyan-300 hover:bg-gray-100">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 512 512"
@@ -211,7 +211,7 @@ export default function SideNav({
 
         <button
           type="button"
-          className="flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-orange-300 hover:bg-gray-100"
+          className="flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-cyan-300 hover:bg-gray-100"
           onClick={handleSignOut}
         >
           <svg

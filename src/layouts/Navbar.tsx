@@ -58,7 +58,7 @@ const Navbar = ({ logo }: NavbarProps) => {
             <Link href='/'>
               <span
                 onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-orange-500'
+                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
               >
                 Home
               </span>
@@ -66,7 +66,7 @@ const Navbar = ({ logo }: NavbarProps) => {
             <Link href='#product'>
               <span
                 onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-orange-500'
+                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
               >
                 Product
               </span>
@@ -74,7 +74,7 @@ const Navbar = ({ logo }: NavbarProps) => {
             <Link href='#faq'>
               <span
                 onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-orange-500'
+                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
               >
                 Faq
               </span>
@@ -82,7 +82,7 @@ const Navbar = ({ logo }: NavbarProps) => {
             <Link href='#contact'>
               <span
                 onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-orange-500'
+                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
               >
                 Contact
               </span>
@@ -95,22 +95,22 @@ const Navbar = ({ logo }: NavbarProps) => {
 
       <div className='mr-12 flex w-2/5 justify-around sm:invisible lg:visible'>
         <Link href='#home'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-orange-500'>
+          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
             Home
           </span>
         </Link>
         <Link href='#product'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-orange-500'>
+          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
             Product
           </span>
         </Link>
         <Link href='#faq'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-orange-500'>
+          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
             Faq
           </span>
         </Link>
         <Link href='#contact'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-orange-500'>
+          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
             Contact
           </span>
         </Link>
