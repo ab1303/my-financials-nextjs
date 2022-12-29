@@ -16,8 +16,8 @@ export default function NotFoundPage() {
               size={60}
               className='animate-flicker drop-shadow-glow'
             />
-            <h1 className='mt-8 text-orange-800'>Page Not Found</h1>
-            <CustomLink className='mt-4 text-orange-500' href='/'>
+            <h1 className='mt-8 text-cyan-800'>Page Not Found</h1>
+            <CustomLink className='mt-4 text-cyan-500' href='/'>
               Back to Home
             </CustomLink>
           </div>

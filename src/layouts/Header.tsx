@@ -33,7 +33,7 @@ export default function Header({ user }: HeaderProps) {
             <span className='text-gray-400'>
               Hi,
               <span className='font-semibold mx-2 text-orange-400'>
-                {user.firstName} {user.lastName}
+                {user.name}
               </span>
             </span>
             {/* Cart TODO Later */}

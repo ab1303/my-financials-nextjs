@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import useOutsideAlerter from "@/hooks/useOutsideAlerter";
 
 import SideNavLink from "./SideNavLink";
+import type { RoleEnumType } from "@prisma/client";
 
-import { type UserRole } from "@/types/enum";
 
 type SideNavProps = {
-  userRole: UserRole;
+  userRole: RoleEnumType | null;
   showSideNav: boolean;
   notifyCloseSideNav?: () => void;
 };
