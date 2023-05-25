@@ -8,7 +8,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 // Prisma adapter for NextAuth, optional and can be removed
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 
-import { prisma } from '../../../server/db/client';
+import { prisma } from '@/server/db/client';
 import { findUser } from '@/server/services/user.service';
 
 export const authOptions: NextAuthOptions = {
