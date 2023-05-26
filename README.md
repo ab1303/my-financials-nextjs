@@ -31,3 +31,16 @@ Follow our deployment guides for [Vercel](https://beta.create.t3.gg/en/deploymen
 
 - Start Docker service
 ` docker-compose up -d `
+
+## Migration to NextJS 13
+
+
+```
+    pnpm up next react react-dom eslint-config-next --latest
+    pnpm upgrade eslint-config-next@latest
+
+    pnpm i -D @next/codemod@latest
+    pnpm add -D @babel/preset-env@^7.1.6
+
+    npx @next/codemod new-link ./src/pages/ --dry
+```
