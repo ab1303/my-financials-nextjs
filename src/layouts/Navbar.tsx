@@ -1,4 +1,4 @@
-import Image from "next/legacy/image";
+import Image from "next/image";
 import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 
@@ -22,7 +22,15 @@ const Navbar = ({ logo }: NavbarProps) => {
   return (
     <div className='flex h-28 flex-row items-center justify-between'>
       <Link href='/' className='logo pl-7 lg:ml-10'>
-        <Image height='65' width='65' src={logo} alt='logo' />
+        <Image
+          height='65'
+          width='65'
+          src={logo}
+          alt='logo'
+          style={{
+            maxWidth: "100%",
+            height: "auto"
+          }} />
       </Link>
 
       {/* Mobile Nav */}
@@ -52,7 +60,15 @@ const Navbar = ({ logo }: NavbarProps) => {
             onClick={() => setOpenNav(false)}
             className='absolute right-12 top-9'
           >
-            <Image height='30' width='30' src='/images/close_icon.png' alt='' />
+            <Image
+              height='30'
+              width='30'
+              src='/images/close_icon.png'
+              alt=''
+              style={{
+                maxWidth: "100%",
+                height: "auto"
+              }} />
           </div>
           <div className='flex h-full flex-col items-center justify-around pt-5'>
             <Link href='/'>
