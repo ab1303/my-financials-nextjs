@@ -43,4 +43,6 @@ Follow our deployment guides for [Vercel](https://beta.create.t3.gg/en/deploymen
     pnpm add -D @babel/preset-env@^7.1.6
 
     npx @next/codemod new-link ./src/pages/ --dry
+
+     npx @next/codemod next-image-to-legacy-image ./src/pages/ --print
 ```
