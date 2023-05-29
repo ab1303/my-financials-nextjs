@@ -44,5 +44,5 @@ Follow our deployment guides for [Vercel](https://beta.create.t3.gg/en/deploymen
 
     npx @next/codemod new-link ./src/pages/ --dry
 
-     npx @next/codemod next-image-to-legacy-image ./src/pages/ --print
+     npx @next/codemod next-image-to-legacy-image ./src --print
 ```
