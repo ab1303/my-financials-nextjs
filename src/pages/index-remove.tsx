@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import PageLoading from '@/components/PageLoading';
 import { useSession } from 'next-auth/react';
-import Hero from '@/layouts/Hero';
+import Hero from '@/components/Hero';
 
 const LandingPage: NextPage = () => {
   const router = useRouter();

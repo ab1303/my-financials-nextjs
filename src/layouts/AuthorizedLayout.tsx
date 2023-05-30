@@ -2,8 +2,7 @@ import { useSession } from 'next-auth/react';
 import * as React from 'react';
 
 import PageLoading from '@/components/PageLoading';
-
-import Header from './Header';
+import Header from '../components/Header';
 
 export default function AuthorizedLayout({
   children,

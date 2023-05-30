@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 
-import { trpc } from '@/utils/trpc';
+import { trpc } from '@/utils/trpc-remove';
 
 const Register: NextPage = () => {
   const router = useRouter();

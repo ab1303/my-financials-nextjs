@@ -3,7 +3,7 @@ import { SessionProvider } from 'next-auth/react';
 
 import type { ReactNode } from 'react';
 
-import { trpc } from '@/utils/trpc';
+import { trpc } from '@/utils/trpc-remove';
 
 import '@/styles/globals.css';
 import 'react-toastify/dist/ReactToastify.css';

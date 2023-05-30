@@ -1,4 +1,6 @@
-import Image from "next/image";
+'use client';
+
+import Image from 'next/image';
 import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 
@@ -28,9 +30,10 @@ const Navbar = ({ logo }: NavbarProps) => {
           src={logo}
           alt='logo'
           style={{
-            maxWidth: "100%",
-            height: "auto"
-          }} />
+            maxWidth: '100%',
+            height: 'auto',
+          }}
+        />
       </Link>
 
       {/* Mobile Nav */}
@@ -66,9 +69,10 @@ const Navbar = ({ logo }: NavbarProps) => {
               src='/images/close_icon.png'
               alt=''
               style={{
-                maxWidth: "100%",
-                height: "auto"
-              }} />
+                maxWidth: '100%',
+                height: 'auto',
+              }}
+            />
           </div>
           <div className='flex h-full flex-col items-center justify-around pt-5'>
             <Link href='/'>

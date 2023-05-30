@@ -2,7 +2,7 @@ import type { User } from 'next-auth';
 import * as React from 'react';
 import { useState } from 'react';
 
-import SideNav from './SideNav';
+import SideNav from '../layouts/SideNav';
 
 type HeaderProps = {
   user: User;
