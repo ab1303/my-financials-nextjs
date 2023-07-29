@@ -2,7 +2,7 @@
 
 import { trpc } from '@/utils/trpc-remove';
 import Link from 'next/link';
-import router from 'next/router';
+import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -11,6 +11,8 @@ export default function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+
+  const router = useRouter();
 
   const registerMutation = trpc.auth.register.useMutation({
     onError(err: any) {

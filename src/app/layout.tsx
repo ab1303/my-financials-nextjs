@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import Providers from '@/components/Providers';
 
+import '@/styles/globals.css';
+import 'react-toastify/dist/ReactToastify.css';
+
 export const metadata: Metadata = {
   title: 'My Financials',
   description: 'My Financials App to track my finances',

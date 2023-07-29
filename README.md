@@ -26,6 +26,10 @@ Also checkout these awesome tutorials on `create-t3-app`.
 
 Follow our deployment guides for [Vercel](https://beta.create.t3.gg/en/deployment/vercel) and [Docker](https://beta.create.t3.gg/en/deployment/docker) for more information.
 
+## Versions
+
+` Node: 16.17.0  `
+
 
 ## Docker Compose
 

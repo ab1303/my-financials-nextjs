@@ -3,15 +3,17 @@
 import type { SignInResponse } from 'next-auth/react';
 import type { FormEvent } from 'react';
 
-import { signIn } from 'next-auth/react';
-import Link from 'next/link';
-import router from 'next/router';
 import { useRef } from 'react';
 import { toast } from 'react-toastify';
+import { signIn } from 'next-auth/react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
+
+  const router = useRouter();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,7 +39,7 @@ export default function LoginForm() {
         return;
       }
 
-      toast.success('Login successful!');
+      toast.success('Login successful!');      
       router.push('/home');
     }
   }

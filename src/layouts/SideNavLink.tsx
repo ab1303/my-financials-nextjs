@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { usePathname } from 'next/navigation';
 import { Children, cloneElement } from 'react';
 
 type NamedChildrenSlots = {
@@ -31,14 +31,14 @@ export default function SideNavLink({
   className,
   children,
 }: SideNavLinkProps) {
-  const router = useRouter();
+  const pathname = usePathname();
 
   const childrenWithProps = isNamedSlots(children)
     ? cloneElement(children.media, {
         className: clsx(
           children.media.props.className,
           'w-5 h-5 mx-5',
-          router.asPath === href ? 'text-cyan-600' : 'text-gray-600'
+          pathname === href ? 'text-cyan-600' : 'text-gray-600'
         ),
       })
     : Children.map(children, (child: React.ReactElement) => {
@@ -46,7 +46,7 @@ export default function SideNavLink({
           className: clsx(
             child.props.className,
             'w-5 h-5 mx-5',
-            router.asPath === href ? 'text-cyan-600' : 'text-gray-600'
+            pathname === href ? 'text-cyan-600' : 'text-gray-600'
           ),
         });
       });
@@ -64,7 +64,7 @@ export default function SideNavLink({
           <span
             className={clsx(
               'text-lg font-bold',
-              router.asPath === href ? 'text-cyan-600' : 'text-gray-600'
+              pathname === href ? 'text-cyan-600' : 'text-gray-600'
             )}
           >
             {name}
