@@ -1,3 +1,5 @@
+'use client';
+
 import type { User } from 'next-auth';
 import * as React from 'react';
 import { useState } from 'react';

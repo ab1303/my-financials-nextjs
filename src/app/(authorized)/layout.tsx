@@ -1,18 +1,24 @@
-import { useSession } from 'next-auth/react';
 import * as React from 'react';
+import { getServerSession } from 'next-auth';
 
 import PageLoading from '@/components/PageLoading';
-import Header from '../components/Header';
+import Header from '@/components/Header';
+import { authOptions } from '@/utils/authOptions';
+import { redirect } from 'next/navigation';
 
-export default function AuthorizedLayout({
+export default async function AuthorizedLayout({
   children,
 }: {
   children: React.ReactElement;
 }) {
-  const { data: session, status } = useSession({ required: true });
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect("/auth/login");
+  }
 
   const isUser = !!session?.user;
-  if (status === 'loading' || !isUser) return <PageLoading />;
+  if (!isUser) return <PageLoading />; // shouldn't happen
 
   // Put Header or Footer Here
   const childrenWithUserProp = React.cloneElement(children, {

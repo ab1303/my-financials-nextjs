@@ -1,6 +1,6 @@
 'use client';
 
-import { trpc } from '@/utils/trpc-remove';
+import { trpc } from '@/server/trpc/trpcClient';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
