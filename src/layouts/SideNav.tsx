@@ -151,7 +151,7 @@ export default function SideNav({
               <Disclosure.Panel as='ul' className='pl-3 text-gray-500'>
                 <SideNavLink
                   name='Profile'
-                  href='/profile'
+                  href='/settings/profile'
                   className='border-b-2'
                 >
                   <IconProfile />

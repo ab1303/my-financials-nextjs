@@ -1,3 +1,5 @@
+// https://github.com/trpc/trpc/tree/main/examples/next-edge-runtime/src
+
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { appRouter } from '@/server/trpc/router/_app';
 import { createContext } from '@/server/trpc/context';
