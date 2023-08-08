@@ -39,7 +39,7 @@ export default function LoginForm() {
         return;
       }
 
-      toast.success('Login successful!');      
+      toast.success('Login successful!');
       router.push('/home');
     }
   }
@@ -56,7 +56,7 @@ export default function LoginForm() {
           type='email'
           name='email'
           id='email'
-          className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-cyan-600 focus:ring-cyan-600 sm:text-sm'
+          className='block border bg-gray-50 p-2.5 text-gray-900 sm:text-sm'
           placeholder='name@company.com'
           required
           ref={emailInputRef}
@@ -74,7 +74,7 @@ export default function LoginForm() {
           name='password'
           id='password'
           placeholder='••••••••'
-          className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-cyan-600 focus:ring-cyan-600 sm:text-sm'
+          className='block border bg-gray-50 p-2.5 text-gray-900 sm:text-sm'
           required
           ref={passwordInputRef}
         />

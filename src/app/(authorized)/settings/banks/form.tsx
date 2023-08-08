@@ -4,13 +4,14 @@ import Card from '@/components/card';
 import clsx from 'clsx';
 import { FormProvider, useForm } from 'react-hook-form';
 
-import type { RestaurantFormData } from '@/types';
+import AddressComponent from '@/components/Address';
+import type { BankType, ProfileType } from '@/types';
 
 export default function BanksForm() {
-  const formMethods = useForm<RestaurantFormData>({
+  const formMethods = useForm<BankType>({
     mode: 'onBlur',
     defaultValues: {
-      restaurantName: '',
+      bankName: '',
       address: {
         addressLine: '',
         street_address: '',
@@ -25,10 +26,11 @@ export default function BanksForm() {
     register,
     control,
     formState: { errors },
+    setValue,
     handleSubmit,
   } = formMethods;
 
-  const submitHandler = async (formData: RestaurantFormData) => {
+  const submitHandler = async (formData: BankType) => {
     // try {
     //   const result: { ok: boolean } & Notify = await postData(
     //     `${publicRuntimeConfig.NEXT_PUBLIC_API_URL}/api/restaurant`,
@@ -63,18 +65,18 @@ export default function BanksForm() {
               <label
                 className={clsx(
                   'block text-sm font-medium ',
-                  errors.restaurantName ? 'text-orange-700' : 'text-gray-700'
+                  errors.bankName ? 'text-orange-700' : 'text-gray-700'
                 )}
               >
-                Name
+                Bank Name
               </label>
               <div className='mt-1'>
                 <input
                   type='text'
                   className={clsx(
-                    errors.restaurantName && 'text-orange-700 border-orange-700'
+                    errors.bankName && 'text-orange-700 border-orange-700'
                   )}
-                  {...register('restaurantName', { required: true })}
+                  {...register('bankName', { required: true })}
                 />
               </div>
             </div>
@@ -117,7 +119,22 @@ export default function BanksForm() {
               </div>
             </div> */}
 
-            {/* <AddressComponent apiKey={apiKey} propertyName='address' /> */}
+            <AddressComponent<BankType>
+              basePropertyName='address'
+              addressFields={{
+                addressLineName: 'address.addressLine',
+                postcodeName: 'address.postcode',
+                stateName: 'address.state',
+                street_addressName: 'address.street_address',
+                suburbName: 'address.suburb',
+                addressLineError: errors.address?.addressLine,
+                postcodeError: errors.address?.postcode,
+                stateError: errors.address?.state,
+                street_addressError: errors.address?.street_address,
+                suburbError: errors.address?.suburb
+              }}
+              
+            />
 
             <div>
               <button
