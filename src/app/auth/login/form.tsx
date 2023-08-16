@@ -34,7 +34,7 @@ export default function LoginForm() {
     );
 
     if (result) {
-      if (!result.ok) {
+      if (result.error) {
         toast.error(`Could not log you in. Please check your credentials`);
         return;
       }

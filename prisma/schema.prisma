@@ -74,3 +74,17 @@ enum RoleEnumType {
   user
   admin
 }
+
+// Business Schema
+
+// Bank
+
+model Bank {
+  id            String @id @default(cuid())
+  name          String
+  addressLine   String
+  streetAddress String
+  suburb        String
+  postcode      Int
+  state         String
+}

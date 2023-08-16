@@ -1,13 +1,34 @@
 'use client';
 
-import Card from '@/components/card';
 import clsx from 'clsx';
+import { z } from 'zod';
 import { FormProvider, useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
+import { TRPCError } from '@trpc/server';
+import { trpc } from '@/server/trpc/trpcClient';
 
-import AddressComponent from '@/components/Address';
-import type { BankType, ProfileType } from '@/types';
+import { Card, AddressComponent, PageLoading, Button } from '@/components';
+
+import type { BankType } from '@/types';
+
+const postCodeSchema = z.coerce.number({
+  required_error: 'Postcode is required',
+  invalid_type_error: 'Postcode must be a number',
+});
 
 export default function BanksForm() {
+  const saveBankDetailsMutation = trpc.bank.saveBankDetails.useMutation({
+    onError(error: unknown) {
+      if (error instanceof TRPCError) {
+        toast.error(error.message);
+      }
+    },
+
+    onSuccess() {
+      toast.success('Bank details saved!');
+    },
+  });
+
   const formMethods = useForm<BankType>({
     mode: 'onBlur',
     defaultValues: {
@@ -24,29 +45,28 @@ export default function BanksForm() {
 
   const {
     register,
-    control,
     formState: { errors },
-    setValue,
     handleSubmit,
   } = formMethods;
 
-  const submitHandler = async (formData: BankType) => {
-    // try {
-    //   const result: { ok: boolean } & Notify = await postData(
-    //     `${publicRuntimeConfig.NEXT_PUBLIC_API_URL}/api/restaurant`,
-    //     {
-    //       restaurantName: formData.restaurantName,
-    //       cuisine: formData.cuisine,
-    //       address: formData.address,
-    //     }
-    //   );
-    //   if (!result.ok) toast.error(result.error);
-    //   toast.success(result.success || 'Restaurant created!');
-    //   router.replace('/settings/restaurants');
-    // } catch (e) {
-    //   toast.error(e.error);
-    // }
+  const submitHandler = (formData: BankType) => {
+    console.log('Bank Details', formData);
+
+    const {
+      bankName,
+      address: { addressLine, postcode, state, street_address, suburb },
+    } = formData;
+
+    saveBankDetailsMutation.mutate({
+      name: bankName,
+      addressLine,
+      postcode: postCodeSchema.parse(postcode),
+      state,
+      streetAddress: street_address,
+      suburb,
+    });
   };
+
   return (
     <>
       <Card.Header>
@@ -61,26 +81,6 @@ export default function BanksForm() {
             className='mb-0 space-y-6'
             onSubmit={handleSubmit(submitHandler)}
           >
-            <div>
-              <label
-                className={clsx(
-                  'block text-sm font-medium ',
-                  errors.bankName ? 'text-orange-700' : 'text-gray-700'
-                )}
-              >
-                Bank Name
-              </label>
-              <div className='mt-1'>
-                <input
-                  type='text'
-                  className={clsx(
-                    errors.bankName && 'text-orange-700 border-orange-700'
-                  )}
-                  {...register('bankName', { required: true })}
-                />
-              </div>
-            </div>
-
             {/* <div>
               <label
                 className={clsx(
@@ -119,6 +119,26 @@ export default function BanksForm() {
               </div>
             </div> */}
 
+            <div>
+              <label
+                className={clsx(
+                  'block text-sm font-medium ',
+                  errors.bankName ? 'text-orange-700' : 'text-gray-700'
+                )}
+              >
+                Bank Name
+              </label>
+              <div className='mt-1'>
+                <input
+                  type='text'
+                  className={clsx(
+                    errors.bankName && 'text-orange-700 border-orange-700'
+                  )}
+                  {...register('bankName', { required: true })}
+                />
+              </div>
+            </div>
+
             <AddressComponent<BankType>
               basePropertyName='address'
               addressFields={{
@@ -128,21 +148,21 @@ export default function BanksForm() {
                 street_addressName: 'address.street_address',
                 suburbName: 'address.suburb',
                 addressLineError: errors.address?.addressLine,
+                suburbError: errors.address?.suburb,
                 postcodeError: errors.address?.postcode,
                 stateError: errors.address?.state,
                 street_addressError: errors.address?.street_address,
-                suburbError: errors.address?.suburb
               }}
-              
             />
 
             <div>
-              <button
+              <Button
+                isLoading={saveBankDetailsMutation.isLoading}
+                variant='primary'
                 type='submit'
-                className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500'
               >
                 Create
-              </button>
+              </Button>
             </div>
           </form>
         </FormProvider>

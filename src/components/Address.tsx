@@ -41,7 +41,6 @@ export default function AddressComponent<T extends FieldValues>({
   const uniqId = useId();
   const {
     ready,
-    // init: initialiseGoogleMap,
     suggestions: { data },
     setValue: addressAutoCompleteSetValue,
   } = usePlacesAutocomplete({    
@@ -51,14 +50,8 @@ export default function AddressComponent<T extends FieldValues>({
         country: 'AU',
       },
     },
-    // initOnMount: false,
   });
 
-  // React.useEffect (() => {
-  //   if (window.google && window.google.maps) {
-  //     initialiseGoogleMap();
-  //   }
-  // }, [initialiseGoogleMap]);
 
   const { register, control, setValue: formFieldSetValue } = useFormContext();
 
@@ -121,12 +114,12 @@ export default function AddressComponent<T extends FieldValues>({
         )?.long_name;
 
         formFieldSetValue(
-          'address.street_address',
+          String(addressFields.street_addressName),
           `${streetAddressNumber || ''} ${streetAddress}`
         );
-        formFieldSetValue('address.suburb', suburb || '');
-        formFieldSetValue('address.postcode', postalcode || '');
-        formFieldSetValue('address.state', state || '');
+        formFieldSetValue(String(addressFields.suburbName), suburb || '');
+        formFieldSetValue(`${String(basePropertyName)}.postcode`, postalcode || '');
+        formFieldSetValue(`${String(basePropertyName)}.state`, state || '');
       })
       .catch(() => {
         // console.log('😱 Error: ', error);
@@ -193,6 +186,71 @@ export default function AddressComponent<T extends FieldValues>({
             )}
             {...register(addressFields.street_addressName, { required: true })}
           />
+        </div>
+      </div>
+      <div className='flex'>
+        <div className='w-1/2 '>
+          <label
+            htmlFor='suburb'
+            className={clsx(
+              'block text-sm font-medium ',
+              addressFields.suburbError ? 'text-orange-700' : 'text-gray-700'
+            )}
+          >
+            Suburb
+          </label>
+          <div className='mt-1'>
+            <input
+              type='text'
+              className={clsx(
+                addressFields.suburbError && 'text-orange-700 border-orange-700'
+              )}
+              {...register(addressFields.suburbName, { required: true })}
+            />
+          </div>
+        </div>
+        <div className='w-1/2 ml-3'>
+          <label
+            htmlFor='postcode'
+            className={clsx(
+              'block text-sm font-medium ',
+              addressFields.postcodeError ? 'text-orange-700' : 'text-gray-700'
+            )}
+          >
+            Post Code
+          </label>
+          <div className='mt-1'>
+            <input
+              type='text'
+              id='postcode'
+              className={clsx(
+                addressFields.postcodeError && 'text-orange-700 border-orange-700'
+              )}
+              {...register(addressFields.postcodeName, { required: true })}
+            />
+          </div>
+        </div>
+      </div>
+      <div className='flex'>
+        <div className='w-1/2 '>
+          <label
+            htmlFor='state'
+            className={clsx(
+              'block text-sm font-medium ',
+              addressFields.stateError ? 'text-orange-700' : 'text-gray-700'
+            )}
+          >
+            State
+          </label>
+          <div className='mt-1'>
+            <input
+              type='text'
+              className={clsx(
+                addressFields.stateError && 'text-orange-700 border-orange-700'
+              )}
+              {...register(addressFields.stateName, { required: true })}
+            />
+          </div>
         </div>
       </div>
     </>

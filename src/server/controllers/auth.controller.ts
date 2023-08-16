@@ -1,8 +1,8 @@
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
-import type { CreateUserInput, LoginUserInput } from '../schema/user.schema';
-import { createUser, findUser } from '../services/user.service';
-import type { Context } from '../trpc/context';
+import type { CreateUserInput } from '../schema/user.schema';
+import { createUser } from '../services/user.service';
+import { Prisma } from '@prisma/client';
 
 export const registerHandler = async ({
   input,
@@ -22,13 +22,13 @@ export const registerHandler = async ({
         user,
       },
     };
-  } catch (err: any) {
-    if (err.code === 11000) {
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'Email already exists',
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+       throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: e.message,
       });
     }
-    throw err;
+    throw e;
   }
 };

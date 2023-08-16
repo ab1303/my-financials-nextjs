@@ -33,7 +33,7 @@ export const findUniqueUser = async (
 };
 
 export const updateUser = async (
-  where: Partial<Prisma.UserWhereUniqueInput>,
+  where: Prisma.UserWhereUniqueInput,
   data: Prisma.UserUpdateInput,
   select?: Prisma.UserSelect
 ) => {
