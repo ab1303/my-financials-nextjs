@@ -29,12 +29,14 @@ type AddressFields<T> =
 
 interface Props<T extends FieldValues> {
   basePropertyName: AddressPropertyNames<T>;
-  addressFields: AddressFields<T>
+  addressFields: AddressFields<T>;
+  address?: Address;
 }
 
 export default function AddressComponent<T extends FieldValues>({
   basePropertyName,
-  addressFields
+  addressFields,
+  address
 }: Props<T>) {
 
   // https://github.com/JedWatson/react-select/issues/5459
@@ -54,6 +56,39 @@ export default function AddressComponent<T extends FieldValues>({
 
 
   const { register, control, setValue: formFieldSetValue } = useFormContext();
+
+  const setAddressFields = React.useCallback((address: Address) => {
+    formFieldSetValue(String(addressFields.addressLineName), address.addressLine);
+    formFieldSetValue(`${String(basePropertyName)}.street_address`, address.street_address);
+    formFieldSetValue(`${String(basePropertyName)}.suburb`, address.suburb);
+    formFieldSetValue(`${String(basePropertyName)}.postcode`, address.postcode);
+    formFieldSetValue(`${String(basePropertyName)}.state`, address.state);
+  }, [addressFields, basePropertyName, formFieldSetValue])
+
+  React.useEffect(() => {
+
+    if(!address) {
+      setAddressFields({
+        addressLine: '',
+        street_address: '',
+        postcode: '',
+        state: '',
+        suburb: '',
+      });
+      return;
+    }
+
+    const { addressLine, postcode, state,street_address,suburb } = address;
+      setAddressFields({
+        addressLine,
+        street_address,
+        postcode,
+        state,
+        suburb,
+      });
+  }, [address, setAddressFields]);
+
+
 
   const fetchSuggestions = useDebouncedCallback(
     React.useCallback(
@@ -76,14 +111,15 @@ export default function AddressComponent<T extends FieldValues>({
     debounce
   );
 
+
+
+
+  
+
   const handleSelect = (selectedOption: SingleValue<{ label: string }>) => {
     // Loop like an Array
     if (!selectedOption) {
-      formFieldSetValue(String(addressFields.addressLineName), '');
-      formFieldSetValue(`${String(basePropertyName)}.street_address`, '');
-      formFieldSetValue(`${String(basePropertyName)}.suburb`, '');
-      formFieldSetValue(`${String(basePropertyName)}.postcode`, '');
-      formFieldSetValue(`${String(basePropertyName)}.state`, '');
+      setAddressFields({ addressLine:'',postcode:'',state:'',street_address:'',suburb:'' })
       return;
     }
 
@@ -113,13 +149,14 @@ export default function AddressComponent<T extends FieldValues>({
           c.types.includes('postal_code')
         )?.long_name;
 
-        formFieldSetValue(
-          String(addressFields.street_addressName),
-          `${streetAddressNumber || ''} ${streetAddress}`
-        );
-        formFieldSetValue(String(addressFields.suburbName), suburb || '');
-        formFieldSetValue(`${String(basePropertyName)}.postcode`, postalcode || '');
-        formFieldSetValue(`${String(basePropertyName)}.state`, state || '');
+        setAddressFields({ 
+          street_address:`${streetAddressNumber || ''} ${streetAddress}`,
+          addressLine: suburb || '',
+          suburb: suburb || '', 
+          postcode: postalcode || '',
+          state: state || '',
+        });
+        
       })
       .catch(() => {
         // console.log('😱 Error: ', error);

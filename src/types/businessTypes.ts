@@ -8,10 +8,7 @@ export type Address = {
 
 export type BankType = {
   bankName: string;
-  imageUrl: string;
-  contact: string;
   address: Address;
-  home: Address;
 };
 
 export type ProfileType = {

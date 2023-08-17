@@ -2,13 +2,15 @@
 
 import clsx from 'clsx';
 import { z } from 'zod';
+import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { TRPCError } from '@trpc/server';
 import { trpc } from '@/server/trpc/trpcClient';
 
-import { Card, AddressComponent, PageLoading, Button } from '@/components';
-
+import { Card, AddressComponent, Button } from '@/components';
+import type { SingleValue } from 'react-select';
 import type { BankType } from '@/types';
 
 const postCodeSchema = z.coerce.number({
@@ -16,7 +18,13 @@ const postCodeSchema = z.coerce.number({
   invalid_type_error: 'Postcode must be a number',
 });
 
+type BankOptionType = {
+  value: BankType;
+  label: string;
+};
+
 export default function BanksForm() {
+  const getBanksQuery = trpc.bank.getAllBanks.useQuery();
   const saveBankDetailsMutation = trpc.bank.saveBankDetails.useMutation({
     onError(error: unknown) {
       if (error instanceof TRPCError) {
@@ -28,6 +36,10 @@ export default function BanksForm() {
       toast.success('Bank details saved!');
     },
   });
+
+  const [selectedBank, setSelectedBank] = useState<
+    SingleValue<BankOptionType> | undefined
+  >();
 
   const formMethods = useForm<BankType>({
     mode: 'onBlur',
@@ -47,6 +59,7 @@ export default function BanksForm() {
     register,
     formState: { errors },
     handleSubmit,
+    setValue: formFieldSetValue,
   } = formMethods;
 
   const submitHandler = (formData: BankType) => {
@@ -67,6 +80,42 @@ export default function BanksForm() {
     });
   };
 
+  const handleOptionChange = (option: SingleValue<BankOptionType>) => {
+    if (!option) {
+      formFieldSetValue('bankName', '');
+      setSelectedBank(null);
+      return;
+    }
+
+    if (option.value) {
+      formFieldSetValue('bankName', option.value.bankName);
+      setSelectedBank(option);
+    }
+
+    return;
+  };
+
+  if (getBanksQuery.error) {
+    toast.error(getBanksQuery.error.message);
+  }
+
+  let bankOptions: Array<BankOptionType> = [];
+  if (getBanksQuery.isSuccess && getBanksQuery.data) {
+    bankOptions = getBanksQuery.data.map((o) => ({
+      value: {
+        bankName: o.name,
+        address: {
+          addressLine: o.addressLine,
+          postcode: String(o.postcode),
+          state: o.state,
+          street_address: o.streetAddress,
+          suburb: o.suburb,
+        },
+      },
+      label: o.name,
+    }));
+  }
+
   return (
     <>
       <Card.Header>
@@ -81,43 +130,18 @@ export default function BanksForm() {
             className='mb-0 space-y-6'
             onSubmit={handleSubmit(submitHandler)}
           >
-            {/* <div>
-              <label
-                className={clsx(
-                  'block text-sm font-medium ',
-                  errors.restaurantName ? 'text-orange-700' : 'text-gray-700'
-                )}
-              >
-                Cuisine
-              </label>
+            <div>
+              <label className={clsx('block text-sm font-medium ')}>Bank</label>
               <div className='mt-1'>
-                <Controller
-                  name='cuisine'
-                  control={control}
-                  rules={{
-                    required: true,
-                  }}
-                  render={({ field: { onChange, value } }) => (
-                    <Select
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          borderColor: errors.cuisine && 'rgba(194, 65, 12)',
-                        }),
-                      }}
-                      value={{ label: value }}
-                      options={Object.keys(CuisineMap).map((k) => ({
-                        label: k,
-                      }))}
-                      getOptionValue={({ label }) => label}
-                      onChange={(option) => {
-                        onChange(option?.label || null);
-                      }}
-                    />
-                  )}
+                <Select
+                  className='w-3/5 mr-2'
+                  value={selectedBank}
+                  options={bankOptions}
+                  isClearable
+                  onChange={(option) => handleOptionChange(option)}
                 />
               </div>
-            </div> */}
+            </div>
 
             <div>
               <label
@@ -141,6 +165,7 @@ export default function BanksForm() {
 
             <AddressComponent<BankType>
               basePropertyName='address'
+              address={selectedBank?.value.address}
               addressFields={{
                 addressLineName: 'address.addressLine',
                 postcodeName: 'address.postcode',
