@@ -1,7 +1,10 @@
-import { Prisma } from '@prisma/client';
-import { TRPCError } from '@trpc/server';
-import type { CreateBankInput } from '@/server/schema/bank.schema';
-import { addBankDetails, getBankDetails } from '@/server/services/bank.service';
+import { handleCaughtError } from '@/server/utils/prisma';
+import type { CreateBankInput, ParamsInput } from '@/server/schema/bank.schema';
+import {
+  addBankDetails,
+  deleteBankDetails,
+  getBankDetails,
+} from '@/server/services/bank.service';
 
 export const addBankDetailsHandler = async ({
   input,
@@ -24,27 +27,27 @@ export const addBankDetailsHandler = async ({
       },
     };
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: e.message,
-      });
-    }
-    throw e;
+    handleCaughtError(e);
   }
 };
 
-export const allBankDetails = async () => {
+export const allBankDetailsHandler = async () => {
   try {
     const bankDetails = await getBankDetails();
     return bankDetails;
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: e.message,
-      });
-    }
-    throw e;
+    handleCaughtError(e);
+  }
+};
+
+export const removeBankDetailsHandler = async ({
+  params,
+}: {
+  params: ParamsInput;
+}) => {
+  try {
+    await deleteBankDetails(params.bankId);
+  } catch (e) {
+    handleCaughtError(e);
   }
 };

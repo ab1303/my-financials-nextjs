@@ -3,14 +3,17 @@
 import clsx from 'clsx';
 import { z } from 'zod';
 import { useState } from 'react';
+import type { MouseEventHandler} from 'react';
+import { ImSpinner2 } from 'react-icons/im';
 import { FormProvider, useForm } from 'react-hook-form';
-import Select from 'react-select';
+import Select, { components } from 'react-select';
 import { toast } from 'react-toastify';
+import type { OptionProps, SingleValue } from 'react-select';
 import { TRPCError } from '@trpc/server';
-import { trpc } from '@/server/trpc/trpcClient';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
-import type { SingleValue } from 'react-select';
+import { trpc } from '@/server/trpc/trpcClient';
 import type { BankType } from '@/types';
 
 const postCodeSchema = z.coerce.number({
@@ -21,6 +24,66 @@ const postCodeSchema = z.coerce.number({
 type BankOptionType = {
   value: BankType;
   label: string;
+  id: string;
+};
+
+type DeleteIconProps = {
+  onClick: MouseEventHandler<HTMLDivElement>;
+};
+
+function DeleteIcon(props: DeleteIconProps) {
+  return (
+    <div
+      className='flex items-center hover:cursor-pointer hover:text-orange-700'
+      onClick={props.onClick}
+    >
+      <svg
+        className='mx-2 h-4 w-4 border-b-2 border-b-orange-700'
+        fill='currentColor'
+        viewBox='0 0 20 20'
+        xmlns='http://www.w3.org/2000/svg'
+      >
+        <path
+          fill-rule='evenodd'
+          d='M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z'
+          clip-rule='evenodd'
+        ></path>
+      </svg>
+    </div>
+  );
+}
+
+const Option = (props: OptionProps<BankOptionType, false>) => {
+  const queryClient = useQueryClient();
+  const {
+    isLoading,
+    mutate: deleteBank,
+  } = trpc.bank.removeBankDetails.useMutation({
+    onSuccess() {
+      queryClient.refetchQueries([['getAllBanks']]);
+      toast('Bank details deleted successfully', {
+        type: 'success',
+        position: 'top-right',
+      });
+    },
+    onError(error) {
+      toast(error.message, {
+        type: 'error',
+        position: 'top-right',
+      });
+    },
+  });
+
+  return (
+    <div className='flex justify-between'>
+      <components.Option {...props} />
+      {isLoading ? (
+        <ImSpinner2 className='animate-spin' />
+      ) : (
+        <DeleteIcon onClick={() => deleteBank({ bankId: props.data.id })} />
+      )}
+    </div>
+  );
 };
 
 export default function BanksForm() {
@@ -102,6 +165,8 @@ export default function BanksForm() {
   let bankOptions: Array<BankOptionType> = [];
   if (getBanksQuery.isSuccess && getBanksQuery.data) {
     bankOptions = getBanksQuery.data.map((o) => ({
+      id: o.id,
+      label: o.name,
       value: {
         bankName: o.name,
         address: {
@@ -112,7 +177,6 @@ export default function BanksForm() {
           suburb: o.suburb,
         },
       },
-      label: o.name,
     }));
   }
 
@@ -134,10 +198,11 @@ export default function BanksForm() {
               <label className={clsx('block text-sm font-medium ')}>Bank</label>
               <div className='mt-1'>
                 <Select
+                  isClearable
                   className='w-3/5 mr-2'
+                  components={{ Option }}
                   value={selectedBank}
                   options={bankOptions}
-                  isClearable
                   onChange={(option) => handleOptionChange(option)}
                 />
               </div>

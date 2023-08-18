@@ -4,7 +4,7 @@ type LoadingProps = {
   loadingText?: string;
 };
 
-const PageLoading = ({ loadingText }: LoadingProps) => {
+const SiteLoading = ({ loadingText }: LoadingProps) => {
   return (
     <div className='flex items-center justify-center h-screen shadow-lg shadow-cyan-500 border-2'>
       <Loading loadingText={loadingText} />
@@ -12,4 +12,4 @@ const PageLoading = ({ loadingText }: LoadingProps) => {
   );
 };
 
-export default PageLoading;
+export default SiteLoading;

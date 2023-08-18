@@ -15,3 +15,9 @@ export const getBankDetails = async (
     select,
   })) as Array<Bank>;
 };
+
+export const deleteBankDetails = async (id: string) => {
+  return await prisma.bank.delete({
+    where: { id },
+  });
+};
