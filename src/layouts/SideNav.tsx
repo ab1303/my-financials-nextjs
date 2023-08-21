@@ -100,7 +100,7 @@ export default function SideNav({
               </SideNavLink>
               <SideNavLink
                 name='Bank Interest'
-                href='/cashflow/interest'
+                href='/cashflow/bank-interest'
                 className='border-b-0'
               >
                 <IconCashStack />

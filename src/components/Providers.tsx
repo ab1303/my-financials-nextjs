@@ -5,21 +5,21 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from 'next-auth/react';
 import { ToastContainer } from 'react-toastify';
 
-import { trpc, clientOptions } from '@/server/trpc/trpcClient';
+import { clientOptions, trpcClient } from '@/server/trpc/client';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient());
-  const [trpcClient] = useState(() => trpc.createClient(clientOptions));
+  const [client] = useState(() => trpcClient.createClient(clientOptions));
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+    <trpcClient.Provider client={client} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <SessionProvider>
           {children}
           <ToastContainer />
         </SessionProvider>
       </QueryClientProvider>
-    </trpc.Provider>
+    </trpcClient.Provider>
   );
 };
 

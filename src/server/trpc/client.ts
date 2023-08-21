@@ -1,17 +1,14 @@
+import superjson from 'superjson';
 import type { CreateTRPCClientOptions } from '@trpc/client';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+
 import { httpBatchLink, loggerLink } from '@trpc/client';
-
-import superjson from 'superjson';
-
-import type { AppRouter } from './router/_app';
 import { createTRPCReact } from '@trpc/react-query';
 
-const getBaseUrl = () => {
-  if (typeof window !== 'undefined') return ''; // browser should use relative url
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
-  return `http://localhost:${process.env.PORT ?? 3000}`; // dev SSR should use localhost
-};
+import type { AppRouter } from './router/_app';
+import { getUrl } from './shared';
+
+
 
 export const clientOptions: CreateTRPCClientOptions<AppRouter> = {
   transformer: superjson,
@@ -22,12 +19,17 @@ export const clientOptions: CreateTRPCClientOptions<AppRouter> = {
         (opts.direction === 'down' && opts.result instanceof Error),
     }),
     httpBatchLink({
-      url: `${getBaseUrl()}/api/trpc`,
+      url: getUrl(),
+      headers() {
+        return {
+          'x-trpc-source': 'client',
+        };
+      },
     }),
   ],
 };
 
-export const trpc = createTRPCReact<AppRouter>({
+export const trpcClient = createTRPCReact<AppRouter>({
   unstable_overrides: {
     useMutation: {
       async onSuccess(opts) {
@@ -37,7 +39,6 @@ export const trpc = createTRPCReact<AppRouter>({
     },
   },
 });
-
 
 /**
  * Inference helper for inputs

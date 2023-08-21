@@ -6,6 +6,11 @@ export type Address = {
   state: string;
 };
 
+export type OptionType = {
+  label: string;
+  id: string;
+};
+
 export type BankType = {
   bankName: string;
   address: Address;
@@ -17,4 +22,3 @@ export type ProfileType = {
   profileImageUrl: string;
   contact: string;
 };
-

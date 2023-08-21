@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { z } from 'zod';
 import { useState } from 'react';
-import type { MouseEventHandler} from 'react';
+import type { MouseEventHandler } from 'react';
 import { ImSpinner2 } from 'react-icons/im';
 import { FormProvider, useForm } from 'react-hook-form';
 import Select, { components } from 'react-select';
@@ -13,19 +13,20 @@ import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
-import { trpc } from '@/server/trpc/trpcClient';
+import { trpcClient } from '@/server/trpc/client';
 import type { BankType } from '@/types';
 
-const postCodeSchema = z.coerce.number({
-  required_error: 'Postcode is required',
-  invalid_type_error: 'Postcode must be a number',
-});
 
 type BankOptionType = {
   value: BankType;
   label: string;
   id: string;
 };
+
+const postCodeSchema = z.coerce.number({
+  required_error: 'Postcode is required',
+  invalid_type_error: 'Postcode must be a number',
+});
 
 type DeleteIconProps = {
   onClick: MouseEventHandler<HTMLDivElement>;
@@ -58,7 +59,7 @@ const Option = (props: OptionProps<BankOptionType, false>) => {
   const {
     isLoading,
     mutate: deleteBank,
-  } = trpc.bank.removeBankDetails.useMutation({
+  } = trpcClient.bank.removeBankDetails.useMutation({
     onSuccess() {
       queryClient.refetchQueries([['getAllBanks']]);
       toast('Bank details deleted successfully', {
@@ -87,8 +88,8 @@ const Option = (props: OptionProps<BankOptionType, false>) => {
 };
 
 export default function BanksForm() {
-  const getBanksQuery = trpc.bank.getAllBanks.useQuery();
-  const saveBankDetailsMutation = trpc.bank.saveBankDetails.useMutation({
+  const getBanksQuery = trpcClient.bank.getAllBanks.useQuery();
+  const saveBankDetailsMutation = trpcClient.bank.saveBankDetails.useMutation({
     onError(error: unknown) {
       if (error instanceof TRPCError) {
         toast.error(error.message);
