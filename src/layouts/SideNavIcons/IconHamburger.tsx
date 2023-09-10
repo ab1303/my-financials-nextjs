@@ -4,18 +4,13 @@ function IconHamburger(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
-      className='h-7 w-7'
-      fill='none'
-      viewBox='0 0 24 24'
-      stroke='currentColor'
+      viewBox='0 0 512 512'
+      className='w-6 h-6 text-gray-800'
       {...props}
     >
-      <path
-        strokeLinecap='round'
-        strokeLinejoin='round'
-        strokeWidth={2}
-        d='M6 18L18 6M6 6l12 12'
-      />
+      <rect width='352' height='32' x='80' y='96'></rect>
+      <rect width='352' height='32' x='80' y='240'></rect>
+      <rect width='352' height='32' x='80' y='384'></rect>
     </svg>
   );
 }
