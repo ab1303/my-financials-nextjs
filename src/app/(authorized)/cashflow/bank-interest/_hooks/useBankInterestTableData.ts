@@ -1,15 +1,17 @@
 import { useMemo } from 'react';
 
+export type PaymentHistoryType = {
+  amount: number;
+  datePaid: Date;
+  financialInstitutionId?: string;
+};
+
 export type BankInterestType = {
   month: number;
   year: number;
   amountDue: number;
   amountPaid: number;
-  paymentHistory?: Array<{
-    amount: number;
-    datePaid: Date;
-    financialInstitutionId?: string;
-  }>;
+  paymentHistory?: Array<PaymentHistoryType>;
 };
 
 // This data would come from backend through trpc call

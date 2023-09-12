@@ -14,10 +14,14 @@ import useBankInterestTableData from './_hooks/useBankInterestTableData';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType } from '@/types';
-import type { BankInterestType } from './_hooks/useBankInterestTableData';
+import type {
+  BankInterestType,
+  PaymentHistoryType,
+} from './_hooks/useBankInterestTableData';
 import { Card } from '@/components';
 import Table from '@/components/table';
 import React from 'react';
+import PaymentHistoryModal from './_components/PaymentHistoryModal';
 
 type BankInterestFormProps = {
   initialData: {
@@ -87,61 +91,6 @@ const yearlyData: Array<YearType> = [
 
 const columnHelper = createColumnHelper<BankInterestType>();
 
-const columns = [
-  columnHelper.accessor('month', {
-    header: () => <span>Month</span>,
-    cell: (info) => info.getValue(),
-  }),
-  columnHelper.accessor((row) => row.year, {
-    id: 'year',
-    cell: (info) => <i>{info.getValue()}</i>,
-    header: () => <span>Year</span>,
-  }),
-  columnHelper.accessor('amountDue', {
-    header: () => <span>Amount Due</span>,
-    cell: (info) => info.renderValue(),
-    footer: (props) => props.column.id,
-  }),
-  columnHelper.accessor('amountPaid', {
-    header: () => <span>Amount Paid</span>,
-    footer: (props) => props.column.id,
-  }),
-  columnHelper.accessor('paymentHistory', {
-    header: () => <span>Payment History</span>,
-    cell: ({ row }) => {
-      const { original } = row;
-
-      return (
-        <div className='flex flex-row content-around justify-between px-4 '>
-          {!!original.paymentHistory && original.paymentHistory.length > 0 && (
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-4 w-4 cursor-pointer'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-              onClick={() => {
-                // setSelectedRestaurant({
-                //   categories: original.categories,
-                //   id: original._id,
-                // });
-              }}
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth='2'
-                d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
-              />
-            </svg>
-          )}
-        </div>
-      );
-    },
-    footer: (info) => info.column.id,
-  }),
-];
-
 export default function BankInterestForm(props: BankInterestFormProps) {
   const [selectedBank, setSelectedBank] = useState<
     SingleValue<OptionType> | undefined
@@ -173,6 +122,66 @@ export default function BankInterestForm(props: BankInterestFormProps) {
       }));
   }, [currentYearType]);
 
+  const [selectedMonth, setSelectedMonth] = useState<{
+    paymentHistory: Array<PaymentHistoryType>;
+    id: number | null;
+  }>({ id: null, paymentHistory: [] });
+
+  const columns = [
+    columnHelper.accessor('month', {
+      header: () => <span>Month</span>,
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor((row) => row.year, {
+      id: 'year',
+      cell: (info) => <i>{info.getValue()}</i>,
+      header: () => <span>Year</span>,
+    }),
+    columnHelper.accessor('amountDue', {
+      header: () => <span>Amount Due</span>,
+      cell: (info) => info.renderValue(),
+      footer: (props) => props.column.id,
+    }),
+    columnHelper.accessor('amountPaid', {
+      header: () => <span>Amount Paid</span>,
+      footer: (props) => props.column.id,
+    }),
+    columnHelper.accessor('paymentHistory', {
+      header: () => <span>Payment History</span>,
+      cell: ({ row }) => {
+        const { original } = row;
+
+        return (
+          <div className='flex flex-row content-around justify-between px-4 '>
+            {!!original.paymentHistory && original.paymentHistory.length > 0 && (
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                className='h-4 w-4 cursor-pointer'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+                onClick={() => {
+                  setSelectedMonth({
+                    paymentHistory: original.paymentHistory || [],
+                    id: original.month,
+                  });
+                }}
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+                />
+              </svg>
+            )}
+          </div>
+        );
+      },
+      footer: (info) => info.column.id,
+    }),
+  ];
+
   const data = useBankInterestTableData(1, 2023, 12, 2023);
 
   const table = useReactTable({
@@ -194,9 +203,35 @@ export default function BankInterestForm(props: BankInterestFormProps) {
     return;
   };
 
+  const handlePaymentHistoryModalClose = (
+    updatedPaymentHistory: Array<PaymentHistoryType>
+  ) => {
+    // update selected month
+    const monthToUpdate = data.find((r) => r.month === selectedMonth.id);
+
+    if (!monthToUpdate) {
+      // Should not happen
+      throw 'should not happen';
+    }
+
+    monthToUpdate.paymentHistory = [...updatedPaymentHistory];
+
+    // TODO Later
+    const updatedTableData = data.map((td) => {
+      return td.month === selectedMonth.id ? monthToUpdate : td;
+    });
+
+    // setTableData(updatedTableData);
+
+    setSelectedMonth({
+      paymentHistory: [],
+      id: null,
+    });
+  };
+
   return (
     <form className='mb-0 space-y-6'>
-      <div>
+      <div className='mx-10'>
         <label className={clsx('block text-sm font-medium ')}>
           Financial Year
         </label>
@@ -204,20 +239,20 @@ export default function BankInterestForm(props: BankInterestFormProps) {
           <Select
             instanceId={uniqFiscalYearId}
             isClearable
-            className='w-3/5 mr-2'
+            className='w-2/5 mr-2'
             value={selectedYear}
             options={fiscalYearOptions}
             onChange={(option) => setSelectedYear(option)}
           />
         </div>
       </div>
-      <div>
+      <div className='mx-10'>
         <label className={clsx('block text-sm font-medium ')}>Bank</label>
         <div className='mt-1'>
           <Select
             instanceId={uniqSelectBankId}
             isClearable
-            className='w-3/5 mr-2'
+            className='w-2/5 mr-2'
             value={selectedBank}
             options={bankOptions}
             onChange={(option) => handleOptionChange(option)}
@@ -226,6 +261,11 @@ export default function BankInterestForm(props: BankInterestFormProps) {
       </div>
       <div className='mt-8 overflow-x-scroll'>
         <Card.Body>
+          <PaymentHistoryModal
+            selectedMonth={selectedMonth.id}
+            paymentHistory={selectedMonth.paymentHistory}
+            onClose={handlePaymentHistoryModalClose}
+          />
           <Table>
             <Table.THead>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -259,19 +299,43 @@ export default function BankInterestForm(props: BankInterestFormProps) {
                 );
               })}
             </Table.TBody>
+            {/* // Think about making TFoot as a RSC */}
             <Table.TFoot>
-              {table.getFooterGroups().map((footerGroup) => (
-                <Table.TFoot.TR key={footerGroup.id}>
-                  {footerGroup.headers.map((header) => (
-                    <Table.TFoot.TH key={header.id}>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </Table.TFoot.TH>
-                  ))}
-                </Table.TFoot.TR>
-              ))}
+              {table.getFooterGroups().map((footerGroup) => {
+                console.log('Footer group', footerGroup);
+                return (
+                  <Table.TFoot.TR key={footerGroup.id}>
+                    {footerGroup.headers.map((header) => {
+                      switch (header.id) {
+                        case 'amountDue':
+                          const totalAmountDue = data.reduce(
+                            (total, { amountDue }) => (total += amountDue),
+                            0
+                          );
+                          return (
+                            <Table.TFoot.TH key={header.id}>
+                              {totalAmountDue}
+                            </Table.TFoot.TH>
+                          );
+                        case 'amountPaid':
+                          const totalAmountPaid = data.reduce(
+                            (total, { amountPaid }) => (total += amountPaid),
+                            0
+                          );
+                          return (
+                            <Table.TFoot.TH key={header.id}>
+                              {totalAmountPaid}
+                            </Table.TFoot.TH>
+                          );
+                        default:
+                          return (
+                            <Table.TFoot.TH key={header.id}></Table.TFoot.TH>
+                          );
+                      }
+                    })}
+                  </Table.TFoot.TR>
+                );
+              })}
             </Table.TFoot>
           </Table>
         </Card.Body>
