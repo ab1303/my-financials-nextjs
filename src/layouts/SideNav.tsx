@@ -58,13 +58,13 @@ export default function SideNav({
     <nav
       ref={wrapperRef}
       className={clsx(
-        'absolute inset-y-0 left-0 z-20 w-64 transform bg-white shadow-sm transition duration-200 ease-in-out sm:translate-x-0',
+        'absolute inset-y-0 left-0 z-20 w-64 transform bg-white shadow-sm transition duration-200 ease-in-out',
         openNav ? 'translate-x-0' : '-translate-x-full'
       )}
     >
       <div className='relative flex h-14 items-center justify-between'>
         <button
-          className='p-2 focus-visible:outline-none sm:hidden'
+          className='p-2 focus-visible:outline-none'
           onClick={() => handleCloseSideNav()}
         >
           <IconCross />
