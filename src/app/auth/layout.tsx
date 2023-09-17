@@ -5,10 +5,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className='pt:mt-0 mx-auto flex flex-col items-center justify-center px-6 pt-8 md:h-screen'>
-      <a
-        href=''
-        className='mb-8 flex items-center justify-center text-2xl font-semibold lg:mb-10'
-      >
+      <a className='mb-8 flex items-center justify-center text-2xl font-semibold lg:mb-10'>
         {/* <img src="/images/logo.svg" className="h-10 mr-4" alt="Windster Logo"> */}
         <span className='self-center whitespace-nowrap text-2xl font-bold'>
           My Financials

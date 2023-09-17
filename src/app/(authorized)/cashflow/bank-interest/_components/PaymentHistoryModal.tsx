@@ -1,4 +1,6 @@
-import { Card, Modal } from '@/components';
+import { Modal } from 'flowbite-react';
+
+import { Card } from '@/components';
 
 import type { PaymentHistoryType } from '../_hooks/useBankInterestTableData';
 
@@ -11,15 +13,11 @@ type PaymentHistoryModalProps = {
 export default function PaymentHistoryModal({
   selectedMonth,
   paymentHistory,
+  onClose,
 }: PaymentHistoryModalProps) {
   return (
-    <Modal show={!!selectedMonth}>
-      <Modal.Header
-        onClose={() => {
-            // TODO
-          return;
-        }}
-      >
+    <Modal show={!!selectedMonth} onClose={() => onClose(paymentHistory)}>
+      <Modal.Header>
         <Card.Header.Title>Payment History</Card.Header.Title>
       </Modal.Header>
       <Modal.Body>
