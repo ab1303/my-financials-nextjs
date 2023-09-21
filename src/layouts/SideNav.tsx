@@ -12,14 +12,13 @@ import {
   IconCashFlow,
   IconCross,
   IconGift,
-  IconHamburger,
   IconHome,
   IconProfile,
+  IconBuilding,
+  IconCashCoin,
+  IconReceiptPercent,
+  IconHandHoldingDollar,
 } from './SideNavIcons';
-import IconCashStack from './SideNavIcons/IconCashStack';
-import IconCashMinus from './SideNavIcons/IconHandHoldingDollar';
-import IconCashCoin from './SideNavIcons/IconCashCoin';
-import IconBuilding from './SideNavIcons/IconBuilding';
 
 type SideNavProps = {
   userRole: RoleEnumType | null;
@@ -104,7 +103,8 @@ export default function SideNav({
                 href='/cashflow/bank-interest'
                 className='border-b-0'
               >
-                <IconCashStack />
+                <IconReceiptPercent />
+                {/* <IconCashStack /> */}
               </SideNavLink>
             </Disclosure.Panel>
           </Disclosure>
@@ -130,7 +130,7 @@ export default function SideNav({
         </li>
 
         <SideNavLink name='Zakat' href='/zakat' className='border-b-2'>
-          <IconCashMinus />
+          <IconHandHoldingDollar />
         </SideNavLink>
 
         {userRole === 'admin' && (

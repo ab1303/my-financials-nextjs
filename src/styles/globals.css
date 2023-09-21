@@ -27,6 +27,13 @@
     @apply text-cyan-600 border-gray-300 rounded focus:ring-cyan-600;
   }
 
+  @layer base {
+    [type='text']
+    {
+      @apply leading-4
+    }
+  }
+
   
   /* inter var - latin */
   @font-face {

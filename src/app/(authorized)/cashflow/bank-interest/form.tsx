@@ -9,6 +9,7 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
+import { NumericFormat } from 'react-number-format';
 
 import useBankInterestTableData from './_hooks/useBankInterestTableData';
 
@@ -22,6 +23,7 @@ import { Card } from '@/components';
 import Table from '@/components/table';
 import React from 'react';
 import PaymentHistoryModal from './_components/PaymentHistoryModal';
+import { Label } from 'flowbite-react';
 
 type BankInterestFormProps = {
   initialData: {
@@ -139,11 +141,30 @@ export default function BankInterestForm(props: BankInterestFormProps) {
     }),
     columnHelper.accessor('amountDue', {
       header: () => <span>Amount Due</span>,
-      cell: (info) => info.renderValue(),
+      cell: (info) => {
+        return (
+          <NumericFormat
+            prefix='$'
+            displayType='text'
+            thousandSeparator
+            value={info.renderValue()}
+          />
+        );
+      },
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('amountPaid', {
       header: () => <span>Amount Paid</span>,
+      cell: (info) => {
+        return (
+          <NumericFormat
+            prefix='$'
+            displayType='text'
+            thousandSeparator
+            value={info.renderValue()}
+          />
+        );
+      },
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('paymentHistory', {
@@ -232,9 +253,7 @@ export default function BankInterestForm(props: BankInterestFormProps) {
   return (
     <form className='mb-0 space-y-6'>
       <div className='mx-10'>
-        <label className={clsx('block text-sm font-medium ')}>
-          Financial Year
-        </label>
+        <Label>Financial Year</Label>
         <div className='mt-3'>
           <Select
             instanceId={uniqFiscalYearId}
@@ -247,7 +266,7 @@ export default function BankInterestForm(props: BankInterestFormProps) {
         </div>
       </div>
       <div className='mx-10'>
-        <label className={clsx('block text-sm font-medium ')}>Bank</label>
+        <Label>Bank</Label>
         <div className='mt-1'>
           <Select
             instanceId={uniqSelectBankId}
@@ -314,7 +333,12 @@ export default function BankInterestForm(props: BankInterestFormProps) {
                           );
                           return (
                             <Table.TFoot.TH key={header.id}>
-                              {totalAmountDue}
+                              <NumericFormat
+                                prefix='$'
+                                displayType='text'
+                                thousandSeparator
+                                value={totalAmountDue}
+                              />
                             </Table.TFoot.TH>
                           );
                         case 'amountPaid':
@@ -324,7 +348,12 @@ export default function BankInterestForm(props: BankInterestFormProps) {
                           );
                           return (
                             <Table.TFoot.TH key={header.id}>
-                              {totalAmountPaid}
+                              <NumericFormat
+                                prefix='$'
+                                displayType='text'
+                                thousandSeparator
+                                value={totalAmountPaid}
+                              />
                             </Table.TFoot.TH>
                           );
                         default:

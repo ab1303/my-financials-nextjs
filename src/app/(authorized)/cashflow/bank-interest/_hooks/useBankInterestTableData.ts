@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 export type PaymentHistoryType = {
+  id: number;
   amount: number;
   datePaid: Date;
   financialInstitutionId?: string;
@@ -22,8 +23,8 @@ const bankInterestData: BankInterestType[] = [
     amountDue: 150,
     amountPaid: 100,
     paymentHistory: [
-      { amount: 50, datePaid: new Date('15-Jan-2023') },
-      { amount: 50, datePaid: new Date('27-Jan-2023') },
+      { id: 1, amount: 50, datePaid: new Date('15-Jan-2023') },
+      { id: 2, amount: 50, datePaid: new Date('27-Jan-2023') },
     ],
   },
   {
@@ -37,28 +38,28 @@ const bankInterestData: BankInterestType[] = [
     year: 2023,
     amountDue: 170,
     amountPaid: 50,
-    paymentHistory: [{ amount: 50, datePaid: new Date('15-Mar-2023') }],
+    paymentHistory: [{ id: 3, amount: 50, datePaid: new Date('15-Mar-2023') }],
   },
   {
     month: 4,
     year: 2023,
     amountDue: 180,
     amountPaid: 50,
-    paymentHistory: [{ amount: 50, datePaid: new Date('15-Apr-2023') }],
+    paymentHistory: [{ id: 4, amount: 50, datePaid: new Date('15-Apr-2023') }],
   },
   {
     month: 5,
     year: 2023,
     amountDue: 190,
     amountPaid: 50,
-    paymentHistory: [{ amount: 50, datePaid: new Date('15-May-2023') }],
+    paymentHistory: [{ id: 5, amount: 50, datePaid: new Date('15-May-2023') }],
   },
   {
     month: 6,
     year: 2023,
     amountDue: 200,
     amountPaid: 50,
-    paymentHistory: [{ amount: 50, datePaid: new Date('15-Jun-2023') }],
+    paymentHistory: [{ id: 6, amount: 50, datePaid: new Date('15-Jun-2023') }],
   },
 ];
 
@@ -72,7 +73,6 @@ export default function useBankInterestTableData(
     return bankInterestData
       .filter((d) => [fromYear, toYear].includes(d.year))
       .filter((d) => d.month >= fromMonth)
-      .filter((d) => d.month <= toMonth)
-      ;
+      .filter((d) => d.month <= toMonth);
   }, [fromMonth, fromYear, toMonth, toYear]);
 }
