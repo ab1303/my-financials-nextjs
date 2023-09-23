@@ -4,6 +4,7 @@ import { httpServer } from '@/server/trpc/server-http';
 
 import Card from '@/components/card';
 import BankInterestForm from './form';
+import { bankInterestTableData } from './_hooks/useBankInterestTableData';
 
 export default async function BanksPage() {
   const banks = await httpServer.bank.getAllBanks.query();
@@ -14,10 +15,14 @@ export default async function BanksPage() {
       }))
     : [];
 
+  // TODO: needs to be an rpc call to fetch bankInterestData
 
-    const initialData = {
-      bankOptions
-    }
+  const bankInterestData = bankInterestTableData(1, 2023, 12, 2023);
+
+  const initialData = {
+    bankOptions,
+    bankInterestData,
+  };
   return (
     <>
       <Card.Header>

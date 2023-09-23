@@ -10,8 +10,6 @@ import {
 } from '@tanstack/react-table';
 import { NumericFormat } from 'react-number-format';
 
-import useBankInterestTableData from './_hooks/useBankInterestTableData';
-
 import type { SingleValue } from 'react-select';
 import type { OptionType } from '@/types';
 import type {
@@ -23,12 +21,6 @@ import Table from '@/components/table';
 import React from 'react';
 import PaymentHistoryModal from './_components/PaymentHistoryModal';
 import { Label } from 'flowbite-react';
-
-type BankInterestFormProps = {
-  initialData: {
-    bankOptions: OptionType[];
-  };
-};
 
 // TODO Refactor Section
 
@@ -90,9 +82,23 @@ const yearlyData: Array<YearType> = [
 
 // React Table
 
+type BankInterestFormProps = {
+  initialData: {
+    bankOptions: OptionType[];
+    bankInterestData: BankInterestType[];
+  };
+};
+
 const columnHelper = createColumnHelper<BankInterestType>();
 
 export default function BankInterestForm(props: BankInterestFormProps) {
+  const uniqSelectBankId = useId();
+  const uniqFiscalYearId = useId();
+
+  const {
+    initialData: { bankOptions, bankInterestData },
+  } = props;
+
   const [selectedBank, setSelectedBank] = useState<
     SingleValue<OptionType> | undefined
   >();
@@ -101,12 +107,8 @@ export default function BankInterestForm(props: BankInterestFormProps) {
     SingleValue<OptionType> | undefined
   >();
 
-  const uniqSelectBankId = useId();
-  const uniqFiscalYearId = useId();
-
-  const {
-    initialData: { bankOptions },
-  } = props;
+  // const [data, setData] = React.useState(() => [...bankInterestData]);
+  const [data, setData] = React.useState([...bankInterestData]);
 
   // TODO: use a Toggle control to set current year
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -123,10 +125,7 @@ export default function BankInterestForm(props: BankInterestFormProps) {
       }));
   }, [currentYearType]);
 
-  const [selectedMonth, setSelectedMonth] = useState<{
-    paymentHistory: Array<PaymentHistoryType>;
-    id: number | null;
-  }>({ id: null, paymentHistory: [] });
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
   const columns = [
     columnHelper.accessor('month', {
@@ -181,10 +180,7 @@ export default function BankInterestForm(props: BankInterestFormProps) {
                 viewBox='0 0 24 24'
                 stroke='currentColor'
                 onClick={() => {
-                  setSelectedMonth({
-                    paymentHistory: original.paymentHistory || [],
-                    id: original.month,
-                  });
+                  setSelectedMonth(original.month);
                 }}
               >
                 <path
@@ -202,9 +198,7 @@ export default function BankInterestForm(props: BankInterestFormProps) {
     }),
   ];
 
-  const data = useBankInterestTableData(1, 2023, 12, 2023);
-
-  const table = useReactTable({
+  const table = useReactTable<BankInterestType>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -223,30 +217,27 @@ export default function BankInterestForm(props: BankInterestFormProps) {
     return;
   };
 
-  const handlePaymentHistoryModalClose = (
+  const handlePaymentHistoryUpdate = (
     updatedPaymentHistory: Array<PaymentHistoryType>
   ) => {
-    // update selected month
-    const monthToUpdate = data.find((r) => r.month === selectedMonth.id);
-
-    if (!monthToUpdate) {
-      // Should not happen
-      throw 'should not happen';
-    }
-
-    monthToUpdate.paymentHistory = [...updatedPaymentHistory];
-
-    // TODO Later
     const updatedTableData = data.map((td) => {
-      return td.month === selectedMonth.id ? monthToUpdate : td;
+      if (td.month !== selectedMonth) return td;
+
+      return {
+        ...td,
+        amountPaid: updatedPaymentHistory.reduce(
+          (total, { amount }) => (total += amount),
+          0
+        ),
+        paymentHistory: [...updatedPaymentHistory],
+      };
     });
 
-    // setTableData(updatedTableData);
+    setData([...updatedTableData]);
+  };
 
-    setSelectedMonth({
-      paymentHistory: [],
-      id: null,
-    });
+  const handlePaymentHistoryModalClose = () => {
+    setSelectedMonth(null);
   };
 
   return (
@@ -279,10 +270,14 @@ export default function BankInterestForm(props: BankInterestFormProps) {
       </div>
       <div className='mt-8 overflow-x-scroll'>
         <Card.Body>
-          {selectedMonth.id && (
+          {selectedMonth && (
             <PaymentHistoryModal
-              selectedMonth={selectedMonth.id}
-              paymentHistory={selectedMonth.paymentHistory}
+              selectedMonth={selectedMonth}
+              paymentHistory={
+                data.find((d) => d.month === selectedMonth)?.paymentHistory ||
+                []
+              }
+              onPaymentHistoryUpdate={handlePaymentHistoryUpdate}
               onClose={handlePaymentHistoryModalClose}
             />
           )}

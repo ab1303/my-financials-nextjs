@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Label } from 'flowbite-react';
 
 import { AddIcon, Card, TrashIcon } from '@/components';
@@ -10,17 +10,34 @@ import clsx from 'clsx';
 import CheckIcon from '@/components/icons/CheckIcon';
 import DatePickerDialog from '@/components/DatePickerDialog';
 
+type UpdatedPaymentType = Omit<PaymentHistoryType, 'id'>;
+
 type AddEditPaymentProps = {
   selectedPayment: PaymentHistoryType;
-  onConfirmButtonClick: () => void;
-  onAddButtonClick: () => void;
+  onConfirmButtonClick: (updatedPayment: UpdatedPaymentType) => void;
+  onAddButtonClick: (newPayment: UpdatedPaymentType) => void;
 };
 
 function AddEditPayment({
   selectedPayment,
-  onAddButtonClick,
   onConfirmButtonClick,
 }: AddEditPaymentProps) {
+  const [updatedPayment, setUpdatedPayment] = useState<UpdatedPaymentType>(
+    selectedPayment
+  );
+
+  useEffect(() => {
+    setUpdatedPayment({ ...selectedPayment });
+  }, [selectedPayment]);
+
+  const handleConfirmButtonClick = () => {
+    onConfirmButtonClick(updatedPayment);
+  };
+
+  const handleAddButtonClick = () => {
+    return;
+  };
+
   return (
     <>
       <div className='mt-3 grid grid-cols-7 gap-3'>
@@ -34,18 +51,28 @@ function AddEditPayment({
       <div className='mt-3 grid grid-cols-7 gap-3'>
         <div className='col-span-3'>
           <DatePickerDialog
-            selectedDate={selectedPayment.datePaid}
+            selectedDate={updatedPayment.datePaid}
             onDateChange={(d) => {
-              console.log('selected Date', d);
+              setUpdatedPayment((previousPayment) => ({
+                ...previousPayment,
+                datePaid: d,
+              }));
             }}
           />
         </div>
         <div className='col-span-3'>
           <NumericFormat
+            itemRef=''
             prefix='$'
             displayType='input'
             thousandSeparator
-            value={selectedPayment.amount}
+            value={updatedPayment.amount}
+            onValueChange={(values) => {
+              setUpdatedPayment((previousPayment) => ({
+                ...previousPayment,
+                amount: values.floatValue || 0,
+              }));
+            }}
           />
         </div>
         <div>
@@ -54,7 +81,7 @@ function AddEditPayment({
             <button
               type='button'
               className='inline-block px-4 py-2.5 bg-gray-200 text-gray-700 font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-gray-300 hover:shadow-lg focus:bg-gray-300 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-gray-400 active:shadow-lg transition duration-150 ease-in-out'
-              onClick={onConfirmButtonClick}
+              onClick={handleConfirmButtonClick}
             >
               <CheckIcon />
             </button>
@@ -62,7 +89,7 @@ function AddEditPayment({
             <button
               type='button'
               className='inline-block px-4 py-2.5 bg-gray-200 text-gray-700 font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-gray-300 hover:shadow-lg focus:bg-gray-300 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-gray-400 active:shadow-lg transition duration-150 ease-in-out'
-              onClick={onAddButtonClick}
+              onClick={handleAddButtonClick}
             >
               <AddIcon />
             </button>
@@ -76,7 +103,10 @@ function AddEditPayment({
 type PaymentHistoryModalProps = {
   selectedMonth: number | null;
   paymentHistory: Array<PaymentHistoryType>;
-  onClose: (updatedPaymentHistory: Array<PaymentHistoryType>) => void;
+  onPaymentHistoryUpdate: (
+    updatedPaymentHistory: Array<PaymentHistoryType>
+  ) => void;
+  onClose: () => void;
 };
 
 const defaultPayment: PaymentHistoryType = {
@@ -89,6 +119,7 @@ const defaultPayment: PaymentHistoryType = {
 export default function PaymentHistoryModal({
   selectedMonth,
   paymentHistory,
+  onPaymentHistoryUpdate,
   onClose,
 }: PaymentHistoryModalProps) {
   const [editPaymentId, setEditPaymentId] = useState<number | null>(null);
@@ -99,8 +130,17 @@ export default function PaymentHistoryModal({
     if (!payment) return;
   };
 
-  const onConfirmPaymentClick = () => {
+  const onConfirmPaymentClick = (updatedPayment: UpdatedPaymentType) => {
+    const updatedPaymentHistory = paymentHistory.map((ph) => {
+      if (ph.id !== editPaymentId) return ph;
+
+      return {
+        id: ph.id,
+        ...updatedPayment,
+      };
+    });
     setEditPaymentId(null);
+    onPaymentHistoryUpdate(updatedPaymentHistory);
   };
 
   const selectedPayment: PaymentHistoryType = editPaymentId
@@ -108,7 +148,7 @@ export default function PaymentHistoryModal({
     : defaultPayment;
 
   return (
-    <Modal show={!!selectedMonth} onClose={() => onClose(paymentHistory)}>
+    <Modal show={!!selectedMonth} onClose={onClose}>
       <Modal.Header>
         <Card.Header.Title>Payment History</Card.Header.Title>
       </Modal.Header>

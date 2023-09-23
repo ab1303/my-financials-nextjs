@@ -18,7 +18,7 @@ import type { ChangeEventHandler } from 'react';
 
 type DatePickerDialogProps = {
   selectedDate: Date;
-  onDateChange: (date?: Date) => void;
+  onDateChange: (date: Date) => void;
 };
 
 export default function DatePickerDialog({
