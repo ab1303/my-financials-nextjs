@@ -1,15 +1,11 @@
 import clsx from 'clsx';
 import type { MouseEventHandler } from 'react';
 
-interface TrashIconProps extends React.ComponentPropsWithoutRef<'svg'> {
+interface PenIconProps extends React.ComponentPropsWithoutRef<'svg'> {
   onClick?: MouseEventHandler<SVGSVGElement> | undefined;
 }
 
-export default function PenIcon({
-  onClick,
-  className,
-  ...rest
-}: TrashIconProps) {
+export default function PenIcon({ onClick, className, ...rest }: PenIconProps) {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
@@ -17,7 +13,7 @@ export default function PenIcon({
       viewBox='0 0 24 24'
       strokeWidth={1.5}
       stroke='currentColor'
-      className={clsx('w-6 h-6 cursor-pointer', className)}
+      className={clsx('w-4 h-4 cursor-pointer', className)}
       onClick={onClick}
       {...rest}
     >

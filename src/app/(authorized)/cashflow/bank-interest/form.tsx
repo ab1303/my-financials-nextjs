@@ -1,6 +1,5 @@
 'use client';
 
-import clsx from 'clsx';
 import Select from 'react-select';
 import { useId, useMemo, useState } from 'react';
 import {
@@ -280,11 +279,13 @@ export default function BankInterestForm(props: BankInterestFormProps) {
       </div>
       <div className='mt-8 overflow-x-scroll'>
         <Card.Body>
-          <PaymentHistoryModal
-            selectedMonth={selectedMonth.id}
-            paymentHistory={selectedMonth.paymentHistory}
-            onClose={handlePaymentHistoryModalClose}
-          />
+          {selectedMonth.id && (
+            <PaymentHistoryModal
+              selectedMonth={selectedMonth.id}
+              paymentHistory={selectedMonth.paymentHistory}
+              onClose={handlePaymentHistoryModalClose}
+            />
+          )}
           <Table>
             <Table.THead>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -321,7 +322,6 @@ export default function BankInterestForm(props: BankInterestFormProps) {
             {/* // Think about making TFoot as a RSC */}
             <Table.TFoot>
               {table.getFooterGroups().map((footerGroup) => {
-                console.log('Footer group', footerGroup);
                 return (
                   <Table.TFoot.TR key={footerGroup.id}>
                     {footerGroup.headers.map((header) => {

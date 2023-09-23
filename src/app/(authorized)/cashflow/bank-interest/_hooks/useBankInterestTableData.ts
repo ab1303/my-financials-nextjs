@@ -24,7 +24,7 @@ const bankInterestData: BankInterestType[] = [
     amountPaid: 100,
     paymentHistory: [
       { id: 1, amount: 50, datePaid: new Date('15-Jan-2023') },
-      { id: 2, amount: 50, datePaid: new Date('27-Jan-2023') },
+      { id: 2, amount: 75, datePaid: new Date('27-Jan-2023') },
     ],
   },
   {

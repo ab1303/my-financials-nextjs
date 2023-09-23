@@ -7,7 +7,7 @@ import { authOptions } from '@/utils/authOptions';
 export default async function LandingPage() {
   const data = {
     hero: {
-      appType: 'My Financials App',
+      appType: 'My Financials',
       tagLine: 'Keep your financials in check',
       description:
         'An app to track your financial position and spendings. Moreover to help you calculate your annual zakat liabilities',
