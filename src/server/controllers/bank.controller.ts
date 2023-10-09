@@ -19,6 +19,7 @@ export const addBankDetailsHandler = async ({
       postcode: input.postcode,
       state: input.state,
       suburb: input.suburb,
+      type: 'BANK',
     });
     return {
       status: 'success',

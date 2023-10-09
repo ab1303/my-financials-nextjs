@@ -77,14 +77,43 @@ enum RoleEnumType {
 
 // Business Schema
 
+enum BusinessEnumType {
+  BANK
+  PHILANTHROPY
+}
+
 // Bank
 
-model Bank {
-  id            String @id @default(cuid())
-  name          String
-  addressLine   String
-  streetAddress String
-  suburb        String
-  postcode      Int
-  state         String
+model Business {
+  id             String            @id @default(cuid())
+  name           String
+  addressLine    String?
+  streetAddress  String?
+  suburb         String?
+  postcode       Int?
+  state          String?
+  type           BusinessEnumType?
+  PaymentHistory Payment?
+  BankInterest   BankInterest?
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  datePaid       DateTime
+  amount         Decimal       @db.Money
+  business       Business?     @relation(fields: [businessId], references: [id])
+  businessId     String?       @unique
+  BankInterest   BankInterest? @relation(fields: [bankInterestId], references: [id])
+  bankInterestId String?
+}
+
+model BankInterest {
+  id         String    @id @default(cuid())
+  month      Int
+  year       Int
+  amountDue  Decimal   @db.Money
+  amountPaid Decimal   @db.Money
+  bank       Business  @relation(fields: [bankId], references: [id])
+  bankId     String    @unique
+  payments   Payment[]
 }

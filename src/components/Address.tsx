@@ -34,7 +34,6 @@ interface Props<T extends FieldValues> {
 }
 
 export default function AddressComponent<T extends FieldValues>({
-  basePropertyName,
   addressFields,
   address
 }: Props<T>) {
@@ -59,11 +58,11 @@ export default function AddressComponent<T extends FieldValues>({
 
   const setAddressFields = React.useCallback((address: Address) => {
     formFieldSetValue(String(addressFields.addressLineName), address.addressLine);
-    formFieldSetValue(`${String(basePropertyName)}.street_address`, address.street_address);
-    formFieldSetValue(`${String(basePropertyName)}.suburb`, address.suburb);
-    formFieldSetValue(`${String(basePropertyName)}.postcode`, address.postcode);
-    formFieldSetValue(`${String(basePropertyName)}.state`, address.state);
-  }, [addressFields, basePropertyName, formFieldSetValue])
+    formFieldSetValue(String(addressFields.street_addressName), address.street_address);
+    formFieldSetValue(String(addressFields.suburbName), address.suburb);
+    formFieldSetValue(String(addressFields.postcodeName), address.postcode);
+    formFieldSetValue(String(addressFields.stateName), address.state);
+  }, [addressFields, formFieldSetValue])
 
   React.useEffect(() => {
 
@@ -167,7 +166,6 @@ export default function AddressComponent<T extends FieldValues>({
     <>     
       <div>
         <label
-          htmlFor='addressLine'
           className={clsx(
             'block text-sm font-medium ',
             addressFields.addressLineError ? 'text-orange-700' : 'text-gray-700'
@@ -206,7 +204,7 @@ export default function AddressComponent<T extends FieldValues>({
       </div>
       <div>
         <label
-          htmlFor='street_address'
+          htmlFor={addressFields.street_addressName}
           className={clsx(
             'block text-sm font-medium ',
             addressFields.street_addressError ? 'text-orange-700' : 'text-gray-700'
@@ -216,6 +214,7 @@ export default function AddressComponent<T extends FieldValues>({
         </label>
         <div className='mt-1'>
           <input
+            id={addressFields.street_addressName}
             type='text'
             className={clsx(
               addressFields.street_addressError &&
@@ -228,7 +227,7 @@ export default function AddressComponent<T extends FieldValues>({
       <div className='flex'>
         <div className='w-1/2 '>
           <label
-            htmlFor='suburb'
+            htmlFor={addressFields.suburbName}
             className={clsx(
               'block text-sm font-medium ',
               addressFields.suburbError ? 'text-orange-700' : 'text-gray-700'
@@ -238,6 +237,7 @@ export default function AddressComponent<T extends FieldValues>({
           </label>
           <div className='mt-1'>
             <input
+              id={addressFields.suburbName}
               type='text'
               className={clsx(
                 addressFields.suburbError && 'text-orange-700 border-orange-700'
@@ -248,7 +248,7 @@ export default function AddressComponent<T extends FieldValues>({
         </div>
         <div className='w-1/2 ml-3'>
           <label
-            htmlFor='postcode'
+            htmlFor={addressFields.postcodeName}
             className={clsx(
               'block text-sm font-medium ',
               addressFields.postcodeError ? 'text-orange-700' : 'text-gray-700'
@@ -258,8 +258,8 @@ export default function AddressComponent<T extends FieldValues>({
           </label>
           <div className='mt-1'>
             <input
+              id={addressFields.postcodeName}
               type='text'
-              id='postcode'
               className={clsx(
                 addressFields.postcodeError && 'text-orange-700 border-orange-700'
               )}
@@ -271,7 +271,7 @@ export default function AddressComponent<T extends FieldValues>({
       <div className='flex'>
         <div className='w-1/2 '>
           <label
-            htmlFor='state'
+            htmlFor={addressFields.stateName}
             className={clsx(
               'block text-sm font-medium ',
               addressFields.stateError ? 'text-orange-700' : 'text-gray-700'
@@ -282,6 +282,7 @@ export default function AddressComponent<T extends FieldValues>({
           <div className='mt-1'>
             <input
               type='text'
+              id={addressFields.stateName}
               className={clsx(
                 addressFields.stateError && 'text-orange-700 border-orange-700'
               )}

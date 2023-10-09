@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { z } from 'zod';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { MouseEventHandler } from 'react';
 import { ImSpinner2 } from 'react-icons/im';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -15,7 +15,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Card, AddressComponent, Button } from '@/components';
 import { trpcClient } from '@/server/trpc/client';
 import type { BankType } from '@/types';
-
 
 type BankOptionType = {
   value: BankType;
@@ -45,9 +44,9 @@ function DeleteIcon(props: DeleteIconProps) {
         xmlns='http://www.w3.org/2000/svg'
       >
         <path
-          fill-rule='evenodd'
+          fillRule='evenodd'
           d='M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z'
-          clip-rule='evenodd'
+          clipRule='evenodd'
         ></path>
       </svg>
     </div>
@@ -88,6 +87,7 @@ const Option = (props: OptionProps<BankOptionType, false>) => {
 };
 
 export default function BanksForm() {
+  const queryClient = useQueryClient();
   const getBanksQuery = trpcClient.bank.getAllBanks.useQuery();
   const saveBankDetailsMutation = trpcClient.bank.saveBankDetails.useMutation({
     onError(error: unknown) {
@@ -97,10 +97,12 @@ export default function BanksForm() {
     },
 
     onSuccess() {
+      queryClient.refetchQueries([['getAllBanks']]);
       toast.success('Bank details saved!');
     },
   });
 
+  const uniqSelectBankId = useId();
   const [selectedBank, setSelectedBank] = useState<
     SingleValue<BankOptionType> | undefined
   >();
@@ -126,6 +128,11 @@ export default function BanksForm() {
     setValue: formFieldSetValue,
   } = formMethods;
 
+  const resetForm = () => {
+    formFieldSetValue('bankName', '');
+    setSelectedBank(null);
+  };
+
   const submitHandler = (formData: BankType) => {
     console.log('Bank Details', formData);
 
@@ -142,12 +149,12 @@ export default function BanksForm() {
       streetAddress: street_address,
       suburb,
     });
+    resetForm();
   };
 
   const handleOptionChange = (option: SingleValue<BankOptionType>) => {
     if (!option) {
-      formFieldSetValue('bankName', '');
-      setSelectedBank(null);
+      resetForm();
       return;
     }
 
@@ -171,11 +178,11 @@ export default function BanksForm() {
       value: {
         bankName: o.name,
         address: {
-          addressLine: o.addressLine,
+          addressLine: o.addressLine || '',
           postcode: String(o.postcode),
-          state: o.state,
-          street_address: o.streetAddress,
-          suburb: o.suburb,
+          state: o.state || '',
+          street_address: o.streetAddress || '',
+          suburb: o.suburb || '',
         },
       },
     }));
@@ -204,6 +211,7 @@ export default function BanksForm() {
                   components={{ Option }}
                   value={selectedBank}
                   options={bankOptions}
+                  instanceId={uniqSelectBankId}
                   onChange={(option) => handleOptionChange(option)}
                 />
               </div>
@@ -211,6 +219,7 @@ export default function BanksForm() {
 
             <div>
               <label
+                htmlFor='bankName'
                 className={clsx(
                   'block text-sm font-medium ',
                   errors.bankName ? 'text-orange-700' : 'text-gray-700'
@@ -220,6 +229,7 @@ export default function BanksForm() {
               </label>
               <div className='mt-1'>
                 <input
+                  id='bankName'
                   type='text'
                   className={clsx(
                     errors.bankName && 'text-orange-700 border-orange-700'
