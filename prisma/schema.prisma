@@ -93,8 +93,8 @@ model Business {
   postcode       Int?
   state          String?
   type           BusinessEnumType?
-  PaymentHistory Payment?
-  BankInterest   BankInterest?
+  PaymentHistory Payment[]
+  BankInterest   BankInterest[]
 }
 
 model Payment {
@@ -102,7 +102,7 @@ model Payment {
   datePaid       DateTime
   amount         Decimal       @db.Money
   business       Business?     @relation(fields: [businessId], references: [id])
-  businessId     String?       @unique
+  businessId     String?
   BankInterest   BankInterest? @relation(fields: [bankInterestId], references: [id])
   bankInterestId String?
 }
@@ -114,6 +114,6 @@ model BankInterest {
   amountDue  Decimal   @db.Money
   amountPaid Decimal   @db.Money
   bank       Business  @relation(fields: [bankId], references: [id])
-  bankId     String    @unique
+  bankId     String
   payments   Payment[]
 }

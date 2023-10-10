@@ -110,10 +110,10 @@ type PaymentHistoryModalProps = {
 };
 
 const defaultPayment: PaymentHistoryType = {
-  id: 0,
+  id: '',
   amount: 0,
   datePaid: new Date(),
-  financialInstitutionId: '',
+  businessId: '',
 };
 
 export default function PaymentHistoryModal({
@@ -122,9 +122,9 @@ export default function PaymentHistoryModal({
   onPaymentHistoryUpdate,
   onClose,
 }: PaymentHistoryModalProps) {
-  const [editPaymentId, setEditPaymentId] = useState<number | null>(null);
+  const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
 
-  const onEditPaymentClick = (paymentId: number) => {
+  const onEditPaymentClick = (paymentId: string) => {
     setEditPaymentId(paymentId);
     const payment = paymentHistory.find((p) => p.id === paymentId);
     if (!payment) return;

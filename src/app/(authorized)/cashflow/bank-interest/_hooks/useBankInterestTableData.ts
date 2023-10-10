@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 
 export type PaymentHistoryType = {
-  id: number;
+  id: string;
   amount: number;
   datePaid: Date;
-  financialInstitutionId?: string;
+  businessId?: string;
 };
 
 export type BankInterestType = {
@@ -23,8 +23,8 @@ const bankInterestData: BankInterestType[] = [
     amountDue: 150,
     amountPaid: 125,
     paymentHistory: [
-      { id: 1, amount: 50, datePaid: new Date('15-Jan-2023') },
-      { id: 2, amount: 75, datePaid: new Date('27-Jan-2023') },
+      { id: '1', amount: 50, datePaid: new Date('15-Jan-2023') },
+      { id: '2', amount: 75, datePaid: new Date('27-Jan-2023') },
     ],
   },
   // {

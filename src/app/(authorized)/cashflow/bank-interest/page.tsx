@@ -4,7 +4,7 @@ import { httpServer } from '@/server/trpc/server-http';
 
 import Card from '@/components/card';
 import BankInterestForm from './form';
-import { bankInterestTableData } from './_hooks/useBankInterestTableData';
+import BankInterestTableServer from './BankInterestTableServer';
 
 export default async function BanksPage() {
   const banks = await httpServer.bank.getAllBanks.query();
@@ -15,13 +15,8 @@ export default async function BanksPage() {
       }))
     : [];
 
-  // TODO: needs to be an rpc call to fetch bankInterestData
-
-  const bankInterestData = bankInterestTableData(1, 2023, 12, 2023);
-
   const initialData = {
     bankOptions,
-    bankInterestData,
   };
   return (
     <>
@@ -31,7 +26,13 @@ export default async function BanksPage() {
         </div>
       </Card.Header>
       <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
-        <BankInterestForm initialData={initialData}></BankInterestForm>
+        <BankInterestForm
+          initialData={initialData}
+          renderTableProp={async (bank, year) => {
+            'use server';
+            return <BankInterestTableServer bankId={bank} year={year} />;
+          }}
+        />
       </div>
     </>
   );
