@@ -8,9 +8,13 @@ import React from 'react';
 //   border-top-width: 1px;
 // `;
 
-const TBodyTD: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+type TBodyTDProps = {
+  children?: React.ReactNode;
+} & React.ComponentPropsWithoutRef<'div'>;
+
+const TBodyTD = ({ children, ...rest }: TBodyTDProps) => {
   return (
-    <td role='cell' className='px-6 py-4'>
+    <td role='cell' className='px-6 py-4' {...rest}>
       <span className='text-sm text-gray-500'>{children}</span>
     </td>
   );

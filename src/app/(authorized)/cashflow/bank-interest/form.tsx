@@ -6,10 +6,8 @@ import React, { useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 
 import { Card } from '@/components';
-import PaymentHistoryModal from './_components/PaymentHistoryModal';
 
 import type { SingleValue } from 'react-select';
-
 import type { OptionType, YearType } from '@/types';
 
 // TODO Refactor Section
@@ -81,8 +79,6 @@ export default function BankInterestForm({
       }));
   }, [currentYearType, yearlyData]);
 
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-
   const handleOptionChange = (option: SingleValue<OptionType>) => {
     if (!option) {
       setSelectedBank(null);
@@ -108,25 +104,6 @@ export default function BankInterestForm({
     const query = search ? `?${search}` : '';
     router.push(`${pathname}${query}`);
   };
-
-  // const handlePaymentHistoryUpdate = (
-  //   updatedPaymentHistory: Array<PaymentHistoryType>
-  // ) => {
-  //   const updatedTableData = data.map((td) => {
-  //     if (td.month !== selectedMonth) return td;
-
-  //     return {
-  //       ...td,
-  //       amountPaid: updatedPaymentHistory.reduce(
-  //         (total, { amount }) => (total += amount),
-  //         0
-  //       ),
-  //       paymentHistory: [...updatedPaymentHistory],
-  //     };
-  //   });
-
-  //   setData([...updatedTableData]);
-  // };
 
   return (
     <form className='mb-0 space-y-6'>
@@ -162,23 +139,7 @@ export default function BankInterestForm({
         </div>
       </div>
       <div className='mt-8 overflow-x-scroll'>
-        <Card.Body>
-          {/* {selectedMonth && (
-            <PaymentHistoryModal
-              selectedMonth={selectedMonth}
-              paymentHistory={
-                data.find((d) => d.month === selectedMonth)?.paymentHistory ||
-                []
-              }
-              onPaymentHistoryUpdate={handlePaymentHistoryUpdate}
-              onClose={() => {
-                setSelectedMonth(null);
-              }}
-            />
-          )} */}
-
-          {children}
-        </Card.Body>
+        <Card.Body>{children}</Card.Body>
       </div>
     </form>
   );

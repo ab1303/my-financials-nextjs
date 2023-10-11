@@ -32,3 +32,18 @@ export type YearType = {
   toYear: number;
   toMonth: number;
 };
+
+export type PaymentHistoryType = {
+  id: string;
+  amount: number;
+  datePaid: Date;
+  businessId?: string;
+};
+
+export type BankInterestType = {
+  month: number;
+  year: number;
+  amountDue: number;
+  amountPaid: number;
+  paymentHistory?: Array<PaymentHistoryType>;
+};

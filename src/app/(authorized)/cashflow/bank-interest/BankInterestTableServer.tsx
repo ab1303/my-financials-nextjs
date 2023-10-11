@@ -1,11 +1,8 @@
 import BankInterestTableClient from './BankInterestTableClient';
 import { httpServer } from '@/server/trpc/server-http';
 
-import type {
-  BankInterestType,
-  PaymentHistoryType,
-} from './_hooks/useBankInterestTableData';
 import type { BankInterestModel } from '@/server/models';
+import type { BankInterestType, PaymentHistoryType } from '@/types';
 
 export type BankInterestTableServerProps = {
   bankId: string;

@@ -5,6 +5,7 @@ import { httpServer } from '@/server/trpc/server-http';
 import Card from '@/components/card';
 import BankInterestForm from './form';
 import BankInterestTableServer from './BankInterestTableServer';
+import { Suspense } from 'react';
 
 type BankPageProps = {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -58,6 +59,8 @@ function getSelectedParam(searchParam?: string | string[]) {
   return selected || '';
 }
 
+// page dynamically rendered
+//https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional
 export default async function BanksPage({ searchParams }: BankPageProps) {
   const banks = await httpServer.bank.getAllBanks.query();
   const bankOptions: OptionType[] = banks
@@ -90,10 +93,12 @@ export default async function BanksPage({ searchParams }: BankPageProps) {
           bankIdParam={selectedBankId}
           yearParam={selectedYear}
         >
-          <BankInterestTableServer
-            bankId={selectedBankId}
-            year={selectedYear}
-          />
+          <Suspense fallback={<p>Loading table...</p>}>
+            <BankInterestTableServer
+              bankId={selectedBankId}
+              year={selectedYear}
+            />
+          </Suspense>
         </BankInterestForm>
       </div>
     </>
