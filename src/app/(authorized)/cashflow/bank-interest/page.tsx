@@ -1,4 +1,4 @@
-import type { OptionType } from '@/types';
+import type { OptionType, YearType } from '@/types';
 // import { server } from '@/server/trpc/server';
 import { httpServer } from '@/server/trpc/server-http';
 
@@ -6,7 +6,59 @@ import Card from '@/components/card';
 import BankInterestForm from './form';
 import BankInterestTableServer from './BankInterestTableServer';
 
-export default async function BanksPage() {
+type BankPageProps = {
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+const yearlyData: Array<YearType> = [
+  {
+    id: '2021',
+    type: 'annual',
+    description: '2021',
+    fromYear: 2021,
+    fromMonth: 1,
+    toYear: 2021,
+    toMonth: 12,
+  },
+  {
+    id: '2022',
+    type: 'annual',
+    description: '2022',
+    fromYear: 2022,
+    fromMonth: 1,
+    toYear: 2022,
+    toMonth: 12,
+  },
+  {
+    id: '2021-2022',
+    type: 'fiscal',
+    description: '2021-2022',
+    fromMonth: 7,
+    fromYear: 2021,
+    toMonth: 6,
+    toYear: 2022,
+  },
+  {
+    id: '2022-2023',
+    type: 'fiscal',
+    description: '2021-2022',
+    fromMonth: 7,
+    fromYear: 2022,
+    toMonth: 6,
+    toYear: 2023,
+  },
+];
+
+function getSelectedParam(searchParam?: string | string[]) {
+  const selectedSearch = searchParam || '';
+  const selected = Array.isArray(selectedSearch)
+    ? selectedSearch[0]
+    : selectedSearch;
+
+  return selected || '';
+}
+
+export default async function BanksPage({ searchParams }: BankPageProps) {
   const banks = await httpServer.bank.getAllBanks.query();
   const bankOptions: OptionType[] = banks
     ? banks.map((b) => ({
@@ -15,8 +67,15 @@ export default async function BanksPage() {
       }))
     : [];
 
+  const selectedBank = bankOptions.find(
+    (b) => b.label === getSelectedParam(searchParams?.bank)
+  );
+  const selectedBankId = selectedBank ? selectedBank.id : '';
+  const selectedYear = getSelectedParam(searchParams?.year);
+
   const initialData = {
     bankOptions,
+    yearlyData,
   };
   return (
     <>
@@ -28,11 +87,14 @@ export default async function BanksPage() {
       <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
         <BankInterestForm
           initialData={initialData}
-          renderTableProp={async (bank, year) => {
-            'use server';
-            return <BankInterestTableServer bankId={bank} year={year} />;
-          }}
-        />
+          bankIdParam={selectedBankId}
+          yearParam={selectedYear}
+        >
+          <BankInterestTableServer
+            bankId={selectedBankId}
+            year={selectedYear}
+          />
+        </BankInterestForm>
       </div>
     </>
   );

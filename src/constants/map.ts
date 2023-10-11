@@ -1,0 +1,16 @@
+const MONTHS_MAP = new Map();
+
+MONTHS_MAP.set(1, 'JANUARY');
+MONTHS_MAP.set(2, 'FEBRUARY');
+MONTHS_MAP.set(3, 'MARCH');
+MONTHS_MAP.set(4, 'APRIL');
+MONTHS_MAP.set(5, 'MAY');
+MONTHS_MAP.set(6, 'JUNE');
+MONTHS_MAP.set(7, 'JULY');
+MONTHS_MAP.set(8, 'AUGUST');
+MONTHS_MAP.set(9, 'SEPTEMBER');
+MONTHS_MAP.set(10, 'OCTOBER');
+MONTHS_MAP.set(11, 'NOVEMBER');
+MONTHS_MAP.set(12, 'DECEMBER');
+
+export default MONTHS_MAP;

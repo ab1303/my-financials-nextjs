@@ -212,6 +212,7 @@ export default function BanksForm() {
                   value={selectedBank}
                   options={bankOptions}
                   instanceId={uniqSelectBankId}
+                  getOptionValue={(option) => option.id}
                   onChange={(option) => handleOptionChange(option)}
                 />
               </div>

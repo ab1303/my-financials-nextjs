@@ -5,19 +5,23 @@ import type {
   BankInterestType,
   PaymentHistoryType,
 } from './_hooks/useBankInterestTableData';
+import type { BankInterestModel } from '@/server/models';
 
 export type BankInterestTableServerProps = {
   bankId: string;
-  year: number;
+  year: string;
 };
 
 export default async function BankInterestTableServer({
   bankId,
   year,
 }: BankInterestTableServerProps) {
-  const bankInterestDetails = await httpServer.bankInterest.getYearlyBankInterestDetails.query(
-    { bankId, year }
-  );
+  let bankInterestDetails: BankInterestModel[] | undefined = [];
+  if (bankId && year) {
+    bankInterestDetails = await httpServer.bankInterest.getYearlyBankInterestDetails.query(
+      { bankId, year: +year }
+    );
+  }
 
   const data =
     bankInterestDetails?.map<BankInterestType>((d) => ({

@@ -22,3 +22,13 @@ export type ProfileType = {
   profileImageUrl: string;
   contact: string;
 };
+
+export type YearType = {
+  id: string;
+  type: 'fiscal' | 'annual';
+  description: string;
+  fromYear: number;
+  fromMonth: number;
+  toYear: number;
+  toMonth: number;
+};

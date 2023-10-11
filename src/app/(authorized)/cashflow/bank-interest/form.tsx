@@ -1,69 +1,18 @@
 'use client';
 
-import Select from 'react-select';
-import React, { Suspense, useId, useMemo, useState } from 'react';
 import { Label } from 'flowbite-react';
+import Select from 'react-select';
+import React, { useId, useMemo, useState } from 'react';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+
 import { Card } from '@/components';
 import PaymentHistoryModal from './_components/PaymentHistoryModal';
 
 import type { SingleValue } from 'react-select';
 
-import type { OptionType } from '@/types';
-import type {
-  BankInterestType,
-  PaymentHistoryType,
-} from './_hooks/useBankInterestTableData';
+import type { OptionType, YearType } from '@/types';
 
 // TODO Refactor Section
-
-type YearType = {
-  id: string;
-  type: 'fiscal' | 'annual';
-  description: string;
-  fromYear: number;
-  fromMonth: number;
-  toYear: number;
-  toMonth: number;
-};
-
-const yearlyData: Array<YearType> = [
-  {
-    id: '2021',
-    type: 'annual',
-    description: '2021',
-    fromYear: 2021,
-    fromMonth: 1,
-    toYear: 2021,
-    toMonth: 12,
-  },
-  {
-    id: '2022',
-    type: 'annual',
-    description: '2022',
-    fromYear: 2022,
-    fromMonth: 1,
-    toYear: 2022,
-    toMonth: 12,
-  },
-  {
-    id: '2021-2022',
-    type: 'fiscal',
-    description: '2021-2022',
-    fromMonth: 7,
-    fromYear: 2021,
-    toMonth: 6,
-    toYear: 2022,
-  },
-  {
-    id: '2022-2023',
-    type: 'fiscal',
-    description: '2021-2022',
-    fromMonth: 7,
-    fromYear: 2022,
-    toMonth: 6,
-    toYear: 2023,
-  },
-];
 
 // const fiscalYearOptions: OptionType[] = [
 //   { id: '2021-2022', label: '2021-2022' },
@@ -74,40 +23,54 @@ const yearlyData: Array<YearType> = [
 
 // React Table
 
-type BankInterestRenderProps = {
-  renderTableProp: (bankId: string, year: number) => Promise<JSX.Element>;
-};
-
 type BankInterestFormProps = {
   initialData: {
     bankOptions: OptionType[];
+    yearlyData: Array<YearType>;
   };
-} & BankInterestRenderProps;
+  bankIdParam: string;
+  yearParam: string;
+  children?: React.ReactNode;
+};
 
-export default function BankInterestForm(props: BankInterestFormProps) {
+export default function BankInterestForm({
+  initialData: { bankOptions, yearlyData },
+  bankIdParam,
+  yearParam,
+  children,
+}: BankInterestFormProps) {
   const uniqSelectBankId = useId();
   const uniqFiscalYearId = useId();
 
-  const {
-    initialData: { bankOptions },
-    renderTableProp,
-  } = props;
-
-  const [selectedBank, setSelectedBank] = useState<
-    SingleValue<OptionType> | undefined
-  >();
-
-  const [selectedYear, setSelectedYear] = useState<
-    SingleValue<OptionType> | undefined
-  >();
-
-  // const [data, setData] = React.useState(() => [...bankInterestData]);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // TODO: use a Toggle control to set current year
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentYearType, setCurrentYearType] = useState<YearType['type']>(
     'annual'
   );
+
+  const currentYearData = yearlyData.find((yd) => yd.id === yearParam);
+  const currentYearOption = currentYearData
+    ? {
+        id: currentYearData.id,
+        label: currentYearData.description,
+      }
+    : undefined;
+
+  const [selectedYear, setSelectedYear] = useState<
+    SingleValue<OptionType> | undefined
+  >(currentYearOption);
+
+  const currentBank = bankOptions.find((b) => b.id === bankIdParam);
+
+  const [selectedBank, setSelectedBank] = useState<
+    SingleValue<OptionType> | undefined
+  >(currentBank);
+
+  // const [data, setData] = React.useState(() => [...bankInterestData]);
 
   const fiscalYearOptions = useMemo(() => {
     return yearlyData
@@ -116,21 +79,34 @@ export default function BankInterestForm(props: BankInterestFormProps) {
         id: yd.id,
         label: yd.description,
       }));
-  }, [currentYearType]);
+  }, [currentYearType, yearlyData]);
 
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
   const handleOptionChange = (option: SingleValue<OptionType>) => {
     if (!option) {
       setSelectedBank(null);
-      return;
-    }
-
-    if (option.id) {
+    } else if (option.id) {
       setSelectedBank(option);
     }
 
-    return;
+    updateURLSearchParams('bank', option?.label);
+  };
+
+  const updateURLSearchParams = (
+    selection: 'bank' | 'year',
+    value?: string
+  ) => {
+    const current = new URLSearchParams(searchParams || '');
+
+    if (!value) {
+      current.delete(selection);
+    } else {
+      current.set(selection, value);
+    }
+    const search = current.toString();
+    const query = search ? `?${search}` : '';
+    router.push(`${pathname}${query}`);
   };
 
   // const handlePaymentHistoryUpdate = (
@@ -152,25 +128,22 @@ export default function BankInterestForm(props: BankInterestFormProps) {
   //   setData([...updatedTableData]);
   // };
 
-  const handlePaymentHistoryModalClose = () => {
-    setSelectedMonth(null);
-  };
-
-  const selectedBankValue = selectedBank?.id;
-  const selectedYearValue = selectedYear ? +selectedYear.id : undefined;
-
   return (
     <form className='mb-0 space-y-6'>
       <div className='mx-10'>
         <Label>Financial Year</Label>
         <div className='mt-3'>
           <Select
-            instanceId={uniqFiscalYearId}
             isClearable
             className='w-3/5 mr-2'
             value={selectedYear}
             options={fiscalYearOptions}
-            onChange={(option) => setSelectedYear(option)}
+            instanceId={uniqFiscalYearId}
+            getOptionValue={(option) => option.id}
+            onChange={(option) => {
+              setSelectedYear(option);
+              updateURLSearchParams('year', option?.id);
+            }}
           />
         </div>
       </div>
@@ -183,6 +156,7 @@ export default function BankInterestForm(props: BankInterestFormProps) {
             className='w-3/5 mr-2'
             value={selectedBank}
             options={bankOptions}
+            getOptionValue={(option) => option.id}
             onChange={(option) => handleOptionChange(option)}
           />
         </div>
@@ -197,14 +171,13 @@ export default function BankInterestForm(props: BankInterestFormProps) {
                 []
               }
               onPaymentHistoryUpdate={handlePaymentHistoryUpdate}
-              onClose={handlePaymentHistoryModalClose}
+              onClose={() => {
+                setSelectedMonth(null);
+              }}
             />
           )} */}
-          {selectedBankValue && selectedYearValue && (
-            <Suspense fallback={<p>Loading...</p>}>
-              {renderTableProp(selectedBankValue, selectedYearValue)}
-            </Suspense>
-          )}
+
+          {children}
         </Card.Body>
       </div>
     </form>

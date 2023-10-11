@@ -8,7 +8,7 @@ export const createBankInterestPaymentSchema = object({
 });
 
 export const getYearlyBankInterestPaymentSchema = object({
-  bankId: string({ required_error: 'Bank is required' }),
+  bankId: string({ required_error: 'Bank is required' }).trim().min(5),
   year: number({ required_error: 'Fiscal year is required' }),
 });
 

@@ -10,6 +10,7 @@ import {
 
 import type { BankInterestType } from './_hooks/useBankInterestTableData';
 import { NumericFormat } from 'react-number-format';
+import MONTHS_MAP from '@/constants/map';
 
 const columnHelper = createColumnHelper<BankInterestType>();
 
@@ -23,7 +24,7 @@ export default function BankInterestTableClient({
   const columns = [
     columnHelper.accessor('month', {
       header: () => <span>Month</span>,
-      cell: (info) => info.getValue(),
+      cell: (info) => MONTHS_MAP.get(info.getValue()),
     }),
     columnHelper.accessor('amountDue', {
       header: () => <span>Amount Due</span>,
@@ -124,50 +125,50 @@ export default function BankInterestTableClient({
           );
         })}
       </Table.TBody>
-      {/* // Think about making TFoot as a RSC */}
       <Table.TFoot>
-        {table.getFooterGroups().map((footerGroup) => {
-          return (
-            <Table.TFoot.TR key={footerGroup.id}>
-              {footerGroup.headers.map((header) => {
-                switch (header.id) {
-                  case 'amountDue':
-                    const totalAmountDue = data.reduce(
-                      (total, { amountDue }) => (total += amountDue),
-                      0
-                    );
-                    return (
-                      <Table.TFoot.TH key={header.id}>
-                        <NumericFormat
-                          prefix='$'
-                          displayType='text'
-                          thousandSeparator
-                          value={totalAmountDue}
-                        />
-                      </Table.TFoot.TH>
-                    );
-                  case 'amountPaid':
-                    const totalAmountPaid = data.reduce(
-                      (total, { amountPaid }) => (total += amountPaid),
-                      0
-                    );
-                    return (
-                      <Table.TFoot.TH key={header.id}>
-                        <NumericFormat
-                          prefix='$'
-                          displayType='text'
-                          thousandSeparator
-                          value={totalAmountPaid}
-                        />
-                      </Table.TFoot.TH>
-                    );
-                  default:
-                    return <Table.TFoot.TH key={header.id}></Table.TFoot.TH>;
-                }
-              })}
-            </Table.TFoot.TR>
-          );
-        })}
+        {!!data.length &&
+          table.getFooterGroups().map((footerGroup) => {
+            return (
+              <Table.TFoot.TR key={footerGroup.id}>
+                {footerGroup.headers.map((header) => {
+                  switch (header.id) {
+                    case 'amountDue':
+                      const totalAmountDue = data.reduce(
+                        (total, { amountDue }) => (total += amountDue),
+                        0
+                      );
+                      return (
+                        <Table.TFoot.TH key={header.id}>
+                          <NumericFormat
+                            prefix='$'
+                            displayType='text'
+                            thousandSeparator
+                            value={totalAmountDue}
+                          />
+                        </Table.TFoot.TH>
+                      );
+                    case 'amountPaid':
+                      const totalAmountPaid = data.reduce(
+                        (total, { amountPaid }) => (total += amountPaid),
+                        0
+                      );
+                      return (
+                        <Table.TFoot.TH key={header.id}>
+                          <NumericFormat
+                            prefix='$'
+                            displayType='text'
+                            thousandSeparator
+                            value={totalAmountPaid}
+                          />
+                        </Table.TFoot.TH>
+                      );
+                    default:
+                      return <Table.TFoot.TH key={header.id}></Table.TFoot.TH>;
+                  }
+                })}
+              </Table.TFoot.TR>
+            );
+          })}
       </Table.TFoot>
     </Table>
   );
