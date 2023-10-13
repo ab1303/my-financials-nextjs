@@ -9,6 +9,7 @@ import { Card } from '@/components';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, YearType } from '@/types';
+import EditableTableCell from './_components/EditableTableCell';
 
 // TODO Refactor Section
 

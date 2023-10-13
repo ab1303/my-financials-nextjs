@@ -22,6 +22,7 @@ export default async function BankInterestTableServer({
 
   const data =
     bankInterestDetails?.map<BankInterestType>((d) => ({
+      id: d.id,
       amountDue: d.amountDue,
       amountPaid: d.amountPaid,
       month: d.month,
@@ -30,8 +31,8 @@ export default async function BankInterestTableServer({
         id: p.id,
         amount: p.amount,
         datePaid: p.datePaid,
-        businessId: p.businessId || undefined,
+        businessId: p.businessId,
       })),
     })) || [];
-  return <BankInterestTableClient data={data} />;
+  return <BankInterestTableClient data={data} bankId={bankId} year={+year} />;
 }

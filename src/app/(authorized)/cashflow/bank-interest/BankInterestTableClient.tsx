@@ -8,29 +8,87 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
+import { toast } from 'react-toastify';
 
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
+
 import PaymentHistoryModal from './_components/PaymentHistoryModal';
+import EditableTableCell from './_components/EditableTableCell';
 
 import type { BankInterestType, PaymentHistoryType } from '@/types';
+import { trpcClient } from '@/server/trpc/client';
+import { TRPCError } from '@trpc/server';
 
 const columnHelper = createColumnHelper<BankInterestType>();
 
 type BankInterestTableClientProps = {
   data: Array<BankInterestType>;
+  bankId: string;
+  year: number;
+};
+
+type EditedRowType = {
+  rowIndex: number;
+  updatedValue: number | null;
 };
 
 export default function BankInterestTableClient({
   data: defaultData,
+  bankId,
+  year,
 }: BankInterestTableClientProps) {
+  const [editedRows, setEditedRows] = useState<Map<string, EditedRowType>>(
+    new Map()
+  );
   const [data, setData] = useState(() => [...defaultData]);
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
   useEffect(() => {
     setData(defaultData);
   }, [defaultData]);
 
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const updateBankInterestDetailsMutation = trpcClient.bankInterest.updateBankInterestDetail.useMutation(
+    {
+      onError(error: unknown, { bankInterestId }) {
+        if (error instanceof TRPCError) {
+          toast.error(error.message);
+        }
+        updateEditRows(bankInterestId);
+      },
+
+      onSuccess(_, { bankInterestId, amount }) {
+        toast.success('Interest payment detail updated!');
+        updateEditRows(bankInterestId);
+
+        setData((old) =>
+          old.map((row) => {
+            if (row.id === bankInterestId) {
+              return {
+                ...row,
+                amountDue: amount,
+              };
+            }
+            return row;
+          })
+        );
+      },
+    }
+  );
+
+  const updateEditRows = (id: string, record?: EditedRowType) => {
+    setEditedRows((prev) => {
+      const result = new Map(prev);
+      if (!record) {
+        result.delete(id);
+      } else {
+        result.set(id, record);
+      }
+
+      return result;
+    });
+  };
+
   const columns = [
     columnHelper.accessor('month', {
       header: () => <span>Month</span>,
@@ -40,13 +98,33 @@ export default function BankInterestTableClient({
       size: 220,
       maxSize: 220,
       header: () => <span>Amount Due</span>,
-      cell: (info) => {
+      cell: ({ row, renderValue }) => {
+        let hasEditedRow = false;
+        let renderedValue = renderValue();
+
+        if (editedRows.has(row.original.id)) {
+          hasEditedRow = true;
+          renderedValue = editedRows.get(row.original.id)?.updatedValue || 0;
+        }
+
         return (
-          <NumericFormat
-            prefix='$'
-            displayType='text'
-            thousandSeparator
-            value={info.renderValue()}
+          <EditableTableCell
+            inProgress={hasEditedRow}
+            originalValue={renderedValue}
+            OnValueChange={(value) => {
+              console.log('updated value', value);
+              updateEditRows(row.original.id, {
+                rowIndex: row.index,
+                updatedValue: value,
+              });
+              // update details
+              updateBankInterestDetailsMutation.mutate({
+                bankId,
+                amount: value || 0,
+                bankInterestId: row.original.id,
+                year,
+              });
+            }}
           />
         );
       },
@@ -103,6 +181,7 @@ export default function BankInterestTableClient({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {},
   });
 
   const handlePaymentHistoryUpdate = (

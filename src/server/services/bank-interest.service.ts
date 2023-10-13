@@ -27,6 +27,9 @@ export const getBankInterestDetails = async (
     include: {
       payments: true,
     },
+    orderBy: {
+      month: 'asc',
+    },
   })) as Array<BankInterest>;
 
   return bankInterstDetails.map<BankInterestModel>((b) => ({

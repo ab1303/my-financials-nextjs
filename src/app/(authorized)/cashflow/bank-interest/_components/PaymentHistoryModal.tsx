@@ -1,14 +1,12 @@
+import clsx from 'clsx';
 import { useEffect, useState } from 'react';
 import { Modal, Label } from 'flowbite-react';
-
-import { AddIcon, Card, TrashIcon } from '@/components';
-
-import type { PaymentHistoryType } from '../_hooks/useBankInterestTableData';
 import { NumericFormat } from 'react-number-format';
-import { PenIcon } from '@/components/icons';
-import clsx from 'clsx';
-import CheckIcon from '@/components/icons/CheckIcon';
+
+import { Card } from '@/components';
+import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import DatePickerDialog from '@/components/DatePickerDialog';
+import type { PaymentHistoryType } from '@/types';
 
 type UpdatedPaymentType = Omit<PaymentHistoryType, 'id'>;
 

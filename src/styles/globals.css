@@ -34,6 +34,24 @@
     }
   }
 
+  [type='text']:disabled,
+  [type='email']:disabled,
+  [type='url']:disabled,
+  [type='password']:disabled,
+  [type='number']:disabled,
+  [type='date']:disabled,
+  [type='datetime-local']:disabled,
+  [type='month']:disabled,
+  [type='search']:disabled,
+  [type='tel']:disabled,
+  [type='time']:disabled,
+  [type='week']:disabled {
+    background-color: #a3a3a3;
+    color: linen;
+    opacity: 1;
+  }
+  
+
   
   /* inter var - latin */
   @font-face {
