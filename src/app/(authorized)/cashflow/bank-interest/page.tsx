@@ -93,7 +93,7 @@ export default async function BanksPage({ searchParams }: BankPageProps) {
           bankIdParam={selectedBankId}
           yearParam={selectedYear}
         >
-          <Suspense fallback={<p>Loading table...</p>}>
+          <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             <BankInterestTableServer
               bankId={selectedBankId}
               year={selectedYear}

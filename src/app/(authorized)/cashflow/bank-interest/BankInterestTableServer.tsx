@@ -3,6 +3,7 @@ import { httpServer } from '@/server/trpc/server-http';
 
 import type { BankInterestModel } from '@/server/models';
 import type { BankInterestType, PaymentHistoryType } from '@/types';
+import { BankInterestStateProvider } from './StateProvider';
 
 export type BankInterestTableServerProps = {
   bankId: string;
@@ -34,5 +35,10 @@ export default async function BankInterestTableServer({
         businessId: p.businessId,
       })),
     })) || [];
-  return <BankInterestTableClient data={data} bankId={bankId} year={+year} />;
+
+  return (
+    <BankInterestStateProvider data={data}>
+      <BankInterestTableClient bankId={bankId} year={+year} />
+    </BankInterestStateProvider>
+  );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import {
   useReactTable,
@@ -19,11 +19,11 @@ import EditableTableCell from './_components/EditableTableCell';
 import type { BankInterestType, PaymentHistoryType } from '@/types';
 import { trpcClient } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
+import { useBankInterestState } from './StateProvider';
 
 const columnHelper = createColumnHelper<BankInterestType>();
 
 type BankInterestTableClientProps = {
-  data: Array<BankInterestType>;
   bankId: string;
   year: number;
 };
@@ -34,60 +34,17 @@ type EditedRowType = {
 };
 
 export default function BankInterestTableClient({
-  data: defaultData,
   bankId,
   year,
 }: BankInterestTableClientProps) {
   const [editedRows, setEditedRows] = useState<Map<string, EditedRowType>>(
     new Map()
   );
-  const [data, setData] = useState(() => [...defaultData]);
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
-  useEffect(() => {
-    setData(defaultData);
-  }, [defaultData]);
-
-  const updateBankInterestDetailsMutation = trpcClient.bankInterest.updateBankInterestDetail.useMutation(
-    {
-      onError(error: unknown, { bankInterestId }) {
-        if (error instanceof TRPCError) {
-          toast.error(error.message);
-        }
-        updateEditRows(bankInterestId);
-      },
-
-      onSuccess(_, { bankInterestId, amount }) {
-        toast.success('Interest payment detail updated!');
-        updateEditRows(bankInterestId);
-
-        setData((old) =>
-          old.map((row) => {
-            if (row.id === bankInterestId) {
-              return {
-                ...row,
-                amountDue: amount,
-              };
-            }
-            return row;
-          })
-        );
-      },
-    }
-  );
-
-  const updateEditRows = (id: string, record?: EditedRowType) => {
-    setEditedRows((prev) => {
-      const result = new Map(prev);
-      if (!record) {
-        result.delete(id);
-      } else {
-        result.set(id, record);
-      }
-
-      return result;
-    });
-  };
+  const {
+    state: { data },
+    dispatch,
+  } = useBankInterestState();
 
   const columns = [
     columnHelper.accessor('month', {
@@ -177,12 +134,51 @@ export default function BankInterestTableClient({
     }),
   ];
 
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+
   const table = useReactTable<BankInterestType>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: {},
   });
+
+  const updateBankInterestDetailsMutation = trpcClient.bankInterest.updateBankInterestDetail.useMutation(
+    {
+      onError(error: unknown, { bankInterestId }) {
+        if (error instanceof TRPCError) {
+          toast.error(error.message);
+        }
+        updateEditRows(bankInterestId);
+      },
+
+      onSuccess(_, { bankInterestId, amount }) {
+        toast.success('Interest payment detail updated!');
+        updateEditRows(bankInterestId);
+
+        dispatch({
+          type: 'BANK_INTEREST/UPDATE_INTEREST_PAYMENT',
+          payload: {
+            amount,
+            bankInterestId,
+          },
+        });
+      },
+    }
+  );
+
+  const updateEditRows = (id: string, record?: EditedRowType) => {
+    setEditedRows((prev) => {
+      const result = new Map(prev);
+      if (!record) {
+        result.delete(id);
+      } else {
+        result.set(id, record);
+      }
+
+      return result;
+    });
+  };
 
   const handlePaymentHistoryUpdate = (
     updatedPaymentHistory: Array<PaymentHistoryType>
@@ -200,7 +196,7 @@ export default function BankInterestTableClient({
       };
     });
 
-    setData([...updatedTableData]);
+    // setData([...updatedTableData]);
   };
 
   return (
