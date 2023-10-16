@@ -1,10 +1,5 @@
 import type { BankInterestType, ActionMapUnion } from '@/types';
-
-// enum BankInterestEvents {
-//   UPDATE_BANK_INTEREST_PAYMENT = 'BANK_INTEREST/UPDATE_INTEREST_PAYMENT',
-//   ADD_INTEREST_PAYMENT = 'BANK_INTEREST_PAYMENTS/ADD_INTEREST_PAYMENT',
-//   UPDATE_INTEREST_PAYMENT = 'BANK_INTEREST_PAYMENTS/UPDATE_INTEREST_PAYMENT',
-// }
+import { produce } from 'immer';
 
 type BankInterestMessages = {
   'BANK_INTEREST/INITAL_DATA': BankInterestState;
@@ -20,26 +15,23 @@ export type BankInterestState = {
 
 export type Actions = ActionMapUnion<BankInterestMessages>;
 
-export const bankInterestReducer = (
-  state: BankInterestState,
-  action: Actions
-): BankInterestState => {
-  switch (action.type) {
-    case 'BANK_INTEREST/INITAL_DATA':
-      return { data: [...action.payload.data] };
-    case 'BANK_INTEREST/UPDATE_INTEREST_PAYMENT':
-      const { amount, bankInterestId } = action.payload;
-      const updatedData = state.data.map((row) => {
-        if (row.id === bankInterestId) {
-          return {
-            ...row,
-            amountDue: amount,
-          };
+export const bankInterestReducer = produce<BankInterestState, [Actions]>(
+  (draft, action) => {
+    switch (action.type) {
+      case 'BANK_INTEREST/INITAL_DATA':
+        draft.data = action.payload.data;
+        break;
+      case 'BANK_INTEREST/UPDATE_INTEREST_PAYMENT':
+        const { amount, bankInterestId } = action.payload;
+        const updatedInterestPayment = draft.data.find(
+          (r) => r.id === bankInterestId
+        );
+        if (updatedInterestPayment) {
+          updatedInterestPayment.amountDue = amount;
         }
-        return row;
-      });
-      return { data: updatedData };
-    default:
-      return { ...state };
+        break;
+      default:
+        return draft;
+    }
   }
-};
+);
