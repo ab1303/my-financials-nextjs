@@ -1,3 +1,7 @@
+// This is mainly an experimental and I ran into issues using trpc in server
+// mainly issues around caching;
+// Thus going forward to keep things simple, I decided to not using trpc on server and use server action instead where required.
+
 'use server';
 
 import { loggerLink } from '@trpc/client';

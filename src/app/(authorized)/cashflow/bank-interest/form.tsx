@@ -9,7 +9,6 @@ import { Card } from '@/components';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, YearType } from '@/types';
-import EditableTableCell from './_components/EditableTableCell';
 
 // TODO Refactor Section
 
@@ -103,7 +102,8 @@ export default function BankInterestForm({
     }
     const search = current.toString();
     const query = search ? `?${search}` : '';
-    router.push(`${pathname}${query}`);
+    router.refresh(); // invalidate client cache so that after navigating back to this route; we get updated state rather than stale state
+    router.replace(`${pathname}${query}`); // move to the next path
   };
 
   return (

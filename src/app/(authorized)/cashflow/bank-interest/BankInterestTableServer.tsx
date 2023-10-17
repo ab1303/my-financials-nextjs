@@ -1,9 +1,10 @@
 import BankInterestTableClient from './BankInterestTableClient';
-import { httpServer } from '@/server/trpc/server-http';
 
 import type { BankInterestModel } from '@/server/models';
 import type { BankInterestType, PaymentHistoryType } from '@/types';
 import { BankInterestStateProvider } from './StateProvider';
+import { bankInterestDetailsHandler } from '@/server/controllers/bank-interest.controller';
+import { getYearlyBankInterestSchema } from '@/server/schema/bank-interest.schema';
 
 export type BankInterestTableServerProps = {
   bankId: string;
@@ -15,10 +16,14 @@ export default async function BankInterestTableServer({
   year,
 }: BankInterestTableServerProps) {
   let bankInterestDetails: BankInterestModel[] | undefined = [];
-  if (bankId && year) {
-    bankInterestDetails = await httpServer.bankInterest.getYearlyBankInterestDetails.query(
-      { bankId, year: +year }
-    );
+
+  const validationResult = getYearlyBankInterestSchema.safeParse({
+    bankId,
+    year: +year,
+  });
+
+  if (validationResult.success) {
+    bankInterestDetails = await bankInterestDetailsHandler(bankId, +year);
   }
 
   const data =

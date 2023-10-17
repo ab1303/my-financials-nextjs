@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import type { OptionType, YearType } from '@/types';
 // import { server } from '@/server/trpc/server';
 import { httpServer } from '@/server/trpc/server-http';
@@ -94,6 +96,10 @@ export default async function BanksPage({ searchParams }: BankPageProps) {
           yearParam={selectedYear}
         >
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
+            <div className='font-mono text-gray-500 mb-3'>
+              {selectedBank?.label} Interest
+            </div>
+
             <BankInterestTableServer
               bankId={selectedBankId}
               year={selectedYear}

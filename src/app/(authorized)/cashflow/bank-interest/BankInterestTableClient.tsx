@@ -20,6 +20,7 @@ import type { BankInterestType, PaymentHistoryType } from '@/types';
 import { trpcClient } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 import { useBankInterestState } from './StateProvider';
+import { useRouter } from 'next/navigation';
 
 const columnHelper = createColumnHelper<BankInterestType>();
 
@@ -45,6 +46,8 @@ export default function BankInterestTableClient({
     state: { data },
     dispatch,
   } = useBankInterestState();
+
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
   const columns = [
     columnHelper.accessor('month', {
@@ -133,8 +136,6 @@ export default function BankInterestTableClient({
       footer: (info) => info.column.id,
     }),
   ];
-
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
   const table = useReactTable<BankInterestType>({
     data,
