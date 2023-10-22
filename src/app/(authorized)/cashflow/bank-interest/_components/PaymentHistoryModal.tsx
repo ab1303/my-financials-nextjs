@@ -7,34 +7,29 @@ import { Card } from '@/components';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import DatePickerDialog from '@/components/DatePickerDialog';
 import type { PaymentHistoryType } from '@/types';
+import { useBankInterestState } from '../StateProvider';
+import { trpcClient } from '@/server/trpc/client';
+import { TRPCError } from '@trpc/server';
+import { toast } from 'react-toastify';
 
-type UpdatedPaymentType = Omit<PaymentHistoryType, 'id'>;
+type PaymentType = Omit<PaymentHistoryType, 'id'>;
 
 type AddEditPaymentProps = {
   selectedPayment: PaymentHistoryType;
-  onConfirmButtonClick: (updatedPayment: UpdatedPaymentType) => void;
-  onAddButtonClick: (newPayment: UpdatedPaymentType) => void;
+  onConfirmPayment: (updatedPayment: PaymentType) => void;
+  onAddPayment: (newPayment: PaymentType) => void;
 };
 
 function AddEditPayment({
   selectedPayment,
-  onConfirmButtonClick,
+  onConfirmPayment,
+  onAddPayment,
 }: AddEditPaymentProps) {
-  const [updatedPayment, setUpdatedPayment] = useState<UpdatedPaymentType>(
-    selectedPayment
-  );
+  const [payment, setPayment] = useState<PaymentType>(selectedPayment);
 
   useEffect(() => {
-    setUpdatedPayment({ ...selectedPayment });
+    setPayment({ ...selectedPayment });
   }, [selectedPayment]);
-
-  const handleConfirmButtonClick = () => {
-    onConfirmButtonClick(updatedPayment);
-  };
-
-  const handleAddButtonClick = () => {
-    return;
-  };
 
   return (
     <>
@@ -49,9 +44,9 @@ function AddEditPayment({
       <div className='mt-3 grid grid-cols-7 gap-3'>
         <div className='col-span-3'>
           <DatePickerDialog
-            selectedDate={updatedPayment.datePaid}
+            selectedDate={payment.datePaid}
             onDateChange={(d) => {
-              setUpdatedPayment((previousPayment) => ({
+              setPayment((previousPayment) => ({
                 ...previousPayment,
                 datePaid: d,
               }));
@@ -64,9 +59,9 @@ function AddEditPayment({
             prefix='$'
             displayType='input'
             thousandSeparator
-            value={updatedPayment.amount}
+            value={payment.amount}
             onValueChange={(values) => {
-              setUpdatedPayment((previousPayment) => ({
+              setPayment((previousPayment) => ({
                 ...previousPayment,
                 amount: values.floatValue || 0,
               }));
@@ -79,7 +74,7 @@ function AddEditPayment({
             <button
               type='button'
               className='inline-block px-4 py-2.5 bg-gray-200 text-gray-700 font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-gray-300 hover:shadow-lg focus:bg-gray-300 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-gray-400 active:shadow-lg transition duration-150 ease-in-out'
-              onClick={handleConfirmButtonClick}
+              onClick={() => onConfirmPayment(payment)}
             >
               <CheckIcon />
             </button>
@@ -87,7 +82,7 @@ function AddEditPayment({
             <button
               type='button'
               className='inline-block px-4 py-2.5 bg-gray-200 text-gray-700 font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-gray-300 hover:shadow-lg focus:bg-gray-300 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-gray-400 active:shadow-lg transition duration-150 ease-in-out'
-              onClick={handleAddButtonClick}
+              onClick={() => onAddPayment({ ...payment })}
             >
               <AddIcon />
             </button>
@@ -99,7 +94,7 @@ function AddEditPayment({
 }
 
 type PaymentHistoryModalProps = {
-  selectedMonth: number | null;
+  bankInterestId: string;
   paymentHistory: Array<PaymentHistoryType>;
   onPaymentHistoryUpdate: (
     updatedPaymentHistory: Array<PaymentHistoryType>
@@ -111,24 +106,65 @@ const defaultPayment: PaymentHistoryType = {
   id: '',
   amount: 0,
   datePaid: new Date(),
-  businessId: '',
+  businessId: null,
 };
 
 export default function PaymentHistoryModal({
-  selectedMonth,
+  bankInterestId,
   paymentHistory,
   onPaymentHistoryUpdate,
   onClose,
 }: PaymentHistoryModalProps) {
   const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
 
-  const onEditPaymentClick = (paymentId: string) => {
+  const { dispatch } = useBankInterestState();
+
+  const addPaymentMutation = trpcClient.bankInterest.addBankInterestPayment.useMutation(
+    {
+      onError(error: unknown) {
+        if (error instanceof TRPCError) {
+          toast.error(error.message);
+        }
+      },
+
+      onSuccess({ paymentId }, { amount, datePaid }) {
+        toast.success('Interest payment detail updated!');
+
+        dispatch({
+          type: 'BANK_INTEREST/Payments/ADD_PAYMENT',
+          payload: {
+            bankInterestId,
+            payment: {
+              amount,
+              datePaid,
+              businessId: 'to set', // TODO:
+              id: paymentId,
+            },
+          },
+        });
+      },
+    }
+  );
+
+  const handleAddPayment = (payment: PaymentType) => {
+    const { amount, businessId, datePaid } = payment;
+    addPaymentMutation.mutate({
+      bankInterestId,
+      amount,
+      businessId,
+      datePaid,
+    });
+
+    return;
+  };
+
+  const handleEditPayment = (paymentId: string) => {
     setEditPaymentId(paymentId);
     const payment = paymentHistory.find((p) => p.id === paymentId);
     if (!payment) return;
   };
 
-  const onConfirmPaymentClick = (updatedPayment: UpdatedPaymentType) => {
+  const handleConfirmPayment = (updatedPayment: PaymentType) => {
     const updatedPaymentHistory = paymentHistory.map((ph) => {
       if (ph.id !== editPaymentId) return ph;
 
@@ -146,17 +182,15 @@ export default function PaymentHistoryModal({
     : defaultPayment;
 
   return (
-    <Modal show={!!selectedMonth} onClose={onClose}>
+    <Modal show={!!bankInterestId} onClose={onClose}>
       <Modal.Header>
         <Card.Header.Title>Payment History</Card.Header.Title>
       </Modal.Header>
       <Modal.Body className='space-y-3'>
         <AddEditPayment
           selectedPayment={selectedPayment}
-          onAddButtonClick={() => {
-            return;
-          }}
-          onConfirmButtonClick={onConfirmPaymentClick}
+          onAddPayment={handleAddPayment}
+          onConfirmPayment={handleConfirmPayment}
         />
         {/* // https://floating-ui.com/docs/FloatingList */}
         {paymentHistory.map((record) => (
@@ -180,7 +214,7 @@ export default function PaymentHistoryModal({
               <span className='flex justify-between flex-grow-0 w-10'>
                 <PenIcon
                   className='hover:text-teal-500'
-                  onClick={() => onEditPaymentClick(record.id)}
+                  onClick={() => handleEditPayment(record.id)}
                 />
                 <TrashIcon className='hover:text-orange-800' />
               </span>

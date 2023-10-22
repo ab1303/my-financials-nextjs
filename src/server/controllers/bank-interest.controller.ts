@@ -1,5 +1,6 @@
 import { handleCaughtError } from '@/server/utils/prisma';
 import {
+  addBankInterestPaymentDetail,
   getBankInterestDetails,
   updateBankInterestDetail,
 } from '@/server/services/bank-interest.service';
@@ -26,5 +27,25 @@ export const updateBankInterestDetailsHandler = async (
     await updateBankInterestDetail(id, bankId, year, amountDue);
   } catch (e) {
     handleCaughtError(e);
+  }
+};
+
+export const createBankInterestPaymentHandler = async (
+  bankInterestId: string,
+  businessId: string,
+  amount: number,
+  datePaid: Date
+) => {
+  try {
+    const createPayment = await addBankInterestPaymentDetail(bankInterestId, {
+      amount,
+      datePaid,
+      businessId,
+    });
+    return { paymentId: createPayment.id };
+  } catch (e) {
+    handleCaughtError(e);
+
+    return { paymentId: '' };
   }
 };

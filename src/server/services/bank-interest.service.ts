@@ -1,4 +1,4 @@
-import type { Prisma, BankInterest } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma';
 import type { BankInterestModel, PaymentModel } from '@/server/models';
 
@@ -11,18 +11,18 @@ export const getBankInterestDetails = async (
     year,
   };
 
-  let bankInterstDetails = (await prisma.bankInterest.findMany({
+  let bankInterstDetails = await prisma.bankInterest.findMany({
     where,
     include: {
       payments: true,
     },
-  })) as Array<BankInterest>;
+  });
 
   if (!bankInterstDetails.length) {
     await createYearlyBankInterestDetails(bankId, year);
   }
 
-  bankInterstDetails = (await prisma.bankInterest.findMany({
+  bankInterstDetails = await prisma.bankInterest.findMany({
     where,
     include: {
       payments: true,
@@ -30,7 +30,7 @@ export const getBankInterestDetails = async (
     orderBy: {
       month: 'asc',
     },
-  })) as Array<BankInterest>;
+  });
 
   return bankInterstDetails.map<BankInterestModel>((b) => ({
     id: b.id,
@@ -39,7 +39,12 @@ export const getBankInterestDetails = async (
     year: b.year,
     amountDue: b.amountDue.toNumber(),
     amountPaid: b.amountPaid.toNumber(),
-    payments: [],
+    payments: b.payments.map((bp) => ({
+      id: bp.id,
+      businessId: bp.businessId,
+      amount: bp.amount.toNumber(),
+      datePaid: bp.datePaid,
+    })),
   }));
 };
 
@@ -67,12 +72,18 @@ export const addBankInterestPaymentDetail = async (
   bankInterestId: string,
   payment: Omit<PaymentModel, 'id'>
 ) => {
-  await prisma.payment.create({
+  return await prisma.bankInterest.update({
+    where: { id: bankInterestId },
     data: {
-      bankInterestId,
-      amount: payment.amount,
-      datePaid: payment.datePaid,
-      businessId: payment.businessId,
+      payments: {
+        create: {
+          amount: payment.amount,
+          datePaid: payment.datePaid,
+        },
+      },
+    },
+    include: {
+      payments: true,
     },
   });
 };

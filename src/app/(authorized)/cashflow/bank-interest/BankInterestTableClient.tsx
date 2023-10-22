@@ -47,7 +47,9 @@ export default function BankInterestTableClient({
     dispatch,
   } = useBankInterestState();
 
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [selectedBankInterestId, setSelectedBankInterestId] = useState<
+    string | null
+  >(null);
 
   const columns = [
     columnHelper.accessor('month', {
@@ -92,13 +94,18 @@ export default function BankInterestTableClient({
     }),
     columnHelper.accessor('amountPaid', {
       header: () => <span>Amount Paid</span>,
-      cell: (info) => {
+      cell: ({ row }) => {
+        const totalPaid = row.original.paymentHistory.reduce(
+          (total, { amount }) => (total += amount),
+          0
+        );
+
         return (
           <NumericFormat
             prefix='$'
             displayType='text'
             thousandSeparator
-            value={info.renderValue()}
+            value={totalPaid}
           />
         );
       },
@@ -120,7 +127,7 @@ export default function BankInterestTableClient({
               viewBox='0 0 24 24'
               stroke='currentColor'
               onClick={() => {
-                setSelectedMonth(original.month);
+                setSelectedBankInterestId(original.id);
               }}
             >
               <path
@@ -185,7 +192,7 @@ export default function BankInterestTableClient({
     updatedPaymentHistory: Array<PaymentHistoryType>
   ) => {
     const updatedTableData = data.map((td) => {
-      if (td.month !== selectedMonth) return td;
+      if (td.id !== selectedBankInterestId) return td;
 
       return {
         ...td,
@@ -202,15 +209,16 @@ export default function BankInterestTableClient({
 
   return (
     <>
-      {selectedMonth && (
+      {selectedBankInterestId && (
         <PaymentHistoryModal
-          selectedMonth={selectedMonth}
+          bankInterestId={selectedBankInterestId}
           paymentHistory={
-            data.find((d) => d.month === selectedMonth)?.paymentHistory || []
+            data.find((d) => d.id === selectedBankInterestId)?.paymentHistory ||
+            []
           }
           onPaymentHistoryUpdate={handlePaymentHistoryUpdate}
           onClose={() => {
-            setSelectedMonth(null);
+            setSelectedBankInterestId(null);
           }}
         />
       )}

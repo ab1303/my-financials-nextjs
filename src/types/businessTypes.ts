@@ -46,5 +46,5 @@ export type BankInterestType = {
   year: number;
   amountDue: number;
   amountPaid: number;
-  paymentHistory?: Array<PaymentHistoryType>;
+  paymentHistory: Array<PaymentHistoryType>;
 };

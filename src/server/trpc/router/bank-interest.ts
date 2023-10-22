@@ -1,11 +1,14 @@
 import { router, protectedProcedure } from '@/server/trpc/trpc';
 import {
+  createBankInterestPaymentOuputSchema,
+  createBankInterestPaymentSchema,
   getYearlyBankInterestSchema,
   updateBankInterestSchema,
 } from '@/server/schema/bank-interest.schema';
 import {
   bankInterestDetailsHandler,
   updateBankInterestDetailsHandler,
+  createBankInterestPaymentHandler,
 } from '@/server/controllers/bank-interest.controller';
 
 export const bankInterestRouter = router({
@@ -18,5 +21,16 @@ export const bankInterestRouter = router({
     .input(updateBankInterestSchema)
     .mutation(({ input: { bankInterestId, bankId, year, amount } }) =>
       updateBankInterestDetailsHandler(bankInterestId, bankId, year, amount)
+    ),
+  addBankInterestPayment: protectedProcedure
+    .input(createBankInterestPaymentSchema)
+    .output(createBankInterestPaymentOuputSchema)
+    .mutation(({ input: { bankInterestId, businessId, amount, datePaid } }) =>
+      createBankInterestPaymentHandler(
+        bankInterestId,
+        businessId,
+        amount,
+        datePaid
+      )
     ),
 });
