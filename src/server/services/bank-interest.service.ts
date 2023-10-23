@@ -88,6 +88,50 @@ export const addBankInterestPaymentDetail = async (
   });
 };
 
+export const updateBankInterestPaymentDetail = async (
+  bankInterestId: string,
+  paymentId: string,
+  payment: number
+) => {
+  return await prisma.bankInterest.update({
+    where: { id: bankInterestId },
+    data: {
+      payments: {
+        update: {
+          where: {
+            id: paymentId,
+          },
+          data: {
+            amount: payment,
+          },
+        },
+      },
+    },
+    include: {
+      payments: true,
+    },
+  });
+};
+
+export const removeBankInterestPaymentDetail = async (
+  bankInterestId: string,
+  paymentId: string
+) => {
+  return await prisma.bankInterest.update({
+    where: { id: bankInterestId },
+    data: {
+      payments: {
+        delete: {
+          id: paymentId,
+        },
+      },
+    },
+    include: {
+      payments: true,
+    },
+  });
+};
+
 const createYearlyBankInterestDetails = async (
   bankId: string,
   year: number

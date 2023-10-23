@@ -20,7 +20,6 @@ import type { BankInterestType, PaymentHistoryType } from '@/types';
 import { trpcClient } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 import { useBankInterestState } from './StateProvider';
-import { useRouter } from 'next/navigation';
 
 const columnHelper = createColumnHelper<BankInterestType>();
 
@@ -188,25 +187,6 @@ export default function BankInterestTableClient({
     });
   };
 
-  const handlePaymentHistoryUpdate = (
-    updatedPaymentHistory: Array<PaymentHistoryType>
-  ) => {
-    const updatedTableData = data.map((td) => {
-      if (td.id !== selectedBankInterestId) return td;
-
-      return {
-        ...td,
-        amountPaid: updatedPaymentHistory.reduce(
-          (total, { amount }) => (total += amount),
-          0
-        ),
-        paymentHistory: [...updatedPaymentHistory],
-      };
-    });
-
-    // setData([...updatedTableData]);
-  };
-
   return (
     <>
       {selectedBankInterestId && (
@@ -216,7 +196,6 @@ export default function BankInterestTableClient({
             data.find((d) => d.id === selectedBankInterestId)?.paymentHistory ||
             []
           }
-          onPaymentHistoryUpdate={handlePaymentHistoryUpdate}
           onClose={() => {
             setSelectedBankInterestId(null);
           }}

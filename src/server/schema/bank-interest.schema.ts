@@ -3,10 +3,21 @@ import { object, string, number, date } from 'zod';
 
 // Bank Interest Payments
 export const createBankInterestPaymentSchema = object({
-  bankInterestId: string({ required_error: 'Bank interest month is required' }),
+  bankInterestId: string({ required_error: 'Bank interest id is required' }),
   businessId: string().nullable(),
   amount: number({ required_error: 'Amount is required' }),
   datePaid: date({ required_error: 'Date Paid is required' }),
+});
+
+export const updateBankInterestPaymentSchema = object({
+  bankInterestId: string({ required_error: 'Bank interest id is required' }),
+  paymentId: string({ required_error: 'Payment id is required' }),
+  payment: number({ required_error: 'Payment amount is required' }),
+});
+
+export const removeBankInterestPaymentSchema = object({
+  bankInterestId: string({ required_error: 'Bank interest id is required' }),
+  paymentId: string({ required_error: 'Payment id is required' }),
 });
 
 export const createBankInterestPaymentOuputSchema = object({
@@ -22,7 +33,7 @@ export const getYearlyBankInterestSchema = object({
 export const updateBankInterestSchema = object({
   bankId: string({ required_error: 'Bank is required' }),
   year: number({ required_error: 'Year is required' }),
-  bankInterestId: string({ required_error: 'Bank interest month is required' }),
+  bankInterestId: string({ required_error: 'Bank interest id is required' }),
   amount: number({ required_error: 'Amount is required' }),
 });
 

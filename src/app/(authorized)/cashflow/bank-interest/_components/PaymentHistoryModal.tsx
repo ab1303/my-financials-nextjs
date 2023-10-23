@@ -96,9 +96,6 @@ function AddEditPayment({
 type PaymentHistoryModalProps = {
   bankInterestId: string;
   paymentHistory: Array<PaymentHistoryType>;
-  onPaymentHistoryUpdate: (
-    updatedPaymentHistory: Array<PaymentHistoryType>
-  ) => void;
   onClose: () => void;
 };
 
@@ -112,7 +109,6 @@ const defaultPayment: PaymentHistoryType = {
 export default function PaymentHistoryModal({
   bankInterestId,
   paymentHistory,
-  onPaymentHistoryUpdate,
   onClose,
 }: PaymentHistoryModalProps) {
   const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
@@ -128,7 +124,7 @@ export default function PaymentHistoryModal({
       },
 
       onSuccess({ paymentId }, { amount, datePaid }) {
-        toast.success('Interest payment detail updated!');
+        toast.success('Interest payment detail created!');
 
         dispatch({
           type: 'BANK_INTEREST/Payments/ADD_PAYMENT',
@@ -146,6 +142,51 @@ export default function PaymentHistoryModal({
     }
   );
 
+  const updatePaymentMutation = trpcClient.bankInterest.updateBankInterestPayment.useMutation(
+    {
+      onError(error: unknown) {
+        if (error instanceof TRPCError) {
+          toast.error(error.message);
+        }
+      },
+
+      onSuccess(_, { bankInterestId, paymentId, payment }) {
+        toast.success('Interest payment detail updated!');
+
+        dispatch({
+          type: 'BANK_INTEREST/Payments/EDIT_PAYMENT',
+          payload: {
+            bankInterestId,
+            paymentId,
+            amount: payment,
+          },
+        });
+      },
+    }
+  );
+
+  const removePaymentMutation = trpcClient.bankInterest.removeBankInterestPayment.useMutation(
+    {
+      onError(error: unknown) {
+        if (error instanceof TRPCError) {
+          toast.error(error.message);
+        }
+      },
+
+      onSuccess(_, { bankInterestId, paymentId }) {
+        toast.success('Interest payment detail removed!');
+
+        dispatch({
+          type: 'BANK_INTEREST/Payments/REMOVE_PAYMENT',
+          payload: {
+            bankInterestId,
+            paymentId,
+          },
+        });
+      },
+    }
+  );
+
   const handleAddPayment = (payment: PaymentType) => {
     const { amount, businessId, datePaid } = payment;
     addPaymentMutation.mutate({
@@ -154,27 +195,25 @@ export default function PaymentHistoryModal({
       businessId,
       datePaid,
     });
-
-    return;
   };
 
-  const handleEditPayment = (paymentId: string) => {
-    setEditPaymentId(paymentId);
-    const payment = paymentHistory.find((p) => p.id === paymentId);
-    if (!payment) return;
+  const handleRemovePayment = (paymentId: string) => {
+    removePaymentMutation.mutate({
+      bankInterestId,
+      paymentId,
+    });
   };
 
   const handleConfirmPayment = (updatedPayment: PaymentType) => {
-    const updatedPaymentHistory = paymentHistory.map((ph) => {
-      if (ph.id !== editPaymentId) return ph;
+    if (!editPaymentId) return;
 
-      return {
-        id: ph.id,
-        ...updatedPayment,
-      };
+    updatePaymentMutation.mutate({
+      bankInterestId,
+      paymentId: editPaymentId,
+      payment: updatedPayment.amount,
     });
+
     setEditPaymentId(null);
-    onPaymentHistoryUpdate(updatedPaymentHistory);
   };
 
   const selectedPayment: PaymentHistoryType = editPaymentId
@@ -194,7 +233,7 @@ export default function PaymentHistoryModal({
         />
         {/* // https://floating-ui.com/docs/FloatingList */}
         {paymentHistory.map((record) => (
-          <div key={record.datePaid.toDateString()} className='flex flex-row'>
+          <div key={record.id} className='flex flex-row'>
             <div
               className={clsx(
                 'mt-2 w-2 ',
@@ -213,10 +252,13 @@ export default function PaymentHistoryModal({
               </span>
               <span className='flex justify-between flex-grow-0 w-10'>
                 <PenIcon
-                  className='hover:text-teal-500'
-                  onClick={() => handleEditPayment(record.id)}
+                  className='text-gray-700 hover:text-teal-500'
+                  onClick={() => setEditPaymentId(record.id)}
                 />
-                <TrashIcon className='hover:text-orange-800' />
+                <TrashIcon
+                  className='text-gray-700 hover:text-orange-800'
+                  onClick={() => handleRemovePayment(record.id)}
+                />
               </span>
             </div>
           </div>

@@ -15,6 +15,15 @@ type BankInterestMessages = {
     bankInterestId: string;
     payment: PaymentHistoryType;
   };
+  'BANK_INTEREST/Payments/EDIT_PAYMENT': {
+    bankInterestId: string;
+    paymentId: string;
+    amount: number;
+  };
+  'BANK_INTEREST/Payments/REMOVE_PAYMENT': {
+    bankInterestId: string;
+    paymentId: string;
+  };
 };
 
 export type BankInterestState = {
@@ -49,6 +58,63 @@ export const bankInterestReducer = produce<BankInterestState, [Actions]>(
 
         if (interestPaymentRow) {
           interestPaymentRow.paymentHistory.push(payment);
+          const paymentsTotal = interestPaymentRow.paymentHistory.reduce(
+            (total, { amount }) => (total += amount),
+            0
+          );
+
+          interestPaymentRow.amountPaid = paymentsTotal;
+        }
+
+        break;
+      }
+
+      case 'BANK_INTEREST/Payments/EDIT_PAYMENT': {
+        const { paymentId, bankInterestId, amount } = action.payload;
+        const interestPaymentRow = draft.data.find(
+          (r) => r.id === bankInterestId
+        );
+
+        if (!interestPaymentRow) {
+          return draft;
+        }
+
+        const paymentIndex = interestPaymentRow.paymentHistory.findIndex(
+          (p) => p.id === paymentId
+        );
+
+        if (paymentIndex === -1) {
+          return draft;
+        }
+
+        const paymentRow = interestPaymentRow.paymentHistory[paymentIndex];
+        if (!paymentRow) {
+          return draft;
+        }
+
+        paymentRow.amount = amount;
+
+        const paymentsTotal = interestPaymentRow.paymentHistory.reduce(
+          (total, { amount }) => (total += amount),
+          0
+        );
+
+        interestPaymentRow.amountPaid = paymentsTotal;
+        break;
+      }
+
+      case 'BANK_INTEREST/Payments/REMOVE_PAYMENT': {
+        const { paymentId, bankInterestId } = action.payload;
+        const interestPaymentRow = draft.data.find(
+          (r) => r.id === bankInterestId
+        );
+
+        if (interestPaymentRow) {
+          const paymentIndex = interestPaymentRow.paymentHistory.findIndex(
+            (p) => p.id === paymentId
+          );
+          if (paymentIndex !== -1)
+            interestPaymentRow.paymentHistory.splice(paymentIndex, 1);
           const paymentsTotal = interestPaymentRow.paymentHistory.reduce(
             (total, { amount }) => (total += amount),
             0

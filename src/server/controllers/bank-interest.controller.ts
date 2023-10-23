@@ -2,7 +2,9 @@ import { handleCaughtError } from '@/server/utils/prisma';
 import {
   addBankInterestPaymentDetail,
   getBankInterestDetails,
+  removeBankInterestPaymentDetail,
   updateBankInterestDetail,
+  updateBankInterestPaymentDetail,
 } from '@/server/services/bank-interest.service';
 
 export const bankInterestDetailsHandler = async (
@@ -32,7 +34,7 @@ export const updateBankInterestDetailsHandler = async (
 
 export const createBankInterestPaymentHandler = async (
   bankInterestId: string,
-  businessId: string,
+  businessId: string | null,
   amount: number,
   datePaid: Date
 ) => {
@@ -47,5 +49,32 @@ export const createBankInterestPaymentHandler = async (
     handleCaughtError(e);
 
     return { paymentId: '' };
+  }
+};
+
+export const updateBankInterestPaymentHandler = async (
+  bankInterestId: string,
+  paymentId: string,
+  payment: number
+) => {
+  try {
+    return await updateBankInterestPaymentDetail(
+      bankInterestId,
+      paymentId,
+      payment
+    );
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const removeBankInterestPaymentHandler = async (
+  bankInterestId: string,
+  paymentId: string
+) => {
+  try {
+    return await removeBankInterestPaymentDetail(bankInterestId, paymentId);
+  } catch (e) {
+    handleCaughtError(e);
   }
 };
