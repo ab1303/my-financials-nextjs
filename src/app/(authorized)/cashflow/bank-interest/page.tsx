@@ -13,6 +13,7 @@ type BankPageProps = {
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
+// TODO: Move to a database table
 const yearlyData: Array<YearType> = [
   {
     id: '2021',

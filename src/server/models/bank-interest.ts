@@ -6,6 +6,5 @@ export type BankInterestModel = {
   year: number;
   bankId: string;
   amountDue: number;
-  amountPaid: number;
   payments: PaymentModel[];
 };

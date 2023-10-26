@@ -42,9 +42,14 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       String
   expires      DateTime
+  userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum RoleEnumType {
+  user
+  admin
 }
 
 model User {
@@ -56,10 +61,11 @@ model User {
   password      String
   role          RoleEnumType? @default(user)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  accounts  Account[]
-  sessions  Session[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  accounts   Account[]
+  sessions   Session[]
+  Individual Individual[]
 }
 
 model VerificationToken {
@@ -70,19 +76,27 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-enum RoleEnumType {
-  user
-  admin
-}
-
-// Business Schema
-
 enum BusinessEnumType {
   BANK
   PHILANTHROPY
 }
 
-// Bank
+enum BeneficiaryEnumType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+model Individual {
+  id           String  @id @default(cuid())
+  name         String
+  firstName    String?
+  lastName     String?
+  relationship String?
+  userId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Business
 
 model Business {
   id             String            @id @default(cuid())
@@ -95,6 +109,7 @@ model Business {
   type           BusinessEnumType?
   PaymentHistory Payment[]
   BankInterest   BankInterest[]
+  // ZakatPayment   ZakatPayment[]
 }
 
 model Payment {
@@ -108,12 +123,53 @@ model Payment {
 }
 
 model BankInterest {
-  id         String    @id @default(cuid())
+  id         String       @id @default(cuid())
   month      Int
   year       Int
-  amountDue  Decimal   @db.Money
-  amountPaid Decimal   @db.Money
-  bank       Business  @relation(fields: [bankId], references: [id])
+  amountDue  Decimal      @db.Money
+  bank       Business     @relation(fields: [bankId], references: [id])
   bankId     String
+  calendar   CalendarYear @relation(fields: [calendarId], references: [id])
+  calendarId String       @unique
   payments   Payment[]
+}
+
+// // Zakat
+// model Zakat {
+//   id         String         @id @default(cuid())
+//   calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
+//   calendarId String         @unique
+//   amountDue  Decimal        @db.Money
+//   payments   ZakatPayment[]
+// }
+
+// model ZakatPayment {
+//   id              String               @id @default(cuid())
+//   datePaid        DateTime
+//   amount          Decimal              @db.Money
+//   beneficiaryType BeneficiaryEnumType?
+//   business        Business?            @relation(fields: [businessId], references: [id])
+//   businessId      String?
+//   Zakat           Zakat?               @relation(fields: [zakatId], references: [id])
+//   zakatId         String?
+// }
+
+// Calendar Year
+
+enum CalendarEnumType {
+  ZAKAT
+  ANNUAL
+  FISCAL
+}
+
+model CalendarYear {
+  id           String            @id @default(cuid())
+  description  String
+  fromYear     Int
+  fromMonth    Int
+  toYear       Int
+  toMonth      Int
+  type         CalendarEnumType?
+  // Zakat        Zakat?
+  BankInterest BankInterest?
 }

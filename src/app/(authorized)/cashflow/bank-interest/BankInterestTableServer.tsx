@@ -30,7 +30,7 @@ export default async function BankInterestTableServer({
     bankInterestDetails?.map<BankInterestType>((d) => ({
       id: d.id,
       amountDue: d.amountDue,
-      amountPaid: d.amountPaid,
+      amountPaid: 0,
       month: d.month,
       year: d.year,
       paymentHistory: d.payments.map<PaymentHistoryType>((p) => ({

@@ -18,6 +18,7 @@ import {
   IconCashCoin,
   IconReceiptPercent,
   IconHandHoldingDollar,
+  IconCalendar,
 } from './SideNavIcons';
 
 type SideNavProps = {
@@ -163,6 +164,13 @@ export default function SideNav({
                   className='border-b-0'
                 >
                   <IconBank />
+                </SideNavLink>
+                <SideNavLink
+                  name='Calendar Year(s)'
+                  href='/settings/calendar'
+                  className='border-b-0'
+                >
+                  <IconCalendar />
                 </SideNavLink>
               </Disclosure.Panel>
             </Disclosure>

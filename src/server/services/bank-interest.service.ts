@@ -38,7 +38,6 @@ export const getBankInterestDetails = async (
     month: b.month,
     year: b.year,
     amountDue: b.amountDue.toNumber(),
-    amountPaid: b.amountPaid.toNumber(),
     payments: b.payments.map((bp) => ({
       id: bp.id,
       businessId: bp.businessId,
@@ -137,13 +136,21 @@ const createYearlyBankInterestDetails = async (
   year: number
 ): Promise<number> => {
   const newBankInterestDetails: Array<Prisma.BankInterestCreateManyInput> = [];
+  const calendarYear = await prisma.calendarYear.findFirstOrThrow({
+    where: {
+      fromYear: year,
+      toYear: year,
+      type: 'ANNUAL',
+    },
+  });
+
   for (let i = 1; i <= 12; ++i) {
     newBankInterestDetails.push({
       bankId,
       month: i,
       year,
       amountDue: 0.0,
-      amountPaid: 0,
+      calendarId: calendarYear.id,
     });
   }
 
