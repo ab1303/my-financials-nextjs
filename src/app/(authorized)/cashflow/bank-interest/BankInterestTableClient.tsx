@@ -12,14 +12,13 @@ import { toast } from 'react-toastify';
 
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
-
-import PaymentHistoryModal from './_components/PaymentHistoryModal';
-import EditableTableCell from './_components/EditableTableCell';
-
-import type { BankInterestType } from '@/types';
 import { trpcClient } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
+
 import { useBankInterestState } from './StateProvider';
+import PaymentHistoryModal from './_components/PaymentHistoryModal';
+import EditableTableCell from './_components/EditableTableCell';
+import type { BankInterestType } from './_types';
 
 const columnHelper = createColumnHelper<BankInterestType>();
 

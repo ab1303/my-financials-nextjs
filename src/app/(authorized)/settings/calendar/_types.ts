@@ -1,21 +1,22 @@
-export type CALENDAR_KEYS_TYPE = 'ZAKAT' | 'ANNUAL' | 'FISCAL';
-export type CALENDAR_MAP_TYPE = {
-  [P in CALENDAR_KEYS_TYPE]: string;
-};
+import { CalendarEnumType } from '@prisma/client';
 
 export type ServerActionType = {
   success: boolean;
   error: unknown;
 };
 
-const CALENDAR_MAP: CALENDAR_MAP_TYPE = {
-  ZAKAT: 'ZAKAT',
-  ANNUAL: 'ANNUAL',
-  FISCAL: 'FISCAL',
-} as const;
+export type CalendarYearType = {
+  id: string;
+  type: CalendarEnumType;
+  description: string;
+  fromYear: number;
+  fromMonth: number;
+  toYear: number;
+  toMonth: number;
+};
 
-const CALENDAR_KEYS = Object.entries(CALENDAR_MAP).map(
-  ([k]) => k as CALENDAR_KEYS_TYPE
+const CALENDAR_KEYS = Object.entries(CalendarEnumType).map(
+  ([k]) => k as CalendarEnumType
 );
 
-export { CALENDAR_MAP, CALENDAR_KEYS };
+export { CALENDAR_KEYS };

@@ -1,3 +1,5 @@
+import type { CalendarYearType } from '@/app/(authorized)/settings/calendar/_types';
+
 export type Address = {
   addressLine: string;
   street_address: string;
@@ -23,28 +25,4 @@ export type ProfileType = {
   contact: string;
 };
 
-export type YearType = {
-  id: string;
-  type: 'fiscal' | 'annual';
-  description: string;
-  fromYear: number;
-  fromMonth: number;
-  toYear: number;
-  toMonth: number;
-};
-
-export type PaymentHistoryType = {
-  id: string;
-  datePaid: Date;
-  amount: number;
-  businessId: string | null;
-};
-
-export type BankInterestType = {
-  id: string;
-  month: number;
-  year: number;
-  amountDue: number;
-  amountPaid: number;
-  paymentHistory: Array<PaymentHistoryType>;
-};
+export { CalendarYearType };

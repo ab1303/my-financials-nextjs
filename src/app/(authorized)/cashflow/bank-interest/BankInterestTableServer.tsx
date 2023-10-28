@@ -1,10 +1,10 @@
-import BankInterestTableClient from './BankInterestTableClient';
-
 import type { BankInterestModel } from '@/server/models';
-import type { BankInterestType, PaymentHistoryType } from '@/types';
-import { BankInterestStateProvider } from './StateProvider';
 import { bankInterestDetailsHandler } from '@/server/controllers/bank-interest.controller';
 import { getYearlyBankInterestSchema } from '@/server/schema/bank-interest.schema';
+
+import BankInterestTableClient from './BankInterestTableClient';
+import { BankInterestStateProvider } from './StateProvider';
+import type { BankInterestType, PaymentHistoryType } from './_types';
 
 export type BankInterestTableServerProps = {
   bankId: string;

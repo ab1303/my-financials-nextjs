@@ -8,7 +8,7 @@ import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { Card } from '@/components';
 
 import type { SingleValue } from 'react-select';
-import type { OptionType, YearType } from '@/types';
+import type { OptionType, CalendarYearType } from '@/types';
 
 // TODO Refactor Section
 
@@ -24,7 +24,7 @@ import type { OptionType, YearType } from '@/types';
 type BankInterestFormProps = {
   initialData: {
     bankOptions: OptionType[];
-    yearlyData: Array<YearType>;
+    yearlyData: Array<CalendarYearType>;
   };
   bankIdParam: string;
   yearParam: string;
@@ -46,9 +46,9 @@ export default function BankInterestForm({
 
   // TODO: use a Toggle control to set current year
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [currentYearType, setCurrentYearType] = useState<YearType['type']>(
-    'annual'
-  );
+  const [currentYearType, setCurrentYearType] = useState<
+    CalendarYearType['type']
+  >('ANNUAL');
 
   const currentYearData = yearlyData.find((yd) => yd.id === yearParam);
   const currentYearOption = currentYearData

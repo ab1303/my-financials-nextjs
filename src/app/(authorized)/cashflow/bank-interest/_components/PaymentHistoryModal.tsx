@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
 import { Modal, Label } from 'flowbite-react';
 import { NumericFormat } from 'react-number-format';
@@ -6,11 +7,11 @@ import { NumericFormat } from 'react-number-format';
 import { Card } from '@/components';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import DatePickerDialog from '@/components/DatePickerDialog';
-import type { PaymentHistoryType } from '@/types';
-import { useBankInterestState } from '../StateProvider';
 import { trpcClient } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
-import { toast } from 'react-toastify';
+
+import { useBankInterestState } from '../StateProvider';
+import type { PaymentHistoryType } from '../_types';
 
 type PaymentType = Omit<PaymentHistoryType, 'id'>;
 

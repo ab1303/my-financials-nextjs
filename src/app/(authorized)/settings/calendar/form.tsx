@@ -7,10 +7,11 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { ServerActionType } from './_types';
-import { CALENDAR_KEYS, CALENDAR_MAP } from './_types';
+import { CALENDAR_KEYS } from './_types';
 import { FormDataSchema } from './_schema';
 import type { FormInput } from './_schema';
 import clsx from 'clsx';
+import { CalendarEnumType } from '@prisma/client';
 
 type CalendarFormProps = {
   initialData: unknown;
@@ -124,10 +125,10 @@ export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
                   <div key={k} className='flex items-center gap-2'>
                     <Radio
                       id={k}
-                      value={CALENDAR_MAP[calendarKey]}
+                      value={CalendarEnumType[calendarKey]}
                       {...register('calendarType', { required: true })}
                     />
-                    <Label htmlFor={k}>{CALENDAR_MAP[calendarKey]}</Label>
+                    <Label htmlFor={k}>{CalendarEnumType[calendarKey]}</Label>
                   </div>
                 );
               })}

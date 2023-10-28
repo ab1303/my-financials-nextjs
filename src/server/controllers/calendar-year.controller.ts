@@ -1,5 +1,8 @@
 import { CalendarEnumType } from '@prisma/client';
-import { addCalendarYearDetails } from '../services/calendar-year.service';
+import {
+  addCalendarYearDetails,
+  getCalendarYears,
+} from '../services/calendar-year.service';
 import { handleCaughtError } from '../utils/prisma';
 
 export const createCalendarYearHandler = async (
@@ -32,4 +35,9 @@ export const createCalendarYearHandler = async (
 
     return { calendarId: '' };
   }
+};
+
+export const getCalendarYearsHandler = async () => {
+  const calendarYears = await getCalendarYears();
+  return calendarYears;
 };

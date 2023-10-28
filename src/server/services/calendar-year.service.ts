@@ -20,3 +20,6 @@ export const addCalendarYearDetails = async ({
     },
   });
 };
+
+export const getCalendarYears = async () =>
+  await prisma.calendarYear.findMany();

@@ -1,8 +1,7 @@
-import type {
-  BankInterestType,
-  ActionMapUnion,
-  PaymentHistoryType,
-} from '@/types';
+import type { ActionMapUnion } from '@/types';
+
+import type { BankInterestType, PaymentHistoryType } from './_types';
+
 import { produce } from 'immer';
 
 type BankInterestMessages = {
