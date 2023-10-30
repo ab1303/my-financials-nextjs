@@ -4,11 +4,11 @@ import type { BankInterestModel, PaymentModel } from '@/server/models';
 
 export const getBankInterestDetails = async (
   bankId: string,
-  year: number
+  calendarYearId: string
 ): Promise<Array<BankInterestModel>> => {
   const where: Partial<Prisma.BankInterestWhereUniqueInput> = {
     bankId,
-    year,
+    calendarId: calendarYearId,
   };
 
   let bankInterstDetails = await prisma.bankInterest.findMany({
@@ -19,7 +19,7 @@ export const getBankInterestDetails = async (
   });
 
   if (!bankInterstDetails.length) {
-    await createYearlyBankInterestDetails(bankId, year);
+    await createYearlyBankInterestDetails(bankId, calendarYearId);
   }
 
   bankInterstDetails = await prisma.bankInterest.findMany({
@@ -50,13 +50,13 @@ export const getBankInterestDetails = async (
 export const updateBankInterestDetail = async (
   id: string,
   bankId: string,
-  year: number,
+  calendarYearId: string,
   amountDue: number
 ) => {
   const where: Prisma.BankInterestWhereUniqueInput = {
     id,
     bankId,
-    year,
+    calendarId: calendarYearId,
   };
 
   await prisma.bankInterest.update({
@@ -71,18 +71,11 @@ export const addBankInterestPaymentDetail = async (
   bankInterestId: string,
   payment: Omit<PaymentModel, 'id'>
 ) => {
-  return await prisma.bankInterest.update({
-    where: { id: bankInterestId },
+  return await prisma.payment.create({
     data: {
-      payments: {
-        create: {
-          amount: payment.amount,
-          datePaid: payment.datePaid,
-        },
-      },
-    },
-    include: {
-      payments: true,
+      bankInterestId,
+      amount: payment.amount,
+      datePaid: payment.datePaid,
     },
   });
 };
@@ -133,13 +126,12 @@ export const removeBankInterestPaymentDetail = async (
 
 const createYearlyBankInterestDetails = async (
   bankId: string,
-  year: number
+  calendarYearId: string
 ): Promise<number> => {
   const newBankInterestDetails: Array<Prisma.BankInterestCreateManyInput> = [];
-  const calendarYear = await prisma.calendarYear.findFirstOrThrow({
+  const calendarYear = await prisma.calendarYear.findUniqueOrThrow({
     where: {
-      fromYear: year,
-      toYear: year,
+      id: calendarYearId,
       type: 'ANNUAL',
     },
   });
@@ -148,7 +140,7 @@ const createYearlyBankInterestDetails = async (
     newBankInterestDetails.push({
       bankId,
       month: i,
-      year,
+      year: calendarYear.fromYear,
       amountDue: 0.0,
       calendarId: calendarYear.id,
     });

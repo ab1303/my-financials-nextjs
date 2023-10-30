@@ -2,9 +2,14 @@ import Card from '@/components/card';
 import CalendarForm from './form';
 import { Suspense } from 'react';
 import type { FormInput } from './_schema';
-import { createCalendarYearHandler } from '@/server/controllers/calendar-year.controller';
+import {
+  createCalendarYearHandler,
+  getCalendarYearsHandler,
+} from '@/server/controllers/calendar-year.controller';
+import CalendarTableClient from './CalendarTableClient';
+import { revalidatePath } from 'next/cache';
 
-export default function CalendarYearPage() {
+export default async function CalendarYearPage() {
   async function addCalendarYear(formData: FormInput) {
     'use server';
 
@@ -12,15 +17,21 @@ export default function CalendarYearPage() {
     await createCalendarYearHandler(
       display,
       fromDate.getFullYear(),
-      fromDate.getMonth(),
+      fromDate.getMonth() + 1,
       toDate.getFullYear(),
-      toDate.getMonth(),
+      toDate.getMonth() + 1,
       calendarType
     );
     // mutate data
     // revalidate cache
+
+    revalidatePath('/settings/calendar');
+
     return { success: true, error: null };
   }
+
+  const calendarYearsData = await getCalendarYearsHandler();
+
   return (
     <>
       <Card.Header>
@@ -29,13 +40,14 @@ export default function CalendarYearPage() {
         </div>
       </Card.Header>
       <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
-        <CalendarForm addCalendarYear={addCalendarYear} initialData={{ a: 1 }}>
-          <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
-            <div className='font-mono text-gray-500 mb-3'>
-              New Calendar year
-            </div>
-          </Suspense>
-        </CalendarForm>
+        <CalendarForm
+          addCalendarYear={addCalendarYear}
+          initialData={{ a: 1 }}
+        ></CalendarForm>
+        <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
+          <div className='font-mono text-gray-500 my-3'>Calendar year(s)</div>
+          <CalendarTableClient tableData={calendarYearsData} />
+        </Suspense>
       </div>
     </>
   );

@@ -130,7 +130,7 @@ model BankInterest {
   bank       Business     @relation(fields: [bankId], references: [id])
   bankId     String
   calendar   CalendarYear @relation(fields: [calendarId], references: [id])
-  calendarId String       @unique
+  calendarId String
   payments   Payment[]
 }
 
@@ -138,7 +138,7 @@ model BankInterest {
 // model Zakat {
 //   id         String         @id @default(cuid())
 //   calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
-//   calendarId String         @unique
+//   calendarId String         
 //   amountDue  Decimal        @db.Money
 //   payments   ZakatPayment[]
 // }
@@ -171,5 +171,5 @@ model CalendarYear {
   toMonth      Int
   type         CalendarEnumType?
   // Zakat        Zakat?
-  BankInterest BankInterest?
+  BankInterest BankInterest[]
 }

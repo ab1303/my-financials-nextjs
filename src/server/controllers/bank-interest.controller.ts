@@ -9,10 +9,10 @@ import {
 
 export const bankInterestDetailsHandler = async (
   bankId: string,
-  year: number
+  yearId: string
 ) => {
   try {
-    const bankInterestDetails = await getBankInterestDetails(bankId, year);
+    const bankInterestDetails = await getBankInterestDetails(bankId, yearId);
     return bankInterestDetails;
   } catch (e) {
     handleCaughtError(e);
@@ -22,11 +22,11 @@ export const bankInterestDetailsHandler = async (
 export const updateBankInterestDetailsHandler = async (
   id: string,
   bankId: string,
-  year: number,
+  calendarYearId: string,
   amountDue: number
 ) => {
   try {
-    await updateBankInterestDetail(id, bankId, year, amountDue);
+    await updateBankInterestDetail(id, bankId, calendarYearId, amountDue);
   } catch (e) {
     handleCaughtError(e);
   }

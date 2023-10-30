@@ -27,14 +27,14 @@ type BankInterestFormProps = {
     yearlyData: Array<CalendarYearType>;
   };
   bankIdParam: string;
-  yearParam: string;
+  yearIdParam: string;
   children?: React.ReactNode;
 };
 
 export default function BankInterestForm({
   initialData: { bankOptions, yearlyData },
   bankIdParam,
-  yearParam,
+  yearIdParam,
   children,
 }: BankInterestFormProps) {
   const uniqSelectBankId = useId();
@@ -50,7 +50,7 @@ export default function BankInterestForm({
     CalendarYearType['type']
   >('ANNUAL');
 
-  const currentYearData = yearlyData.find((yd) => yd.id === yearParam);
+  const currentYearData = yearlyData.find((yd) => yd.id === yearIdParam);
   const currentYearOption = currentYearData
     ? {
         id: currentYearData.id,
@@ -120,7 +120,7 @@ export default function BankInterestForm({
             getOptionValue={(option) => option.id}
             onChange={(option) => {
               setSelectedYear(option);
-              updateURLSearchParams('year', option?.id);
+              updateURLSearchParams('year', option?.label);
             }}
           />
         </div>

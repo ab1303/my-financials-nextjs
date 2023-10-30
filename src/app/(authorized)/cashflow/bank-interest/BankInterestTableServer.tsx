@@ -8,22 +8,25 @@ import type { BankInterestType, PaymentHistoryType } from './_types';
 
 export type BankInterestTableServerProps = {
   bankId: string;
-  year: string;
+  calendarYearId: string;
 };
 
 export default async function BankInterestTableServer({
   bankId,
-  year,
+  calendarYearId,
 }: BankInterestTableServerProps) {
   let bankInterestDetails: BankInterestModel[] | undefined = [];
 
   const validationResult = getYearlyBankInterestSchema.safeParse({
     bankId,
-    year: +year,
+    calendarYearId,
   });
 
   if (validationResult.success) {
-    bankInterestDetails = await bankInterestDetailsHandler(bankId, +year);
+    bankInterestDetails = await bankInterestDetailsHandler(
+      bankId,
+      calendarYearId
+    );
   }
 
   const data =
@@ -43,7 +46,10 @@ export default async function BankInterestTableServer({
 
   return (
     <BankInterestStateProvider data={data}>
-      <BankInterestTableClient bankId={bankId} year={+year} />
+      <BankInterestTableClient
+        bankId={bankId}
+        calendarYearId={calendarYearId}
+      />
     </BankInterestStateProvider>
   );
 }

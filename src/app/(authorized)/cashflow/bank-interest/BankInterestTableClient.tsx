@@ -24,7 +24,7 @@ const columnHelper = createColumnHelper<BankInterestType>();
 
 type BankInterestTableClientProps = {
   bankId: string;
-  year: number;
+  calendarYearId: string;
 };
 
 type EditedRowType = {
@@ -34,7 +34,7 @@ type EditedRowType = {
 
 export default function BankInterestTableClient({
   bankId,
-  year,
+  calendarYearId,
 }: BankInterestTableClientProps) {
   const [editedRows, setEditedRows] = useState<Map<string, EditedRowType>>(
     new Map()
@@ -80,9 +80,9 @@ export default function BankInterestTableClient({
               // update details
               updateBankInterestDetailsMutation.mutate({
                 bankId,
+                calendarYearId,
                 amount: value || 0,
                 bankInterestId: row.original.id,
-                year,
               });
             }}
           />

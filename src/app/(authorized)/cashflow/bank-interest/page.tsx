@@ -8,32 +8,33 @@ import Card from '@/components/card';
 import BankInterestForm from './form';
 import BankInterestTableServer from './BankInterestTableServer';
 import { Suspense } from 'react';
+import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 
 type BankPageProps = {
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
 // TODO: Move to a database table
-const yearlyData: Array<CalendarYearType> = [
-  {
-    id: '2021',
-    type: 'ANNUAL',
-    description: '2021',
-    fromYear: 2021,
-    fromMonth: 1,
-    toYear: 2021,
-    toMonth: 12,
-  },
-  {
-    id: '2022',
-    type: 'ANNUAL',
-    description: '2022',
-    fromYear: 2022,
-    fromMonth: 1,
-    toYear: 2022,
-    toMonth: 12,
-  },
-];
+// const yearlyData: Array<CalendarYearType> = [
+//   {
+//     id: '2021',
+//     type: 'ANNUAL',
+//     description: '2021',
+//     fromYear: 2021,
+//     fromMonth: 1,
+//     toYear: 2021,
+//     toMonth: 12,
+//   },
+//   {
+//     id: '2022',
+//     type: 'ANNUAL',
+//     description: '2022',
+//     fromYear: 2022,
+//     fromMonth: 1,
+//     toYear: 2022,
+//     toMonth: 12,
+//   },
+// ];
 
 function getSelectedParam(searchParam?: string | string[]) {
   const selectedSearch = searchParam || '';
@@ -47,6 +48,10 @@ function getSelectedParam(searchParam?: string | string[]) {
 // page dynamically rendered
 //https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional
 export default async function BanksPage({ searchParams }: BankPageProps) {
+  const yearlyData = (await getCalendarYearsHandler()).filter(
+    (yd) => yd.type === 'ANNUAL'
+  );
+
   const banks = await httpServer.bank.getAllBanks.query();
   const bankOptions: OptionType[] = banks
     ? banks.map((b) => ({
@@ -55,11 +60,19 @@ export default async function BanksPage({ searchParams }: BankPageProps) {
       }))
     : [];
 
+  const yearParam = +getSelectedParam(searchParams?.year);
+
   const selectedBank = bankOptions.find(
     (b) => b.label === getSelectedParam(searchParams?.bank)
   );
   const selectedBankId = selectedBank ? selectedBank.id : '';
-  const selectedYear = getSelectedParam(searchParams?.year);
+
+  const selectedCalendarYear = yearlyData.find(
+    (yd) => yd.fromYear === yearParam && yd.toYear === yearParam
+  );
+  const selectedCalendarYearId = selectedCalendarYear
+    ? selectedCalendarYear.id
+    : '';
 
   const initialData = {
     bankOptions,
@@ -76,7 +89,7 @@ export default async function BanksPage({ searchParams }: BankPageProps) {
         <BankInterestForm
           initialData={initialData}
           bankIdParam={selectedBankId}
-          yearParam={selectedYear}
+          yearIdParam={selectedCalendarYearId}
         >
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             <div className='font-mono text-gray-500 mb-3'>
@@ -85,7 +98,7 @@ export default async function BanksPage({ searchParams }: BankPageProps) {
 
             <BankInterestTableServer
               bankId={selectedBankId}
-              year={selectedYear}
+              calendarYearId={selectedCalendarYearId}
             />
           </Suspense>
         </BankInterestForm>

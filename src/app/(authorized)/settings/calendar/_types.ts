@@ -7,7 +7,7 @@ export type ServerActionType = {
 
 export type CalendarYearType = {
   id: string;
-  type: CalendarEnumType;
+  type: CalendarEnumType | null;
   description: string;
   fromYear: number;
   fromMonth: number;

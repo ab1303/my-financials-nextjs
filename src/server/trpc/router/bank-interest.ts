@@ -19,13 +19,18 @@ import {
 export const bankInterestRouter = router({
   getYearlyBankInterestDetails: protectedProcedure
     .input(getYearlyBankInterestSchema)
-    .query(({ input: { bankId, year } }) =>
-      bankInterestDetailsHandler(bankId, year)
+    .query(({ input: { bankId, calendarYearId } }) =>
+      bankInterestDetailsHandler(bankId, calendarYearId)
     ),
   updateBankInterestDetail: protectedProcedure
     .input(updateBankInterestSchema)
-    .mutation(({ input: { bankInterestId, bankId, year, amount } }) =>
-      updateBankInterestDetailsHandler(bankInterestId, bankId, year, amount)
+    .mutation(({ input: { bankInterestId, bankId, calendarYearId, amount } }) =>
+      updateBankInterestDetailsHandler(
+        bankInterestId,
+        bankId,
+        calendarYearId,
+        amount
+      )
     ),
   addBankInterestPayment: protectedProcedure
     .input(createBankInterestPaymentSchema)

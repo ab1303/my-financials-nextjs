@@ -27,12 +27,12 @@ export const createBankInterestPaymentOuputSchema = object({
 // Bank Interest
 export const getYearlyBankInterestSchema = object({
   bankId: string({ required_error: 'Bank is required' }).trim().min(5),
-  year: number({ required_error: 'Fiscal year is required' }),
+  calendarYearId: string({ required_error: 'Fiscal year is required' }),
 });
 
 export const updateBankInterestSchema = object({
   bankId: string({ required_error: 'Bank is required' }),
-  year: number({ required_error: 'Year is required' }),
+  calendarYearId: string({ required_error: 'Year is required' }),
   bankInterestId: string({ required_error: 'Bank interest id is required' }),
   amount: number({ required_error: 'Amount is required' }),
 });
