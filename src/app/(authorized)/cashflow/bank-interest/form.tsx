@@ -10,17 +10,6 @@ import { Card } from '@/components';
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
 
-// TODO Refactor Section
-
-// const fiscalYearOptions: OptionType[] = [
-//   { id: '2021-2022', label: '2021-2022' },
-//   { id: '2022-2023', label: '2022-2023' },
-// ];
-
-// TODO Refactor Section End
-
-// React Table
-
 type BankInterestFormProps = {
   initialData: {
     bankOptions: OptionType[];

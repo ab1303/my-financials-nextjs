@@ -97,7 +97,7 @@ export default function DatePickerDialog({
         />
       </div>
       {isOpen && (
-        <FloatingOverlay>
+        <FloatingOverlay className='z-10'>
           <FloatingFocusManager context={context}>
             <div
               ref={refs.setFloating}
