@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import type { OptionType, CalendarYearType } from '@/types';
+import type { OptionType } from '@/types';
 // import { server } from '@/server/trpc/server';
 import { httpServer } from '@/server/trpc/server-http';
 
@@ -13,28 +13,6 @@ import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.cont
 type BankPageProps = {
   searchParams: { [key: string]: string | string[] | undefined };
 };
-
-// TODO: Move to a database table
-// const yearlyData: Array<CalendarYearType> = [
-//   {
-//     id: '2021',
-//     type: 'ANNUAL',
-//     description: '2021',
-//     fromYear: 2021,
-//     fromMonth: 1,
-//     toYear: 2021,
-//     toMonth: 12,
-//   },
-//   {
-//     id: '2022',
-//     type: 'ANNUAL',
-//     description: '2022',
-//     fromYear: 2022,
-//     fromMonth: 1,
-//     toYear: 2022,
-//     toMonth: 12,
-//   },
-// ];
 
 function getSelectedParam(searchParam?: string | string[]) {
   const selectedSearch = searchParam || '';

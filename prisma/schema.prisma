@@ -109,7 +109,7 @@ model Business {
   type           BusinessEnumType?
   PaymentHistory Payment[]
   BankInterest   BankInterest[]
-  // ZakatPayment   ZakatPayment[]
+  ZakatPayment   ZakatPayment[]
 }
 
 model Payment {
@@ -134,25 +134,25 @@ model BankInterest {
   payments   Payment[]
 }
 
-// // Zakat
-// model Zakat {
-//   id         String         @id @default(cuid())
-//   calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
-//   calendarId String         
-//   amountDue  Decimal        @db.Money
-//   payments   ZakatPayment[]
-// }
+// Zakat
+model Zakat {
+  id         String         @id @default(cuid())
+  calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
+  calendarId String
+  amountDue  Decimal        @db.Money
+  payments   ZakatPayment[]
+}
 
-// model ZakatPayment {
-//   id              String               @id @default(cuid())
-//   datePaid        DateTime
-//   amount          Decimal              @db.Money
-//   beneficiaryType BeneficiaryEnumType?
-//   business        Business?            @relation(fields: [businessId], references: [id])
-//   businessId      String?
-//   Zakat           Zakat?               @relation(fields: [zakatId], references: [id])
-//   zakatId         String?
-// }
+model ZakatPayment {
+  id              String               @id @default(cuid())
+  datePaid        DateTime
+  amount          Decimal              @db.Money
+  beneficiaryType BeneficiaryEnumType?
+  business        Business?            @relation(fields: [businessId], references: [id])
+  businessId      String?
+  Zakat           Zakat?               @relation(fields: [zakatId], references: [id])
+  zakatId         String?
+}
 
 // Calendar Year
 
@@ -170,6 +170,6 @@ model CalendarYear {
   toYear       Int
   toMonth      Int
   type         CalendarEnumType?
-  // Zakat        Zakat?
+  Zakat        Zakat[]
   BankInterest BankInterest[]
 }

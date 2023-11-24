@@ -23,8 +23,6 @@ export default async function CalendarYearPage() {
       calendarType
     );
     // mutate data
-    // revalidate cache
-
     revalidatePath('/settings/calendar');
 
     return { success: true, error: null };
@@ -45,7 +43,9 @@ export default async function CalendarYearPage() {
           initialData={{ a: 1 }}
         ></CalendarForm>
         <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
-          <div className='font-mono text-gray-500 my-3'>Calendar year(s)</div>
+          <div className='font-mono text-gray-500 mt-12 mb-4'>
+            Calendar year(s)
+          </div>
           <CalendarTableClient tableData={calendarYearsData} />
         </Suspense>
       </div>
