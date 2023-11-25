@@ -15,10 +15,12 @@ export const addZakatCalendarYearDetails = async ({
 };
 
 export const getZakatPayments = async (
-  zakatId: string
+  calendarYearId: string
 ): Promise<Array<ZakatPaymentModel>> => {
   const where: Partial<Prisma.ZakatPaymentWhereInput> = {
-    zakatId,
+    Zakat: {
+      calendarId: calendarYearId,
+    },
   };
 
   const zakatPayments = await prisma.zakatPayment.findMany({

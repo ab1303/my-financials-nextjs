@@ -10,6 +10,6 @@ export type ZakatModel = {
 
 // TODO:
 export type ZakatPaymentModel = PaymentModel & {
-  beneficiaryType: BeneficiaryEnumType | null;
+  beneficiaryType: BeneficiaryEnumType;
   zakatId: string | null;
 };

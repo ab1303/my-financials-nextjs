@@ -7,7 +7,6 @@ import { createZakatYearHandler } from '@/server/controllers/zakat.controller';
 
 import ZakatForm from './form';
 import type { FormInput } from './_schema';
-import { revalidatePath } from 'next/cache';
 import ZakatPaymentsTableServer from './ZakatTableServer';
 
 type ZakatPageProps = {
@@ -28,8 +27,6 @@ export default async function ZakatPage({ searchParams }: ZakatPageProps) {
 
     const { calendarYearId, totalAmount } = formData;
     await createZakatYearHandler(calendarYearId, totalAmount);
-    // mutate data
-    revalidatePath('/settings/calendar');
 
     return { success: true, error: null };
   }
@@ -61,7 +58,7 @@ export default async function ZakatPage({ searchParams }: ZakatPageProps) {
 
       <Card.Header>
         <div className='flex justify-between mt-4 text-left'>
-          <Card.Header.Title>Zakat Page</Card.Header.Title>
+          <Card.Header.Title>Zakat Payments</Card.Header.Title>
         </div>
       </Card.Header>
       <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
