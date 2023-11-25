@@ -1,5 +1,6 @@
 import { prisma } from '../utils/prisma';
-import type { ZakatModel } from '../models/zakat';
+import type { ZakatModel, ZakatPaymentModel } from '../models/zakat';
+import type { Prisma } from '@prisma/client';
 
 export const addZakatCalendarYearDetails = async ({
   calendarId,
@@ -11,4 +12,29 @@ export const addZakatCalendarYearDetails = async ({
       amountDue,
     },
   });
+};
+
+export const getZakatPayments = async (
+  zakatId: string
+): Promise<Array<ZakatPaymentModel>> => {
+  const where: Partial<Prisma.ZakatPaymentWhereInput> = {
+    zakatId,
+  };
+
+  const zakatPayments = await prisma.zakatPayment.findMany({
+    where,
+    include: {
+      business: true,
+      Zakat: true,
+    },
+  });
+
+  return zakatPayments.map<ZakatPaymentModel>((zp) => ({
+    id: zp.id,
+    datePaid: zp.datePaid,
+    amount: zp.amount.toNumber(),
+    businessId: zp.businessId,
+    zakatId: zp.zakatId,
+    beneficiaryType: zp.beneficiaryType,
+  }));
 };

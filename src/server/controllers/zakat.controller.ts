@@ -1,4 +1,7 @@
-import { addZakatCalendarYearDetails } from '../services/zakat.service';
+import {
+  addZakatCalendarYearDetails,
+  getZakatPayments,
+} from '../services/zakat.service';
 import { handleCaughtError } from '../utils/prisma';
 
 export const createZakatYearHandler = async (
@@ -16,5 +19,14 @@ export const createZakatYearHandler = async (
     handleCaughtError(e);
 
     return { zakatCalendarId: '' };
+  }
+};
+
+export const zakatPaymentsHandler = async (calendarYearId: string) => {
+  try {
+    const zakatPayments = await getZakatPayments(calendarYearId);
+    return zakatPayments;
+  } catch (e) {
+    handleCaughtError(e);
   }
 };

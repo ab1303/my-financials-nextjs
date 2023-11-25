@@ -1,4 +1,6 @@
 import Head from 'next/head';
+import { Suspense } from 'react';
+
 import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { createZakatYearHandler } from '@/server/controllers/zakat.controller';
@@ -6,6 +8,7 @@ import { createZakatYearHandler } from '@/server/controllers/zakat.controller';
 import ZakatForm from './form';
 import type { FormInput } from './_schema';
 import { revalidatePath } from 'next/cache';
+import ZakatPaymentsTableServer from './ZakatTableServer';
 
 type ZakatPageProps = {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -66,7 +69,15 @@ export default async function ZakatPage({ searchParams }: ZakatPageProps) {
           initialData={initialData}
           yearIdParam={selectedCalendarYearId}
           addZakatCalendarYear={addZakatCalendarYear}
-        ></ZakatForm>
+        >
+          <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
+            <div className='font-mono text-gray-500 mb-3'>
+              {selectedCalendarYear?.description} Payments
+            </div>
+
+            <ZakatPaymentsTableServer calendarYearId={selectedCalendarYearId} />
+          </Suspense>
+        </ZakatForm>
       </div>
     </>
   );

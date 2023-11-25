@@ -138,20 +138,20 @@ model BankInterest {
 model Zakat {
   id         String         @id @default(cuid())
   calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
-  calendarId String
+  calendarId String         @unique
   amountDue  Decimal        @db.Money
   payments   ZakatPayment[]
 }
 
 model ZakatPayment {
-  id              String               @id @default(cuid())
+  id              String              @id @default(cuid())
   datePaid        DateTime
-  amount          Decimal              @db.Money
-  beneficiaryType BeneficiaryEnumType?
-  business        Business?            @relation(fields: [businessId], references: [id])
+  amount          Decimal             @db.Money
+  beneficiaryType BeneficiaryEnumType
+  business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
-  Zakat           Zakat?               @relation(fields: [zakatId], references: [id])
-  zakatId         String?
+  Zakat           Zakat               @relation(fields: [zakatId], references: [id])
+  zakatId         String
 }
 
 // Calendar Year
