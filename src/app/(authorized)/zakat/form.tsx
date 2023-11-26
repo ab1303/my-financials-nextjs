@@ -69,6 +69,7 @@ function NumericFormatWithIndicator<BaseType = InputAttributes>({
 type ZakatFormProps = {
   initialData: {
     zakatYearData: Array<CalendarYearType>;
+    amountDue: number;
   };
   yearIdParam: string;
   children?: React.ReactNode;
@@ -76,7 +77,7 @@ type ZakatFormProps = {
 };
 
 export default function ZakatForm({
-  initialData: { zakatYearData },
+  initialData: { zakatYearData, amountDue },
   yearIdParam,
   addZakatCalendarYear,
   children,
@@ -87,7 +88,7 @@ export default function ZakatForm({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [totalAmountDue, setTotalAmountDue] = useState<number>(amountDue);
   const [isSavingAmount, setIsSavingAmount] = useState<boolean>(false);
 
   const currentYearData = zakatYearData.find((yd) => yd.id === yearIdParam);
@@ -130,7 +131,7 @@ export default function ZakatForm({
     setIsSavingAmount(true);
     await addZakatCalendarYear({
       calendarYearId: selectedYear.id,
-      totalAmount: paymentAmount,
+      totalAmount: totalAmountDue,
     });
     setIsSavingAmount(false);
   };
@@ -169,9 +170,9 @@ export default function ZakatForm({
             displayType='input'
             className='w-3/5 mr-2'
             thousandSeparator
-            value={paymentAmount}
+            value={totalAmountDue}
             onValueChange={(values) => {
-              setPaymentAmount(values.floatValue || 0);
+              setTotalAmountDue(values.floatValue || 0);
             }}
             onBlur={updateTotalZakatAmount}
           />

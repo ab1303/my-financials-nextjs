@@ -146,7 +146,6 @@ export default function BankInterestTableClient({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    meta: {},
   });
 
   const updateBankInterestDetailsMutation = trpcClient.bankInterest.updateBankInterestDetail.useMutation(

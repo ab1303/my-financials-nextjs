@@ -53,7 +53,6 @@ export default function CalendarTableClient({
     data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    meta: {},
   });
 
   return (

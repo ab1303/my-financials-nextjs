@@ -1,10 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { NumericFormat } from 'react-number-format';
 import {
   useReactTable,
-  createColumnHelper,
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
@@ -16,67 +14,41 @@ import { TRPCError } from '@trpc/server';
 import { useZakatPaymentState } from './StateProvider';
 
 import type { ZakatPaymentType } from './_types';
+import { columns } from './_table/columns';
 
-type ZakatTableClientProps = {};
-
-type EditedRowType = {
-  rowIndex: number;
-  updatedValue: number | null;
-};
-
-const columnHelper = createColumnHelper<ZakatPaymentType>();
-
-export default function ZakatTableClient({}: ZakatTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<string, EditedRowType>>(
-    new Map()
-  );
+export default function ZakatTableClient() {
+  const [editedRows, setEditedRows] = useState({});
+  const [validRows, setValidRows] = useState({});
 
   const {
     state: { data },
     dispatch,
   } = useZakatPaymentState();
 
-  const [selectedZakatPaymentId, setSelectedZakatPaymentId] = useState<
-    string | null
-  >(null);
-
-  const updateEditRows = (id: string, record?: EditedRowType) => {
-    setEditedRows((prev) => {
-      const result = new Map(prev);
-      if (!record) {
-        result.delete(id);
-      } else {
-        result.set(id, record);
-      }
-
-      return result;
-    });
-  };
-
-  const columns = [
-    columnHelper.accessor('datePaid', {
-      header: () => <span>Date Paid</span>,
-      cell: (info) => info.getValue().toDateString(),
-    }),
-    columnHelper.accessor('amount', {
-      size: 220,
-      maxSize: 220,
-      header: () => <span>Amount Paid</span>,
-      cell: (info) => info.getValue(),
-      footer: (props) => props.column.id,
-    }),
-    columnHelper.accessor('beneficiaryType', {
-      header: () => <span>Beneficiary</span>,
-      cell: (info) => info.getValue(),
-      footer: (props) => props.column.id,
-    }),
-  ];
-
   const table = useReactTable<ZakatPaymentType>({
     data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    meta: {},
+    meta: {
+      editedRows,
+      validRows,
+      setEditedRows,
+      revertData: (rowIndex: number) => {
+        // TODO
+        // setData((old) =>
+        //   old.map((row, index) =>
+        //     index === rowIndex ? originalData[rowIndex] : row
+        //   )
+        // );
+      },
+      updateRow: (rowIndex: number) => {
+        // TODO
+        // updateRow(data[rowIndex].id, data[rowIndex]);
+      },
+      removeRow: (rowIndex: number) => {
+        //deleteRow(data[rowIndex].id);
+      },
+    },
   });
 
   return (

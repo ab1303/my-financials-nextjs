@@ -14,6 +14,27 @@ export const addZakatCalendarYearDetails = async ({
   });
 };
 
+export const getZakatPayment = async (
+  calendarYearId: string
+): Promise<ZakatModel> => {
+  const zakatPayment = await prisma.zakat.findUnique({
+    where: { calendarId: calendarYearId },
+  });
+
+  if (!zakatPayment)
+    return {
+      id: '',
+      amountDue: 0,
+      calendarId: calendarYearId,
+    };
+
+  return {
+    id: zakatPayment.id,
+    amountDue: zakatPayment.amountDue.toNumber(),
+    calendarId: zakatPayment.calendarId,
+  };
+};
+
 export const getZakatPayments = async (
   calendarYearId: string
 ): Promise<Array<ZakatPaymentModel>> => {

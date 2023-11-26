@@ -3,7 +3,10 @@ import { Suspense } from 'react';
 
 import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { createZakatYearHandler } from '@/server/controllers/zakat.controller';
+import {
+  createZakatYearHandler,
+  zakatHandler,
+} from '@/server/controllers/zakat.controller';
 
 import ZakatForm from './form';
 import type { FormInput } from './_schema';
@@ -44,8 +47,11 @@ export default async function ZakatPage({ searchParams }: ZakatPageProps) {
     ? selectedCalendarYear.id
     : '';
 
+  const zakat = await zakatHandler(selectedCalendarYearId);
+
   const initialData = {
     zakatYearData,
+    amountDue: zakat?.amountDue || 0,
   };
 
   return (
