@@ -29,7 +29,8 @@ export default async function ZakatPage({ searchParams }: ZakatPageProps) {
     'use server';
 
     const { calendarYearId, totalAmount } = formData;
-    await createZakatYearHandler(calendarYearId, totalAmount);
+    if (calendarYearId)
+      await createZakatYearHandler(calendarYearId, totalAmount);
 
     return { success: true, error: null };
   }

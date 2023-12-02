@@ -13,8 +13,8 @@ declare module '@tanstack/react-table' {
 }
 
 type EditCellProps<TData, TValue> = {
-  row: CellContext<TData, TValue>['row'];
   table: CellContext<TData, TValue>['table'];
+  row: CellContext<TData, TValue>['row'];
 };
 
 export const EditCell = <TData, TValue>({
@@ -38,6 +38,9 @@ export const EditCell = <TData, TValue>({
         ? meta?.revertData(row.index)
         : meta?.updateRow(row.index);
     }
+
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const removeRow = () => {
@@ -45,31 +48,43 @@ export const EditCell = <TData, TValue>({
   };
 
   return (
-    <div className='edit-cell-container'>
+    <div className='flex justify-center items-center gap-1'>
       {meta?.editedRows[row.id] ? (
-        <div className='edit-cell-action'>
-          <button onClick={setEditedRows} name='cancel'>
+        <div className='flex gap-1'>
+          <button
+            className='rounded-full h-7 w-7 bg-gray-200 text-slate-400'
+            onClick={setEditedRows}
+            name='cancel'
+          >
             ⚊
           </button>{' '}
-          <button onClick={setEditedRows} name='done' disabled={disableSubmit}>
+          <button
+            className='rounded-full h-7 w-7 bg-gray-200 text-green-400'
+            onClick={setEditedRows}
+            name='done'
+            disabled={disableSubmit}
+          >
             ✔
           </button>
         </div>
       ) : (
-        <div className='edit-cell-action'>
-          <button onClick={setEditedRows} name='edit'>
+        <div className='flex gap-1'>
+          <button
+            className='rounded-full h-7 w-7 bg-gray-200 text-blue-400'
+            onClick={setEditedRows}
+            name='edit'
+          >
             ✐
           </button>
-          <button onClick={removeRow} name='remove'>
+          <button
+            className='rounded-full h-7 w-7 bg-gray-200 text-red-400'
+            onClick={removeRow}
+            name='remove'
+          >
             X
           </button>
         </div>
       )}
-      <input
-        type='checkbox'
-        checked={row.getIsSelected()}
-        onChange={row.getToggleSelectedHandler()}
-      />
     </div>
   );
 };

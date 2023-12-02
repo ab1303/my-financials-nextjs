@@ -1,6 +1,6 @@
 import {
   addZakatCalendarYearDetails,
-  getZakatPayment,
+  getZakat,
   getZakatPayments,
 } from '../services/zakat.service';
 import { handleCaughtError } from '../utils/prisma';
@@ -10,6 +10,9 @@ export const createZakatYearHandler = async (
   totalAmount: number
 ) => {
   try {
+    const zakat = await getZakat(zakatCalendarYearId);
+    if (!!zakat.id) return { zakatCalendarId: zakat.id };
+
     const zakatCalendarYear = await addZakatCalendarYearDetails({
       calendarId: zakatCalendarYearId,
       amountDue: totalAmount,
@@ -34,7 +37,7 @@ export const zakatPaymentsHandler = async (calendarYearId: string) => {
 
 export const zakatHandler = async (calendarYearId: string) => {
   try {
-    const zakatPayment = await getZakatPayment(calendarYearId);
+    const zakatPayment = await getZakat(calendarYearId);
     return zakatPayment;
   } catch (e) {
     handleCaughtError(e);

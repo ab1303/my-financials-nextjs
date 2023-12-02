@@ -74,7 +74,7 @@ export default function DatePickerDialog({
       >
         <div className='absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none'>
           <svg
-            className='w-4 h-4 text-gray-500 dark:text-gray-400'
+            className='w-4 h-4 text-gray-700 dark:text-gray-400'
             aria-hidden='true'
             xmlns='http://www.w3.org/2000/svg'
             fill='currentColor'
@@ -88,8 +88,8 @@ export default function DatePickerDialog({
           type='text'
           className={clsx(
             ' block w-full pl-10',
-            'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500',
-            'dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+            'border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500',
+            'dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500'
           )}
           placeholder={format(new Date(), 'y-MM-dd')}
           value={format(selectedDate, 'y-MM-dd')}

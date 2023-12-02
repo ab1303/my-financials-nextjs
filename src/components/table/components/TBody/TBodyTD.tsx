@@ -15,7 +15,7 @@ type TBodyTDProps = {
 const TBodyTD = ({ children, ...rest }: TBodyTDProps) => {
   return (
     <td role='cell' className='px-6 py-4' {...rest}>
-      <span className='text-sm text-gray-500'>{children}</span>
+      <span className='text-sm'>{children}</span>
     </td>
   );
 };
