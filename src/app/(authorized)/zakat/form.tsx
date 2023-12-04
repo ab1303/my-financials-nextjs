@@ -13,7 +13,6 @@ import type { OptionType, CalendarYearType } from '@/types';
 import type { InputAttributes, NumericFormatProps } from 'react-number-format';
 import type { FormInput } from './_schema';
 import type { ServerActionType } from './_types';
-import { BeneficiaryEnumType } from '@prisma/client';
 
 // React Table
 type NumericFormatWithIndicatorProps<BaseType> = NumericFormatProps<

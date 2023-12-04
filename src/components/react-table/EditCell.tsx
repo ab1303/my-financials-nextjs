@@ -1,14 +1,15 @@
 import type { CellContext, RowData } from '@tanstack/react-table';
 import type { Dispatch, MouseEvent, SetStateAction } from 'react';
+import { castDraft, produce } from 'immer';
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
-    validRows: Record<string, unknown>;
-    editedRows: Record<string, unknown>;
+    validRows: Record<string, TData>;
+    editedRows: Map<string, TData>;
     updateRow: (rowIndex: number) => void;
     removeRow: (rowIndex: number) => void;
     revertData: (rowIndex: number) => void;
-    setEditedRows: Dispatch<SetStateAction<Record<string, unknown>>>;
+    setEditedRows: Dispatch<SetStateAction<Map<string, TData>>>;
   }
 }
 
@@ -29,14 +30,24 @@ export const EditCell = <TData, TValue>({
 
   const setEditedRows = (e: MouseEvent<HTMLButtonElement>) => {
     const elName = e.currentTarget.name;
-    meta?.setEditedRows((old: Record<string, unknown>) => ({
-      ...old,
-      [row.id]: !old[row.id],
-    }));
-    if (elName !== 'edit') {
-      e.currentTarget.name === 'cancel'
-        ? meta?.revertData(row.index)
-        : meta?.updateRow(row.index);
+
+    meta?.setEditedRows(
+      produce((draft) => {
+        draft.has(row.id)
+          ? draft.delete(row.id)
+          : draft.set(row.id, castDraft(row.original));
+      })
+    );
+
+    switch (elName) {
+      case 'edit':
+        break;
+      case 'cancel':
+        meta?.revertData(row.index);
+        break;
+      case 'done':
+        meta?.updateRow(row.index);
+        break;
     }
 
     e.preventDefault();
@@ -49,7 +60,7 @@ export const EditCell = <TData, TValue>({
 
   return (
     <div className='flex justify-center items-center gap-1'>
-      {meta?.editedRows[row.id] ? (
+      {meta?.editedRows.get(row.id) ? (
         <div className='flex gap-1'>
           <button
             className='rounded-full h-7 w-7 bg-gray-200 text-slate-400'

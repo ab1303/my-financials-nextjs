@@ -1,4 +1,7 @@
 'use client';
+import { enableMapSet } from 'immer';
+
+enableMapSet();
 
 import { useState } from 'react';
 import {
@@ -17,7 +20,9 @@ import type { ZakatPaymentType } from './_types';
 import { columns } from './_table/columns';
 
 export default function ZakatTableClient() {
-  const [editedRows, setEditedRows] = useState({});
+  const [editedRows, setEditedRows] = useState<Map<string, ZakatPaymentType>>(
+    new Map()
+  );
   const [validRows, setValidRows] = useState({});
 
   const {

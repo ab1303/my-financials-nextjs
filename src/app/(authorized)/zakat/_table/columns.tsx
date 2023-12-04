@@ -15,20 +15,40 @@ export const columns = [
   columnHelper.accessor('datePaid', {
     header: () => <span>Date Paid</span>,
     cell: TableCell,
-    meta: { type: 'DATE' },
+    meta: {
+      type: 'DATE',
+      propName: 'datePaid',
+    },
   }),
   columnHelper.accessor('amount', {
     size: 220,
     maxSize: 220,
     header: () => <span>Amount Paid</span>,
     cell: TableCell,
-    meta: { type: 'AMOUNT' },
+    meta: { type: 'AMOUNT', propName: 'amount' },
     footer: (props) => props.column.id,
   }),
   columnHelper.accessor('beneficiaryType', {
-    header: () => <span>Beneficiary</span>,
+    header: () => <span>Beneficiary Type</span>,
     cell: TableCell,
-    meta: { type: 'SELECT', selectOptions: beneficiaryOptions },
+    meta: {
+      type: 'SELECT',
+      propName: 'beneficiaryType',
+      selectOptions: beneficiaryOptions,
+    },
+    footer: (props) => props.column.id,
+  }),
+  columnHelper.accessor('beneficiaryId', {
+    header: () => <span>Beneficiary</span>,
+    cell: ({ row, column, table }) => {
+      const { original } = row;
+      const columnMeta = column.columnDef.meta;
+      const tableMeta = table.options.meta;
+
+      const editedRecord = tableMeta?.editedRows.get(row.id);
+
+      return <span>Create type {editedRecord?.beneficiaryType}</span>;
+    },
     footer: (props) => props.column.id,
   }),
   columnHelper.display({
