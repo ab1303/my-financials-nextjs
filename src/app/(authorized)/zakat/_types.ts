@@ -16,7 +16,7 @@ export type ZakatPaymentType = {
   id: string;
   datePaid: Date;
   amount: number;
-  beneficiaryId: string | null;
+  beneficiaryId: string;
   beneficiaryType: BeneficiaryEnumType;
 };
 

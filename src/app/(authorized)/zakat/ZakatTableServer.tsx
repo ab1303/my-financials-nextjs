@@ -17,7 +17,7 @@ export default async function ZakatPaymentsTableServer({
     zakatPayments?.map<ZakatPaymentType>((zp) => ({
       id: zp.id,
       amount: zp.amount,
-      beneficiaryId: zp.businessId,
+      beneficiaryId: zp.businessId || '',
       beneficiaryType: zp.beneficiaryType,
       datePaid: zp.datePaid,
     })) || [];

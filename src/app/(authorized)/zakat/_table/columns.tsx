@@ -4,6 +4,8 @@ import { TableCell, EditCell } from '@/components/react-table';
 import type { ZakatPaymentType } from '../_types';
 import type { OptionType } from '@/types';
 import { BeneficiaryEnumType } from '@prisma/client';
+import BeneficiarySelectionCell from './BeneficiarySelectionCell';
+import { castDraft, produce } from 'immer';
 
 const beneficiaryOptions = Object.entries(BeneficiaryEnumType).flatMap<
   OptionType
@@ -40,14 +42,45 @@ export const columns = [
   }),
   columnHelper.accessor('beneficiaryId', {
     header: () => <span>Beneficiary</span>,
-    cell: ({ row, column, table }) => {
+    cell: ({ row, table }) => {
       const { original } = row;
-      const columnMeta = column.columnDef.meta;
       const tableMeta = table.options.meta;
+
+      const updateRecord = (
+        editedRecord: ZakatPaymentType,
+        beneficiaryId: string
+      ) => {
+        const updatedRecord = {
+          ...editedRecord,
+          beneficiaryId,
+        };
+
+        tableMeta?.setEditedRows(
+          produce((draft) => {
+            draft.set(row.id, castDraft(updatedRecord));
+          })
+        );
+      };
 
       const editedRecord = tableMeta?.editedRows.get(row.id);
 
-      return <span>Create type {editedRecord?.beneficiaryType}</span>;
+      if (!editedRecord) return <span>{original.beneficiaryId}</span>;
+
+      if (editedRecord.beneficiaryType == 'BUSINESS') {
+        return <span>Create type {editedRecord.beneficiaryType}</span>;
+      }
+
+      return (
+        <BeneficiarySelectionCell
+          defaultOptions={[]}
+          beneficiaryId={editedRecord.beneficiaryId}
+          beneficiaryType={editedRecord.beneficiaryType}
+          onSelectionChange={(beneficiaryId) => {
+            updateRecord(editedRecord, beneficiaryId || '');
+            return;
+          }}
+        />
+      );
     },
     footer: (props) => props.column.id,
   }),
