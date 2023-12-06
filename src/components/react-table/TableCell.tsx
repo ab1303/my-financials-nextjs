@@ -80,12 +80,6 @@ export const TableCell = <TData, TValue>({
             isClearable
             instanceId={uniqSelectId}
             value={selectValue}
-            styles={{
-              control: (base) => ({
-                ...base,
-                zIndex: 32,
-              }),
-            }}
             options={columnMeta.selectOptions || []}
             getOptionValue={(option: OptionType) => option.id}
             onChange={(option) => {

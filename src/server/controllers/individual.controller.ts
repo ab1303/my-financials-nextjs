@@ -1,4 +1,7 @@
-import { addIndividualBeneficiary } from '@/server/services/individual.service';
+import {
+  addIndividualBeneficiary,
+  getIndividuals,
+} from '@/server/services/individual.service';
 import { handleCaughtError } from '@/server/utils/prisma';
 
 export const createIndividualBeneficiaryHandler = async (
@@ -20,5 +23,13 @@ export const createIndividualBeneficiaryHandler = async (
     handleCaughtError(e);
 
     return { beneficiaryId: '' };
+  }
+};
+
+export const getIndividualsHandler = async () => {
+  try {
+    return await getIndividuals();
+  } catch (e) {
+    handleCaughtError(e);
   }
 };

@@ -19,6 +19,8 @@ import {
   IconReceiptPercent,
   IconHandHoldingDollar,
   IconCalendar,
+  IconRelations,
+  IconUser,
 } from './SideNavIcons';
 
 type SideNavProps = {
@@ -131,7 +133,7 @@ export default function SideNav({
         <li>
           <Disclosure>
             <Disclosure.Button className='flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-cyan-300 hover:bg-gray-100'>
-              <IconBuilding />
+              <IconRelations />
               <span className={clsx('text-lg font-bold text-gray-600')}>
                 Relation(s)
               </span>
@@ -149,7 +151,7 @@ export default function SideNav({
                 href='/relation/individual'
                 className='border-b-0'
               >
-                <IconProfile />
+                <IconUser />
               </SideNavLink>
             </Disclosure.Panel>
           </Disclosure>

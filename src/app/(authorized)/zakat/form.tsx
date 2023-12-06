@@ -2,7 +2,7 @@
 
 import { Label } from 'flowbite-react';
 import Select from 'react-select';
-import React, { useId, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
 
@@ -90,6 +90,10 @@ export default function ZakatForm({
 
   const [totalAmountDue, setTotalAmountDue] = useState<number>(amountDue);
   const [isSavingAmount, setIsSavingAmount] = useState<boolean>(false);
+
+  useEffect(() => {
+    setTotalAmountDue(amountDue);
+  }, [amountDue]);
 
   const currentYearData = zakatYearData.find((yd) => yd.id === yearIdParam);
   const currentYearOption = currentYearData

@@ -3,7 +3,7 @@ import { enableMapSet } from 'immer';
 
 enableMapSet();
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -16,10 +16,18 @@ import { trpcClient } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 import { useZakatPaymentState } from './StateProvider';
 
-import type { ZakatPaymentType } from './_types';
-import { columns } from './_table/columns';
+import { getTableColumns } from './_table/columns';
 
-export default function ZakatTableClient() {
+import type { ZakatPaymentType } from './_types';
+import type { OptionType } from '@/types';
+
+type ZakatTableClientProps = {
+  individualsOptions: OptionType[];
+};
+
+export default function ZakatTableClient({
+  individualsOptions,
+}: ZakatTableClientProps) {
   const [editedRows, setEditedRows] = useState<Map<string, ZakatPaymentType>>(
     new Map()
   );
@@ -29,6 +37,10 @@ export default function ZakatTableClient() {
     state: { data },
     dispatch,
   } = useZakatPaymentState();
+
+  const columns = useMemo(() => getTableColumns(individualsOptions), [
+    individualsOptions,
+  ]);
 
   const table = useReactTable<ZakatPaymentType>({
     data: data,
