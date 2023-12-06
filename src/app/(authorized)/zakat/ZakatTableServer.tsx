@@ -13,6 +13,10 @@ export default async function ZakatPaymentsTableServer({
 }: ZakatTableServerProps) {
   const zakatPayments = await zakatPaymentsHandler(calendarYearId);
 
+  
+
+
+
   const data =
     zakatPayments?.map<ZakatPaymentType>((zp) => ({
       id: zp.id,

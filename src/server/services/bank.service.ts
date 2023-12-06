@@ -1,8 +1,10 @@
 import type { Prisma, Business } from '@prisma/client';
 import { prisma } from '../utils/prisma';
 
-export const addBankDetails = async (input: Prisma.BusinessCreateInput) => {
-  const result = await prisma.business.create({ data: input });
+export const addBankDetails = async (
+  input: Prisma.BusinessUncheckedCreateInput
+) => {
+  const result = await prisma.business.create({ data: { ...input } });
   return result as Business;
 };
 

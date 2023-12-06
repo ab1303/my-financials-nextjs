@@ -9,7 +9,9 @@ import { createBankSchema, params } from '@/server/schema/bank.schema';
 export const bankRouter = router({
   saveBankDetails: protectedProcedure
     .input(createBankSchema)
-    .mutation((bankDetails) => addBankDetailsHandler(bankDetails)),
+    .mutation(({ input, ctx: { session } }) =>
+      addBankDetailsHandler({ input, userId: session.user.id })
+    ),
   getAllBanks: protectedProcedure.query(() => {
     return allBankDetailsHandler();
   }),

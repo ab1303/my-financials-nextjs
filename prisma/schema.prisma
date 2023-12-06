@@ -66,6 +66,7 @@ model User {
   accounts   Account[]
   sessions   Session[]
   Individual Individual[]
+  Business   Business[]
 }
 
 model VerificationToken {
@@ -110,6 +111,8 @@ model Business {
   PaymentHistory Payment[]
   BankInterest   BankInterest[]
   ZakatPayment   ZakatPayment[]
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Payment {

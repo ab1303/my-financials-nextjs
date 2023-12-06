@@ -105,7 +105,6 @@ export default function SideNav({
                 className='border-b-0'
               >
                 <IconReceiptPercent />
-                {/* <IconCashStack /> */}
               </SideNavLink>
             </Disclosure.Panel>
           </Disclosure>
@@ -125,6 +124,32 @@ export default function SideNav({
                 className='border-b-0'
               >
                 <IconBank />
+              </SideNavLink>
+            </Disclosure.Panel>
+          </Disclosure>
+        </li>
+        <li>
+          <Disclosure>
+            <Disclosure.Button className='flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-cyan-300 hover:bg-gray-100'>
+              <IconBuilding />
+              <span className={clsx('text-lg font-bold text-gray-600')}>
+                Relation(s)
+              </span>
+            </Disclosure.Button>
+            <Disclosure.Panel as='ul' className='pl-3 text-gray-500'>
+              <SideNavLink
+                name='Business'
+                href='/relation/business'
+                className='border-b-0'
+              >
+                <IconBuilding />
+              </SideNavLink>
+              <SideNavLink
+                name='Individual'
+                href='/relation/individual'
+                className='border-b-0'
+              >
+                <IconProfile />
               </SideNavLink>
             </Disclosure.Panel>
           </Disclosure>
