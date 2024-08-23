@@ -58,14 +58,26 @@ export function getTableColumns(individualsOptions: OptionType[]) {
 
           tableMeta?.setEditedRows(
             produce((draft) => {
-              draft.set(row.id, castDraft(updatedRecord));
+              draft.set(row.index, castDraft(updatedRecord));
             })
           );
         };
 
-        const editedRecord = tableMeta?.editedRows.get(row.id);
+        const editedRecord = tableMeta?.editedRows.get(row.index);
 
-        if (!editedRecord) return <span>{original.beneficiaryId}</span>;
+        // Display
+        if (!editedRecord) {
+          // case business
+          if (original.beneficiaryType == 'BUSINESS') {
+            return <span>{original.beneficiaryId}</span>;
+          }
+
+          const selectedOption = individualsOptions.find(
+            (i) => i.id === original.beneficiaryId
+          );
+
+          return <span>{selectedOption?.label}</span>;
+        }
 
         if (editedRecord.beneficiaryType == 'BUSINESS') {
           return <span>Create type {editedRecord.beneficiaryType}</span>;

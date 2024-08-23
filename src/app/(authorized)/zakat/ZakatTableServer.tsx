@@ -5,6 +5,7 @@ import { getIndividualsHandler } from '@/server/controllers/individual.controlle
 
 import type { ZakatPaymentType } from './_types';
 import type { OptionType } from '@/types';
+import { addRow, deleteRow, editRow } from './actions';
 
 export type ZakatTableServerProps = {
   calendarYearId: string;
@@ -34,7 +35,12 @@ export default async function ZakatPaymentsTableServer({
     })) || [];
   return (
     <ZakatPaymentStateProvider data={data}>
-      <ZakatTableClient individualsOptions={individualsOptions} />
+      <ZakatTableClient
+        individualsOptions={individualsOptions}
+        addRow={addRow}
+        editRow={editRow}
+        deleteRow={deleteRow}
+      />
     </ZakatPaymentStateProvider>
   );
 }

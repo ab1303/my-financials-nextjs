@@ -59,12 +59,12 @@ export const TableCell = <TData, TValue>({
 
     tableMeta?.setEditedRows(
       produce((draft) => {
-        draft.set(row.id, castDraft(updatedRecord));
+        draft.set(row.index, castDraft(updatedRecord));
       })
     );
   };
 
-  const editedRecord = tableMeta?.editedRows.get(row.id);
+  const editedRecord = tableMeta?.editedRows.get(row.index);
   const value = editedRecord ? editedRecord[columnMeta.propName] : initialValue;
   let controlRenderer: Record<ControlType, () => JSX.Element | null>;
   if (editedRecord) {

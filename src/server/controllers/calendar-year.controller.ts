@@ -13,12 +13,7 @@ export const createCalendarYearHandler = async (
   toMonth: number,
   type: string
 ) => {
-  const calendarType =
-    type === CalendarEnumType['ANNUAL']
-      ? CalendarEnumType['ANNUAL']
-      : type === CalendarEnumType['FISCAL']
-      ? CalendarEnumType['FISCAL']
-      : CalendarEnumType['ZAKAT'];
+  const calendarType = CalendarEnumType[type as keyof typeof CalendarEnumType];
 
   try {
     const createCalendarYear = await addCalendarYearDetails({

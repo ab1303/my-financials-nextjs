@@ -5,11 +5,11 @@ import { castDraft, produce } from 'immer';
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     validRows: Record<string, TData>;
-    editedRows: Map<string, TData>;
+    editedRows: Map<number, TData>;
     updateRow: (rowIndex: number) => void;
     removeRow: (rowIndex: number) => void;
     revertData: (rowIndex: number) => void;
-    setEditedRows: Dispatch<SetStateAction<Map<string, TData>>>;
+    setEditedRows: Dispatch<SetStateAction<Map<number, TData>>>;
   }
 }
 
@@ -33,9 +33,9 @@ export const EditCell = <TData, TValue>({
 
     meta?.setEditedRows(
       produce((draft) => {
-        draft.has(row.id)
-          ? draft.delete(row.id)
-          : draft.set(row.id, castDraft(row.original));
+        draft.has(row.index)
+          ? draft.delete(row.index)
+          : draft.set(row.index, castDraft(row.original));
       })
     );
 
@@ -60,7 +60,7 @@ export const EditCell = <TData, TValue>({
 
   return (
     <div className='flex justify-center items-center gap-1'>
-      {meta?.editedRows.get(row.id) ? (
+      {meta?.editedRows.get(row.index) ? (
         <div className='flex gap-1'>
           <button
             className='rounded-full h-7 w-7 bg-gray-200 text-slate-400'

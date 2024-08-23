@@ -18,17 +18,27 @@ import { useZakatPaymentState } from './StateProvider';
 
 import { getTableColumns } from './_table/columns';
 
-import type { ZakatPaymentType } from './_types';
+import type { ServerActionType, ZakatPaymentType } from './_types';
 import type { OptionType } from '@/types';
+import { editRow } from './actions';
 
 type ZakatTableClientProps = {
   individualsOptions: OptionType[];
+  editRow: (
+    rowId: string,
+    record: ZakatPaymentType
+  ) => Promise<ServerActionType>;
+  addRow: () => Promise<ServerActionType>;
+  deleteRow: () => Promise<ServerActionType>;
 };
 
 export default function ZakatTableClient({
   individualsOptions,
+  addRow,
+  editRow,
+  deleteRow,
 }: ZakatTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<string, ZakatPaymentType>>(
+  const [editedRows, setEditedRows] = useState<Map<number, ZakatPaymentType>>(
     new Map()
   );
   const [validRows, setValidRows] = useState({});
@@ -57,13 +67,34 @@ export default function ZakatTableClient({
         //     index === rowIndex ? originalData[rowIndex] : row
         //   )
         // );
+        console.log('row reverted in client', rowIndex);
       },
-      updateRow: (rowIndex: number) => {
-        // TODO
-        // updateRow(data[rowIndex].id, data[rowIndex]);
+      updateRow: async (rowIndex: number) => {
+        const row = data[rowIndex];
+        if (!row) return;
+
+        const updatedRecord = editedRows.get(rowIndex);
+        if (!updatedRecord) return;
+
+        const editResult = await editRow(updatedRecord.id, updatedRecord);
+        if (editResult.success) {
+          dispatch({
+            type: 'ZAKAT/Payments/EDIT_PAYMENT',
+            payload: {
+              payment: updatedRecord,
+              zakatPaymentId: updatedRecord.id,
+            },
+          });
+        }
+        console.log('row updated in client', editResult);
       },
       removeRow: (rowIndex: number) => {
         //deleteRow(data[rowIndex].id);
+        const record = data[rowIndex];
+        if (!record) return;
+
+        deleteRow();
+        console.log('row deleted in client', rowIndex);
       },
     },
   });

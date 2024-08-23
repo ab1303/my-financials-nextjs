@@ -37,6 +37,15 @@ export const zakatPaymentReducer = produce<ZakatPaymentsState, [Actions]>(
       }
 
       case 'ZAKAT/Payments/EDIT_PAYMENT': {
+        const { payment, zakatPaymentId } = action.payload;
+        const editedPayment = draft.data.find((d) => d.id === zakatPaymentId);
+
+        if (!editedPayment) return;
+
+        editedPayment.amount = payment.amount;
+        editedPayment.beneficiaryType = payment.beneficiaryType;
+        editedPayment.beneficiaryId = payment.beneficiaryId;
+        editedPayment.datePaid = payment.datePaid;
         break;
       }
 
