@@ -12,7 +12,7 @@ import { toast } from 'react-toastify';
 
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
-import { trpcClient } from '@/server/trpc/client';
+import { trpc } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 
 import { useBankInterestState } from './StateProvider';
@@ -148,8 +148,8 @@ export default function BankInterestTableClient({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const updateBankInterestDetailsMutation = trpcClient.bankInterest.updateBankInterestDetail.useMutation(
-    {
+  const updateBankInterestDetailsMutation =
+    trpc.bankInterest.updateBankInterestDetail.useMutation({
       onError(error: unknown, { bankInterestId }) {
         if (error instanceof TRPCError) {
           toast.error(error.message);
@@ -169,8 +169,7 @@ export default function BankInterestTableClient({
           },
         });
       },
-    }
-  );
+    });
 
   const updateEditRows = (id: string, record?: EditedRowType) => {
     setEditedRows((prev) => {

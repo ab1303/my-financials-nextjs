@@ -13,7 +13,7 @@ import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
-import { trpcClient } from '@/server/trpc/client';
+import { trpc } from '@/server/trpc/client';
 import type { BankType } from '@/types';
 
 type BankOptionType = {
@@ -55,29 +55,27 @@ function DeleteIcon(props: DeleteIconProps) {
 
 const Option = (props: OptionProps<BankOptionType, false>) => {
   const queryClient = useQueryClient();
-  const {
-    isLoading,
-    mutate: deleteBank,
-  } = trpcClient.bank.removeBankDetails.useMutation({
-    onSuccess() {
-      queryClient.refetchQueries([['getAllBanks']]);
-      toast('Bank details deleted successfully', {
-        type: 'success',
-        position: 'top-right',
-      });
-    },
-    onError(error) {
-      toast(error.message, {
-        type: 'error',
-        position: 'top-right',
-      });
-    },
-  });
+  const { isPending, mutate: deleteBank } =
+    trpc.bank.removeBankDetails.useMutation({
+      onSuccess() {
+        queryClient.refetchQueries({ queryKey: [['getAllBanks']] });
+        toast('Bank details deleted successfully', {
+          type: 'success',
+          position: 'top-right',
+        });
+      },
+      onError(error) {
+        toast(error.message, {
+          type: 'error',
+          position: 'top-right',
+        });
+      },
+    });
 
   return (
     <div className='flex justify-between'>
       <components.Option {...props} />
-      {isLoading ? (
+      {isPending ? (
         <ImSpinner2 className='animate-spin' />
       ) : (
         <DeleteIcon onClick={() => deleteBank({ bankId: props.data.id })} />
@@ -88,8 +86,8 @@ const Option = (props: OptionProps<BankOptionType, false>) => {
 
 export default function BanksForm() {
   const queryClient = useQueryClient();
-  const getBanksQuery = trpcClient.bank.getAllBanks.useQuery();
-  const saveBankDetailsMutation = trpcClient.bank.saveBankDetails.useMutation({
+  const getBanksQuery = trpc.bank.getAllBanks.useQuery();
+  const saveBankDetailsMutation = trpc.bank.saveBankDetails.useMutation({
     onError(error: unknown) {
       if (error instanceof TRPCError) {
         toast.error(error.message);
@@ -97,7 +95,7 @@ export default function BanksForm() {
     },
 
     onSuccess() {
-      queryClient.refetchQueries([['getAllBanks']]);
+      queryClient.refetchQueries({ queryKey: [['getAllBanks']] });
       toast.success('Bank details saved!');
     },
   });
@@ -259,7 +257,7 @@ export default function BanksForm() {
 
             <div>
               <Button
-                isLoading={saveBankDetailsMutation.isLoading}
+                isLoading={saveBankDetailsMutation.isPending}
                 variant='primary'
                 type='submit'
               >

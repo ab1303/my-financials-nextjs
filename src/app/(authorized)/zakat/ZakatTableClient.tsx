@@ -12,7 +12,7 @@ import {
 import { toast } from 'react-toastify';
 
 import Table from '@/components/table';
-import { trpcClient } from '@/server/trpc/client';
+import { trpc } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 import { useZakatPaymentState } from './StateProvider';
 
@@ -48,9 +48,10 @@ export default function ZakatTableClient({
     dispatch,
   } = useZakatPaymentState();
 
-  const columns = useMemo(() => getTableColumns(individualsOptions), [
-    individualsOptions,
-  ]);
+  const columns = useMemo(
+    () => getTableColumns(individualsOptions),
+    [individualsOptions]
+  );
 
   const table = useReactTable<ZakatPaymentType>({
     data: data,

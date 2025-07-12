@@ -10,7 +10,8 @@ import { Suspense } from 'react';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 
 // types
-import type { CalendarEnumType, OptionType } from '@/types';
+import type { OptionType } from '@/types';
+import type { CalendarEnumType } from '@prisma/client';
 
 type BankPageProps = {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -28,8 +29,9 @@ function getSelectedParam(searchParam?: string | string[]) {
 // page dynamically rendered
 //https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional
 export default async function BanksPage({ searchParams }: BankPageProps) {
-  const yearlyData = (await getCalendarYearsHandler()).filter(
-    (yd) => yd.type === 'ANNUAL'
+  const allYearlyData = await getCalendarYearsHandler();
+  const yearlyData = allYearlyData.filter(
+    (yd: { type: CalendarEnumType | null }) => yd.type === 'ANNUAL'
   );
 
   const banks = await httpServer.bank.getAllBanks.query();

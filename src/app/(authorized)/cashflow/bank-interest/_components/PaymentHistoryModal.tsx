@@ -7,7 +7,7 @@ import { NumericFormat } from 'react-number-format';
 import { Card } from '@/components';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import DatePickerDialog from '@/components/DatePickerDialog';
-import { trpcClient } from '@/server/trpc/client';
+import { trpc } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 
 import { useBankInterestState } from '../StateProvider';
@@ -116,8 +116,8 @@ export default function PaymentHistoryModal({
 
   const { dispatch } = useBankInterestState();
 
-  const addPaymentMutation = trpcClient.bankInterest.addBankInterestPayment.useMutation(
-    {
+  const addPaymentMutation =
+    trpc.bankInterest.addBankInterestPayment.useMutation({
       onError(error: unknown) {
         if (error instanceof TRPCError) {
           toast.error(error.message);
@@ -140,11 +140,10 @@ export default function PaymentHistoryModal({
           },
         });
       },
-    }
-  );
+    });
 
-  const updatePaymentMutation = trpcClient.bankInterest.updateBankInterestPayment.useMutation(
-    {
+  const updatePaymentMutation =
+    trpc.bankInterest.updateBankInterestPayment.useMutation({
       onError(error: unknown) {
         if (error instanceof TRPCError) {
           toast.error(error.message);
@@ -163,11 +162,10 @@ export default function PaymentHistoryModal({
           },
         });
       },
-    }
-  );
+    });
 
-  const removePaymentMutation = trpcClient.bankInterest.removeBankInterestPayment.useMutation(
-    {
+  const removePaymentMutation =
+    trpc.bankInterest.removeBankInterestPayment.useMutation({
       onError(error: unknown) {
         if (error instanceof TRPCError) {
           toast.error(error.message);
@@ -185,8 +183,7 @@ export default function PaymentHistoryModal({
           },
         });
       },
-    }
-  );
+    });
 
   const handleAddPayment = (payment: PaymentType) => {
     const { amount, businessId, datePaid } = payment;
