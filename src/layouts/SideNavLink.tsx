@@ -58,17 +58,18 @@ export default function SideNavLink({
         className
       )}
     >
-      <Link href={href}>
-        <span className='flex h-full w-full items-center justify-start space-x-3'>
-          {childrenWithProps}
-          <span
-            className={clsx(
-              'text-lg font-bold',
-              pathname === href ? 'text-cyan-600' : 'text-gray-600'
-            )}
-          >
-            {name}
-          </span>
+      <Link 
+        href={href} 
+        className='flex h-full w-full items-center justify-start space-x-3'
+      >
+        {childrenWithProps}
+        <span
+          className={clsx(
+            'text-lg font-bold',
+            pathname === href ? 'text-cyan-600' : 'text-gray-600'
+          )}
+        >
+          {name}
         </span>
       </Link>
     </li>

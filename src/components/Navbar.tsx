@@ -75,37 +75,33 @@ const Navbar = ({ logo }: NavbarProps) => {
             />
           </div>
           <div className='flex h-full flex-col items-center justify-around pt-5'>
-            <Link href='/'>
-              <span
-                onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
-              >
-                Home
-              </span>
+            <Link 
+              href='/' 
+              className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+              onClick={() => setOpenNav(false)}
+            >
+              Home
             </Link>
-            <Link href='#product'>
-              <span
-                onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
-              >
-                Product
-              </span>
+            <Link 
+              href='#product' 
+              className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+              onClick={() => setOpenNav(false)}
+            >
+              Product
             </Link>
-            <Link href='#faq'>
-              <span
-                onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
-              >
-                Faq
-              </span>
+            <Link 
+              href='#faq' 
+              className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+              onClick={() => setOpenNav(false)}
+            >
+              Faq
             </Link>
-            <Link href='#contact'>
-              <span
-                onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
-              >
-                Contact
-              </span>
+            <Link 
+              href='#contact' 
+              className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+              onClick={() => setOpenNav(false)}
+            >
+              Contact
             </Link>
           </div>
         </div>
@@ -114,25 +110,17 @@ const Navbar = ({ logo }: NavbarProps) => {
       {/* Desktop Nav */}
 
       <div className='mr-12 flex w-2/5 justify-around sm:invisible lg:visible'>
-        <Link href='#home'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
-            Home
-          </span>
+        <Link href='#home' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+          Home
         </Link>
-        <Link href='#product'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
-            Product
-          </span>
+        <Link href='#product' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+          Product
         </Link>
-        <Link href='#faq'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
-            Faq
-          </span>
+        <Link href='#faq' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+          Faq
         </Link>
-        <Link href='#contact'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
-            Contact
-          </span>
+        <Link href='#contact' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+          Contact
         </Link>
       </div>
     </div>
