@@ -1,6 +1,5 @@
 export const dynamic = 'force-dynamic';
 
-import type { OptionType } from '@/types';
 // import { server } from '@/server/trpc/server';
 import { httpServer } from '@/server/trpc/server-http';
 
@@ -9,6 +8,9 @@ import BankInterestForm from './form';
 import BankInterestTableServer from './BankInterestTableServer';
 import { Suspense } from 'react';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
+
+// types
+import type { CalendarEnumType, OptionType } from '@/types';
 
 type BankPageProps = {
   searchParams: { [key: string]: string | string[] | undefined };
