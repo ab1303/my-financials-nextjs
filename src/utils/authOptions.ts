@@ -8,8 +8,6 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/server/db/client';
 import { findUser } from '@/server/services/user.service';
 
-
-
 export const authOptions: NextAuthOptions = {
   // Include user.id on session
   callbacks: {
@@ -30,12 +28,12 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/auth/login',
   },
-  secret: process.env.ACCESS_TOKEN_SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
   },
   jwt: {
-    secret: process.env.ACCESS_TOKEN_SECRET,
+    secret: process.env.NEXTAUTH_SECRET,
   },
   // Configure one or more authentication providers
   adapter: PrismaAdapter(prisma),
