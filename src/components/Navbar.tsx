@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import Image from "next/image";
 import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 
@@ -25,14 +25,11 @@ const Navbar = ({ logo }: NavbarProps) => {
     <div className='flex h-28 flex-row items-center justify-between'>
       <Link href='/' className='logo pl-7 lg:ml-10'>
         <Image
-          height='65'
-          width='65'
+          height={65}
+          width={65}
           src={logo}
           alt='logo'
-          style={{
-            maxWidth: '100%',
-            height: 'auto',
-          }}
+          className='h-auto max-w-full'
         />
       </Link>
 
@@ -64,14 +61,11 @@ const Navbar = ({ logo }: NavbarProps) => {
             className='absolute right-12 top-9'
           >
             <Image
-              height='30'
-              width='30'
+              height={30}
+              width={30}
               src='/images/close_icon.png'
-              alt=''
-              style={{
-                maxWidth: '100%',
-                height: 'auto',
-              }}
+              alt='Close menu'
+              className='h-auto max-w-full'
             />
           </div>
           <div className='flex h-full flex-col items-center justify-around pt-5'>
