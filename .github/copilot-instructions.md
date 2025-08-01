@@ -2,6 +2,7 @@
 
 ## Dos
 
+- Use TypeScript for all code (frontend, backend, API routes, database models).
 - Organize routes and components in the `app` directory.
 - Leverage Server Components for data fetching.
 - Use Server Actions for form submissions.
@@ -25,6 +26,12 @@
 
 ## Project Structure
 
+- Keep all source code in `/src`.
+- Organize by feature/modules where possible.
+- Place Prisma schema in `/prisma`.
+- Place global styles in `/styles`.
+- Place tRPC routers in `/server/api`.
+- Place NextAuth config in `/server/auth`.
 - Use the `app` directory for all route components, layouts, and handlers.
 - Place shared utilities in `src/utils`.
 - Place shared types in `src/types`.
