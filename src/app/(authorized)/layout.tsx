@@ -5,11 +5,12 @@ import PageLoading from '@/components/PageLoading';
 import Header from '@/components/Header';
 import { authOptions } from '@/utils/authOptions';
 import { redirect } from 'next/navigation';
+import { UserProvider } from './UserProvider';
 
 export default async function AuthorizedLayout({
   children,
 }: {
-  children: React.ReactElement;
+  children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -20,17 +21,14 @@ export default async function AuthorizedLayout({
   const isUser = !!session?.user;
   if (!isUser) return <PageLoading />; // shouldn't happen
 
-  // Put Header or Footer Here
-  const childrenWithUserProp = React.cloneElement(children, {
-    user: session.user,
-  });
-  return (
+ return (
     <div className='box-border'>
-      <Header user={session.user}></Header>
-
+      <Header user={session.user} />
+      
       <div className='flex flex-col'>
-        {/* <Navbar logo='/images/logo.png' /> */}
-        {childrenWithUserProp}
+        <UserProvider user={session.user}>
+          {children}
+        </UserProvider>
       </div>
     </div>
   );

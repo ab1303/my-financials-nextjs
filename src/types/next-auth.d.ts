@@ -1,15 +1,16 @@
 import type { RoleEnumType } from '@prisma/client';
 import { type DefaultUser } from 'next-auth';
 
-type AugmentedUser = {
-  id: string;
-} & User;
 
 declare module 'next-auth' {
+
   interface User extends Omit<DefaultUser, 'id'> {
     role: RoleEnumType | null;
   }
-
+  
+  interface AugmentedUser extends User {
+    id: string;
+  }
   /**
    * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
    */

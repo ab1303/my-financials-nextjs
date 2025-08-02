@@ -8,15 +8,27 @@
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
-  swcMinify: true,
+
+  // Enable Turbopack for development
+  // experimental: {
+  //   turbo: {
+  //     rules: {
+  //       // Handle CSS imports properly
+  //       '*.css': {
+  //         loaders: ['css-loader'],
+  //         as: '*.css',
+  //       },
+  //     },
+  //     resolveAlias: {
+  //       '@': './src',
+  //     },
+  //   },
+  // },
+
   i18n: {
     locales: ['en'],
     defaultLocale: 'en',
   },
-  webpack(config) {
-    config.experiments = { ...config.experiments, topLevelAwait: true };
-    return config;
-  },
-  // Server Actions are enabled by default in Next.js 14
 };
+
 export default config;

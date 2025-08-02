@@ -1,3 +1,7 @@
+/* ----------- Loading ------------- */
+@import url('./loading.css');
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -105,6 +109,7 @@
     @apply min-h-[calc(100vh-56px)];
   }
 }
+
 
 .toggle-bg:after {
   content: "";
@@ -274,5 +279,4 @@ input:checked + .toggle-bg {
 }
 
 
-/* ----------- Loading ------------- */
-@import url('./loading.css');
+
