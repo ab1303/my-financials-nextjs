@@ -13,22 +13,23 @@ import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.cont
 import type { OptionType } from '@/types';
 import type { CalendarEnumType } from '@prisma/client';
 
-type BankPageProps = {
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
-function getSelectedParam(searchParam?: string | string[]) {
-  const selectedSearch = searchParam || '';
-  const selected = Array.isArray(selectedSearch)
-    ? selectedSearch[0]
-    : selectedSearch;
-
-  return selected || '';
-}
-
 // page dynamically rendered
 //https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional
-export default async function BanksPage({ searchParams }: BankPageProps) {
+export default async function BanksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+
+  function getSelectedParam(searchParam?: string | string[]) {
+    const selectedSearch = searchParam || '';
+    const selected = Array.isArray(selectedSearch)
+      ? selectedSearch[0]
+      : selectedSearch;
+    return selected || '';
+  }
+
   const allYearlyData = await getCalendarYearsHandler();
   const yearlyData = allYearlyData.filter(
     (yd: { type: CalendarEnumType | null }) => yd.type === 'ANNUAL'
@@ -42,10 +43,10 @@ export default async function BanksPage({ searchParams }: BankPageProps) {
       }))
     : [];
 
-  const yearParam = +getSelectedParam(searchParams?.year);
+  const yearParam = +getSelectedParam(params?.year);
 
   const selectedBank = bankOptions.find(
-    (b) => b.label === getSelectedParam(searchParams?.bank)
+    (b) => b.label === getSelectedParam(params?.bank)
   );
   const selectedBankId = selectedBank ? selectedBank.id : '';
 
