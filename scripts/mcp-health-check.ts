@@ -45,7 +45,9 @@ async function checkMCPHealth() {
 
     console.log('🎉 MCP health check complete!');
   } catch (error) {
-    console.error('❌ Health check failed:', error.message);
+    if (error instanceof Error)
+      console.error('❌ Health check failed:', error.message);
+
     console.log('💡 Try running: npm run mcp:logs');
     process.exit(1);
   }

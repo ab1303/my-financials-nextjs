@@ -18,7 +18,8 @@
     "mcp:logs": "docker-compose logs -f mcp-postgres",
     "mcp:test": "curl -X GET http://localhost:3001/health || echo 'Testing MCP connection...'",
     "mcp:pull": "docker pull mcp/postgres:latest",
-    "db:mcp": "npm run mcp:start && sleep 5 && npm run mcp:test"
+    "db:mcp": "npm run mcp:start && sleep 5 && npm run mcp:test",
+    "db:generate": "prisma generate"
   },
   "dependencies": {
     "@babel/core": "^7.22.10",
