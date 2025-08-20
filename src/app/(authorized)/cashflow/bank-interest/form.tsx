@@ -1,6 +1,6 @@
 'use client';
 
-import { Label } from 'flowbite-react';
+import { Label } from '@/components/ui/Label';
 import Select from 'react-select';
 import React, { useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
@@ -35,9 +35,8 @@ export default function BankInterestForm({
 
   // TODO: use a Toggle control to set current year
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [currentYearType, setCurrentYearType] = useState<
-    CalendarYearType['type']
-  >('ANNUAL');
+  const [currentYearType, setCurrentYearType] =
+    useState<CalendarYearType['type']>('ANNUAL');
 
   const currentYearData = yearlyData.find((yd) => yd.id === yearIdParam);
   const currentYearOption = currentYearData
@@ -80,7 +79,7 @@ export default function BankInterestForm({
 
   const updateURLSearchParams = (
     selection: 'bank' | 'year',
-    value?: string
+    value?: string,
   ) => {
     const current = new URLSearchParams(searchParams || '');
 
