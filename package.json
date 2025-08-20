@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "next build --turbopack",
     "build:turbo": "next build --turbo",
     "build:webpack": "next build",
     "build:styles": "npx tailwindcss -i ./src/styles/global.css -o ./dist/css/flowbite.css",

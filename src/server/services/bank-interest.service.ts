@@ -4,7 +4,7 @@ import type { BankInterestModel, PaymentModel } from '@/server/models';
 
 export const getBankInterestDetails = async (
   bankId: string,
-  calendarYearId: string
+  calendarYearId: string,
 ): Promise<Array<BankInterestModel>> => {
   const where: Partial<Prisma.BankInterestWhereUniqueInput> = {
     bankId,
@@ -51,7 +51,7 @@ export const updateBankInterestDetail = async (
   id: string,
   bankId: string,
   calendarYearId: string,
-  amountDue: number
+  amountDue: number,
 ) => {
   const where: Prisma.BankInterestWhereUniqueInput = {
     id,
@@ -69,7 +69,7 @@ export const updateBankInterestDetail = async (
 
 export const addBankInterestPaymentDetail = async (
   bankInterestId: string,
-  payment: Omit<PaymentModel, 'id'>
+  payment: Omit<PaymentModel, 'id'>,
 ) => {
   return await prisma.payment.create({
     data: {
@@ -83,7 +83,7 @@ export const addBankInterestPaymentDetail = async (
 export const updateBankInterestPaymentDetail = async (
   bankInterestId: string,
   paymentId: string,
-  payment: number
+  payment: number,
 ) => {
   return await prisma.bankInterest.update({
     where: { id: bankInterestId },
@@ -107,7 +107,7 @@ export const updateBankInterestPaymentDetail = async (
 
 export const removeBankInterestPaymentDetail = async (
   bankInterestId: string,
-  paymentId: string
+  paymentId: string,
 ) => {
   return await prisma.bankInterest.update({
     where: { id: bankInterestId },
@@ -126,9 +126,16 @@ export const removeBankInterestPaymentDetail = async (
 
 const createYearlyBankInterestDetails = async (
   bankId: string,
-  calendarYearId: string
+  calendarYearId: string,
 ): Promise<number> => {
   const newBankInterestDetails: Array<Prisma.BankInterestCreateManyInput> = [];
+
+  console.log('Creating yearly bank interest details:', {
+    bankId,
+    calendarYearId,
+    timestamp: new Date().toISOString(),
+  });
+
   const calendarYear = await prisma.calendarYear.findUniqueOrThrow({
     where: {
       id: calendarYearId,

@@ -9,25 +9,8 @@
 const config = {
   reactStrictMode: true,
 
-  // Enable Turbopack for development
-  // experimental: {
-  //   turbo: {
-  //     rules: {
-  //       // Handle CSS imports properly
-  //       '*.css': {
-  //         loaders: ['css-loader'],
-  //         as: '*.css',
-  //       },
-  //     },
-  //     resolveAlias: {
-  //       '@': './src',
-  //     },
-  //   },
-  // },
-
-  i18n: {
-    locales: ['en'],
-    defaultLocale: 'en',
+  experimental: {
+    // ppr: 'incremental',
   },
 };
 

@@ -26,9 +26,10 @@ export const httpServer = experimental_createTRPCNextAppDirServer<AppRouter>({
           batch: true,
           url: getUrl(),
           transformer: superjson,
-          headers() {
+          async headers() {
+            const cookieStore = await cookies();
             return {
-              cookie: cookies().toString(),
+              cookie: cookieStore.toString(),
               'x-trpc-source': 'rsc-http',
             };
           },
