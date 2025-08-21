@@ -1,7 +1,9 @@
 'use client';
 import { Button } from '@/components';
 import DatePickerDialog from '@/components/DatePickerDialog';
-import { Label, Radio } from 'flowbite-react';
+import { Label } from '@/components/ui/Label';
+import { Radio } from '@/components/ui/Radio';
+import { TextInput } from '@/components/ui/TextInput';
 import type { SubmitHandler } from 'react-hook-form';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,14 +59,12 @@ export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
   return (
     <form className='mb-0 space-y-6' onSubmit={handleSubmit(processForm)}>
       <div className='w-1/2 mx-10'>
-        <label htmlFor='display'>Display</label>
+        <Label htmlFor='display'>Display</Label>
         <div className='mt-1'>
-          <input
+          <TextInput
             id='display'
             type='text'
-            className={clsx(
-              errors.display && 'text-orange-700 border-orange-700'
-            )}
+            error={!!errors.display}
             {...register('display', { required: true })}
           />
         </div>
@@ -116,7 +116,7 @@ export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
               className={clsx(
                 'flex gap-2',
                 errors.calendarType &&
-                  'border rounded-xl p-2  text-orange-700 border-orange-700'
+                  'border rounded-xl p-2  text-orange-700 border-orange-700',
               )}
             >
               {CALENDAR_KEYS.map((k) => {

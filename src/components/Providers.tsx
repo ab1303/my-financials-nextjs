@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Flowbite } from 'flowbite-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from 'next-auth/react';
 import { ToastContainer } from 'react-toastify';
 
 import { clientOptions, trpc } from '@/server/trpc/client';
-import { flowbiteTheme as theme } from '@/styles/theme';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(
@@ -22,7 +20,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
             },
           },
         },
-      })
+      }),
   );
   const [trpcClient] = useState(() => trpc.createClient(clientOptions));
 
@@ -30,7 +28,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <SessionProvider>
-          <Flowbite theme={{ theme }}>{children}</Flowbite>
+          {children}
           <ToastContainer />
         </SessionProvider>
       </QueryClientProvider>

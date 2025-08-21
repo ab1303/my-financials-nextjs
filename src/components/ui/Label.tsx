@@ -6,15 +6,17 @@ import clsx from 'clsx';
 export interface LabelProps
   extends React.LabelHTMLAttributes<HTMLLabelElement> {
   requiredIndicator?: boolean | React.ReactNode;
+  error?: boolean;
 }
 
 export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
-  ({ className, children, requiredIndicator, ...rest }, ref) => {
+  ({ className, children, requiredIndicator, error, ...rest }, ref) => {
     return (
       <label
         ref={ref}
         className={clsx(
-          'block text-sm font-medium text-gray-700 dark:text-gray-200',
+          'block text-sm font-medium',
+          error ? 'text-orange-700' : 'text-gray-700 dark:text-gray-200',
           className,
         )}
         {...rest}

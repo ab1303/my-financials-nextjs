@@ -13,6 +13,8 @@ import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
+import { Label } from '@/components/ui/Label';
+import { TextInput } from '@/components/ui/TextInput';
 import { trpc } from '@/server/trpc/client';
 import type { BankType } from '@/types';
 
@@ -201,7 +203,7 @@ export default function BanksForm() {
             onSubmit={handleSubmit(submitHandler)}
           >
             <div>
-              <label className={clsx('block text-sm font-medium ')}>Bank</label>
+              <Label htmlFor='bank'>Bank</Label>
               <div className='mt-1'>
                 <Select
                   isClearable
@@ -217,22 +219,14 @@ export default function BanksForm() {
             </div>
 
             <div>
-              <label
-                htmlFor='bankName'
-                className={clsx(
-                  'block text-sm font-medium ',
-                  errors.bankName ? 'text-orange-700' : 'text-gray-700'
-                )}
-              >
+              <Label htmlFor='bankName' error={!!errors.bankName}>
                 Bank Name
-              </label>
+              </Label>
               <div className='mt-1'>
-                <input
+                <TextInput
                   id='bankName'
                   type='text'
-                  className={clsx(
-                    errors.bankName && 'text-orange-700 border-orange-700'
-                  )}
+                  error={!!errors.bankName}
                   {...register('bankName', { required: true })}
                 />
               </div>
