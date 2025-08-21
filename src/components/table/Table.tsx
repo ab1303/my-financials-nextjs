@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 
 import THead from './components/THead';
 import TBody from './components/TBody';
@@ -10,11 +11,28 @@ type CommonComponents = {
   TFoot: typeof TFoot;
 };
 
-const Table: React.FC<{ children?: React.ReactNode }> & CommonComponents = ({
+type TableProps = {
+  children?: React.ReactNode;
+  className?: string;
+  tableClassName?: string;
+};
+
+const Table: React.FC<TableProps> & CommonComponents = ({
   children,
+  className,
+  tableClassName,
 }) => (
-  <div className='overflow-x-auto shadow-sm border border-gray-200 rounded-lg'>
-    <table className='min-w-full divide-y divide-gray-200'>{children}</table>
+  <div
+    className={clsx(
+      'overflow-x-auto shadow-sm border border-gray-200 rounded-lg',
+      className,
+    )}
+  >
+    <table
+      className={clsx('min-w-full divide-y divide-gray-200', tableClassName)}
+    >
+      {children}
+    </table>
   </div>
 );
 

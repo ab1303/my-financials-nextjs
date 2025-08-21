@@ -11,6 +11,7 @@ import {
 import { toast } from 'react-toastify';
 
 import Table from '@/components/table';
+import { tableStyles } from '@/styles/theme';
 import MONTHS_MAP from '@/constants/map';
 import { trpc } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
@@ -56,7 +57,7 @@ export default function BankInterestTableClient({
       cell: (info) => MONTHS_MAP.get(info.getValue()),
     }),
     columnHelper.accessor('amountDue', {
-      size: 200,
+      size: 160,
       header: () => <span>Amount Due</span>,
       cell: ({ row, renderValue }) => {
         let hasEditedRow = false;
@@ -91,7 +92,7 @@ export default function BankInterestTableClient({
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('amountPaid', {
-      size: 150,
+      size: 140,
       header: () => <span>Amount Paid</span>,
       cell: ({ row }) => {
         const totalPaid = row.original.paymentHistory.reduce(
@@ -111,7 +112,7 @@ export default function BankInterestTableClient({
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('paymentHistory', {
-      size: 120,
+      size: 100,
       header: () => <span>Payment(s)</span>,
       cell: ({ row }) => {
         const { original } = row;
@@ -146,6 +147,7 @@ export default function BankInterestTableClient({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    columnResizeMode: 'onChange',
   });
 
   const updateBankInterestDetailsMutation =
@@ -199,7 +201,7 @@ export default function BankInterestTableClient({
         />
       )}
 
-      <Table>
+      <Table className={tableStyles.container.compact}>
         <Table.THead>
           {table.getHeaderGroups().map((headerGroup) => (
             <Table.THead.TR key={headerGroup.id}>
@@ -220,10 +222,7 @@ export default function BankInterestTableClient({
               <Table.TBody.TR key={row.id}>
                 {row.getVisibleCells().map((cell) => {
                   return (
-                    <Table.TBody.TD
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() }}
-                    >
+                    <Table.TBody.TD key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

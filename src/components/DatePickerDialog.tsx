@@ -16,6 +16,7 @@ import { format, isValid, parse } from 'date-fns';
 import { DayPicker } from 'react-day-picker';
 import clsx from 'clsx';
 
+import { inputStyles } from '@/styles/theme';
 import type { ChangeEventHandler } from 'react';
 
 type DatePickerDialogProps = {
@@ -89,7 +90,7 @@ export default function DatePickerDialog({
         <input
           size={12}
           type='text'
-          className='block w-full pl-10 px-3 py-2 border border-gray-300 bg-gray-50 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500'
+          className={inputStyles.withIcon}
           placeholder={format(new Date(), 'y-MM-dd')}
           value={format(selectedDate, 'y-MM-dd')}
           onChange={handleInputChange}

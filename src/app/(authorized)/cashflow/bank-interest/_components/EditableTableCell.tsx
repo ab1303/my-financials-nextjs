@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 
 import { ImSpinner2 } from 'react-icons/im';
+import { inputStyles } from '@/styles/theme';
 
 type EditableTableCellProps = {
   inProgress?: boolean;
@@ -24,7 +25,7 @@ export default function EditableTableCell({
   return (
     <div className='flex flex-row items-center'>
       <NumericFormat
-        className='w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:border-teal-500 focus:ring-1 focus:ring-teal-500'
+        className={`${inputStyles.base.replace('bg-gray-50', 'bg-white')}`}
         itemRef=''
         prefix='$'
         displayType='input'

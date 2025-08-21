@@ -9,6 +9,7 @@ import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import DatePickerDialog from '@/components/DatePickerDialog';
 import { trpc } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
+import { inputStyles, buttonStyles } from '@/styles/theme';
 
 import { useBankInterestState } from '../StateProvider';
 import type { PaymentHistoryType } from '../_types';
@@ -56,7 +57,7 @@ function AddEditPayment({
         </div>
         <div className='col-span-4'>
           <NumericFormat
-            className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-gray-50'
+            className={inputStyles.base}
             itemRef=''
             prefix='$'
             displayType='input'
@@ -75,7 +76,10 @@ function AddEditPayment({
           {!!selectedPayment.id ? (
             <button
               type='button'
-              className='inline-flex items-center justify-center w-10 h-10 bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2'
+              className={clsx(
+                buttonStyles.icon,
+                'bg-teal-100 text-teal-600 hover:bg-teal-200 hover:text-teal-700 focus:ring-teal-500',
+              )}
               onClick={() => onConfirmPayment(payment)}
             >
               <CheckIcon />
@@ -83,7 +87,10 @@ function AddEditPayment({
           ) : (
             <button
               type='button'
-              className='inline-flex items-center justify-center w-10 h-10 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
+              className={clsx(
+                buttonStyles.icon,
+                'bg-green-100 text-green-600 hover:bg-green-200 hover:text-green-700 focus:ring-green-500',
+              )}
               onClick={() => onAddPayment({ ...payment })}
             >
               <AddIcon />
@@ -255,13 +262,19 @@ export default function PaymentHistoryModal({
                   </span>
                   <div className='flex space-x-3'>
                     <button
-                      className='p-2 text-gray-400 hover:text-teal-600 hover:bg-gray-50 rounded-lg transition-colors'
+                      className={clsx(
+                        buttonStyles.iconCompact,
+                        'text-gray-400 hover:text-teal-600 hover:bg-gray-50 focus:ring-teal-500',
+                      )}
                       onClick={() => setEditPaymentId(record.id)}
                     >
                       <PenIcon className='w-5 h-5' />
                     </button>
                     <button
-                      className='p-2 text-gray-400 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors'
+                      className={clsx(
+                        buttonStyles.iconCompact,
+                        'text-gray-400 hover:text-red-600 hover:bg-gray-50 focus:ring-red-500',
+                      )}
                       onClick={() => handleRemovePayment(record.id)}
                     >
                       <TrashIcon className='w-5 h-5' />
