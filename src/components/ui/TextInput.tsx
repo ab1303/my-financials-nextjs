@@ -16,8 +16,6 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
         className={clsx(
           'block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900',
           'focus:border-teal-500 focus:ring-teal-500',
-          'dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400',
-          'dark:focus:border-teal-500 dark:focus:ring-teal-500',
           error &&
             'border-red-500 bg-red-50 text-red-900 placeholder-red-700 focus:border-red-500 focus:ring-red-500',
           className,

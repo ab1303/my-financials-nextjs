@@ -13,8 +13,7 @@ import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
-import { Label } from '@/components/ui/Label';
-import { TextInput } from '@/components/ui/TextInput';
+import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 import type { BankType } from '@/types';
 
@@ -189,14 +188,14 @@ export default function BanksForm() {
   }
 
   return (
-    <>
+    <Card>
       <Card.Header>
-        <div className='flex justify-between mt-4 text-left'>
+        <div className='flex justify-between text-left'>
           <Card.Header.Title>Bank Details</Card.Header.Title>
         </div>
       </Card.Header>
 
-      <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
+      <Card.Body>
         <FormProvider {...formMethods}>
           <form
             className='mb-0 space-y-6'
@@ -207,7 +206,7 @@ export default function BanksForm() {
               <div className='mt-1'>
                 <Select
                   isClearable
-                  className='w-3/5 mr-2'
+                  className='w-full max-w-md'
                   components={{ Option }}
                   value={selectedBank}
                   options={bankOptions}
@@ -260,7 +259,7 @@ export default function BanksForm() {
             </div>
           </form>
         </FormProvider>
-      </div>
-    </>
+      </Card.Body>
+    </Card>
   );
 }

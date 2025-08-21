@@ -1,10 +1,10 @@
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
 import { useEffect, useState } from 'react';
-import { Modal, Label } from 'flowbite-react';
 import { NumericFormat } from 'react-number-format';
 
 import { Card } from '@/components';
+import { Modal, Label } from '@/components/ui';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import DatePickerDialog from '@/components/DatePickerDialog';
 import { trpc } from '@/server/trpc/client';
@@ -34,15 +34,15 @@ function AddEditPayment({
 
   return (
     <>
-      <div className='mt-3 grid grid-cols-7 gap-3'>
-        <div className='col-span-3 px-2'>
+      <div className='grid grid-cols-8 gap-4 mb-2'>
+        <div className='col-span-3'>
           <Label>Date</Label>
         </div>
-        <div className='col-span-3 px-2'>
+        <div className='col-span-4'>
           <Label>Amount $</Label>
         </div>
       </div>
-      <div className='mt-3 grid grid-cols-7 gap-3'>
+      <div className='grid grid-cols-8 gap-4 items-end'>
         <div className='col-span-3'>
           <DatePickerDialog
             selectedDate={payment.datePaid}
@@ -54,8 +54,9 @@ function AddEditPayment({
             }}
           />
         </div>
-        <div className='col-span-3'>
+        <div className='col-span-4'>
           <NumericFormat
+            className='w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-gray-50'
             itemRef=''
             prefix='$'
             displayType='input'
@@ -69,12 +70,12 @@ function AddEditPayment({
             }}
           />
         </div>
-        <div>
+        <div className='col-span-1'>
           {/* https://stackoverflow.com/questions/65230250/onclick-event-handler-not-work-as-expected-when-attached-to-svg-icon-in-react */}
           {!!selectedPayment.id ? (
             <button
               type='button'
-              className='inline-block px-4 py-2.5 bg-gray-200 text-gray-700 font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-gray-300 hover:shadow-lg focus:bg-gray-300 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-gray-400 active:shadow-lg transition duration-150 ease-in-out'
+              className='inline-flex items-center justify-center w-10 h-10 bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2'
               onClick={() => onConfirmPayment(payment)}
             >
               <CheckIcon />
@@ -82,7 +83,7 @@ function AddEditPayment({
           ) : (
             <button
               type='button'
-              className='inline-block px-4 py-2.5 bg-gray-200 text-gray-700 font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-gray-300 hover:shadow-lg focus:bg-gray-300 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-gray-400 active:shadow-lg transition duration-150 ease-in-out'
+              className='inline-flex items-center justify-center w-10 h-10 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
               onClick={() => onAddPayment({ ...payment })}
             >
               <AddIcon />
@@ -223,44 +224,54 @@ export default function PaymentHistoryModal({
       <Modal.Header>
         <Card.Header.Title>Payment History</Card.Header.Title>
       </Modal.Header>
-      <Modal.Body className='space-y-3'>
+      <Modal.Body>
         <AddEditPayment
           selectedPayment={selectedPayment}
           onAddPayment={handleAddPayment}
           onConfirmPayment={handleConfirmPayment}
         />
-        {/* // https://floating-ui.com/docs/FloatingList */}
-        {paymentHistory.map((record) => (
-          <div key={record.id} className='flex flex-row'>
-            <div
-              className={clsx(
-                'mt-2 w-2 ',
-                editPaymentId === record.id ? 'bg-teal-500' : 'bg-orange-300'
-              )}
-            ></div>
-            <div className='bg-white flex shadow w-full justify-between mt-2 py-4 px-6 sm:px-10'>
-              <span>{record.datePaid.toDateString()}</span>
-              <span>
-                <NumericFormat
-                  prefix='$'
-                  displayType='text'
-                  thousandSeparator
-                  value={record.amount}
-                />
-              </span>
-              <span className='flex justify-between flex-grow-0 w-10'>
-                <PenIcon
-                  className='text-gray-700 hover:text-teal-500'
-                  onClick={() => setEditPaymentId(record.id)}
-                />
-                <TrashIcon
-                  className='text-gray-700 hover:text-orange-800'
-                  onClick={() => handleRemovePayment(record.id)}
-                />
-              </span>
+
+        <div className='space-y-3 mt-6'>
+          {paymentHistory.map((record) => (
+            <div key={record.id} className='flex items-center space-x-3'>
+              <div
+                className={clsx(
+                  'w-1 h-16 rounded-full',
+                  editPaymentId === record.id ? 'bg-teal-500' : 'bg-gray-300',
+                )}
+              ></div>
+              <div className='flex-1 bg-white border border-gray-200 rounded-lg shadow-sm p-4'>
+                <div className='flex justify-between items-center'>
+                  <span className='text-sm font-medium text-gray-900'>
+                    {record.datePaid.toDateString()}
+                  </span>
+                  <span className='text-lg font-semibold text-gray-900'>
+                    <NumericFormat
+                      prefix='$'
+                      displayType='text'
+                      thousandSeparator
+                      value={record.amount}
+                    />
+                  </span>
+                  <div className='flex space-x-3'>
+                    <button
+                      className='p-2 text-gray-400 hover:text-teal-600 hover:bg-gray-50 rounded-lg transition-colors'
+                      onClick={() => setEditPaymentId(record.id)}
+                    >
+                      <PenIcon className='w-5 h-5' />
+                    </button>
+                    <button
+                      className='p-2 text-gray-400 hover:text-red-600 hover:bg-gray-50 rounded-lg transition-colors'
+                      onClick={() => handleRemovePayment(record.id)}
+                    >
+                      <TrashIcon className='w-5 h-5' />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </Modal.Body>
     </Modal>
   );

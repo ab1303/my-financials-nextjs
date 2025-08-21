@@ -45,7 +45,7 @@ const ModalRoot = ({
             >
               <Dialog.Panel
                 className={clsx(
-                  'w-full max-w-lg transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left align-middle shadow-xl transition-all',
+                  'w-full max-w-2xl transform overflow-hidden rounded-lg bg-white text-left align-middle shadow-xl transition-all',
                   panelClassName,
                 )}
               >
@@ -66,12 +66,7 @@ const Header = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <div
-    className={clsx(
-      'px-6 pt-5 pb-3 border-b border-gray-200 dark:border-gray-700',
-      className,
-    )}
-  >
+  <div className={clsx('px-6 pt-6 pb-4 border-b border-gray-200', className)}>
     {children}
   </div>
 );
@@ -82,7 +77,7 @@ const Body = ({
 }: {
   children: ReactNode;
   className?: string;
-}) => <div className={clsx('px-6 py-5 space-y-4', className)}>{children}</div>;
+}) => <div className={clsx('px-6 py-6 space-y-6', className)}>{children}</div>;
 
 const Footer = ({
   children,
@@ -93,7 +88,7 @@ const Footer = ({
 }) => (
   <div
     className={clsx(
-      'px-6 pt-3 pb-5 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3',
+      'px-6 pt-4 pb-6 border-t border-gray-200 flex justify-end gap-3',
       className,
     )}
   >

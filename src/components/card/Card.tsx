@@ -9,9 +9,14 @@ type CommonComponents = {
 };
 
 const Card: React.FC<{ children?: React.ReactNode }> & CommonComponents = (
-  props
+  props,
 ) => {
-  return <div className='border-2' {...props} />;
+  return (
+    <div
+      className='bg-white shadow rounded-lg border border-gray-200 mt-6'
+      {...props}
+    />
+  );
 };
 
 Card.Header = CardHeader;

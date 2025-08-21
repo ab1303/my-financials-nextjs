@@ -16,7 +16,7 @@ export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
         ref={ref}
         className={clsx(
           'block text-sm font-medium',
-          error ? 'text-orange-700' : 'text-gray-700 dark:text-gray-200',
+          error ? 'text-orange-700' : 'text-gray-700',
           className,
         )}
         {...rest}

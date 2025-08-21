@@ -13,9 +13,9 @@ type CommonComponents = {
 const Table: React.FC<{ children?: React.ReactNode }> & CommonComponents = ({
   children,
 }) => (
-  <table className='min-w-full divide-y divide-gray-200 overflow-x-scroll'>
-    {children}
-  </table>
+  <div className='overflow-x-auto shadow-sm border border-gray-200 rounded-lg'>
+    <table className='min-w-full divide-y divide-gray-200'>{children}</table>
+  </div>
 );
 
 Table.THead = THead;

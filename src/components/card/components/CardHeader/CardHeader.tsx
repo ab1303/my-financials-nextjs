@@ -8,8 +8,9 @@ type CommonComponents = {
   Title: typeof CardHeaderTitle;
 };
 
-const CardHeader: React.FC<{ children?: React.ReactNode }> & CommonComponents = (props) => (
-  <div className='py-4 px-4' {...props}></div>
+const CardHeader: React.FC<{ children?: React.ReactNode }> &
+  CommonComponents = (props) => (
+  <div className='px-6 py-4 border-b border-gray-200' {...props}></div>
 );
 
 CardHeader.Text = CardHeaderText;
