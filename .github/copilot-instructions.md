@@ -22,7 +22,8 @@
 - Do not use `router.push` for form submissions when Server Actions are available.
 - Never expose sensitive environment variables in client code.
 - Do not import client-only modules into Server Components.
-- Avoid using `next/router` in App
+- Avoid using `next/router` in App Router; use `next/navigation` instead.
+- Do not pass event handlers or non-serializable props from Server to Client Components.
 
 ## Project Structure
 
@@ -39,6 +40,8 @@
 - Use route groups (parentheses) for organization without affecting URLs.
 - Place API route handlers in `app/api`.
 - Do not use the `pages` directory.
+- Create Client Component wrappers when Server Components need to pass interactive state to children.
+- Co-locate component types, schemas, and utilities in feature-specific `_types.ts` and `_schema.ts` files.
 
 ## Client Components
 
@@ -46,6 +49,9 @@
 - Use `next/navigation` hooks (`useRouter`, `usePathname`) instead of `next/router`.
 - Handle form state with `useFormStatus`, `useFormState`, and `useOptimistic` when using Server Actions.
 - Include client-specific logic like user interaction and browser APIs.
+- Create wrapper Client Components to manage state when Server Components need to pass event handlers.
+- Use `useState` for managing editing/modal states and other interactive UI state.
+- Implement proper prop interfaces with TypeScript for component contracts.
 
 ## Server Components
 
@@ -64,6 +70,8 @@
 - Call Server Actions from both Server and Client Components for data mutations.
 - Use `useFormStatus` and `useFormState` in Client Components to track form submissions.
 - Use `useOptimistic` to update the UI optimistically before server confirmation.
+- Use `revalidatePath` or `revalidateTag` after data mutations to ensure UI consistency.
+- Pass Server Actions as props to Client Components for form handling.
 
 ## Data Fetching
 
@@ -100,3 +108,27 @@
 - Use Husky and lint-staged to enforce linting and formatting before commits.
 - Add and configure Jest, React Testing Library, or Cypress for testing.
 - Keep test files near related components.
+
+## Client/Server Boundary Patterns
+
+- When building interactive features that require both server data and client state, use the Client Wrapper pattern.
+- Create a Client Component wrapper that receives data and Server Actions as props from a Server Component parent.
+- Handle all interactive state (`useState`, `useEffect`) in Client Components, never in Server Components.
+- Pass event handlers between Client Components as props, not from Server to Client Components.
+- Use proper TypeScript interfaces to define the contract between Server and Client Component boundaries.
+
+## Form and State Management Patterns
+
+- For edit/update functionality, manage editing state in Client Components using `useState<RecordType | null>`.
+- Use `useEffect` to populate form fields when editing records change.
+- Implement conditional rendering based on state (e.g., "Create" vs "Update" button text).
+- Reset forms and clear editing state after successful Server Action completion.
+- Use `react-hook-form` with `zod` validation for complex forms with proper TypeScript integration.
+
+## Table and Data Display Patterns
+
+- Use TanStack Table with proper TypeScript generics for type-safe table implementations.
+- Implement action columns with edit/delete functionality using icon buttons from `react-icons`.
+- Pass event handlers as props to table components for row actions (edit, delete, etc.).
+- Structure table components to receive data and handlers from parent Client Components.
+- Use proper accessibility attributes (`aria-label`) for interactive table elements.

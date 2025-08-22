@@ -1,4 +1,5 @@
 'use client';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components';
 import DatePickerDialog from '@/components/DatePickerDialog';
 import { Label } from '@/components/ui/Label';
@@ -16,8 +17,12 @@ import type { FormInput } from './_schema';
 import clsx from 'clsx';
 import { CalendarEnumType } from '@prisma/client';
 
+import type { CalendarYearType } from './_types';
+
 type CalendarFormProps = {
-  initialData: unknown;
+  initialData?: CalendarYearType;
+  editingRecord?: CalendarYearType | null;
+  setEditingRecord?: (record: CalendarYearType | null) => void;
   children?: React.ReactNode;
   addCalendarYear: (formData: FormInput) => Promise<ServerActionType>;
 };
@@ -25,7 +30,15 @@ type CalendarFormProps = {
 const currentDate = new Date(),
   y = currentDate.getFullYear();
 
-export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
+export default function CalendarForm({
+  initialData,
+  editingRecord: externalEditingRecord,
+  setEditingRecord: setExternalEditingRecord,
+  addCalendarYear,
+}: CalendarFormProps) {
+  // Use external editing record if provided, otherwise use internal state
+  const editingRecord = externalEditingRecord || null;
+  const setEditingRecord = setExternalEditingRecord || (() => {});
   // Descriptions for each calendar type
   const descriptions: Record<string, string> = {
     ZAKAT: 'Year used for Zakat calculation, based on Islamic lunar calendar.',
@@ -41,25 +54,45 @@ export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
   } = useForm<FormInput>({
     resolver: zodResolver(FormDataSchema),
     defaultValues: {
-      fromDate: new Date(y, 0, 1),
-      toDate: new Date(y, 12, 0),
+      display: initialData?.description || '',
+      calendarType: initialData?.type || 'ANNUAL',
+      fromDate: initialData
+        ? new Date(initialData.fromYear, initialData.fromMonth - 1, 1)
+        : new Date(y, 0, 1),
+      toDate: initialData
+        ? new Date(initialData.toYear, initialData.toMonth - 1, 1)
+        : new Date(y, 12, 0),
     },
   });
 
+  // Populate form when editingRecord changes
+  useEffect(() => {
+    if (editingRecord) {
+      reset({
+        display: editingRecord.description,
+        calendarType: editingRecord.type || 'ANNUAL',
+        fromDate: new Date(
+          editingRecord.fromYear,
+          editingRecord.fromMonth - 1,
+          1,
+        ),
+        toDate: new Date(editingRecord.toYear, editingRecord.toMonth - 1, 1),
+      });
+    } else {
+      reset({
+        display: '',
+        calendarType: 'ANNUAL',
+        fromDate: new Date(y, 0, 1),
+        toDate: new Date(y, 12, 0),
+      });
+    }
+  }, [editingRecord, reset, y]);
+
   const processForm: SubmitHandler<FormInput> = async (data) => {
-    console.log('Submit click', data);
     const result = await addCalendarYear(data);
-
-    if (!result) {
-      console.log('Something went wrong');
-      return;
-    }
-
-    if (result.error) {
-      console.log(result.error);
-      return;
-    }
-
+    if (!result) return;
+    if (result.error) return;
+    setEditingRecord(null);
     reset();
   };
 
@@ -153,12 +186,8 @@ export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
         </div>
       </div>
       <div className='mx-10'>
-        <Button
-          // isLoading={saveBankDetailsMutation.isLoading}
-          variant='primary'
-          type='submit'
-        >
-          Create
+        <Button variant='primary' type='submit'>
+          {editingRecord ? 'Update' : 'Create'}
         </Button>
       </div>
     </form>

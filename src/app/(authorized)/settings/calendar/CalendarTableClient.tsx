@@ -10,16 +10,17 @@ import {
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
 import type { CalendarYearType } from './_types';
+import { HiPencil, HiTrash } from 'react-icons/hi2';
 
 const columnHelper = createColumnHelper<CalendarYearType>();
 
 type CalendarTableClientProps = {
   tableData: Array<CalendarYearType>;
+  onEdit: (row: CalendarYearType) => void;
+  onDelete: (row: CalendarYearType) => void;
 };
-
-export default function CalendarTableClient({
-  tableData,
-}: CalendarTableClientProps) {
+export default function CalendarTableClient(props: CalendarTableClientProps) {
+  const { tableData, onEdit, onDelete } = props;
   const columns = [
     columnHelper.accessor('fromYear', {
       header: () => <span>From Year</span>,
@@ -47,6 +48,33 @@ export default function CalendarTableClient({
       header: () => <span>Type</span>,
       cell: (info) => info.getValue(),
     }),
+    columnHelper.display({
+      id: 'actions',
+      header: () => <span>Actions</span>,
+      cell: (info) => {
+        const row = info.row.original;
+        return (
+          <div className='flex gap-2'>
+            <button
+              type='button'
+              aria-label='Edit'
+              className='p-1 rounded hover:bg-gray-100'
+              onClick={() => onEdit(row)}
+            >
+              <HiPencil className='w-3 h-3 text-blue-500' />
+            </button>
+            <button
+              type='button'
+              aria-label='Delete'
+              className='p-1 rounded hover:bg-gray-100'
+              onClick={() => onDelete(row)}
+            >
+              <HiTrash className='w-3 h-3 text-red-500' />
+            </button>
+          </div>
+        );
+      },
+    }),
   ];
 
   const table = useReactTable<CalendarYearType>({
@@ -65,7 +93,7 @@ export default function CalendarTableClient({
                 <Table.THead.TH key={header.id}>
                   {flexRender(
                     header.column.columnDef.header,
-                    header.getContext()
+                    header.getContext(),
                   )}
                 </Table.THead.TH>
               ))}
@@ -84,7 +112,7 @@ export default function CalendarTableClient({
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.TBody.TD>
                   );
