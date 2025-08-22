@@ -53,7 +53,9 @@ export default function TelInput({ propertyName }: TelInputComponentProps) {
               ? true
               : false;
           }}
-          onChange={(phone) => onChange(phone)}
+          onChange={(_, __, event: React.ChangeEvent<HTMLInputElement>) =>
+            onChange(event.target.value)
+          }
         />
       )}
     />

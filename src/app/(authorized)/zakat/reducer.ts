@@ -1,6 +1,6 @@
 import type { ActionMapUnion } from '@/types';
 
-import type { ZakatType, ZakatPaymentType } from './_types';
+import type { ZakatPaymentType } from './_types';
 
 import { produce } from 'immer';
 
@@ -33,6 +33,8 @@ export const zakatPaymentReducer = produce<ZakatPaymentsState, [Actions]>(
         break;
       }
       case 'ZAKAT/Payments/ADD_PAYMENT': {
+        const { payment } = action.payload;
+        draft.data.push(payment);
         break;
       }
 
@@ -50,6 +52,8 @@ export const zakatPaymentReducer = produce<ZakatPaymentsState, [Actions]>(
       }
 
       case 'ZAKAT/Payments/REMOVE_PAYMENT': {
+        const { zakatPaymentId } = action.payload;
+        draft.data = draft.data.filter((d) => d.id !== zakatPaymentId);
         break;
       }
 

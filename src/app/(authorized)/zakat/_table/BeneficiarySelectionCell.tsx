@@ -3,7 +3,7 @@ import CreatableSelect from 'react-select/creatable';
 import { toast } from 'react-toastify';
 import { produce } from 'immer';
 
-import { trpcClient } from '@/server/trpc/client';
+import { trpc } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 
 import type { OptionType } from '@/types';
@@ -27,8 +27,8 @@ export default function BeneficiarySelectionCell({
 
   const selectedOptionValue = options.find((o) => o.id == beneficiaryId);
 
-  const addIndividualBeneficiaryMutation = trpcClient.individual.addIndividualBeneficiary.useMutation(
-    {
+  const addIndividualBeneficiaryMutation =
+    trpc.individual.addIndividualBeneficiary.useMutation({
       onError(error: unknown, {}) {
         if (error instanceof TRPCError) {
           toast.error(error.message);
@@ -49,8 +49,7 @@ export default function BeneficiarySelectionCell({
         onSelectionChange(newOption.id);
         toast.success('Created invidiual beneficiary!');
       },
-    }
-  );
+    });
 
   const handleCreate = (inputValue: string) => {
     setIsLoading(true);

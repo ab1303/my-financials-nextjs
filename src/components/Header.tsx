@@ -13,6 +13,8 @@ type HeaderProps = {
 export default function Header({ user }: HeaderProps) {
   const [showSideNav, setShowSideNav] = useState(false);
 
+  console.log('user', user);
+
   return (
     <div>
       <header className='sticky top-0 z-10 border-2 border-gray-200'>

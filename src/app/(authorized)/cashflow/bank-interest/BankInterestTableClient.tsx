@@ -11,8 +11,9 @@ import {
 import { toast } from 'react-toastify';
 
 import Table from '@/components/table';
+import { tableStyles } from '@/styles/theme';
 import MONTHS_MAP from '@/constants/map';
-import { trpcClient } from '@/server/trpc/client';
+import { trpc } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 
 import { useBankInterestState } from './StateProvider';
@@ -37,7 +38,7 @@ export default function BankInterestTableClient({
   calendarYearId,
 }: BankInterestTableClientProps) {
   const [editedRows, setEditedRows] = useState<Map<string, EditedRowType>>(
-    new Map()
+    new Map(),
   );
 
   const {
@@ -51,12 +52,12 @@ export default function BankInterestTableClient({
 
   const columns = [
     columnHelper.accessor('month', {
+      size: 120,
       header: () => <span>Month</span>,
       cell: (info) => MONTHS_MAP.get(info.getValue()),
     }),
     columnHelper.accessor('amountDue', {
-      size: 220,
-      maxSize: 220,
+      size: 160,
       header: () => <span>Amount Due</span>,
       cell: ({ row, renderValue }) => {
         let hasEditedRow = false;
@@ -91,11 +92,12 @@ export default function BankInterestTableClient({
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('amountPaid', {
+      size: 140,
       header: () => <span>Amount Paid</span>,
       cell: ({ row }) => {
         const totalPaid = row.original.paymentHistory.reduce(
           (total, { amount }) => (total += amount),
-          0
+          0,
         );
 
         return (
@@ -111,7 +113,6 @@ export default function BankInterestTableClient({
     }),
     columnHelper.accessor('paymentHistory', {
       size: 100,
-      maxSize: 100,
       header: () => <span>Payment(s)</span>,
       cell: ({ row }) => {
         const { original } = row;
@@ -146,10 +147,11 @@ export default function BankInterestTableClient({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    columnResizeMode: 'onChange',
   });
 
-  const updateBankInterestDetailsMutation = trpcClient.bankInterest.updateBankInterestDetail.useMutation(
-    {
+  const updateBankInterestDetailsMutation =
+    trpc.bankInterest.updateBankInterestDetail.useMutation({
       onError(error: unknown, { bankInterestId }) {
         if (error instanceof TRPCError) {
           toast.error(error.message);
@@ -169,8 +171,7 @@ export default function BankInterestTableClient({
           },
         });
       },
-    }
-  );
+    });
 
   const updateEditRows = (id: string, record?: EditedRowType) => {
     setEditedRows((prev) => {
@@ -200,7 +201,7 @@ export default function BankInterestTableClient({
         />
       )}
 
-      <Table>
+      <Table className={tableStyles.container.compact}>
         <Table.THead>
           {table.getHeaderGroups().map((headerGroup) => (
             <Table.THead.TR key={headerGroup.id}>
@@ -208,7 +209,7 @@ export default function BankInterestTableClient({
                 <Table.THead.TH key={header.id}>
                   {flexRender(
                     header.column.columnDef.header,
-                    header.getContext()
+                    header.getContext(),
                   )}
                 </Table.THead.TH>
               ))}
@@ -221,13 +222,10 @@ export default function BankInterestTableClient({
               <Table.TBody.TR key={row.id}>
                 {row.getVisibleCells().map((cell) => {
                   return (
-                    <Table.TBody.TD
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() }}
-                    >
+                    <Table.TBody.TD key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.TBody.TD>
                   );
@@ -246,7 +244,7 @@ export default function BankInterestTableClient({
                       case 'amountDue':
                         const totalAmountDue = data.reduce(
                           (total, { amountDue }) => (total += amountDue),
-                          0
+                          0,
                         );
                         return (
                           <Table.TFoot.TH key={header.id}>
@@ -261,7 +259,7 @@ export default function BankInterestTableClient({
                       case 'amountPaid':
                         const totalAmountPaid = data.reduce(
                           (total, { amountPaid }) => (total += amountPaid),
-                          0
+                          0,
                         );
                         return (
                           <Table.TFoot.TH key={header.id}>

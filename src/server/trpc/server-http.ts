@@ -16,7 +16,6 @@ import { getUrl } from './shared';
 export const httpServer = experimental_createTRPCNextAppDirServer<AppRouter>({
   config() {
     return {
-      transformer: superjson,
       links: [
         loggerLink({
           enabled: (opts) =>
@@ -26,9 +25,11 @@ export const httpServer = experimental_createTRPCNextAppDirServer<AppRouter>({
         experimental_nextHttpLink({
           batch: true,
           url: getUrl(),
-          headers() {
+          transformer: superjson,
+          async headers() {
+            const cookieStore = await cookies();
             return {
-              cookie: cookies().toString(),
+              cookie: cookieStore.toString(),
               'x-trpc-source': 'rsc-http',
             };
           },

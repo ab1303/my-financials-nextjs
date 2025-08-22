@@ -1,6 +1,6 @@
 'use client';
 
-import { Label } from 'flowbite-react';
+import { Label } from '@/components/ui/Label';
 import Select from 'react-select';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
@@ -15,12 +15,11 @@ import type { FormInput } from './_schema';
 import type { ServerActionType } from './_types';
 
 // React Table
-type NumericFormatWithIndicatorProps<BaseType> = NumericFormatProps<
-  BaseType
-> & {
-  isWorking: boolean;
-  indicatorText: string;
-};
+type NumericFormatWithIndicatorProps<BaseType> =
+  NumericFormatProps<BaseType> & {
+    isWorking: boolean;
+    indicatorText: string;
+  };
 
 function NumericFormatWithIndicator<BaseType = InputAttributes>({
   value,
@@ -155,7 +154,7 @@ export default function ZakatForm({
             onChange={(option) => {
               setSelectedYear(option);
               const selectedYearData = zakatYearData.find(
-                (yd) => yd.id === option?.id
+                (yd) => yd.id === option?.id,
               );
 
               updateURLSearchParams(selectedYearData);

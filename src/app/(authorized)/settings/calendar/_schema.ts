@@ -2,7 +2,7 @@ import { CalendarEnumType } from '@prisma/client';
 import { z } from 'zod';
 
 export const FormDataSchema = z.object({
-  display: z.string().nonempty('Display is required.'),
+  display: z.string().min(1, 'Display is required.'),
   fromDate: z.date({ required_error: 'From date is required' }),
   toDate: z.date({ required_error: 'To date is required' }),
   calendarType: z.enum(

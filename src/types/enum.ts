@@ -1,7 +1,15 @@
+export { CalendarEnumType } from '@prisma/client';
+
 enum ActionLinkVariant {
   'add',
   'remove',
 }
+
+// export enum CalendarEnumType {
+//   ANNUAL = 'ANNUAL',
+//   FISCAL = 'FISCAL',
+//   ZAKAT = 'ZAKAT',
+// }
 
 export type ActionLink = keyof typeof ActionLinkVariant;
 

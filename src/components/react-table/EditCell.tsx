@@ -33,10 +33,12 @@ export const EditCell = <TData, TValue>({
 
     meta?.setEditedRows(
       produce((draft) => {
-        draft.has(row.index)
-          ? draft.delete(row.index)
-          : draft.set(row.index, castDraft(row.original));
-      })
+        if (draft.has(row.index)) {
+          draft.delete(row.index);
+        } else {
+          draft.set(row.index, castDraft(row.original));
+        }
+      }),
     );
 
     switch (elName) {

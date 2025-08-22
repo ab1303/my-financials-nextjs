@@ -9,24 +9,20 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { toast } from 'react-toastify';
 
 import Table from '@/components/table';
-import { trpcClient } from '@/server/trpc/client';
-import { TRPCError } from '@trpc/server';
 import { useZakatPaymentState } from './StateProvider';
 
 import { getTableColumns } from './_table/columns';
 
 import type { ServerActionType, ZakatPaymentType } from './_types';
 import type { OptionType } from '@/types';
-import { editRow } from './actions';
 
 type ZakatTableClientProps = {
   individualsOptions: OptionType[];
   editRow: (
     rowId: string,
-    record: ZakatPaymentType
+    record: ZakatPaymentType,
   ) => Promise<ServerActionType>;
   addRow: () => Promise<ServerActionType>;
   deleteRow: () => Promise<ServerActionType>;
@@ -39,7 +35,7 @@ export default function ZakatTableClient({
   deleteRow,
 }: ZakatTableClientProps) {
   const [editedRows, setEditedRows] = useState<Map<number, ZakatPaymentType>>(
-    new Map()
+    new Map(),
   );
   const [validRows, setValidRows] = useState({});
 
@@ -48,9 +44,10 @@ export default function ZakatTableClient({
     dispatch,
   } = useZakatPaymentState();
 
-  const columns = useMemo(() => getTableColumns(individualsOptions), [
-    individualsOptions,
-  ]);
+  const columns = useMemo(
+    () => getTableColumns(individualsOptions),
+    [individualsOptions],
+  );
 
   const table = useReactTable<ZakatPaymentType>({
     data: data,
@@ -109,7 +106,7 @@ export default function ZakatTableClient({
                 <Table.THead.TH key={header.id}>
                   {flexRender(
                     header.column.columnDef.header,
-                    header.getContext()
+                    header.getContext(),
                   )}
                 </Table.THead.TH>
               ))}
@@ -128,7 +125,7 @@ export default function ZakatTableClient({
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </Table.TBody.TD>
                   );

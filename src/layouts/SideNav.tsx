@@ -5,6 +5,7 @@ import { signOut } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
 
 import useOutsideAlerter from '@/hooks/useOutsideAlerter';
+import { navigationStyles } from '@/styles/theme';
 
 import SideNavLink from './SideNavLink';
 import {
@@ -60,33 +61,38 @@ export default function SideNav({
     <nav
       ref={wrapperRef}
       className={clsx(
-        'absolute inset-y-0 left-0 z-20 w-64 transform bg-white shadow-sm transition duration-200 ease-in-out',
-        openNav ? 'translate-x-0' : '-translate-x-full'
+        navigationStyles.sidebar.base,
+        openNav
+          ? navigationStyles.sidebar.open
+          : navigationStyles.sidebar.closed,
       )}
     >
-      <div className='relative flex h-14 items-center justify-between'>
+      <div className={navigationStyles.header.base}>
         <button
-          className='p-2 focus-visible:outline-none'
+          className={navigationStyles.header.closeButton}
           onClick={() => handleCloseSideNav()}
         >
           <IconCross />
         </button>
         <h2 className='m-3'></h2>
       </div>
-      <ul className='flex flex-col text-sm'>
+      <ul className={navigationStyles.navList.base}>
         <SideNavLink name='Home' href='/home' className='border-b-2'>
           <IconHome />
         </SideNavLink>
 
         <li>
           <Disclosure>
-            <Disclosure.Button className='flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-cyan-300 hover:bg-gray-100'>
+            <Disclosure.Button className={navigationStyles.disclosure.button}>
               <IconCashFlow />
               <span className={clsx('text-lg font-bold text-gray-600')}>
                 CashFlow
               </span>
             </Disclosure.Button>
-            <Disclosure.Panel as='ul' className='pl-3 text-gray-500'>
+            <Disclosure.Panel
+              as='ul'
+              className={navigationStyles.disclosure.panel}
+            >
               <SideNavLink
                 name='Income'
                 href='/cashflow/income'
@@ -113,13 +119,16 @@ export default function SideNav({
         </li>
         <li>
           <Disclosure>
-            <Disclosure.Button className='flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-cyan-300 hover:bg-gray-100'>
+            <Disclosure.Button className={navigationStyles.disclosure.button}>
               <IconBuilding />
               <span className={clsx('text-lg font-bold text-gray-600')}>
                 Asset(s)
               </span>
             </Disclosure.Button>
-            <Disclosure.Panel as='ul' className='pl-3 text-gray-500'>
+            <Disclosure.Panel
+              as='ul'
+              className={navigationStyles.disclosure.panel}
+            >
               <SideNavLink
                 name='Bank(s)'
                 href='/cashflow/bank'

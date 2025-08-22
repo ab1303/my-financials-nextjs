@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import Image from "next/image";
 import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 
@@ -25,14 +25,11 @@ const Navbar = ({ logo }: NavbarProps) => {
     <div className='flex h-28 flex-row items-center justify-between'>
       <Link href='/' className='logo pl-7 lg:ml-10'>
         <Image
-          height='65'
-          width='65'
+          height={65}
+          width={65}
           src={logo}
           alt='logo'
-          style={{
-            maxWidth: '100%',
-            height: 'auto',
-          }}
+          className='h-auto max-w-full'
         />
       </Link>
 
@@ -64,48 +61,41 @@ const Navbar = ({ logo }: NavbarProps) => {
             className='absolute right-12 top-9'
           >
             <Image
-              height='30'
-              width='30'
+              height={30}
+              width={30}
               src='/images/close_icon.png'
-              alt=''
-              style={{
-                maxWidth: '100%',
-                height: 'auto',
-              }}
+              alt='Close menu'
+              className='h-auto max-w-full'
             />
           </div>
           <div className='flex h-full flex-col items-center justify-around pt-5'>
-            <Link href='/'>
-              <span
-                onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
-              >
-                Home
-              </span>
+            <Link 
+              href='/' 
+              className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+              onClick={() => setOpenNav(false)}
+            >
+              Home
             </Link>
-            <Link href='#product'>
-              <span
-                onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
-              >
-                Product
-              </span>
+            <Link 
+              href='#product' 
+              className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+              onClick={() => setOpenNav(false)}
+            >
+              Product
             </Link>
-            <Link href='#faq'>
-              <span
-                onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
-              >
-                Faq
-              </span>
+            <Link 
+              href='#faq' 
+              className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+              onClick={() => setOpenNav(false)}
+            >
+              Faq
             </Link>
-            <Link href='#contact'>
-              <span
-                onClick={() => setOpenNav(false)}
-                className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
-              >
-                Contact
-              </span>
+            <Link 
+              href='#contact' 
+              className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+              onClick={() => setOpenNav(false)}
+            >
+              Contact
             </Link>
           </div>
         </div>
@@ -114,25 +104,17 @@ const Navbar = ({ logo }: NavbarProps) => {
       {/* Desktop Nav */}
 
       <div className='mr-12 flex w-2/5 justify-around sm:invisible lg:visible'>
-        <Link href='#home'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
-            Home
-          </span>
+        <Link href='#home' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+          Home
         </Link>
-        <Link href='#product'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
-            Product
-          </span>
+        <Link href='#product' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+          Product
         </Link>
-        <Link href='#faq'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
-            Faq
-          </span>
+        <Link href='#faq' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+          Faq
         </Link>
-        <Link href='#contact'>
-          <span className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
-            Contact
-          </span>
+        <Link href='#contact' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+          Contact
         </Link>
       </div>
     </div>

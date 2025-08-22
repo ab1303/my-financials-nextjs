@@ -1,4 +1,4 @@
-# My Financials built on  "Create T3 App"
+# My Financials built on "Create T3 App"
 
 This is an app bootstrapped according to the [init.tips](https://init.tips) stack, also known as the T3-Stack.
 
@@ -15,29 +15,30 @@ If you are not familiar with the different technologies used in this project, pl
 
 We also [roll our own docs](https://beta.create.t3.gg) with some summary information and links to the respective documentation.
 
-Also checkout these awesome tutorials on `create-t3-app`.
+## Overall TechStack
 
-- [Build a Blog With the T3 Stack - tRPC, TypeScript, Next.js, Prisma & Zod](https://www.youtube.com/watch?v=syEWlxVFUrY)
-- [Build a Live Chat Application with the T3 Stack - TypeScript, Tailwind, tRPC](https://www.youtube.com/watch?v=dXRRY37MPuk)
-- [Build a full stack app with create-t3-app](https://www.nexxel.dev/blog/ct3a-guestbook)
-- [A first look at create-t3-app](https://dev.to/ajcwebdev/a-first-look-at-create-t3-app-1i8f)
-
-## How do I deploy this?
-
-Follow our deployment guides for [Vercel](https://beta.create.t3.gg/en/deployment/vercel) and [Docker](https://beta.create.t3.gg/en/deployment/docker) for more information.
+- Next.js for the React-based frontend and routing (next)
+- TypeScript for type safety (typescript)
+- tRPC for typesafe APIs (@trpc/server, @trpc/client, @trpc/react-query)
+- Prisma for ORM and database management (prisma, @prisma/client)
+- NextAuth.js for authentication (next-auth)
+- Tailwind CSS for styling (tailwindcss)
+- React Query for data fetching and caching (@tanstack/react-query)
+- Immer for immutable state management (immer)
+- React Toastify for notifications (react-toastify)
+- React Select for select inputs (react-select)
+- React Icons for iconography (react-icons)
 
 ## Versions
 
-` Node: 16.17.0  `
-
+`Node: 20.18.1 `
 
 ## Docker Compose
 
 - Start Docker service
-` docker-compose up -d `
+  `docker-compose up -d`
 
 ## Migration to NextJS 13
-
 
 ```
     pnpm up next react react-dom eslint-config-next --latest
@@ -50,5 +51,5 @@ Follow our deployment guides for [Vercel](https://beta.create.t3.gg/en/deploymen
 
     npx @next/codemod next-image-to-legacy-image ./src --print
 
-    npx @next/codemod next-image-experimental ./src --print 
+    npx @next/codemod next-image-experimental ./src --print
 ```

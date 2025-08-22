@@ -12,19 +12,21 @@ import ZakatForm from './form';
 import type { FormInput } from './_schema';
 import ZakatPaymentsTableServer from './ZakatTableServer';
 
-type ZakatPageProps = {
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
+// Next.js v15: searchParams is now a Promise
 function getSelectedParam(searchParam?: string | string[]) {
   const selectedSearch = searchParam || '';
   const selected = Array.isArray(selectedSearch)
     ? selectedSearch[0]
     : selectedSearch;
-
   return selected || '';
 }
-export default async function ZakatPage({ searchParams }: ZakatPageProps) {
+
+export default async function ZakatPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
   async function addZakatCalendarYear(formData: FormInput) {
     'use server';
 
@@ -35,8 +37,8 @@ export default async function ZakatPage({ searchParams }: ZakatPageProps) {
     return { success: true, error: null };
   }
 
-  const fromYearParam = +getSelectedParam(searchParams?.fromYear);
-  const toYearParam = +getSelectedParam(searchParams?.toYear);
+  const fromYearParam = +getSelectedParam(params?.fromYear);
+  const toYearParam = +getSelectedParam(params?.toYear);
   const calenderYears = await getCalendarYearsHandler();
 
   const zakatYearData = calenderYears.filter((yd) => yd.type === 'ZAKAT');

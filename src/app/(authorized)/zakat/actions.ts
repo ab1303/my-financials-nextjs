@@ -7,7 +7,7 @@ export async function addRow() {
   return { success: true, error: null };
 }
 
-export async function editRow(rowId: string, record: ZakatPaymentType) {
+export async function editRow(/*rowId: string, record: ZakatPaymentType*/) {
   console.log('edit row in server');
   return { success: true, error: null };
 }

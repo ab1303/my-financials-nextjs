@@ -3,7 +3,7 @@ import * as React from 'react';
 export default async function ZakatRootLayout({
   children,
 }: {
-  children: React.ReactElement;
+  children: React.ReactNode;
 }) {
   return (
     <div className='min-h-screen bg-gray-100 flex flex-col px-6 lg:px-8'>

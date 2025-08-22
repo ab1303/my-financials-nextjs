@@ -8,10 +8,7 @@ import { createTRPCReact } from '@trpc/react-query';
 import type { AppRouter } from './router/_app';
 import { getUrl } from './shared';
 
-
-
 export const clientOptions: CreateTRPCClientOptions<AppRouter> = {
-  transformer: superjson,
   links: [
     loggerLink({
       enabled: (opts) =>
@@ -20,6 +17,7 @@ export const clientOptions: CreateTRPCClientOptions<AppRouter> = {
     }),
     httpBatchLink({
       url: getUrl(),
+      transformer: superjson,
       headers() {
         return {
           'x-trpc-source': 'client',
@@ -29,16 +27,7 @@ export const clientOptions: CreateTRPCClientOptions<AppRouter> = {
   ],
 };
 
-export const trpcClient = createTRPCReact<AppRouter>({
-  unstable_overrides: {
-    useMutation: {
-      async onSuccess(opts) {
-        await opts.originalFn();
-        await opts.queryClient.invalidateQueries();
-      },
-    },
-  },
-});
+export const trpc = createTRPCReact<AppRouter>();
 
 /**
  * Inference helper for inputs

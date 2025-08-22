@@ -13,7 +13,8 @@ import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
-import { trpcClient } from '@/server/trpc/client';
+import { Label, TextInput } from '@/components/ui';
+import { trpc } from '@/server/trpc/client';
 import type { BankType } from '@/types';
 
 type BankOptionType = {
@@ -55,29 +56,27 @@ function DeleteIcon(props: DeleteIconProps) {
 
 const Option = (props: OptionProps<BankOptionType, false>) => {
   const queryClient = useQueryClient();
-  const {
-    isLoading,
-    mutate: deleteBank,
-  } = trpcClient.bank.removeBankDetails.useMutation({
-    onSuccess() {
-      queryClient.refetchQueries([['getAllBanks']]);
-      toast('Bank details deleted successfully', {
-        type: 'success',
-        position: 'top-right',
-      });
-    },
-    onError(error) {
-      toast(error.message, {
-        type: 'error',
-        position: 'top-right',
-      });
-    },
-  });
+  const { isPending, mutate: deleteBank } =
+    trpc.bank.removeBankDetails.useMutation({
+      onSuccess() {
+        queryClient.refetchQueries({ queryKey: [['getAllBanks']] });
+        toast('Bank details deleted successfully', {
+          type: 'success',
+          position: 'top-right',
+        });
+      },
+      onError(error) {
+        toast(error.message, {
+          type: 'error',
+          position: 'top-right',
+        });
+      },
+    });
 
   return (
     <div className='flex justify-between'>
       <components.Option {...props} />
-      {isLoading ? (
+      {isPending ? (
         <ImSpinner2 className='animate-spin' />
       ) : (
         <DeleteIcon onClick={() => deleteBank({ bankId: props.data.id })} />
@@ -88,8 +87,8 @@ const Option = (props: OptionProps<BankOptionType, false>) => {
 
 export default function BanksForm() {
   const queryClient = useQueryClient();
-  const getBanksQuery = trpcClient.bank.getAllBanks.useQuery();
-  const saveBankDetailsMutation = trpcClient.bank.saveBankDetails.useMutation({
+  const getBanksQuery = trpc.bank.getAllBanks.useQuery();
+  const saveBankDetailsMutation = trpc.bank.saveBankDetails.useMutation({
     onError(error: unknown) {
       if (error instanceof TRPCError) {
         toast.error(error.message);
@@ -97,7 +96,7 @@ export default function BanksForm() {
     },
 
     onSuccess() {
-      queryClient.refetchQueries([['getAllBanks']]);
+      queryClient.refetchQueries({ queryKey: [['getAllBanks']] });
       toast.success('Bank details saved!');
     },
   });
@@ -189,25 +188,25 @@ export default function BanksForm() {
   }
 
   return (
-    <>
+    <Card>
       <Card.Header>
-        <div className='flex justify-between mt-4 text-left'>
+        <div className='flex justify-between text-left'>
           <Card.Header.Title>Bank Details</Card.Header.Title>
         </div>
       </Card.Header>
 
-      <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
+      <Card.Body>
         <FormProvider {...formMethods}>
           <form
             className='mb-0 space-y-6'
             onSubmit={handleSubmit(submitHandler)}
           >
             <div>
-              <label className={clsx('block text-sm font-medium ')}>Bank</label>
+              <Label htmlFor='bank'>Bank</Label>
               <div className='mt-1'>
                 <Select
                   isClearable
-                  className='w-3/5 mr-2'
+                  className='w-full max-w-md'
                   components={{ Option }}
                   value={selectedBank}
                   options={bankOptions}
@@ -219,22 +218,14 @@ export default function BanksForm() {
             </div>
 
             <div>
-              <label
-                htmlFor='bankName'
-                className={clsx(
-                  'block text-sm font-medium ',
-                  errors.bankName ? 'text-orange-700' : 'text-gray-700'
-                )}
-              >
+              <Label htmlFor='bankName' error={!!errors.bankName}>
                 Bank Name
-              </label>
+              </Label>
               <div className='mt-1'>
-                <input
+                <TextInput
                   id='bankName'
                   type='text'
-                  className={clsx(
-                    errors.bankName && 'text-orange-700 border-orange-700'
-                  )}
+                  error={!!errors.bankName}
                   {...register('bankName', { required: true })}
                 />
               </div>
@@ -259,7 +250,7 @@ export default function BanksForm() {
 
             <div>
               <Button
-                isLoading={saveBankDetailsMutation.isLoading}
+                isLoading={saveBankDetailsMutation.isPending}
                 variant='primary'
                 type='submit'
               >
@@ -268,7 +259,7 @@ export default function BanksForm() {
             </div>
           </form>
         </FormProvider>
-      </div>
-    </>
+      </Card.Body>
+    </Card>
   );
 }

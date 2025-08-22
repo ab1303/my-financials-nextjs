@@ -1,6 +1,6 @@
 'use client';
 
-import { trpcClient } from '@/server/trpc/client';
+import { trpc } from '@/server/trpc/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
@@ -14,7 +14,7 @@ export default function RegisterForm() {
 
   const router = useRouter();
 
-  const registerMutation = trpcClient.auth.register.useMutation({
+  const registerMutation = trpc.auth.register.useMutation({
     onError(err: any) {
       toast.error(err.message);
     },
