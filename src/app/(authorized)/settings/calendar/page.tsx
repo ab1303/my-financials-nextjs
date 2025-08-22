@@ -17,9 +17,10 @@ export default async function CalendarYearPage() {
     const { id, display, calendarType, fromDate, toDate } = formData;
 
     try {
+      let result;
       if (id) {
         // Update existing calendar year
-        await updateCalendarYearHandler(
+        result = await updateCalendarYearHandler(
           id,
           display,
           fromDate.getFullYear(),
@@ -30,7 +31,7 @@ export default async function CalendarYearPage() {
         );
       } else {
         // Create new calendar year
-        await createCalendarYearHandler(
+        result = await createCalendarYearHandler(
           display,
           fromDate.getFullYear(),
           fromDate.getMonth() + 1,
@@ -40,9 +41,31 @@ export default async function CalendarYearPage() {
         );
       }
 
-      // mutate data
-      revalidatePath('/settings/calendar');
-      return { success: true, error: null };
+      // Check if the operation was successful
+      if (
+        'calendarId' in result &&
+        result.calendarId &&
+        result.calendarId !== ''
+      ) {
+        revalidatePath('/settings/calendar');
+        return { success: true };
+      } else {
+        // Handle error case - result has error properties
+        const errorMessage =
+          'error' in result && typeof result.error === 'string'
+            ? result.error
+            : 'Failed to save calendar year';
+
+        return {
+          success: false,
+          error: errorMessage,
+          isReferentialIntegrityError:
+            'isReferentialIntegrityError' in result &&
+            typeof result.isReferentialIntegrityError === 'boolean'
+              ? result.isReferentialIntegrityError
+              : undefined,
+        };
+      }
     } catch (error) {
       return { success: false, error: 'Failed to save calendar year' };
     }
@@ -52,9 +75,26 @@ export default async function CalendarYearPage() {
     'use server';
 
     try {
-      await deleteCalendarYearHandler(id);
-      revalidatePath('/settings/calendar');
-      return { success: true, error: null };
+      const result = await deleteCalendarYearHandler(id);
+      if (result.success) {
+        revalidatePath('/settings/calendar');
+        return { success: true };
+      } else {
+        const errorMessage =
+          'error' in result && typeof result.error === 'string'
+            ? result.error
+            : 'Failed to delete calendar year';
+
+        return {
+          success: false,
+          error: errorMessage,
+          isReferentialIntegrityError:
+            'isReferentialIntegrityError' in result &&
+            typeof result.isReferentialIntegrityError === 'boolean'
+              ? result.isReferentialIntegrityError
+              : undefined,
+        };
+      }
     } catch (error) {
       return { success: false, error: 'Failed to delete calendar year' };
     }

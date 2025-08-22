@@ -24,6 +24,19 @@ export const addCalendarYearDetails = async ({
 export const getCalendarYears = async () =>
   await prisma.calendarYear.findMany();
 
+export const checkCalendarYearDeletability = async (id: string) => {
+  // Optional: Keep this for UI hints, but make it lightweight
+  // Only check if calendar year exists and let DB handle constraints
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+
+  return {
+    exists: !!calendarYear,
+  };
+};
+
 export const updateCalendarYearDetails = async (
   id: string,
   data: Omit<CalendarYearModel, 'id'>,
@@ -42,6 +55,8 @@ export const updateCalendarYearDetails = async (
 };
 
 export const deleteCalendarYearById = async (id: string) => {
+  // Let the database handle referential integrity constraints
+  // This will throw a P2003 error if there are foreign key constraints
   return await prisma.calendarYear.delete({
     where: { id },
   });

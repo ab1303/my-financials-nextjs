@@ -36,7 +36,12 @@ export default function CalendarClientWrapper({
         setEditingRecord(null);
       }
     } else {
-      toast.error('Failed to delete calendar year');
+      // Show specific error message for referential integrity violations
+      if (result.isReferentialIntegrityError && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.error(result.error || 'Failed to delete calendar year');
+      }
     }
   };
 

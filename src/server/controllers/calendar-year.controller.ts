@@ -4,8 +4,9 @@ import {
   getCalendarYears,
   updateCalendarYearDetails,
   deleteCalendarYearById,
+  checkCalendarYearDeletability,
 } from '../services/calendar-year.service';
-import { handleCaughtError } from '../utils/prisma';
+import { handleCaughtError, handleDatabaseError } from '../utils/prisma';
 
 export const createCalendarYearHandler = async (
   description: string,
@@ -29,8 +30,8 @@ export const createCalendarYearHandler = async (
     return { calendarId: createCalendarYear.id };
   } catch (e) {
     handleCaughtError(e);
-
-    return { calendarId: '' };
+    const errorResult = handleDatabaseError(e);
+    return { calendarId: '', ...errorResult };
   }
 };
 
@@ -62,7 +63,8 @@ export const updateCalendarYearHandler = async (
     return { calendarId: updatedCalendarYear.id };
   } catch (e) {
     handleCaughtError(e);
-    return { calendarId: '' };
+    const errorResult = handleDatabaseError(e);
+    return { calendarId: '', ...errorResult };
   }
 };
 
@@ -72,6 +74,19 @@ export const deleteCalendarYearHandler = async (id: string) => {
     return { success: true };
   } catch (e) {
     handleCaughtError(e);
-    return { success: false };
+    return handleDatabaseError(e);
+  }
+};
+
+export const checkCalendarYearDeletabilityHandler = async (id: string) => {
+  try {
+    const result = await checkCalendarYearDeletability(id);
+    return { success: true, ...result };
+  } catch (e) {
+    handleCaughtError(e);
+    return {
+      success: false,
+      error: 'Failed to check calendar year deletability',
+    };
   }
 };
