@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Children, cloneElement } from 'react';
 
+import { navigationStyles } from '@/styles/theme';
+
 type NamedChildrenSlots = {
   media: React.ReactElement;
   action: React.ReactNode;
@@ -16,7 +18,7 @@ type SideNavLinkProps = {
 };
 
 const isObject = <T extends Record<string, unknown>>(
-  value: unknown
+  value: unknown,
 ): value is T =>
   typeof value === 'object' &&
   typeof value !== 'function' &&
@@ -37,36 +39,37 @@ export default function SideNavLink({
     ? cloneElement(children.media, {
         className: clsx(
           children.media.props.className,
-          'w-5 h-5 mx-5',
-          pathname === href ? 'text-cyan-600' : 'text-gray-600'
+          navigationStyles.navItem.icon,
+          pathname === href
+            ? navigationStyles.navItem.active
+            : navigationStyles.navItem.inactive,
         ),
       })
     : Children.map(children, (child: React.ReactElement) => {
         return cloneElement(child, {
           className: clsx(
             child.props.className,
-            'w-5 h-5 mx-5',
-            pathname === href ? 'text-cyan-600' : 'text-gray-600'
+            navigationStyles.navItem.icon,
+            pathname === href
+              ? navigationStyles.navItem.active
+              : navigationStyles.navItem.inactive,
           ),
         });
       });
 
   return (
-    <li
-      className={clsx(
-        'flex h-14 items-center justify-between rounded-sm hover:border-cyan-300 hover:bg-gray-100',
-        className
-      )}
-    >
-      <Link 
-        href={href} 
+    <li className={clsx(navigationStyles.navItem.link, className)}>
+      <Link
+        href={href}
         className='flex h-full w-full items-center justify-start space-x-3'
       >
         {childrenWithProps}
         <span
           className={clsx(
             'text-lg font-bold',
-            pathname === href ? 'text-cyan-600' : 'text-gray-600'
+            pathname === href
+              ? navigationStyles.navItem.active
+              : navigationStyles.navItem.inactive,
           )}
         >
           {name}

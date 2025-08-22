@@ -158,25 +158,30 @@ export const formStyles = {
   errorText: 'text-sm text-red-600',
 };
 
-// Navigation and sidebar styling (based on SideNav components)
+// Navigation and sidebar styling (based on SideNav components and original flowbite theme)
 export const navigationStyles = {
-  // Sidebar container
+  // Sidebar container (matches flowbite sidebar.root)
   sidebar: {
     base: 'absolute inset-y-0 left-0 z-20 w-64 transform bg-white shadow-sm transition duration-200 ease-in-out',
     open: 'translate-x-0',
     closed: '-translate-x-full',
+    // Flowbite-compatible styles
+    root: 'h-full bg-gray-50',
+    inner: 'h-full overflow-y-auto overflow-x-hidden bg-white py-4 px-3',
   },
   // Navigation header
   header: {
     base: 'relative flex h-14 items-center justify-between',
     closeButton: 'p-2 focus-visible:outline-none',
   },
-  // Navigation list
+  // Navigation list (matches flowbite sidebar.collapse.list)
   navList: {
     base: 'flex flex-col text-sm',
     nested: 'pl-3 text-gray-500',
+    // Flowbite collapse list
+    collapse: 'space-y-2 py-2 list-none',
   },
-  // Navigation items
+  // Navigation items (matches flowbite sidebar.item)
   navItem: {
     base: 'flex h-14 w-full items-center justify-start space-x-3 border-b-2 hover:border-cyan-300 hover:bg-gray-100',
     link: 'flex h-14 items-center justify-between rounded-sm hover:border-cyan-300 hover:bg-gray-100',
@@ -184,7 +189,13 @@ export const navigationStyles = {
     inactive: 'text-gray-600',
     icon: 'w-5 h-5 mx-5',
     text: 'text-lg font-bold text-gray-600',
+    // Flowbite item styles
+    flowbite:
+      'no-underline flex items-center rounded-lg p-2 text-lg font-normal text-gray-900 hover:bg-gray-100',
   },
+  // Item groups (matches flowbite sidebar.itemGroup)
+  itemGroup:
+    'list-none border-t border-gray-200 pt-3 first:mt-0 first:border-t-0 first:pt-0',
   // Disclosure/collapsible sections
   disclosure: {
     button:
@@ -193,32 +204,32 @@ export const navigationStyles = {
   },
 };
 
-// Footer styling utilities (for future use)
+// Footer styling utilities (exact match to flowbite footer theme)
 export const footerStyles = {
   root: {
-    base: 'flex flex-col',
+    base: 'flex flex-col', // Exact flowbite match
   },
   brand: {
-    base: 'm-6 flex items-center',
+    base: 'm-6 flex items-center', // Exact flowbite match
   },
   groupLink: {
-    base: 'flex flex-col flex-wrap text-gray-500',
-    link: 'mb-4 last:mr-0 md:mr-6',
+    base: 'flex flex-col flex-wrap text-gray-500', // Exact flowbite match (removed dark mode)
+    link: 'mb-4 last:mr-0 md:mr-6', // Exact flowbite match
   },
   icon: {
-    base: 'text-gray-400 hover:text-gray-900',
+    base: 'text-gray-400 hover:text-gray-900', // Exact flowbite match (removed dark mode)
   },
 };
 
-// Enhanced modal styling (extending the existing modalStyles)
+// Enhanced modal styling (extending the existing modalStyles with exact flowbite matches)
 export const enhancedModalStyles = {
   ...modalStyles,
-  // Modal body styling based on flowbite theme
+  // Modal body styling - exact match to flowbite modal.body.base
   body: {
     base: 'px-6 py-6 space-y-6',
     compact: 'px-4 py-4 space-y-3',
     spacious: 'px-8 py-8 space-y-8',
-    // Flowbite-style body spacing
+    // Exact flowbite modal body styling
     flowbite: 'space-y-6 px-6 pb-4 sm:pb-6 lg:px-8 xl:pb-8',
   },
   header: {
@@ -231,13 +242,13 @@ export const enhancedModalStyles = {
   },
 };
 
-// List and itemGroup styling utilities
+// List and itemGroup styling utilities (exact match to flowbite sidebar styles)
 export const listStyles = {
-  base: 'space-y-2 py-2 list-none',
+  base: 'space-y-2 py-2 list-none', // Exact match to flowbite sidebar.collapse.list
   itemGroup:
-    'list-none border-t border-gray-200 pt-3 first:mt-0 first:border-t-0 first:pt-0',
+    'list-none border-t border-gray-200 pt-3 first:mt-0 first:border-t-0 first:pt-0', // Exact match to flowbite sidebar.itemGroup
   item: {
-    base: 'no-underline flex items-center rounded-lg p-2 text-lg font-normal text-gray-900 hover:bg-gray-100',
+    base: 'no-underline flex items-center rounded-lg p-2 text-lg font-normal text-gray-900 hover:bg-gray-100', // Exact match to flowbite sidebar.item.base
     active: 'bg-gray-100 text-gray-900',
     inactive: 'text-gray-700',
   },

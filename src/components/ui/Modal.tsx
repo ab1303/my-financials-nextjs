@@ -4,6 +4,8 @@ import { Dialog, Transition } from '@headlessui/react';
 import React, { Fragment, ReactNode } from 'react';
 import clsx from 'clsx';
 
+import { enhancedModalStyles } from '@/styles/theme';
+
 type ModalRootProps = {
   show: boolean;
   onClose: () => void;
@@ -74,10 +76,16 @@ const Header = ({
 const Body = ({
   children,
   className,
+  variant = 'base',
 }: {
   children: ReactNode;
   className?: string;
-}) => <div className={clsx('px-6 py-6 space-y-6', className)}>{children}</div>;
+  variant?: 'base' | 'compact' | 'spacious' | 'flowbite';
+}) => (
+  <div className={clsx(enhancedModalStyles.body[variant], className)}>
+    {children}
+  </div>
+);
 
 const Footer = ({
   children,

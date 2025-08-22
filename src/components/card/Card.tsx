@@ -1,5 +1,7 @@
 import React from 'react';
+import clsx from 'clsx';
 
+import { cardStyles } from '@/styles/theme';
 import CardBody from './components/CardBody';
 import CardHeader from './components/CardHeader';
 
@@ -8,14 +10,22 @@ type CommonComponents = {
   Body: typeof CardBody;
 };
 
-const Card: React.FC<{ children?: React.ReactNode }> & CommonComponents = (
-  props,
-) => {
+type CardProps = {
+  children?: React.ReactNode;
+  variant?: 'base' | 'interactive' | 'elevated' | 'flat';
+  className?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+const Card: React.FC<CardProps> & CommonComponents = ({
+  children,
+  variant = 'base',
+  className,
+  ...props
+}) => {
   return (
-    <div
-      className='bg-white shadow rounded-lg border border-gray-200 mt-6'
-      {...props}
-    />
+    <div className={clsx(cardStyles[variant], 'mt-6', className)} {...props}>
+      {children}
+    </div>
   );
 };
 
