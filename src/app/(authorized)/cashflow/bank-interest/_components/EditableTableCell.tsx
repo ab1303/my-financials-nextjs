@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
+import clsx from 'clsx';
 
 import { ImSpinner2 } from 'react-icons/im';
-import { inputStyles } from '@/styles/theme';
+import { inputStyles, buttonStyles, colorStyles } from '@/styles/theme';
+import { stylingUtils } from '@/styles/styling';
 
 type EditableTableCellProps = {
   inProgress?: boolean;
@@ -15,18 +17,20 @@ export default function EditableTableCell({
   originalValue,
   OnValueChange,
 }: EditableTableCellProps) {
-  const [hasValueChanged, setHasValueChanged] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [value, setValue] = useState(() => originalValue);
 
   useEffect(() => {
-    setHasValueChanged(originalValue !== value);
+    setIsEditing(originalValue !== value);
   }, [originalValue, value]);
 
   return (
-    <div className='flex flex-row items-center'>
+    <div className='flex flex-row items-center gap-2'>
       <NumericFormat
-        className={`${inputStyles.base.replace('bg-gray-50', 'bg-white')}`}
-        itemRef=''
+        className={stylingUtils.overrideClasses(
+          inputStyles.base,
+          { bg: 'bg-white' }, // Override bg-gray-50 with bg-white
+        )}
         prefix='$'
         displayType='input'
         thousandSeparator
@@ -34,27 +38,47 @@ export default function EditableTableCell({
         disabled={inProgress}
         onValueChange={(values) => setValue(values.floatValue || 0)}
       />
-      <span className='flex items-center ml-2 w-20'>
-        {inProgress && <ImSpinner2 className='animate-spin text-teal-500' />}
-        {hasValueChanged && (
-          <>
+      <div className='flex items-center min-w-[5rem]'>
+        {inProgress && (
+          <ImSpinner2
+            className={clsx('animate-spin', colorStyles.primary.text)}
+          />
+        )}
+        {isEditing && !inProgress && (
+          <div className='flex gap-1'>
             <button
               type='button'
-              className='w-6 h-6 rounded-full text-xs mx-1 bg-green-100 text-green-600 hover:bg-green-200 hover:text-green-800 border border-green-200'
+              className={clsx(
+                buttonStyles.iconSmall,
+                'text-xs',
+                colorStyles.primary.bg,
+                'text-white',
+                colorStyles.primary.hover.bg,
+                'hover:text-white',
+                colorStyles.primary.focus,
+              )}
               onClick={() => OnValueChange(value)}
+              aria-label='Save changes'
             >
               ✓
             </button>
             <button
               type='button'
-              className='w-6 h-6 rounded-full text-xs bg-orange-100 text-orange-600 hover:bg-orange-200 hover:text-orange-800 border border-orange-200'
+              className={clsx(
+                buttonStyles.iconSmall,
+                'text-xs',
+                'bg-orange-100 text-orange-600 border border-orange-200',
+                'hover:bg-orange-200 hover:text-orange-800',
+                'focus:ring-orange-500',
+              )}
               onClick={() => setValue(originalValue)}
+              aria-label='Cancel changes'
             >
               ↩
             </button>
-          </>
+          </div>
         )}
-      </span>
+      </div>
     </div>
   );
 }
