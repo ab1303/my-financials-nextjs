@@ -4,6 +4,7 @@ import DatePickerDialog from '@/components/DatePickerDialog';
 import { Label } from '@/components/ui/Label';
 import { Radio } from '@/components/ui/Radio';
 import { TextInput } from '@/components/ui/TextInput';
+import { HiOutlineInformationCircle } from 'react-icons/hi';
 import type { SubmitHandler } from 'react-hook-form';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +26,12 @@ const currentDate = new Date(),
   y = currentDate.getFullYear();
 
 export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
+  // Descriptions for each calendar type
+  const descriptions: Record<string, string> = {
+    ZAKAT: 'Year used for Zakat calculation, based on Islamic lunar calendar.',
+    ANNUAL: 'Standard calendar year (Jan-Dec) for regular reporting.',
+    FISCAL: 'Fiscal year, used for business accounting and tax purposes.',
+  };
   const {
     register,
     handleSubmit,
@@ -119,19 +126,28 @@ export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
                   'border rounded-xl p-2  text-orange-700 border-orange-700',
               )}
             >
-              {CALENDAR_KEYS.map((k) => {
-                const calendarKey = k;
-                return (
-                  <div key={k} className='flex items-center gap-2'>
-                    <Radio
-                      id={k}
-                      value={CalendarEnumType[calendarKey]}
-                      {...register('calendarType', { required: true })}
+              {CALENDAR_KEYS.map((calendarKey) => (
+                <div key={calendarKey} className='flex items-center gap-2'>
+                  <Radio
+                    id={calendarKey}
+                    value={CalendarEnumType[calendarKey]}
+                    {...register('calendarType', { required: true })}
+                  />
+                  <Label htmlFor={calendarKey}>
+                    {CalendarEnumType[calendarKey]}
+                  </Label>
+                  {/* Info icon with tooltip using Heroicons via React Icons */}
+                  <span className='relative group'>
+                    <HiOutlineInformationCircle
+                      className='w-4 h-4 text-gray-400 cursor-pointer'
+                      aria-label='Info'
                     />
-                    <Label htmlFor={k}>{CalendarEnumType[calendarKey]}</Label>
-                  </div>
-                );
-              })}
+                    <span className='absolute left-1/2 -translate-x-1/2 mt-2 z-10 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg'>
+                      {descriptions[calendarKey]}
+                    </span>
+                  </span>
+                </div>
+              ))}
             </div>
           </fieldset>
         </div>
