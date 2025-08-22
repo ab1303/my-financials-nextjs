@@ -2,7 +2,8 @@ import { CalendarEnumType } from '@prisma/client';
 
 export type ServerActionType = {
   success: boolean;
-  error: unknown;
+  error?: string;
+  isReferentialIntegrityError?: boolean;
 };
 
 export type CalendarYearType = {
@@ -16,7 +17,7 @@ export type CalendarYearType = {
 };
 
 const CALENDAR_KEYS = Object.entries(CalendarEnumType).map(
-  ([k]) => k as CalendarEnumType
+  ([k]) => k as CalendarEnumType,
 );
 
 export { CALENDAR_KEYS };

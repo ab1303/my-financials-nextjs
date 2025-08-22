@@ -30,3 +30,37 @@ export function handleCaughtError(e: unknown) {
   }
   throw e;
 }
+
+export function handleDatabaseError(e: unknown) {
+  if (e instanceof Prisma.PrismaClientKnownRequestError) {
+    switch (e.code) {
+      case 'P2003':
+        return {
+          success: false,
+          error:
+            'Cannot delete this record because it is referenced by other data. Please remove all related records first.',
+          isReferentialIntegrityError: true,
+        };
+      case 'P2025':
+        return {
+          success: false,
+          error: 'Record not found',
+        };
+      case 'P2002':
+        return {
+          success: false,
+          error: 'A record with this information already exists',
+        };
+      default:
+        return {
+          success: false,
+          error: 'A database error occurred',
+        };
+    }
+  }
+
+  return {
+    success: false,
+    error: 'An unexpected error occurred',
+  };
+}

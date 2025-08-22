@@ -1,9 +1,12 @@
 'use client';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { Button } from '@/components';
 import DatePickerDialog from '@/components/DatePickerDialog';
 import { Label } from '@/components/ui/Label';
 import { Radio } from '@/components/ui/Radio';
 import { TextInput } from '@/components/ui/TextInput';
+import { HiOutlineInformationCircle } from 'react-icons/hi';
 import type { SubmitHandler } from 'react-hook-form';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,16 +18,34 @@ import type { FormInput } from './_schema';
 import clsx from 'clsx';
 import { CalendarEnumType } from '@prisma/client';
 
+import type { CalendarYearType } from './_types';
+
 type CalendarFormProps = {
-  initialData: unknown;
+  initialData?: CalendarYearType;
+  editingRecord?: CalendarYearType | null;
+  setEditingRecord?: (record: CalendarYearType | null) => void;
   children?: React.ReactNode;
-  addCalendarYear: (formData: FormInput) => Promise<ServerActionType>;
+  upsertCalendarYear: (formData: FormInput) => Promise<ServerActionType>;
 };
 
 const currentDate = new Date(),
   y = currentDate.getFullYear();
 
-export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
+export default function CalendarForm({
+  initialData,
+  editingRecord: externalEditingRecord,
+  setEditingRecord: setExternalEditingRecord,
+  upsertCalendarYear,
+}: CalendarFormProps) {
+  // Use external editing record if provided, otherwise use internal state
+  const editingRecord = externalEditingRecord || null;
+  const setEditingRecord = setExternalEditingRecord || (() => {});
+  // Descriptions for each calendar type
+  const descriptions: Record<string, string> = {
+    ZAKAT: 'Year used for Zakat calculation, based on Islamic lunar calendar.',
+    ANNUAL: 'Standard calendar year (Jan-Dec) for regular reporting.',
+    FISCAL: 'Fiscal year, used for business accounting and tax purposes.',
+  };
   const {
     register,
     handleSubmit,
@@ -34,25 +55,66 @@ export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
   } = useForm<FormInput>({
     resolver: zodResolver(FormDataSchema),
     defaultValues: {
-      fromDate: new Date(y, 0, 1),
-      toDate: new Date(y, 12, 0),
+      id: initialData?.id || undefined,
+      display: initialData?.description || '',
+      calendarType: initialData?.type || 'ANNUAL',
+      fromDate: initialData
+        ? new Date(initialData.fromYear, initialData.fromMonth - 1, 1)
+        : new Date(y, 0, 1),
+      toDate: initialData
+        ? new Date(initialData.toYear, initialData.toMonth - 1, 1)
+        : new Date(y, 12, 0),
     },
   });
 
+  // Populate form when editingRecord changes
+  useEffect(() => {
+    if (editingRecord) {
+      reset({
+        id: editingRecord.id,
+        display: editingRecord.description,
+        calendarType: editingRecord.type || 'ANNUAL',
+        fromDate: new Date(
+          editingRecord.fromYear,
+          editingRecord.fromMonth - 1,
+          1,
+        ),
+        toDate: new Date(editingRecord.toYear, editingRecord.toMonth - 1, 1),
+      });
+    } else {
+      reset({
+        id: undefined,
+        display: '',
+        calendarType: 'ANNUAL',
+        fromDate: new Date(y, 0, 1),
+        toDate: new Date(y, 12, 0),
+      });
+    }
+  }, [editingRecord, reset, y]);
+
   const processForm: SubmitHandler<FormInput> = async (data) => {
-    console.log('Submit click', data);
-    const result = await addCalendarYear(data);
-
+    const result = await upsertCalendarYear(data);
     if (!result) {
-      console.log('Something went wrong');
+      toast.error('Failed to save calendar year');
       return;
     }
-
     if (result.error) {
-      console.log(result.error);
+      toast.error(
+        typeof result.error === 'string'
+          ? result.error
+          : 'Failed to save calendar year',
+      );
       return;
     }
 
+    // Success feedback
+    if (editingRecord) {
+      toast.success('Calendar year updated successfully!');
+    } else {
+      toast.success('Calendar year created successfully!');
+    }
+
+    setEditingRecord(null);
     reset();
   };
 
@@ -119,30 +181,35 @@ export default function CalendarForm({ addCalendarYear }: CalendarFormProps) {
                   'border rounded-xl p-2  text-orange-700 border-orange-700',
               )}
             >
-              {CALENDAR_KEYS.map((k) => {
-                const calendarKey = k;
-                return (
-                  <div key={k} className='flex items-center gap-2'>
-                    <Radio
-                      id={k}
-                      value={CalendarEnumType[calendarKey]}
-                      {...register('calendarType', { required: true })}
+              {CALENDAR_KEYS.map((calendarKey) => (
+                <div key={calendarKey} className='flex items-center gap-2'>
+                  <Radio
+                    id={calendarKey}
+                    value={CalendarEnumType[calendarKey]}
+                    {...register('calendarType', { required: true })}
+                  />
+                  <Label htmlFor={calendarKey}>
+                    {CalendarEnumType[calendarKey]}
+                  </Label>
+                  {/* Info icon with tooltip using Heroicons via React Icons */}
+                  <span className='relative group'>
+                    <HiOutlineInformationCircle
+                      className='w-4 h-4 text-gray-400 cursor-pointer'
+                      aria-label='Info'
                     />
-                    <Label htmlFor={k}>{CalendarEnumType[calendarKey]}</Label>
-                  </div>
-                );
-              })}
+                    <span className='absolute left-1/2 -translate-x-1/2 mt-2 z-10 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap shadow-lg'>
+                      {descriptions[calendarKey]}
+                    </span>
+                  </span>
+                </div>
+              ))}
             </div>
           </fieldset>
         </div>
       </div>
       <div className='mx-10'>
-        <Button
-          // isLoading={saveBankDetailsMutation.isLoading}
-          variant='primary'
-          type='submit'
-        >
-          Create
+        <Button variant='primary' type='submit'>
+          {editingRecord ? 'Update' : 'Create'}
         </Button>
       </div>
     </form>

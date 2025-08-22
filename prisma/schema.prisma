@@ -132,7 +132,7 @@ model BankInterest {
   amountDue  Decimal      @db.Money
   bank       Business     @relation(fields: [bankId], references: [id])
   bankId     String
-  calendar   CalendarYear @relation(fields: [calendarId], references: [id])
+  calendar   CalendarYear @relation(fields: [calendarId], references: [id], onDelete: Restrict)
   calendarId String
   payments   Payment[]
 }
@@ -140,7 +140,7 @@ model BankInterest {
 // Zakat
 model Zakat {
   id         String         @id @default(cuid())
-  calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
+  calendar   CalendarYear   @relation(fields: [calendarId], references: [id], onDelete: Restrict)
   calendarId String         @unique
   amountDue  Decimal        @db.Money
   payments   ZakatPayment[]
