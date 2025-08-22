@@ -5,26 +5,59 @@ import type { FormInput } from './_schema';
 import {
   createCalendarYearHandler,
   getCalendarYearsHandler,
+  updateCalendarYearHandler,
+  deleteCalendarYearHandler,
 } from '@/server/controllers/calendar-year.controller';
 import { revalidatePath } from 'next/cache';
 
 export default async function CalendarYearPage() {
-  async function addCalendarYear(formData: FormInput) {
+  async function upsertCalendarYear(formData: FormInput) {
     'use server';
 
-    const { display, calendarType, fromDate, toDate } = formData;
-    await createCalendarYearHandler(
-      display,
-      fromDate.getFullYear(),
-      fromDate.getMonth() + 1,
-      toDate.getFullYear(),
-      toDate.getMonth() + 1,
-      calendarType,
-    );
-    // mutate data
-    revalidatePath('/settings/calendar');
+    const { id, display, calendarType, fromDate, toDate } = formData;
 
-    return { success: true, error: null };
+    try {
+      if (id) {
+        // Update existing calendar year
+        await updateCalendarYearHandler(
+          id,
+          display,
+          fromDate.getFullYear(),
+          fromDate.getMonth() + 1,
+          toDate.getFullYear(),
+          toDate.getMonth() + 1,
+          calendarType,
+        );
+      } else {
+        // Create new calendar year
+        await createCalendarYearHandler(
+          display,
+          fromDate.getFullYear(),
+          fromDate.getMonth() + 1,
+          toDate.getFullYear(),
+          toDate.getMonth() + 1,
+          calendarType,
+        );
+      }
+
+      // mutate data
+      revalidatePath('/settings/calendar');
+      return { success: true, error: null };
+    } catch (error) {
+      return { success: false, error: 'Failed to save calendar year' };
+    }
+  }
+
+  async function deleteCalendarYear(id: string) {
+    'use server';
+
+    try {
+      await deleteCalendarYearHandler(id);
+      revalidatePath('/settings/calendar');
+      return { success: true, error: null };
+    } catch (error) {
+      return { success: false, error: 'Failed to delete calendar year' };
+    }
   }
 
   const calendarYearsData = await getCalendarYearsHandler();
@@ -40,7 +73,8 @@ export default async function CalendarYearPage() {
         <Suspense fallback={<p className='font-medium'>Loading...</p>}>
           <CalendarClientWrapper
             tableData={calendarYearsData}
-            addCalendarYear={addCalendarYear}
+            upsertCalendarYear={upsertCalendarYear}
+            deleteCalendarYear={deleteCalendarYear}
           />
         </Suspense>
       </div>

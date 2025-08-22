@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   useReactTable,
   createColumnHelper,
@@ -10,7 +11,7 @@ import {
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
 import type { CalendarYearType } from './_types';
-import { HiPencil, HiTrash } from 'react-icons/hi2';
+import { HiPencil, HiTrash, HiCheck, HiXMark } from 'react-icons/hi2';
 
 const columnHelper = createColumnHelper<CalendarYearType>();
 
@@ -21,6 +22,7 @@ type CalendarTableClientProps = {
 };
 export default function CalendarTableClient(props: CalendarTableClientProps) {
   const { tableData, onEdit, onDelete } = props;
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const columns = [
     columnHelper.accessor('fromYear', {
       header: () => <span>From Year</span>,
@@ -53,24 +55,57 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
       header: () => <span>Actions</span>,
       cell: (info) => {
         const row = info.row.original;
+        const isDeleting = deletingId === row.id;
+
         return (
           <div className='flex gap-2'>
-            <button
-              type='button'
-              aria-label='Edit'
-              className='p-1 rounded hover:bg-gray-100'
-              onClick={() => onEdit(row)}
-            >
-              <HiPencil className='w-3 h-3 text-blue-500' />
-            </button>
-            <button
-              type='button'
-              aria-label='Delete'
-              className='p-1 rounded hover:bg-gray-100'
-              onClick={() => onDelete(row)}
-            >
-              <HiTrash className='w-3 h-3 text-red-500' />
-            </button>
+            {!isDeleting && (
+              <button
+                type='button'
+                aria-label='Edit'
+                title='Edit calendar year'
+                className='p-1 rounded hover:bg-gray-100 transition-colors'
+                onClick={() => onEdit(row)}
+              >
+                <HiPencil className='w-4 h-4 text-blue-500' />
+              </button>
+            )}
+
+            {isDeleting ? (
+              <>
+                <button
+                  type='button'
+                  aria-label='Confirm delete'
+                  title='Confirm delete'
+                  className='p-1 rounded hover:bg-green-100 transition-colors'
+                  onClick={() => {
+                    onDelete(row);
+                    setDeletingId(null);
+                  }}
+                >
+                  <HiCheck className='w-4 h-4 text-green-600' />
+                </button>
+                <button
+                  type='button'
+                  aria-label='Cancel delete'
+                  title='Cancel delete'
+                  className='p-1 rounded hover:bg-gray-100 transition-colors'
+                  onClick={() => setDeletingId(null)}
+                >
+                  <HiXMark className='w-4 h-4 text-gray-500' />
+                </button>
+              </>
+            ) : (
+              <button
+                type='button'
+                aria-label='Delete'
+                title='Delete calendar year'
+                className='p-1 rounded hover:bg-red-100 transition-colors'
+                onClick={() => setDeletingId(row.id)}
+              >
+                <HiTrash className='w-4 h-4 text-red-500' />
+              </button>
+            )}
           </div>
         );
       },

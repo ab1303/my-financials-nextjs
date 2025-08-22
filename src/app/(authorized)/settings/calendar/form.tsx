@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { Button } from '@/components';
 import DatePickerDialog from '@/components/DatePickerDialog';
 import { Label } from '@/components/ui/Label';
@@ -24,7 +25,7 @@ type CalendarFormProps = {
   editingRecord?: CalendarYearType | null;
   setEditingRecord?: (record: CalendarYearType | null) => void;
   children?: React.ReactNode;
-  addCalendarYear: (formData: FormInput) => Promise<ServerActionType>;
+  upsertCalendarYear: (formData: FormInput) => Promise<ServerActionType>;
 };
 
 const currentDate = new Date(),
@@ -34,7 +35,7 @@ export default function CalendarForm({
   initialData,
   editingRecord: externalEditingRecord,
   setEditingRecord: setExternalEditingRecord,
-  addCalendarYear,
+  upsertCalendarYear,
 }: CalendarFormProps) {
   // Use external editing record if provided, otherwise use internal state
   const editingRecord = externalEditingRecord || null;
@@ -54,6 +55,7 @@ export default function CalendarForm({
   } = useForm<FormInput>({
     resolver: zodResolver(FormDataSchema),
     defaultValues: {
+      id: initialData?.id || undefined,
       display: initialData?.description || '',
       calendarType: initialData?.type || 'ANNUAL',
       fromDate: initialData
@@ -69,6 +71,7 @@ export default function CalendarForm({
   useEffect(() => {
     if (editingRecord) {
       reset({
+        id: editingRecord.id,
         display: editingRecord.description,
         calendarType: editingRecord.type || 'ANNUAL',
         fromDate: new Date(
@@ -80,6 +83,7 @@ export default function CalendarForm({
       });
     } else {
       reset({
+        id: undefined,
         display: '',
         calendarType: 'ANNUAL',
         fromDate: new Date(y, 0, 1),
@@ -89,9 +93,27 @@ export default function CalendarForm({
   }, [editingRecord, reset, y]);
 
   const processForm: SubmitHandler<FormInput> = async (data) => {
-    const result = await addCalendarYear(data);
-    if (!result) return;
-    if (result.error) return;
+    const result = await upsertCalendarYear(data);
+    if (!result) {
+      toast.error('Failed to save calendar year');
+      return;
+    }
+    if (result.error) {
+      toast.error(
+        typeof result.error === 'string'
+          ? result.error
+          : 'Failed to save calendar year',
+      );
+      return;
+    }
+
+    // Success feedback
+    if (editingRecord) {
+      toast.success('Calendar year updated successfully!');
+    } else {
+      toast.success('Calendar year created successfully!');
+    }
+
     setEditingRecord(null);
     reset();
   };

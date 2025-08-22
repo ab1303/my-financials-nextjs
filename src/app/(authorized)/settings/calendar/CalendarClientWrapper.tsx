@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 import CalendarForm from './form';
 import CalendarTableClient from './CalendarTableClient';
 import type { CalendarYearType } from './_types';
@@ -9,12 +10,14 @@ import type { ServerActionType } from './_types';
 
 type CalendarClientWrapperProps = {
   tableData: CalendarYearType[];
-  addCalendarYear: (formData: FormInput) => Promise<ServerActionType>;
+  upsertCalendarYear: (formData: FormInput) => Promise<ServerActionType>;
+  deleteCalendarYear: (id: string) => Promise<ServerActionType>;
 };
 
 export default function CalendarClientWrapper({
   tableData,
-  addCalendarYear,
+  upsertCalendarYear,
+  deleteCalendarYear,
 }: CalendarClientWrapperProps) {
   const [editingRecord, setEditingRecord] = useState<CalendarYearType | null>(
     null,
@@ -24,15 +27,23 @@ export default function CalendarClientWrapper({
     setEditingRecord(record);
   };
 
-  const handleDelete = (record: CalendarYearType) => {
-    // TODO: Implement delete functionality
-    console.log('Delete record:', record);
+  const handleDelete = async (record: CalendarYearType) => {
+    const result = await deleteCalendarYear(record.id);
+    if (result.success) {
+      toast.success('Calendar year deleted successfully!');
+      // Clear editing state if we're deleting the currently edited record
+      if (editingRecord?.id === record.id) {
+        setEditingRecord(null);
+      }
+    } else {
+      toast.error('Failed to delete calendar year');
+    }
   };
 
   return (
     <>
       <CalendarForm
-        addCalendarYear={addCalendarYear}
+        upsertCalendarYear={upsertCalendarYear}
         initialData={editingRecord || undefined}
         editingRecord={editingRecord}
         setEditingRecord={setEditingRecord}
