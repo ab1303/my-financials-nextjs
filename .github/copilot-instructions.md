@@ -25,6 +25,12 @@
 - Avoid using `next/router` in App Router; use `next/navigation` instead.
 - Do not pass event handlers or non-serializable props from Server to Client Components.
 
+## Spec Files
+
+All spec files (including PRDs) must be created in the `spec` folder located at the project root.
+The filename of each spec file should clearly reflect the changes or feature to be implemented based on the spec (e.g., `bank-details-update-functionality.md`, `business-entity-management-prd.md`).
+Do not create spec or PRD files in any other location.
+
 ## Project Structure
 
 - Keep all source code in `/src`.
