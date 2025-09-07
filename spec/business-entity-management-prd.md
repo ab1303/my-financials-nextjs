@@ -46,17 +46,19 @@
 
 ## 4. Functional requirements
 
-- **Business CRUD operations** (Priority: High)
-  - Users can create, update, and delete business records.
-  - The form fields mirror those of Bank Details, with "Business" replacing "Bank."
-  - Address input uses the shared Address component.
-  - Button text changes to "Update" when editing an existing business.
-  - Unique business name constraint enforced.
-  - All fields required except for optional address fields (if any).
-  - Postcode must be numeric and 4 digits (AU format).
-  - State must be a valid AU state/territory code (dropdown).
-  - No special characters allowed in business name.
-  - Address component validations should be flexible for future global support.
+**Business CRUD operations** (Priority: High)
+
+- Users can create, update, and delete business records.
+- The form fields mirror those of Bank Details, with "Business" replacing "Bank."
+- There is a required `type` select field, populated with values from the `BusinessEnumType` enum (`BANK`, `BUSINESS`, `PHILANTHROPY`).
+- Address input uses the shared Address component.
+- Button text changes to "Update" when editing an existing business.
+- Unique business name constraint enforced.
+- All fields required except for optional address fields (if any).
+- Postcode must be numeric and 4 digits (AU format).
+- State must be a valid AU state/territory code (dropdown).
+- No special characters allowed in business name.
+- Address component validations should be flexible for future global support.
 
 ## 5. User experience
 
@@ -151,12 +153,13 @@ A general user navigates to the Business section, adds a new business by filling
 
 ### 10.1. Create business
 
-- **ID**: GH-001
-- **Description**: As a user, I want to add a new business with all required details so that I can track my business entities.
-- **Acceptance criteria**:
-  - User can access the business creation form.
-  - All required fields are validated.
-  - Business is saved and appears in the list.
+**ID**: GH-001
+**Description**: As a user, I want to add a new business with all required details, including selecting a business type, so that I can track my business entities.
+**Acceptance criteria**:
+
+- User can access the business creation form.
+- All required fields, including the `type` select field (populated from `BusinessEnumType`), are validated.
+- Business is saved and appears in the list.
 
 ### 10.2. Update business
 
