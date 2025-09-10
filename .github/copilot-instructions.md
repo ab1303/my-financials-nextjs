@@ -1,104 +1,86 @@
 # Copilot Instructions for my-financials-nextjs
 
-## Dos
+## General Principles
 
-- Use TypeScript for all code (frontend, backend, API routes, database models).
-- Organize routes and components in the `app` directory.
-- Leverage Server Components for data fetching.
-- Use Server Actions for form submissions.
-- Use `next/link` for internal routing and prefetching.
-- Implement loading states with `loading` files.
-- Optimize images with the `<Image />` component.
-- Separate server and client logic carefully.
-- Manage database schema changes with Prisma Migrate; keep schema and migrations in `prisma/`.
-- Document all required environment variables in `.env-example`; never commit secrets.
-- Use `docker-compose.yaml` for local development; refer to `render.yaml` for deployment.
-- Follow T3 Stack conventions and use tRPC for typesafe APIs.
-
-## Donts
-
-- Do not mix the `pages` and `app` directories for routing.
-- Do not fetch data in Client Components if it can be done on the server.
-- Do not use `router.push` for form submissions when Server Actions are available.
-- Never expose sensitive environment variables in client code.
-- Do not import client-only modules into Server Components.
-- Avoid using `next/router` in App Router; use `next/navigation` instead.
-- Do not pass event handlers or non-serializable props from Server to Client Components.
-
-## Spec Files
-
-All spec files (including PRDs) must be created in the `spec` folder located at the project root.
-The filename of each spec file should clearly reflect the changes or feature to be implemented based on the spec (e.g., `bank-details-update-functionality.md`, `business-entity-management-prd.md`).
-Do not create spec or PRD files in any other location.
+- **Use TypeScript everywhere**: All code (frontend, backend, API, models) must be in TypeScript.
+- **App Router only**: Use the `app` directory for all routing. Do not use or reference the `pages` directory.
+- **Server-first by default**: Use Server Components for all data fetching, rendering, and business logic unless interactivity is required.
+- **Client Components for interactivity**: Only use Client Components for UI that requires browser APIs, user events, or state.
+- **Never pass event handlers or non-serializable props from Server to Client Components.**
+- **Explicit boundaries**: Clearly separate Server and Client logic. Use the Client Wrapper pattern for interactive features.
+- **Follow T3 Stack conventions**: Use tRPC for typesafe APIs, Prisma for ORM, NextAuth for auth, Tailwind for styling.
+- **No secrets in client code**: Never expose sensitive environment variables or secrets to the client.
+- **Document all required environment variables in `.env-example`.**
+- **All specs/PRDs in `spec/` at project root.**
 
 ## Project Structure
 
-- Keep all source code in `/src`.
-- Organize by feature/modules where possible.
-- Place Prisma schema in `/prisma`.
-- Place global styles in `/styles`.
-- Place tRPC routers in `/server/api`.
-- Place NextAuth config in `/server/auth`.
-- Use the `app` directory for all route components, layouts, and handlers.
-- Place shared utilities in `src/utils`.
-- Place shared types in `src/types`.
-- Co-locate route handlers, loading, and error states within the `app` directory.
+- All source code in `/src`.
+- Organize by feature/module where possible.
+- Prisma schema and migrations in `/prisma`.
+- Global styles in `/styles`.
+- tRPC routers in `/server/api`.
+- NextAuth config in `/server/auth`.
+- All route components, layouts, handlers in `app/`.
+- Shared utilities in `src/utils`.
+- Shared types in `src/types`.
+- Co-locate route handlers, loading, and error states within `app/`.
 - Use route groups (parentheses) for organization without affecting URLs.
-- Place API route handlers in `app/api`.
+- API route handlers in `app/api`.
 - Do not use the `pages` directory.
-- Create Client Component wrappers when Server Components need to pass interactive state to children.
 - Co-locate component types, schemas, and utilities in feature-specific `_types.ts` and `_schema.ts` files.
-
-## Client Components
-
-- Mark Client Components with `"use client"` at the top.
-- Use `next/navigation` hooks (`useRouter`, `usePathname`) instead of `next/router`.
-- Handle form state with `useFormStatus`, `useFormState`, and `useOptimistic` when using Server Actions.
-- Include client-specific logic like user interaction and browser APIs.
-- Create wrapper Client Components to manage state when Server Components need to pass event handlers.
-- Use `useState` for managing editing/modal states and other interactive UI state.
-- Implement proper prop interfaces with TypeScript for component contracts.
 
 ## Server Components
 
-- Default to Server Components for data fetching and rendering.
-- Do not use client-side hooks or browser APIs in Server Components.
-- Use `Suspense` boundaries for streaming and granular loading states.
-- Use `generateMetadata` for dynamic SEO metadata.
-- Prefer `fetch` with `revalidate` options for caching.
-- Implement `generateStaticParams` for static builds of dynamic routes.
+- Default to Server Components for all data fetching, rendering, and business logic.
+- **Never use client-side hooks or browser APIs in Server Components.**
+- Use `Suspense` for streaming and granular loading states.
+- Use `generateMetadata` for dynamic SEO.
+- Use `fetch` with `revalidate` for caching.
+- Use `generateStaticParams` for static builds of dynamic routes.
 - Use `unstable_noStore` for fully dynamic, non-cached rendering.
-- Use `Promise.all` for parallel data fetching and `React.cache` for request deduplication.
+- Use `Promise.all` for parallel data fetching and `React.cache` for deduplication.
+
+## Client Components
+
+- Mark with `"use client"` at the top.
+- Use only for UI that requires interactivity, browser APIs, or user events.
+- Use `next/navigation` hooks (`useRouter`, `usePathname`) instead of `next/router`.
+- Use `useFormStatus`, `useFormState`, and `useOptimistic` for Server Actions.
+- Use `useState` for managing UI state (editing, modals, etc.).
+- **Never fetch data in Client Components if it can be done on the server.**
+- Implement prop interfaces with TypeScript.
+- Use wrapper Client Components to manage state when Server Components need to pass event handlers.
 
 ## Server Actions
 
-- Define Server Actions with the `"use server"` directive.
-- Call Server Actions from both Server and Client Components for data mutations.
+- Use the `"use server"` directive.
+- Call from both Server and Client Components for data mutations.
 - Use `useFormStatus` and `useFormState` in Client Components to track form submissions.
-- Use `useOptimistic` to update the UI optimistically before server confirmation.
-- Use `revalidatePath` or `revalidateTag` after data mutations to ensure UI consistency.
+- Use `useOptimistic` to update UI optimistically before server confirmation.
+- Use `revalidatePath` or `revalidateTag` after mutations to ensure UI consistency.
 - Pass Server Actions as props to Client Components for form handling.
 
 ## Data Fetching
 
-- Use the built-in `fetch` in Server Components for data retrieval.
+- Use built-in `fetch` in Server Components for all data retrieval.
 - Pass caching strategies with `fetch(url, { next: { revalidate: <seconds> } })`.
 - Minimize external requests in serverless environments.
 - Avoid fetching in Client Components if possible.
 
 ## Route Handlers
 
-- Replace deprecated `pages/api` routes with Route Handlers under `app/api`.
+- Use Route Handlers under `app/api` (not `pages/api`).
 - `GET` handlers are static by default unless configured otherwise.
 - Validate incoming data and use proper CORS/security measures.
-- Support JSON, text, and other file responses.
+- Support JSON, text, and file responses.
 
 ## Styling and Assets
 
 - Use Tailwind CSS for utility-first styling and Flowbite for prebuilt components.
 - Use CSS Modules or CSS-in-JS as needed.
 - Use the built-in `<Image />` component for optimized images.
-- Consider built-in font optimization with `@next/font` or newer APIs.
+- Use built-in font optimization with `@next/font` or newer APIs.
 
 ## Performance
 
@@ -110,18 +92,26 @@ Do not create spec or PRD files in any other location.
 ## Testing and Linting
 
 - Use `next lint` with ESLint and integrate Prettier.
-- Use Prettier and `prettier-plugin-tailwindcss` for consistent formatting.
-- Use Husky and lint-staged to enforce linting and formatting before commits.
-- Add and configure Jest, React Testing Library, or Cypress for testing.
+- Use Prettier and `prettier-plugin-tailwindcss` for formatting.
+- Use Husky and lint-staged to enforce linting/formatting before commits.
+- Add/configure Jest, React Testing Library, or Cypress for testing.
 - Keep test files near related components.
 
 ## Client/Server Boundary Patterns
 
-- When building interactive features that require both server data and client state, use the Client Wrapper pattern.
-- Create a Client Component wrapper that receives data and Server Actions as props from a Server Component parent.
-- Handle all interactive state (`useState`, `useEffect`) in Client Components, never in Server Components.
-- Pass event handlers between Client Components as props, not from Server to Client Components.
-- Use proper TypeScript interfaces to define the contract between Server and Client Component boundaries.
+> **Do not remove the Client Wrapper Pattern instructions below. Add new patterns as additional bullets. Both patterns are required. Use the Client Wrapper Pattern for interactive features that require both server data and client state. Use the user-specific data pattern for business/bank details and similar cases.**
+
+- **Client Wrapper Pattern (for interactive features that require both server data and client state):**
+  - Create a Client Component wrapper that receives data and Server Actions as props from a Server Component parent.
+  - Handle all interactive state (`useState`, `useEffect`) in Client Components, never in Server Components.
+  - Pass event handlers between Client Components as props, not from Server to Client Components.
+  - Use TypeScript interfaces to define the contract between Server and Client boundaries.
+
+- **For user-specific data (e.g., business/bank details):**
+  - Keep the page as a Server Component.
+  - Render a Client Component for interactivity/state.
+  - The Client Component should fetch its own data (e.g., via tRPC), and the server will inject the user context/session automatically (do not pass userId from client to server).
+  - Never convert the whole page to a Client Component just to access user/session; use the Bank Details pattern as reference.
 
 ## Form and State Management Patterns
 
@@ -129,12 +119,23 @@ Do not create spec or PRD files in any other location.
 - Use `useEffect` to populate form fields when editing records change.
 - Implement conditional rendering based on state (e.g., "Create" vs "Update" button text).
 - Reset forms and clear editing state after successful Server Action completion.
-- Use `react-hook-form` with `zod` validation for complex forms with proper TypeScript integration.
+- Use `react-hook-form` with `zod` validation for complex forms with TypeScript integration.
 
 ## Table and Data Display Patterns
 
-- Use TanStack Table with proper TypeScript generics for type-safe table implementations.
-- Implement action columns with edit/delete functionality using icon buttons from `react-icons`.
-- Pass event handlers as props to table components for row actions (edit, delete, etc.).
+- Use TanStack Table with TypeScript generics for type-safe tables.
+- Implement action columns with edit/delete using icon buttons from `react-icons`.
+- Pass event handlers as props to table components for row actions.
 - Structure table components to receive data and handlers from parent Client Components.
 - Use proper accessibility attributes (`aria-label`) for interactive table elements.
+
+## Error Handling and Naming
+
+- Always handle errors explicitly in both Server and Client Components. Show user-friendly error messages.
+- Use clear, descriptive names for files, components, and functions. Follow feature-based naming for co-located files.
+
+## Spec Files
+
+- All spec files (including PRDs) must be created in the `spec` folder at the project root.
+- Filenames must clearly reflect the feature or change (e.g., `bank-details-update-functionality.md`).
+- Do not create spec or PRD files in any other location.

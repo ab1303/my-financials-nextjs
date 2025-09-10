@@ -1,3 +1,7 @@
+export enum BusinessEnumType {
+  BANK = 'BANK',
+  PHILANTHROPY = 'PHILANTHROPY',
+}
 export { CalendarEnumType } from '@prisma/client';
 
 enum ActionLinkVariant {
