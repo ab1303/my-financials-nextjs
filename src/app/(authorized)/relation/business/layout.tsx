@@ -1,4 +1,6 @@
-import React from 'react';
+import * as React from 'react';
+import clsx from 'clsx';
+import { layoutStyles } from '@/styles/theme';
 
 export default function BusinessLayout({
   children,
@@ -6,9 +8,21 @@ export default function BusinessLayout({
   children: React.ReactNode;
 }) {
   return (
-    <section className='max-w-3xl mx-auto py-8 px-4'>
-      <h1 className='text-2xl font-bold mb-6'>Business Management</h1>
-      {children}
-    </section>
+    <div
+      className={clsx(
+        'min-h-screen bg-gray-100 flex flex-col',
+        layoutStyles.spacing.section,
+        layoutStyles.spacing.sectionLg,
+      )}
+    >
+      <div
+        className={clsx(
+          'container min-w-full mx-auto',
+          layoutStyles.container['3xl'],
+        )}
+      >
+        {children}
+      </div>
+    </div>
   );
 }

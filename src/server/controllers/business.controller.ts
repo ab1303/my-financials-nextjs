@@ -4,6 +4,7 @@ import {
   deleteBusinessDetails,
   getBusinessDetails,
 } from '@/server/services/business.service';
+import { BusinessEnumType } from '@/types/enum';
 
 import type {
   CreateBusinessInput,
@@ -20,6 +21,7 @@ export const addBusinessDetailsHandler = async ({
   try {
     const businessResult = await addBusinessDetails({
       name: input.name,
+      type: input.type as BusinessEnumType,
       addressLine: input.addressLine,
       streetAddress: input.streetAddress,
       postcode: input.postcode,

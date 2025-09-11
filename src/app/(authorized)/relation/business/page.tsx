@@ -1,10 +1,9 @@
-import BusinessSelect from './BusinessSelect';
+import BusinessForm from './form';
 
 export default function BusinessPage() {
   return (
-    <div>
-      <BusinessSelect />
-      {/* The Client Component will handle data fetching, selection, and form state */}
+    <div className='max-w-3xl mx-auto mt-8'>
+      <BusinessForm />
     </div>
   );
 }

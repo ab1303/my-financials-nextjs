@@ -89,6 +89,12 @@
 - Use `React.useMemo` and `React.useCallback` in Client Components to avoid re-renders.
 - Use `fetch` caching and revalidation carefully.
 
+## Building Project
+
+** DO NOT USE `npm` as the tool to build project **
+
+- Always use `pnpm` to build project
+
 ## Testing and Linting
 
 - Use `next lint` with ESLint and integrate Prettier.
