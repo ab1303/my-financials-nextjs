@@ -19,6 +19,16 @@ export const addBusinessDetailsHandler = async ({
   userId: string;
 }) => {
   try {
+    // Uniqueness check: business name must be unique per user (case-insensitive)
+    const existing = await getBusinessDetails({
+      userId,
+      name: { equals: input.name, mode: 'insensitive' },
+    });
+    if (existing && existing.length > 0) {
+      throw new Error(
+        'A business with this name already exists. Business names must be unique.',
+      );
+    }
     const businessResult = await addBusinessDetails({
       name: input.name,
       type: input.type as BusinessEnumType,
@@ -36,6 +46,9 @@ export const addBusinessDetailsHandler = async ({
       },
     };
   } catch (e) {
+    if (e instanceof Error && e.message.includes('already exists')) {
+      throw e;
+    }
     handleCaughtError(e);
   }
 };

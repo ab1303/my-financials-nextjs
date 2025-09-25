@@ -214,3 +214,21 @@ A general user navigates to the Business section, adds a new business by filling
   - When a business is selected from the dropdown, all of its details are populated in the form fields.
   - The user can edit the populated details and update the business.
   - The dropdown is accessible and supports searching/filtering if there are many businesses.
+
+### 10.8. Unique Business Name Constraint (Client + Server Validation)
+
+- **ID**: GH-008
+- **Description**: As a user, I want to be prevented from creating or updating a business with a name that already exists (case-insensitive), with clear error messages if I attempt to do so My business records remain unique and I avoid confusion or data integrity issues
+- **Acceptance criteria**:
+  - When entering a business name in the form, the client checks against the list of existing business names (case-insensitive) and shows an error if a duplicate is detected before submission
+  - On form submission, the server validates that the business name is unique for the user (case-insensitive)
+  - If a duplicate is detected on the server, a clear error message is returned and displayed to the user
+  - The error message is user-friendly and indicates that the business name must be unique
+  - The validation works for both create and update operations
+  - The validation is enforced for all users (each user can only have unique business names in their own account)
+
+#### Notes
+
+- The client-side check is for UX only; the server-side check is the source of truth
+- Error messages should be consistent across client and server
+- This story complements the existing GH-004 story in the PRD

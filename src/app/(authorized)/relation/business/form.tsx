@@ -35,6 +35,8 @@ type BusinessOptionType = {
   id: string;
 };
 
+const AU_STATE_CODES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
+
 const postCodeSchema = z.coerce.number({
   required_error: 'Postcode is required',
   invalid_type_error: 'Postcode must be a number',
@@ -129,6 +131,7 @@ export default function BusinessForm() {
     mode: 'onBlur',
     defaultValues: {
       businessName: '',
+      type: BusinessEnumType.BANK,
       address: {
         addressLine: '',
         street_address: '',
@@ -148,11 +151,7 @@ export default function BusinessForm() {
 
   const resetForm = () => {
     formFieldSetValue('businessName', '');
-    formFieldSetValue('address.addressLine', '');
-    formFieldSetValue('address.street_address', '');
-    formFieldSetValue('address.suburb', '');
-    formFieldSetValue('address.postcode', '');
-    formFieldSetValue('address.state', '');
+    formFieldSetValue('type', BusinessEnumType.BANK);
     setSelectedBusiness(null);
   };
 
@@ -185,20 +184,9 @@ export default function BusinessForm() {
 
     if (option.value) {
       formFieldSetValue('businessName', option.value.businessName);
-      formFieldSetValue(
-        'address.addressLine',
-        option.value.address.addressLine,
-      );
-      formFieldSetValue(
-        'address.street_address',
-        option.value.address.street_address,
-      );
-      formFieldSetValue('address.suburb', option.value.address.suburb);
-      formFieldSetValue('address.postcode', option.value.address.postcode);
-      formFieldSetValue('address.state', option.value.address.state);
+      formFieldSetValue('type', option.value.type);
       setSelectedBusiness(option);
     }
-
     return;
   };
 

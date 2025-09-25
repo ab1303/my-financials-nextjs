@@ -58,6 +58,7 @@ This instruction file contains patterns and best practices for implementing enti
   ```
 
 - **Option types for selects**: Define option types for react-select components:
+
   ```typescript
   // Generic pattern for any entity
   type EntityOptionType<T> = {
@@ -80,7 +81,11 @@ This instruction file contains patterns and best practices for implementing enti
 
   ```typescript
   // Examples of different entity enums
-  import { BusinessEnumType, BankAccountType, EntityStatusType } from '@/types/enum';
+  import {
+    BusinessEnumType,
+    BankAccountType,
+    EntityStatusType,
+  } from '@/types/enum';
   ```
 
 - **Render as dropdown**: Display enum values as select dropdowns with proper styling:
@@ -108,6 +113,7 @@ This instruction file contains patterns and best practices for implementing enti
 
 - **Use react-hook-form**: Implement forms with react-hook-form for validation and state management
 - **Default values structure**: Always provide complete default values:
+
   ```typescript
   // Generic pattern for any entity form
   const formMethods = useForm<EntityType>({
@@ -132,7 +138,9 @@ This instruction file contains patterns and best practices for implementing enti
     defaultValues: {
       businessName: '',
       type: BusinessEnumType.BANK,
-      address: { /* address fields */ },
+      address: {
+        /* address fields */
+      },
     },
   });
   ```
@@ -152,7 +160,7 @@ This instruction file contains patterns and best practices for implementing enti
   const [selectedBusiness, setSelectedBusiness] = useState<
     SingleValue<BusinessOptionType> | undefined
   >();
-  
+
   const [selectedBank, setSelectedBank] = useState<
     SingleValue<BankOptionType> | undefined
   >();
@@ -189,6 +197,7 @@ This instruction file contains patterns and best practices for implementing enti
   ```
 
 - **Custom option components**: Use react-select custom components for delete functionality:
+
   ```typescript
   // Generic pattern for any entity options with delete
   const Option = (props: OptionProps<EntityOptionType<YourEntityType>, false>) => (
@@ -216,6 +225,7 @@ This instruction file contains patterns and best practices for implementing enti
 #### Query and Mutation Setup
 
 - **Use proper query patterns**: Implement tRPC queries for data fetching:
+
   ```typescript
   // Generic pattern for entity queries and mutations
   const getEntitiesQuery = trpc.entityRouter.getAllEntities.useQuery();
@@ -241,6 +251,7 @@ This instruction file contains patterns and best practices for implementing enti
 #### Data Transformation
 
 - **Transform API data for selects**: Convert API responses to option format:
+
   ```typescript
   // Generic pattern for transforming entity data
   const entityOptions: EntityOptionType<YourEntityType>[] =
@@ -277,6 +288,7 @@ This instruction file contains patterns and best practices for implementing enti
 #### Reusable Address Components
 
 - **Use AddressComponent**: Integrate existing AddressComponent for address fields when applicable:
+
   ```tsx
   // Generic pattern for entities with addresses
   <AddressComponent<YourEntityType>
@@ -331,7 +343,7 @@ This instruction file contains patterns and best practices for implementing enti
 
   // Examples
   import BusinessForm from './form'; // Business page
-  import BankForm from './form';     // Bank page
+  import BankForm from './form'; // Bank page
   ```
 
 - **Layout consistency**: Use layout.tsx for consistent background styling:
@@ -381,6 +393,7 @@ This instruction file contains patterns and best practices for implementing enti
 #### Controller Updates
 
 - **Handle type fields**: Ensure backend controllers process type/enum fields:
+
   ```typescript
   // Generic pattern for controllers
   // In entity.controller.ts
@@ -389,7 +402,7 @@ This instruction file contains patterns and best practices for implementing enti
   // Examples for specific entities
   // In business.controller.ts
   type: input.type || BusinessEnumType.BANK,
-  
+
   // In bank.controller.ts
   accountType: input.accountType || BankAccountType.CHECKING,
   ```
@@ -397,6 +410,7 @@ This instruction file contains patterns and best practices for implementing enti
 #### Schema Updates
 
 - **Include type validation**: Update schemas to include type field validation:
+
   ```typescript
   // Generic pattern for schemas
   // In entity.schema.ts
@@ -405,7 +419,7 @@ This instruction file contains patterns and best practices for implementing enti
   // Examples for specific entities
   // In business.schema.ts
   type: z.nativeEnum(BusinessEnumType).optional(),
-  
+
   // In bank.schema.ts
   accountType: z.nativeEnum(BankAccountType).optional(),
   ```
