@@ -21,26 +21,50 @@ Implementation tracking for [Individual Entity Management PRD](./individual-enti
   - Migration resolved schema drift issues
   - All database constraints properly applied
 
-### 🚧 Phase 2: Backend Services & API (IN PROGRESS)
+### ✅ Phase 2: Backend Services & API (COMPLETED)
 
-- [ ] **Create Relationship Backend Services**
-  - Create service layer with `addRelationship`, `getRelationships` functions for user-scoped relationship management
-  - **Files to create:** `src/server/services/relationship.service.ts`
-- [ ] **Create Individual Backend Services**
-  - Create service layer with `addIndividualDetails`, `getIndividualDetails` functions following Business service pattern
-  - **Files to create:** `src/server/services/individual.service.ts`
-- [ ] **Create Individual Backend Controllers**
-  - Create controller with create, read operations following Business controller pattern with uniqueness validation
-  - **Files to create:** `src/server/controllers/individual.controller.ts`
-- [ ] **Create Individual tRPC API**
-  - Create tRPC router with `saveIndividualDetails`, `getAllIndividuals`, and relationship management procedures
-  - **Files to create:** `src/server/trpc/router/individual.ts`
+- [x] **Create Relationship Backend Services** - Created comprehensive relationship service with CRUD operations and user-scoped functionality
+  - ✅ `addRelationship` - Create new relationships for users
+  - ✅ `getRelationships` - Fetch user-scoped relationships with sorting
+  - ✅ `getRelationshipById` - Find relationship by ID
+  - ✅ `getRelationshipByNameAndUser` - Find relationship by name and user (for uniqueness)
+  - ✅ `getOrCreateRelationship` - Helper for dynamic relationship creation
+  - ✅ `updateRelationship` and `deleteRelationship` - Full CRUD support
+  - **Files created:** `src/server/services/relationship.service.ts`
+- [x] **Create Individual Backend Services** - Created comprehensive individual service with CRUD operations, relationship inclusion, and uniqueness validation
+  - ✅ `addIndividualDetails` - Create new individuals with relationship data
+  - ✅ `getIndividualDetails` - Fetch user-scoped individuals with optional select/include
+  - ✅ `getIndividualById` - Find individual by ID with relationship data
+  - ✅ `getIndividualByNameAndUser` - Case-insensitive name search for uniqueness validation
+  - ✅ `updateIndividualDetails` and `deleteIndividualDetails` - Full CRUD support
+  - ✅ `validateIndividualNameUniqueness` - Helper for enforcing unique names per user
+  - **Files updated:** `src/server/services/individual.service.ts`
+- [x] **Create Individual Backend Controllers** - Created comprehensive controller with create, update operations, uniqueness validation, and relationship handling
+  - ✅ `addIndividualDetailsHandler` - Create individuals with automatic relationship creation/lookup
+  - ✅ `updateIndividualDetailsHandler` - Update individuals with uniqueness validation (excluding self)
+  - ✅ `allIndividualDetailsHandler` - Fetch all user-scoped individuals with relationships
+  - ✅ `removeIndividualDetailsHandler` - Delete individual records
+  - ✅ Integrated dynamic relationship management with `getOrCreateRelationship`
+  - ✅ Case-insensitive uniqueness validation for individual names per user
+  - **Files updated:** `src/server/controllers/individual.controller.ts`
+- [x] **Create Individual tRPC API** - Created comprehensive tRPC router with Individual and Relationship endpoints
+  - ✅ `saveIndividualDetails` - Create new individuals via tRPC
+  - ✅ `updateIndividualDetails` - Update existing individuals via tRPC
+  - ✅ `getAllIndividuals` - Fetch all user-scoped individuals with relationships
+  - ✅ `removeIndividualDetails` - Delete individual records
+  - ✅ `getAllRelationships` - Fetch user-scoped relationships for dropdown
+  - ✅ Integrated with main app router (`_app.ts`)
+  - **Files updated:** `src/server/trpc/router/individual.ts`
 
-### 🔄 Phase 3: Validation & Schemas (PENDING)
+### 🔄 Phase 3: Validation & Schemas (COMPLETED)
 
-- [ ] **Create Individual Validation Schemas**
-  - Create Zod validation with required name field, optional relationship field, and address fields
-  - **Files to create:** `src/server/schema/individual.schema.ts`
+- [x] **Create Individual Validation Schemas** - Created comprehensive Zod schemas for Individual and Relationship validation
+  - ✅ `createIndividualSchema` - Validation for new individual creation with required name, optional relationship, and address fields
+  - ✅ `updateIndividualSchema` - Validation for individual updates with all optional fields
+  - ✅ `createRelationshipSchema` - Validation for relationship creation with 150-character limit
+  - ✅ Address field validation with proper limits (AU postcode format)
+  - ✅ TypeScript type exports for tRPC integration
+  - **Files updated:** `src/server/schema/individual.schema.ts`
 
 ### 🎨 Phase 4: Frontend Implementation (PENDING)
 
