@@ -50,7 +50,9 @@ This feature enables authenticated users to manage (add, edit, and delete) indiv
 - **Add Zakat payment row** (Priority: High)
   - Users can add a new payment row for the selected Zakat year.
   - Required fields: date paid, amount paid, beneficiary type, beneficiary.
-  - Validations: amount must be positive; date cannot be in the future.
+  - Validations:
+    - Amount must be positive, with up to two decimal places (e.g., 123.45), and entered in the user's default currency (e.g., USD, PKR).
+    - Date must be in ISO 8601 format (YYYY-MM-DD), must not be in the future, and should be stored/validated in UTC timezone.
 - **Edit Zakat payment row** (Priority: High)
   - Users can edit any of their payment rows for the selected year.
   - All validations from add apply.

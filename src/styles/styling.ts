@@ -6,17 +6,6 @@ import clsx from 'clsx';
 
 export const stylingUtils = {
   /**
-   * Replace string-based class manipulation with proper clsx usage
-   * @deprecated Use clsx with conditional classes instead
-   */
-  replaceClass: (baseClasses: string, oldClass: string, newClass: string) => {
-    console.warn(
-      'replaceClass is deprecated. Use clsx with conditional classes instead.',
-    );
-    return baseClasses.replace(oldClass, newClass);
-  },
-
-  /**
    * Properly override classes using clsx
    * @param baseClasses - Base class string
    * @param overrides - Object of class prefixes to override

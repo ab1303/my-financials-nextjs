@@ -12,7 +12,6 @@ export default async function SettingsRootLayout({
       className={clsx(
         'min-h-screen bg-gray-100 flex flex-col',
         layoutStyles.spacing.section,
-        layoutStyles.spacing.sectionLg,
       )}
     >
       <div

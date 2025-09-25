@@ -48,8 +48,11 @@ export default function ResponsiveInput({
   return <input className={inputClassName} {...props} />;
 }
 
-// Export width utilities for use in other components
-export const inputWidthUtils = {
+// If these utilities are only used here, keep them internal to this file.
+// Otherwise, move them to '@/styles/styling' for reuse across components.
+
+// Example: Internal utility (remove export)
+const inputWidthUtils = {
   responsive: stylingUtils.responsiveWidth.input,
   override: (baseClass: string, width: string) =>
     stylingUtils.overrideClasses(baseClass, { w: width }),

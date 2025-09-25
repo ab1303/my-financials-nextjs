@@ -1,5 +1,5 @@
 import type { TypeOf } from 'zod';
-import { object, string, number } from 'zod';
+import z, { object, string, number } from 'zod';
 import { BusinessEnumType } from '@/types/enum';
 
 export const createBusinessSchema = object({
@@ -7,10 +7,10 @@ export const createBusinessSchema = object({
     100,
     'Business Name must be less than 100 characters',
   ),
-  type: string({ required_error: 'Business type is required' }).refine(
-    (val) => Object.values(BusinessEnumType).includes(val as BusinessEnumType),
-    { message: 'Invalid business type' },
-  ),
+  type: z.nativeEnum(BusinessEnumType, {
+    required_error: 'Business type is required',
+    invalid_type_error: 'Invalid business type',
+  }),
   addressLine: string({ required_error: 'Address line is required' }),
   streetAddress: string({ required_error: 'Street address is required' }),
   postcode: number({ required_error: 'Postcode is required' }).max(9999),

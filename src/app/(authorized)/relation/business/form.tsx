@@ -156,8 +156,6 @@ export default function BusinessForm() {
   };
 
   const submitHandler = (formData: BusinessType) => {
-    console.log('Business Details', formData);
-
     const {
       businessName,
       type,

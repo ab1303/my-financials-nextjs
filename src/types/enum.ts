@@ -1,13 +1,17 @@
-export enum BusinessEnumType {
-  BANK = 'BANK',
-  PHILANTHROPY = 'PHILANTHROPY',
-}
+export const BusinessEnumType = {
+  BANK: 'BANK',
+  PHILANTHROPY: 'PHILANTHROPY',
+} as const;
+export type BusinessEnumType =
+  (typeof BusinessEnumType)[keyof typeof BusinessEnumType];
+
 export { CalendarEnumType } from '@prisma/client';
 
-enum ActionLinkVariant {
-  'add',
-  'remove',
-}
+export const ActionLinkVariant = {
+  add: 'add',
+  remove: 'remove',
+} as const;
+export type ActionLink = keyof typeof ActionLinkVariant;
 
 // export enum CalendarEnumType {
 //   ANNUAL = 'ANNUAL',
@@ -15,16 +19,15 @@ enum ActionLinkVariant {
 //   ZAKAT = 'ZAKAT',
 // }
 
-export type ActionLink = keyof typeof ActionLinkVariant;
-
 export interface CardData {
   image: string;
   title: string;
   url: string;
 }
 
-export enum Countries {
-  Australia = 'AU (+61)',
-  NewZealand = 'NZ (+64)',
-  Singapore = 'SG (+65)',
-}
+export const Countries = {
+  Australia: 'AU (+61)',
+  NewZealand: 'NZ (+64)',
+  Singapore: 'SG (+65)',
+} as const;
+export type Countries = (typeof Countries)[keyof typeof Countries];
