@@ -38,6 +38,9 @@
 //   import { colorStyles } from '@/styles/theme';
 //   <div className={clsx('p-4', colorStyles.primary.bg, colorStyles.primary.text)}>
 
+import clsx from 'clsx';
+import { stylingUtils } from './styling';
+
 export const theme = {
   // Basic theme object to maintain compatibility
   // Components now use Tailwind classes directly
@@ -360,5 +363,67 @@ export const responsiveStyles = {
   grid: {
     responsive: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
     cards: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+  },
+};
+
+// Utility functions for common styling patterns
+export const themeUtils = {
+  /**
+   * Override width classes properly using clsx
+   * @param baseClasses - Base classes that might contain width
+   * @param newWidth - New width class to apply
+   * @param additionalClasses - Additional classes to merge
+   */
+  overrideWidth: (
+    baseClasses: string,
+    newWidth: string,
+    additionalClasses?: string,
+  ) => {
+    // Remove common width classes and apply the new one
+    const classArray = baseClasses
+      .split(' ')
+      .filter(
+        (cls) =>
+          !cls.startsWith('w-') &&
+          !cls.startsWith('min-w-') &&
+          !cls.startsWith('max-w-'),
+      );
+
+    return clsx(classArray, newWidth, additionalClasses);
+  },
+
+  /**
+   * Override sizing classes properly using clsx
+   * @param baseClasses - Base classes that might contain sizing
+   * @param newSizing - New sizing classes to apply
+   * @param additionalClasses - Additional classes to merge
+   */
+  overrideSizing: (
+    baseClasses: string,
+    newSizing: Record<string, string>,
+    additionalClasses?: string,
+  ) => {
+    let classArray = baseClasses.split(' ');
+
+    // Remove sizing classes that are being overridden
+    Object.keys(newSizing).forEach((sizeType) => {
+      classArray = classArray.filter((cls) => !cls.startsWith(`${sizeType}-`));
+    });
+
+    return clsx(classArray, Object.values(newSizing), additionalClasses);
+  },
+};
+
+// Enhanced input styles with width variations
+export const enhancedInputStyles = {
+  ...inputStyles,
+  // Width variants that properly override the base w-full
+  widthVariants: {
+    sm: stylingUtils.overrideClasses(inputStyles.base, { w: 'w-1/4' }),
+    md: stylingUtils.overrideClasses(inputStyles.base, { w: 'w-1/2' }),
+    lg: stylingUtils.overrideClasses(inputStyles.base, { w: 'w-3/4' }),
+    xl: stylingUtils.overrideClasses(inputStyles.base, { w: 'w-full' }),
+    custom: (width: string) =>
+      stylingUtils.overrideClasses(inputStyles.base, { w: width }),
   },
 };

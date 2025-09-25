@@ -1,6 +1,7 @@
 import { router } from '@/server/trpc/trpc';
 import { authRouter } from './auth';
 import { bankRouter } from './bank';
+import { businessRouter } from './business';
 import { bankInterestRouter } from './bank-interest';
 import { individualRouter } from './individual';
 
@@ -12,6 +13,7 @@ export const appRouter = router({
   bank: bankRouter,
   bankInterest: bankInterestRouter,
   individual: individualRouter,
+  business: businessRouter,
 });
 
 // export type definition of API

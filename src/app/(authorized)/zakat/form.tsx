@@ -5,20 +5,24 @@ import Select from 'react-select';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
+import clsx from 'clsx';
 
 import { Card } from '@/components';
+import { stylingUtils } from '@/styles/styling';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
 import type { InputAttributes, NumericFormatProps } from 'react-number-format';
 import type { FormInput } from './_schema';
 import type { ServerActionType } from './_types';
+import { inputStyles } from '@/styles/theme';
 
 // React Table
 type NumericFormatWithIndicatorProps<BaseType> =
   NumericFormatProps<BaseType> & {
     isWorking: boolean;
     indicatorText: string;
+    className?: string;
   };
 
 function NumericFormatWithIndicator<BaseType = InputAttributes>({
@@ -27,24 +31,29 @@ function NumericFormatWithIndicator<BaseType = InputAttributes>({
   isWorking,
   onValueChange,
   onBlur,
+  className,
+  ...props
 }: NumericFormatWithIndicatorProps<BaseType>) {
   return (
-    <div className='flex items-center'>
+    <div className='flex items-center gap-2'>
       <NumericFormat
-        itemRef=''
+        className={stylingUtils.overrideClasses(
+          inputStyles.base,
+          { w: 'w-3/5' }, // Override any w-* classes with w-3/5
+          className,
+        )}
         prefix='$'
         displayType='input'
-        className='w-3/5 mr-2'
         thousandSeparator
         value={value}
         onValueChange={onValueChange}
         onBlur={onBlur}
       />
       {isWorking && (
-        <div role='status'>
+        <div role='status' className='flex items-center'>
           <svg
             aria-hidden='true'
-            className='w-4 h-4 me-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600'
+            className='w-4 h-4 text-gray-200 animate-spin fill-blue-600'
             viewBox='0 0 100 101'
             fill='none'
             xmlns='http://www.w3.org/2000/svg'
@@ -146,7 +155,7 @@ export default function ZakatForm({
         <div className='mt-3'>
           <Select
             isClearable
-            className='w-3/5 mr-2'
+            className='w-3/5'
             value={selectedYear}
             options={zakatYearOptions}
             instanceId={uniqFiscalYearId}
@@ -168,11 +177,6 @@ export default function ZakatForm({
           <NumericFormatWithIndicator
             indicatorText='Saving...'
             isWorking={isSavingAmount}
-            itemRef=''
-            prefix='$'
-            displayType='input'
-            className='w-3/5 mr-2'
-            thousandSeparator
             value={totalAmountDue}
             onValueChange={(values) => {
               setTotalAmountDue(values.floatValue || 0);
