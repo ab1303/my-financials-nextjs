@@ -116,8 +116,7 @@ model Individual {
   postcode      Int?
   state         String?
 
-  // Global address support
-  globalAddress String? // For non-AU addresses when "Global" format is selected
+  // Address format - "AU" uses structured fields above, "GLOBAL" stores full address in addressLine
   addressFormat String? @default("AU") // "AU" or "GLOBAL" to indicate which format was used
 
   userId    String

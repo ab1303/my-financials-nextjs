@@ -15,9 +15,18 @@ export const createIndividualSchema = object({
   relationshipName: optional(
     string().max(150, 'Relationship must be less than 150 characters').trim(),
   ),
+  // Address format selector
+  addressFormat: optional(
+    string().refine(
+      (val) => val === 'AU' || val === 'GLOBAL',
+      'Address format must be either AU or GLOBAL',
+    ),
+  ).default('AU'),
   // Address fields (all optional as per PRD)
+  // For AU format: use structured fields below
+  // For GLOBAL format: use addressLine to store complete address
   addressLine: optional(
-    string().max(200, 'Address line must be less than 200 characters'),
+    string().max(500, 'Address line must be less than 500 characters'),
   ),
   streetAddress: optional(
     string().max(200, 'Street address must be less than 200 characters'),
@@ -46,9 +55,18 @@ export const updateIndividualSchema = object({
   relationshipName: optional(
     string().max(150, 'Relationship must be less than 150 characters').trim(),
   ),
+  // Address format selector
+  addressFormat: optional(
+    string().refine(
+      (val) => val === 'AU' || val === 'GLOBAL',
+      'Address format must be either AU or GLOBAL',
+    ),
+  ),
   // Address fields (all optional)
+  // For AU format: use structured fields below
+  // For GLOBAL format: use addressLine to store complete address
   addressLine: optional(
-    string().max(200, 'Address line must be less than 200 characters'),
+    string().max(500, 'Address line must be less than 500 characters'),
   ),
   streetAddress: optional(
     string().max(200, 'Street address must be less than 200 characters'),

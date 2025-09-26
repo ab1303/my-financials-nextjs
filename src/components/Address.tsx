@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import AsyncSelect from 'react-select/async';
+import Select from 'react-select';
 import { useDebouncedCallback } from 'use-debounce';
 import usePlacesAutocomplete, { getGeocode } from 'use-places-autocomplete';
+import clsx from 'clsx';
 
 import type { Options, SingleValue } from 'react-select';
 import type { FieldError, FieldValues } from 'react-hook-form';
@@ -10,6 +12,7 @@ import type { FieldError, FieldValues } from 'react-hook-form';
 import { Label } from '@/components/ui/Label';
 import { TextInput } from '@/components/ui/TextInput';
 import type { Address, FilteredKeys } from '@/types';
+import { inputStyles } from '@/styles/theme';
 import { useId } from 'react';
 
 const debounce = 300;
@@ -29,12 +32,16 @@ interface Props<T extends FieldValues> {
   addressFields: AddressFields<T>;
   address?: Address;
   required?: boolean; // Whether address fields are required (default: true for backwards compatibility)
+  addressFormat?: 'AU' | 'GLOBAL'; // Address format selector
+  onAddressFormatChange?: (format: 'AU' | 'GLOBAL') => void; // Callback for format changes
 }
 
 export default function AddressComponent<T extends FieldValues>({
   addressFields,
   address,
   required = true, // Default to true to maintain existing behavior for Business entities
+  addressFormat = 'AU', // Default to AU for backward compatibility
+  onAddressFormatChange,
 }: Props<T>) {
   // https://github.com/JedWatson/react-select/issues/5459
   const uniqId = useId();
@@ -167,110 +174,173 @@ export default function AddressComponent<T extends FieldValues>({
 
   return (
     <>
-      <div>
-        <Label error={!!addressFields.addressLineError}>Address</Label>
-        <div className='mt-1'>
-          {ready && (
-            <Controller
-              name={String(addressFields.addressLineName)}
-              control={control}
-              rules={{
-                required: required,
+      {/* Country/Address Format Selector */}
+      {onAddressFormatChange && (
+        <div className='mb-4'>
+          <Label>Address Format</Label>
+          <div className='mt-1'>
+            <Select
+              instanceId={`${uniqId}-format`}
+              value={{
+                value: addressFormat,
+                label: addressFormat === 'AU' ? 'Australia' : 'Global',
               }}
-              render={({ field: { onChange, value } }) => (
-                <AsyncSelect
-                  instanceId={uniqId}
-                  {...selectProps}
-                  styles={{
-                    control: (base) => ({
-                      ...base,
-                      borderColor:
-                        addressFields.addressLineError && 'rgba(194, 65, 12)',
-                    }),
+              options={[
+                { value: 'AU' as const, label: 'Australia' },
+                { value: 'GLOBAL' as const, label: 'Global' },
+              ]}
+              onChange={(option) => {
+                if (option?.value) {
+                  onAddressFormatChange(option.value);
+                }
+              }}
+              isClearable={false}
+              isSearchable={false}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Conditional rendering based on address format */}
+      {addressFormat === 'AU' ? (
+        // Australian Address Fields
+        <>
+          <div>
+            <Label error={!!addressFields.addressLineError}>Address</Label>
+            <div className='mt-1'>
+              {ready && (
+                <Controller
+                  name={String(addressFields.addressLineName)}
+                  control={control}
+                  rules={{
+                    required: required,
                   }}
-                  value={{ label: String(value) }}
-                  loadOptions={fetchSuggestions}
-                  getOptionValue={({ label }) => label}
-                  onChange={(option) => {
-                    handleSelect(option);
-                    onChange(option?.label);
-                  }}
+                  render={({ field: { onChange, value } }) => (
+                    <AsyncSelect
+                      instanceId={uniqId}
+                      {...selectProps}
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          borderColor:
+                            addressFields.addressLineError &&
+                            'rgba(194, 65, 12)',
+                        }),
+                      }}
+                      value={{ label: String(value) }}
+                      loadOptions={fetchSuggestions}
+                      getOptionValue={({ label }) => label}
+                      onChange={(option) => {
+                        handleSelect(option);
+                        onChange(option?.label);
+                      }}
+                    />
+                  )}
                 />
               )}
-            />
-          )}
-        </div>
-      </div>
-      <div>
-        <Label
-          htmlFor={addressFields.street_addressName}
-          error={!!addressFields.street_addressError}
-        >
-          Street Address
-        </Label>
-        <div className='mt-1'>
-          <TextInput
-            id={addressFields.street_addressName}
-            type='text'
-            error={!!addressFields.street_addressError}
-            {...register(addressFields.street_addressName, {
-              required: required,
-            })}
-          />
-        </div>
-      </div>
-      <div className='flex'>
-        <div className='w-1/2 '>
+            </div>
+          </div>
+          <div>
+            <Label
+              htmlFor={addressFields.street_addressName}
+              error={!!addressFields.street_addressError}
+            >
+              Street Address
+            </Label>
+            <div className='mt-1'>
+              <TextInput
+                id={addressFields.street_addressName}
+                type='text'
+                error={!!addressFields.street_addressError}
+                {...register(addressFields.street_addressName, {
+                  required: required,
+                })}
+              />
+            </div>
+          </div>
+          <div className='flex'>
+            <div className='w-1/2 '>
+              <Label
+                htmlFor={addressFields.suburbName}
+                error={!!addressFields.suburbError}
+              >
+                Suburb
+              </Label>
+              <div className='mt-1'>
+                <TextInput
+                  id={addressFields.suburbName}
+                  type='text'
+                  error={!!addressFields.suburbError}
+                  {...register(addressFields.suburbName, {
+                    required: required,
+                  })}
+                />
+              </div>
+            </div>
+            <div className='w-1/2 ml-3'>
+              <Label
+                htmlFor={addressFields.postcodeName}
+                error={!!addressFields.postcodeError}
+              >
+                Post Code
+              </Label>
+              <div className='mt-1'>
+                <TextInput
+                  id={addressFields.postcodeName}
+                  type='text'
+                  error={!!addressFields.postcodeError}
+                  {...register(addressFields.postcodeName, {
+                    required: required,
+                  })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className='flex'>
+            <div className='w-1/2 '>
+              <Label
+                htmlFor={addressFields.stateName}
+                error={!!addressFields.stateError}
+              >
+                State
+              </Label>
+              <div className='mt-1'>
+                <TextInput
+                  type='text'
+                  id={addressFields.stateName}
+                  error={!!addressFields.stateError}
+                  {...register(addressFields.stateName, { required: required })}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        // Global Address Field - stored in addressLine
+        <div>
           <Label
-            htmlFor={addressFields.suburbName}
-            error={!!addressFields.suburbError}
+            htmlFor={addressFields.addressLineName}
+            error={!!addressFields.addressLineError}
           >
-            Suburb
+            Address
           </Label>
           <div className='mt-1'>
-            <TextInput
-              id={addressFields.suburbName}
-              type='text'
-              error={!!addressFields.suburbError}
-              {...register(addressFields.suburbName, { required: required })}
+            <textarea
+              id={addressFields.addressLineName}
+              rows={4}
+              className={clsx(
+                inputStyles.base,
+                addressFields.addressLineError && inputStyles.error,
+                'resize-none', // Prevent resizing to maintain consistent layout
+              )}
+              placeholder='Enter the complete address...'
+              {...register(addressFields.addressLineName, {
+                required: required,
+              })}
             />
           </div>
         </div>
-        <div className='w-1/2 ml-3'>
-          <Label
-            htmlFor={addressFields.postcodeName}
-            error={!!addressFields.postcodeError}
-          >
-            Post Code
-          </Label>
-          <div className='mt-1'>
-            <TextInput
-              id={addressFields.postcodeName}
-              type='text'
-              error={!!addressFields.postcodeError}
-              {...register(addressFields.postcodeName, { required: required })}
-            />
-          </div>
-        </div>
-      </div>
-      <div className='flex'>
-        <div className='w-1/2 '>
-          <Label
-            htmlFor={addressFields.stateName}
-            error={!!addressFields.stateError}
-          >
-            State
-          </Label>
-          <div className='mt-1'>
-            <TextInput
-              type='text'
-              id={addressFields.stateName}
-              error={!!addressFields.stateError}
-              {...register(addressFields.stateName, { required: required })}
-            />
-          </div>
-        </div>
-      </div>
+      )}
     </>
   );
 }

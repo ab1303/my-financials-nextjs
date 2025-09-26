@@ -4,6 +4,7 @@ import {
   deleteIndividualDetails,
   getIndividualDetails,
   validateIndividualNameUniqueness,
+  updateIndividualDetails,
 } from '@/server/services/individual.service';
 import { getOrCreateRelationship } from '@/server/services/relationship.service';
 
@@ -47,6 +48,7 @@ export const addIndividualDetailsHandler = async ({
       firstName: input.firstName || null,
       lastName: input.lastName || null,
       relationshipId,
+      addressFormat: input.addressFormat || 'AU',
       addressLine: input.addressLine || null,
       streetAddress: input.streetAddress || null,
       suburb: input.suburb || null,
@@ -114,6 +116,8 @@ export const updateIndividualDetailsHandler = async ({
       updateData.lastName = input.lastName || null;
     if (relationshipId !== undefined)
       updateData.relationshipId = relationshipId;
+    if (input.addressFormat !== undefined)
+      updateData.addressFormat = input.addressFormat || 'AU';
     if (input.addressLine !== undefined)
       updateData.addressLine = input.addressLine || null;
     if (input.streetAddress !== undefined)
@@ -123,10 +127,10 @@ export const updateIndividualDetailsHandler = async ({
       updateData.postcode = input.postcode || null;
     if (input.state !== undefined) updateData.state = input.state || null;
 
-    const individualResult = await addIndividualDetails({
-      ...updateData,
-      userId,
-    });
+    const individualResult = await updateIndividualDetails(
+      input.id,
+      updateData,
+    );
 
     return {
       status: 'success',

@@ -23,6 +23,7 @@ type IndividualType = {
   firstName?: string;
   lastName?: string;
   address: {
+    addressLocation?: 'AU' | 'GLOBAL';
     addressLine: string;
     street_address: string;
     suburb: string;
@@ -135,11 +136,31 @@ export default function IndividualForm() {
       },
     });
 
+  const updateIndividualDetailsMutation =
+    trpc.individual.updateIndividualDetails.useMutation({
+      onError(error: unknown) {
+        if (error instanceof TRPCError) {
+          toast.error(error.message);
+        }
+      },
+
+      onSuccess() {
+        queryClient.refetchQueries({
+          queryKey: [['individual', 'getAllIndividuals']],
+        });
+        queryClient.refetchQueries({
+          queryKey: [['individual', 'getAllRelationships']],
+        });
+        toast.success('Individual details updated!');
+      },
+    });
+
   const uniqSelectIndividualId = useId();
   const uniqSelectRelationshipId = useId();
   const [selectedIndividual, setSelectedIndividual] = useState<
     SingleValue<IndividualOptionType> | undefined
   >();
+  const [addressFormat, setAddressFormat] = useState<'AU' | 'GLOBAL'>('AU');
 
   const formMethods = useForm<IndividualType>({
     mode: 'onBlur',
@@ -149,6 +170,7 @@ export default function IndividualForm() {
       firstName: '',
       lastName: '',
       address: {
+        addressLocation: 'AU',
         addressLine: '',
         street_address: '',
         suburb: '',
@@ -170,12 +192,14 @@ export default function IndividualForm() {
     formFieldSetValue('relationshipName', '');
     formFieldSetValue('firstName', '');
     formFieldSetValue('lastName', '');
+    formFieldSetValue('address.addressLocation', 'AU');
     formFieldSetValue('address.addressLine', '');
     formFieldSetValue('address.street_address', '');
     formFieldSetValue('address.suburb', '');
     formFieldSetValue('address.postcode', '');
     formFieldSetValue('address.state', '');
     setSelectedIndividual(null);
+    setAddressFormat('AU'); // Reset address format state
   };
 
   const submitHandler = (formData: IndividualType) => {
@@ -184,20 +208,44 @@ export default function IndividualForm() {
       relationshipName,
       firstName,
       lastName,
-      address: { addressLine, postcode, state, street_address, suburb },
+      address: {
+        addressLocation,
+        addressLine,
+        postcode,
+        state,
+        street_address,
+        suburb,
+      },
     } = formData;
 
-    saveIndividualDetailsMutation.mutate({
+    const commonData = {
       name: individualName,
       relationshipName: relationshipName || undefined,
       firstName: firstName || undefined,
       lastName: lastName || undefined,
-      addressLine,
-      postcode: postcode ? postCodeSchema.parse(postcode) : undefined,
-      state,
-      streetAddress: street_address,
-      suburb,
-    });
+      addressFormat: addressLocation || 'AU',
+      // For GLOBAL format, store the complete address in addressLine
+      // For AU format, store individual fields as before
+      addressLine: addressLine || undefined,
+      postcode:
+        addressLocation === 'AU' && postcode
+          ? postCodeSchema.parse(postcode)
+          : undefined,
+      state: addressLocation === 'AU' ? state : undefined,
+      streetAddress: addressLocation === 'AU' ? street_address : undefined,
+      suburb: addressLocation === 'AU' ? suburb : undefined,
+    };
+
+    if (selectedIndividual) {
+      // Update existing individual
+      updateIndividualDetailsMutation.mutate({
+        id: selectedIndividual.id,
+        ...commonData,
+      });
+    } else {
+      // Create new individual
+      saveIndividualDetailsMutation.mutate(commonData);
+    }
     resetForm();
   };
 
@@ -215,6 +263,18 @@ export default function IndividualForm() {
       );
       formFieldSetValue('firstName', option.value.firstName || '');
       formFieldSetValue('lastName', option.value.lastName || '');
+
+      // Handle address format
+      const format = option.value.address.addressLocation || 'AU';
+      formFieldSetValue('address.addressLocation', format);
+      setAddressFormat(format);
+
+      // For both AU and GLOBAL, addressLine contains the relevant data
+      formFieldSetValue(
+        'address.addressLine',
+        option.value.address.addressLine || '',
+      );
+
       setSelectedIndividual(option);
     }
     return;
@@ -236,6 +296,7 @@ export default function IndividualForm() {
         firstName: individual.firstName || '',
         lastName: individual.lastName || '',
         address: {
+          addressLocation: individual.addressFormat || 'AU',
           addressLine: individual.addressLine || '',
           postcode: String(individual.postcode || ''),
           state: individual.state || '',
@@ -370,6 +431,25 @@ export default function IndividualForm() {
               basePropertyName='address'
               address={selectedIndividual?.value.address}
               required={false} // Address fields are optional for individuals
+              addressFormat={addressFormat}
+              onAddressFormatChange={(format) => {
+                const previousFormat = addressFormat;
+                setAddressFormat(format);
+                formFieldSetValue('address.addressLocation', format);
+                // Clear opposite format fields when switching
+                if (format === 'AU') {
+                  // When switching to AU, clear the addressLine if it was previously used for global
+                  if (previousFormat === 'GLOBAL') {
+                    formFieldSetValue('address.addressLine', '');
+                  }
+                } else {
+                  // When switching to GLOBAL, clear AU-specific fields but keep addressLine
+                  formFieldSetValue('address.street_address', '');
+                  formFieldSetValue('address.suburb', '');
+                  formFieldSetValue('address.postcode', '');
+                  formFieldSetValue('address.state', '');
+                }
+              }}
               addressFields={{
                 addressLineName: 'address.addressLine',
                 postcodeName: 'address.postcode',
@@ -386,7 +466,10 @@ export default function IndividualForm() {
 
             <div>
               <Button
-                isLoading={saveIndividualDetailsMutation.isPending}
+                isLoading={
+                  saveIndividualDetailsMutation.isPending ||
+                  updateIndividualDetailsMutation.isPending
+                }
                 variant='primary'
                 type='submit'
               >
