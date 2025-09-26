@@ -116,6 +116,10 @@ model Individual {
   postcode      Int?
   state         String?
 
+  // Global address support
+  globalAddress String? // For non-AU addresses when "Global" format is selected
+  addressFormat String? @default("AU") // "AU" or "GLOBAL" to indicate which format was used
+
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())

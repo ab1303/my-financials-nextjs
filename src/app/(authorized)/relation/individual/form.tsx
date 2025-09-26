@@ -369,6 +369,7 @@ export default function IndividualForm() {
             <AddressComponent<IndividualType>
               basePropertyName='address'
               address={selectedIndividual?.value.address}
+              required={false} // Address fields are optional for individuals
               addressFields={{
                 addressLineName: 'address.addressLine',
                 postcodeName: 'address.postcode',

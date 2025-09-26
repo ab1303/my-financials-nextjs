@@ -276,6 +276,22 @@ A general user navigates to the Individual section, adds a new individual by fil
   - The relationship dropdown efficiently handles growing lists of relationships.
   - Relationships persist across user sessions.
 
+### 10.10. Global address support with country selection
+
+- **ID**: GH-018
+- **Description**: As a user, I want to choose between Australian and Global address formats when entering address information for individuals, so that I can accurately capture address details regardless of the individual's location.
+- **Acceptance criteria**:
+  - A dropdown with "Australia" and "Global" options appears before the address fields.
+  - "Australia" is selected by default to maintain current behavior.
+  - When "Australia" is selected, the current AU address fields are displayed (Address autocomplete, Street Address, Suburb, Post Code, State).
+  - When "Global" is selected, a single "Complete Address" text area is displayed for free-form address entry.
+  - The selected address format and data are saved to the individual record.
+  - Form validation works appropriately for both address formats.
+  - Address format selection is preserved when editing existing individuals.
+  - Global addresses are stored in a separate database field (`globalAddress`) to avoid conflicts with AU-specific fields.
+  - The address component gracefully handles switching between formats without data loss.
+  - Both address formats are optional and do not block form submission.
+
 #### Notes
 
 - The client-side validation is for UX enhancement; server-side validation is the authoritative source.

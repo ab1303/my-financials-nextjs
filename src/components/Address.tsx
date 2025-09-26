@@ -28,11 +28,13 @@ interface Props<T extends FieldValues> {
   basePropertyName: AddressPropertyNames<T>;
   addressFields: AddressFields<T>;
   address?: Address;
+  required?: boolean; // Whether address fields are required (default: true for backwards compatibility)
 }
 
 export default function AddressComponent<T extends FieldValues>({
   addressFields,
   address,
+  required = true, // Default to true to maintain existing behavior for Business entities
 }: Props<T>) {
   // https://github.com/JedWatson/react-select/issues/5459
   const uniqId = useId();
@@ -173,7 +175,7 @@ export default function AddressComponent<T extends FieldValues>({
               name={String(addressFields.addressLineName)}
               control={control}
               rules={{
-                required: true,
+                required: required,
               }}
               render={({ field: { onChange, value } }) => (
                 <AsyncSelect
@@ -211,7 +213,9 @@ export default function AddressComponent<T extends FieldValues>({
             id={addressFields.street_addressName}
             type='text'
             error={!!addressFields.street_addressError}
-            {...register(addressFields.street_addressName, { required: true })}
+            {...register(addressFields.street_addressName, {
+              required: required,
+            })}
           />
         </div>
       </div>
@@ -228,7 +232,7 @@ export default function AddressComponent<T extends FieldValues>({
               id={addressFields.suburbName}
               type='text'
               error={!!addressFields.suburbError}
-              {...register(addressFields.suburbName, { required: true })}
+              {...register(addressFields.suburbName, { required: required })}
             />
           </div>
         </div>
@@ -244,7 +248,7 @@ export default function AddressComponent<T extends FieldValues>({
               id={addressFields.postcodeName}
               type='text'
               error={!!addressFields.postcodeError}
-              {...register(addressFields.postcodeName, { required: true })}
+              {...register(addressFields.postcodeName, { required: required })}
             />
           </div>
         </div>
@@ -262,7 +266,7 @@ export default function AddressComponent<T extends FieldValues>({
               type='text'
               id={addressFields.stateName}
               error={!!addressFields.stateError}
-              {...register(addressFields.stateName, { required: true })}
+              {...register(addressFields.stateName, { required: required })}
             />
           </div>
         </div>
