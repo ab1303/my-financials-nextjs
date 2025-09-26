@@ -160,6 +160,9 @@ export default function IndividualForm() {
   const [selectedIndividual, setSelectedIndividual] = useState<
     SingleValue<IndividualOptionType> | undefined
   >();
+  const [selectedRelationship, setSelectedRelationship] = useState<
+    SingleValue<RelationshipOptionType> | undefined
+  >();
   const [addressFormat, setAddressFormat] = useState<'AU' | 'GLOBAL'>('AU');
 
   const formMethods = useForm<IndividualType>({
@@ -199,6 +202,7 @@ export default function IndividualForm() {
     formFieldSetValue('address.postcode', '');
     formFieldSetValue('address.state', '');
     setSelectedIndividual(null);
+    setSelectedRelationship(null); // Clear relationship selection
     setAddressFormat('AU'); // Reset address format state
   };
 
@@ -242,11 +246,12 @@ export default function IndividualForm() {
         id: selectedIndividual.id,
         ...commonData,
       });
+      // Don't reset form for updates - keep the updated data visible
     } else {
       // Create new individual
       saveIndividualDetailsMutation.mutate(commonData);
+      resetForm(); // Only reset form for new creations
     }
-    resetForm();
   };
 
   const handleOptionChange = (option: SingleValue<IndividualOptionType>) => {
@@ -264,16 +269,50 @@ export default function IndividualForm() {
       formFieldSetValue('firstName', option.value.firstName || '');
       formFieldSetValue('lastName', option.value.lastName || '');
 
+      // Set the relationship selection if it exists
+      if (option.value.relationshipName && relationshipOptions.length > 0) {
+        const relationshipOption = relationshipOptions.find(
+          (rel) => rel.value === option.value.relationshipName,
+        );
+        setSelectedRelationship(relationshipOption || null);
+      } else {
+        setSelectedRelationship(null);
+      }
+
       // Handle address format
       const format = option.value.address.addressLocation || 'AU';
       formFieldSetValue('address.addressLocation', format);
       setAddressFormat(format);
 
-      // For both AU and GLOBAL, addressLine contains the relevant data
-      formFieldSetValue(
-        'address.addressLine',
-        option.value.address.addressLine || '',
-      );
+      // Populate address fields based on format
+      if (format === 'AU') {
+        // For AU format, populate individual fields
+        formFieldSetValue(
+          'address.addressLine',
+          option.value.address.addressLine || '',
+        );
+        formFieldSetValue(
+          'address.street_address',
+          option.value.address.street_address || '',
+        );
+        formFieldSetValue('address.suburb', option.value.address.suburb || '');
+        formFieldSetValue(
+          'address.postcode',
+          option.value.address.postcode || '',
+        );
+        formFieldSetValue('address.state', option.value.address.state || '');
+      } else {
+        // For GLOBAL format, the complete address is in addressLine
+        formFieldSetValue(
+          'address.addressLine',
+          option.value.address.addressLine || '',
+        );
+        // Clear AU-specific fields for global format
+        formFieldSetValue('address.street_address', '');
+        formFieldSetValue('address.suburb', '');
+        formFieldSetValue('address.postcode', '');
+        formFieldSetValue('address.state', '');
+      }
 
       setSelectedIndividual(option);
     }
@@ -375,6 +414,7 @@ export default function IndividualForm() {
                   isClearable
                   className='w-full max-w-md'
                   options={relationshipOptions}
+                  value={selectedRelationship}
                   instanceId={uniqSelectRelationshipId}
                   getOptionValue={(option) => option.id}
                   placeholder='Select or type a relationship...'
@@ -384,6 +424,7 @@ export default function IndividualForm() {
                     }
                   }}
                   onChange={(option) => {
+                    setSelectedRelationship(option);
                     formFieldSetValue('relationshipName', option?.value || '');
                   }}
                   formatCreateLabel={(inputValue: string) =>
