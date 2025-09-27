@@ -1,7 +1,9 @@
 import { zakatPaymentsHandler } from '@/server/controllers/zakat.controller';
 import { ZakatPaymentStateProvider } from './StateProvider';
 import ZakatTableClient from './ZakatTableClient';
-import { getIndividualsHandler } from '@/server/controllers/individual.controller';
+import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/utils/authOptions';
 
 import type { ZakatPaymentType } from './_types';
 import type { OptionType } from '@/types';
@@ -14,33 +16,59 @@ export type ZakatTableServerProps = {
 export default async function ZakatPaymentsTableServer({
   calendarYearId,
 }: ZakatTableServerProps) {
-  const zakatPayments = await zakatPaymentsHandler(calendarYearId);
-  const individuals = await getIndividualsHandler();
+  try {
+    // Get user session for user-specific data
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      throw new Error('User session not found');
+    }
 
-  let individualsOptions: Array<OptionType> = [];
-  if (individuals) {
-    individualsOptions = individuals.map<OptionType>((i) => ({
-      id: i.id,
-      label: i.name,
-    }));
+    const zakatPayments = await zakatPaymentsHandler(calendarYearId);
+    const individuals = await allIndividualDetailsHandler(session.user.id);
+
+    let individualsOptions: Array<OptionType> = [];
+    if (individuals) {
+      individualsOptions = individuals.map<OptionType>((i) => ({
+        id: i.id,
+        label: i.name,
+      }));
+    }
+
+    const data =
+      zakatPayments?.map<ZakatPaymentType>((zp) => ({
+        id: zp.id,
+        amount: zp.amount,
+        beneficiaryId: zp.businessId || '',
+        beneficiaryType: zp.beneficiaryType,
+        datePaid: zp.datePaid,
+      })) || [];
+
+    return (
+      <ZakatPaymentStateProvider data={data}>
+        <ZakatTableClient
+          individualsOptions={individualsOptions}
+          addRow={addRow}
+          editRow={editRow}
+          deleteRow={deleteRow}
+        />
+      </ZakatPaymentStateProvider>
+    );
+  } catch (error) {
+    console.error('Error loading Zakat table data:', error);
+    return (
+      <div className='p-4 bg-red-50 border border-red-200 rounded-md'>
+        <p className='text-red-800 font-medium'>
+          Failed to load Zakat payments table
+        </p>
+        <p className='text-red-600 text-sm mt-1'>
+          {error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred'}
+        </p>
+        <p className='text-gray-600 text-xs mt-2'>
+          Please refresh the page or contact support if the problem persists.
+        </p>
+      </div>
+    );
   }
-
-  const data =
-    zakatPayments?.map<ZakatPaymentType>((zp) => ({
-      id: zp.id,
-      amount: zp.amount,
-      beneficiaryId: zp.businessId || '',
-      beneficiaryType: zp.beneficiaryType,
-      datePaid: zp.datePaid,
-    })) || [];
-  return (
-    <ZakatPaymentStateProvider data={data}>
-      <ZakatTableClient
-        individualsOptions={individualsOptions}
-        addRow={addRow}
-        editRow={editRow}
-        deleteRow={deleteRow}
-      />
-    </ZakatPaymentStateProvider>
-  );
 }
