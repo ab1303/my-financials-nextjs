@@ -1,11 +1,10 @@
-import { useState } from 'react';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 
 import { trpc } from '@/server/trpc/client';
 
 import type { OptionType } from '@/types';
-import type { BeneficiaryEnumType } from '@prisma/client';
+import type { BeneficiaryEnumType, Business } from '@prisma/client';
 
 type BeneficiarySelectionCellProps = {
   defaultIndividualOptions: Array<OptionType>;
@@ -20,16 +19,16 @@ export default function BeneficiarySelectionCell({
   beneficiaryId,
   onSelectionChange,
 }: BeneficiarySelectionCellProps) {
-  // Fetch business options when beneficiary type is BUSINESS
-  const getBusinessesQuery = trpc.business.getAllBusinesses.useQuery(
-    undefined,
+  // Fetch business options when beneficiary type is BUSINESS (only PHILANTHROPY type)
+  const getBusinessesQuery = trpc.business.getBusinessesByType.useQuery(
+    { type: 'PHILANTHROPY' },
     {
       enabled: beneficiaryType === 'BUSINESS',
     },
   );
 
   const businessOptions: OptionType[] =
-    getBusinessesQuery.data?.map((business) => ({
+    getBusinessesQuery.data?.map((business: Business) => ({
       id: business.id,
       label: business.name,
     })) || [];
@@ -62,6 +61,41 @@ export default function BeneficiarySelectionCell({
       }
       getOptionValue={(option) => option.id}
       getOptionLabel={(option) => option.label}
+      menuPortalTarget={document.body}
+      menuPosition='fixed'
+      styles={{
+        control: (provided) => ({
+          ...provided,
+          minHeight: 'auto',
+          fontSize: '0.875rem',
+          borderColor: '#d1d5db',
+          '&:hover': {
+            borderColor: '#d1d5db',
+          },
+        }),
+        valueContainer: (provided) => ({
+          ...provided,
+          padding: '0.25rem 0.5rem',
+        }),
+        input: (provided) => ({
+          ...provided,
+          margin: 0,
+          padding: 0,
+        }),
+        indicatorSeparator: () => ({ display: 'none' }),
+        indicatorsContainer: (provided) => ({
+          ...provided,
+          height: 'auto',
+        }),
+        menu: (provided) => ({
+          ...provided,
+          zIndex: 9999,
+        }),
+        menuPortal: (provided) => ({
+          ...provided,
+          zIndex: 9999,
+        }),
+      }}
     />
   );
 }

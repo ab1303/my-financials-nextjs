@@ -3,6 +3,7 @@ import {
   addBusinessDetails,
   deleteBusinessDetails,
   getBusinessDetails,
+  getBusinessDetailsByType,
 } from '@/server/services/business.service';
 import { BusinessEnumType } from '@/types/enum';
 
@@ -56,6 +57,18 @@ export const addBusinessDetailsHandler = async ({
 export const allBusinessDetailsHandler = async (userId: string) => {
   try {
     const businessDetails = await getBusinessDetails({ userId });
+    return businessDetails;
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const getBusinessesByTypeHandler = async (
+  userId: string,
+  type?: string,
+) => {
+  try {
+    const businessDetails = await getBusinessDetailsByType(userId, type);
     return businessDetails;
   } catch (e) {
     handleCaughtError(e);

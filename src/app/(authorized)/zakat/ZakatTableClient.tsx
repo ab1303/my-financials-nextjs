@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import { FaPlus } from 'react-icons/fa';
 
 import Table from '@/components/table';
+import { tableCellStyles } from '@/styles/theme';
 import { Button } from '@/components';
 import { useZakatPaymentState } from './StateProvider';
 
@@ -219,7 +220,8 @@ export default function ZakatTableClient({
       <div className='mb-4 flex justify-between items-center'>
         <h3 className='text-sm font-medium text-gray-700'>Payment Records</h3>
         <button
-          className='rounded-lg h-10 w-10 sm:h-12 sm:w-12 bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center border border-teal-600 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm touch-manipulation'
+          type='button'
+          className={tableCellStyles.addButton}
           onClick={handleAddPayment}
           disabled={!calendarYearId}
           aria-label='Add new payment'

@@ -427,3 +427,37 @@ export const enhancedInputStyles = {
       stylingUtils.overrideClasses(inputStyles.base, { w: width }),
   },
 };
+
+// Table cell input styling for inline editing
+export const tableCellStyles = {
+  // Input fields within table cells
+  input: {
+    base: 'w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white',
+    amount:
+      'w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white text-right font-mono',
+    date: 'block w-full pl-10 px-2 py-1 text-sm border border-gray-300 bg-white text-gray-900 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500',
+  },
+  // Select/dropdown styling within table cells
+  select: {
+    base: 'w-full text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white',
+    container: 'relative z-50', // High z-index for dropdown positioning
+    menu: 'z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto',
+    menuPortal: 'z-[9999]', // Extremely high z-index for portal
+  },
+  // Action button styling within table cells
+  actions: {
+    iconButton:
+      'rounded-full h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center border transition-colors duration-150 touch-manipulation',
+    editButton:
+      'bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 border-blue-200',
+    deleteButton:
+      'bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border-red-200',
+    saveButton:
+      'bg-teal-100 hover:bg-teal-200 text-teal-600 hover:text-teal-700 border-teal-200 disabled:opacity-50 disabled:cursor-not-allowed',
+    cancelButton:
+      'bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-700 border-gray-200',
+  },
+  // Add payment button styling
+  addButton:
+    'rounded-lg h-10 w-10 sm:h-12 sm:w-12 bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center border border-teal-600 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm touch-manipulation',
+};

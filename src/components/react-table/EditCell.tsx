@@ -4,6 +4,7 @@ import { castDraft, produce } from 'immer';
 import { FaPen, FaTrash, FaSave, FaUndo } from 'react-icons/fa';
 import { useState } from 'react';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import { tableCellStyles } from '@/styles/theme';
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -105,7 +106,7 @@ export const EditCell = <TData, TValue>({
         {meta?.editedRows.get(row.index) ? (
           <div className='flex gap-1'>
             <button
-              className='rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-700 flex items-center justify-center border border-gray-200 transition-colors duration-150 touch-manipulation'
+              className={`${tableCellStyles.actions.iconButton} ${tableCellStyles.actions.cancelButton}`}
               onClick={setEditedRows}
               name='cancel'
               aria-label='Cancel editing'
@@ -114,7 +115,7 @@ export const EditCell = <TData, TValue>({
               <FaUndo size={12} />
             </button>
             <button
-              className='rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-teal-100 hover:bg-teal-200 text-teal-600 hover:text-teal-700 flex items-center justify-center border border-teal-200 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+              className={`${tableCellStyles.actions.iconButton} ${tableCellStyles.actions.saveButton}`}
               onClick={setEditedRows}
               name='done'
               disabled={disableSubmit}
@@ -127,7 +128,7 @@ export const EditCell = <TData, TValue>({
         ) : (
           <div className='flex gap-1'>
             <button
-              className='rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 flex items-center justify-center border border-blue-200 transition-colors duration-150 touch-manipulation'
+              className={`${tableCellStyles.actions.iconButton} ${tableCellStyles.actions.editButton}`}
               onClick={setEditedRows}
               name='edit'
               aria-label='Edit row'
@@ -136,7 +137,7 @@ export const EditCell = <TData, TValue>({
               <FaPen size={12} />
             </button>
             <button
-              className='rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 flex items-center justify-center border border-red-200 transition-colors duration-150 touch-manipulation'
+              className={`${tableCellStyles.actions.iconButton} ${tableCellStyles.actions.deleteButton}`}
               onClick={removeRow}
               name='remove'
               aria-label='Delete row'
