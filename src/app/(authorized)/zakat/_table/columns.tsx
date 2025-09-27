@@ -7,9 +7,9 @@ import { BeneficiaryEnumType } from '@prisma/client';
 import BeneficiarySelectionCell from './BeneficiarySelectionCell';
 import { castDraft, produce } from 'immer';
 
-const beneficiaryOptions = Object.entries(BeneficiaryEnumType).flatMap<
-  OptionType
->(([k, v]) => ({ id: k, label: v }));
+const beneficiaryOptions = Object.entries(
+  BeneficiaryEnumType,
+).flatMap<OptionType>(([k, v]) => ({ id: k, label: v }));
 
 const columnHelper = createColumnHelper<ZakatPaymentType>();
 
@@ -49,7 +49,7 @@ export function getTableColumns(individualsOptions: OptionType[]) {
 
         const updateRecord = (
           editedRecord: ZakatPaymentType,
-          beneficiaryId: string
+          beneficiaryId: string,
         ) => {
           const updatedRecord = {
             ...editedRecord,
@@ -59,7 +59,7 @@ export function getTableColumns(individualsOptions: OptionType[]) {
           tableMeta?.setEditedRows(
             produce((draft) => {
               draft.set(row.index, castDraft(updatedRecord));
-            })
+            }),
           );
         };
 
@@ -67,13 +67,13 @@ export function getTableColumns(individualsOptions: OptionType[]) {
 
         // Display
         if (!editedRecord) {
-          // case business
+          // case business - we need to fetch the business name to display
           if (original.beneficiaryType == 'BUSINESS') {
-            return <span>{original.beneficiaryId}</span>;
+            return <span>Loading...</span>; // TODO: We need business data to display name instead of ID
           }
 
           const selectedOption = individualsOptions.find(
-            (i) => i.id === original.beneficiaryId
+            (i) => i.id === original.beneficiaryId,
           );
 
           return <span>{selectedOption?.label}</span>;
@@ -85,7 +85,7 @@ export function getTableColumns(individualsOptions: OptionType[]) {
 
         return (
           <BeneficiarySelectionCell
-            defaultOptions={individualsOptions}
+            defaultIndividualOptions={individualsOptions}
             beneficiaryId={editedRecord.beneficiaryId}
             beneficiaryType={editedRecord.beneficiaryType}
             onSelectionChange={(beneficiaryId) => {

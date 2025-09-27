@@ -1,70 +1,67 @@
 import { useState } from 'react';
-import CreatableSelect from 'react-select/creatable';
+import Select from 'react-select';
 import { toast } from 'react-toastify';
-import { produce } from 'immer';
 
 import { trpc } from '@/server/trpc/client';
-import { TRPCError } from '@trpc/server';
 
 import type { OptionType } from '@/types';
 import type { BeneficiaryEnumType } from '@prisma/client';
 
 type BeneficiarySelectionCellProps = {
-  defaultOptions: Array<OptionType>;
+  defaultIndividualOptions: Array<OptionType>;
   beneficiaryType: BeneficiaryEnumType;
   beneficiaryId: string;
   onSelectionChange: (beneficiaryId?: string) => void;
 };
 
 export default function BeneficiarySelectionCell({
-  defaultOptions,
+  defaultIndividualOptions,
+  beneficiaryType,
   beneficiaryId,
   onSelectionChange,
 }: BeneficiarySelectionCellProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [options, setOptions] = useState<OptionType[]>(defaultOptions);
-  // const [value, setValue] = useState<OptionType | null>();
+  // Fetch business options when beneficiary type is BUSINESS
+  const getBusinessesQuery = trpc.business.getAllBusinesses.useQuery(
+    undefined,
+    {
+      enabled: beneficiaryType === 'BUSINESS',
+    },
+  );
 
-  const selectedOptionValue = options.find((o) => o.id == beneficiaryId);
+  const businessOptions: OptionType[] =
+    getBusinessesQuery.data?.map((business) => ({
+      id: business.id,
+      label: business.name,
+    })) || [];
 
-  const addIndividualBeneficiaryMutation =
-    trpc.individual.addIndividualBeneficiary.useMutation({
-      onError(error: unknown, {}) {
-        if (error instanceof TRPCError) {
-          toast.error(error.message);
-        }
-      },
+  // Get the current options based on beneficiary type
+  const currentOptions =
+    beneficiaryType === 'BUSINESS' ? businessOptions : defaultIndividualOptions;
+  const selectedOptionValue = currentOptions.find(
+    (o) => o.id === beneficiaryId,
+  );
 
-      onSuccess({ beneficiaryId }, { name }) {
-        const newOption: OptionType = { id: beneficiaryId, label: name };
-        setOptions(
-          produce((draft) => {
-            draft.push({
-              id: beneficiaryId,
-              label: name,
-            });
-          })
-        );
-        setIsLoading(false);
-        onSelectionChange(newOption.id);
-        toast.success('Created invidiual beneficiary!');
-      },
-    });
-
-  const handleCreate = (inputValue: string) => {
-    setIsLoading(true);
-    addIndividualBeneficiaryMutation.mutate({ name: inputValue });
-  };
+  if (getBusinessesQuery.error) {
+    toast.error('Failed to load business options');
+  }
 
   return (
-    <CreatableSelect
+    <Select
       isClearable
-      isDisabled={isLoading}
-      isLoading={isLoading}
+      isDisabled={
+        beneficiaryType === 'BUSINESS' && getBusinessesQuery.isLoading
+      }
+      isLoading={beneficiaryType === 'BUSINESS' && getBusinessesQuery.isLoading}
       onChange={(newValue) => onSelectionChange(newValue?.id)}
-      onCreateOption={handleCreate}
-      options={options}
+      options={currentOptions}
       value={selectedOptionValue}
+      placeholder={
+        beneficiaryType === 'BUSINESS'
+          ? 'Select a business...'
+          : 'Select an individual...'
+      }
+      getOptionValue={(option) => option.id}
+      getOptionLabel={(option) => option.label}
     />
   );
 }

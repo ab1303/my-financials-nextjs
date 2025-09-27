@@ -1,6 +1,9 @@
 import type { CellContext, RowData } from '@tanstack/react-table';
 import type { Dispatch, MouseEvent, SetStateAction } from 'react';
 import { castDraft, produce } from 'immer';
+import { FaPen, FaTrash, FaSave, FaUndo } from 'react-icons/fa';
+import { useState } from 'react';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -22,6 +25,9 @@ export const EditCell = <TData, TValue>({
   row,
   table,
 }: EditCellProps<TData, TValue>) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const meta = table.options.meta;
   const validRow = meta?.validRows[row.id];
   const disableSubmit = validRow
@@ -57,47 +63,103 @@ export const EditCell = <TData, TValue>({
   };
 
   const removeRow = () => {
-    meta?.removeRow(row.index);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      await meta?.removeRow(row.index);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      // Error handling is done in the removeRow function
+      console.error('Delete error:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Try to get meaningful details for the confirmation dialog
+  const getRowDetails = () => {
+    const original = row.original as any;
+    const details: { [key: string]: string | undefined } = {};
+
+    if (original.datePaid) {
+      const date =
+        original.datePaid instanceof Date
+          ? original.datePaid.toLocaleDateString()
+          : String(original.datePaid);
+      details.date = date;
+    }
+
+    if (original.amount) {
+      details.amount = `$${Number(original.amount).toFixed(2)}`;
+    }
+
+    return details;
   };
 
   return (
-    <div className='flex justify-center items-center gap-1'>
-      {meta?.editedRows.get(row.index) ? (
-        <div className='flex gap-1'>
-          <button
-            className='rounded-full h-7 w-7 bg-gray-200 text-slate-400'
-            onClick={setEditedRows}
-            name='cancel'
-          >
-            ⚊
-          </button>{' '}
-          <button
-            className='rounded-full h-7 w-7 bg-gray-200 text-green-400'
-            onClick={setEditedRows}
-            name='done'
-            disabled={disableSubmit}
-          >
-            ✔
-          </button>
-        </div>
-      ) : (
-        <div className='flex gap-1'>
-          <button
-            className='rounded-full h-7 w-7 bg-gray-200 text-blue-400'
-            onClick={setEditedRows}
-            name='edit'
-          >
-            ✐
-          </button>
-          <button
-            className='rounded-full h-7 w-7 bg-gray-200 text-red-400'
-            onClick={removeRow}
-            name='remove'
-          >
-            X
-          </button>
-        </div>
-      )}
-    </div>
+    <>
+      <div className='flex justify-center items-center gap-1'>
+        {meta?.editedRows.get(row.index) ? (
+          <div className='flex gap-1'>
+            <button
+              className='rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-700 flex items-center justify-center border border-gray-200 transition-colors duration-150 touch-manipulation'
+              onClick={setEditedRows}
+              name='cancel'
+              aria-label='Cancel editing'
+              title='Cancel'
+            >
+              <FaUndo size={12} />
+            </button>
+            <button
+              className='rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-teal-100 hover:bg-teal-200 text-teal-600 hover:text-teal-700 flex items-center justify-center border border-teal-200 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+              onClick={setEditedRows}
+              name='done'
+              disabled={disableSubmit}
+              aria-label='Save changes'
+              title='Save'
+            >
+              <FaSave size={12} />
+            </button>
+          </div>
+        ) : (
+          <div className='flex gap-1'>
+            <button
+              className='rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 flex items-center justify-center border border-blue-200 transition-colors duration-150 touch-manipulation'
+              onClick={setEditedRows}
+              name='edit'
+              aria-label='Edit row'
+              title='Edit'
+            >
+              <FaPen size={12} />
+            </button>
+            <button
+              className='rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 flex items-center justify-center border border-red-200 transition-colors duration-150 touch-manipulation'
+              onClick={removeRow}
+              name='remove'
+              aria-label='Delete row'
+              title='Delete'
+            >
+              <FaTrash size={12} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteConfirm}
+        title='Delete Payment'
+        message='Are you sure you want to delete this payment record? This action cannot be undone.'
+        details={getRowDetails()}
+        confirmButtonText='Delete Payment'
+        cancelButtonText='Cancel'
+        variant='danger'
+        isLoading={isDeleting}
+      />
+    </>
   );
 };
