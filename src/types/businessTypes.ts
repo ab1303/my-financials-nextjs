@@ -1,6 +1,7 @@
 import type { CalendarYearType } from '@/app/(authorized)/settings/calendar/_types';
 
 export type Address = {
+  addressLocation?: 'AU' | 'GLOBAL'; // Format indicator
   addressLine: string;
   street_address: string;
   suburb: string;

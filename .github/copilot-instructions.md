@@ -135,6 +135,30 @@
 - Structure table components to receive data and handlers from parent Client Components.
 - Use proper accessibility attributes (`aria-label`) for interactive table elements.
 
+## Database Migration Safety
+
+> **CRITICAL: These rules prevent catastrophic data loss. Follow strictly.**
+
+- **NEVER run `prisma migrate reset` without explicit user consent and backup confirmation.**
+- **ALWAYS warn before destructive operations** that can cause data loss.
+- **Migration drift resolution**:
+  - First attempt: Manual migration repair techniques
+  - Last resort: `prisma migrate reset` only with user approval and confirmed backup
+  - NEVER assume development data is disposable
+- **Required warnings before destructive commands**:
+  - "⚠️ WARNING: This will DELETE ALL DATA in your database"
+  - "Do you have a recent backup? (Y/N)"
+  - "Type 'DELETE MY DATA' to confirm"
+- **Safe migration practices**:
+  - Add columns with default values when adding required fields
+  - Use separate migrations for schema changes and data migrations
+  - Test migrations on database copies first
+  - Always provide rollback instructions
+- **Backup requirements**:
+  - Recommend `pg_dump` before major schema changes
+  - Document backup restoration procedures
+  - Never proceed with destructive operations without confirmed backup
+
 ## Error Handling and Naming
 
 - Always handle errors explicitly in both Server and Client Components. Show user-friendly error messages.
