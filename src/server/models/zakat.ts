@@ -13,3 +13,15 @@ export type ZakatPaymentModel = PaymentModel & {
   beneficiaryType: BeneficiaryEnumType;
   zakatId: string | null;
 };
+
+// More flexible type for service layer operations
+export type ZakatPaymentInput = {
+  id?: string;
+  datePaid: Date;
+  amount: number;
+  beneficiaryType: BeneficiaryEnumType;
+  beneficiaryId?: string | null;
+  businessId?: string | null;
+  individualId?: string | null;
+  zakatId?: string | null;
+};

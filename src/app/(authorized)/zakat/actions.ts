@@ -45,7 +45,7 @@ export async function addRow(input: CreateZakatPaymentInput) {
       datePaid: validatedInput.datePaid,
       amount: validatedInput.amount,
       beneficiaryType: validatedInput.beneficiaryType,
-      businessId: validatedInput.beneficiaryId || null,
+      beneficiaryId: validatedInput.beneficiaryId,
     });
 
     return {
@@ -56,7 +56,7 @@ export async function addRow(input: CreateZakatPaymentInput) {
         datePaid: newPayment.datePaid,
         amount: newPayment.amount.toNumber(),
         beneficiaryType: newPayment.beneficiaryType,
-        beneficiaryId: newPayment.businessId || '',
+        beneficiaryId: validatedInput.beneficiaryId || '',
       },
     };
   } catch (error) {
@@ -86,7 +86,7 @@ export async function editRow(input: UpdateZakatPaymentInput) {
         datePaid: validatedInput.datePaid,
         amount: validatedInput.amount,
         beneficiaryType: validatedInput.beneficiaryType,
-        businessId: validatedInput.beneficiaryId || null,
+        beneficiaryId: validatedInput.beneficiaryId,
         zakatId: '', // This will be ignored in the update
       },
       validatedInput.id,

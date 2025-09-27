@@ -1,5 +1,9 @@
 import { prisma } from '../utils/prisma';
-import type { ZakatModel, ZakatPaymentModel } from '../models/zakat';
+import type {
+  ZakatModel,
+  ZakatPaymentModel,
+  ZakatPaymentInput,
+} from '../models/zakat';
 import type { Prisma } from '@prisma/client';
 
 export const addZakatCalendarYearDetails = async ({
@@ -46,6 +50,7 @@ export const getZakatPayments = async (
     where,
     include: {
       business: true,
+      individual: true,
       Zakat: true,
     },
   });
@@ -55,17 +60,16 @@ export const getZakatPayments = async (
     datePaid: zp.datePaid,
     amount: zp.amount.toNumber(),
     businessId: zp.businessId,
+    individualId: zp.individualId,
     zakatId: zp.zakatId,
     beneficiaryType: zp.beneficiaryType,
   }));
 };
 
 export const updateZakatPayment = async (
-  model: ZakatPaymentModel,
+  model: ZakatPaymentInput,
   zakatPaymentId: string,
 ) => {
-  const { datePaid, amount, beneficiaryType, businessId } = model;
-
   const where: Prisma.ZakatPaymentWhereUniqueInput = {
     id: zakatPaymentId,
   };
@@ -73,17 +77,20 @@ export const updateZakatPayment = async (
   await prisma.zakatPayment.update({
     where,
     data: {
-      datePaid,
-      amount,
-      beneficiaryType,
-      businessId,
+      datePaid: model.datePaid,
+      amount: model.amount,
+      beneficiaryType: model.beneficiaryType,
+      businessId:
+        model.beneficiaryType === 'BUSINESS' ? model.beneficiaryId : null,
+      individualId:
+        model.beneficiaryType === 'INDIVIDUAL' ? model.beneficiaryId : null,
     },
   });
 };
 
 export const addZakatPaymentDetail = async (
   zakatId: string,
-  payment: Omit<ZakatPaymentModel, 'id' | 'zakatId'>,
+  payment: Omit<ZakatPaymentInput, 'id' | 'zakatId'>,
 ) => {
   return await prisma.zakatPayment.create({
     data: {
@@ -91,7 +98,10 @@ export const addZakatPaymentDetail = async (
       datePaid: payment.datePaid,
       amount: payment.amount,
       beneficiaryType: payment.beneficiaryType,
-      businessId: payment.businessId,
+      businessId:
+        payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
+      individualId:
+        payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
     },
   });
 };

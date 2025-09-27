@@ -119,10 +119,11 @@ model Individual {
   // Address format - "AU" uses structured fields above, "GLOBAL" stores full address in addressLine
   addressFormat String? @default("AU") // "AU" or "GLOBAL" to indicate which format was used
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ZakatPayment ZakatPayment[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   @@unique([name, userId]) // Unique individual name per user (case-sensitive, but we'll handle case-insensitive in code)
 }
@@ -183,6 +184,8 @@ model ZakatPayment {
   beneficiaryType BeneficiaryEnumType
   business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
+  individual      Individual?         @relation(fields: [individualId], references: [id])
+  individualId    String?
   Zakat           Zakat               @relation(fields: [zakatId], references: [id])
   zakatId         String
 }

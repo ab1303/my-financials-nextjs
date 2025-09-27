@@ -56,8 +56,15 @@ export default function BeneficiarySelectionCell({
       value={selectedOptionValue}
       placeholder={
         beneficiaryType === 'BUSINESS'
-          ? 'Select a business...'
+          ? businessOptions.length === 0 && !getBusinessesQuery.isLoading
+            ? 'No philanthropy businesses found'
+            : 'Select a business...'
           : 'Select an individual...'
+      }
+      noOptionsMessage={() =>
+        beneficiaryType === 'BUSINESS'
+          ? 'No philanthropy businesses available'
+          : 'No individuals available'
       }
       getOptionValue={(option) => option.id}
       getOptionLabel={(option) => option.label}

@@ -79,10 +79,7 @@ export function getTableColumns(individualsOptions: OptionType[]) {
           return <span>{selectedOption?.label}</span>;
         }
 
-        if (editedRecord.beneficiaryType == 'BUSINESS') {
-          return <span>Create type {editedRecord.beneficiaryType}</span>;
-        }
-
+        // Edit mode - always show the BeneficiarySelectionCell for both INDIVIDUAL and BUSINESS
         return (
           <BeneficiarySelectionCell
             defaultIndividualOptions={individualsOptions}
