@@ -1,8 +1,9 @@
 import { BeneficiaryEnumType } from '@prisma/client';
 
-export type ServerActionType = {
+export type ServerActionType<T = unknown> = {
   success: boolean;
   error: unknown;
+  data?: T;
 };
 
 export type ZakatType = {
@@ -21,7 +22,7 @@ export type ZakatPaymentType = {
 };
 
 const BENEFICIARY_ENUM_KEYS = Object.entries(BeneficiaryEnumType).map(
-  ([k]) => k as BeneficiaryEnumType
+  ([k]) => k as BeneficiaryEnumType,
 );
 
 export { BENEFICIARY_ENUM_KEYS };

@@ -9,23 +9,30 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
+import { toast } from 'react-toastify';
 
 import Table from '@/components/table';
+import { Button } from '@/components';
 import { useZakatPaymentState } from './StateProvider';
 
 import { getTableColumns } from './_table/columns';
 
 import type { ServerActionType, ZakatPaymentType } from './_types';
+import type {
+  CreateZakatPaymentInput,
+  UpdateZakatPaymentInput,
+  DeleteZakatPaymentInput,
+} from './_schema';
 import type { OptionType } from '@/types';
 
 type ZakatTableClientProps = {
   individualsOptions: OptionType[];
-  editRow: (
-    rowId: string,
-    record: ZakatPaymentType,
-  ) => Promise<ServerActionType>;
-  addRow: () => Promise<ServerActionType>;
-  deleteRow: () => Promise<ServerActionType>;
+  editRow: (input: UpdateZakatPaymentInput) => Promise<ServerActionType>;
+  addRow: (
+    input: CreateZakatPaymentInput,
+  ) => Promise<ServerActionType<ZakatPaymentType>>;
+  deleteRow: (input: DeleteZakatPaymentInput) => Promise<ServerActionType>;
+  calendarYearId: string;
 };
 
 export default function ZakatTableClient({
@@ -33,16 +40,59 @@ export default function ZakatTableClient({
   addRow,
   editRow,
   deleteRow,
+  calendarYearId,
 }: ZakatTableClientProps) {
   const [editedRows, setEditedRows] = useState<Map<number, ZakatPaymentType>>(
     new Map(),
   );
   const [validRows, setValidRows] = useState({});
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
 
   const {
     state: { data },
     dispatch,
   } = useZakatPaymentState();
+
+  const handleAddPayment = async () => {
+    if (!calendarYearId) {
+      toast.error('Please select a Zakat year first');
+      return;
+    }
+
+    setIsAddingPayment(true);
+
+    try {
+      // Create a new payment with default values
+      const today = new Date();
+      const newPaymentInput: CreateZakatPaymentInput = {
+        datePaid: today,
+        amount: 0,
+        beneficiaryType: 'INDIVIDUAL',
+        beneficiaryId: undefined,
+        calendarYearId: calendarYearId,
+      };
+
+      const addResult = await addRow(newPaymentInput);
+
+      if (addResult.success && addResult.data) {
+        dispatch({
+          type: 'ZAKAT/Payments/ADD_PAYMENT',
+          payload: {
+            zakatPaymentId: addResult.data.id,
+            payment: addResult.data as ZakatPaymentType,
+          },
+        });
+        toast.success('Payment added! Click edit to modify details.');
+      } else {
+        toast.error((addResult.error as string) || 'Failed to add payment');
+      }
+    } catch (error) {
+      toast.error('Failed to add payment');
+      console.error('Add payment error:', error);
+    } finally {
+      setIsAddingPayment(false);
+    }
+  };
 
   const columns = useMemo(
     () => getTableColumns(individualsOptions),
@@ -73,7 +123,14 @@ export default function ZakatTableClient({
         const updatedRecord = editedRows.get(rowIndex);
         if (!updatedRecord) return;
 
-        const editResult = await editRow(updatedRecord.id, updatedRecord);
+        const editResult = await editRow({
+          id: updatedRecord.id,
+          datePaid: updatedRecord.datePaid,
+          amount: updatedRecord.amount,
+          beneficiaryType: updatedRecord.beneficiaryType,
+          beneficiaryId: updatedRecord.beneficiaryId,
+        });
+
         if (editResult.success) {
           dispatch({
             type: 'ZAKAT/Payments/EDIT_PAYMENT',
@@ -85,19 +142,38 @@ export default function ZakatTableClient({
         }
         console.log('row updated in client', editResult);
       },
-      removeRow: (rowIndex: number) => {
-        //deleteRow(data[rowIndex].id);
+      removeRow: async (rowIndex: number) => {
         const record = data[rowIndex];
         if (!record) return;
 
-        deleteRow();
-        console.log('row deleted in client', rowIndex);
+        const deleteResult = await deleteRow({ id: record.id });
+        if (deleteResult.success) {
+          dispatch({
+            type: 'ZAKAT/Payments/REMOVE_PAYMENT',
+            payload: {
+              zakatPaymentId: record.id,
+            },
+          });
+        }
+        console.log('row deleted in client', deleteResult);
       },
     },
   });
 
   return (
     <>
+      <div className='mb-4 flex justify-between items-center'>
+        <h3 className='text-sm font-medium text-gray-700'>Payment Records</h3>
+        <Button
+          variant='primary'
+          onClick={handleAddPayment}
+          isLoading={isAddingPayment}
+          disabled={!calendarYearId}
+        >
+          Add Payment
+        </Button>
+      </div>
+
       <Table>
         <Table.THead>
           {table.getHeaderGroups().map((headerGroup) => (

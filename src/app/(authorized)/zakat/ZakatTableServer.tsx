@@ -50,6 +50,7 @@ export default async function ZakatPaymentsTableServer({
           addRow={addRow}
           editRow={editRow}
           deleteRow={deleteRow}
+          calendarYearId={calendarYearId}
         />
       </ZakatPaymentStateProvider>
     );
