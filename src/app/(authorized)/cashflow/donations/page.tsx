@@ -34,7 +34,7 @@ export default async function DonationPage({
 
   const donationYearData = calenderYears.filter((yd) => yd.type === 'FISCAL');
   const selectedCalendarYear = donationYearData.find(
-    (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam
+    (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
   );
 
   const selectedCalendarYearId = selectedCalendarYear
@@ -72,7 +72,9 @@ export default async function DonationPage({
               {selectedCalendarYear?.description} Donations
             </div>
 
-            <DonationPaymentsTableServer calendarYearId={selectedCalendarYearId} />
+            <DonationPaymentsTableServer
+              calendarYearId={selectedCalendarYearId}
+            />
           </Suspense>
         </DonationForm>
       </div>

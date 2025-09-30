@@ -40,7 +40,9 @@ export const donationPaymentReducer = produce<DonationPaymentsState, [Actions]>(
 
       case 'DONATION/Payments/EDIT_PAYMENT': {
         const { payment, donationPaymentId } = action.payload;
-        const editedPayment = draft.data.find((d) => d.id === donationPaymentId);
+        const editedPayment = draft.data.find(
+          (d) => d.id === donationPaymentId,
+        );
 
         if (!editedPayment) return;
 
@@ -61,5 +63,5 @@ export const donationPaymentReducer = produce<DonationPaymentsState, [Actions]>(
       default:
         return draft;
     }
-  }
+  },
 );

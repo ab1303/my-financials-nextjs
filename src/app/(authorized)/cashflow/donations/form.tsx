@@ -36,7 +36,7 @@ export default function DonationForm({
   const [selectedDonationYear, setSelectedDonationYear] =
     useState<SingleValue<OptionType>>(null);
   const [totalDonations, setTotalDonations] = useState(
-    initialData.totalDonations
+    initialData.totalDonations,
   );
 
   const donationYearOptions: Array<OptionType> = useMemo(
@@ -45,7 +45,7 @@ export default function DonationForm({
         id: zy.id,
         label: zy.description,
       })),
-    [initialData.donationYearData]
+    [initialData.donationYearData],
   );
 
   // Set selected year based on URL params
@@ -55,12 +55,14 @@ export default function DonationForm({
 
     if (fromYear && toYear) {
       const yearData = initialData.donationYearData.find(
-        (yd) => yd.fromYear === +fromYear && yd.toYear === +toYear
+        (yd) => yd.fromYear === +fromYear && yd.toYear === +toYear,
       );
-      const yearOption = yearData ? {
-        id: yearData.id,
-        label: yearData.description,
-      } : null;
+      const yearOption = yearData
+        ? {
+            id: yearData.id,
+            label: yearData.description,
+          }
+        : null;
       setSelectedDonationYear(yearOption);
     } else if (donationYearOptions.length > 0) {
       // Default to the first year if no params
@@ -78,12 +80,14 @@ export default function DonationForm({
   const onYearChange = (selectedOption: SingleValue<OptionType>) => {
     setSelectedDonationYear(selectedOption);
 
-    const selectedYearData = selectedOption 
-      ? initialData.donationYearData.find(yd => yd.id === selectedOption.id)
+    const selectedYearData = selectedOption
+      ? initialData.donationYearData.find((yd) => yd.id === selectedOption.id)
       : undefined;
 
     if (selectedYearData) {
-      const current = new URLSearchParams(Array.from(searchParams?.entries() || []));
+      const current = new URLSearchParams(
+        Array.from(searchParams?.entries() || []),
+      );
       current.set('fromYear', selectedYearData.fromYear.toString());
       current.set('toYear', selectedYearData.toYear.toString());
 

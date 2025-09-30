@@ -46,9 +46,9 @@ export default function DonationTableClient({
   deleteRow,
   calendarYearId,
 }: DonationTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<number, DonationPaymentType>>(
-    new Map(),
-  );
+  const [editedRows, setEditedRows] = useState<
+    Map<number, DonationPaymentType>
+  >(new Map());
   const [validRows, setValidRows] = useState({});
 
   const {
@@ -152,9 +152,10 @@ export default function DonationTableClient({
             });
             toast.success('Donation created successfully');
           } else {
-            const errorMessage = createResult.error instanceof Error 
-              ? createResult.error.message 
-              : 'Failed to create donation';
+            const errorMessage =
+              createResult.error instanceof Error
+                ? createResult.error.message
+                : 'Failed to create donation';
             toast.error(errorMessage);
           }
         } else {
@@ -178,9 +179,10 @@ export default function DonationTableClient({
             });
             toast.success('Donation updated successfully');
           } else {
-            const errorMessage = updateResult.error instanceof Error 
-              ? updateResult.error.message 
-              : 'Failed to update donation';
+            const errorMessage =
+              updateResult.error instanceof Error
+                ? updateResult.error.message
+                : 'Failed to update donation';
             toast.error(errorMessage);
           }
         }
@@ -212,9 +214,10 @@ export default function DonationTableClient({
           });
           toast.success('Donation deleted successfully');
         } else {
-          const errorMessage = deleteResult.error instanceof Error 
-            ? deleteResult.error.message 
-            : 'Failed to delete donation';
+          const errorMessage =
+            deleteResult.error instanceof Error
+              ? deleteResult.error.message
+              : 'Failed to delete donation';
           toast.error(errorMessage);
         }
       },

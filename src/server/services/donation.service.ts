@@ -16,7 +16,9 @@ export const addDonationCalendarYearDetails = async ({
   });
 };
 
-export const getDonation = async (calendarYearId: string): Promise<DonationModel> => {
+export const getDonation = async (
+  calendarYearId: string,
+): Promise<DonationModel> => {
   const donation = await prisma.donation.findUnique({
     where: { calendarId: calendarYearId },
   });
@@ -113,7 +115,9 @@ export const deleteDonationPayment = async (donationPaymentId: string) => {
   });
 };
 
-export const getTotalDonations = async (calendarYearId: string): Promise<number> => {
+export const getTotalDonations = async (
+  calendarYearId: string,
+): Promise<number> => {
   const result = await prisma.donationPayment.aggregate({
     where: {
       donation: {

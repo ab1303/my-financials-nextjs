@@ -132,20 +132,20 @@ model Individual {
 // Business
 
 model Business {
-  id             String            @id @default(cuid())
-  name           String
-  addressLine    String?
-  streetAddress  String?
-  suburb         String?
-  postcode       Int?
-  state          String?
-  type           BusinessEnumType?
-  PaymentHistory Payment[]
-  BankInterest   BankInterest[]
-  ZakatPayment   ZakatPayment[]
+  id              String            @id @default(cuid())
+  name            String
+  addressLine     String?
+  streetAddress   String?
+  suburb          String?
+  postcode        Int?
+  state           String?
+  type            BusinessEnumType?
+  PaymentHistory  Payment[]
+  BankInterest    BankInterest[]
+  ZakatPayment    ZakatPayment[]
   DonationPayment DonationPayment[]
-  userId         String
-  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
@@ -205,7 +205,7 @@ model DonationPayment {
   datePaid        DateTime
   amount          Decimal             @db.Money
   beneficiaryType BeneficiaryEnumType
-  taxCategory     String              // Tax category for donation classification
+  taxCategory     String // Tax category for donation classification
   business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
   individual      Individual?         @relation(fields: [individualId], references: [id])

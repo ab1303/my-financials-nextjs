@@ -33,7 +33,9 @@ export async function addRow(input: CreateDonationPaymentInput) {
     const validatedInput = CreateDonationPaymentSchema.parse(input);
 
     // Get or create Donation record for the calendar year
-    const donationResult = await createDonationYearHandler(validatedInput.calendarYearId);
+    const donationResult = await createDonationYearHandler(
+      validatedInput.calendarYearId,
+    );
     if (!donationResult.donationCalendarId) {
       return {
         success: false,
@@ -42,13 +44,16 @@ export async function addRow(input: CreateDonationPaymentInput) {
     }
 
     // Create payment record
-    const newPayment = await addDonationPaymentDetail(donationResult.donationCalendarId, {
-      datePaid: validatedInput.datePaid,
-      amount: validatedInput.amount,
-      beneficiaryType: validatedInput.beneficiaryType,
-      taxCategory: validatedInput.taxCategory,
-      beneficiaryId: validatedInput.beneficiaryId,
-    });
+    const newPayment = await addDonationPaymentDetail(
+      donationResult.donationCalendarId,
+      {
+        datePaid: validatedInput.datePaid,
+        amount: validatedInput.amount,
+        beneficiaryType: validatedInput.beneficiaryType,
+        taxCategory: validatedInput.taxCategory,
+        beneficiaryId: validatedInput.beneficiaryId,
+      },
+    );
 
     return {
       success: true,

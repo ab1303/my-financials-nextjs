@@ -54,6 +54,12 @@ export const DeleteDonationPaymentSchema = z.object({
   id: z.string().nonempty('Payment ID is required'),
 });
 
-export type CreateDonationPaymentInput = z.infer<typeof CreateDonationPaymentSchema>;
-export type UpdateDonationPaymentInput = z.infer<typeof UpdateDonationPaymentSchema>;
-export type DeleteDonationPaymentInput = z.infer<typeof DeleteDonationPaymentSchema>;
+export type CreateDonationPaymentInput = z.infer<
+  typeof CreateDonationPaymentSchema
+>;
+export type UpdateDonationPaymentInput = z.infer<
+  typeof UpdateDonationPaymentSchema
+>;
+export type DeleteDonationPaymentInput = z.infer<
+  typeof DeleteDonationPaymentSchema
+>;

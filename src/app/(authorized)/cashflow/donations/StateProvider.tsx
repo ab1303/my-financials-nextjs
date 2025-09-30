@@ -24,9 +24,12 @@ export const DonationPaymentStateProvider = ({
   data: initialData,
   children,
 }: DonationPaymentStateProviderProps) => {
-  const [donationPaymentDetails, dispatch] = useReducer(donationPaymentReducer, {
-    data: initialData,
-  });
+  const [donationPaymentDetails, dispatch] = useReducer(
+    donationPaymentReducer,
+    {
+      data: initialData,
+    },
+  );
 
   useEffect(() => {
     dispatch({
@@ -44,4 +47,5 @@ export const DonationPaymentStateProvider = ({
   );
 };
 
-export const useDonationPaymentState = () => useContext(DonationPaymentStateContext);
+export const useDonationPaymentState = () =>
+  useContext(DonationPaymentStateContext);
