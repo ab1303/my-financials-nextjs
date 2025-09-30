@@ -119,11 +119,12 @@ model Individual {
   // Address format - "AU" uses structured fields above, "GLOBAL" stores full address in addressLine
   addressFormat String? @default("AU") // "AU" or "GLOBAL" to indicate which format was used
 
-  userId       String
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ZakatPayment ZakatPayment[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ZakatPayment    ZakatPayment[]
+  DonationPayment DonationPayment[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@unique([name, userId]) // Unique individual name per user (case-sensitive, but we'll handle case-insensitive in code)
 }
@@ -142,6 +143,7 @@ model Business {
   PaymentHistory Payment[]
   BankInterest   BankInterest[]
   ZakatPayment   ZakatPayment[]
+  DonationPayment DonationPayment[]
   userId         String
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -190,6 +192,28 @@ model ZakatPayment {
   zakatId         String
 }
 
+// Donations
+model Donation {
+  id         String            @id @default(cuid())
+  calendar   CalendarYear      @relation(fields: [calendarId], references: [id])
+  calendarId String            @unique
+  payments   DonationPayment[]
+}
+
+model DonationPayment {
+  id              String              @id @default(cuid())
+  datePaid        DateTime
+  amount          Decimal             @db.Money
+  beneficiaryType BeneficiaryEnumType
+  taxCategory     String              // Tax category for donation classification
+  business        Business?           @relation(fields: [businessId], references: [id])
+  businessId      String?
+  individual      Individual?         @relation(fields: [individualId], references: [id])
+  individualId    String?
+  donation        Donation            @relation(fields: [donationId], references: [id])
+  donationId      String
+}
+
 // Calendar Year
 
 enum CalendarEnumType {
@@ -208,4 +232,5 @@ model CalendarYear {
   type         CalendarEnumType?
   Zakat        Zakat[]
   BankInterest BankInterest[]
+  Donation     Donation[]
 }

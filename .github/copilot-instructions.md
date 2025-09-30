@@ -139,6 +139,11 @@
 
 > **CRITICAL: These rules prevent catastrophic data loss. Follow strictly.**
 
+- **ALWAYS check for running development servers before Prisma operations**:
+  - Stop the dev server (`Ctrl+C` in terminal) before running `prisma generate`, `prisma migrate dev`, or `prisma db push`
+  - Running Prisma commands while dev server is active causes EPERM file locking errors on Windows
+  - Check for running Node.js processes with `tasklist | grep -i node` if needed
+  - Restart dev server after Prisma operations complete
 - **NEVER run `prisma migrate reset` without explicit user consent and backup confirmation.**
 - **ALWAYS warn before destructive operations** that can cause data loss.
 - **Migration drift resolution**:
