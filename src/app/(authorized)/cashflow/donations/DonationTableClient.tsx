@@ -3,7 +3,7 @@ import { enableMapSet } from 'immer';
 
 enableMapSet();
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-table';
 import { toast } from 'react-toastify';
 import { FaPlus } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 
 import Table from '@/components/table';
 import { useDonationPaymentState } from './StateProvider';
@@ -45,6 +46,8 @@ export default function DonationTableClient({
   const [editedRows, setEditedRows] = useState<
     Map<number, DonationPaymentType>
   >(new Map());
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const validRows = {};
 
   const {
@@ -120,67 +123,109 @@ export default function DonationTableClient({
 
         // Check if this is a temporary row (new payment)
         if (updatedRecord.id.startsWith('temp-')) {
+          // Validate required fields before creating
+          if (!updatedRecord.beneficiaryId) {
+            toast.error('Please select a beneficiary before saving');
+            return;
+          }
+          if (!updatedRecord.taxCategory) {
+            toast.error('Please select a tax category before saving');
+            return;
+          }
+          if (updatedRecord.amount <= 0) {
+            toast.error('Please enter a valid amount');
+            return;
+          }
+
           // Create new payment
-          const createResult = await addRow({
-            datePaid: updatedRecord.datePaid,
-            amount: updatedRecord.amount,
-            beneficiaryType: updatedRecord.beneficiaryType,
-            taxCategory: updatedRecord.taxCategory,
-            beneficiaryId: updatedRecord.beneficiaryId || undefined,
-            calendarYearId: calendarYearId,
-          });
+          startTransition(async () => {
+            const createResult = await addRow({
+              datePaid: updatedRecord.datePaid,
+              amount: updatedRecord.amount,
+              beneficiaryType: updatedRecord.beneficiaryType,
+              taxCategory: updatedRecord.taxCategory,
+              beneficiaryId: updatedRecord.beneficiaryId,
+              calendarYearId: calendarYearId,
+            });
 
-          if (createResult.success && createResult.data) {
-            // Remove the temporary row
-            dispatch({
-              type: 'DONATION/Payments/REMOVE_PAYMENT',
-              payload: {
-                donationPaymentId: updatedRecord.id,
-              },
-            });
-            // Add the real row
-            dispatch({
-              type: 'DONATION/Payments/ADD_PAYMENT',
-              payload: {
-                donationPaymentId: createResult.data.id,
-                payment: createResult.data as DonationPaymentType,
-              },
-            });
-            toast.success('Donation created successfully');
-          } else {
-            const errorMessage =
-              createResult.error instanceof Error
-                ? createResult.error.message
-                : 'Failed to create donation';
-            toast.error(errorMessage);
-          }
+            if (createResult.success && createResult.data) {
+              // Remove the temporary row
+              dispatch({
+                type: 'DONATION/Payments/REMOVE_PAYMENT',
+                payload: {
+                  donationPaymentId: updatedRecord.id,
+                },
+              });
+              // Add the real row
+              dispatch({
+                type: 'DONATION/Payments/ADD_PAYMENT',
+                payload: {
+                  donationPaymentId: createResult.data.id,
+                  payment: createResult.data as DonationPaymentType,
+                },
+              });
+              // Clear the edit state only on success
+              setEditedRows(new Map());
+              toast.success('Donation created successfully');
+              // Refresh to get updated server data (including totals)
+              router.refresh();
+            } else {
+              const errorMessage =
+                createResult.error instanceof Error
+                  ? createResult.error.message
+                  : 'Failed to create donation';
+              toast.error(errorMessage);
+              // Keep row in edit mode by not clearing editedRows
+            }
+          });
         } else {
-          // Update existing payment
-          const updateResult = await editRow({
-            id: updatedRecord.id,
-            datePaid: updatedRecord.datePaid,
-            amount: updatedRecord.amount,
-            beneficiaryType: updatedRecord.beneficiaryType,
-            taxCategory: updatedRecord.taxCategory,
-            beneficiaryId: updatedRecord.beneficiaryId || undefined,
-          });
-
-          if (updateResult.success) {
-            dispatch({
-              type: 'DONATION/Payments/EDIT_PAYMENT',
-              payload: {
-                donationPaymentId: updatedRecord.id,
-                payment: updatedRecord,
-              },
-            });
-            toast.success('Donation updated successfully');
-          } else {
-            const errorMessage =
-              updateResult.error instanceof Error
-                ? updateResult.error.message
-                : 'Failed to update donation';
-            toast.error(errorMessage);
+          // Validate required fields before updating
+          if (!updatedRecord.beneficiaryId) {
+            toast.error('Please select a beneficiary before saving');
+            return;
           }
+          if (!updatedRecord.taxCategory) {
+            toast.error('Please select a tax category before saving');
+            return;
+          }
+          if (updatedRecord.amount <= 0) {
+            toast.error('Please enter a valid amount');
+            return;
+          }
+
+          // Update existing payment
+          startTransition(async () => {
+            const updateResult = await editRow({
+              id: updatedRecord.id,
+              datePaid: updatedRecord.datePaid,
+              amount: updatedRecord.amount,
+              beneficiaryType: updatedRecord.beneficiaryType,
+              taxCategory: updatedRecord.taxCategory,
+              beneficiaryId: updatedRecord.beneficiaryId,
+            });
+
+            if (updateResult.success) {
+              dispatch({
+                type: 'DONATION/Payments/EDIT_PAYMENT',
+                payload: {
+                  donationPaymentId: updatedRecord.id,
+                  payment: updatedRecord,
+                },
+              });
+              // Clear the edit state only on success
+              setEditedRows(new Map());
+              toast.success('Donation updated successfully');
+              // Refresh to get updated server data (including totals)
+              router.refresh();
+            } else {
+              const errorMessage =
+                updateResult.error instanceof Error
+                  ? updateResult.error.message
+                  : 'Failed to update donation';
+              toast.error(errorMessage);
+              // Keep row in edit mode by not clearing editedRows
+            }
+          });
         }
       },
       removeRow: async (rowIndex: number) => {
@@ -199,40 +244,49 @@ export default function DonationTableClient({
           return;
         }
 
-        const deleteResult = await deleteRow({ id: row.id });
+        startTransition(async () => {
+          const deleteResult = await deleteRow({ id: row.id });
 
-        if (deleteResult.success) {
-          dispatch({
-            type: 'DONATION/Payments/REMOVE_PAYMENT',
-            payload: {
-              donationPaymentId: row.id,
-            },
-          });
-          toast.success('Donation deleted successfully');
-        } else {
-          const errorMessage =
-            deleteResult.error instanceof Error
-              ? deleteResult.error.message
-              : 'Failed to delete donation';
-          toast.error(errorMessage);
-        }
+          if (deleteResult.success) {
+            dispatch({
+              type: 'DONATION/Payments/REMOVE_PAYMENT',
+              payload: {
+                donationPaymentId: row.id,
+              },
+            });
+            toast.success('Donation deleted successfully');
+            // Refresh to get updated server data (including totals)
+            router.refresh();
+          } else {
+            const errorMessage =
+              deleteResult.error instanceof Error
+                ? deleteResult.error.message
+                : 'Failed to delete donation';
+            toast.error(errorMessage);
+          }
+        });
       },
     },
   });
 
   return (
     <>
-      <div className='mb-4 flex justify-between items-center'>
-        <h3 className='text-sm font-medium text-gray-700'>Payment Records</h3>
+      <div className='mb-6 flex justify-between items-center'>
+        <h3 className='text-lg font-medium text-gray-900'>
+          Payment Records
+          {isPending && (
+            <span className='ml-2 text-sm text-gray-500'>(Updating...)</span>
+          )}
+        </h3>
         <button
           type='button'
-          className='inline-flex items-center justify-center w-10 h-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-teal-100 text-teal-600 hover:bg-teal-200 focus:ring-teal-500'
+          className='inline-flex items-center justify-center w-10 h-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-teal-100 text-teal-600 hover:bg-teal-200 focus:ring-teal-500 transition-colors'
           onClick={handleAddPayment}
-          disabled={!calendarYearId}
+          disabled={!calendarYearId || isPending}
           aria-label='Add new donation'
           title='Add Donation'
         >
-          <FaPlus size={14} />
+          <FaPlus size={16} />
         </button>
       </div>
 
@@ -257,10 +311,25 @@ export default function DonationTableClient({
           <Table.TBody>
             {table.getRowModel().rows.length === 0 ? (
               <Table.TBody.TR>
-                <td colSpan={6} className='text-center py-8 text-gray-500 px-6'>
-                  {!calendarYearId
-                    ? 'Please select a fiscal year to view donations'
-                    : 'No donations recorded for this fiscal year'}
+                <td
+                  colSpan={6}
+                  className='text-center py-12 text-gray-500 px-6 bg-gray-50'
+                >
+                  <div className='flex flex-col items-center'>
+                    <div className='text-gray-400 mb-2'>
+                      <FaPlus size={24} />
+                    </div>
+                    <p className='text-base font-medium text-gray-900 mb-1'>
+                      {!calendarYearId
+                        ? 'Select a fiscal year'
+                        : 'No donations recorded'}
+                    </p>
+                    <p className='text-sm text-gray-500'>
+                      {!calendarYearId
+                        ? 'Please select a fiscal year to view donations'
+                        : 'Click the + button above to add your first donation record'}
+                    </p>
+                  </div>
                 </td>
               </Table.TBody.TR>
             ) : (

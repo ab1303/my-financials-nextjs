@@ -29,7 +29,7 @@ export const CreateDonationPaymentSchema = z.object({
     required_error: 'Beneficiary type is required',
   }),
   taxCategory: z.string().nonempty('Tax category is required'),
-  beneficiaryId: z.string().optional(),
+  beneficiaryId: z.string().nonempty('Please select a beneficiary'),
   calendarYearId: z.string().nonempty('Calendar year is required'),
 });
 
@@ -47,7 +47,7 @@ export const UpdateDonationPaymentSchema = z.object({
     ),
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
   taxCategory: z.string().nonempty('Tax category is required'),
-  beneficiaryId: z.string().optional(),
+  beneficiaryId: z.string().nonempty('Please select a beneficiary'),
 });
 
 export const DeleteDonationPaymentSchema = z.object({

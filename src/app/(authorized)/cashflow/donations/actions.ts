@@ -1,6 +1,7 @@
 'use server';
 
 import { getServerSession } from 'next-auth';
+import { revalidatePath } from 'next/cache';
 import { authOptions } from '@/utils/authOptions';
 import {
   addDonationPaymentDetail,
@@ -31,6 +32,14 @@ export async function addRow(input: CreateDonationPaymentInput) {
 
     // Validate input
     const validatedInput = CreateDonationPaymentSchema.parse(input);
+
+    // Additional validation for beneficiaryId
+    if (
+      !validatedInput.beneficiaryId ||
+      validatedInput.beneficiaryId.trim() === ''
+    ) {
+      return { success: false, error: 'Please select a beneficiary' };
+    }
 
     // Get or create Donation record for the calendar year
     const donationResult = await createDonationYearHandler(
@@ -73,6 +82,9 @@ export async function addRow(input: CreateDonationPaymentInput) {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to add payment',
     };
+  } finally {
+    // Revalidate the donations page to update totals and data
+    revalidatePath('/cashflow/donations');
   }
 }
 
@@ -86,6 +98,14 @@ export async function editRow(input: UpdateDonationPaymentInput) {
 
     // Validate input
     const validatedInput = UpdateDonationPaymentSchema.parse(input);
+
+    // Additional validation for beneficiaryId
+    if (
+      !validatedInput.beneficiaryId ||
+      validatedInput.beneficiaryId.trim() === ''
+    ) {
+      return { success: false, error: 'Please select a beneficiary' };
+    }
 
     // Update payment record
     await updateDonationPayment(
@@ -109,6 +129,9 @@ export async function editRow(input: UpdateDonationPaymentInput) {
       error:
         error instanceof Error ? error.message : 'Failed to update payment',
     };
+  } finally {
+    // Revalidate the donations page to update totals and data
+    revalidatePath('/cashflow/donations');
   }
 }
 
@@ -134,5 +157,8 @@ export async function deleteRow(input: DeleteDonationPaymentInput) {
       error:
         error instanceof Error ? error.message : 'Failed to delete payment',
     };
+  } finally {
+    // Revalidate the donations page to update totals and data
+    revalidatePath('/cashflow/donations');
   }
 }

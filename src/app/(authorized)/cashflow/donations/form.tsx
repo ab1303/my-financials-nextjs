@@ -140,6 +140,26 @@ export default function DonationForm({
             instanceId={id}
             getOptionValue={(option) => option.id}
             onChange={onYearChange}
+            placeholder='Select fiscal year...'
+            styles={{
+              control: (provided, state) => ({
+                ...provided,
+                borderColor: state.isFocused ? '#14b8a6' : '#d1d5db',
+                boxShadow: state.isFocused ? '0 0 0 1px #14b8a6' : 'none',
+                '&:hover': {
+                  borderColor: '#14b8a6',
+                },
+              }),
+              option: (provided, state) => ({
+                ...provided,
+                backgroundColor: state.isSelected
+                  ? '#14b8a6'
+                  : state.isFocused
+                    ? '#f0fdfa'
+                    : 'white',
+                color: state.isSelected ? 'white' : '#374151',
+              }),
+            }}
           />
         </div>
       </div>
@@ -148,7 +168,7 @@ export default function DonationForm({
         <div className='mt-3'>
           <NumericFormat
             id={`${id}-total-donations`}
-            className='w-3/5 block px-3 py-2 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+            className='w-3/5 block px-3 py-2 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 font-medium'
             prefix='$'
             displayType='text'
             thousandSeparator
