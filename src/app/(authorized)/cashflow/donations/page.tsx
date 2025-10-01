@@ -27,7 +27,7 @@ export default async function DonationPage({
   const toYearParam = +getSelectedParam(params?.toYear);
   const calenderYears = await getCalendarYearsHandler();
 
-  const donationYearData = calenderYears.filter((yd) => yd.type === 'ZAKAT');
+  const donationYearData = calenderYears.filter((yd) => yd.type === 'FISCAL');
   const selectedCalendarYear = donationYearData.find(
     (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
   );
@@ -56,9 +56,11 @@ export default async function DonationPage({
           yearIdParam={selectedCalendarYearId}
         >
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
-            <div className='font-mono text-gray-500 mb-3'>
-              {selectedCalendarYear?.description} Donations
-            </div>
+            {selectedCalendarYear && (
+              <div className='font-mono text-gray-500 mb-3'>
+                {selectedCalendarYear.description} Donations
+              </div>
+            )}
 
             <DonationPaymentsTableServer
               calendarYearId={selectedCalendarYearId}

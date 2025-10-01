@@ -11,11 +11,22 @@ const beneficiaryOptions = Object.entries(
   BeneficiaryEnumType,
 ).flatMap<OptionType>(([k, v]) => ({ id: k, label: v }));
 
+const taxCategoryOptions: OptionType[] = [
+  { id: 'RELIGIOUS', label: 'Religious Organizations' },
+  { id: 'EDUCATIONAL', label: 'Educational Institutions' },
+  { id: 'HEALTHCARE', label: 'Healthcare/Medical' },
+  { id: 'ENVIRONMENTAL', label: 'Environmental Causes' },
+  { id: 'SOCIAL', label: 'Social Services' },
+  { id: 'ARTS', label: 'Arts & Culture' },
+  { id: 'OTHER', label: 'Other/General Charity' },
+];
+
 const columnHelper = createColumnHelper<DonationPaymentType>();
 
 export function getTableColumns(individualsOptions: OptionType[]) {
   return [
     columnHelper.accessor('datePaid', {
+      size: 150,
       header: () => <span>Date Paid</span>,
       cell: TableCell,
       meta: {
@@ -24,23 +35,26 @@ export function getTableColumns(individualsOptions: OptionType[]) {
       },
     }),
     columnHelper.accessor('amount', {
-      size: 220,
-      maxSize: 220,
+      size: 180,
+      maxSize: 200,
       header: () => <span>Amount Donated</span>,
       cell: TableCell,
       meta: { type: 'AMOUNT', propName: 'amount' },
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('taxCategory', {
+      size: 160,
       header: () => <span>Tax Category</span>,
       cell: TableCell,
       meta: {
-        type: 'INPUT',
+        type: 'SELECT',
         propName: 'taxCategory',
+        selectOptions: taxCategoryOptions,
       },
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('beneficiaryType', {
+      size: 160,
       header: () => <span>Beneficiary Type</span>,
       cell: TableCell,
       meta: {
@@ -51,6 +65,7 @@ export function getTableColumns(individualsOptions: OptionType[]) {
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('beneficiaryId', {
+      size: 200,
       header: () => <span>Beneficiary</span>,
       cell: ({ row, table }) => {
         const { original } = row;
@@ -105,6 +120,7 @@ export function getTableColumns(individualsOptions: OptionType[]) {
     }),
     columnHelper.display({
       id: 'actions',
+      size: 100,
       header: () => <span>Actions</span>,
       cell: EditCell,
     }),

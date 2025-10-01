@@ -13,7 +13,6 @@ import { toast } from 'react-toastify';
 import { FaPlus } from 'react-icons/fa';
 
 import Table from '@/components/table';
-import { Button } from '@/components';
 import { useDonationPaymentState } from './StateProvider';
 
 import { getTableColumns } from './_table/columns';
@@ -222,22 +221,23 @@ export default function DonationTableClient({
   });
 
   return (
-    <div className='space-y-4'>
-      <div className='flex justify-between items-center'>
-        <h3 className='text-lg font-medium text-gray-900'>Donation Payments</h3>
-        <Button
+    <>
+      <div className='mb-4 flex justify-between items-center'>
+        <h3 className='text-sm font-medium text-gray-700'>Payment Records</h3>
+        <button
           type='button'
+          className='inline-flex items-center justify-center w-10 h-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-teal-100 text-teal-600 hover:bg-teal-200 focus:ring-teal-500'
           onClick={handleAddPayment}
           disabled={!calendarYearId}
-          className='inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+          aria-label='Add new donation'
+          title='Add Donation'
         >
-          <FaPlus className='-ml-0.5 mr-2 h-4 w-4' aria-hidden='true' />
-          Add Donation
-        </Button>
+          <FaPlus size={14} />
+        </button>
       </div>
 
-      <div className='overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg'>
-        <Table className='min-w-full divide-y divide-gray-300'>
+      <div className='overflow-x-auto'>
+        <Table>
           <Table.THead>
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.THead.TR key={headerGroup.id}>
@@ -288,6 +288,6 @@ export default function DonationTableClient({
           </Table.TBody>
         </Table>
       </div>
-    </div>
+    </>
   );
 }

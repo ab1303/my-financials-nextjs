@@ -63,11 +63,36 @@ export default function DonationForm({
           }
         : null;
       setSelectedDonationYear(yearOption);
-    } else if (donationYearOptions.length > 0) {
-      // Default to the first year if no params
-      setSelectedDonationYear(donationYearOptions[0] || null);
+    } else if (donationYearOptions.length > 0 && !fromYear && !toYear) {
+      // Auto-select the first year and update URL if no params exist
+      const firstYear = donationYearOptions[0];
+      if (firstYear) {
+        setSelectedDonationYear(firstYear);
+
+        // Find the year data to get fromYear and toYear
+        const selectedYearData = initialData.donationYearData.find(
+          (yd) => yd.id === firstYear.id,
+        );
+
+        if (selectedYearData) {
+          const current = new URLSearchParams();
+          current.set('fromYear', selectedYearData.fromYear.toString());
+          current.set('toYear', selectedYearData.toYear.toString());
+
+          const search = current.toString();
+          const query = search ? `?${search}` : '';
+
+          router.replace(`${pathname}${query}`);
+        }
+      }
     }
-  }, [donationYearOptions, searchParams, initialData.donationYearData]);
+  }, [
+    donationYearOptions,
+    searchParams,
+    initialData.donationYearData,
+    router,
+    pathname,
+  ]);
 
   // Update total donations when year changes
   useEffect(() => {
@@ -83,70 +108,58 @@ export default function DonationForm({
       ? initialData.donationYearData.find((yd) => yd.id === selectedOption.id)
       : undefined;
 
+    const current = new URLSearchParams(
+      Array.from(searchParams?.entries() || []),
+    );
+
     if (selectedYearData) {
-      const current = new URLSearchParams(
-        Array.from(searchParams?.entries() || []),
-      );
       current.set('fromYear', selectedYearData.fromYear.toString());
       current.set('toYear', selectedYearData.toYear.toString());
-
-      const search = current.toString();
-      const query = search ? `?${search}` : '';
-
-      router.push(`${pathname}${query}`);
+    } else {
+      // Clear the parameters when no year is selected
+      current.delete('fromYear');
+      current.delete('toYear');
     }
+
+    const search = current.toString();
+    const query = search ? `?${search}` : '';
+
+    router.push(`${pathname}${query}`);
   };
 
   return (
-    <div className='bg-white py-6 px-4 space-y-6 sm:p-6'>
-      <div>
-        <h3 className='text-lg leading-6 font-medium text-gray-900'>
-          Donation Management
-        </h3>
-        <p className='mt-1 text-sm text-gray-500'>
-          Track your charitable donations for tax reporting purposes.
-        </p>
-      </div>
-
-      <div className='grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6'>
-        <div className='sm:col-span-3'>
-          <Label htmlFor={`${id}-donation-year`}>Fiscal Year</Label>
-          <div className='mt-1'>
-            <Select
-              inputId={`${id}-donation-year`}
-              value={selectedDonationYear}
-              onChange={onYearChange}
-              options={donationYearOptions}
-              isSearchable={false}
-              placeholder='Select fiscal year...'
-              className='react-select-container'
-              classNamePrefix='react-select'
-            />
-          </div>
-        </div>
-
-        <div className='sm:col-span-3'>
-          <Label htmlFor={`${id}-total-donations`}>Total Donations</Label>
-          <div className='mt-1'>
-            <NumericFormat
-              id={`${id}-total-donations`}
-              className='shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-50'
-              prefix='$'
-              displayType='text'
-              thousandSeparator
-              value={totalDonations}
-              readOnly
-            />
-          </div>
-          <p className='mt-1 text-xs text-gray-500'>
-            Calculated from individual donation records
-          </p>
+    <form className='mb-0 space-y-6'>
+      <div className='mx-10'>
+        <Label>Fiscal Year</Label>
+        <div className='mt-3'>
+          <Select
+            isClearable
+            className='w-3/5'
+            value={selectedDonationYear}
+            options={donationYearOptions}
+            instanceId={id}
+            getOptionValue={(option) => option.id}
+            onChange={onYearChange}
+          />
         </div>
       </div>
-
-      <div className='pt-6'>
-        <Card>{children}</Card>
+      <div className='mx-10'>
+        <Label>Total Donations</Label>
+        <div className='mt-3'>
+          <NumericFormat
+            id={`${id}-total-donations`}
+            className='w-3/5 block px-3 py-2 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+            prefix='$'
+            displayType='text'
+            thousandSeparator
+            value={totalDonations}
+            readOnly
+          />
+        </div>
       </div>
-    </div>
+      <div className='mt-8'>
+        <Card.Body>{children}</Card.Body>
+      </div>
+    </form>
   );
 }
