@@ -164,8 +164,12 @@ export default function DonationTableClient({
                   payment: createResult.data as DonationPaymentType,
                 },
               });
-              // Clear the edit state only on success
-              setEditedRows(new Map());
+              // Clear only this specific row's edit state on success
+              setEditedRows((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(rowIndex);
+                return newMap;
+              });
               toast.success('Donation created successfully');
               // Refresh to get updated server data (including totals)
               router.refresh();
@@ -212,8 +216,12 @@ export default function DonationTableClient({
                   payment: updatedRecord,
                 },
               });
-              // Clear the edit state only on success
-              setEditedRows(new Map());
+              // Clear only this specific row's edit state on success
+              setEditedRows((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(rowIndex);
+                return newMap;
+              });
               toast.success('Donation updated successfully');
               // Refresh to get updated server data (including totals)
               router.refresh();

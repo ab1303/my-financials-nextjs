@@ -40,11 +40,18 @@ export const EditCell = <TData, TValue>({
 
     meta?.setEditedRows(
       produce((draft) => {
-        if (draft.has(row.index)) {
-          draft.delete(row.index);
-        } else {
-          draft.set(row.index, castDraft(row.original));
+        if (elName === 'edit') {
+          // Add to edit mode
+          if (!draft.has(row.index)) {
+            draft.set(row.index, castDraft(row.original));
+          }
+        } else if (elName === 'cancel') {
+          // Remove from edit mode on cancel
+          if (draft.has(row.index)) {
+            draft.delete(row.index);
+          }
         }
+        // For 'done', don't clear edit state here - let updateRow handle it on success
       }),
     );
 
@@ -55,6 +62,7 @@ export const EditCell = <TData, TValue>({
         meta?.revertData(row.index);
         break;
       case 'done':
+        // Don't clear edit state here - updateRow will handle it on success
         meta?.updateRow(row.index);
         break;
     }
