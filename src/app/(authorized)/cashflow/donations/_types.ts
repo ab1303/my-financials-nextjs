@@ -17,9 +17,12 @@ export type DonationPaymentType = {
   id: string;
   datePaid: Date;
   amount: number;
-  beneficiaryId: string;
   beneficiaryType: BeneficiaryEnumType;
   taxCategory: string;
+  businessId?: string;
+  individualId?: string;
+  // Computed field for table operations
+  beneficiaryId: string;
 };
 
 const BENEFICIARY_ENUM_KEYS = Object.entries(BeneficiaryEnumType).map(

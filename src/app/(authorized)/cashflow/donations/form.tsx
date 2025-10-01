@@ -10,7 +10,6 @@ import { Card } from '@/components';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
-import type { FormInput } from './_schema';
 
 type InitialDataType = {
   donationYearData: Array<CalendarYearType>;

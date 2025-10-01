@@ -1,13 +1,8 @@
-import Head from 'next/head';
 import { Suspense } from 'react';
 
 import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import {
-  createDonationYearHandler,
-  donationHandler,
-  totalDonationsHandler,
-} from '@/server/controllers/donation.controller';
+import { totalDonationsHandler } from '@/server/controllers/donation.controller';
 
 import DonationForm from './form';
 import DonationPaymentsTableServer from './DonationTableServer';
@@ -32,7 +27,7 @@ export default async function DonationPage({
   const toYearParam = +getSelectedParam(params?.toYear);
   const calenderYears = await getCalendarYearsHandler();
 
-  const donationYearData = calenderYears.filter((yd) => yd.type === 'FISCAL');
+  const donationYearData = calenderYears.filter((yd) => yd.type === 'ZAKAT');
   const selectedCalendarYear = donationYearData.find(
     (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
   );
@@ -41,7 +36,6 @@ export default async function DonationPage({
     ? selectedCalendarYear.id
     : '';
 
-  const donation = await donationHandler(selectedCalendarYearId);
   const totalDonations = await totalDonationsHandler(selectedCalendarYearId);
 
   const initialData = {
@@ -51,12 +45,6 @@ export default async function DonationPage({
 
   return (
     <>
-      <Head>
-        <title>Donations</title>
-        <meta name='page' content='donations' />
-        <link rel='icon' href='/favicon.ico' />
-      </Head>
-
       <Card.Header>
         <div className='flex justify-between mt-4 text-left'>
           <Card.Header.Title>Donation Tracking</Card.Header.Title>

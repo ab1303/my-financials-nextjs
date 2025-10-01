@@ -13,7 +13,6 @@ import { toast } from 'react-toastify';
 import { FaPlus } from 'react-icons/fa';
 
 import Table from '@/components/table';
-import { tableCellStyles } from '@/styles/theme';
 import { Button } from '@/components';
 import { useDonationPaymentState } from './StateProvider';
 
@@ -29,7 +28,6 @@ import type { OptionType } from '@/types';
 
 type DonationTableClientProps = {
   individualsOptions: OptionType[];
-  businessesOptions: OptionType[];
   editRow: (input: UpdateDonationPaymentInput) => Promise<ServerActionType>;
   addRow: (
     input: CreateDonationPaymentInput,
@@ -40,7 +38,6 @@ type DonationTableClientProps = {
 
 export default function DonationTableClient({
   individualsOptions,
-  businessesOptions,
   addRow,
   editRow,
   deleteRow,
@@ -49,7 +46,7 @@ export default function DonationTableClient({
   const [editedRows, setEditedRows] = useState<
     Map<number, DonationPaymentType>
   >(new Map());
-  const [validRows, setValidRows] = useState({});
+  const validRows = {};
 
   const {
     state: { data },
@@ -89,8 +86,8 @@ export default function DonationTableClient({
   };
 
   const columns = useMemo(
-    () => getTableColumns(individualsOptions, businessesOptions),
-    [individualsOptions, businessesOptions],
+    () => getTableColumns(individualsOptions),
+    [individualsOptions],
   );
 
   const table = useReactTable<DonationPaymentType>({

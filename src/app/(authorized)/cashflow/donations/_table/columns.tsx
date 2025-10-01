@@ -5,6 +5,7 @@ import type { DonationPaymentType } from '../_types';
 import type { OptionType } from '@/types';
 import { BeneficiaryEnumType } from '@prisma/client';
 import { castDraft, produce } from 'immer';
+import BeneficiarySelectionCell from './BeneficiarySelectionCell';
 
 const beneficiaryOptions = Object.entries(
   BeneficiaryEnumType,
@@ -12,10 +13,7 @@ const beneficiaryOptions = Object.entries(
 
 const columnHelper = createColumnHelper<DonationPaymentType>();
 
-export function getTableColumns(
-  individualsOptions: OptionType[],
-  businessesOptions: OptionType[],
-) {
+export function getTableColumns(individualsOptions: OptionType[]) {
   return [
     columnHelper.accessor('datePaid', {
       header: () => <span>Date Paid</span>,
@@ -54,11 +52,54 @@ export function getTableColumns(
     }),
     columnHelper.accessor('beneficiaryId', {
       header: () => <span>Beneficiary</span>,
-      cell: TableCell,
-      meta: {
-        type: 'SELECT',
-        propName: 'beneficiaryId',
-        selectOptions: individualsOptions.concat(businessesOptions),
+      cell: ({ row, table }) => {
+        const { original } = row;
+        const tableMeta = table.options.meta;
+
+        const updateRecord = (
+          editedRecord: DonationPaymentType,
+          beneficiaryId: string,
+        ) => {
+          const updatedRecord = {
+            ...editedRecord,
+            beneficiaryId,
+          };
+
+          tableMeta?.setEditedRows(
+            produce((draft) => {
+              draft.set(row.index, castDraft(updatedRecord));
+            }),
+          );
+        };
+
+        const editedRecord = tableMeta?.editedRows.get(row.index);
+
+        // Display
+        if (!editedRecord) {
+          // case business - we need to fetch the business name to display
+          if (original.beneficiaryType == 'BUSINESS') {
+            return <span>Loading...</span>; // TODO: We need business data to display name instead of ID
+          }
+
+          const selectedOption = individualsOptions.find(
+            (i) => i.id === original.beneficiaryId,
+          );
+
+          return <span>{selectedOption?.label}</span>;
+        }
+
+        // Edit mode - always show the BeneficiarySelectionCell for both INDIVIDUAL and BUSINESS
+        return (
+          <BeneficiarySelectionCell
+            defaultIndividualOptions={individualsOptions}
+            beneficiaryId={editedRecord.beneficiaryId}
+            beneficiaryType={editedRecord.beneficiaryType}
+            onSelectionChange={(beneficiaryId?: string) => {
+              updateRecord(editedRecord, beneficiaryId || '');
+              return;
+            }}
+          />
+        );
       },
       footer: (props) => props.column.id,
     }),

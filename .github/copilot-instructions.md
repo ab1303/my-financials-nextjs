@@ -12,6 +12,7 @@
 - **No secrets in client code**: Never expose sensitive environment variables or secrets to the client.
 - **Document all required environment variables in `.env-example`.**
 - **All specs/PRDs in `spec/` at project root.**
+- **ALWAYS run `pnpm run build` before declaring any feature complete**: Ensure the project builds without errors in production mode before marking implementation as finished. Fix any build errors, unused imports, or linting warnings that appear during the build process.
 
 ## Project Structure
 
