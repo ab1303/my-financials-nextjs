@@ -63,9 +63,28 @@ export async function addRow(input: CreateIncomeEntryInput) {
     };
   } catch (error) {
     console.error('Error adding income entry:', error);
+
+    // Provide user-friendly error messages
+    let errorMessage = 'Failed to add income entry. Please try again.';
+
+    if (error instanceof Error) {
+      if (error.message.includes('validation')) {
+        errorMessage = 'Invalid data provided. Please check your entries.';
+      } else if (error.message.includes('unique')) {
+        errorMessage = 'A similar entry already exists.';
+      } else if (
+        error.message.includes('authentication') ||
+        error.message.includes('session')
+      ) {
+        errorMessage = 'Your session has expired. Please log in again.';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to add entry',
+      error: errorMessage,
     };
   } finally {
     // Revalidate the income page to update totals and data
@@ -94,9 +113,28 @@ export async function editRow(input: UpdateIncomeEntryInput) {
     return { success: true, error: null };
   } catch (error) {
     console.error('Error updating income entry:', error);
+
+    // Provide user-friendly error messages
+    let errorMessage = 'Failed to update income entry. Please try again.';
+
+    if (error instanceof Error) {
+      if (error.message.includes('validation')) {
+        errorMessage = 'Invalid data provided. Please check your entries.';
+      } else if (error.message.includes('not found')) {
+        errorMessage = 'Income entry not found. It may have been deleted.';
+      } else if (
+        error.message.includes('authentication') ||
+        error.message.includes('session')
+      ) {
+        errorMessage = 'Your session has expired. Please log in again.';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to update entry',
+      error: errorMessage,
     };
   } finally {
     // Revalidate the income page to update totals and data
@@ -121,9 +159,27 @@ export async function deleteRow(input: DeleteIncomeEntryInput) {
     return { success: true, error: null };
   } catch (error) {
     console.error('Error deleting income entry:', error);
+
+    // Provide user-friendly error messages
+    let errorMessage = 'Failed to delete income entry. Please try again.';
+
+    if (error instanceof Error) {
+      if (error.message.includes('not found')) {
+        errorMessage =
+          'Income entry not found. It may have already been deleted.';
+      } else if (
+        error.message.includes('authentication') ||
+        error.message.includes('session')
+      ) {
+        errorMessage = 'Your session has expired. Please log in again.';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete entry',
+      error: errorMessage,
     };
   } finally {
     // Revalidate the income page to update totals and data

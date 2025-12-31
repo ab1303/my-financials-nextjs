@@ -73,12 +73,17 @@ export default function IncomeSummaryClient({
         const response = await fetch(
           `/api/income/monthly-summary?calendarYearId=${selectedYearId}&userId=${userId}`,
         );
-        if (response.ok) {
-          const data = (await response.json()) as MonthlyIncomeSummary[];
-          setMonthlySummary(data);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to fetch income summary');
         }
+        const data = (await response.json()) as MonthlyIncomeSummary[];
+        setMonthlySummary(data);
       } catch (error) {
         console.error('Failed to fetch monthly summary:', error);
+        setMonthlySummary([]);
+        // Could add toast notification here if toast is imported
+        // toast.error('Failed to load income summary. Please try again.');
       } finally {
         setLoading(false);
       }

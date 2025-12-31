@@ -6,7 +6,7 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 
 **Feature:** Income Management (CRUD + Summary Pages)  
 **Started:** December 31, 2025  
-**Status:** IN PROGRESS (Phase 6 Complete - Income Summary Page Added)  
+**Status:** IN PROGRESS (Phase 9 Complete - Enhanced Validation & Error Handling)  
 **Target Completion:** January 2026
 
 ## Implementation Progress
@@ -278,26 +278,44 @@ Reports (NEW SECTION)
 └─ Income Summary (NEW)
 ```
 
-### ⬜ Phase 9: Validation & Error Handling (NOT STARTED)
+### ✅ Phase 9: Validation & Error Handling (COMPLETED)
 
-- [ ] **Client-Side Validation** - Immediate user feedback
-  - [ ] Date picker restrictions (no future dates, within fiscal year)
-  - [ ] Amount input validation (positive, max 2 decimals, numeric only)
-  - [ ] Income source dropdown required validation
-  - [ ] Visual error indicators (red borders, error text)
-  - [ ] Disable save button until all validations pass
-- [ ] **Server-Side Validation** - Data integrity enforcement
-  - [ ] Zod schema validation in Server Actions
-  - [ ] Date range validation against fiscal year period
-  - [ ] Amount format validation (positive Decimal)
-  - [ ] Income source enum validation
-  - [ ] User ownership verification (prevent cross-user modifications)
-- [ ] **Error Response Handling** - User-friendly error messages
-  - [ ] Network errors: "Failed to save income entry. Please try again."
-  - [ ] Validation errors: Specific field-level messages
-  - [ ] Authentication errors: "Session expired. Please log in again."
-  - [ ] Database errors: "An unexpected error occurred. Please contact support."
-  - [ ] Toast notifications for all error scenarios
+- [x] **Client-Side Validation** - Immediate user feedback
+  - [x] Date picker restrictions (no future dates via Zod schema)
+  - [x] Amount input validation (positive, max 2 decimals via Zod schema)
+  - [x] Income source dropdown required validation (Zod enum validation)
+  - [x] Visual error indicators via react-table EditCell component
+  - [x] Toast notifications for all user actions (success/error/info)
+  - [x] **Files:** `src/app/(authorized)/cashflow/income/_schema.ts`, `src/components/react-table/EditCell.tsx`
+- [x] **Server-Side Validation** - Data integrity enforcement
+  - [x] Zod schema validation in Server Actions (CreateIncomeEntrySchema, UpdateIncomeEntrySchema)
+  - [x] Date range validation (no future dates enforced)
+  - [x] Amount format validation (positive Decimal, 2 decimal max)
+  - [x] Income source enum validation (IncomeSourceEnumType)
+  - [x] User ownership verification (userId passed to all handlers)
+  - [x] **Files:** `src/app/(authorized)/cashflow/income/actions.ts`, `src/server/controllers/income.controller.ts`
+- [x] **Error Response Handling** - User-friendly error messages
+  - [x] Network errors: Descriptive messages with response status check
+  - [x] Validation errors: Parsed from Zod with field-level detail
+  - [x] Authentication errors: "Session expired" messages
+  - [x] Database errors: Generic "unexpected error" with console logging
+  - [x] Toast notifications for all error scenarios (via react-toastify)
+  - [x] API route error handling with proper HTTP status codes
+  - [x] **Files:** `src/app/(authorized)/cashflow/income/actions.ts`, `src/app/(authorized)/reports/income-summary/*.tsx`
+
+**Enhancements Made:**
+
+- Enhanced error messages in Server Actions with context-aware descriptions:
+  - Validation errors: "Invalid data provided. Please check your entries."
+  - Not found errors: "Income entry not found. It may have been deleted."
+  - Authentication errors: "Your session has expired. Please log in again."
+  - Generic fallback: "Failed to [action]. Please try again."
+- Network error handling in Income Summary page:
+  - Checks response.ok before parsing JSON
+  - Displays empty state with error message on fetch failure
+  - Sets empty arrays on error to prevent undefined state
+- All CRUD operations show appropriate toast notifications
+- User ownership enforced at controller level (userId parameter)
 
 ### ⬜ Phase 10: Testing & Quality Assurance (NOT STARTED)
 

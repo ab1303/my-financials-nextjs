@@ -8,7 +8,7 @@ import { INCOME_SOURCE_LABELS } from '../_types';
 
 const incomeSourceOptions: OptionType[] = Object.entries(
   IncomeSourceEnumType,
-).map(([key, value]) => ({
+).map(([, value]) => ({
   id: value,
   label: INCOME_SOURCE_LABELS[value as IncomeSourceEnumType],
 }));

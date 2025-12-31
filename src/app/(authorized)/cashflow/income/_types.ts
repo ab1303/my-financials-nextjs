@@ -1,4 +1,4 @@
-import { IncomeSourceEnumType } from '@prisma/client';
+import type { IncomeSourceEnumType } from '@prisma/client';
 
 export type ServerActionType<T = unknown> = {
   success: boolean;

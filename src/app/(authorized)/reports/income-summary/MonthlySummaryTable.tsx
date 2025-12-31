@@ -62,12 +62,18 @@ export default function MonthlySummaryTable({
           const response = await fetch(
             `/api/income/source-breakdown?calendarYearId=${calendarYearId}&month=${month}&year=${year}&userId=${userId}`,
           );
-          if (response.ok) {
-            const data = (await response.json()) as SourceBreakdown[];
-            setSourceBreakdowns(new Map(sourceBreakdowns).set(key, data));
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+              errorData.error || 'Failed to fetch source breakdown',
+            );
           }
+          const data = (await response.json()) as SourceBreakdown[];
+          setSourceBreakdowns(new Map(sourceBreakdowns).set(key, data));
         } catch (error) {
           console.error('Failed to fetch source breakdown:', error);
+          // Set empty array so user knows there was an attempt to load
+          setSourceBreakdowns(new Map(sourceBreakdowns).set(key, []));
         } finally {
           const newLoading = new Set(loadingBreakdowns);
           newLoading.delete(key);
