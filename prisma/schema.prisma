@@ -68,6 +68,7 @@ model User {
   Individual   Individual[]
   Business     Business[]
   Relationship Relationship[]
+  Income       Income[]
 }
 
 model VerificationToken {
@@ -86,6 +87,16 @@ enum BusinessEnumType {
 enum BeneficiaryEnumType {
   INDIVIDUAL
   BUSINESS
+}
+
+enum IncomeSourceEnumType {
+  EMPLOYMENT
+  STOCKS
+  BONDS
+  RENTAL
+  BUSINESS
+  FREELANCE
+  OTHER
 }
 
 // Relationship lookup table (user-scoped)
@@ -214,6 +225,33 @@ model DonationPayment {
   donationId      String
 }
 
+// Income
+model Income {
+  id         String        @id @default(cuid())
+  calendar   CalendarYear  @relation(fields: [calendarId], references: [id])
+  calendarId String
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries    IncomeEntry[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([calendarId, userId])
+}
+
+model IncomeEntry {
+  id         String               @id @default(cuid())
+  dateEarned DateTime
+  amount     Decimal              @db.Money
+  source     IncomeSourceEnumType
+  income     Income               @relation(fields: [incomeId], references: [id], onDelete: Cascade)
+  incomeId   String
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  @@index([incomeId, dateEarned])
+}
+
 // Calendar Year
 
 enum CalendarEnumType {
@@ -232,5 +270,6 @@ model CalendarYear {
   type         CalendarEnumType?
   Zakat        Zakat[]
   BankInterest BankInterest[]
+  Income       Income[]
   Donation     Donation[]
 }
