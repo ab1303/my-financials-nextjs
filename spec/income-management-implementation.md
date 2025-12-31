@@ -6,7 +6,7 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 
 **Feature:** Income Management (CRUD + Summary Pages)  
 **Started:** December 31, 2025  
-**Status:** IN PROGRESS (Phase 3 Complete)  
+**Status:** IN PROGRESS (Phase 4 Complete)  
 **Target Completion:** January 2026
 
 ## Implementation Progress
@@ -83,35 +83,36 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 - Test user scoping (ensure no cross-user data access)
 - Test error handling paths
 
-### ⬜ Phase 4: Server Actions & CRUD Operations (NOT STARTED)
+### ✅ Phase 4: Server Actions & CRUD Operations (COMPLETED)
 
-- [ ] **Server Actions Implementation** - Full CRUD operations
-  - [ ] `addRow(input: CreateIncomeEntryInput)` - Complete implementation with:
-    - [ ] Session validation (getServerSession)
-    - [ ] Input validation with Zod schema
-    - [ ] Fiscal year Integration (get/create Income record)
-    - [ ] Date range validation (within fiscal year)
-    - [ ] Amount validation (positive, max 2 decimals)
-    - [ ] Source validation (valid enum value)
-    - [ ] Success/error response structure
-  - [ ] `editRow(entryId, input: UpdateIncomeEntryInput)` - Complete implementation with:
-    - [ ] Entry existence validation
-    - [ ] User ownership verification
-    - [ ] Input validation with Zod schema
-    - [ ] Service integration
-    - [ ] Success/error response structure
-  - [ ] `deleteRow(entryId)` - Complete implementation with:
-    - [ ] Entry existence validation
-    - [ ] User ownership verification
-    - [ ] Proper confirmation handling
-    - [ ] Cascade considerations (no children to worry about)
-    - [ ] Success/error response structure
-  - [ ] **Files:** `src/app/(authorized)/cashflow/income/actions.ts`
-- [ ] **Zod Validation Schemas** - Type-safe validation
-  - [ ] `CreateIncomeEntrySchema` - Validation for new entries
-  - [ ] `UpdateIncomeEntrySchema` - Validation for edits
-  - [ ] Input types inferred from schemas
-  - [ ] **Files:** `src/app/(authorized)/cashflow/income/_schema.ts`
+- [x] **Server Actions Implementation** - Full CRUD operations
+  - [x] `addRow(input: CreateIncomeEntryInput)` - Complete implementation with:
+    - [x] Session validation (getServerSession)
+    - [x] Input validation with CreateIncomeEntrySchema
+    - [x] Fiscal year Integration (get/create Income record via createIncomeYearHandler)
+    - [x] Amount validation (positive, max 2 decimals via Zod schema)
+    - [x] Source validation (valid enum value via Zod schema)
+    - [x] Success/error response structure
+    - [x] Path revalidation after mutation
+  - [x] `editRow(input: UpdateIncomeEntryInput)` - Complete implementation with:
+    - [x] Session validation
+    - [x] Input validation with UpdateIncomeEntrySchema
+    - [x] Service integration (updateIncomeEntry)
+    - [x] Success/error response structure
+    - [x] Path revalidation after mutation
+  - [x] `deleteRow(input: DeleteIncomeEntryInput)` - Complete implementation with:
+    - [x] Session validation
+    - [x] Input validation with DeleteIncomeEntrySchema
+    - [x] Service integration (deleteIncomeEntry)
+    - [x] Success/error response structure
+    - [x] Path revalidation after mutation
+  - [x] **Files:** `src/app/(authorized)/cashflow/income/actions.ts`
+- [x] **Zod Validation Schemas** - Type-safe validation
+  - [x] `CreateIncomeEntrySchema` - Validation for new entries (date, amount, source)
+  - [x] `UpdateIncomeEntrySchema` - Validation for edits
+  - [x] `DeleteIncomeEntrySchema` - Validation for deletes
+  - [x] Input types inferred from schemas
+  - [x] **Files:** `src/app/(authorized)/cashflow/income/_schema.ts`
 
 **Key Validations:**
 
