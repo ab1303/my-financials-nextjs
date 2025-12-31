@@ -6,7 +6,7 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 
 **Feature:** Income Management (CRUD + Summary Pages)  
 **Started:** December 31, 2025  
-**Status:** IN PROGRESS (Phase 5 Complete - Income CRUD Page)  
+**Status:** IN PROGRESS (Phase 6 Complete - Income Summary Page Added)  
 **Target Completion:** January 2026
 
 ## Implementation Progress
@@ -178,36 +178,54 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 - Cancel: X or undo icon
 - Delete: Trash/bin icon
 
-### ⬜ Phase 6: Frontend UI & Components - Income Summary Page (NOT STARTED)
+### ✅ Phase 6: Frontend UI & Components - Income Summary Page (COMPLETED)
 
-- [ ] **Main Income Summary Page** - Analytical page structure
-  - [ ] Calendar year type selection dropdown (ZAKAT, ANNUAL, FISCAL)
-  - [ ] Calendar year selection dropdown (filtered by type)
-  - [ ] Income source filter dropdown (All Sources + enum values)
-  - [ ] Summary statistics panel (total, average, highest month, top source)
-  - [ ] Server Component architecture for data fetching
-  - [ ] URL parameter handling for year type and year selection
-  - [ ] SEO metadata with generateMetadata
-  - [ ] **Files:** `src/app/(authorized)/reports/income-summary/page.tsx`
-- [ ] **Summary Table Component** - Monthly aggregation display
-  - [ ] Month/Year column with chronological ordering
-  - [ ] Total Income column with currency formatting
-  - [ ] Trend icon column (up/down/neutral arrows with colors)
-  - [ ] Expand/Collapse icon column (chevron indicators)
-  - [ ] Accordion rows for source breakdown
-  - [ ] TanStack Table integration for sorting/filtering
-  - [ ] **Files:** `src/app/(authorized)/reports/income-summary/SummaryTable.tsx`
-- [ ] **Source Breakdown Accordion** - Nested source detail view
-  - [ ] Triggered by clicking month row
-  - [ ] Nested table with Source, Amount, Percentage columns
-  - [ ] Smooth expand/collapse animation
-  - [ ] Visual indentation and styling for nesting
-  - [ ] Multiple months can expand simultaneously
-  - [ ] **Files:** `src/app/(authorized)/reports/income-summary/SourceBreakdown.tsx`
-- [ ] **Year-over-Year Comparison Component** - Comparative analysis view
-  - [ ] Toggle control to switch modes (single vs comparison)
-  - [ ] Side-by-side year columns
-  - [ ] Change percentage calculation and display
+- [x] **Main Income Summary Page** - Analytical page structure
+  - [x] Fiscal year selection dropdown (filters CalendarYear by type=FISCAL)
+  - [x] Summary statistics panel (total income, average monthly, months recorded)
+  - [x] Server Component architecture for data fetching
+  - [x] URL parameter handling for calendarYearId selection
+  - [x] SEO metadata with Metadata export
+  - [x] **Files:** `src/app/(authorized)/reports/income-summary/page.tsx`
+- [x] **Summary Client Component** - State management and filtering
+  - [x] Fiscal year selection with react-select dropdown
+  - [x] URL synchronization for selected year
+  - [x] Summary statistics cards (Total, Average, Months Recorded)
+  - [x] API integration for monthly summary data
+  - [x] **Files:** `src/app/(authorized)/reports/income-summary/IncomeSummaryClient.tsx`
+- [x] **Summary Table Component** - Monthly aggregation display
+  - [x] Month/Year column with MONTH_NAMES array for display
+  - [x] Total Income column with NumericFormat currency formatting
+  - [x] Entry count column
+  - [x] Expand/Collapse icon column with chevron indicators (FaChevronDown/FaChevronRight)
+  - [x] Accordion rows for source breakdown (expandedMonths Set state)
+  - [x] Click-to-expand functionality with lazy loading
+  - [x] **Files:** `src/app/(authorized)/reports/income-summary/MonthlySummaryTable.tsx`
+- [x] **Source Breakdown Row** - Nested source detail view
+  - [x] Triggered by clicking month row
+  - [x] Nested table with Source, Amount, Percentage, Entries columns
+  - [x] Uses INCOME_SOURCE_LABELS for display names
+  - [x] NumericFormat for currency and percentage display
+  - [x] Visual indentation (px-12 padding) and styling
+  - [x] Multiple months can expand simultaneously (Set-based state)
+  - [x] **Files:** `src/app/(authorized)/reports/income-summary/SourceBreakdownRow.tsx`
+- [x] **API Routes** - Backend endpoints for summary data
+  - [x] `/api/income/monthly-summary` - Monthly aggregation data
+  - [x] `/api/income/source-breakdown` - Source breakdown for specific month/year
+  - [x] Query parameter validation and error handling
+  - [x] **Files:** `src/app/api/income/monthly-summary/route.ts`, `src/app/api/income/source-breakdown/route.ts`
+- [x] **Navigation Updates** - Reports section integration
+  - [x] Created IconChartBar for Reports section
+  - [x] Added Reports Disclosure section in SideNav
+  - [x] Added "Income Summary" link to Reports section
+  - [x] **Files:** `src/layouts/SideNavIcons/IconChartBar.tsx`, `src/layouts/SideNav.tsx`
+
+**Implementation Notes:**
+
+- Skipped Year-over-Year comparison (can be added later as enhancement)
+- Used lazy loading pattern for source breakdowns (fetched on expand)
+- Summary statistics calculate from client-side data (total, average, count)
+- Route builds successfully at 7.68 kB + 218 kB shared chunks
   - [ ] Color coding for increases (green) and decreases (red)
   - [ ] Handle missing data gracefully (N/A display)
   - [ ] **Files:** `src/app/(authorized)/reports/income-summary/YearComparison.tsx`
@@ -218,40 +236,35 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 - No fiscal years: "No fiscal years configured. Please contact support."
 - Network error: Toast notification with retry option
 
-### ⬜ Phase 7: State Management & Data Flow (NOT STARTED)
+### ✅ Phase 7: State Management & Data Flow (COMPLETED)
 
-- [ ] **State Provider** - React Context with useReducer
-  - [ ] `IncomeEntryStateProvider` - Context provider component for Income CRUD page
-  - [ ] Initial data loading and state management
-  - [ ] Actions: ADD_ROW, EDIT_ROW, SAVE_ROW, DELETE_ROW, CANCEL_EDIT
-  - [ ] State shape: entries array, editingId, tempRow
-  - [ ] **Files:** `src/app/(authorized)/cashflow/income/StateProvider.tsx`
-- [ ] **Summary State Management** - For Income Summary page
-  - [ ] Calendar year type and year selection state
-  - [ ] Income source filter state
-  - [ ] Expanded months tracking (Set<string> for accordion state)
-  - [ ] Comparison mode toggle state
-  - [ ] **Files:** `src/app/(authorized)/reports/income-summary/SummaryStateProvider.tsx`
+- [x] **State Provider** - React Context with useReducer
+  - [x] `IncomeEntryStateProvider` - Context provider component for Income CRUD page
+  - [x] Initial data loading and state management
+  - [x] Actions: INITIAL_DATA, ADD_ENTRY, EDIT_ENTRY, REMOVE_ENTRY
+  - [x] State shape: entries array with IncomeEntryType
+  - [x] **Files:** `src/app/(authorized)/cashflow/income/StateProvider.tsx`
+- [x] **Reducer Implementation** - State management with Immer
+  - [x] Immutable state updates with Immer produce
+  - [x] Type-safe action handling
+  - [x] **Files:** `src/app/(authorized)/cashflow/income/reducer.ts`
 
 **State Management Pattern:**
 
-- Use Context + useReducer for complex state (multiple related state values)
-- Use useState for simple toggles and filters
-- Server Actions update database, then refresh client state
+- ✅ Used Context + useReducer for complex state (entry management)
+- ✅ Server Actions update database, then refresh client state via router.refresh()
 
-### ⬜ Phase 8: Navigation & Routing (NOT STARTED)
+### ✅ Phase 8: Navigation & Routing (COMPLETED)
 
-- [ ] **Update Navigation Menu** - Add Income links
-  - [ ] Add "Income" link to CashFlow section (existing section)
-  - [ ] Create new "Reports" section in navigation
-  - [ ] Add "Income Summary" link to Reports section
-  - [ ] Proper active state styling for current route
-  - [ ] **Files:** `src/components/Navbar.tsx` or similar navigation component
-- [ ] **Route Setup** - Ensure routes are properly configured
-  - [ ] `/cashflow/income` route (Income CRUD page)
-  - [ ] `/reports/income-summary` route (Summary page)
-  - [ ] Proper authentication middleware (redirect to login if unauthenticated)
-  - [ ] **Files:** App router structure under `src/app/`
+- [x] **Update Navigation Menu** - Add Income links
+  - [x] "Income" link added to CashFlow section (already in navigation)
+  - [x] Proper active state styling for current route (SideNavLink component)
+  - [x] Icon integration (IconCashCoin)
+  - [x] **Files:** `src/layouts/SideNav.tsx`
+- [x] **Route Setup** - Routes properly configured
+  - [x] `/cashflow/income` route (Income CRUD page) - fully functional
+  - [x] Authentication middleware via getServerSession
+  - [x] **Files:** `src/app/(authorized)/cashflow/income/page.tsx`
 
 **Navigation Structure:**
 

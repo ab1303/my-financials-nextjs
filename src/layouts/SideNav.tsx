@@ -22,6 +22,7 @@ import {
   IconCalendar,
   IconRelations,
   IconUser,
+  IconChartBar,
 } from './SideNavIcons';
 
 type SideNavProps = {
@@ -161,6 +162,29 @@ export default function SideNav({
                 className='border-b-0'
               >
                 <IconUser />
+              </SideNavLink>
+            </Disclosure.Panel>
+          </Disclosure>
+        </li>
+
+        <li>
+          <Disclosure>
+            <Disclosure.Button className={navigationStyles.disclosure.button}>
+              <IconChartBar />
+              <span className={clsx('text-lg font-bold text-gray-600')}>
+                Reports
+              </span>
+            </Disclosure.Button>
+            <Disclosure.Panel
+              as='ul'
+              className={navigationStyles.disclosure.panel}
+            >
+              <SideNavLink
+                name='Income Summary'
+                href='/reports/income-summary'
+                className='border-b-0'
+              >
+                <IconCashCoin />
               </SideNavLink>
             </Disclosure.Panel>
           </Disclosure>
