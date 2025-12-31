@@ -63,11 +63,13 @@ export const getIncome = async (
  * Get all income entries for a calendar year
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
+ * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
  * @returns Array of income entries
  */
 export const getIncomeEntries = async (
   calendarYearId: string,
   userId: string,
+  prismaClient = prisma,
 ): Promise<Array<IncomeEntryModel>> => {
   const where: Partial<Prisma.IncomeEntryWhereInput> = {
     income: {
@@ -76,7 +78,7 @@ export const getIncomeEntries = async (
     },
   };
 
-  const incomeEntries = await prisma.incomeEntry.findMany({
+  const incomeEntries = await prismaClient.incomeEntry.findMany({
     where,
     include: {
       income: true,
@@ -99,13 +101,15 @@ export const getIncomeEntries = async (
  * Add a new income entry to an Income record
  * @param incomeId - Parent Income record ID
  * @param entry - Income entry data
+ * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
  * @returns Created IncomeEntry record
  */
 export const addIncomeEntry = async (
   incomeId: string,
   entry: Omit<IncomeEntryInput, 'id' | 'incomeId'>,
+  prismaClient = prisma,
 ) => {
-  return await prisma.incomeEntry.create({
+  return await prismaClient.incomeEntry.create({
     data: {
       incomeId,
       dateEarned: entry.dateEarned,
@@ -119,16 +123,18 @@ export const addIncomeEntry = async (
  * Update an existing income entry
  * @param entryId - IncomeEntry ID to update
  * @param entry - Updated income entry data
+ * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
  */
 export const updateIncomeEntry = async (
   entryId: string,
   entry: Omit<IncomeEntryInput, 'id' | 'incomeId'>,
+  prismaClient = prisma,
 ) => {
   const where: Prisma.IncomeEntryWhereUniqueInput = {
     id: entryId,
   };
 
-  await prisma.incomeEntry.update({
+  await prismaClient.incomeEntry.update({
     where,
     data: {
       dateEarned: entry.dateEarned,
@@ -141,9 +147,13 @@ export const updateIncomeEntry = async (
 /**
  * Delete an income entry
  * @param entryId - IncomeEntry ID to delete
+ * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
  */
-export const deleteIncomeEntry = async (entryId: string) => {
-  await prisma.incomeEntry.delete({
+export const deleteIncomeEntry = async (
+  entryId: string,
+  prismaClient = prisma,
+) => {
+  await prismaClient.incomeEntry.delete({
     where: {
       id: entryId,
     },
@@ -154,13 +164,15 @@ export const deleteIncomeEntry = async (entryId: string) => {
  * Calculate total income for a calendar year
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
+ * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
  * @returns Total income amount
  */
 export const getTotalIncome = async (
   calendarYearId: string,
   userId: string,
+  prismaClient = prisma,
 ): Promise<number> => {
-  const result = await prisma.incomeEntry.aggregate({
+  const result = await prismaClient.incomeEntry.aggregate({
     where: {
       income: {
         calendarId: calendarYearId,
