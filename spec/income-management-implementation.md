@@ -6,7 +6,7 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 
 **Feature:** Income Management (CRUD + Summary Pages)  
 **Started:** December 31, 2025  
-**Status:** IN PROGRESS (Phase 2 Complete)  
+**Status:** IN PROGRESS (Phase 3 Complete)  
 **Target Completion:** January 2026
 
 ## Implementation Progress
@@ -60,22 +60,22 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 - Convert Decimal to number with `toNumber()` ?? 0 for null safety
 - Filter all queries by userId for data isolation
 
-### ⬜ Phase 3: Backend Controllers (NOT STARTED)
+### ✅ Phase 3: Backend Controllers (COMPLETED)
 
-- [ ] **Income Controllers** - Backend request handlers implementation
-  - [ ] `createIncomeYearHandler(calendarYearId, userId)` - Create/retrieve Income year records
-  - [ ] `incomeHandler(calendarYearId, userId)` - Get Income details for a fiscal year
-  - [ ] `incomeEntriesHandler(incomeId)` - Get all entries for an Income record
-  - [ ] `totalIncomeHandler(calendarYearId, userId)` - Get calculated total income
-  - [ ] `monthlyIncomeSummaryHandler(calendarYearId, userId)` - Get monthly aggregations
-  - [ ] `sourceBreakdownHandler(calendarYearId, month, year, userId)` - Get source breakdown for month
-  - [ ] **Files:** `src/server/controllers/income.controller.ts`
-- [ ] **Error Handling** - Comprehensive error responses
-  - [ ] User not found errors
-  - [ ] Calendar year not found errors
-  - [ ] Income record not found errors
-  - [ ] Validation errors with detailed messages
-  - [ ] Database operation errors
+- [x] **Income Controllers** - Backend request handlers implementation
+  - [x] `createIncomeYearHandler(calendarYearId, userId)` - Create/retrieve Income year records
+  - [x] `incomeHandler(calendarYearId, userId)` - Get Income details for a fiscal year
+  - [x] `incomeEntriesHandler(calendarYearId, userId)` - Get all entries for a calendar year
+  - [x] `totalIncomeHandler(calendarYearId, userId)` - Get calculated total income
+  - [x] `monthlyIncomeSummaryHandler(calendarYearId, userId)` - Get monthly aggregations
+  - [x] `sourceBreakdownHandler(calendarYearId, month, year, userId)` - Get source breakdown for month
+  - [x] **Files:** `src/server/controllers/income.controller.ts`
+- [x] **Error Handling** - Comprehensive error responses
+  - [x] User scoping enforced in all handlers
+  - [x] Calendar year not found errors handled
+  - [x] Income record not found errors handled
+  - [x] Database operation errors caught with handleCaughtError
+  - [x] Safe defaults returned on error (empty string, 0, undefined)
 
 **Testing:**
 
