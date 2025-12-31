@@ -6,7 +6,7 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 
 **Feature:** Income Management (CRUD + Summary Pages)  
 **Started:** December 31, 2025  
-**Status:** IN PROGRESS (Phase 1 Complete)  
+**Status:** IN PROGRESS (Phase 2 Complete)  
 **Target Completion:** January 2026
 
 ## Implementation Progress
@@ -32,26 +32,26 @@ Implementation tracking for [Income Management PRD](./income-management-prd.md)
 - CalendarYear model with FISCAL type entries must exist
 - User model with authentication setup
 
-### ⬜ Phase 2: Backend Services & Models (NOT STARTED)
+### ✅ Phase 2: Backend Services & Models (COMPLETED)
 
-- [ ] **Income Service Layer** - Create comprehensive service implementation
-  - [ ] `addIncomeCalendarYearDetails(calendarId, userId)` - Create Income records for fiscal years
-  - [ ] `getIncome(calendarYearId, userId)` - Fetch Income record by fiscal year ID with user scoping
-  - [ ] `getIncomeEntries(incomeId)` - Fetch all entries for an Income record with proper joins
-  - [ ] `addIncomeEntry(incomeId, input: IncomeEntryInput)` - Create new income entry records
-  - [ ] `updateIncomeEntry(entryId, input: IncomeEntryInput)` - Update existing entry records
-  - [ ] `deleteIncomeEntry(entryId)` - Delete entry records with validation
-  - [ ] `getTotalIncome(calendarYearId, userId)` - Calculate total income dynamically using Prisma aggregate
-  - [ ] `getMonthlyIncomeSummary(calendarYearId, userId)` - Aggregate entries by month/year with totals
-  - [ ] `getSourceBreakdown(calendarYearId, month, year, userId)` - Breakdown by source for specific month
-  - [ ] **Files:** `src/server/services/income.service.ts`
-- [ ] **Income Models** - TypeScript models definition
-  - [ ] `IncomeModel` - Main Income record structure with calendar year relation
-  - [ ] `IncomeEntryModel` - Entry record with dateEarned, amount, source, income relation
-  - [ ] `IncomeEntryInput` - Service layer input type for create/update operations
-  - [ ] `MonthlyIncomeSummary` - Type for monthly aggregation results
-  - [ ] `SourceBreakdown` - Type for source drill-down results
-  - [ ] **Files:** `src/server/models/income.ts`
+- [x] **Income Service Layer** - Create comprehensive service implementation
+  - [x] `addIncomeCalendarYearDetails(calendarId, userId)` - Create Income records for fiscal years
+  - [x] `getIncome(calendarYearId, userId)` - Fetch Income record by fiscal year ID with user scoping
+  - [x] `getIncomeEntries(calendarYearId, userId)` - Fetch all entries for calendar year with proper joins (updated signature)
+  - [x] `addIncomeEntry(incomeId, input: IncomeEntryInput)` - Create new income entry records
+  - [x] `updateIncomeEntry(entryId, input: IncomeEntryInput)` - Update existing entry records
+  - [x] `deleteIncomeEntry(entryId)` - Delete entry records with validation
+  - [x] `getTotalIncome(calendarYearId, userId)` - Calculate total income dynamically using Prisma aggregate
+  - [x] `getMonthlyIncomeSummary(calendarYearId, userId)` - Aggregate entries by month/year with totals
+  - [x] `getSourceBreakdown(calendarYearId, month, year, userId)` - Breakdown by source for specific month
+  - [x] **Files:** `src/server/services/income.service.ts`
+- [x] **Income Models** - TypeScript models definition
+  - [x] `IncomeModel` - Main Income record structure with calendar year relation
+  - [x] `IncomeEntryModel` - Entry record with dateEarned, amount, source, income relation
+  - [x] `IncomeEntryInput` - Service layer input type for create/update operations
+  - [x] `MonthlyIncomeSummary` - Type for monthly aggregation results
+  - [x] `SourceBreakdown` - Type for source drill-down results
+  - [x] **Files:** `src/server/models/income.ts`
 
 **Key Patterns:**
 
