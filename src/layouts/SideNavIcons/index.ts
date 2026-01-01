@@ -13,6 +13,7 @@ import IconHandHoldingDollar from './IconHandHoldingDollar';
 import IconCalendar from './IconCalendar';
 import IconRelations from './IconRelations';
 import IconUser from './IconUser';
+import IconChartBar from './IconChartBar';
 
 export {
   IconHamburger,
@@ -30,4 +31,5 @@ export {
   IconCalendar,
   IconRelations,
   IconUser,
+  IconChartBar,
 };

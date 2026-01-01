@@ -16,7 +16,7 @@ import { format, isValid, parse } from 'date-fns';
 import { DayPicker } from 'react-day-picker';
 import clsx from 'clsx';
 
-import { inputStyles } from '@/styles/theme';
+import { tableCellStyles } from '@/styles/theme';
 import type { ChangeEventHandler } from 'react';
 
 type DatePickerDialogProps = {
@@ -56,14 +56,14 @@ export default function DatePickerDialog({
 
   const handleInputChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     const date = parse(e.currentTarget.value, 'y-MM-dd', new Date());
-    if (isValid(date)) {
+    if (isValid(date) && date <= new Date()) {
       onDateChange(date);
     }
   };
 
   const handleDaySelect = (date: Date) => {
-    onDateChange(date);
-    if (date) {
+    if (date && date <= new Date()) {
+      onDateChange(date);
       setIsOpen(false);
     }
   };
@@ -90,10 +90,11 @@ export default function DatePickerDialog({
         <input
           size={12}
           type='text'
-          className={inputStyles.withIcon}
+          className={tableCellStyles.input.date}
           placeholder={format(new Date(), 'y-MM-dd')}
           value={format(selectedDate, 'y-MM-dd')}
           onChange={handleInputChange}
+          max={format(new Date(), 'y-MM-dd')}
         />
       </div>
       {isOpen &&
@@ -114,6 +115,7 @@ export default function DatePickerDialog({
                   defaultMonth={selectedDate}
                   selected={selectedDate}
                   onSelect={(_, selectedDay) => handleDaySelect(selectedDay)}
+                  disabled={(date) => date > new Date()}
                   classNames={{
                     months:
                       'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
@@ -136,7 +138,7 @@ export default function DatePickerDialog({
                       'bg-teal-600 text-white hover:bg-teal-600 hover:text-white focus:bg-teal-600 focus:text-white',
                     day_today: 'bg-gray-100 text-gray-900',
                     day_outside: 'text-gray-400 opacity-50',
-                    day_disabled: 'text-gray-400 opacity-50',
+                    day_disabled: 'text-gray-400 opacity-50 cursor-not-allowed',
                     day_hidden: 'invisible',
                   }}
                 />

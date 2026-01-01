@@ -18,6 +18,20 @@ export const getBusinessDetails = async (
   })) as Array<Business>;
 };
 
+export const getBusinessDetailsByType = async (
+  userId: string,
+  type?: string,
+) => {
+  const whereCondition: Prisma.BusinessWhereInput = {
+    userId,
+    ...(type && { type: type as any }),
+  };
+
+  return (await prisma.business.findMany({
+    where: whereCondition,
+  })) as Array<Business>;
+};
+
 export const deleteBusinessDetails = async (id: string) => {
   return await prisma.business.delete({
     where: { id },

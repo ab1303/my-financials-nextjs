@@ -1,5 +1,9 @@
 import { prisma } from '../utils/prisma';
-import type { ZakatModel, ZakatPaymentModel } from '../models/zakat';
+import type {
+  ZakatModel,
+  ZakatPaymentModel,
+  ZakatPaymentInput,
+} from '../models/zakat';
 import type { Prisma } from '@prisma/client';
 
 export const addZakatCalendarYearDetails = async ({
@@ -34,7 +38,7 @@ export const getZakat = async (calendarYearId: string): Promise<ZakatModel> => {
 };
 
 export const getZakatPayments = async (
-  calendarYearId: string
+  calendarYearId: string,
 ): Promise<Array<ZakatPaymentModel>> => {
   const where: Partial<Prisma.ZakatPaymentWhereInput> = {
     Zakat: {
@@ -46,6 +50,7 @@ export const getZakatPayments = async (
     where,
     include: {
       business: true,
+      individual: true,
       Zakat: true,
     },
   });
@@ -55,17 +60,16 @@ export const getZakatPayments = async (
     datePaid: zp.datePaid,
     amount: zp.amount.toNumber(),
     businessId: zp.businessId,
+    individualId: zp.individualId,
     zakatId: zp.zakatId,
     beneficiaryType: zp.beneficiaryType,
   }));
 };
 
 export const updateZakatPayment = async (
-  model: ZakatPaymentModel,
-  zakatPaymentId: string
+  model: ZakatPaymentInput,
+  zakatPaymentId: string,
 ) => {
-  const { datePaid, amount, beneficiaryType, businessId } = model;
-
   const where: Prisma.ZakatPaymentWhereUniqueInput = {
     id: zakatPaymentId,
   };
@@ -73,10 +77,39 @@ export const updateZakatPayment = async (
   await prisma.zakatPayment.update({
     where,
     data: {
-      datePaid,
-      amount,
-      beneficiaryType,
-      businessId,
+      datePaid: model.datePaid,
+      amount: model.amount,
+      beneficiaryType: model.beneficiaryType,
+      businessId:
+        model.beneficiaryType === 'BUSINESS' ? model.beneficiaryId : null,
+      individualId:
+        model.beneficiaryType === 'INDIVIDUAL' ? model.beneficiaryId : null,
+    },
+  });
+};
+
+export const addZakatPaymentDetail = async (
+  zakatId: string,
+  payment: Omit<ZakatPaymentInput, 'id' | 'zakatId'>,
+) => {
+  return await prisma.zakatPayment.create({
+    data: {
+      zakatId,
+      datePaid: payment.datePaid,
+      amount: payment.amount,
+      beneficiaryType: payment.beneficiaryType,
+      businessId:
+        payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
+      individualId:
+        payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
+    },
+  });
+};
+
+export const deleteZakatPayment = async (zakatPaymentId: string) => {
+  await prisma.zakatPayment.delete({
+    where: {
+      id: zakatPaymentId,
     },
   });
 };

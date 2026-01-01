@@ -103,7 +103,7 @@ export default async function CalendarYearPage() {
   const calendarYearsData = await getCalendarYearsHandler();
 
   return (
-    <>
+    <div className='max-w-6xl mx-auto mt-8'>
       <Card.Header>
         <div className='flex justify-between mt-4 text-left'>
           <Card.Header.Title>Calendar Year(s)</Card.Header.Title>
@@ -118,6 +118,6 @@ export default async function CalendarYearPage() {
           />
         </Suspense>
       </div>
-    </>
+    </div>
   );
 }

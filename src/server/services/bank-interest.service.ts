@@ -139,9 +139,15 @@ const createYearlyBankInterestDetails = async (
   const calendarYear = await prisma.calendarYear.findUniqueOrThrow({
     where: {
       id: calendarYearId,
-      type: 'ANNUAL',
     },
   });
+
+  // Validate calendar year is ANNUAL type
+  if (calendarYear.type !== 'ANNUAL') {
+    throw new Error(
+      `Calendar year ${calendarYearId} must be of type ANNUAL, but found ${calendarYear.type}`,
+    );
+  }
 
   for (let i = 1; i <= 12; ++i) {
     newBankInterestDetails.push({

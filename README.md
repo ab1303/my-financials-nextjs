@@ -28,6 +28,48 @@ We also [roll our own docs](https://beta.create.t3.gg) with some summary informa
 - React Toastify for notifications (react-toastify)
 - React Select for select inputs (react-select)
 - React Icons for iconography (react-icons)
+- TanStack Table for interactive data tables (@tanstack/react-table)
+- Zod for schema validation (zod)
+
+## Features
+
+### Income Management (NEW - December 2025)
+
+Track and analyze your income with comprehensive CRUD operations and analytical reporting.
+
+**Income Tracking (`/cashflow/income`):**
+
+- Record income entries by date, amount, and source
+- Support for multiple income sources: Employment, Stocks, Bonds, Rental, Business, Freelance, Other
+- Fiscal year-based organization
+- Inline editing with TanStack Table
+- Real-time total income calculation
+- User-scoped data with authentication
+
+**Income Summary (`/reports/income-summary`):**
+
+- Monthly income aggregations with totals
+- Source breakdown analysis with percentages
+- Expandable accordion view for detailed drill-down
+- Summary statistics (total income, average monthly, months recorded)
+- Fiscal year filtering
+
+**Technical Implementation:**
+
+- Two-tier database structure (Income → IncomeEntry)
+- Server-side validation with Zod schemas
+- User ownership verification at controller level
+- Toast notifications for all user actions
+- Context + useReducer state management
+- Server Actions for CRUD operations
+
+### Other Features
+
+- **Zakat Management** - Calculate and track zakat payments
+- **Donations Tracking** - Record charitable donations
+- **Bank Interest Management** - Track interest earned
+- **Business & Individual Relations** - Manage entities
+- **Calendar Year Management** - Configure fiscal years
 
 ## Versions
 

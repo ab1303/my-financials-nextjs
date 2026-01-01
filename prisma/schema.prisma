@@ -68,6 +68,8 @@ model User {
   Individual   Individual[]
   Business     Business[]
   Relationship Relationship[]
+  Income       Income[]
+  Expense      Expense[]
 }
 
 model VerificationToken {
@@ -86,6 +88,16 @@ enum BusinessEnumType {
 enum BeneficiaryEnumType {
   INDIVIDUAL
   BUSINESS
+}
+
+enum IncomeSourceEnumType {
+  EMPLOYMENT
+  STOCKS
+  BONDS
+  RENTAL
+  BUSINESS
+  FREELANCE
+  OTHER
 }
 
 // Relationship lookup table (user-scoped)
@@ -119,10 +131,12 @@ model Individual {
   // Address format - "AU" uses structured fields above, "GLOBAL" stores full address in addressLine
   addressFormat String? @default("AU") // "AU" or "GLOBAL" to indicate which format was used
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ZakatPayment    ZakatPayment[]
+  DonationPayment DonationPayment[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@unique([name, userId]) // Unique individual name per user (case-sensitive, but we'll handle case-insensitive in code)
 }
@@ -130,19 +144,20 @@ model Individual {
 // Business
 
 model Business {
-  id             String            @id @default(cuid())
-  name           String
-  addressLine    String?
-  streetAddress  String?
-  suburb         String?
-  postcode       Int?
-  state          String?
-  type           BusinessEnumType?
-  PaymentHistory Payment[]
-  BankInterest   BankInterest[]
-  ZakatPayment   ZakatPayment[]
-  userId         String
-  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String            @id @default(cuid())
+  name            String
+  addressLine     String?
+  streetAddress   String?
+  suburb          String?
+  postcode        Int?
+  state           String?
+  type            BusinessEnumType?
+  PaymentHistory  Payment[]
+  BankInterest    BankInterest[]
+  ZakatPayment    ZakatPayment[]
+  DonationPayment DonationPayment[]
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Payment {
@@ -183,8 +198,95 @@ model ZakatPayment {
   beneficiaryType BeneficiaryEnumType
   business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
+  individual      Individual?         @relation(fields: [individualId], references: [id])
+  individualId    String?
   Zakat           Zakat               @relation(fields: [zakatId], references: [id])
   zakatId         String
+}
+
+// Donations
+model Donation {
+  id         String            @id @default(cuid())
+  calendar   CalendarYear      @relation(fields: [calendarId], references: [id])
+  calendarId String            @unique
+  payments   DonationPayment[]
+}
+
+model DonationPayment {
+  id              String              @id @default(cuid())
+  datePaid        DateTime
+  amount          Decimal             @db.Money
+  beneficiaryType BeneficiaryEnumType
+  taxCategory     String // Tax category for donation classification
+  business        Business?           @relation(fields: [businessId], references: [id])
+  businessId      String?
+  individual      Individual?         @relation(fields: [individualId], references: [id])
+  individualId    String?
+  donation        Donation            @relation(fields: [donationId], references: [id])
+  donationId      String
+}
+
+// Income
+model Income {
+  id         String        @id @default(cuid())
+  calendar   CalendarYear  @relation(fields: [calendarId], references: [id])
+  calendarId String
+  userId     String
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries    IncomeEntry[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([calendarId, userId])
+}
+
+model IncomeEntry {
+  id         String               @id @default(cuid())
+  dateEarned DateTime
+  amount     Decimal              @db.Money
+  source     IncomeSourceEnumType
+  income     Income               @relation(fields: [incomeId], references: [id], onDelete: Cascade)
+  incomeId   String
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  @@index([incomeId, dateEarned])
+}
+
+// Expenses
+model ExpenseCategory {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  entries   ExpenseEntry[]
+}
+
+model Expense {
+  id         String         @id @default(cuid())
+  calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
+  calendarId String
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries    ExpenseEntry[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([calendarId, userId])
+}
+
+model ExpenseEntry {
+  id         String          @id @default(cuid())
+  month      Int // 1-12 (January = 1, December = 12)
+  amount     Decimal         @db.Money
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+  categoryId String
+  expense    Expense         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expenseId  String
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([expenseId, month])
 }
 
 // Calendar Year
@@ -205,4 +307,7 @@ model CalendarYear {
   type         CalendarEnumType?
   Zakat        Zakat[]
   BankInterest BankInterest[]
+  Income       Income[]
+  Expense      Expense[]
+  Donation     Donation[]
 }

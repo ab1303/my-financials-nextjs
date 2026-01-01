@@ -3,6 +3,7 @@ import { useState, useEffect, useId } from 'react';
 import Select from 'react-select';
 
 import DatePickerDialog from '../DatePickerDialog';
+import { tableCellStyles } from '@/styles/theme';
 import type { CellContext, RowData } from '@tanstack/react-table';
 import type { ReactNode } from 'react';
 
@@ -50,7 +51,7 @@ export const TableCell = <TData, TValue>({
   const updateRecord = (
     editedRecord: TData,
     propName: keyof TData,
-    value: TValue
+    value: TValue,
   ) => {
     const updatedRecord: TData = {
       ...editedRecord,
@@ -60,7 +61,7 @@ export const TableCell = <TData, TValue>({
     tableMeta?.setEditedRows(
       produce((draft) => {
         draft.set(row.index, castDraft(updatedRecord));
-      })
+      }),
     );
   };
 
@@ -73,24 +74,46 @@ export const TableCell = <TData, TValue>({
       SELECT: () => {
         // const selectValue = value as PropsValue<OptionType> | undefined;
         const selectValue = columnMeta?.selectOptions?.find(
-          (o) => o.id === editedRecord[columnMeta.propName]
+          (o) => o.id === editedRecord[columnMeta.propName],
         );
         return (
-          <Select
-            isClearable
-            instanceId={uniqSelectId}
-            value={selectValue}
-            options={columnMeta.selectOptions || []}
-            getOptionValue={(option: OptionType) => option.id}
-            onChange={(option) => {
-              if (option)
-                updateRecord(
-                  editedRecord,
-                  columnMeta.propName,
-                  option.id as TValue
-                );
-            }}
-          />
+          <div className={tableCellStyles.select.container}>
+            <Select
+              isClearable
+              instanceId={uniqSelectId}
+              value={selectValue}
+              options={columnMeta.selectOptions || []}
+              getOptionValue={(option: OptionType) => option.id}
+              menuPortalTarget={document.body}
+              className={tableCellStyles.select.base}
+              classNamePrefix='react-select'
+              styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                control: (base, state) => ({
+                  ...base,
+                  minHeight: '32px',
+                  fontSize: '0.875rem',
+                  borderColor: state.isFocused ? '#14b8a6' : '#d1d5db',
+                  boxShadow: state.isFocused ? '0 0 0 1px #14b8a6' : 'none',
+                  '&:hover': {
+                    borderColor: '#14b8a6',
+                  },
+                }),
+                menu: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+              }}
+              onChange={(option) => {
+                if (option)
+                  updateRecord(
+                    editedRecord,
+                    columnMeta.propName,
+                    option.id as TValue,
+                  );
+              }}
+            />
+          </div>
         );
       },
       DATE: () => (
@@ -103,6 +126,7 @@ export const TableCell = <TData, TValue>({
       ),
       AMOUNT: () => (
         <NumericFormat
+          className={tableCellStyles.input.amount}
           itemRef=''
           prefix='$'
           displayType='input'
@@ -112,7 +136,7 @@ export const TableCell = <TData, TValue>({
             updateRecord(
               editedRecord,
               columnMeta.propName,
-              (values.floatValue || 0) as TValue
+              (values.floatValue || 0) as TValue,
             )
           }
         />

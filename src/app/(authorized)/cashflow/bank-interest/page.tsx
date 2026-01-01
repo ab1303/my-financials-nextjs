@@ -32,7 +32,7 @@ export default async function BanksPage({
 
   const allYearlyData = await getCalendarYearsHandler();
   const yearlyData = allYearlyData.filter(
-    (yd: { type: CalendarEnumType | null }) => yd.type === 'ANNUAL'
+    (yd: { type: CalendarEnumType | null }) => yd.type === 'ANNUAL',
   );
 
   const banks = await httpServer.bank.getAllBanks.query();
@@ -43,15 +43,15 @@ export default async function BanksPage({
       }))
     : [];
 
-  const yearParam = +getSelectedParam(params?.year);
+  const yearParamLabel = getSelectedParam(params?.year);
 
   const selectedBank = bankOptions.find(
-    (b) => b.label === getSelectedParam(params?.bank)
+    (b) => b.label === getSelectedParam(params?.bank),
   );
   const selectedBankId = selectedBank ? selectedBank.id : '';
 
   const selectedCalendarYear = yearlyData.find(
-    (yd) => yd.fromYear === yearParam && yd.toYear === yearParam
+    (yd) => yd.description === yearParamLabel,
   );
   const selectedCalendarYearId = selectedCalendarYear
     ? selectedCalendarYear.id
@@ -75,14 +75,22 @@ export default async function BanksPage({
           yearIdParam={selectedCalendarYearId}
         >
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
-            <div className='font-mono text-gray-500 mb-3'>
-              {selectedBank?.label} Interest
-            </div>
+            {selectedBankId && selectedCalendarYearId ? (
+              <>
+                <div className='font-mono text-gray-500 mb-3'>
+                  {selectedBank?.label} Interest
+                </div>
 
-            <BankInterestTableServer
-              bankId={selectedBankId}
-              calendarYearId={selectedCalendarYearId}
-            />
+                <BankInterestTableServer
+                  bankId={selectedBankId}
+                  calendarYearId={selectedCalendarYearId}
+                />
+              </>
+            ) : (
+              <p className='text-gray-500 text-sm'>
+                Please select a bank and year to view interest details.
+              </p>
+            )}
           </Suspense>
         </BankInterestForm>
       </div>
