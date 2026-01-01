@@ -69,6 +69,7 @@ model User {
   Business     Business[]
   Relationship Relationship[]
   Income       Income[]
+  Expense      Expense[]
 }
 
 model VerificationToken {
@@ -252,6 +253,42 @@ model IncomeEntry {
   @@index([incomeId, dateEarned])
 }
 
+// Expenses
+model ExpenseCategory {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  entries   ExpenseEntry[]
+}
+
+model Expense {
+  id         String         @id @default(cuid())
+  calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
+  calendarId String
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries    ExpenseEntry[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([calendarId, userId])
+}
+
+model ExpenseEntry {
+  id         String          @id @default(cuid())
+  month      Int // 1-12 (January = 1, December = 12)
+  amount     Decimal         @db.Money
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+  categoryId String
+  expense    Expense         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expenseId  String
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([expenseId, month])
+}
+
 // Calendar Year
 
 enum CalendarEnumType {
@@ -271,5 +308,6 @@ model CalendarYear {
   Zakat        Zakat[]
   BankInterest BankInterest[]
   Income       Income[]
+  Expense      Expense[]
   Donation     Donation[]
 }
