@@ -23,6 +23,7 @@ import {
   IconRelations,
   IconUser,
   IconChartBar,
+  IconExpense,
 } from './SideNavIcons';
 
 type SideNavProps = {
@@ -107,6 +108,13 @@ export default function SideNav({
                 className='border-b-0'
               >
                 <IconGift />
+              </SideNavLink>
+              <SideNavLink
+                name='Expenses'
+                href='/cashflow/expense'
+                className='border-b-0'
+              >
+                <IconExpense />
               </SideNavLink>
               <SideNavLink
                 name='Bank Interest'

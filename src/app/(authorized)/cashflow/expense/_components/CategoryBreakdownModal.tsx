@@ -11,10 +11,12 @@ import { Modal, Label } from '@/components/ui';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import { inputStyles, buttonStyles } from '@/styles/theme';
 import {
-  getMonthBreakdownHandler,
-  expenseCategoriesHandler,
-} from '@/server/controllers/expense.controller';
-import { addRow, editRow, deleteRow } from '../actions';
+  addRow,
+  editRow,
+  deleteRow,
+  getExpenseCategories,
+  getMonthEntries,
+} from '../actions';
 
 import {
   ExpenseEntryStateProvider,
@@ -65,9 +67,9 @@ function CategoryBreakdownContent({
   // Load categories on mount
   useEffect(() => {
     const loadCategories = async () => {
-      const cats = await expenseCategoriesHandler();
-      if (cats) {
-        setCategories(cats);
+      const result = await getExpenseCategories();
+      if (result.success && result.data) {
+        setCategories(result.data);
       }
     };
     loadCategories();
@@ -418,12 +420,8 @@ export default function CategoryBreakdownModal(
   useEffect(() => {
     const loadEntries = async () => {
       setIsLoading(true);
-      const data = await getMonthBreakdownHandler(
-        props.calendarYearId,
-        '', // userId will be fetched from session in handler
-        props.month,
-      );
-      setEntries(data || []);
+      const result = await getMonthEntries(props.calendarYearId, props.month);
+      setEntries(result.data || []);
       setIsLoading(false);
     };
 
