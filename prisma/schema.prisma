@@ -61,15 +61,17 @@ model User {
   password      String
   role          RoleEnumType? @default(user)
 
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  accounts     Account[]
-  sessions     Session[]
-  Individual   Individual[]
-  Business     Business[]
-  Relationship Relationship[]
-  Income       Income[]
-  Expense      Expense[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  accounts          Account[]
+  sessions          Session[]
+  Individual        Individual[]
+  Business          Business[]
+  Relationship      Relationship[]
+  Income            Income[]
+  Expense           Expense[]
+  BankAccount       BankAccount[]
+  BankAssetSnapshot BankAssetSnapshot[]
 }
 
 model VerificationToken {
@@ -156,6 +158,7 @@ model Business {
   BankInterest    BankInterest[]
   ZakatPayment    ZakatPayment[]
   DonationPayment DonationPayment[]
+  BankAccount     BankAccount[]
   userId          String
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -310,4 +313,50 @@ model CalendarYear {
   Income       Income[]
   Expense      Expense[]
   Donation     Donation[]
+}
+
+// Bank Assets - Cash Tracking
+
+// Bank Account (user's individual accounts within a bank)
+model BankAccount {
+  id        String           @id @default(cuid())
+  name      String // e.g., "Savings", "Term Deposit", "Everyday"
+  bankId    String // Reference to Business (type=BANK)
+  bank      Business         @relation(fields: [bankId], references: [id])
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries   BankAssetEntry[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([name, bankId, userId]) // Unique account name per bank per user
+  @@index([userId, bankId])
+}
+
+// Snapshot header (one per snapshot date)
+model BankAssetSnapshot {
+  id           String           @id @default(cuid())
+  snapshotDate DateTime
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries      BankAssetEntry[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([userId, snapshotDate])
+}
+
+// Individual account balance entries within a snapshot
+model BankAssetEntry {
+  id         String            @id @default(cuid())
+  balance    Decimal           @db.Money
+  accountId  String
+  account    BankAccount       @relation(fields: [accountId], references: [id])
+  snapshotId String
+  snapshot   BankAssetSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([accountId, snapshotId]) // One entry per account per snapshot
+  @@index([snapshotId])
 }
