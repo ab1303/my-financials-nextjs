@@ -3,9 +3,11 @@ import { prisma } from '../utils/prisma';
 
 // Bank Account Service
 
-export const createBankAccount = async (
-  input: Prisma.BankAccountUncheckedCreateInput,
-) => {
+export const createBankAccount = async (input: {
+  name: string;
+  bankId: string;
+  userId: string;
+}) => {
   return await prisma.bankAccount.create({
     data: input,
     include: {
