@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'react-toastify';
+import CreatableSelect from 'react-select/creatable';
 
 import { trpc } from '@/server/trpc/client';
 import { Modal } from '@/components/ui/Modal';
@@ -17,6 +18,12 @@ type NewSnapshotModalProps = {
   onSuccess: () => void;
 };
 
+type EntryType = {
+  bankId: string;
+  accountId: string;
+  balance: number;
+};
+
 export default function NewSnapshotModal({
   isOpen,
   onClose,
@@ -27,17 +34,28 @@ export default function NewSnapshotModal({
     const today = new Date().toISOString().split('T')[0];
     return today || new Date().toISOString().substring(0, 10);
   });
-  const [entries, setEntries] = useState<
-    Array<{ accountId: string; balance: number }>
-  >([]);
+  const [entries, setEntries] = useState<EntryType[]>([]);
 
   // Fetch banks (type=BANK)
-  const { data: banks } = trpc.business.getBusinessesByType.useQuery({
+  const { data: banks = [] } = trpc.business.getBusinessesByType.useQuery({
     type: 'BANK',
   });
 
   // Fetch all user's bank accounts
-  const { data: userAccounts } = trpc.bankAsset.getBankAccounts.useQuery({});
+  const { data: userAccounts = [] } = trpc.bankAsset.getBankAccounts.useQuery(
+    {},
+  );
+
+  // Create bank account mutation
+  const createAccountMutation = trpc.bankAsset.createBankAccount.useMutation({
+    onSuccess: () => {
+      // Refetch accounts after creating new account
+      trpc.useUtils().bankAsset.getBankAccounts.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create account');
+    },
+  });
 
   // Create snapshot mutation
   const createSnapshotMutation = trpc.bankAsset.createSnapshot.useMutation({
@@ -54,6 +72,7 @@ export default function NewSnapshotModal({
   useEffect(() => {
     if (mostRecentSnapshot?.entries && entries.length === 0) {
       const snapshotEntries = mostRecentSnapshot.entries.map((entry: any) => ({
+        bankId: entry.account.bankId,
         accountId: entry.account.id,
         balance: Number(entry.balance),
       }));
@@ -69,14 +88,24 @@ export default function NewSnapshotModal({
       return;
     }
 
+    // Validate all entries have bankId and accountId
+    const validEntries = entries.every((e) => e.bankId && e.accountId);
+    if (!validEntries) {
+      toast.error('Please select a bank and account for all entries');
+      return;
+    }
+
     createSnapshotMutation.mutate({
       snapshotDate: new Date(snapshotDate),
-      entries,
+      entries: entries.map((e) => ({
+        accountId: e.accountId,
+        balance: e.balance,
+      })),
     });
   };
 
   const handleAddEntry = () => {
-    setEntries([...entries, { accountId: '', balance: 0 }]);
+    setEntries([...entries, { bankId: '', accountId: '', balance: 0 }]);
   };
 
   const handleRemoveEntry = (index: number) => {
@@ -85,16 +114,45 @@ export default function NewSnapshotModal({
 
   const handleEntryChange = (
     index: number,
-    field: 'accountId' | 'balance',
+    field: 'bankId' | 'accountId' | 'balance',
     value: string | number,
   ) => {
     const newEntries = [...entries];
-    if (field === 'accountId') {
+    if (field === 'bankId') {
+      newEntries[index]!.bankId = value as string;
+      // Reset account when bank changes
+      newEntries[index]!.accountId = '';
+    } else if (field === 'accountId') {
       newEntries[index]!.accountId = value as string;
     } else {
       newEntries[index]!.balance = value as number;
     }
     setEntries(newEntries);
+  };
+
+  // Handle creating a new account
+  const handleCreateAccount = async (
+    bankId: string,
+    accountName: string,
+  ): Promise<string> => {
+    try {
+      const result = (await createAccountMutation.mutateAsync({
+        name: accountName,
+        bankId,
+      })) as any;
+      if (!result?.data?.account?.id) {
+        throw new Error('Failed to create account');
+      }
+      return result.data.account.id;
+    } catch (error) {
+      // Error already handled by mutation error handler
+      throw error;
+    }
+  };
+
+  // Get accounts for selected bank
+  const getAccountsForBank = (bankId: string) => {
+    return userAccounts.filter((acc) => acc.bankId === bankId);
   };
 
   return (
@@ -144,66 +202,157 @@ export default function NewSnapshotModal({
                 </p>
               ) : (
                 <div className='space-y-3'>
-                  {entries.map((entry, index) => (
-                    <div
-                      key={index}
-                      className='flex gap-3 items-start p-4 bg-gray-50 rounded-lg'
-                    >
-                      <div className='flex-1'>
-                        <Label htmlFor={`account-${index}`}>Account</Label>
-                        <select
-                          id={`account-${index}`}
-                          value={entry.accountId}
-                          onChange={(e) =>
-                            handleEntryChange(
-                              index,
-                              'accountId',
-                              e.target.value,
-                            )
-                          }
-                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
-                          required
-                        >
-                          <option value=''>Select account...</option>
-                          {userAccounts?.map((account: any) => (
-                            <option key={account.id} value={account.id}>
-                              {account.bank.name} - {account.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                  {entries.map((entry, index) => {
+                    const selectedBankAccounts = getAccountsForBank(
+                      entry.bankId,
+                    );
+                    const accountOptions = selectedBankAccounts.map((acc) => ({
+                      value: acc.id,
+                      label: acc.name,
+                    }));
 
-                      <div className='w-48'>
-                        <Label htmlFor={`balance-${index}`}>Balance</Label>
-                        <NumericFormat
-                          id={`balance-${index}`}
-                          value={entry.balance}
-                          onValueChange={(values) =>
-                            handleEntryChange(
-                              index,
-                              'balance',
-                              values.floatValue || 0,
-                            )
-                          }
-                          thousandSeparator=','
-                          prefix='$'
-                          decimalScale={2}
-                          fixedDecimalScale
-                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
-                          required
-                        />
-                      </div>
-
-                      <button
-                        type='button'
-                        onClick={() => handleRemoveEntry(index)}
-                        className='mt-7 p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded'
-                        aria-label='Remove account entry'
+                    return (
+                      <div
+                        key={index}
+                        className='p-4 bg-gray-50 rounded-lg space-y-3'
                       >
-                        <FiPlus className='rotate-45 w-5 h-5' />
-                      </button>
-                    </div>
-                  ))}
+                        {/* Bank Selector */}
+                        <div>
+                          <Label htmlFor={`bank-${index}`}>Bank</Label>
+                          <select
+                            id={`bank-${index}`}
+                            value={entry.bankId}
+                            onChange={(e) =>
+                              handleEntryChange(index, 'bankId', e.target.value)
+                            }
+                            required
+                            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+                          >
+                            <option value=''>-- Select Bank --</option>
+                            {banks.map((bank) => (
+                              <option key={bank.id} value={bank.id}>
+                                {bank.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Account Selector (CreatableSelect) */}
+                        <div>
+                          <Label htmlFor={`account-${index}`}>Account</Label>
+                          <CreatableSelect
+                            inputId={`account-${index}`}
+                            options={accountOptions}
+                            value={
+                              entry.accountId
+                                ? {
+                                    value: entry.accountId,
+                                    label:
+                                      selectedBankAccounts.find(
+                                        (a) => a.id === entry.accountId,
+                                      )?.name ||
+                                      selectedBankAccounts[0]?.name ||
+                                      'Select account...',
+                                  }
+                                : null
+                            }
+                            onChange={(option) => {
+                              if (option) {
+                                handleEntryChange(
+                                  index,
+                                  'accountId',
+                                  option.value,
+                                );
+                              }
+                            }}
+                            onCreateOption={async (inputValue) => {
+                              if (!entry.bankId) {
+                                toast.error('Please select a bank first');
+                                return;
+                              }
+
+                              try {
+                                const newAccountId = await handleCreateAccount(
+                                  entry.bankId,
+                                  inputValue,
+                                );
+                                // Update entry with new account
+                                handleEntryChange(
+                                  index,
+                                  'accountId',
+                                  newAccountId,
+                                );
+                                toast.success(
+                                  `Account &quot;${inputValue}&quot; created!`,
+                                );
+                              } catch {
+                                // Error already toasted in mutation handler
+                              }
+                            }}
+                            isDisabled={!entry.bankId}
+                            isClearable
+                            placeholder='Select or type to create account...'
+                            className='mt-1'
+                            classNamePrefix='rs'
+                            styles={{
+                              control: (base) => ({
+                                ...base,
+                                borderColor: entry.bankId
+                                  ? undefined
+                                  : '#d1d5db',
+                                backgroundColor: entry.bankId
+                                  ? 'white'
+                                  : '#f3f4f6',
+                              }),
+                            }}
+                            isLoading={createAccountMutation.isPending}
+                          />
+                          {!entry.bankId && (
+                            <p className='mt-1 text-xs text-gray-500'>
+                              Select a bank first to add accounts
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Balance Input */}
+                        <div>
+                          <Label htmlFor={`balance-${index}`}>Balance</Label>
+                          <NumericFormat
+                            id={`balance-${index}`}
+                            value={entry.balance}
+                            onValueChange={(values) => {
+                              handleEntryChange(
+                                index,
+                                'balance',
+                                values.floatValue || 0,
+                              );
+                            }}
+                            thousandSeparator=','
+                            prefix='$'
+                            decimalScale={2}
+                            fixedDecimalScale
+                            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+                            placeholder='0.00'
+                            required
+                          />
+                        </div>
+
+                        {/* Remove Button */}
+                        {entries.length > 1 && (
+                          <div className='flex justify-end'>
+                            <button
+                              type='button'
+                              onClick={() => handleRemoveEntry(index)}
+                              className='text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded text-sm font-medium'
+                              aria-label='Remove account entry'
+                            >
+                              Remove Account
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
