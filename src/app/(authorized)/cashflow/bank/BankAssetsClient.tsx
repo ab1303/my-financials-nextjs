@@ -5,9 +5,10 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
 import Select from 'react-select';
 import { Disclosure } from '@headlessui/react';
-import { FiChevronDown, FiPlus } from 'react-icons/fi';
+import { FiChevronDown, FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
+import { toast } from 'react-toastify';
 
 import { trpc } from '@/server/trpc/client';
 import type { CalendarYearType, OptionType } from '@/types';
@@ -18,6 +19,7 @@ import type {
 } from '@/types/bank-asset.types';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components';
+import { Modal } from '@/components/ui/Modal';
 import NewSnapshotModal from './NewSnapshotModal';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
@@ -68,6 +70,26 @@ export default function BankAssetsClient({ initialData }: Props) {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Snapshot selection state
+  const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(
+    null,
+  );
+
+  // Edit entry state
+  const [editingEntry, setEditingEntry] = useState<{
+    entryId: string;
+    accountName: string;
+    balance: number;
+  } | null>(null);
+  const [editBalance, setEditBalance] = useState(0);
+
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    entryId: string;
+    accountName: string;
+    snapshotId: string;
+  } | null>(null);
+
   // Update selectedYear when initialData changes (e.g., type switch)
   useEffect(() => {
     if (initialData.selectedCalendarYearId && yearOptions.length > 0) {
@@ -81,7 +103,7 @@ export default function BankAssetsClient({ initialData }: Props) {
   }, [initialData.selectedCalendarYearId, yearOptions]);
 
   // Get most recent snapshot for selected calendar year
-  const { data: snapshot, isLoading } =
+  const { data: mostRecentSnapshot } =
     trpc.bankAsset.getMostRecentSnapshot.useQuery(
       {
         calendarYearId: selectedYear?.id || '',
@@ -90,6 +112,36 @@ export default function BankAssetsClient({ initialData }: Props) {
         enabled: !!selectedYear?.id,
       },
     );
+
+  // Get all snapshots for the selected calendar year (for history dropdown)
+  const { data: allSnapshots = [] } = trpc.bankAsset.getSnapshots.useQuery(
+    {
+      calendarYearId: selectedYear?.id || '',
+    },
+    {
+      enabled: !!selectedYear?.id,
+    },
+  );
+
+  // Auto-select most recent snapshot when snapshots load
+  useEffect(() => {
+    if (allSnapshots.length > 0 && !selectedSnapshotId) {
+      // Select the most recent snapshot
+      const sorted = [...allSnapshots].sort(
+        (a: any, b: any) =>
+          new Date(b.snapshotDate).getTime() -
+          new Date(a.snapshotDate).getTime(),
+      );
+      if (sorted[0]?.id) {
+        setSelectedSnapshotId(sorted[0].id);
+      }
+    }
+  }, [allSnapshots, selectedSnapshotId]);
+
+  // Get the currently selected snapshot
+  const snapshot = selectedSnapshotId
+    ? allSnapshots.find((s: any) => s.id === selectedSnapshotId)
+    : null;
 
   // Get totals if snapshot exists
   const { data: totals } = trpc.bankAsset.getSnapshotTotals.useQuery(
@@ -100,6 +152,58 @@ export default function BankAssetsClient({ initialData }: Props) {
       enabled: !!snapshot?.id,
     },
   ) as { data?: SnapshotTotals };
+
+  // Get all user's bank accounts to check if any banks exist
+  const { data: userBankAccounts = [] } =
+    trpc.bankAsset.getBankAccounts.useQuery({});
+
+  // Loading state - true if snapshots are still loading
+  const isLoading = allSnapshots.length === 0 && !!selectedYear?.id;
+
+  // Update entry mutation
+  const updateEntryMutation = trpc.bankAsset.updateEntry.useMutation({
+    onSuccess: () => {
+      toast.success('Balance updated!');
+      setEditingEntry(null);
+      // Refetch snapshot data
+      trpc.useUtils().bankAsset.getSnapshots.invalidate();
+      trpc.useUtils().bankAsset.getMostRecentSnapshot.invalidate();
+      trpc.useUtils().bankAsset.getSnapshotTotals.invalidate();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update balance');
+    },
+  });
+
+  // Delete entry mutation
+  const deleteEntryMutation = trpc.bankAsset.deleteEntry.useMutation({
+    onSuccess: () => {
+      toast.success('Account removed!');
+      setDeleteConfirm(null);
+      // Refetch snapshot data
+      trpc.useUtils().bankAsset.getSnapshots.invalidate();
+      trpc.useUtils().bankAsset.getMostRecentSnapshot.invalidate();
+      trpc.useUtils().bankAsset.getSnapshotTotals.invalidate();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete account');
+    },
+  });
+
+  // Delete snapshot mutation
+  const deleteSnapshotMutation = trpc.bankAsset.deleteSnapshot.useMutation({
+    onSuccess: () => {
+      toast.success('Snapshot deleted!');
+      setSelectedSnapshotId(null);
+      // Reset and refetch data
+      trpc.useUtils().bankAsset.getSnapshots.invalidate();
+      trpc.useUtils().bankAsset.getMostRecentSnapshot.invalidate();
+      trpc.useUtils().bankAsset.getSnapshotTotals.invalidate();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to delete snapshot');
+    },
+  });
 
   const handleTypeChange = (type: CalendarType) => {
     setSelectedType(type);
@@ -117,6 +221,46 @@ export default function BankAssetsClient({ initialData }: Props) {
       params.set('yearId', selected.id);
       router.push(`${pathname}?${params.toString()}`);
     }
+  };
+
+  const handleEditEntry = (
+    entryId: string,
+    accountName: string,
+    balance: number,
+  ) => {
+    setEditingEntry({ entryId, accountName, balance });
+    setEditBalance(balance);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingEntry) return;
+
+    updateEntryMutation.mutate({
+      entryId: editingEntry.entryId,
+      balance: editBalance,
+    });
+  };
+
+  const handleDeleteEntry = (
+    entryId: string,
+    accountName: string,
+    snapshotId: string,
+  ) => {
+    setDeleteConfirm({ entryId, accountName, snapshotId });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteConfirm) return;
+
+    deleteEntryMutation.mutate({
+      entryId: deleteConfirm.entryId,
+    });
+  };
+
+  const handleDeleteSnapshot = (snapshotId: string) => {
+    deleteSnapshotMutation.mutate({
+      snapshotId,
+    });
   };
 
   return (
@@ -159,17 +303,62 @@ export default function BankAssetsClient({ initialData }: Props) {
             isClearable
           />
         </div>
+
+        {/* Snapshot Date Selector */}
+        {allSnapshots.length > 0 && (
+          <div>
+            <Label htmlFor={`${id}-snapshot`}>Snapshot Date</Label>
+            <select
+              id={`${id}-snapshot`}
+              value={selectedSnapshotId || ''}
+              onChange={(e) => setSelectedSnapshotId(e.target.value)}
+              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+            >
+              {[...allSnapshots]
+                .sort(
+                  (a: any, b: any) =>
+                    new Date(b.snapshotDate).getTime() -
+                    new Date(a.snapshotDate).getTime(),
+                )
+                .map((snap: any) => (
+                  <option key={snap.id} value={snap.id}>
+                    {new Date(snap.snapshotDate).toLocaleDateString('en-AU', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })}{' '}
+                    {snap.id === allSnapshots[0]?.id && '(Most Recent)'}
+                  </option>
+                ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Snapshot Date Display */}
       {snapshot && (
-        <div className='text-gray-600 font-medium'>
-          Snapshot as of:{' '}
-          {new Date(snapshot.snapshotDate).toLocaleDateString('en-AU', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          })}
+        <div className='flex items-center justify-between'>
+          <div className='text-gray-600 font-medium'>
+            Snapshot as of:{' '}
+            {new Date(snapshot.snapshotDate).toLocaleDateString('en-AU', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </div>
+          <button
+            onClick={() =>
+              setDeleteConfirm({
+                snapshotId: snapshot.id,
+                entryId: '',
+                accountName: '',
+              })
+            }
+            className='inline-flex items-center gap-2 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors'
+          >
+            <FiTrash2 size={16} />
+            Delete Snapshot
+          </button>
         </div>
       )}
 
@@ -205,10 +394,28 @@ export default function BankAssetsClient({ initialData }: Props) {
         <div className='text-center py-8 text-gray-500'>
           Loading bank assets...
         </div>
+      ) : userBankAccounts.length === 0 ? (
+        <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
+          <p className='text-gray-700 mb-4 font-medium'>
+            You need to add banks first.
+          </p>
+          <p className='text-sm text-gray-600 mb-6'>
+            Configure your banks in Settings before tracking cash assets.
+          </p>
+          <a
+            href='/settings/banks'
+            className='inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium'
+          >
+            Go to Settings → Banks
+          </a>
+        </div>
       ) : !totals || (totals && totals.banks.length === 0) ? (
         <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
-          <p className='text-gray-600 mb-4'>
-            No snapshot recorded for this period.
+          <p className='text-gray-700 mb-4 font-medium'>
+            No snapshots recorded.
+          </p>
+          <p className='text-sm text-gray-600 mb-6'>
+            Take your first snapshot to start tracking your cash position.
           </p>
           <Button variant='primary' onClick={() => setIsModalOpen(true)}>
             <FiPlus className='mr-2' />
@@ -262,29 +469,61 @@ export default function BankAssetsClient({ initialData }: Props) {
                           </tr>
                         </thead>
                         <tbody className='bg-white divide-y divide-gray-200'>
-                          {bank.accounts.map((account: AccountBalance) => (
-                            <tr key={account.accountId}>
-                              <td className='px-4 py-3 text-sm text-gray-900'>
-                                {account.accountName}
-                              </td>
-                              <td className='px-4 py-3 text-sm text-right font-mono text-gray-900'>
-                                <NumericFormat
-                                  value={Number(account.balance)}
-                                  displayType='text'
-                                  thousandSeparator=','
-                                  prefix='$'
-                                  decimalScale={2}
-                                  fixedDecimalScale
-                                />
-                              </td>
-                              <td className='px-4 py-3 text-sm text-right'>
-                                {/* Actions will be added in Phase 4 */}
-                                <span className='text-gray-400 text-xs'>
-                                  Edit/Delete
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                          {bank.accounts.map((account: AccountBalance) => {
+                            // Find the entry ID from the snapshot entries
+                            const snapshotEntry = snapshot?.entries.find(
+                              (e) => e.accountId === account.accountId,
+                            );
+                            return (
+                              <tr key={account.accountId}>
+                                <td className='px-4 py-3 text-sm text-gray-900'>
+                                  {account.accountName}
+                                </td>
+                                <td className='px-4 py-3 text-sm text-right font-mono text-gray-900'>
+                                  <NumericFormat
+                                    value={Number(account.balance)}
+                                    displayType='text'
+                                    thousandSeparator=','
+                                    prefix='$'
+                                    decimalScale={2}
+                                    fixedDecimalScale
+                                  />
+                                </td>
+                                <td className='px-4 py-3 text-sm text-right'>
+                                  <div className='flex justify-end gap-2'>
+                                    <button
+                                      onClick={() =>
+                                        handleEditEntry(
+                                          snapshotEntry?.id || '',
+                                          account.accountName,
+                                          Number(account.balance),
+                                        )
+                                      }
+                                      className='p-1 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded transition-colors'
+                                      aria-label={`Edit ${account.accountName}`}
+                                      title='Edit balance'
+                                    >
+                                      <FiEdit2 className='w-4 h-4' />
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteEntry(
+                                          snapshotEntry?.id || '',
+                                          account.accountName,
+                                          snapshot?.id || '',
+                                        )
+                                      }
+                                      className='p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors'
+                                      aria-label={`Delete ${account.accountName}`}
+                                      title='Delete account'
+                                    >
+                                      <FiTrash2 className='w-4 h-4' />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -317,6 +556,142 @@ export default function BankAssetsClient({ initialData }: Props) {
           window.location.reload();
         }}
       />
+
+      {/* Edit Entry Modal */}
+      <Modal show={!!editingEntry} onClose={() => setEditingEntry(null)}>
+        <Modal.Header>
+          <h2 className='text-xl font-semibold text-gray-900'>
+            Edit Account Balance
+          </h2>
+        </Modal.Header>
+
+        <Modal.Body>
+          <div className='space-y-4'>
+            <div>
+              <Label>Account</Label>
+              <p className='mt-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-300 text-gray-900'>
+                {editingEntry?.accountName}
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor='edit-balance'>New Balance</Label>
+              <NumericFormat
+                id='edit-balance'
+                value={editBalance}
+                onValueChange={(values) => {
+                  setEditBalance(values.floatValue || 0);
+                }}
+                thousandSeparator=','
+                prefix='$'
+                decimalScale={2}
+                fixedDecimalScale
+                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+              />
+            </div>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            type='button'
+            variant='secondary'
+            onClick={() => setEditingEntry(null)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type='button'
+            variant='primary'
+            onClick={handleSaveEdit}
+            disabled={updateEntryMutation.isPending}
+          >
+            {updateEntryMutation.isPending ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={!!deleteConfirm} onClose={() => setDeleteConfirm(null)}>
+        <Modal.Header>
+          <h2 className='text-xl font-semibold text-gray-900'>
+            {deleteConfirm?.snapshotId && !deleteConfirm?.entryId
+              ? 'Delete Entire Snapshot'
+              : 'Delete Account'}
+          </h2>
+        </Modal.Header>
+
+        <Modal.Body>
+          <div className='space-y-4'>
+            {deleteConfirm?.snapshotId && !deleteConfirm?.entryId ? (
+              <>
+                <p className='text-gray-700'>
+                  Are you sure you want to delete the entire snapshot from{' '}
+                  <span className='font-semibold'>
+                    {snapshot &&
+                      new Date(snapshot.snapshotDate).toLocaleDateString(
+                        'en-AU',
+                        {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        },
+                      )}
+                  </span>
+                  ?
+                </p>
+                <p className='text-sm'>
+                  This will delete{' '}
+                  <span className='font-semibold'>
+                    {snapshot?.entries.length}
+                  </span>{' '}
+                  account
+                  {snapshot?.entries.length !== 1 ? 's' : ''} from this
+                  snapshot.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className='text-gray-700'>
+                  Are you sure you want to delete{' '}
+                  <span className='font-semibold'>
+                    {deleteConfirm?.accountName}
+                  </span>{' '}
+                  from this snapshot?
+                </p>
+              </>
+            )}
+            <p className='text-sm text-gray-500'>
+              This action cannot be undone.
+            </p>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            type='button'
+            variant='secondary'
+            onClick={() => setDeleteConfirm(null)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type='button'
+            variant='primary'
+            onClick={handleConfirmDelete}
+            disabled={
+              deleteEntryMutation.isPending || deleteSnapshotMutation.isPending
+            }
+            className='!bg-red-600 hover:!bg-red-700'
+          >
+            {deleteEntryMutation.isPending || deleteSnapshotMutation.isPending
+              ? 'Deleting...'
+              : deleteConfirm?.snapshotId && !deleteConfirm?.entryId
+                ? 'Delete Snapshot'
+                : 'Delete Account'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
