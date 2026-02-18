@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState, useEffect } from 'react';
+import { useId, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
 import Select from 'react-select';
@@ -18,6 +18,7 @@ import type {
 } from '@/types/bank-asset.types';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components';
+import NewSnapshotModal from './NewSnapshotModal';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 
@@ -40,17 +41,53 @@ export default function BankAssetsClient({ initialData }: Props) {
   const [selectedType, setSelectedType] = useState<CalendarType>(
     initialData.selectedType,
   );
-  const [selectedYear, setSelectedYear] =
-    useState<SingleValue<OptionType>>(null);
+
+  // Memoize year options to prevent unnecessary re-renders
+  const yearOptions: OptionType[] = useMemo(
+    () =>
+      initialData.calendarYears.map((cy) => ({
+        id: cy.id,
+        label: cy.description,
+      })),
+    [initialData.calendarYears],
+  );
+
+  // Initialize selectedYear from server-provided default
+  const [selectedYear, setSelectedYear] = useState<SingleValue<OptionType>>(
+    () => {
+      if (initialData.selectedCalendarYearId && yearOptions.length > 0) {
+        return (
+          yearOptions.find(
+            (opt) => opt.id === initialData.selectedCalendarYearId,
+          ) || null
+        );
+      }
+      return null;
+    },
+  );
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Update selectedYear when initialData changes (e.g., type switch)
+  useEffect(() => {
+    if (initialData.selectedCalendarYearId && yearOptions.length > 0) {
+      const selected = yearOptions.find(
+        (opt) => opt.id === initialData.selectedCalendarYearId,
+      );
+      setSelectedYear(selected || null);
+    } else if (yearOptions.length === 0) {
+      setSelectedYear(null);
+    }
+  }, [initialData.selectedCalendarYearId, yearOptions]);
 
   // Get most recent snapshot for selected calendar year
   const { data: snapshot, isLoading } =
     trpc.bankAsset.getMostRecentSnapshot.useQuery(
       {
-        calendarYearId: initialData.selectedCalendarYearId,
+        calendarYearId: selectedYear?.id || '',
       },
       {
-        enabled: !!initialData.selectedCalendarYearId,
+        enabled: !!selectedYear?.id,
       },
     );
 
@@ -64,27 +101,9 @@ export default function BankAssetsClient({ initialData }: Props) {
     },
   ) as { data?: SnapshotTotals };
 
-  const yearOptions: Array<OptionType> = initialData.calendarYears.map(
-    (cy) => ({
-      id: cy.id,
-      label: cy.description,
-    }),
-  );
-
-  // Set selected year based on initialData
-  useEffect(() => {
-    if (initialData.selectedCalendarYearId && yearOptions.length > 0) {
-      const selected = yearOptions.find(
-        (opt) => opt.id === initialData.selectedCalendarYearId,
-      );
-      if (selected) {
-        setSelectedYear(selected);
-      }
-    }
-  }, [initialData.selectedCalendarYearId, yearOptions]);
-
   const handleTypeChange = (type: CalendarType) => {
     setSelectedType(type);
+    setSelectedYear(null); // Clear selection when type changes
     const params = new URLSearchParams(searchParams?.toString());
     params.set('type', type);
     params.delete('yearId'); // Reset year when type changes
@@ -130,13 +149,14 @@ export default function BankAssetsClient({ initialData }: Props) {
           <Label htmlFor={`${id}-year`}>Calendar Year</Label>
           <Select
             id={`${id}-year`}
+            instanceId={id}
             value={selectedYear}
             onChange={handleYearChange}
             options={yearOptions}
-            getOptionLabel={(option) => option.label}
             getOptionValue={(option) => option.id}
             placeholder='Select year...'
             className='mt-1'
+            isClearable
           />
         </div>
       </div>
@@ -173,7 +193,15 @@ export default function BankAssetsClient({ initialData }: Props) {
       )}
 
       {/* Bank Accordions */}
-      {isLoading ? (
+      {!selectedYear ? (
+        <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
+          <p className='text-gray-600 mb-2'>
+            {yearOptions.length === 0
+              ? `No ${selectedType} calendar years available.`
+              : 'Please select a calendar year to view bank assets.'}
+          </p>
+        </div>
+      ) : isLoading ? (
         <div className='text-center py-8 text-gray-500'>
           Loading bank assets...
         </div>
@@ -182,7 +210,7 @@ export default function BankAssetsClient({ initialData }: Props) {
           <p className='text-gray-600 mb-4'>
             No snapshot recorded for this period.
           </p>
-          <Button variant='primary'>
+          <Button variant='primary' onClick={() => setIsModalOpen(true)}>
             <FiPlus className='mr-2' />
             New Snapshot
           </Button>
@@ -271,12 +299,24 @@ export default function BankAssetsClient({ initialData }: Props) {
       {/* New Snapshot Button (bottom) */}
       {totals && (totals as SnapshotTotals).banks.length > 0 && (
         <div className='flex justify-center pt-4'>
-          <Button variant='primary'>
+          <Button variant='primary' onClick={() => setIsModalOpen(true)}>
             <FiPlus className='mr-2' />
             New Snapshot
           </Button>
         </div>
       )}
+
+      {/* New Snapshot Modal */}
+      <NewSnapshotModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        mostRecentSnapshot={snapshot}
+        onSuccess={() => {
+          setIsModalOpen(false);
+          // Trigger refetch of snapshot data
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }
