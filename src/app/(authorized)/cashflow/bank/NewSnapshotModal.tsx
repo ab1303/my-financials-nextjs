@@ -11,10 +11,26 @@ import { Modal } from '@/components/ui/Modal';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components';
 
+type BankAssetEntry = {
+  id: string;
+  balance: string | number;
+  account: {
+    id: string;
+    name: string;
+    bankId: string;
+  };
+};
+
+type BankAssetSnapshot = {
+  id: string;
+  snapshotDate: Date | string;
+  entries: BankAssetEntry[];
+};
+
 type NewSnapshotModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  mostRecentSnapshot: any;
+  mostRecentSnapshot?: any;
   onSuccess: () => void;
 };
 
@@ -53,7 +69,7 @@ export default function NewSnapshotModal({
       trpc.useUtils().bankAsset.getBankAccounts.invalidate();
     },
     onError: (error) => {
-      toast.error(error.message || 'Failed to create account');
+      toast.error((error as any)?.message || 'Failed to create account');
     },
   });
 
@@ -64,7 +80,7 @@ export default function NewSnapshotModal({
       onSuccess();
     },
     onError: (error) => {
-      toast.error(error.message || 'Failed to create snapshot');
+      toast.error((error as any)?.message || 'Failed to create snapshot');
     },
   });
 
@@ -136,10 +152,10 @@ export default function NewSnapshotModal({
     accountName: string,
   ): Promise<string> => {
     try {
-      const result = (await createAccountMutation.mutateAsync({
+      const result = await createAccountMutation.mutateAsync({
         name: accountName,
         bankId,
-      })) as any;
+      });
       if (!result?.data?.account?.id) {
         throw new Error('Failed to create account');
       }

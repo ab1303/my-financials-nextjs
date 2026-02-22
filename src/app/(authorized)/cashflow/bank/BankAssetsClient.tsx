@@ -102,9 +102,9 @@ export default function BankAssetsClient({ initialData }: Props) {
     }
   }, [initialData.selectedCalendarYearId, yearOptions]);
 
-  // Get most recent snapshot for selected calendar year
-  const { data: mostRecentSnapshot } =
-    trpc.bankAsset.getMostRecentSnapshot.useQuery(
+  // Get all snapshots for the selected calendar year (for history dropdown)
+  const { data: allSnapshots = [], isLoading: isLoadingSnapshots } =
+    trpc.bankAsset.getSnapshots.useQuery(
       {
         calendarYearId: selectedYear?.id || '',
       },
@@ -113,22 +113,12 @@ export default function BankAssetsClient({ initialData }: Props) {
       },
     );
 
-  // Get all snapshots for the selected calendar year (for history dropdown)
-  const { data: allSnapshots = [] } = trpc.bankAsset.getSnapshots.useQuery(
-    {
-      calendarYearId: selectedYear?.id || '',
-    },
-    {
-      enabled: !!selectedYear?.id,
-    },
-  );
-
   // Auto-select most recent snapshot when snapshots load
   useEffect(() => {
     if (allSnapshots.length > 0 && !selectedSnapshotId) {
       // Select the most recent snapshot
       const sorted = [...allSnapshots].sort(
-        (a: any, b: any) =>
+        (a, b) =>
           new Date(b.snapshotDate).getTime() -
           new Date(a.snapshotDate).getTime(),
       );
@@ -140,7 +130,7 @@ export default function BankAssetsClient({ initialData }: Props) {
 
   // Get the currently selected snapshot
   const snapshot = selectedSnapshotId
-    ? allSnapshots.find((s: any) => s.id === selectedSnapshotId)
+    ? allSnapshots.find((s) => s.id === selectedSnapshotId)
     : null;
 
   // Get totals if snapshot exists
@@ -153,12 +143,13 @@ export default function BankAssetsClient({ initialData }: Props) {
     },
   ) as { data?: SnapshotTotals };
 
-  // Get all user's bank accounts to check if any banks exist
-  const { data: userBankAccounts = [] } =
-    trpc.bankAsset.getBankAccounts.useQuery({});
+  // Fetch configured banks (from Business model, type=BANK)
+  const { data: banks = [] } = trpc.business.getBusinessesByType.useQuery({
+    type: 'BANK',
+  });
 
-  // Loading state - true if snapshots are still loading
-  const isLoading = allSnapshots.length === 0 && !!selectedYear?.id;
+  // Loading state - true only if query is actively fetching
+  const isLoading = isLoadingSnapshots && !!selectedYear?.id;
 
   // Update entry mutation
   const updateEntryMutation = trpc.bankAsset.updateEntry.useMutation({
@@ -170,8 +161,8 @@ export default function BankAssetsClient({ initialData }: Props) {
       trpc.useUtils().bankAsset.getMostRecentSnapshot.invalidate();
       trpc.useUtils().bankAsset.getSnapshotTotals.invalidate();
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to update balance');
+    onError: (error) => {
+      toast.error((error as any)?.message || 'Failed to update balance');
     },
   });
 
@@ -185,8 +176,8 @@ export default function BankAssetsClient({ initialData }: Props) {
       trpc.useUtils().bankAsset.getMostRecentSnapshot.invalidate();
       trpc.useUtils().bankAsset.getSnapshotTotals.invalidate();
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to delete account');
+    onError: (error) => {
+      toast.error((error as any)?.message || 'Failed to delete account');
     },
   });
 
@@ -254,12 +245,6 @@ export default function BankAssetsClient({ initialData }: Props) {
 
     deleteEntryMutation.mutate({
       entryId: deleteConfirm.entryId,
-    });
-  };
-
-  const handleDeleteSnapshot = (snapshotId: string) => {
-    deleteSnapshotMutation.mutate({
-      snapshotId,
     });
   };
 
@@ -394,7 +379,7 @@ export default function BankAssetsClient({ initialData }: Props) {
         <div className='text-center py-8 text-gray-500'>
           Loading bank assets...
         </div>
-      ) : userBankAccounts.length === 0 ? (
+      ) : banks.length === 0 ? (
         <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
           <p className='text-gray-700 mb-4 font-medium'>
             You need to add banks first.
@@ -549,7 +534,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       <NewSnapshotModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        mostRecentSnapshot={snapshot}
+        mostRecentSnapshot={snapshot as any}
         onSuccess={() => {
           setIsModalOpen(false);
           // Trigger refetch of snapshot data

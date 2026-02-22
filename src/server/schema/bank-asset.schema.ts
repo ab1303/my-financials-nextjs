@@ -1,5 +1,5 @@
 import type { TypeOf } from 'zod';
-import { object, string, number, z, array } from 'zod';
+import { object, string, z, array } from 'zod';
 
 // Schema for creating a bank account
 export const createBankAccountSchema = object({
