@@ -46,27 +46,36 @@ export default function NewSnapshotModal({
   mostRecentSnapshot,
   onSuccess,
 }: NewSnapshotModalProps) {
+  const utils = trpc.useUtils();
   const [snapshotDate, setSnapshotDate] = useState<string>(() => {
     const today = new Date().toISOString().split('T')[0];
     return today || new Date().toISOString().substring(0, 10);
   });
   const [entries, setEntries] = useState<EntryType[]>([]);
 
-  // Fetch banks (type=BANK)
-  const { data: banks = [] } = trpc.business.getBusinessesByType.useQuery({
-    type: 'BANK',
-  });
+  // Fetch banks (type=BANK) - only when modal is open
+  const { data: banks = [] } = trpc.business.getBusinessesByType.useQuery(
+    {
+      type: 'BANK',
+    },
+    {
+      enabled: isOpen,
+    },
+  );
 
-  // Fetch all user's bank accounts
+  // Fetch all user's bank accounts - only when modal is open
   const { data: userAccounts = [] } = trpc.bankAsset.getBankAccounts.useQuery(
     {},
+    {
+      enabled: isOpen,
+    },
   );
 
   // Create bank account mutation
   const createAccountMutation = trpc.bankAsset.createBankAccount.useMutation({
     onSuccess: () => {
       // Refetch accounts after creating new account
-      trpc.useUtils().bankAsset.getBankAccounts.invalidate();
+      utils.bankAsset.getBankAccounts.invalidate();
     },
     onError: (error) => {
       toast.error((error as any)?.message || 'Failed to create account');
@@ -281,29 +290,28 @@ export default function NewSnapshotModal({
                                 );
                               }
                             }}
-                            onCreateOption={async (inputValue) => {
+                            onCreateOption={(inputValue) => {
                               if (!entry.bankId) {
                                 toast.error('Please select a bank first');
                                 return;
                               }
 
-                              try {
-                                const newAccountId = await handleCreateAccount(
-                                  entry.bankId,
-                                  inputValue,
-                                );
-                                // Update entry with new account
-                                handleEntryChange(
-                                  index,
-                                  'accountId',
-                                  newAccountId,
-                                );
-                                toast.success(
-                                  `Account &quot;${inputValue}&quot; created!`,
-                                );
-                              } catch {
-                                // Error already toasted in mutation handler
-                              }
+                              // Call async function without awaiting in callback
+                              handleCreateAccount(entry.bankId, inputValue)
+                                .then((newAccountId) => {
+                                  // Update entry with new account
+                                  handleEntryChange(
+                                    index,
+                                    'accountId',
+                                    newAccountId,
+                                  );
+                                  toast.success(
+                                    `Account "${inputValue}" created!`,
+                                  );
+                                })
+                                .catch(() => {
+                                  // Error already toasted in mutation handler
+                                });
                             }}
                             isDisabled={!entry.bankId}
                             isClearable

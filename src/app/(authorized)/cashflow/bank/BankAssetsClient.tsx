@@ -39,6 +39,7 @@ export default function BankAssetsClient({ initialData }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const utils = trpc.useUtils();
 
   const [selectedType, setSelectedType] = useState<CalendarType>(
     initialData.selectedType,
@@ -103,13 +104,15 @@ export default function BankAssetsClient({ initialData }: Props) {
   }, [initialData.selectedCalendarYearId, yearOptions]);
 
   // Get all snapshots for the selected calendar year (for history dropdown)
+  // Only enable query when we have a valid selected year with an ID
   const { data: allSnapshots = [], isLoading: isLoadingSnapshots } =
     trpc.bankAsset.getSnapshots.useQuery(
       {
-        calendarYearId: selectedYear?.id || '',
+        calendarYearId: selectedYear?.id ?? '',
       },
       {
         enabled: !!selectedYear?.id,
+        retry: 1,
       },
     );
 
@@ -157,9 +160,9 @@ export default function BankAssetsClient({ initialData }: Props) {
       toast.success('Balance updated!');
       setEditingEntry(null);
       // Refetch snapshot data
-      trpc.useUtils().bankAsset.getSnapshots.invalidate();
-      trpc.useUtils().bankAsset.getMostRecentSnapshot.invalidate();
-      trpc.useUtils().bankAsset.getSnapshotTotals.invalidate();
+      utils.bankAsset.getSnapshots.invalidate();
+      utils.bankAsset.getMostRecentSnapshot.invalidate();
+      utils.bankAsset.getSnapshotTotals.invalidate();
     },
     onError: (error) => {
       toast.error((error as any)?.message || 'Failed to update balance');
@@ -172,9 +175,9 @@ export default function BankAssetsClient({ initialData }: Props) {
       toast.success('Account removed!');
       setDeleteConfirm(null);
       // Refetch snapshot data
-      trpc.useUtils().bankAsset.getSnapshots.invalidate();
-      trpc.useUtils().bankAsset.getMostRecentSnapshot.invalidate();
-      trpc.useUtils().bankAsset.getSnapshotTotals.invalidate();
+      utils.bankAsset.getSnapshots.invalidate();
+      utils.bankAsset.getMostRecentSnapshot.invalidate();
+      utils.bankAsset.getSnapshotTotals.invalidate();
     },
     onError: (error) => {
       toast.error((error as any)?.message || 'Failed to delete account');
@@ -187,9 +190,9 @@ export default function BankAssetsClient({ initialData }: Props) {
       toast.success('Snapshot deleted!');
       setSelectedSnapshotId(null);
       // Reset and refetch data
-      trpc.useUtils().bankAsset.getSnapshots.invalidate();
-      trpc.useUtils().bankAsset.getMostRecentSnapshot.invalidate();
-      trpc.useUtils().bankAsset.getSnapshotTotals.invalidate();
+      utils.bankAsset.getSnapshots.invalidate();
+      utils.bankAsset.getMostRecentSnapshot.invalidate();
+      utils.bankAsset.getSnapshotTotals.invalidate();
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to delete snapshot');
@@ -537,8 +540,10 @@ export default function BankAssetsClient({ initialData }: Props) {
         mostRecentSnapshot={snapshot as any}
         onSuccess={() => {
           setIsModalOpen(false);
-          // Trigger refetch of snapshot data
-          window.location.reload();
+          // Reset selected snapshot ID first so auto-selection can pick new one
+          setSelectedSnapshotId(null);
+          // Invalidate all snapshots queries to refetch from server
+          utils.bankAsset.getSnapshots.invalidate();
         }}
       />
 
