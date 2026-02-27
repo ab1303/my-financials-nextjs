@@ -80,10 +80,14 @@ export default function BankAssetsClient({ initialData }: Props) {
   // Edit entry state
   const [editingEntry, setEditingEntry] = useState<{
     entryId: string;
+    accountId: string;
+    bankId: string;
     accountName: string;
     balance: number;
   } | null>(null);
   const [editBalance, setEditBalance] = useState(0);
+  const [editAccountName, setEditAccountName] = useState('');
+  const [isEditingModalName, setIsEditingModalName] = useState(false);
 
   // Delete confirmation state
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -232,20 +236,46 @@ export default function BankAssetsClient({ initialData }: Props) {
 
   const handleEditEntry = (
     entryId: string,
+    accountId: string,
+    bankId: string,
     accountName: string,
     balance: number,
   ) => {
-    setEditingEntry({ entryId, accountName, balance });
+    setEditingEntry({ entryId, accountId, bankId, accountName, balance });
     setEditBalance(balance);
+    setEditAccountName(accountName);
+    setIsEditingModalName(false);
   };
 
   const handleSaveEdit = async () => {
     if (!editingEntry) return;
 
+    const nameChanged =
+      editAccountName.trim() !== '' &&
+      editAccountName.trim() !== editingEntry.accountName;
+
+    // Update balance via tRPC mutation
     updateEntryMutation.mutate({
       entryId: editingEntry.entryId,
       balance: editBalance,
     });
+
+    // Update account name via server action if changed
+    if (nameChanged) {
+      const result = await updateAccountName({
+        accountId: editingEntry.accountId,
+        name: editAccountName.trim(),
+      });
+
+      if (result.success) {
+        toast.success('Account name updated!');
+        // Invalidate queries to reflect the name change
+        utils.bankAsset.getSnapshotTotals.invalidate();
+        utils.bankAsset.getSnapshots.invalidate();
+      } else {
+        toast.error(result.error || 'Failed to update account name');
+      }
+    }
   };
 
   const handleDeleteEntry = (
@@ -298,7 +328,9 @@ export default function BankAssetsClient({ initialData }: Props) {
         setEditingAccountName(null);
         setNewAccountName('');
         setAccountNameError('');
-        // Revalidation happens via revalidatePath in server action
+        // Invalidate tRPC queries so account name refreshes in the UI
+        utils.bankAsset.getSnapshotTotals.invalidate();
+        utils.bankAsset.getSnapshots.invalidate();
       } else {
         setAccountNameError(result.error || 'Failed to update account name');
       }
@@ -580,7 +612,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                             account.accountName,
                                           )
                                         }
-                                        className='ml-2 p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-gray-600 hover:bg-gray-100 rounded transition-all'
+                                        className='ml-2 p-1 text-gray-400 opacity-40 group-hover:opacity-100 hover:text-gray-600 hover:bg-gray-100 rounded transition-all'
                                         aria-label={`Edit ${account.accountName}`}
                                         title='Edit account name'
                                       >
@@ -612,6 +644,8 @@ export default function BankAssetsClient({ initialData }: Props) {
                                       onClick={() =>
                                         handleEditEntry(
                                           snapshotEntry?.id || '',
+                                          account.accountId,
+                                          bank.bankId,
                                           account.accountName,
                                           Number(account.balance),
                                         )
@@ -680,21 +714,42 @@ export default function BankAssetsClient({ initialData }: Props) {
       <Modal show={!!editingEntry} onClose={() => setEditingEntry(null)}>
         <Modal.Header>
           <h2 className='text-xl font-semibold text-gray-900'>
-            Edit Account Balance
+            Edit Account Details
           </h2>
         </Modal.Header>
 
         <Modal.Body>
           <div className='space-y-4'>
             <div>
-              <Label>Account</Label>
-              <p className='mt-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-300 text-gray-900'>
-                {editingEntry?.accountName}
-              </p>
+              <Label htmlFor='edit-account-name'>Account Name</Label>
+              {isEditingModalName ? (
+                <input
+                  id='edit-account-name'
+                  type='text'
+                  value={editAccountName}
+                  onChange={(e) => setEditAccountName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setIsEditingModalName(false);
+                  }}
+                  autoFocus
+                  className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+                  placeholder='Account name'
+                />
+              ) : (
+                <div
+                  onClick={() => setIsEditingModalName(true)}
+                  className='group mt-1 flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer hover:border-teal-400 hover:bg-white transition-colors'
+                >
+                  <span className='text-gray-900'>
+                    {editAccountName}
+                  </span>
+                  <FiEdit2 className='w-4 h-4 text-gray-400 opacity-40 group-hover:opacity-100 transition-opacity' />
+                </div>
+              )}
             </div>
 
             <div>
-              <Label htmlFor='edit-balance'>New Balance</Label>
+              <Label htmlFor='edit-balance'>Balance</Label>
               <NumericFormat
                 id='edit-balance'
                 value={editBalance}
