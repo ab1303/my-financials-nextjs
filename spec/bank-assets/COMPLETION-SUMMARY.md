@@ -179,11 +179,12 @@ The Bank Assets Cash Tracking feature has been **fully implemented, tested, and 
 | 10.5       | Save multi-account snapshot        | ✅     | Form submission, validation, multiple entries |
 | 10.6       | Edit account balance               | ✅     | Edit modal + updateEntry mutation             |
 | 10.7       | Delete account entry               | ✅     | Delete modal + deleteEntry mutation           |
-| 10.8       | View historical snapshots          | ✅     | Snapshot date dropdown selector               |
-| 10.9       | Empty state handling               | ✅     | 4 distinct scenarios with guidance            |
-| 10.10      | Delete entire snapshot             | ✅     | Delete button + confirmation modal            |
-| 10.11      | Authentication & isolation         | ✅     | protectedProcedure + userId filtering         |
-| 10.12      | Responsive design                  | ✅     | Mobile-friendly, touch targets, scroll        |
+| 10.8       | Edit account name                  | ⏳     | Pending - Inline edit + updateBankAccount     |
+| 10.9       | View historical snapshots          | ✅     | Snapshot date dropdown selector               |
+| 10.10      | Empty state handling               | ✅     | 4 distinct scenarios with guidance            |
+| 10.11      | Delete entire snapshot             | ✅     | Delete button + confirmation modal            |
+| 10.12      | Authentication & isolation         | ✅     | protectedProcedure + userId filtering         |
+| 10.13      | Responsive design                  | ✅     | Mobile-friendly, touch targets, scroll        |
 
 ---
 
@@ -280,6 +281,41 @@ The Bank Assets Cash Tracking feature has been **fully implemented, tested, and 
 3. **AUD Only**: Currency hardcoded as AUD (future enhancement: multi-currency)
 4. **No Forecasting**: Cash position predictions (future enhancement)
 5. **No Exports**: Excel/PDF export (future enhancement)
+
+---
+
+## Pending Enhancements
+
+### Edit Account Name (BA-013) - ⏳ NOT YET IMPLEMENTED
+
+**User Story**: As an authenticated user, I want to edit the name of an existing bank account, so that I can correct typos or rename accounts without losing historical data.
+
+**Priority**: Medium
+
+**Implementation Requirements**:
+
+- Add pencil/edit icon next to account name in expanded accordion view
+- Icon appears on hover (desktop) or always visible (mobile)
+- Inline edit mode with input field, auto-focused
+- Keyboard support: Enter to save, Escape to cancel
+- Validation: Non-empty name, unique within bank for user
+- Backend: New `updateBankAccount` mutation in tRPC router
+- Changes propagate to all snapshots (BankAccount is shared record)
+
+**Files to Modify**:
+
+- `src/app/(authorized)/cashflow/bank/BankAssetsClient.tsx` - Add inline edit UI
+- `src/server/trpc/router/bank-asset.ts` - Add updateBankAccount endpoint
+- `src/server/controllers/bank-asset.controller.ts` - Add handler
+- `src/server/services/bank-asset.service.ts` - Add service function
+- `src/server/schema/bank-asset.schema.ts` - Add validation schema
+
+**UX Pattern**:
+
+- Consistent with existing edit balance pattern (FiEdit2 icon)
+- Subtle icon styling to avoid visual clutter
+- Toast notification on successful save
+- Inline validation error display
 
 ---
 

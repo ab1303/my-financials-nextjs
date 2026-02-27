@@ -61,6 +61,14 @@ export const getBankAccountsSchema = object({
   bankId: string().optional(),
 });
 
+// Schema for updating a bank account name
+export const updateBankAccountSchema = object({
+  accountId: string({ required_error: 'Account ID is required' }),
+  name: string({ required_error: 'Account name is required' })
+    .min(1, 'Account name cannot be empty')
+    .max(100, 'Account name must be less than 100 characters'),
+});
+
 export type CreateBankAccountInput = TypeOf<typeof createBankAccountSchema>;
 export type BankAssetEntryInput = TypeOf<typeof bankAssetEntrySchema>;
 export type CreateBankAssetSnapshotInput = TypeOf<
@@ -69,6 +77,7 @@ export type CreateBankAssetSnapshotInput = TypeOf<
 export type UpdateBankAssetEntryInput = TypeOf<
   typeof updateBankAssetEntrySchema
 >;
+export type UpdateBankAccountInput = TypeOf<typeof updateBankAccountSchema>;
 export type DeleteSnapshotInput = TypeOf<typeof deleteSnapshotSchema>;
 export type DeleteEntryInput = TypeOf<typeof deleteEntrySchema>;
 export type GetSnapshotsInput = TypeOf<typeof getSnapshotsSchema>;

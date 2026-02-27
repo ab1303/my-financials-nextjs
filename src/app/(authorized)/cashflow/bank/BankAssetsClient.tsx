@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/Label';
 import { Button } from '@/components';
 import { Modal } from '@/components/ui/Modal';
 import NewSnapshotModal from './NewSnapshotModal';
+import { updateAccountName } from './actions';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 
@@ -90,6 +91,15 @@ export default function BankAssetsClient({ initialData }: Props) {
     accountName: string;
     snapshotId: string;
   } | null>(null);
+
+  // Edit account name state
+  const [editingAccountName, setEditingAccountName] = useState<{
+    accountId: string;
+    bankId: string;
+    currentName: string;
+  } | null>(null);
+  const [newAccountName, setNewAccountName] = useState('');
+  const [accountNameError, setAccountNameError] = useState('');
 
   // Update selectedYear when initialData changes (e.g., type switch)
   useEffect(() => {
@@ -199,6 +209,9 @@ export default function BankAssetsClient({ initialData }: Props) {
     },
   });
 
+  // Server action state for updating account name
+  const [isUpdatingAccountName, setIsUpdatingAccountName] = useState(false);
+
   const handleTypeChange = (type: CalendarType) => {
     setSelectedType(type);
     setSelectedYear(null); // Clear selection when type changes
@@ -249,6 +262,65 @@ export default function BankAssetsClient({ initialData }: Props) {
     deleteEntryMutation.mutate({
       entryId: deleteConfirm.entryId,
     });
+  };
+
+  const handleStartEditAccountName = (
+    accountId: string,
+    bankId: string,
+    currentName: string,
+  ) => {
+    setEditingAccountName({ accountId, bankId, currentName });
+    setNewAccountName(currentName);
+    setAccountNameError('');
+  };
+
+  const handleSaveAccountName = async () => {
+    if (!editingAccountName || !newAccountName.trim()) {
+      setAccountNameError('Account name cannot be empty');
+      return;
+    }
+
+    if (newAccountName === editingAccountName.currentName) {
+      // No change, just close edit mode
+      setEditingAccountName(null);
+      return;
+    }
+
+    setIsUpdatingAccountName(true);
+    try {
+      const result = await updateAccountName({
+        accountId: editingAccountName.accountId,
+        name: newAccountName.trim(),
+      });
+
+      if (result.success) {
+        toast.success('Account name updated!');
+        setEditingAccountName(null);
+        setNewAccountName('');
+        setAccountNameError('');
+        // Revalidation happens via revalidatePath in server action
+      } else {
+        setAccountNameError(result.error || 'Failed to update account name');
+      }
+    } finally {
+      setIsUpdatingAccountName(false);
+    }
+  };
+
+  const handleCancelEditAccountName = () => {
+    setEditingAccountName(null);
+    setNewAccountName('');
+    setAccountNameError('');
+  };
+
+  const handleAccountNameKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === 'Enter') {
+      handleSaveAccountName();
+    } else if (e.key === 'Escape') {
+      handleCancelEditAccountName();
+    }
   };
 
   return (
@@ -465,7 +537,64 @@ export default function BankAssetsClient({ initialData }: Props) {
                             return (
                               <tr key={account.accountId}>
                                 <td className='px-4 py-3 text-sm text-gray-900'>
-                                  {account.accountName}
+                                  {editingAccountName?.accountId ===
+                                  account.accountId ? (
+                                    <div className='flex items-center gap-2'>
+                                      <input
+                                        type='text'
+                                        value={newAccountName}
+                                        onChange={(e) => {
+                                          setNewAccountName(e.target.value);
+                                          setAccountNameError('');
+                                        }}
+                                        onKeyDown={handleAccountNameKeyDown}
+                                        autoFocus
+                                        className='flex-1 px-2 py-1 border border-teal-500 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-600'
+                                        placeholder='Account name'
+                                      />
+                                      <button
+                                        onClick={handleSaveAccountName}
+                                        disabled={isUpdatingAccountName}
+                                        className='px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 disabled:opacity-50 transition-colors'
+                                        title='Save'
+                                      >
+                                        ✓
+                                      </button>
+                                      <button
+                                        onClick={handleCancelEditAccountName}
+                                        disabled={isUpdatingAccountName}
+                                        className='px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50 transition-colors'
+                                        title='Cancel'
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className='flex items-center justify-between group'>
+                                      <span>{account.accountName}</span>
+                                      <button
+                                        onClick={() =>
+                                          handleStartEditAccountName(
+                                            account.accountId,
+                                            bank.bankId,
+                                            account.accountName,
+                                          )
+                                        }
+                                        className='ml-2 p-1 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-gray-600 hover:bg-gray-100 rounded transition-all'
+                                        aria-label={`Edit ${account.accountName}`}
+                                        title='Edit account name'
+                                      >
+                                        <FiEdit2 className='w-4 h-4' />
+                                      </button>
+                                    </div>
+                                  )}
+                                  {accountNameError &&
+                                    editingAccountName?.accountId ===
+                                      account.accountId && (
+                                      <p className='text-xs text-red-600 mt-1'>
+                                        {accountNameError}
+                                      </p>
+                                    )}
                                 </td>
                                 <td className='px-4 py-3 text-sm text-right font-mono text-gray-900'>
                                   <NumericFormat

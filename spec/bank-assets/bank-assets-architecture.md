@@ -26,12 +26,13 @@
 │  ┌────────────────────────────────────────────────────────────────────┐ │
 │  │  tRPC Router: src/server/trpc/router/bank-asset.ts                │ │
 │  │  ┌──────────────────┐  ┌──────────────────┐  ┌─────────────────┐ │ │
-│  │  │  Queries (5)     │  │  Mutations (5)   │  │ Protected by    │ │ │
+│  │  │  Queries (5)     │  │  Mutations (6)   │  │ Protected by    │ │ │
 │  │  │  - getBankAccts  │  │  - createAccount │  │ Authentication  │ │ │
 │  │  │  - getSnapshots  │  │  - createSnapsht │  │ (NextAuth)      │ │ │
 │  │  │  - getMostRecent │  │  - updateEntry   │  │                 │ │ │
-│  │  │  - getById       │  │  - deleteEntry   │  │ User Context    │ │ │
-│  │  │  - getTotals     │  │  - deleteSnapsht │  │ Injected        │ │ │
+│  │  │  - getById       │  │  - updateAccount │  │ User Context    │ │ │
+│  │  │  - getTotals     │  │  - deleteEntry   │  │ Injected        │ │ │
+│  │  │                  │  │  - deleteSnapsht │  │                 │ │ │
 │  │  └──────────────────┘  └──────────────────┘  └─────────────────┘ │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
 │                                    │                                     │
@@ -70,6 +71,7 @@
 │  │  │  - createBankAccount()                                       │ │ │
 │  │  │  - getBankAccounts()                                         │ │ │
 │  │  │  - getBankAccountById()                                      │ │ │
+│  │  │  - updateBankAccount()  [Rename accounts]                    │ │ │
 │  │  │                                                               │ │ │
 │  │  │  Snapshot Operations:                                        │ │ │
 │  │  │  - createBankAssetSnapshot() [Transaction]                  │ │ │

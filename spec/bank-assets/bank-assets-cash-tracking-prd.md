@@ -2,17 +2,18 @@
 
 ## Implementation Progress
 
-**Current Status**: Phase 1-5 ✅ FULLY COMPLETE - All 4 Critical Issues Fixed
+**Current Status**: Phase 1-5 ✅ FULLY COMPLETE - Phase 6 ⏳ PENDING
 
 | Phase                       | Status      | Completion | User Stories | Notes                                        |
 | --------------------------- | ----------- | ---------- | ------------ | -------------------------------------------- |
 | Phase 1: Database & API     | ✅ Complete | 100%       | Foundation   | All endpoints operational                    |
 | Phase 2: Basic UI - Display | ✅ Complete | 100%       | 10.1-10.2    | Calendar selectors working correctly         |
 | Phase 3: Snapshot Creation  | ✅ Complete | 100%       | 10.3-10.5    | Modal form, pre-fill, data persistence FIXED |
-| Phase 4: Edit & Delete      | ✅ Complete | 100%       | 10.6-10.10   | All CRUD operations functional               |
-| Phase 5: Polish & Testing   | ✅ Complete | 100%       | 10.11-10.12  | Query invalidation, UI state mgmt perfected  |
+| Phase 4: Edit & Delete      | ✅ Complete | 100%       | 10.6-10.7    | Edit balance, delete entry functional        |
+| Phase 5: Polish & Testing   | ✅ Complete | 100%       | 10.9-10.13   | Query invalidation, UI state mgmt perfected  |
+| Phase 6: Account Management | ⏳ Pending  | 0%         | 10.8         | Edit account name feature                    |
 
-**Last Updated**: 2026-02-22
+**Last Updated**: 2026-02-23
 
 ### Critical Issues Found & Fixed
 
@@ -221,7 +222,24 @@ Key capabilities:
   - Uses CreatableSelect for account selection
   - Creates new BankAssetEntry linked to existing snapshot
 
-### 4.5 Snapshot deletion (Priority: Medium)
+### 4.5 Account name management (Priority: Medium)
+
+- **Edit account name** (Priority: Medium)
+  - Pencil icon next to account name in expanded accordion view
+  - Clicking icon opens inline edit mode with current name pre-filled
+  - Save updates the BankAccount record (propagates to all snapshots)
+  - Cancel reverts to original name without saving
+  - Validation: Account name must be unique within the same bank for the user
+  - Success toast notification on save
+  - Immediate UI update reflects the new name across all visible entries
+
+- **Account name display pattern** (Priority: Medium)
+  - Account name and pencil icon appear on same row
+  - Pencil icon appears on hover (desktop) or always visible (mobile)
+  - Icon uses subtle styling to avoid visual clutter
+  - Edit mode replaces name text with input field inline
+
+### 4.6 Snapshot deletion (Priority: Medium)
 
 - **Delete account entry** (Priority: Medium)
   - Delete icon on each account row
@@ -240,7 +258,7 @@ Key capabilities:
   - Removes BankAssetSnapshot and all related BankAssetEntry records
   - Page refreshes to show previous snapshot (if exists)
 
-### 4.6 Historical snapshot access (Priority: Medium)
+### 4.7 Historical snapshot access (Priority: Medium)
 
 - **Snapshot history dropdown** (Priority: Medium)
   - Secondary dropdown or date picker showing all snapshots within selected calendar year
@@ -272,7 +290,7 @@ Key capabilities:
 
 - **No banks configured**: Display message with link to Settings → Banks
 - **Bank deleted**: If a bank is deleted from Settings, historical snapshots retain the data but bank name shows "(Deleted)"
-- **Account renamed**: If account is renamed, historical entries retain old name, new snapshots use new name
+- **Account renamed**: When account name is edited, the change propagates to all snapshots (past and future) since the BankAccount record is shared. This ensures consistency across the user's financial history.
 - **Zero balance**: Allow $0.00 entries (account exists but empty)
 - **Very large balances**: Support up to 9 digits with 2 decimal places
 - **Multiple snapshots same day**: Allow (user might correct a mistake)
@@ -406,26 +424,40 @@ Later that month, Sarah needs to calculate her Zakat. She switches the calendar 
   - TypeScript errors: ✅ 0
   - ESLint errors: ✅ 0
 
-- **Phase 3: Snapshot Creation** (3-4 days) 🔄 **NEXT**
-  - Build snapshot creation modal/form with date picker
-  - Implement CreatableSelect for account management
-  - Add pre-fill logic from previous snapshot
-  - Handle multi-account, multi-bank entry
-  - Implement save with Server Actions
-  - Add success/error toast notifications
+- **Phase 3: Snapshot Creation** (3-4 days) ✅ **COMPLETED**
+  - ✅ Build snapshot creation modal/form with date picker
+  - ✅ Implement CreatableSelect for account management
+  - ✅ Add pre-fill logic from previous snapshot
+  - ✅ Handle multi-account, multi-bank entry
+  - ✅ Implement save with Server Actions
+  - ✅ Add success/error toast notifications
 
-- **Phase 4: Edit & Delete** (2-3 days) ⏳ **PENDING**
-  - Add edit functionality for account balances
-  - Implement delete with confirmation dialogs
-  - Add optimistic UI updates
-  - Handle edge cases (last account in bank, etc.)
+- **Phase 4: Edit & Delete** (2-3 days) ✅ **COMPLETED**
+  - ✅ Add edit functionality for account balances
+  - ✅ Implement delete with confirmation dialogs
+  - ✅ Add optimistic UI updates
+  - ✅ Handle edge cases (last account in bank, etc.)
 
-- **Phase 5: Polish & Testing** (2-3 days) ⏳ **PENDING**
-  - Historical snapshot viewing
-  - Error handling and validation refinement
-  - Responsive design adjustments
-  - Unit and integration tests
-  - Build verification and bug fixes
+- **Phase 5: Polish & Testing** (2-3 days) ✅ **COMPLETED**
+  - ✅ Historical snapshot viewing
+  - ✅ Error handling and validation refinement
+  - ✅ Responsive design adjustments
+  - ✅ Unit and integration tests
+  - ✅ Build verification and bug fixes
+
+- **Phase 6: Account Management** (1-2 days) ⏳ **PENDING**
+  - Edit bank account names (rename accounts)
+  - Inline edit UI pattern with pencil icon
+  - New `updateBankAccount` tRPC endpoint
+  - Validation for unique account names per bank
+  - Changes propagate to all snapshots (BankAccount is shared record)
+
+  **Files to Modify:**
+  - `src/app/(authorized)/cashflow/bank/BankAssetsClient.tsx` - Add inline edit UI
+  - `src/server/trpc/router/bank-asset.ts` - Add updateBankAccount endpoint
+  - `src/server/controllers/bank-asset.controller.ts` - Add handler
+  - `src/server/services/bank-asset.service.ts` - Add service function
+  - `src/server/schema/bank-asset.schema.ts` - Add validation schema
 
 ## 10. User stories
 
@@ -523,7 +555,26 @@ Later that month, Sarah needs to calculate her Zakat. She switches the calendar 
   - Success toast notification displayed
   - If last account in bank is deleted, bank section is removed from accordion
 
-### 10.8 View historical snapshots
+### 10.8 Edit account name (NEW)
+
+- **ID**: BA-013
+- **Description**: As an authenticated user, I want to edit the name of an existing bank account, so that I can correct typos or rename accounts without losing historical data.
+- **Acceptance criteria**:
+  - Pencil/edit icon visible next to account name in expanded accordion view
+  - Icon appears on hover (desktop) or is always visible (mobile) for discoverability
+  - Clicking the icon enables inline edit mode with current name in an input field
+  - Input field is auto-focused and pre-filled with the current account name
+  - Pressing Enter or clicking Save confirms the edit
+  - Pressing Escape or clicking Cancel reverts to original name
+  - Validation: Account name must be non-empty and unique within the same bank for the user
+  - Validation error displayed inline if name is duplicate or empty
+  - Success toast notification shown on successful save
+  - Account name change propagates to all snapshots (past and future) since BankAccount is a shared record
+  - UI immediately reflects the new name without requiring page refresh
+  - Edit icon uses subtle styling (e.g., gray color, smaller size) to avoid visual clutter
+  - Keyboard accessible: Tab to focus, Enter to edit, Escape to cancel
+
+### 10.9 View historical snapshots
 
 - **ID**: BA-008
 - **Description**: As an authenticated user, I want to view historical snapshots within a calendar year, so that I can see how my cash position has changed over time.
@@ -535,7 +586,7 @@ Later that month, Sarah needs to calculate her Zakat. She switches the calendar 
   - User can edit or delete entries in historical snapshots
   - Clear indication of which snapshot date is being viewed
 
-### 10.9 Empty state handling
+### 10.10 Empty state handling
 
 - **ID**: BA-009
 - **Description**: As an authenticated user, I want to see helpful guidance when I have no snapshots or no banks configured, so that I understand how to get started.
@@ -545,7 +596,7 @@ Later that month, Sarah needs to calculate her Zakat. She switches the calendar 
   - "New Snapshot" button prominently displayed in empty state
   - Empty state uses consistent styling with other empty states in app
 
-### 10.10 Delete entire snapshot
+### 10.11 Delete entire snapshot
 
 - **ID**: BA-010
 - **Description**: As an authenticated user, I want to delete an entire snapshot, so that I can remove erroneous or duplicate entries.
@@ -557,7 +608,7 @@ Later that month, Sarah needs to calculate her Zakat. She switches the calendar 
   - Page refreshes to show previous snapshot (or empty state)
   - Success toast notification displayed
 
-### 10.11 Authentication and data isolation
+### 10.12 Authentication and data isolation
 
 - **ID**: BA-011
 - **Description**: As an authenticated user, I want my bank asset data to be completely private and isolated from other users, so that my financial information remains secure.
@@ -568,7 +619,7 @@ Later that month, Sarah needs to calculate her Zakat. She switches the calendar 
   - API endpoints validate user ownership before any CRUD operation
   - Unauthenticated requests are rejected with appropriate error
 
-### 10.12 Responsive accordion display
+### 10.13 Responsive accordion display
 
 - **ID**: BA-012
 - **Description**: As an authenticated user, I want the bank assets page to work well on mobile devices, so that I can check my cash position on the go.

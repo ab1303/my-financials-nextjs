@@ -89,6 +89,13 @@ trpc.bankAsset.createBankAccount.mutate({
   bankId: "clxx..."
 })
 
+// Update a bank account name (rename)
+// ⏳ PENDING IMPLEMENTATION
+trpc.bankAsset.updateBankAccount.mutate({
+  accountId: "clxx...",
+  name: "New Account Name"
+})
+
 // Get user's bank accounts (optionally filter by bank)
 trpc.bankAsset.getBankAccounts.query({
   bankId?: "clxx..."

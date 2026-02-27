@@ -48,6 +48,55 @@ export const getBankAccountById = async (accountId: string, userId: string) => {
   });
 };
 
+export const updateBankAccount = async (input: {
+  accountId: string;
+  name: string;
+  userId: string;
+}) => {
+  // Verify the account belongs to the user
+  const account = await prisma.bankAccount.findFirst({
+    where: {
+      id: input.accountId,
+      userId: input.userId,
+    },
+  });
+
+  if (!account) {
+    throw new Error('Account not found or does not belong to user');
+  }
+
+  // Check if new name is unique within the same bank for this user
+  // (allow if it's the same account being updated)
+  const existingAccount = await prisma.bankAccount.findFirst({
+    where: {
+      name: input.name,
+      bankId: account.bankId,
+      userId: input.userId,
+      id: {
+        not: input.accountId, // Don't check against itself
+      },
+    },
+  });
+
+  if (existingAccount) {
+    throw new Error(
+      `Account name "${input.name}" already exists for this bank`,
+    );
+  }
+
+  return await prisma.bankAccount.update({
+    where: {
+      id: input.accountId,
+    },
+    data: {
+      name: input.name,
+    },
+    include: {
+      bank: true,
+    },
+  });
+};
+
 // Bank Asset Snapshot Service
 
 export const createBankAssetSnapshot = async (
