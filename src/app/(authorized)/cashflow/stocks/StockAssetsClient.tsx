@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
 import Select from 'react-select';
 import { Disclosure, Dialog, Transition } from '@headlessui/react';
-import { FiChevronDown, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiChevronDown, FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'react-toastify';
@@ -15,6 +15,21 @@ import type { CalendarYearType, OptionType } from '@/types';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components';
 import NewSnapshotModal from './NewSnapshotModal';
+import HoldingFormModal from './HoldingFormModal';
+import SummaryCards from './SummaryCards';
+import {
+  calculateHoldingMetrics,
+  formatCurrency,
+  formatQuantity,
+  formatPrice,
+  formatPercentage,
+  formatHoldingPeriod,
+  getPLColorClass,
+  getPLBgColorClass,
+  getTermStatusColorClass,
+  getTermStatusLabel,
+} from '@/utils/stock-asset-calculations';
+import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 
@@ -37,9 +52,17 @@ export default function StockAssetsClient({ initialData }: Props) {
   const [selectedType] = useState<CalendarType>(initialData.selectedType);
 
   const [isNewSnapshotModalOpen, setIsNewSnapshotModalOpen] = useState(false);
+  const [isHoldingFormModalOpen, setIsHoldingFormModalOpen] = useState(false);
+  const [editingHolding, setEditingHolding] =
+    useState<StockHoldingWithAccount | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     snapshotId: string;
     snapshotDate: string;
+  } | null>(null);
+  const [deleteHoldingConfirm, setDeleteHoldingConfirm] = useState<{
+    holdingId: string;
+    ticker: string;
+    snapshotId: string;
   } | null>(null);
 
   // Memoize year options to prevent unnecessary re-renders
@@ -118,6 +141,31 @@ export default function StockAssetsClient({ initialData }: Props) {
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to delete snapshot');
+    },
+  });
+
+  // Update holding mutation
+  const updateHolding = trpc.stockAsset.updateHolding.useMutation({
+    onSuccess: () => {
+      toast.success('Holding updated successfully');
+      setEditingHolding(null);
+      setIsHoldingFormModalOpen(false);
+      refetchTotals();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update holding');
+    },
+  });
+
+  // Delete holding mutation
+  const deleteHolding = trpc.stockAsset.deleteHolding.useMutation({
+    onSuccess: () => {
+      toast.success('Holding deleted successfully');
+      setDeleteHoldingConfirm(null);
+      refetchTotals();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete holding');
     },
   });
 
@@ -229,104 +277,8 @@ export default function StockAssetsClient({ initialData }: Props) {
       </div>
 
       {/* Grand Total Summary Cards */}
-      {totals && (
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-          {totals.currencies.map((currencyTotal: any) => (
-            <div
-              key={currencyTotal.currency}
-              className={clsx(
-                'rounded-lg p-6 border-2',
-                currencyTotal.currency === 'AUD'
-                  ? 'bg-blue-50 border-blue-200'
-                  : 'bg-green-50 border-green-200',
-              )}
-            >
-              <div className='text-sm font-medium uppercase tracking-wide mb-2'>
-                <span
-                  className={
-                    currencyTotal.currency === 'AUD'
-                      ? 'text-blue-700'
-                      : 'text-green-700'
-                  }
-                >
-                  {currencyTotal.currency} Total Value
-                </span>
-              </div>
-              <div
-                className={clsx(
-                  'text-3xl font-bold mb-4',
-                  currencyTotal.currency === 'AUD'
-                    ? 'text-blue-900'
-                    : 'text-green-900',
-                )}
-              >
-                <NumericFormat
-                  value={currencyTotal.totalValue}
-                  displayType='text'
-                  thousandSeparator=','
-                  prefix={currencyTotal.currency === 'AUD' ? '$' : 'US$'}
-                  decimalScale={2}
-                  fixedDecimalScale
-                />
-              </div>
-              <div className='space-y-2 text-sm'>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>Cost Basis:</span>
-                  <span className='font-medium'>
-                    <NumericFormat
-                      value={currencyTotal.totalCostBasis}
-                      displayType='text'
-                      thousandSeparator=','
-                      prefix={currencyTotal.currency === 'AUD' ? '$' : 'US$'}
-                      decimalScale={2}
-                      fixedDecimalScale
-                    />
-                  </span>
-                </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>Unrealized P/L:</span>
-                  <span
-                    className={
-                      currencyTotal.totalUnrealizedPL >= 0
-                        ? 'font-medium text-green-600'
-                        : 'font-medium text-red-600'
-                    }
-                  >
-                    <NumericFormat
-                      value={currencyTotal.totalUnrealizedPL}
-                      displayType='text'
-                      thousandSeparator=','
-                      prefix={currencyTotal.currency === 'AUD' ? '$' : 'US$'}
-                      decimalScale={2}
-                      fixedDecimalScale
-                    />
-                  </span>
-                </div>
-                {currencyTotal.totalRealizedPL !== 0 && (
-                  <div className='flex justify-between'>
-                    <span className='text-gray-600'>Realized P/L:</span>
-                    <span
-                      className={
-                        currencyTotal.totalRealizedPL >= 0
-                          ? 'font-medium text-green-600'
-                          : 'font-medium text-red-600'
-                      }
-                    >
-                      <NumericFormat
-                        value={currencyTotal.totalRealizedPL}
-                        displayType='text'
-                        thousandSeparator=','
-                        prefix={currencyTotal.currency === 'AUD' ? '$' : 'US$'}
-                        decimalScale={2}
-                        fixedDecimalScale
-                      />
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+      {totals && totals.currencies && (
+        <SummaryCards currencyTotals={totals.currencies} />
       )}
 
       {/* Stock Holdings Accordions */}
@@ -433,130 +385,224 @@ export default function StockAssetsClient({ initialData }: Props) {
                           <thead className='bg-gray-50'>
                             <tr>
                               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                                Ticker
-                              </th>
-                              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                                Company
+                                Stock
                               </th>
                               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                                Quantity
+                                Qty
                               </th>
                               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
                                 Buy Price
                               </th>
                               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                                Current Price
+                                Buy Date
                               </th>
                               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                                Market Value
+                                Curr Price
                               </th>
                               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                                Unrealized P/L
+                                Value
+                              </th>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                                P/L
+                              </th>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                                P/L %
+                              </th>
+                              <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                                Holding
+                              </th>
+                              <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                                Term
+                              </th>
+                              <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                                CGT
+                              </th>
+                              <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                                Actions
                               </th>
                             </tr>
                           </thead>
                           <tbody className='bg-white divide-y divide-gray-200'>
-                            {account.holdings.map(
-                              (holding: {
-                                id: string;
-                                ticker: string;
-                                companyName: string;
-                                quantity: number;
-                                buyPrice: number;
-                                currentPrice: number;
-                                currency: 'AUD' | 'USD';
-                              }) => {
-                                const costBasis =
-                                  Number(holding.buyPrice) *
-                                  Number(holding.quantity);
-                                const marketValue =
-                                  Number(holding.currentPrice) *
-                                  Number(holding.quantity);
-                                const unrealizedPL = marketValue - costBasis;
+                            {account.holdings.map((holding: any) => {
+                              const metrics = calculateHoldingMetrics(
+                                holding,
+                                new Date(
+                                  snapshots?.find(
+                                    (s) => s.id === selectedSnapshotId,
+                                  )?.snapshotDate || new Date(),
+                                ),
+                              );
 
-                                return (
-                                  <tr
-                                    key={holding.id}
-                                    className='hover:bg-gray-50'
-                                  >
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                              return (
+                                <tr
+                                  key={holding.id}
+                                  className={clsx(
+                                    'hover:bg-gray-50',
+                                    metrics.isSold && 'opacity-75',
+                                  )}
+                                >
+                                  {/* Stock: ticker + company */}
+                                  <td className='px-6 py-4 text-sm'>
+                                    <div className='font-semibold text-gray-900'>
                                       {holding.ticker}
-                                    </td>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-600'>
+                                      {metrics.isSold && (
+                                        <span className='ml-2 inline-block px-2 py-1 text-xs font-semibold bg-gray-200 text-gray-700 rounded'>
+                                          SOLD
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className='text-xs text-gray-500'>
                                       {holding.companyName}
-                                    </td>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900'>
-                                      {Number(holding.quantity).toFixed(6)}
-                                    </td>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
-                                      <NumericFormat
-                                        value={Number(holding.buyPrice)}
-                                        displayType='text'
-                                        thousandSeparator=','
-                                        prefix={
-                                          holding.currency === 'AUD'
-                                            ? '$'
-                                            : 'US$'
-                                        }
-                                        decimalScale={2}
-                                        fixedDecimalScale
-                                      />
-                                    </td>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
-                                      <NumericFormat
-                                        value={Number(holding.currentPrice)}
-                                        displayType='text'
-                                        thousandSeparator=','
-                                        prefix={
-                                          holding.currency === 'AUD'
-                                            ? '$'
-                                            : 'US$'
-                                        }
-                                        decimalScale={2}
-                                        fixedDecimalScale
-                                      />
-                                    </td>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900'>
-                                      <NumericFormat
-                                        value={marketValue}
-                                        displayType='text'
-                                        thousandSeparator=','
-                                        prefix={
-                                          holding.currency === 'AUD'
-                                            ? '$'
-                                            : 'US$'
-                                        }
-                                        decimalScale={2}
-                                        fixedDecimalScale
-                                      />
-                                    </td>
-                                    <td
+                                    </div>
+                                  </td>
+
+                                  {/* Quantity */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900'>
+                                    {formatQuantity(metrics.remainingQuantity)}
+                                  </td>
+
+                                  {/* Buy Price */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
+                                    {formatPrice(
+                                      Number(holding.buyPrice),
+                                      holding.currency,
+                                    )}
+                                  </td>
+
+                                  {/* Buy Date */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
+                                    {new Date(
+                                      holding.buyDate,
+                                    ).toLocaleDateString('en-AU', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                    })}
+                                  </td>
+
+                                  {/* Current Price */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
+                                    {formatPrice(
+                                      Number(holding.currentPrice),
+                                      holding.currency,
+                                    )}
+                                  </td>
+
+                                  {/* Market Value */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900'>
+                                    {formatCurrency(
+                                      metrics.marketValue,
+                                      holding.currency,
+                                    )}
+                                  </td>
+
+                                  {/* Unrealized P/L */}
+                                  <td
+                                    className={clsx(
+                                      'px-6 py-4 whitespace-nowrap text-sm text-right font-semibold',
+                                      getPLColorClass(metrics.unrealizedPL),
+                                    )}
+                                  >
+                                    {formatCurrency(
+                                      metrics.unrealizedPL,
+                                      holding.currency,
+                                    )}
+                                  </td>
+
+                                  {/* P/L % */}
+                                  <td
+                                    className={clsx(
+                                      'px-6 py-4 whitespace-nowrap text-sm text-right font-semibold',
+                                      getPLColorClass(
+                                        metrics.unrealizedPLPercent,
+                                      ),
+                                    )}
+                                  >
+                                    {formatPercentage(
+                                      metrics.unrealizedPLPercent,
+                                    )}
+                                  </td>
+
+                                  {/* Holding Period */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center text-gray-600'>
+                                    {formatHoldingPeriod(
+                                      metrics.holdingPeriodMonths,
+                                    )}
+                                  </td>
+
+                                  {/* Term Status */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center'>
+                                    <span
                                       className={clsx(
-                                        'px-6 py-4 whitespace-nowrap text-sm text-right font-semibold',
-                                        unrealizedPL >= 0
-                                          ? 'text-green-600'
-                                          : 'text-red-600',
+                                        'inline-block px-2 py-1 text-xs font-semibold rounded',
+                                        getTermStatusColorClass(
+                                          metrics.termStatus,
+                                        ),
                                       )}
                                     >
-                                      <NumericFormat
-                                        value={unrealizedPL}
-                                        displayType='text'
-                                        thousandSeparator=','
-                                        prefix={
-                                          holding.currency === 'AUD'
-                                            ? '$'
-                                            : 'US$'
-                                        }
-                                        decimalScale={2}
-                                        fixedDecimalScale
-                                      />
-                                    </td>
-                                  </tr>
-                                );
-                              },
-                            )}
+                                      {getTermStatusLabel(metrics.termStatus)}
+                                    </span>
+                                  </td>
+
+                                  {/* CGT Eligibility */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center'>
+                                    {metrics.isSold ? (
+                                      metrics.isCGTEligible ? (
+                                        <span className='text-green-600 font-semibold'>
+                                          ✓
+                                        </span>
+                                      ) : (
+                                        <span className='text-red-600'>✗</span>
+                                      )
+                                    ) : (
+                                      <span className='text-gray-400 text-xs'>
+                                        N/A
+                                      </span>
+                                    )}
+                                  </td>
+
+                                  {/* Actions */}
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center space-x-2'>
+                                    <button
+                                      onClick={() => {
+                                        setEditingHolding(holding);
+                                        setIsHoldingFormModalOpen(true);
+                                      }}
+                                      className='text-indigo-600 hover:text-indigo-700 inline-block'
+                                      title='Edit holding'
+                                    >
+                                      <FiEdit2 size={16} />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setDeleteHoldingConfirm({
+                                          holdingId: holding.id,
+                                          ticker: holding.ticker,
+                                          snapshotId: selectedSnapshotId || '',
+                                        });
+                                      }}
+                                      className='text-red-600 hover:text-red-700 inline-block'
+                                      title='Delete holding'
+                                    >
+                                      <FiTrash2 size={16} />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
+                      </div>
+                      <div className='mt-4 flex justify-end'>
+                        <Button
+                          variant='secondary'
+                          onClick={() => {
+                            setEditingHolding(null);
+                            setIsHoldingFormModalOpen(true);
+                          }}
+                        >
+                          <FiPlus className='mr-2' size={16} />
+                          Add Holding
+                        </Button>
                       </div>
                     </Disclosure.Panel>
                   </div>
@@ -576,6 +622,22 @@ export default function StockAssetsClient({ initialData }: Props) {
           refetchSnapshots();
         }}
         brokerageAccounts={brokerageAccounts || []}
+      />
+
+      {/* Holding Form Modal (Add/Edit) */}
+      <HoldingFormModal
+        isOpen={isHoldingFormModalOpen}
+        onClose={() => {
+          setIsHoldingFormModalOpen(false);
+          setEditingHolding(null);
+        }}
+        onSuccess={() => {
+          setIsHoldingFormModalOpen(false);
+          setEditingHolding(null);
+        }}
+        brokerageAccounts={brokerageAccounts || []}
+        snapshotId={selectedSnapshotId || undefined}
+        editingHolding={editingHolding}
       />
 
       {/* Delete Confirmation Modal */}
@@ -644,6 +706,85 @@ export default function StockAssetsClient({ initialData }: Props) {
                         disabled={deleteSnapshot.isPending}
                       >
                         {deleteSnapshot.isPending ? 'Deleting...' : 'Delete'}
+                      </Button>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
+              </div>
+            </div>
+          </Dialog>
+        </Transition>
+      )}
+
+      {/* Delete Holding Confirmation Modal */}
+      {deleteHoldingConfirm && (
+        <Transition show={true} as={Fragment}>
+          <Dialog
+            as='div'
+            className='relative z-50'
+            onClose={() => setDeleteHoldingConfirm(null)}
+          >
+            <Transition.Child
+              as={Fragment}
+              enter='ease-out duration-300'
+              enterFrom='opacity-0'
+              enterTo='opacity-100'
+              leave='ease-in duration-200'
+              leaveFrom='opacity-100'
+              leaveTo='opacity-0'
+            >
+              <div className='fixed inset-0 bg-black bg-opacity-25' />
+            </Transition.Child>
+
+            <div className='fixed inset-0 overflow-y-auto'>
+              <div className='flex min-h-full items-center justify-center p-4'>
+                <Transition.Child
+                  as={Fragment}
+                  enter='ease-out duration-300'
+                  enterFrom='opacity-0 scale-95'
+                  enterTo='opacity-100 scale-100'
+                  leave='ease-in duration-200'
+                  leaveFrom='opacity-100 scale-100'
+                  leaveTo='opacity-0 scale-95'
+                >
+                  <Dialog.Panel className='w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all'>
+                    <Dialog.Title
+                      as='h3'
+                      className='text-lg font-medium leading-6 text-red-600'
+                    >
+                      Delete Holding
+                    </Dialog.Title>
+                    <div className='mt-2'>
+                      <p className='text-sm text-gray-600'>
+                        Are you sure you want to delete{' '}
+                        <span className='font-semibold'>
+                          {deleteHoldingConfirm.ticker}
+                        </span>
+                        ?
+                      </p>
+                      <p className='text-sm text-gray-500 mt-2'>
+                        This action cannot be undone.
+                      </p>
+                    </div>
+
+                    <div className='mt-4 flex gap-3 justify-end'>
+                      <Button
+                        variant='secondary'
+                        onClick={() => setDeleteHoldingConfirm(null)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant='secondary'
+                        className='text-red-600 hover:text-red-700'
+                        onClick={async () => {
+                          await deleteHolding.mutateAsync({
+                            holdingId: deleteHoldingConfirm.holdingId,
+                          });
+                        }}
+                        disabled={deleteHolding.isPending}
+                      >
+                        {deleteHolding.isPending ? 'Deleting...' : 'Delete'}
                       </Button>
                     </div>
                   </Dialog.Panel>
