@@ -1,0 +1,89 @@
+import { Suspense } from 'react';
+import type { Metadata } from 'next';
+import { getServerSession } from 'next-auth';
+
+import Card from '@/components/card';
+import { authOptions } from '@/utils/authOptions';
+import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
+
+import StockAssetsClient from './StockAssetsClient';
+
+export const metadata: Metadata = {
+  title: 'Stock Assets | My Financials',
+  description: 'Track stock holdings across multiple brokerage accounts',
+};
+
+// Next.js v15: searchParams is now a Promise
+function getSelectedParam(searchParam?: string | string[]) {
+  const selectedSearch = searchParam || '';
+  const selected = Array.isArray(selectedSearch)
+    ? selectedSearch[0]
+    : selectedSearch;
+  return selected || '';
+}
+
+export default async function StockAssetsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+
+  // Get user session for user-specific data
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return (
+      <div className='p-4 bg-red-50 border border-red-200 rounded-md'>
+        <p className='text-red-800 font-medium'>Authentication required</p>
+        <p className='text-red-600 text-sm mt-1'>
+          Please log in to access stock assets.
+        </p>
+      </div>
+    );
+  }
+
+  const calendarTypeParam = getSelectedParam(params?.type) || 'FISCAL';
+  const calendarYearIdParam = getSelectedParam(params?.yearId);
+
+  // Get calendar years for the selector
+  const calendarYears = await getCalendarYearsHandler();
+
+  // Filter by selected type
+  const filteredYears = calendarYears.filter(
+    (cy) => cy.type === calendarTypeParam,
+  );
+
+  // Determine selected calendar year
+  let selectedCalendarYear = filteredYears.find(
+    (cy) => cy.id === calendarYearIdParam,
+  );
+
+  // Default to most recent if not specified
+  if (!selectedCalendarYear && filteredYears.length > 0) {
+    selectedCalendarYear = filteredYears[0];
+  }
+
+  const initialData = {
+    calendarYears: filteredYears,
+    selectedType: calendarTypeParam as 'FISCAL' | 'ANNUAL' | 'ZAKAT',
+    selectedCalendarYearId: selectedCalendarYear?.id || '',
+  };
+
+  return (
+    <>
+      <Card.Header>
+        <div className='flex justify-between mt-4 text-left'>
+          <Card.Header.Title>
+            Stock Assets - Portfolio Tracking
+          </Card.Header.Title>
+        </div>
+      </Card.Header>
+
+      <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
+        <Suspense fallback={<p className='font-medium'>Loading...</p>}>
+          <StockAssetsClient initialData={initialData} />
+        </Suspense>
+      </div>
+    </>
+  );
+}

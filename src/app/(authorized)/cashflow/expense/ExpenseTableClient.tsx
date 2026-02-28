@@ -11,7 +11,6 @@ import {
 import { FaListUl } from 'react-icons/fa';
 
 import Table from '@/components/table';
-import { tableStyles } from '@/styles/theme';
 import MONTHS_MAP from '@/constants/map';
 import type { MonthlyExpenseSummary } from '@/server/models/expense';
 

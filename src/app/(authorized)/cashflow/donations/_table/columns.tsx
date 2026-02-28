@@ -23,7 +23,10 @@ const taxCategoryOptions: OptionType[] = [
 
 const columnHelper = createColumnHelper<DonationPaymentType>();
 
-export function getTableColumns(individualsOptions: OptionType[]) {
+export function getTableColumns(
+  individualsOptions: OptionType[],
+  businessesOptions?: OptionType[],
+) {
   return [
     columnHelper.accessor('datePaid', {
       size: 150,
@@ -91,9 +94,12 @@ export function getTableColumns(individualsOptions: OptionType[]) {
 
         // Display
         if (!editedRecord) {
-          // case business - we need to fetch the business name to display
+          // Display business or individual name based on beneficiary type
           if (original.beneficiaryType == 'BUSINESS') {
-            return <span>Loading...</span>; // TODO: We need business data to display name instead of ID
+            const selectedOption = businessesOptions?.find(
+              (b) => b.id === original.beneficiaryId,
+            );
+            return <span>{selectedOption?.label || 'Unknown Business'}</span>;
           }
 
           const selectedOption = individualsOptions.find(

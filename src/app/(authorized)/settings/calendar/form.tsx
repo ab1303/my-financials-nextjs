@@ -146,6 +146,7 @@ export default function CalendarForm({
                       onChange(changedDate);
                       return;
                     }}
+                    allowFutureDates={true}
                   />
                 )}
               />
@@ -166,6 +167,7 @@ export default function CalendarForm({
                       onChange(changedDate);
                       return;
                     }}
+                    allowFutureDates={true}
                   />
                 )}
               />

@@ -1,0 +1,109 @@
+'use client';
+
+import {
+  formatCurrency,
+  formatPL,
+  getPLColorClass,
+} from '@/utils/stock-asset-calculations';
+
+interface CurrencyTotalFromService {
+  currency: string;
+  totalValue: number;
+  totalCostBasis: number;
+  totalUnrealizedPL: number;
+  totalRealizedPL: number;
+  accounts: any[];
+}
+
+interface SummaryCardsProps {
+  currencyTotals: CurrencyTotalFromService[];
+}
+
+/**
+ * Display portfolio summary cards, one per currency (AUD/USD).
+ * Shows total market value and P/L (realized + unrealized).
+ * Color-coded backgrounds: AUD (teal), USD (blue).
+ */
+export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
+  if (!currencyTotals || currencyTotals.length === 0) {
+    return (
+      <div className='p-6 bg-gray-50 rounded-lg border border-gray-200 text-center'>
+        <p className='text-gray-600'>No holdings recorded yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+      {currencyTotals.map((total) => {
+        const isCurrency = total.currency === 'AUD' ? true : false;
+        const currencyFlag = total.currency === 'AUD' ? '🇦🇺' : '🇺🇸';
+
+        // Color scheme: AUD = teal, USD = blue
+        const bgColor = isCurrency
+          ? 'bg-teal-50 border-teal-200'
+          : 'bg-blue-50 border-blue-200';
+        const headerColor = isCurrency ? 'text-teal-900' : 'text-blue-900';
+        const badgeColor = isCurrency
+          ? 'bg-teal-100 text-teal-800'
+          : 'bg-blue-100 text-blue-800';
+
+        const totalPL = total.totalUnrealizedPL + total.totalRealizedPL;
+        const totalPLColorClass = getPLColorClass(totalPL);
+
+        return (
+          <div
+            key={total.currency}
+            className={`p-4 rounded-lg border ${bgColor}`}
+          >
+            {/* Header with Currency */}
+            <div className='flex items-center justify-between mb-3'>
+              <h3 className={`font-semibold ${headerColor}`}>
+                {currencyFlag} {total.currency} Holdings
+              </h3>
+            </div>
+
+            {/* Portfolio Value */}
+            <div className='mb-4'>
+              <p className='text-sm text-gray-600 mb-1'>Portfolio Value</p>
+              <p className='text-2xl font-bold text-gray-900'>
+                {formatCurrency(total.totalValue, total.currency as any)}
+              </p>
+            </div>
+
+            {/* P/L Breakdown */}
+            <div className='space-y-2'>
+              {/* Unrealized P/L */}
+              <div className='flex justify-between items-center py-2 border-t border-gray-200 border-opacity-50'>
+                <p className='text-sm text-gray-600'>Unrealized P/L</p>
+                <p
+                  className={`font-semibold ${getPLColorClass(total.totalUnrealizedPL)}`}
+                >
+                  {formatPL(total.totalUnrealizedPL, total.currency as any)}
+                </p>
+              </div>
+
+              {/* Realized P/L */}
+              <div className='flex justify-between items-center py-2 border-t border-gray-200 border-opacity-50'>
+                <p className='text-sm text-gray-600'>Realized P/L</p>
+                <p
+                  className={`font-semibold ${getPLColorClass(total.totalRealizedPL)}`}
+                >
+                  {formatPL(total.totalRealizedPL, total.currency as any)}
+                </p>
+              </div>
+
+              {/* Total P/L */}
+              <div className='flex justify-between items-center py-3 border-t-2 border-gray-300'>
+                <p className='font-semibold text-gray-900'>Total P/L</p>
+                <p className={`text-lg font-bold ${totalPLColorClass}`}>
+                  {formatPL(totalPL, total.currency as any)}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

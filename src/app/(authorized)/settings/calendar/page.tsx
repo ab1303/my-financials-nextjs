@@ -47,7 +47,10 @@ export default async function CalendarYearPage() {
         result.calendarId &&
         result.calendarId !== ''
       ) {
+        // Revalidate calendar settings page
         revalidatePath('/settings/calendar');
+        // Revalidate Bank Assets page to refresh calendar year dropdown
+        revalidatePath('/cashflow/bank');
         return { success: true };
       } else {
         // Handle error case - result has error properties
@@ -77,7 +80,10 @@ export default async function CalendarYearPage() {
     try {
       const result = await deleteCalendarYearHandler(id);
       if (result.success) {
+        // Revalidate calendar settings page
         revalidatePath('/settings/calendar');
+        // Revalidate Bank Assets page to refresh calendar year dropdown
+        revalidatePath('/cashflow/bank');
         return { success: true };
       } else {
         const errorMessage =

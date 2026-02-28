@@ -22,11 +22,13 @@ import type { ChangeEventHandler } from 'react';
 type DatePickerDialogProps = {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
+  allowFutureDates?: boolean;
 };
 
 export default function DatePickerDialog({
   selectedDate,
   onDateChange,
+  allowFutureDates = false,
 }: DatePickerDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -56,13 +58,13 @@ export default function DatePickerDialog({
 
   const handleInputChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     const date = parse(e.currentTarget.value, 'y-MM-dd', new Date());
-    if (isValid(date) && date <= new Date()) {
+    if (isValid(date) && (allowFutureDates || date <= new Date())) {
       onDateChange(date);
     }
   };
 
   const handleDaySelect = (date: Date) => {
-    if (date && date <= new Date()) {
+    if (date && (allowFutureDates || date <= new Date())) {
       onDateChange(date);
       setIsOpen(false);
     }
@@ -94,7 +96,7 @@ export default function DatePickerDialog({
           placeholder={format(new Date(), 'y-MM-dd')}
           value={format(selectedDate, 'y-MM-dd')}
           onChange={handleInputChange}
-          max={format(new Date(), 'y-MM-dd')}
+          {...(!allowFutureDates && { max: format(new Date(), 'y-MM-dd') })}
         />
       </div>
       {isOpen &&
@@ -115,7 +117,9 @@ export default function DatePickerDialog({
                   defaultMonth={selectedDate}
                   selected={selectedDate}
                   onSelect={(_, selectedDay) => handleDaySelect(selectedDay)}
-                  disabled={(date) => date > new Date()}
+                  {...(!allowFutureDates && {
+                    disabled: (date) => date > new Date(),
+                  })}
                   classNames={{
                     months:
                       'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',

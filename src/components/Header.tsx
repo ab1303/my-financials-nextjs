@@ -5,6 +5,7 @@ import * as React from 'react';
 import { useState } from 'react';
 
 import SideNav from '../layouts/SideNav';
+import { APP_NAME } from '@/constants';
 
 type HeaderProps = {
   user: User;
@@ -31,8 +32,7 @@ export default function Header({ user }: HeaderProps) {
             </svg>
           </button>
           <span className='flex-grow flex items-center justify-center font-extrabold font-serif text-xl text-cyan-700 '>
-            {/* TODO: Pull this from context */}
-            My Financials
+            {APP_NAME}
           </span>
           <div className='flex items-center relative'>
             <span className='text-gray-400'>

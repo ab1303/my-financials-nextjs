@@ -208,3 +208,65 @@ export async function deleteRow(input: DeleteExpenseEntryInput) {
     revalidatePath('/cashflow/expense');
   }
 }
+
+export async function getExpenseCategories() {
+  'use server';
+
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return { success: false, error: 'User not authenticated', data: [] };
+    }
+
+    const { getExpenseCategories } = await import(
+      '@/server/services/expense.service'
+    );
+    const categories = await getExpenseCategories();
+
+    return {
+      success: true,
+      error: null,
+      data: categories,
+    };
+  } catch (error) {
+    console.error('Error fetching expense categories:', error);
+    return {
+      success: false,
+      error: 'Failed to load categories',
+      data: [],
+    };
+  }
+}
+
+export async function getMonthEntries(calendarYearId: string, month: number) {
+  'use server';
+
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return { success: false, error: 'User not authenticated', data: [] };
+    }
+
+    const { getExpenseEntriesForMonth } = await import(
+      '@/server/services/expense.service'
+    );
+    const entries = await getExpenseEntriesForMonth(
+      calendarYearId,
+      session.user.id,
+      month,
+    );
+
+    return {
+      success: true,
+      error: null,
+      data: entries,
+    };
+  } catch (error) {
+    console.error('Error fetching month entries:', error);
+    return {
+      success: false,
+      error: 'Failed to load entries',
+      data: [],
+    };
+  }
+}

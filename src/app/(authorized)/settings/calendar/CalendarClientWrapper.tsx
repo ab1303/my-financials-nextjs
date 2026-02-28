@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import CalendarForm from './form';
 import CalendarTableClient from './CalendarTableClient';
+import PastCalendarYears from './PastCalendarYears';
 import type { CalendarYearType } from './_types';
+import { isCurrentCalendarYear, groupByYearRange } from './_types';
 import type { FormInput } from './_schema';
 import type { ServerActionType } from './_types';
 
@@ -22,6 +24,24 @@ export default function CalendarClientWrapper({
   const [editingRecord, setEditingRecord] = useState<CalendarYearType | null>(
     null,
   );
+
+  const { currentEntries, pastGroups } = useMemo(() => {
+    const current: CalendarYearType[] = [];
+    const past: CalendarYearType[] = [];
+
+    for (const entry of tableData) {
+      if (isCurrentCalendarYear(entry)) {
+        current.push(entry);
+      } else {
+        past.push(entry);
+      }
+    }
+
+    return {
+      currentEntries: current,
+      pastGroups: groupByYearRange(past),
+    };
+  }, [tableData]);
 
   const handleEdit = (record: CalendarYearType) => {
     setEditingRecord(record);
@@ -53,9 +73,23 @@ export default function CalendarClientWrapper({
         editingRecord={editingRecord}
         setEditingRecord={setEditingRecord}
       />
-      <div className='font-mono text-gray-500 mt-12 mb-4'>Calendar year(s)</div>
-      <CalendarTableClient
-        tableData={tableData}
+      <div className='font-mono text-gray-500 mt-12 mb-4'>
+        Current calendar year(s)
+      </div>
+      {currentEntries.length > 0 ? (
+        <CalendarTableClient
+          tableData={currentEntries}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      ) : (
+        <p className='text-sm text-gray-400 italic'>
+          No active calendar years for the current period.
+        </p>
+      )}
+
+      <PastCalendarYears
+        groups={pastGroups}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

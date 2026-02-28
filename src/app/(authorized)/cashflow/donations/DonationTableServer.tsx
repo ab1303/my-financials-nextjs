@@ -2,6 +2,7 @@ import { donationPaymentsHandler } from '@/server/controllers/donation.controlle
 import { DonationPaymentStateProvider } from './StateProvider';
 import DonationTableClient from './DonationTableClient';
 import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
+import { allBusinessDetailsHandler } from '@/server/controllers/business.controller';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/utils/authOptions';
 
@@ -25,12 +26,21 @@ export default async function DonationPaymentsTableServer({
 
     const donationPayments = await donationPaymentsHandler(calendarYearId);
     const individuals = await allIndividualDetailsHandler(session.user.id);
+    const businesses = await allBusinessDetailsHandler(session.user.id);
 
     let individualsOptions: Array<OptionType> = [];
     if (individuals) {
       individualsOptions = individuals.map<OptionType>((i) => ({
         id: i.id,
         label: i.name,
+      }));
+    }
+
+    let businessesOptions: Array<OptionType> = [];
+    if (businesses) {
+      businessesOptions = businesses.map<OptionType>((b) => ({
+        id: b.id,
+        label: b.name,
       }));
     }
 
@@ -51,6 +61,7 @@ export default async function DonationPaymentsTableServer({
       <DonationPaymentStateProvider data={data}>
         <DonationTableClient
           individualsOptions={individualsOptions}
+          businessesOptions={businessesOptions}
           addRow={addRow}
           editRow={editRow}
           deleteRow={deleteRow}

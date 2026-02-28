@@ -24,7 +24,7 @@ export const CreateExpenseEntrySchema = z.object({
       (val) => Number(val.toFixed(2)) === val,
       'Amount can have at most 2 decimal places',
     ),
-  categoryId: z.string().uuid('Invalid category'),
+  categoryId: z.string().nonempty('Category is required'),
   calendarYearId: z.string().nonempty('Calendar year is required'),
 });
 
@@ -44,7 +44,7 @@ export const UpdateExpenseEntrySchema = z.object({
       'Amount can have at most 2 decimal places',
     )
     .optional(),
-  categoryId: z.string().uuid('Invalid category').optional(),
+  categoryId: z.string().nonempty('Category is required').optional(),
 });
 
 export const DeleteExpenseEntrySchema = z.object({

@@ -11,10 +11,12 @@ import { Modal, Label } from '@/components/ui';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import { inputStyles, buttonStyles } from '@/styles/theme';
 import {
-  getMonthBreakdownHandler,
-  expenseCategoriesHandler,
-} from '@/server/controllers/expense.controller';
-import { addRow, editRow, deleteRow } from '../actions';
+  addRow,
+  editRow,
+  deleteRow,
+  getExpenseCategories,
+  getMonthEntries,
+} from '../actions';
 
 import {
   ExpenseEntryStateProvider,
@@ -65,9 +67,9 @@ function CategoryBreakdownContent({
   // Load categories on mount
   useEffect(() => {
     const loadCategories = async () => {
-      const cats = await expenseCategoriesHandler();
-      if (cats) {
-        setCategories(cats);
+      const result = await getExpenseCategories();
+      if (result.success && result.data) {
+        setCategories(result.data);
       }
     };
     loadCategories();
@@ -197,139 +199,18 @@ function CategoryBreakdownContent({
         <Card.Header.Title>Expenses for {monthName}</Card.Header.Title>
       </Modal.Header>
 
-      <Modal.Body>
-        {/* Expense Entry List */}
-        <div className='space-y-3 mb-6'>
-          {state.data.length === 0 && !entryForm.categoryId ? (
-            <div className='text-center py-8 text-gray-500'>
-              No expenses recorded for this month. Click + to add your first
-              expense.
-            </div>
-          ) : (
-            state.data.map((entry) => (
-              <div
-                key={entry.id}
-                className='grid grid-cols-12 gap-3 items-center border-b pb-3'
-              >
-                {editEntryId === entry.id ? (
-                  <>
-                    {/* Edit Mode */}
-                    <div className='col-span-5'>
-                      <Select
-                        instanceId={`category-edit-${selectId}`}
-                        options={categoryOptions}
-                        value={
-                          categoryOptions.find(
-                            (opt) => opt.id === entryForm.categoryId,
-                          ) || null
-                        }
-                        onChange={(option) => {
-                          if (option) {
-                            setEntryForm({
-                              ...entryForm,
-                              categoryId: option.id,
-                              categoryName: option.label,
-                            });
-                          }
-                        }}
-                        getOptionValue={(option) => option.id}
-                        placeholder='Select category...'
-                      />
-                    </div>
-                    <div className='col-span-4'>
-                      <NumericFormat
-                        className={inputStyles.base}
-                        prefix='$'
-                        displayType='input'
-                        thousandSeparator
-                        value={entryForm.amount}
-                        onValueChange={(values) => {
-                          setEntryForm({
-                            ...entryForm,
-                            amount: values.floatValue || 0,
-                          });
-                        }}
-                      />
-                    </div>
-                    <div className='col-span-3 flex gap-2'>
-                      <button
-                        type='button'
-                        className={clsx(
-                          buttonStyles.icon,
-                          'bg-teal-100 text-teal-600 hover:bg-teal-200',
-                        )}
-                        onClick={() => handleEditEntry(entry.id)}
-                        disabled={isLoading}
-                      >
-                        <CheckIcon />
-                      </button>
-                      <button
-                        type='button'
-                        className={clsx(
-                          buttonStyles.icon,
-                          'bg-gray-100 text-gray-600 hover:bg-gray-200',
-                        )}
-                        onClick={cancelEdit}
-                        disabled={isLoading}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Display Mode */}
-                    <div className='col-span-5 font-medium'>
-                      {entry.categoryName}
-                    </div>
-                    <div className='col-span-4'>
-                      <NumericFormat
-                        prefix='$'
-                        displayType='text'
-                        thousandSeparator
-                        value={entry.amount.toFixed(2)}
-                      />
-                    </div>
-                    <div className='col-span-3 flex gap-2'>
-                      <button
-                        type='button'
-                        className={clsx(
-                          buttonStyles.icon,
-                          'bg-blue-100 text-blue-600 hover:bg-blue-200',
-                        )}
-                        onClick={() => startEdit(entry)}
-                        disabled={isLoading}
-                        aria-label='Edit entry'
-                      >
-                        <PenIcon />
-                      </button>
-                      <button
-                        type='button'
-                        className={clsx(
-                          buttonStyles.icon,
-                          'bg-red-100 text-red-600 hover:bg-red-200',
-                        )}
-                        onClick={() => handleDeleteEntry(entry.id)}
-                        disabled={isLoading}
-                        aria-label='Delete entry'
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Add New Entry Form */}
+      <Modal.Body className='space-y-6'>
+        {/* Add New Entry Form - Top Position */}
         {editEntryId === null && (
-          <div className='border-t pt-4'>
-            <Label className='mb-2'>Add New Expense</Label>
+          <div className='bg-gray-50 rounded-lg p-4 border border-gray-200'>
+            <div className='mb-3'>
+              <span className='text-sm font-semibold text-gray-700'>
+                Add New Expense
+              </span>
+            </div>
             <div className='grid grid-cols-12 gap-3 items-end'>
               <div className='col-span-5'>
-                <Label>Category</Label>
+                <Label className='text-xs text-gray-600 mb-1'>Category</Label>
                 <Select
                   instanceId={`category-add-${selectId}`}
                   options={categoryOptions}
@@ -349,10 +230,15 @@ function CategoryBreakdownContent({
                   }}
                   getOptionValue={(option) => option.id}
                   placeholder='Select category...'
+                  menuPortalTarget={document.body}
+                  menuPosition='fixed'
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
                 />
               </div>
               <div className='col-span-4'>
-                <Label>Amount $</Label>
+                <Label className='text-xs text-gray-600 mb-1'>Amount $</Label>
                 <NumericFormat
                   className={inputStyles.base}
                   prefix='$'
@@ -376,6 +262,7 @@ function CategoryBreakdownContent({
                   )}
                   onClick={handleAddEntry}
                   disabled={isLoading}
+                  aria-label='Add expense'
                 >
                   <AddIcon />
                 </button>
@@ -383,6 +270,147 @@ function CategoryBreakdownContent({
             </div>
           </div>
         )}
+
+        {/* Expense Entry List */}
+        <div>
+          {state.data.length === 0 ? (
+            <div className='text-center py-12 text-gray-500'>
+              <p className='text-sm'>
+                No expenses recorded for this month. Click + to add your first
+                expense.
+              </p>
+            </div>
+          ) : (
+            <div className='space-y-3'>
+              {state.data.map((entry) => (
+                <div key={entry.id} className='flex items-center space-x-3'>
+                  <div
+                    className={clsx(
+                      'w-1 h-16 rounded-full',
+                      editEntryId === entry.id ? 'bg-teal-500' : 'bg-gray-300',
+                    )}
+                  />
+                  <div className='flex-1 bg-white border border-gray-200 rounded-lg shadow-sm p-4'>
+                    {editEntryId === entry.id ? (
+                      <div className='grid grid-cols-12 gap-3 items-center'>
+                        {/* Edit Mode */}
+                        <div className='col-span-5'>
+                          <Select
+                            instanceId={`category-edit-${selectId}`}
+                            options={categoryOptions}
+                            value={
+                              categoryOptions.find(
+                                (opt) => opt.id === entryForm.categoryId,
+                              ) || null
+                            }
+                            onChange={(option) => {
+                              if (option) {
+                                setEntryForm({
+                                  ...entryForm,
+                                  categoryId: option.id,
+                                  categoryName: option.label,
+                                });
+                              }
+                            }}
+                            getOptionValue={(option) => option.id}
+                            placeholder='Select category...'
+                            menuPortalTarget={document.body}
+                            menuPosition='fixed'
+                            styles={{
+                              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                            }}
+                          />
+                        </div>
+                        <div className='col-span-4'>
+                          <NumericFormat
+                            className={inputStyles.base}
+                            prefix='$'
+                            displayType='input'
+                            thousandSeparator
+                            value={entryForm.amount}
+                            onValueChange={(values) => {
+                              setEntryForm({
+                                ...entryForm,
+                                amount: values.floatValue || 0,
+                              });
+                            }}
+                          />
+                        </div>
+                        <div className='col-span-3 flex gap-2 justify-end'>
+                          <button
+                            type='button'
+                            className={clsx(
+                              buttonStyles.iconCompact,
+                              'text-gray-400 hover:text-teal-600 hover:bg-gray-50',
+                            )}
+                            onClick={() => handleEditEntry(entry.id)}
+                            disabled={isLoading}
+                            aria-label='Save changes'
+                          >
+                            <CheckIcon className='w-5 h-5' />
+                          </button>
+                          <button
+                            type='button'
+                            className={clsx(
+                              buttonStyles.iconCompact,
+                              'text-gray-400 hover:text-gray-600 hover:bg-gray-50',
+                            )}
+                            onClick={cancelEdit}
+                            disabled={isLoading}
+                            aria-label='Cancel edit'
+                          >
+                            <span className='text-xl'>×</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className='flex justify-between items-center'>
+                        {/* Display Mode */}
+                        <span className='text-sm font-medium text-gray-900'>
+                          {entry.categoryName}
+                        </span>
+                        <span className='text-lg font-semibold text-gray-900'>
+                          <NumericFormat
+                            prefix='$'
+                            displayType='text'
+                            thousandSeparator
+                            value={entry.amount.toFixed(2)}
+                          />
+                        </span>
+                        <div className='flex space-x-3'>
+                          <button
+                            type='button'
+                            className={clsx(
+                              buttonStyles.iconCompact,
+                              'text-gray-400 hover:text-teal-600 hover:bg-gray-50',
+                            )}
+                            onClick={() => startEdit(entry)}
+                            disabled={isLoading}
+                            aria-label='Edit entry'
+                          >
+                            <PenIcon className='w-5 h-5' />
+                          </button>
+                          <button
+                            type='button'
+                            className={clsx(
+                              buttonStyles.iconCompact,
+                              'text-gray-400 hover:text-red-600 hover:bg-gray-50',
+                            )}
+                            onClick={() => handleDeleteEntry(entry.id)}
+                            disabled={isLoading}
+                            aria-label='Delete entry'
+                          >
+                            <TrashIcon className='w-5 h-5' />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </Modal.Body>
 
       <Modal.Footer>
@@ -418,12 +446,8 @@ export default function CategoryBreakdownModal(
   useEffect(() => {
     const loadEntries = async () => {
       setIsLoading(true);
-      const data = await getMonthBreakdownHandler(
-        props.calendarYearId,
-        '', // userId will be fetched from session in handler
-        props.month,
-      );
-      setEntries(data || []);
+      const result = await getMonthEntries(props.calendarYearId, props.month);
+      setEntries(result.data || []);
       setIsLoading(false);
     };
 

@@ -23,6 +23,8 @@ import {
   IconRelations,
   IconUser,
   IconChartBar,
+  IconExpense,
+  IconStock,
 } from './SideNavIcons';
 
 type SideNavProps = {
@@ -109,6 +111,13 @@ export default function SideNav({
                 <IconGift />
               </SideNavLink>
               <SideNavLink
+                name='Expenses'
+                href='/cashflow/expense'
+                className='border-b-0'
+              >
+                <IconExpense />
+              </SideNavLink>
+              <SideNavLink
                 name='Bank Interest'
                 href='/cashflow/bank-interest'
                 className='border-b-0'
@@ -136,6 +145,13 @@ export default function SideNav({
                 className='border-b-0'
               >
                 <IconBank />
+              </SideNavLink>
+              <SideNavLink
+                name='Stock(s)'
+                href='/cashflow/stocks'
+                className='border-b-0'
+              >
+                <IconStock />
               </SideNavLink>
             </Disclosure.Panel>
           </Disclosure>

@@ -33,10 +33,15 @@ export default function BankInterestForm({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // TODO: use a Toggle control to set current year
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // State for switching between calendar types
   const [currentYearType, setCurrentYearType] =
     useState<CalendarYearType['type']>('ANNUAL');
+
+  // Get available year types from the data
+  const availableYearTypes = useMemo(
+    () => Array.from(new Set(yearlyData.map((yd) => yd.type))),
+    [yearlyData],
+  );
 
   const currentYearData = yearlyData.find((yd) => yd.id === yearIdParam);
   const currentYearOption = currentYearData
@@ -96,6 +101,31 @@ export default function BankInterestForm({
 
   return (
     <form className='mb-0 space-y-6'>
+      {/* Calendar Type Toggle */}
+      {availableYearTypes.length > 1 && (
+        <div className='mx-10'>
+          <Label>Calendar Type</Label>
+          <div className='mt-3 flex gap-2'>
+            {availableYearTypes.map((type) => (
+              <button
+                key={type}
+                type='button'
+                onClick={() => {
+                  setCurrentYearType(type);
+                  setSelectedYear(undefined); // Clear selection when switching types
+                }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  currentYearType === type
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className='mx-10'>
         <Label>Financial Year</Label>
         <div className='mt-3'>

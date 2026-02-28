@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:14.5    
+    image: postgres:14.5
     container_name: postgres-financials-db
     restart: always
     ports:
@@ -12,7 +12,26 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: financials
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d financials"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d financials']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - financials-network
+
+  postgres-test-e2e:
+    image: postgres:14.5
+    container_name: postgres-financials-test-e2e
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: financials_e2e_test
+    volumes:
+      - postgres-test-e2e-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,6 +57,7 @@ services:
 
 volumes:
   db_data:
+  postgres-test-e2e-data:
 
 networks:
   financials-network:

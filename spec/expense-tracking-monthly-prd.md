@@ -364,70 +364,70 @@ src/app/(authorized)/cashflow/expense/
 
 ### Phase 1: Database and seed data (Priority: High)
 
-- [ ] Create Prisma migration for ExpenseCategory, Expense, ExpenseEntry models
-- [ ] Create seed script for initial 10 expense categories
-- [ ] Run migration and seed on development database
-- [ ] Verify schema with Prisma Studio
+- [x] Create Prisma migration for ExpenseCategory, Expense, ExpenseEntry models
+- [x] Create seed script for initial 10 expense categories
+- [x] Run migration and seed on development database
+- [x] Verify schema with Prisma Studio
 
 ### Phase 2: Backend services and validation (Priority: High)
 
-- [ ] Create Zod schemas in \_schema.ts (validation rules)
-- [ ] Create TypeScript types in \_types.ts
-- [ ] Implement ExpenseService with Prisma operations
-- [ ] Implement ExpenseController with business logic
+- [x] Create Zod schemas in \_schema.ts (validation rules)
+- [x] Create TypeScript types in \_types.ts
+- [x] Implement ExpenseService with Prisma operations
+- [x] Implement ExpenseController with business logic
 - [ ] Write unit tests for service methods
 - [ ] Write unit tests for validation schemas
 
 ### Phase 3: Server Actions and CRUD (Priority: High)
 
-- [ ] Implement Server Actions in actions.ts (addRow, editRow, deleteRow)
-- [ ] Add session validation to all actions
-- [ ] Implement revalidatePath after mutations
-- [ ] Add error handling with user-friendly messages
+- [x] Implement Server Actions in actions.ts (addRow, editRow, deleteRow)
+- [x] Add session validation to all actions
+- [x] Implement revalidatePath after mutations
+- [x] Add error handling with user-friendly messages
 - [ ] Write integration tests for Server Actions
 
 ### Phase 4: Main page and table (Priority: High)
 
-- [ ] Create page.tsx (Server Component with fiscal year fetch)
-- [ ] Create form.tsx (fiscal year dropdown with URL params)
-- [ ] Create ExpenseTableServer (fetch monthly aggregates)
-- [ ] Create ExpenseTableClient (TanStack Table with 12 rows)
-- [ ] Implement columns.tsx (Month, Total Expense, Category Breakdown icon)
-- [ ] Add footer row with annual total
-- [ ] Test fiscal year switching and total calculations
+- [x] Create page.tsx (Server Component with fiscal year fetch)
+- [x] Create form.tsx (fiscal year dropdown with URL params)
+- [x] Create ExpenseTableServer (fetch monthly aggregates)
+- [x] Create ExpenseTableClient (TanStack Table with 12 rows)
+- [x] Implement columns.tsx (Month, Total Expense, Category Breakdown icon)
+- [x] Add footer row with annual total
+- [x] Test fiscal year switching and total calculations
 
 ### Phase 5: Category breakdown modal (Priority: High)
 
-- [ ] Create CategoryBreakdownModal component
-- [ ] Implement entry list display with category and amount
-- [ ] Create inline add/edit form with react-select dropdown
-- [ ] Implement delete functionality with icon button
-- [ ] Add modal footer with category total
-- [ ] Test CRUD operations in modal
+- [x] Create CategoryBreakdownModal component
+- [x] Implement entry list display with category and amount
+- [x] Create inline add/edit form with react-select dropdown
+- [x] Implement delete functionality with icon button
+- [x] Add modal footer with category total
+- [x] Test CRUD operations in modal
 
 ### Phase 6: State management and optimistic updates (Priority: Medium)
 
-- [ ] Create StateProvider with Context + useReducer
-- [ ] Implement reducer.ts with Immer (ADD_ENTRY, EDIT_ENTRY, REMOVE_ENTRY)
-- [ ] Wire reducer dispatch to modal CRUD operations
-- [ ] Implement optimistic UI updates with rollback on error
-- [ ] Test state consistency across add/edit/delete flows
+- [x] Create StateProvider with Context + useReducer
+- [x] Implement reducer.ts with Immer (ADD_ENTRY, EDIT_ENTRY, REMOVE_ENTRY)
+- [x] Wire reducer dispatch to modal CRUD operations
+- [x] Implement optimistic UI updates with rollback on error
+- [x] Test state consistency across add/edit/delete flows
 
 ### Phase 7: Polish and testing (Priority: Medium)
 
-- [ ] Add loading states (spinners, skeleton screens)
-- [ ] Implement toast notifications for success/error
-- [ ] Add empty states with helpful messages
-- [ ] Perform accessibility audit (keyboard navigation, ARIA labels)
-- [ ] Manual testing of all user flows
+- [x] Add loading states (spinners, skeleton screens)
+- [x] Implement toast notifications for success/error
+- [x] Add empty states with helpful messages
+- [x] Perform accessibility audit (keyboard navigation, ARIA labels)
+- [x] Manual testing of all user flows
 - [ ] Cross-browser testing (Chrome, Firefox, Safari, Edge)
 - [ ] Mobile responsive testing
 
 ### Phase 8: Production readiness (Priority: High)
 
-- [ ] Run `pnpm run build` to verify production build succeeds
-- [ ] Fix any build warnings or errors
-- [ ] Review and update .env-example if new env vars added
+- [x] Run `pnpm run build` to verify production build succeeds
+- [x] Fix any build warnings or errors
+- [x] Review and update .env-example if new env vars added
 - [ ] Update README.md with expense tracking feature documentation
 - [ ] Create migration rollback plan
 - [ ] Production deployment and smoke testing
