@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
 import {
   useReactTable,
@@ -9,12 +10,14 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { FaListUl } from 'react-icons/fa';
+import { FiUpload } from 'react-icons/fi';
 
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
 import type { MonthlyExpenseSummary } from '@/server/models/expense';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
+import AIImportWizard from './_components/ai-import/AIImportWizard';
 
 const columnHelper = createColumnHelper<MonthlyExpenseSummary>();
 
@@ -27,7 +30,9 @@ export default function ExpenseTableClient({
   calendarYearId,
   monthlySummaries,
 }: ExpenseTableClientProps) {
+  const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [isImportWizardOpen, setIsImportWizardOpen] = useState(false);
 
   const columns = [
     columnHelper.accessor('month', {
@@ -86,6 +91,17 @@ export default function ExpenseTableClient({
 
   return (
     <>
+      {/* AI Import Button */}
+      <div className='mb-4 flex justify-end'>
+        <button
+          onClick={() => setIsImportWizardOpen(true)}
+          className='flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors'
+        >
+          <FiUpload className='h-4 w-4' />
+          AI Import
+        </button>
+      </div>
+
       <div className='overflow-x-auto'>
         <Table>
           <Table.THead>
@@ -146,6 +162,14 @@ export default function ExpenseTableClient({
           onClose={() => setSelectedMonth(null)}
         />
       )}
+
+      {/* AI Import Wizard Modal */}
+      <AIImportWizard
+        isOpen={isImportWizardOpen}
+        onClose={() => setIsImportWizardOpen(false)}
+        calendarYearId={calendarYearId}
+        onImportComplete={() => router.refresh()}
+      />
     </>
   );
 }

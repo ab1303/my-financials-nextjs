@@ -40,10 +40,10 @@ export class LocalStorageAdapter implements IImageStorageAdapter {
   }
 
   async uploadImage(
-    _file: Buffer,
-    _mimeType: string,
-    _userId: string,
-    _originalFileName: string,
+    file: Buffer,
+    mimeType: string,
+    userId: string,
+    originalFileName: string,
   ): Promise<StorageResult> {
     // Ensure directory exists
     await mkdir(this.uploadDir, { recursive: true });
