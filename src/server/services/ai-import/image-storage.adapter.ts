@@ -40,10 +40,10 @@ export class LocalStorageAdapter implements IImageStorageAdapter {
   }
 
   async uploadImage(
-    file: Buffer,
-    mimeType: string,
-    userId: string,
-    originalFileName: string,
+    _file: Buffer,
+    _mimeType: string,
+    _userId: string,
+    _originalFileName: string,
   ): Promise<StorageResult> {
     // Ensure directory exists
     await mkdir(this.uploadDir, { recursive: true });
@@ -185,11 +185,11 @@ export class S3StorageAdapter implements IImageStorageAdapter {
     );
   }
 
-  async deleteImage(storageUrl: string): Promise<void> {
+  async deleteImage(_storageUrl: string): Promise<void> {
     throw new Error('S3StorageAdapter not implemented yet');
   }
 
-  async getImageBuffer(storageUrl: string): Promise<Buffer> {
+  async getImageBuffer(_storageUrl: string): Promise<Buffer> {
     throw new Error('S3StorageAdapter not implemented yet');
   }
 }
