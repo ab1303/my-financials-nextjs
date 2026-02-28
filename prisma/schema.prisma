@@ -73,6 +73,8 @@ model User {
   BankAccount       BankAccount[]
   BankAssetSnapshot BankAssetSnapshot[]
   StockSnapshot     StockSnapshot[]
+  AIImportSession   AIImportSession[]
+  ImportImage       ImportImage[]
 }
 
 model VerificationToken {
@@ -289,6 +291,8 @@ model ExpenseEntry {
   categoryId String
   expense    Expense         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   expenseId  String
+  importImage    ImportImage?  @relation(fields: [importImageId], references: [id])
+  importImageId  String?
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
@@ -368,6 +372,8 @@ model BankAssetEntry {
   account    BankAccount       @relation(fields: [accountId], references: [id])
   snapshotId String
   snapshot   BankAssetSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  importImage    ImportImage?  @relation(fields: [importImageId], references: [id])
+  importImageId  String?
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
 
@@ -414,4 +420,64 @@ model StockHolding {
   @@index([snapshotId])
   @@index([accountId])
   @@index([ticker])
+}
+
+// AI Image Import
+
+enum ImportTypeEnum {
+  EXPENSE
+  BANK_ASSET
+}
+
+enum ImportStatusEnum {
+  PENDING
+  PROCESSING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum StorageProviderEnum {
+  LOCAL
+  VERCEL_BLOB
+  S3
+}
+
+model AIImportSession {
+  id                String            @id @default(cuid())
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  importType        ImportTypeEnum
+  status            ImportStatusEnum  @default(PENDING)
+  overallConfidence Float?
+  recordsCreated    Int               @default(0)
+  metadata          Json?
+  images            ImportImage[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+model ImportImage {
+  id              String              @id @default(cuid())
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  session         AIImportSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId       String
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  storageUrl      String
+  storageProvider StorageProviderEnum
+  confidence      Float?
+  extractedData   Json?
+  errorMessage    String?
+  createdAt       DateTime            @default(now())
+
+  expenseEntries  ExpenseEntry[]
+  bankAssetEntries BankAssetEntry[]
+
+  @@index([sessionId])
+  @@index([userId])
 }
