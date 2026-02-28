@@ -72,6 +72,7 @@ model User {
   Expense           Expense[]
   BankAccount       BankAccount[]
   BankAssetSnapshot BankAssetSnapshot[]
+  StockSnapshot     StockSnapshot[]
 }
 
 model VerificationToken {
@@ -85,6 +86,7 @@ model VerificationToken {
 enum BusinessEnumType {
   BANK
   PHILANTHROPY
+  BROKERAGE
 }
 
 enum BeneficiaryEnumType {
@@ -159,6 +161,7 @@ model Business {
   ZakatPayment    ZakatPayment[]
   DonationPayment DonationPayment[]
   BankAccount     BankAccount[]
+  StockHolding    StockHolding[]
   userId          String
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -300,6 +303,17 @@ enum CalendarEnumType {
   FISCAL
 }
 
+enum InvestmentTermEnumType {
+  SHORT_TERM
+  MID_TERM
+  LONG_TERM
+}
+
+enum CurrencyEnumType {
+  AUD
+  USD
+}
+
 model CalendarYear {
   id           String            @id @default(cuid())
   description  String
@@ -359,4 +373,45 @@ model BankAssetEntry {
 
   @@unique([accountId, snapshotId]) // One entry per account per snapshot
   @@index([snapshotId])
+}
+
+// Stock Assets Tracking
+
+// Snapshot header (one per snapshot date)
+model StockSnapshot {
+  id           String         @id @default(cuid())
+  snapshotDate DateTime
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  holdings     StockHolding[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([userId, snapshotDate])
+}
+
+// Individual stock holdings within a snapshot
+model StockHolding {
+  id           String                 @id @default(cuid())
+  ticker       String
+  companyName  String
+  quantity     Decimal
+  buyPrice     Decimal                @db.Money
+  buyDate      DateTime
+  currentPrice Decimal                @db.Money
+  currency     CurrencyEnumType
+  plannedTerm  InvestmentTermEnumType
+  salePrice    Decimal?               @db.Money
+  saleDate     DateTime?
+  soldQuantity Decimal?
+  accountId    String
+  account      Business               @relation(fields: [accountId], references: [id])
+  snapshotId   String
+  snapshot     StockSnapshot          @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  @@index([snapshotId])
+  @@index([accountId])
+  @@index([ticker])
 }

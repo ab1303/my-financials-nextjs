@@ -5,7 +5,14 @@
 ### 1.1 Document title and version
 
 - PRD: Assets Stocks Tracking
-- Version: 1.0
+- Version: 1.1
+
+### 1.0.1 Revision History
+
+| Version | Date       | Changes                                                                                                                                                          |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2026-02-01 | Initial PRD                                                                                                                                                      |
+| 1.1     | 2026-02-28 | Refined after code review: removed calendarId (use date-range filtering), added soldQuantity, Decimal quantity, consolidated API router, simplified UI structure |
 
 ### 1.2 Product summary
 
@@ -185,10 +192,12 @@ Key capabilities:
 
 - **Record partial or full sale** (Priority: Medium)
   - User updates existing holding with sale information
-  - Enter Sale Price and Sale Date
-  - For partial sale: Reduce Quantity field to remaining shares
-  - System calculates realized P/L for sold portion
+  - Enter Sale Price, Sale Date, and Sold Quantity
+  - For partial sale: Enter soldQuantity (original quantity preserved for audit)
+  - For full sale: soldQuantity equals quantity
+  - System calculates realized P/L based on soldQuantity
   - CGT discount auto-calculated based on Buy Date vs Sale Date
+  - Remaining shares = quantity - soldQuantity (displayed in table)
 
 - **Edit snapshot date** (Priority: Low)
   - Option to modify the snapshot date
@@ -228,9 +237,10 @@ Key capabilities:
   - Unrealized P/L % = ((Market Value - Cost Basis) / Cost Basis) × 100
 
 - **Realized P/L calculation** (Priority: High)
-  - For sold holdings only
-  - Realized P/L = (Sale Price × Quantity Sold) - (Buy Price × Quantity Sold)
-  - If partial sale, calculate based on sold quantity only
+  - For sold holdings only (where soldQuantity > 0)
+  - Realized P/L = (Sale Price × soldQuantity) - (Buy Price × soldQuantity)
+  - For partial sale: uses soldQuantity field (original quantity preserved)
+  - Remaining unrealized = (currentPrice - buyPrice) × (quantity - soldQuantity)
 
 - **Holding period calculation** (Priority: High)
   - Actual Holding = differenceInMonths(snapshotDate or saleDate, buyDate)
@@ -289,7 +299,7 @@ Key capabilities:
 
 ### 5.1 Entry points & first-time user flow
 
-- **Navigation**: Assets → Stocks in sidebar (new menu item under Assets disclosure)
+- **Navigation**: Asset(s) → Stocks in sidebar (new menu item under Asset(s) disclosure, route: `/cashflow/stocks`)
 - **First visit**: Empty state with clear CTA - "Track your stock portfolio. Take your first snapshot."
 - **Prerequisite check**: If user has no brokerage accounts configured, prompt: "You need to add a brokerage account first. Go to Settings → Business."
 - **First snapshot**: Guided form with clear labels, tooltips explaining each field
@@ -477,7 +487,7 @@ Later, when preparing his tax return, Marcus switches to the previous fiscal yea
 | ------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | STK-005 | As a user, I want to add a new stock purchase so that I can track my investment         | Given I'm creating/editing a snapshot, When I add a new holding with ticker, quantity, buy price, and buy date, Then the holding appears in the appropriate account accordion |
 | STK-006 | As a user, I want to record a stock sale so that I can track my realized gains/losses   | Given I have an existing holding, When I enter sale price and sale date, Then the realized P/L is calculated and CGT eligibility is shown                                     |
-| STK-007 | As a user, I want to record a partial stock sale so that I can track remaining holdings | Given I have 100 shares, When I sell 50 and update quantity to 50 with sale info, Then 50 shares remain and realized P/L reflects sold portion                                |
+| STK-007 | As a user, I want to record a partial stock sale so that I can track remaining holdings | Given I have 100 shares, When I enter soldQuantity=50 with sale price/date, Then original quantity is preserved, remaining=50, and realized P/L reflects sold portion         |
 
 ### 10.3 Portfolio analysis
 
@@ -503,6 +513,11 @@ Later, when preparing his tax return, Marcus switches to the previous fiscal yea
 
 ## 11. Database schema (Proposed)
 
+> **REFINED v1.1**: Removed `calendarId` from StockSnapshot to match the bank-assets pattern
+> of date-range filtering. Changed `quantity` from `Int` to `Decimal` to support fractional
+> shares. Added `soldQuantity` field for proper partial sale tracking without losing original
+> purchase quantity. Removed CalendarYear relation (filtering done via date ranges).
+
 ```prisma
 // Add to existing BusinessEnumType enum
 enum BusinessEnumType {
@@ -525,11 +540,10 @@ enum CurrencyEnumType {
 }
 
 // Stock snapshot - point-in-time record of portfolio
+// NOTE: No calendarId - follows bank-assets pattern of date-range filtering
 model StockSnapshot {
   id           String         @id @default(cuid())
   snapshotDate DateTime
-  calendar     CalendarYear   @relation(fields: [calendarId], references: [id])
-  calendarId   String
   userId       String
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   holdings     StockHolding[]
@@ -537,7 +551,6 @@ model StockSnapshot {
   updatedAt    DateTime       @updatedAt
 
   @@index([userId, snapshotDate])
-  @@index([calendarId])
 }
 
 // Individual stock holding within a snapshot
@@ -545,7 +558,7 @@ model StockHolding {
   id             String                @id @default(cuid())
   ticker         String                // e.g., "CBA.AX", "AAPL"
   companyName    String                // e.g., "Commonwealth Bank", "Apple Inc"
-  quantity       Int                   // Number of shares held
+  quantity       Decimal               @db.Decimal(12, 6) // Supports fractional shares
   buyPrice       Decimal               @db.Money // Price per share at purchase
   buyDate        DateTime              // Date of purchase
   currentPrice   Decimal               @db.Money // User-entered current price (manual)
@@ -553,8 +566,9 @@ model StockHolding {
   plannedTerm    InvestmentTermEnumType // User's intended holding period
 
   // Sale information (optional - populated when stock is sold)
-  salePrice      Decimal?              @db.Money // Price per share at sale
+  salePrice      Decimal?              @db.Money    // Price per share at sale
   saleDate       DateTime?             // Date of sale
+  soldQuantity   Decimal?              @db.Decimal(12, 6) // Shares sold (original quantity preserved)
 
   // Relations
   account        Business              @relation(fields: [accountId], references: [id])
@@ -576,60 +590,41 @@ model StockHolding {
 
 // Add to Business model:
 //   StockHolding  StockHolding[]
-
-// Add to CalendarYear model:
-//   StockSnapshot StockSnapshot[]
 ```
 
 ## 12. API endpoints (tRPC)
 
-### 12.1 Snapshot operations
+> **REFINED v1.1**: Consolidated all endpoints under a single `stockAsset` router
+> to match the bank-assets pattern. Removed separate routers for holdings and summaries.
 
-| Procedure                       | Type     | Description                          |
-| ------------------------------- | -------- | ------------------------------------ |
-| `stockSnapshot.getByFiscalYear` | Query    | Get all snapshots for a fiscal year  |
-| `stockSnapshot.getLatest`       | Query    | Get most recent snapshot for prefill |
-| `stockSnapshot.getById`         | Query    | Get specific snapshot with holdings  |
-| `stockSnapshot.create`          | Mutation | Create new snapshot with holdings    |
-| `stockSnapshot.delete`          | Mutation | Delete snapshot and all holdings     |
+### 12.1 All endpoints (single `stockAsset` router)
 
-### 12.2 Holding operations
-
-| Procedure             | Type     | Description                          |
-| --------------------- | -------- | ------------------------------------ |
-| `stockHolding.create` | Mutation | Add holding to existing snapshot     |
-| `stockHolding.update` | Mutation | Update holding (including sale info) |
-| `stockHolding.delete` | Mutation | Remove holding from snapshot         |
-
-### 12.3 Summary operations
-
-| Procedure                        | Type  | Description                          |
-| -------------------------------- | ----- | ------------------------------------ |
-| `stockSummary.getAccountTotals`  | Query | Get totals grouped by account        |
-| `stockSummary.getCurrencyTotals` | Query | Get grand totals grouped by currency |
-| `stockSummary.getCGTReport`      | Query | Get CGT-eligible holdings for tax    |
+| Procedure                          | Type     | Description                                      |
+| ---------------------------------- | -------- | ------------------------------------------------ |
+| `stockAsset.getSnapshots`          | Query    | Get all snapshots for a fiscal year (date range) |
+| `stockAsset.getMostRecentSnapshot` | Query    | Get most recent snapshot for prefill             |
+| `stockAsset.getSnapshotById`       | Query    | Get specific snapshot with all holdings          |
+| `stockAsset.getSnapshotTotals`     | Query    | Get totals grouped by account & currency         |
+| `stockAsset.createSnapshot`        | Mutation | Create new snapshot with holdings                |
+| `stockAsset.deleteSnapshot`        | Mutation | Delete snapshot and all holdings                 |
+| `stockAsset.createHolding`         | Mutation | Add holding to existing snapshot                 |
+| `stockAsset.updateHolding`         | Mutation | Update holding (prices, sale info, etc.)         |
+| `stockAsset.deleteHolding`         | Mutation | Remove holding from snapshot                     |
 
 ## 13. UI component structure
 
+> **REFINED v1.1**: Simplified to match bank-assets pattern. Removed over-engineered
+> reducer/StateProvider/actions. Uses tRPC hooks directly in client component.
+> Route placed under `/cashflow/stocks` for consistency with `/cashflow/bank`.
+
 ```
-src/app/(authorized)/assets/stocks/
-├── page.tsx                    # Server Component - main page
-├── layout.tsx                  # Layout wrapper
-├── form.tsx                    # Client Component - fiscal year/snapshot selectors
-├── actions.ts                  # Server Actions for CRUD
-├── reducer.ts                  # State reducer for optimistic updates
-├── StateProvider.tsx           # Context provider for state management
-├── _types.ts                   # TypeScript types
-├── _schema.ts                  # Zod validation schemas
-├── StockSnapshotTableServer.tsx # Server Component - data fetching
-├── StockSnapshotTableClient.tsx # Client Component - accordion + table
-├── NewSnapshotModal.tsx        # Modal for creating snapshots
-├── HoldingForm.tsx             # Form for adding/editing holdings
-├── SummaryCards.tsx            # Grand total summary cards
-└── _table/
-    ├── columns.tsx             # TanStack Table column definitions
-    ├── HoldingRow.tsx          # Individual holding row component
-    └── AccountAccordion.tsx    # Accordion wrapper per account
+src/app/(authorized)/cashflow/stocks/
+├── page.tsx                    # Server Component - main page (data fetching)
+├── StockAssetsClient.tsx       # Client Component - main interactive UI
+├── NewSnapshotModal.tsx        # Modal for creating/prefilling snapshots
+├── HoldingFormModal.tsx        # Modal for adding/editing individual holdings
+├── SummaryCards.tsx            # Grand total summary cards (AUD/USD)
+└── _types.ts                   # Feature-specific TypeScript types
 ```
 
 ## 14. Wireframe description

@@ -1,0 +1,541 @@
+'use client';
+
+import { useState } from 'react';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'react-toastify';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import Select from 'react-select';
+import { NumericFormat } from 'react-number-format';
+
+import { Modal } from '@/components/ui/Modal';
+import { Label } from '@/components/ui/Label';
+import { Button } from '@/components';
+import { trpc } from '@/server/trpc/client';
+import { createStockSnapshotSchema } from '@/server/schema/stock-asset.schema';
+
+import type { CreateStockSnapshotInput } from '@/server/schema/stock-asset.schema';
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  brokerageAccounts: Array<{
+    id: string;
+    name: string;
+  }>;
+}
+
+type FormData = CreateStockSnapshotInput;
+
+const CURRENCY_OPTIONS = [
+  { value: 'AUD', label: 'AUD' },
+  { value: 'USD', label: 'USD' },
+];
+
+const TERM_OPTIONS = [
+  { value: 'SHORT_TERM', label: 'Short Term (< 12 months)' },
+  { value: 'MID_TERM', label: 'Mid Term (12-36 months)' },
+  { value: 'LONG_TERM', label: 'Long Term (> 36 months)' },
+];
+
+export default function NewSnapshotModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  brokerageAccounts,
+}: Props) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const utils = trpc.useUtils();
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
+    resolver: zodResolver(createStockSnapshotSchema),
+    defaultValues: {
+      snapshotDate: new Date(),
+      holdings: [
+        {
+          ticker: '',
+          companyName: '',
+          quantity: 0,
+          buyPrice: 0,
+          buyDate: new Date(),
+          currentPrice: 0,
+          currency: 'AUD',
+          plannedTerm: 'MID_TERM',
+          accountId: brokerageAccounts?.[0]?.id || '',
+        },
+      ],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'holdings',
+  });
+
+  const createSnapshot = trpc.stockAsset.createSnapshot.useMutation({
+    onSuccess: () => {
+      toast.success('Snapshot created successfully!');
+      utils.stockAsset.getSnapshots.invalidate();
+      reset();
+      onClose();
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create snapshot');
+    },
+  });
+
+  const onSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    try {
+      await createSnapshot.mutateAsync(data);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+
+  const accountOptions = brokerageAccounts.map((account) => ({
+    value: account.id,
+    label: account.name,
+  }));
+
+  return (
+    <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-4xl'>
+      <Modal.Header>
+        <h2 className='text-xl font-semibold text-gray-900'>
+          New Stock Snapshot
+        </h2>
+        <p className='text-sm text-gray-600 mt-1'>
+          Record your current stock portfolio position
+        </p>
+      </Modal.Header>
+
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Modal.Body variant='spacious'>
+          {/* Snapshot Date */}
+          <div>
+            <Label htmlFor='snapshotDate'>Snapshot Date *</Label>
+            <input
+              {...register('snapshotDate')}
+              type='date'
+              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+            />
+            {errors.snapshotDate && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.snapshotDate.message}
+              </p>
+            )}
+          </div>
+
+          {/* Holdings */}
+          <div>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+              Stock Holdings
+            </h3>
+
+            {fields.map((field, index) => (
+              <div
+                key={field.id}
+                className='mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50'
+              >
+                <div className='flex justify-between items-center mb-4'>
+                  <h4 className='font-medium text-gray-900'>
+                    Holding #{index + 1}
+                  </h4>
+                  {fields.length > 1 && (
+                    <button
+                      type='button'
+                      onClick={() => remove(index)}
+                      className='text-red-600 hover:text-red-700 flex items-center gap-1'
+                    >
+                      <FiTrash2 size={16} />
+                      Remove
+                    </button>
+                  )}
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  {/* Account Selection */}
+                  <div className='md:col-span-2'>
+                    <Label htmlFor={`holdings.${index}.accountId`}>
+                      Brokerage Account *
+                    </Label>
+                    <Controller
+                      name={`holdings.${index}.accountId`}
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          options={accountOptions}
+                          value={accountOptions.find(
+                            (opt) => opt.value === field.value,
+                          )}
+                          onChange={(selected) =>
+                            field.onChange(selected?.value)
+                          }
+                          className='mt-1'
+                        />
+                      )}
+                    />
+                    {errors.holdings?.[index]?.accountId && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.accountId?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Ticker */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.ticker`}>
+                      Ticker Symbol *
+                    </Label>
+                    <input
+                      {...register(`holdings.${index}.ticker`)}
+                      type='text'
+                      placeholder='e.g., CBA'
+                      className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                    />
+                    {errors.holdings?.[index]?.ticker && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.ticker?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Company Name */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.companyName`}>
+                      Company Name *
+                    </Label>
+                    <input
+                      {...register(`holdings.${index}.companyName`)}
+                      type='text'
+                      placeholder='e.g., Commonwealth Bank'
+                      className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                    />
+                    {errors.holdings?.[index]?.companyName && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.companyName?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Currency */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.currency`}>
+                      Currency *
+                    </Label>
+                    <Controller
+                      name={`holdings.${index}.currency`}
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          options={CURRENCY_OPTIONS}
+                          value={CURRENCY_OPTIONS.find(
+                            (opt) => opt.value === field.value,
+                          )}
+                          onChange={(selected) =>
+                            field.onChange(selected?.value)
+                          }
+                          className='mt-1'
+                        />
+                      )}
+                    />
+                    {errors.holdings?.[index]?.currency && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.currency?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Quantity */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.quantity`}>
+                      Quantity *
+                    </Label>
+                    <Controller
+                      name={`holdings.${index}.quantity`}
+                      control={control}
+                      render={({ field }) => (
+                        <NumericFormat
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.floatValue ?? 0);
+                          }}
+                          onBlur={field.onBlur}
+                          allowNegative={false}
+                          decimalScale={6}
+                          placeholder='0.000000'
+                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                        />
+                      )}
+                    />
+                    {errors.holdings?.[index]?.quantity && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.quantity?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Buy Price */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.buyPrice`}>
+                      Buy Price *
+                    </Label>
+                    <Controller
+                      name={`holdings.${index}.buyPrice`}
+                      control={control}
+                      render={({ field }) => (
+                        <NumericFormat
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.floatValue ?? 0);
+                          }}
+                          onBlur={field.onBlur}
+                          allowNegative={false}
+                          decimalScale={2}
+                          fixedDecimalScale
+                          prefix='$'
+                          placeholder='$0.00'
+                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                        />
+                      )}
+                    />
+                    {errors.holdings?.[index]?.buyPrice && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.buyPrice?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Buy Date */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.buyDate`}>
+                      Buy Date *
+                    </Label>
+                    <input
+                      {...register(`holdings.${index}.buyDate`)}
+                      type='date'
+                      className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                    />
+                    {errors.holdings?.[index]?.buyDate && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.buyDate?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Current Price */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.currentPrice`}>
+                      Current Price *
+                    </Label>
+                    <Controller
+                      name={`holdings.${index}.currentPrice`}
+                      control={control}
+                      render={({ field }) => (
+                        <NumericFormat
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.floatValue ?? 0);
+                          }}
+                          onBlur={field.onBlur}
+                          allowNegative={false}
+                          decimalScale={2}
+                          fixedDecimalScale
+                          prefix='$'
+                          placeholder='$0.00'
+                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                        />
+                      )}
+                    />
+                    {errors.holdings?.[index]?.currentPrice && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.currentPrice?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Planned Term */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.plannedTerm`}>
+                      Planned Holding Term *
+                    </Label>
+                    <Controller
+                      name={`holdings.${index}.plannedTerm`}
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          options={TERM_OPTIONS}
+                          value={TERM_OPTIONS.find(
+                            (opt) => opt.value === field.value,
+                          )}
+                          onChange={(selected) =>
+                            field.onChange(selected?.value)
+                          }
+                          className='mt-1'
+                        />
+                      )}
+                    />
+                    {errors.holdings?.[index]?.plannedTerm && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.plannedTerm?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sale Price (Optional) */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.salePrice`}>
+                      Sale Price (Optional)
+                    </Label>
+                    <Controller
+                      name={`holdings.${index}.salePrice`}
+                      control={control}
+                      render={({ field }) => (
+                        <NumericFormat
+                          value={field.value ?? ''}
+                          onValueChange={(values) => {
+                            field.onChange(
+                              values.floatValue === undefined
+                                ? null
+                                : values.floatValue,
+                            );
+                          }}
+                          onBlur={field.onBlur}
+                          allowNegative={false}
+                          decimalScale={2}
+                          fixedDecimalScale
+                          prefix='$'
+                          placeholder='$0.00'
+                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                        />
+                      )}
+                    />
+                    {errors.holdings?.[index]?.salePrice && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.salePrice?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sale Date (Optional) */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.saleDate`}>
+                      Sale Date (Optional)
+                    </Label>
+                    <input
+                      {...register(`holdings.${index}.saleDate`)}
+                      type='date'
+                      className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                    />
+                    {errors.holdings?.[index]?.saleDate && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.saleDate?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sold Quantity (Optional) */}
+                  <div>
+                    <Label htmlFor={`holdings.${index}.soldQuantity`}>
+                      Sold Quantity (Optional)
+                    </Label>
+                    <Controller
+                      name={`holdings.${index}.soldQuantity`}
+                      control={control}
+                      render={({ field }) => (
+                        <NumericFormat
+                          value={field.value ?? ''}
+                          onValueChange={(values) => {
+                            field.onChange(
+                              values.floatValue === undefined
+                                ? null
+                                : values.floatValue,
+                            );
+                          }}
+                          onBlur={field.onBlur}
+                          allowNegative={false}
+                          decimalScale={6}
+                          placeholder='0.000000'
+                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                        />
+                      )}
+                    />
+                    {errors.holdings?.[index]?.soldQuantity && (
+                      <p className='mt-1 text-sm text-red-600'>
+                        {errors.holdings[index]?.soldQuantity?.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {errors.holdings &&
+              typeof errors.holdings === 'object' &&
+              'message' in errors.holdings && (
+                <p className='mt-2 text-sm text-red-600'>
+                  {(errors.holdings as any).message}
+                </p>
+              )}
+
+            <button
+              type='button'
+              onClick={() =>
+                append({
+                  ticker: '',
+                  companyName: '',
+                  quantity: 0,
+                  buyPrice: 0,
+                  buyDate: new Date(),
+                  currentPrice: 0,
+                  currency: 'AUD',
+                  plannedTerm: 'MID_TERM',
+                  accountId: brokerageAccounts?.[0]?.id || '',
+                })
+              }
+              className='flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium'
+            >
+              <FiPlus size={16} />
+              Add Another Holding
+            </button>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant='secondary'
+            onClick={handleClose}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant='primary'
+            type='submit'
+            disabled={isSubmitting || createSnapshot.isPending}
+          >
+            {isSubmitting || createSnapshot.isPending
+              ? 'Creating...'
+              : 'Create Snapshot'}
+          </Button>
+        </Modal.Footer>
+      </form>
+    </Modal>
+  );
+}

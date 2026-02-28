@@ -1,0 +1,210 @@
+import { handleCaughtError, prisma } from '@/server/utils/prisma';
+import {
+  createStockSnapshot,
+  getStockSnapshots,
+  getMostRecentSnapshot,
+  getSnapshotById,
+  getSnapshotTotals,
+  createStockHolding,
+  updateStockHolding,
+  deleteStockHolding,
+  deleteStockSnapshot,
+} from '@/server/services/stock-asset.service';
+
+import type {
+  CreateStockSnapshotInput,
+  CreateStockHoldingInput,
+  UpdateStockHoldingInput,
+  DeleteSnapshotInput,
+  DeleteHoldingInput,
+  GetSnapshotsInput,
+  GetSnapshotByIdInput,
+} from '@/server/schema/stock-asset.schema';
+
+// Helper: Resolve calendarYearId to date range
+async function resolveDateRange(calendarYearId?: string) {
+  if (!calendarYearId) return {};
+
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+  });
+
+  if (!calendarYear) return {};
+
+  return {
+    fromDate: new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1),
+    toDate: new Date(calendarYear.toYear, calendarYear.toMonth, 0),
+  };
+}
+
+// Snapshot Controllers
+
+export const createSnapshotHandler = async ({
+  input,
+  userId,
+}: {
+  input: CreateStockSnapshotInput;
+  userId: string;
+}) => {
+  try {
+    const snapshot = await createStockSnapshot(userId, input);
+    return {
+      status: 'success',
+      data: {
+        snapshot,
+      },
+    };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const getSnapshotsHandler = async ({
+  input,
+  userId,
+}: {
+  input: GetSnapshotsInput;
+  userId: string;
+}) => {
+  try {
+    const dateRange = await resolveDateRange(input.calendarYearId);
+
+    const snapshots = await getStockSnapshots(userId, {
+      calendarYearId: input.calendarYearId,
+      ...dateRange,
+    });
+
+    return snapshots;
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const getMostRecentSnapshotHandler = async ({
+  input,
+  userId,
+}: {
+  input: GetSnapshotsInput;
+  userId: string;
+}) => {
+  try {
+    const dateRange = await resolveDateRange(input.calendarYearId);
+
+    const snapshot = await getMostRecentSnapshot(userId, {
+      calendarYearId: input.calendarYearId,
+      ...dateRange,
+    });
+
+    return snapshot;
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const getSnapshotByIdHandler = async ({
+  input,
+  userId,
+}: {
+  input: GetSnapshotByIdInput;
+  userId: string;
+}) => {
+  try {
+    const snapshot = await getSnapshotById(input.snapshotId, userId);
+    return snapshot;
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const getSnapshotTotalsHandler = async ({
+  input,
+  userId,
+}: {
+  input: GetSnapshotByIdInput;
+  userId: string;
+}) => {
+  try {
+    const totals = await getSnapshotTotals(input.snapshotId, userId);
+    return totals;
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const deleteSnapshotHandler = async ({
+  input,
+  userId,
+}: {
+  input: DeleteSnapshotInput;
+  userId: string;
+}) => {
+  try {
+    await deleteStockSnapshot(input.snapshotId, userId);
+    return {
+      status: 'success',
+      message: 'Snapshot deleted successfully',
+    };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+// Holding Controllers
+
+export const createHoldingHandler = async ({
+  input,
+  userId,
+}: {
+  input: CreateStockHoldingInput;
+  userId: string;
+}) => {
+  try {
+    const holding = await createStockHolding(userId, input);
+    return {
+      status: 'success',
+      data: {
+        holding,
+      },
+    };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const updateHoldingHandler = async ({
+  input,
+  userId,
+}: {
+  input: UpdateStockHoldingInput;
+  userId: string;
+}) => {
+  try {
+    const holding = await updateStockHolding(userId, input);
+    return {
+      status: 'success',
+      data: {
+        holding,
+      },
+    };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const deleteHoldingHandler = async ({
+  input,
+  userId,
+}: {
+  input: DeleteHoldingInput;
+  userId: string;
+}) => {
+  try {
+    await deleteStockHolding(input.holdingId, userId);
+    return {
+      status: 'success',
+      message: 'Holding deleted successfully',
+    };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
