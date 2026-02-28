@@ -28,6 +28,7 @@ import type { OptionType } from '@/types';
 
 type DonationTableClientProps = {
   individualsOptions: OptionType[];
+  businessesOptions: OptionType[];
   editRow: (input: UpdateDonationPaymentInput) => Promise<ServerActionType>;
   addRow: (
     input: CreateDonationPaymentInput,
@@ -38,6 +39,7 @@ type DonationTableClientProps = {
 
 export default function DonationTableClient({
   individualsOptions,
+  businessesOptions,
   addRow,
   editRow,
   deleteRow,
@@ -88,8 +90,8 @@ export default function DonationTableClient({
   };
 
   const columns = useMemo(
-    () => getTableColumns(individualsOptions),
-    [individualsOptions],
+    () => getTableColumns(individualsOptions, businessesOptions),
+    [individualsOptions, businessesOptions],
   );
 
   const table = useReactTable<DonationPaymentType>({

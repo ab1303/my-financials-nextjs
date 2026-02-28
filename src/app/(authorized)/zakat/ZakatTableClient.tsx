@@ -29,6 +29,7 @@ import type { OptionType } from '@/types';
 
 type ZakatTableClientProps = {
   individualsOptions: OptionType[];
+  businessesOptions: OptionType[];
   editRow: (input: UpdateZakatPaymentInput) => Promise<ServerActionType>;
   addRow: (
     input: CreateZakatPaymentInput,
@@ -39,6 +40,7 @@ type ZakatTableClientProps = {
 
 export default function ZakatTableClient({
   individualsOptions,
+  businessesOptions,
   addRow,
   editRow,
   deleteRow,
@@ -86,8 +88,8 @@ export default function ZakatTableClient({
   };
 
   const columns = useMemo(
-    () => getTableColumns(individualsOptions),
-    [individualsOptions],
+    () => getTableColumns(individualsOptions, businessesOptions),
+    [individualsOptions, businessesOptions],
   );
 
   const table = useReactTable<ZakatPaymentType>({
