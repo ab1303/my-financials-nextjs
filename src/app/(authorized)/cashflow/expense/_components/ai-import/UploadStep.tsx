@@ -54,10 +54,13 @@ export default function UploadStep({
     <div className='space-y-6'>
       {/* Context Display */}
       <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
-        <h3 className='text-sm font-semibold text-blue-900 mb-2'>Import Details</h3>
+        <h3 className='text-sm font-semibold text-blue-900 mb-2'>
+          Import Details
+        </h3>
         <div className='text-sm text-blue-800'>
           <p>
-            <span className='font-medium'>Month:</span> {MONTHS_MAP.get(context.month) || `Month ${context.month}`}
+            <span className='font-medium'>Month:</span>{' '}
+            {MONTHS_MAP.get(context.month) || `Month ${context.month}`}
           </p>
         </div>
       </div>

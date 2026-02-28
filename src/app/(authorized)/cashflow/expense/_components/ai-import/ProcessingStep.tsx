@@ -10,9 +10,9 @@ export default function ProcessingStep({
   onComplete,
   context,
 }: ProcessingStepProps) {
-  const [processedFiles, setProcessedFiles] = useState<Map<string, ImageResult>>(
-    new Map(),
-  );
+  const [processedFiles, setProcessedFiles] = useState<
+    Map<string, ImageResult>
+  >(new Map());
   const [overallProgress, setOverallProgress] = useState(0);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -85,8 +85,10 @@ export default function ProcessingStep({
                   setCurrentImage(validatedEvent.currentImage);
                   setOverallProgress(
                     Math.round(
-                      ((validatedEvent.imageIndex + 1) / validatedEvent.totalImages) * 100
-                    )
+                      ((validatedEvent.imageIndex + 1) /
+                        validatedEvent.totalImages) *
+                        100,
+                    ),
                   );
                 } else if (validatedEvent.type === 'extraction') {
                   setProcessedFiles((prev) => {
@@ -152,7 +154,8 @@ export default function ProcessingStep({
           }
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Processing failed';
+        const message =
+          err instanceof Error ? err.message : 'Processing failed';
         setError(message);
         console.error('Processing error:', err);
       }
@@ -166,8 +169,12 @@ export default function ProcessingStep({
       {/* Overall Progress */}
       <div className='space-y-2'>
         <div className='flex justify-between items-center'>
-          <h3 className='text-sm font-semibold text-gray-900'>Processing Images</h3>
-          <span className='text-sm font-medium text-gray-600'>{overallProgress}%</span>
+          <h3 className='text-sm font-semibold text-gray-900'>
+            Processing Images
+          </h3>
+          <span className='text-sm font-medium text-gray-600'>
+            {overallProgress}%
+          </span>
         </div>
         <div className='w-full bg-gray-200 rounded-full h-2 overflow-hidden'>
           <div
@@ -216,13 +223,16 @@ export default function ProcessingStep({
                   <p className='text-sm font-medium text-gray-900 truncate'>
                     {result.fileName}
                   </p>
-                  {result.status === 'success' && result.entriesCreated !== undefined && (
-                    <p className='text-xs text-gray-600'>
-                      {result.entriesCreated} entries created
-                    </p>
-                  )}
+                  {result.status === 'success' &&
+                    result.entriesCreated !== undefined && (
+                      <p className='text-xs text-gray-600'>
+                        {result.entriesCreated} entries created
+                      </p>
+                    )}
                   {result.status === 'failed' && result.errorMessage && (
-                    <p className='text-xs text-red-600'>{result.errorMessage}</p>
+                    <p className='text-xs text-red-600'>
+                      {result.errorMessage}
+                    </p>
                   )}
                 </div>
               </div>

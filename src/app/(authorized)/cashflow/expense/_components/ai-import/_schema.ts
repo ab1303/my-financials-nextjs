@@ -21,7 +21,9 @@ export const BankAssetImportRequestSchema = z.object({
   }),
 });
 
-export type BankAssetImportRequest = z.infer<typeof BankAssetImportRequestSchema>;
+export type BankAssetImportRequest = z.infer<
+  typeof BankAssetImportRequestSchema
+>;
 
 // File Upload Schema
 export const FileUploadSchema = z.object({
@@ -69,7 +71,7 @@ export const SSEEventSchema = z.union([
         confidence: z.number().optional(),
         entriesCreated: z.number().optional(),
         errorMessage: z.string().optional(),
-      })
+      }),
     ),
   }),
 ]);

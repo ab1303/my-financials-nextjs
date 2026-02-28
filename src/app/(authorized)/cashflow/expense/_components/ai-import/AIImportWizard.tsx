@@ -22,7 +22,9 @@ export default function AIImportWizard({
 }: AIImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>('upload');
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [importResult, setImportResult] = useState<ImportSessionResult | null>(null);
+  const [importResult, setImportResult] = useState<ImportSessionResult | null>(
+    null,
+  );
   // Default to current month
   const month = new Date().getMonth() + 1;
 
@@ -121,9 +123,12 @@ export default function AIImportWizard({
                           currentStep === step
                             ? 'bg-blue-600 text-white'
                             : ['upload', 'processing'].includes(currentStep) &&
-                              index < ['upload', 'processing', 'results'].indexOf(currentStep)
-                            ? 'bg-green-600 text-white'
-                            : 'bg-gray-200 text-gray-600'
+                                index <
+                                  ['upload', 'processing', 'results'].indexOf(
+                                    currentStep,
+                                  )
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-200 text-gray-600'
                         }`}
                       >
                         {index + 1}
@@ -131,7 +136,9 @@ export default function AIImportWizard({
                       {index < 2 && (
                         <div
                           className={`h-1 mx-2 flex-1 ${
-                            ['upload', 'processing', 'results'].indexOf(currentStep) > index
+                            ['upload', 'processing', 'results'].indexOf(
+                              currentStep,
+                            ) > index
                               ? 'bg-green-600'
                               : 'bg-gray-200'
                           }`}

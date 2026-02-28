@@ -7,7 +7,10 @@ export interface ConfidenceBadgeProps {
   className?: string;
 }
 
-export default function ConfidenceBadge({ score, className = '' }: ConfidenceBadgeProps) {
+export default function ConfidenceBadge({
+  score,
+  className = '',
+}: ConfidenceBadgeProps) {
   const percentage = Math.round(score * 100);
   let level: 'HIGH' | 'MEDIUM' | 'LOW';
 
@@ -22,13 +25,17 @@ export default function ConfidenceBadge({ score, className = '' }: ConfidenceBad
   const colorClass = getConfidenceColor(level);
 
   return (
-    <div className={`inline-flex items-center px-3 py-1 rounded-full border ${colorClass} text-sm font-medium ${className}`}>
+    <div
+      className={`inline-flex items-center px-3 py-1 rounded-full border ${colorClass} text-sm font-medium ${className}`}
+    >
       <span className='mr-2'>
         {level === 'HIGH' && '✓'}
         {level === 'MEDIUM' && '○'}
         {level === 'LOW' && '!'}
       </span>
-      <span>{percentage}% {level}</span>
+      <span>
+        {percentage}% {level}
+      </span>
     </div>
   );
 }
