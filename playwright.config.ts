@@ -46,7 +46,10 @@ export default defineConfig({
     // Main test project: uses storageState from auth setup
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/user.json',
+      },
       dependencies: ['auth setup'],
     },
   ],
