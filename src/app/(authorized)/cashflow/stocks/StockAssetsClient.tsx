@@ -231,7 +231,7 @@ export default function StockAssetsClient({ initialData }: Props) {
       {/* Grand Total Summary Cards */}
       {totals && (
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-          {totals.currencies.map((currencyTotal) => (
+          {totals.currencies.map((currencyTotal: any) => (
             <div
               key={currencyTotal.currency}
               className={clsx(
@@ -456,87 +456,105 @@ export default function StockAssetsClient({ initialData }: Props) {
                             </tr>
                           </thead>
                           <tbody className='bg-white divide-y divide-gray-200'>
-                            {account.holdings.map((holding: any) => {
-                              const costBasis =
-                                Number(holding.buyPrice) *
-                                Number(holding.quantity);
-                              const marketValue =
-                                Number(holding.currentPrice) *
-                                Number(holding.quantity);
-                              const unrealizedPL = marketValue - costBasis;
+                            {account.holdings.map(
+                              (holding: {
+                                id: string;
+                                ticker: string;
+                                companyName: string;
+                                quantity: number;
+                                buyPrice: number;
+                                currentPrice: number;
+                                currency: 'AUD' | 'USD';
+                              }) => {
+                                const costBasis =
+                                  Number(holding.buyPrice) *
+                                  Number(holding.quantity);
+                                const marketValue =
+                                  Number(holding.currentPrice) *
+                                  Number(holding.quantity);
+                                const unrealizedPL = marketValue - costBasis;
 
-                              return (
-                                <tr
-                                  key={holding.id}
-                                  className='hover:bg-gray-50'
-                                >
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
-                                    {holding.ticker}
-                                  </td>
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-600'>
-                                    {holding.companyName}
-                                  </td>
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900'>
-                                    {Number(holding.quantity).toFixed(6)}
-                                  </td>
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
-                                    <NumericFormat
-                                      value={Number(holding.buyPrice)}
-                                      displayType='text'
-                                      thousandSeparator=','
-                                      prefix={
-                                        holding.currency === 'AUD' ? '$' : 'US$'
-                                      }
-                                      decimalScale={2}
-                                      fixedDecimalScale
-                                    />
-                                  </td>
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
-                                    <NumericFormat
-                                      value={Number(holding.currentPrice)}
-                                      displayType='text'
-                                      thousandSeparator=','
-                                      prefix={
-                                        holding.currency === 'AUD' ? '$' : 'US$'
-                                      }
-                                      decimalScale={2}
-                                      fixedDecimalScale
-                                    />
-                                  </td>
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900'>
-                                    <NumericFormat
-                                      value={marketValue}
-                                      displayType='text'
-                                      thousandSeparator=','
-                                      prefix={
-                                        holding.currency === 'AUD' ? '$' : 'US$'
-                                      }
-                                      decimalScale={2}
-                                      fixedDecimalScale
-                                    />
-                                  </td>
-                                  <td
-                                    className={clsx(
-                                      'px-6 py-4 whitespace-nowrap text-sm text-right font-semibold',
-                                      unrealizedPL >= 0
-                                        ? 'text-green-600'
-                                        : 'text-red-600',
-                                    )}
+                                return (
+                                  <tr
+                                    key={holding.id}
+                                    className='hover:bg-gray-50'
                                   >
-                                    <NumericFormat
-                                      value={unrealizedPL}
-                                      displayType='text'
-                                      thousandSeparator=','
-                                      prefix={
-                                        holding.currency === 'AUD' ? '$' : 'US$'
-                                      }
-                                      decimalScale={2}
-                                      fixedDecimalScale
-                                    />
-                                  </td>
-                                </tr>
-                              );
-                            })}
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
+                                      {holding.ticker}
+                                    </td>
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-600'>
+                                      {holding.companyName}
+                                    </td>
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900'>
+                                      {Number(holding.quantity).toFixed(6)}
+                                    </td>
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
+                                      <NumericFormat
+                                        value={Number(holding.buyPrice)}
+                                        displayType='text'
+                                        thousandSeparator=','
+                                        prefix={
+                                          holding.currency === 'AUD'
+                                            ? '$'
+                                            : 'US$'
+                                        }
+                                        decimalScale={2}
+                                        fixedDecimalScale
+                                      />
+                                    </td>
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
+                                      <NumericFormat
+                                        value={Number(holding.currentPrice)}
+                                        displayType='text'
+                                        thousandSeparator=','
+                                        prefix={
+                                          holding.currency === 'AUD'
+                                            ? '$'
+                                            : 'US$'
+                                        }
+                                        decimalScale={2}
+                                        fixedDecimalScale
+                                      />
+                                    </td>
+                                    <td className='px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900'>
+                                      <NumericFormat
+                                        value={marketValue}
+                                        displayType='text'
+                                        thousandSeparator=','
+                                        prefix={
+                                          holding.currency === 'AUD'
+                                            ? '$'
+                                            : 'US$'
+                                        }
+                                        decimalScale={2}
+                                        fixedDecimalScale
+                                      />
+                                    </td>
+                                    <td
+                                      className={clsx(
+                                        'px-6 py-4 whitespace-nowrap text-sm text-right font-semibold',
+                                        unrealizedPL >= 0
+                                          ? 'text-green-600'
+                                          : 'text-red-600',
+                                      )}
+                                    >
+                                      <NumericFormat
+                                        value={unrealizedPL}
+                                        displayType='text'
+                                        thousandSeparator=','
+                                        prefix={
+                                          holding.currency === 'AUD'
+                                            ? '$'
+                                            : 'US$'
+                                        }
+                                        decimalScale={2}
+                                        fixedDecimalScale
+                                      />
+                                    </td>
+                                  </tr>
+                                );
+                              },
+                            )}
                           </tbody>
                         </table>
                       </div>

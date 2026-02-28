@@ -15,6 +15,7 @@ import IconRelations from './IconRelations';
 import IconUser from './IconUser';
 import IconChartBar from './IconChartBar';
 import IconExpense from './IconExpense';
+import IconStock from './IconStock';
 
 export {
   IconHamburger,
@@ -34,4 +35,5 @@ export {
   IconUser,
   IconChartBar,
   IconExpense,
+  IconStock,
 };
