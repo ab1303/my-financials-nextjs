@@ -1,5 +1,5 @@
-import Head from 'next/head';
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 
 import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
@@ -11,6 +11,11 @@ import {
 import ZakatForm from './form';
 import type { FormInput } from './_schema';
 import ZakatPaymentsTableServer from './ZakatTableServer';
+
+export const metadata: Metadata = {
+  title: 'Zakat',
+  description: 'Zakat payment management',
+};
 
 // Next.js v15: searchParams is now a Promise
 function getSelectedParam(searchParam?: string | string[]) {
@@ -43,7 +48,7 @@ export default async function ZakatPage({
 
   const zakatYearData = calenderYears.filter((yd) => yd.type === 'ZAKAT');
   const selectedCalendarYear = zakatYearData.find(
-    (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam
+    (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
   );
 
   const selectedCalendarYearId = selectedCalendarYear
@@ -59,12 +64,6 @@ export default async function ZakatPage({
 
   return (
     <>
-      <Head>
-        <title>Zakat</title>
-        <meta name='page' content='zakat' />
-        <link rel='icon' href='/favicon.ico' />
-      </Head>
-
       <Card.Header>
         <div className='flex justify-between mt-4 text-left'>
           <Card.Header.Title>Zakat Payments</Card.Header.Title>

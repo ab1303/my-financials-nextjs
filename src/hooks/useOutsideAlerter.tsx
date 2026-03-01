@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export default function useOutsideAlerter(
-  ref: React.RefObject<HTMLDivElement>,
-  handleCloseSideNav: (event: MouseEvent) => void
+  ref: React.RefObject<HTMLDivElement | null>,
+  handleCloseSideNav: (event: MouseEvent) => void,
 ) {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -12,10 +12,10 @@ export default function useOutsideAlerter(
     }
 
     // Bind the event listener
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       // Unbind the event listener on clean up
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [ref, handleCloseSideNav]);
 }

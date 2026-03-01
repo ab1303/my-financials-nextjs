@@ -8,7 +8,7 @@ import { ImSpinner2 } from 'react-icons/im';
 import { FormProvider, useForm } from 'react-hook-form';
 import Select, { components } from 'react-select';
 import { toast } from 'react-toastify';
-import type { OptionProps, SingleValue } from 'react-select';
+import type { OptionProps, SingleValue, GroupBase } from 'react-select';
 import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -68,7 +68,14 @@ function DeleteIcon(props: DeleteIconProps) {
   );
 }
 
-const Option = (props: OptionProps<BusinessOptionType, false>) => {
+// React 19 type compatibility wrapper for react-select Option
+const BaseOption = components.Option as React.ComponentType<
+  OptionProps<BusinessOptionType, false, GroupBase<BusinessOptionType>>
+>;
+
+const Option = (
+  props: OptionProps<BusinessOptionType, false>,
+): React.JSX.Element => {
   const queryClient = useQueryClient();
   const { isPending, mutate: deleteBusiness } =
     trpc.business.removeBusinessDetails.useMutation({
@@ -91,7 +98,7 @@ const Option = (props: OptionProps<BusinessOptionType, false>) => {
 
   return (
     <div className='flex justify-between'>
-      <components.Option {...props} />
+      <BaseOption {...props} />
       {isPending ? (
         <ImSpinner2 className='animate-spin' />
       ) : (

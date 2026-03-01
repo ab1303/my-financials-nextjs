@@ -319,15 +319,16 @@ export default function NewSnapshotModal({
                             className='mt-1'
                             classNamePrefix='rs'
                             styles={{
-                              control: (base) => ({
-                                ...base,
-                                borderColor: entry.bankId
-                                  ? undefined
-                                  : '#d1d5db',
-                                backgroundColor: entry.bankId
-                                  ? 'white'
-                                  : '#f3f4f6',
-                              }),
+                              control: (base) =>
+                                ({
+                                  ...base,
+                                  borderColor: entry.bankId
+                                    ? undefined
+                                    : '#d1d5db',
+                                  backgroundColor: entry.bankId
+                                    ? 'white'
+                                    : '#f3f4f6',
+                                }) as typeof base,
                             }}
                             isLoading={createAccountMutation.isPending}
                           />

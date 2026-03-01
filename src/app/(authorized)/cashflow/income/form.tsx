@@ -140,23 +140,25 @@ export default function IncomeForm({
             onChange={onYearChange}
             placeholder='Select fiscal year...'
             styles={{
-              control: (provided, state) => ({
-                ...provided,
-                borderColor: state.isFocused ? '#14b8a6' : '#d1d5db',
-                boxShadow: state.isFocused ? '0 0 0 1px #14b8a6' : 'none',
-                '&:hover': {
-                  borderColor: '#14b8a6',
-                },
-              }),
-              option: (provided, state) => ({
-                ...provided,
-                backgroundColor: state.isSelected
-                  ? '#14b8a6'
-                  : state.isFocused
-                    ? '#f0fdfa'
-                    : 'white',
-                color: state.isSelected ? 'white' : '#374151',
-              }),
+              control: (provided, state) =>
+                ({
+                  ...provided,
+                  borderColor: state.isFocused ? '#14b8a6' : '#d1d5db',
+                  boxShadow: state.isFocused ? '0 0 0 1px #14b8a6' : 'none',
+                  '&:hover': {
+                    borderColor: '#14b8a6',
+                  },
+                }) as typeof provided,
+              option: (provided, state) =>
+                ({
+                  ...provided,
+                  backgroundColor: state.isSelected
+                    ? '#14b8a6'
+                    : state.isFocused
+                      ? '#f0fdfa'
+                      : 'white',
+                  color: state.isSelected ? 'white' : '#374151',
+                }) as typeof provided,
             }}
           />
         </div>

@@ -5,7 +5,7 @@ import { layoutStyles } from '@/styles/theme';
 export default async function SettingsRootLayout({
   children,
 }: {
-  children: React.ReactElement;
+  children: React.ReactNode;
 }) {
   return (
     <div

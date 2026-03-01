@@ -8,10 +8,6 @@
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
-
-  experimental: {
-    // ppr: 'incremental',
-  },
 };
 
 export default config;

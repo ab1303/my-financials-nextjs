@@ -9,7 +9,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import Select, { components } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { toast } from 'react-toastify';
-import type { OptionProps, SingleValue } from 'react-select';
+import type { OptionProps, SingleValue, GroupBase } from 'react-select';
 import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -77,7 +77,14 @@ function DeleteIcon(props: DeleteIconProps) {
   );
 }
 
-const Option = (props: OptionProps<IndividualOptionType, false>) => {
+// React 19 type compatibility wrapper for react-select Option
+const BaseOption = components.Option as React.ComponentType<
+  OptionProps<IndividualOptionType, false, GroupBase<IndividualOptionType>>
+>;
+
+const Option = (
+  props: OptionProps<IndividualOptionType, false>,
+): React.JSX.Element => {
   const queryClient = useQueryClient();
   const { isPending, mutate: deleteIndividual } =
     trpc.individual.removeIndividualDetails.useMutation({
@@ -100,7 +107,7 @@ const Option = (props: OptionProps<IndividualOptionType, false>) => {
 
   return (
     <div className='flex justify-between'>
-      <components.Option {...props} />
+      <BaseOption {...props} />
       {isPending ? (
         <ImSpinner2 className='animate-spin' />
       ) : (

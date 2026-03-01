@@ -71,37 +71,43 @@ export default function BeneficiarySelectionCell({
       menuPortalTarget={document.body}
       menuPosition='fixed'
       styles={{
-        control: (provided) => ({
-          ...provided,
-          minHeight: 'auto',
-          fontSize: '0.875rem',
-          borderColor: '#d1d5db',
-          '&:hover': {
+        control: (provided) =>
+          ({
+            ...provided,
+            minHeight: 'auto',
+            fontSize: '0.875rem',
             borderColor: '#d1d5db',
-          },
-        }),
-        valueContainer: (provided) => ({
-          ...provided,
-          padding: '0.25rem 0.5rem',
-        }),
-        input: (provided) => ({
-          ...provided,
-          margin: 0,
-          padding: 0,
-        }),
+            '&:hover': {
+              borderColor: '#d1d5db',
+            },
+          }) as typeof provided,
+        valueContainer: (provided) =>
+          ({
+            ...provided,
+            padding: '0.25rem 0.5rem',
+          }) as typeof provided,
+        input: (provided) =>
+          ({
+            ...provided,
+            margin: 0,
+            padding: 0,
+          }) as typeof provided,
         indicatorSeparator: () => ({ display: 'none' }),
-        indicatorsContainer: (provided) => ({
-          ...provided,
-          height: 'auto',
-        }),
-        menu: (provided) => ({
-          ...provided,
-          zIndex: 9999,
-        }),
-        menuPortal: (provided) => ({
-          ...provided,
-          zIndex: 9999,
-        }),
+        indicatorsContainer: (provided) =>
+          ({
+            ...provided,
+            height: 'auto',
+          }) as typeof provided,
+        menu: (provided) =>
+          ({
+            ...provided,
+            zIndex: 9999,
+          }) as typeof provided,
+        menuPortal: (provided) =>
+          ({
+            ...provided,
+            zIndex: 9999,
+          }) as typeof provided,
       }}
     />
   );

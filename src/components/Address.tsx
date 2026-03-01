@@ -222,12 +222,13 @@ export default function AddressComponent<T extends FieldValues>({
                       instanceId={uniqId}
                       {...selectProps}
                       styles={{
-                        control: (base) => ({
-                          ...base,
-                          borderColor:
-                            addressFields.addressLineError &&
-                            'rgba(194, 65, 12)',
-                        }),
+                        control: (base) =>
+                          ({
+                            ...base,
+                            borderColor:
+                              addressFields.addressLineError &&
+                              'rgba(194, 65, 12)',
+                          }) as typeof base,
                       }}
                       value={{ label: String(value) }}
                       loadOptions={fetchSuggestions}

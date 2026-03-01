@@ -6,7 +6,7 @@ import { Children, cloneElement } from 'react';
 import { navigationStyles } from '@/styles/theme';
 
 type NamedChildrenSlots = {
-  media: React.ReactElement;
+  media: React.ReactElement<{ className?: string }>;
   action: React.ReactNode;
 };
 
@@ -14,7 +14,7 @@ type SideNavLinkProps = {
   href: string;
   name: string;
   className?: string;
-  children: React.ReactElement | NamedChildrenSlots;
+  children: React.ReactElement<{ className?: string }> | NamedChildrenSlots;
 };
 
 const isObject = <T extends Record<string, unknown>>(
@@ -45,17 +45,20 @@ export default function SideNavLink({
             : navigationStyles.navItem.inactive,
         ),
       })
-    : Children.map(children, (child: React.ReactElement) => {
-        return cloneElement(child, {
-          className: clsx(
-            child.props.className,
-            navigationStyles.navItem.icon,
-            pathname === href
-              ? navigationStyles.navItem.active
-              : navigationStyles.navItem.inactive,
-          ),
-        });
-      });
+    : Children.map(
+        children,
+        (child: React.ReactElement<{ className?: string }>) => {
+          return cloneElement(child, {
+            className: clsx(
+              child.props.className,
+              navigationStyles.navItem.icon,
+              pathname === href
+                ? navigationStyles.navItem.active
+                : navigationStyles.navItem.inactive,
+            ),
+          });
+        },
+      );
 
   return (
     <li className={clsx(navigationStyles.navItem.link, className)}>

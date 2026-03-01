@@ -5,7 +5,7 @@ import React from 'react';
 export default async function BankLayout({
   children,
 }: {
-  children: React.ReactElement;
+  children: React.ReactNode;
 }) {
   const apiKey = process.env.GOOGLE_API_KEY;
 

@@ -233,7 +233,8 @@ function CategoryBreakdownContent({
                   menuPortalTarget={document.body}
                   menuPosition='fixed'
                   styles={{
-                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    menuPortal: (base) =>
+                      ({ ...base, zIndex: 9999 }) as typeof base,
                   }}
                 />
               </div>
@@ -317,7 +318,8 @@ function CategoryBreakdownContent({
                             menuPortalTarget={document.body}
                             menuPosition='fixed'
                             styles={{
-                              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                              menuPortal: (base) =>
+                                ({ ...base, zIndex: 9999 }) as typeof base,
                             }}
                           />
                         </div>

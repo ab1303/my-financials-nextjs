@@ -67,7 +67,7 @@ export const TableCell = <TData, TValue>({
 
   const editedRecord = tableMeta?.editedRows.get(row.index);
   const value = editedRecord ? editedRecord[columnMeta.propName] : initialValue;
-  let controlRenderer: Record<ControlType, () => JSX.Element | null>;
+  let controlRenderer: Record<ControlType, () => React.JSX.Element | null>;
   if (editedRecord) {
     controlRenderer = {
       INPUT: () => <span>input jsx</span>,
@@ -88,21 +88,24 @@ export const TableCell = <TData, TValue>({
               className={tableCellStyles.select.base}
               classNamePrefix='react-select'
               styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                control: (base, state) => ({
-                  ...base,
-                  minHeight: '32px',
-                  fontSize: '0.875rem',
-                  borderColor: state.isFocused ? '#14b8a6' : '#d1d5db',
-                  boxShadow: state.isFocused ? '0 0 0 1px #14b8a6' : 'none',
-                  '&:hover': {
-                    borderColor: '#14b8a6',
-                  },
-                }),
-                menu: (base) => ({
-                  ...base,
-                  zIndex: 9999,
-                }),
+                menuPortal: (base) =>
+                  ({ ...base, zIndex: 9999 }) as typeof base,
+                control: (base, state) =>
+                  ({
+                    ...base,
+                    minHeight: '32px',
+                    fontSize: '0.875rem',
+                    borderColor: state.isFocused ? '#14b8a6' : '#d1d5db',
+                    boxShadow: state.isFocused ? '0 0 0 1px #14b8a6' : 'none',
+                    '&:hover': {
+                      borderColor: '#14b8a6',
+                    },
+                  }) as typeof base,
+                menu: (base) =>
+                  ({
+                    ...base,
+                    zIndex: 9999,
+                  }) as typeof base,
               }}
               onChange={(option) => {
                 if (option)

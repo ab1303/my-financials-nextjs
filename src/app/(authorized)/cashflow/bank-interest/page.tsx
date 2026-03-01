@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-// import { server } from '@/server/trpc/server';
-import { httpServer } from '@/server/trpc/server-http';
+import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
 
 import Card from '@/components/card';
 import BankInterestForm from './form';
@@ -35,7 +34,7 @@ export default async function BanksPage({
     (yd: { type: CalendarEnumType | null }) => yd.type === 'ANNUAL',
   );
 
-  const banks = await httpServer.bank.getAllBanks.query();
+  const banks = await allBankDetailsHandler();
   const bankOptions: OptionType[] = banks
     ? banks.map((b) => ({
         id: b.id,
