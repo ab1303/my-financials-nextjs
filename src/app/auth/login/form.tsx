@@ -1,6 +1,5 @@
 'use client';
 
-import type { SignInResponse } from 'next-auth/react';
 import type { FormEvent } from 'react';
 
 import { useRef } from 'react';
@@ -24,14 +23,11 @@ export default function LoginForm() {
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
 
-    const result: SignInResponse | undefined = await signIn<'credentials'>(
-      'credentials',
-      {
-        redirect: false,
-        email: enteredEmail,
-        password: enteredPassword,
-      }
-    );
+    const result = await signIn('credentials', {
+      redirect: false,
+      email: enteredEmail,
+      password: enteredPassword,
+    });
 
     if (result) {
       if (result.error) {

@@ -1,24 +1,19 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
+import { auth } from '@/server/auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/utils/authOptions';
-import {
-  updateBankAccount as updateBankAccountService,
-} from '@/server/services/bank-asset.service';
-import {
-  updateBankAccountSchema,
-} from '@/server/schema/bank-asset.schema';
+import { updateBankAccount as updateBankAccountService } from '@/server/services/bank-asset.service';
+import { updateBankAccountSchema } from '@/server/schema/bank-asset.schema';
 import type { UpdateBankAccountInput } from '@/server/schema/bank-asset.schema';
 
 export async function updateAccountName(input: UpdateBankAccountInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
-      return { 
-        success: false, 
-        error: 'User not authenticated' 
+      return {
+        success: false,
+        error: 'User not authenticated',
       };
     }
 

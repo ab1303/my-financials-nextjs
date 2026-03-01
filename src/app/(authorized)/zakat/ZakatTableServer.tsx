@@ -3,8 +3,7 @@ import { ZakatPaymentStateProvider } from './StateProvider';
 import ZakatTableClient from './ZakatTableClient';
 import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
 import { allBusinessDetailsHandler } from '@/server/controllers/business.controller';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 
 import type { ZakatPaymentType } from './_types';
 import type { OptionType } from '@/types';
@@ -19,7 +18,7 @@ export default async function ZakatPaymentsTableServer({
 }: ZakatTableServerProps) {
   try {
     // Get user session for user-specific data
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       throw new Error('User session not found');
     }

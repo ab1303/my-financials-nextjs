@@ -1,21 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getServerSession } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { Decimal } from '@prisma/client/runtime/library';
-import { addRow, editRow, deleteRow } from '@/app/(authorized)/cashflow/income/actions';
+import {
+  addRow,
+  editRow,
+  deleteRow,
+} from '@/app/(authorized)/cashflow/income/actions';
 import { prismaMock } from '../mocks/prisma.mock';
 import { mockSession } from '../mocks/auth.mock';
 import { createMockIncomeEntry } from '../mocks/income.mock';
 
-// Mock Next.js auth
-vi.mock('next-auth', () => ({
-  getServerSession: vi.fn(),
+// Mock auth function
+vi.mock('@/server/auth', () => ({
+  auth: vi.fn(),
 }));
 
 // Mock Next.js cache revalidation
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
+
+import { auth } from '@/server/auth';
 
 describe('Income Server Actions', () => {
   const userId = 'test-user-id';
@@ -25,7 +30,7 @@ describe('Income Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default to authenticated session
-    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(auth).mockResolvedValue(mockSession);
   });
 
   describe('addRow', () => {
@@ -67,7 +72,7 @@ describe('Income Server Actions', () => {
     });
 
     it('should return error when user is not authenticated', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(null);
 
       const input = {
         calendarYearId,
@@ -98,8 +103,22 @@ describe('Income Server Actions', () => {
 
     it('should handle all income source types', async () => {
       const sources: Array<
-        'EMPLOYMENT' | 'BUSINESS' | 'INVESTMENT' | 'RENTAL' | 'GIFT' | 'ZAKAT' | 'OTHER'
-      > = ['EMPLOYMENT', 'BUSINESS', 'INVESTMENT', 'RENTAL', 'GIFT', 'ZAKAT', 'OTHER'];
+        | 'EMPLOYMENT'
+        | 'BUSINESS'
+        | 'INVESTMENT'
+        | 'RENTAL'
+        | 'GIFT'
+        | 'ZAKAT'
+        | 'OTHER'
+      > = [
+        'EMPLOYMENT',
+        'BUSINESS',
+        'INVESTMENT',
+        'RENTAL',
+        'GIFT',
+        'ZAKAT',
+        'OTHER',
+      ];
 
       prismaMock.income.findUnique.mockResolvedValue({
         id: incomeId,
@@ -159,7 +178,7 @@ describe('Income Server Actions', () => {
     });
 
     it('should return error when user is not authenticated', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(null);
 
       const input = {
         id: 'entry-id',
@@ -183,7 +202,7 @@ describe('Income Server Actions', () => {
       };
 
       prismaMock.incomeEntry.update.mockRejectedValue(
-        new Error('Record to update not found')
+        new Error('Record to update not found'),
       );
 
       const result = await editRow(input);
@@ -211,7 +230,7 @@ describe('Income Server Actions', () => {
     });
 
     it('should return error when user is not authenticated', async () => {
-      vi.mocked(getServerSession).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(null);
 
       const input = { id: 'entry-id' };
 
@@ -225,7 +244,7 @@ describe('Income Server Actions', () => {
       const input = { id: 'non-existent-id' };
 
       prismaMock.incomeEntry.delete.mockRejectedValue(
-        new Error('Record to delete not found')
+        new Error('Record to delete not found'),
       );
 
       const result = await deleteRow(input);

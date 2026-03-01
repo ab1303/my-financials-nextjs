@@ -1,8 +1,7 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
+import { auth } from '@/server/auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/utils/authOptions';
 import {
   addExpenseEntry,
   updateExpenseEntry,
@@ -23,7 +22,7 @@ import type {
 export async function addRow(input: CreateExpenseEntryInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -96,7 +95,7 @@ export async function addRow(input: CreateExpenseEntryInput) {
 export async function editRow(input: UpdateExpenseEntryInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -162,7 +161,7 @@ export async function editRow(input: UpdateExpenseEntryInput) {
 export async function deleteRow(input: DeleteExpenseEntryInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -213,7 +212,7 @@ export async function getExpenseCategories() {
   'use server';
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated', data: [] };
     }
@@ -242,7 +241,7 @@ export async function getMonthEntries(calendarYearId: string, month: number) {
   'use server';
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated', data: [] };
     }

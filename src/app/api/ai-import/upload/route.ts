@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { getStorageAdapter } from '@/server/services/ai-import/image-storage.adapter';
 import {
@@ -28,7 +27,7 @@ import type { UploadResponse } from '@/server/services/ai-import/_types';
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

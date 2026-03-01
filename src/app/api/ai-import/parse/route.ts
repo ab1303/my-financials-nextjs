@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { getStorageAdapter } from '@/server/services/ai-import/image-storage.adapter';
 import { extractExpenseData } from '@/server/services/ai-import/ai-vision.service';
@@ -32,7 +31,7 @@ import { ImportStatusEnum, ImportTypeEnum } from '@prisma/client';
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

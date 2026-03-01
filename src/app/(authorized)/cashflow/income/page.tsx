@@ -4,8 +4,7 @@ import type { Metadata } from 'next';
 import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalIncomeHandler } from '@/server/controllers/income.controller';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 
 import IncomeForm from './form';
 import IncomeTableServer from './IncomeTableServer';
@@ -32,7 +31,7 @@ export default async function IncomePage({
   const params = await searchParams;
 
   // Get user session for user-specific data
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     // Redirect to login or show error
     return (

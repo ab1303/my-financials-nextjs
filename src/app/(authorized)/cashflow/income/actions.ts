@@ -1,8 +1,7 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
+import { auth } from '@/server/auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/utils/authOptions';
 import {
   addIncomeEntry,
   updateIncomeEntry,
@@ -23,7 +22,7 @@ import type {
 export async function addRow(input: CreateIncomeEntryInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -95,7 +94,7 @@ export async function addRow(input: CreateIncomeEntryInput) {
 export async function editRow(input: UpdateIncomeEntryInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -145,7 +144,7 @@ export async function editRow(input: UpdateIncomeEntryInput) {
 export async function deleteRow(input: DeleteIncomeEntryInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }

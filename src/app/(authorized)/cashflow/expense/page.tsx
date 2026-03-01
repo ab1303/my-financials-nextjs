@@ -4,8 +4,7 @@ import type { Metadata } from 'next';
 import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalExpensesHandler } from '@/server/controllers/expense.controller';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 
 import ExpenseForm from './form';
 import ExpenseTableServer from './ExpenseTableServer';
@@ -32,7 +31,7 @@ export default async function ExpensePage({
   const params = await searchParams;
 
   // Get user session for user-specific data
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     // Redirect to login or show error
     return (

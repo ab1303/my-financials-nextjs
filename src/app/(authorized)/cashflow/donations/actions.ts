@@ -1,8 +1,7 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
+import { auth } from '@/server/auth';
 import { revalidatePath } from 'next/cache';
-import { authOptions } from '@/utils/authOptions';
 import {
   addDonationPaymentDetail,
   updateDonationPayment,
@@ -25,7 +24,7 @@ import type { DonationPaymentType } from './_types';
 export async function addRow(input: CreateDonationPaymentInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -91,7 +90,7 @@ export async function addRow(input: CreateDonationPaymentInput) {
 export async function editRow(input: UpdateDonationPaymentInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -138,7 +137,7 @@ export async function editRow(input: UpdateDonationPaymentInput) {
 export async function deleteRow(input: DeleteDonationPaymentInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }

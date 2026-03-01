@@ -1,13 +1,13 @@
-import { type inferAsyncReturnType } from "@trpc/server";
-import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
-import { getServerSession, type Session } from "next-auth";
+import { type inferAsyncReturnType } from '@trpc/server';
+import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+import type { Session } from 'next-auth';
 
-import { prisma } from "../db/client";
-import { authOptions } from "@/utils/authOptions";
+import { auth } from '@/server/auth';
+import { prisma } from '../db/client';
 
 type CreateContextOptions = {
   session: Session | null;
-  headers?: {[k: string]: string}
+  headers?: { [k: string]: string };
 };
 
 /** Use this helper for:
@@ -28,15 +28,13 @@ export const createContextInner = async (opts: CreateContextOptions) => {
  * @link https://github.com/trpc/trpc/blob/main/examples/.experimental/next-app-dir/src/server/context.ts
  **/
 export const createContext = async (opts?: FetchCreateContextFnOptions) => {
-  
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   return await createContextInner({
     session,
     headers: opts && Object.fromEntries(opts.req.headers),
   });
 };
-
 
 // export const createServerContext = async () => {
 

@@ -1,7 +1,6 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 import {
   addZakatPaymentDetail,
   updateZakatPayment,
@@ -23,7 +22,7 @@ import type { ZakatPaymentType } from './_types';
 export async function addRow(input: CreateZakatPaymentInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -71,7 +70,7 @@ export async function addRow(input: CreateZakatPaymentInput) {
 export async function editRow(input: UpdateZakatPaymentInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }
@@ -106,7 +105,7 @@ export async function editRow(input: UpdateZakatPaymentInput) {
 export async function deleteRow(input: DeleteZakatPaymentInput) {
   try {
     // Validate session
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return { success: false, error: 'User not authenticated' };
     }

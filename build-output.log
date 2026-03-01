@@ -1,0 +1,15 @@
+
+> my-financials@0.1.0 build C:\My Github\my-financials-nextjs
+> next build
+
+❌ Invalid environment variables:
+ AUTH_SECRET: Required
+ AUTH_URL: Required
+
+⨯ Failed to load next.config.mjs, see more info here https://nextjs.org/docs/messages/next-config-error
+
+> Build error occurred
+Error: Invalid environment variables
+    at <unknown> (src\env\server.mjs:16:9)
+    at async (next.config.mjs:6:38)
+ ELIFECYCLE  Command failed with exit code 1.

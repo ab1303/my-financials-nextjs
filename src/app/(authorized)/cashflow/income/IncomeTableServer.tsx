@@ -1,8 +1,7 @@
 import { incomeEntriesHandler } from '@/server/controllers/income.controller';
 import { IncomeEntryStateProvider } from './StateProvider';
 import IncomeTableClient from './IncomeTableClient';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 
 import type { IncomeEntryType } from './_types';
 import { addRow, deleteRow, editRow } from './actions';
@@ -16,7 +15,7 @@ export default async function IncomeTableServer({
 }: IncomeTableServerProps) {
   try {
     // Get user session for user-specific data
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       throw new Error('User session not found');
     }

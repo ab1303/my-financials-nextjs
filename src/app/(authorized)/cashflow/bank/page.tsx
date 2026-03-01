@@ -1,9 +1,8 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { getServerSession } from 'next-auth';
 
 import Card from '@/components/card';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 
 import BankAssetsClient from './BankAssetsClient';
@@ -30,7 +29,7 @@ export default async function BankAssetsPage({
   const params = await searchParams;
 
   // Get user session for user-specific data
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     return (
       <div className='p-4 bg-red-50 border border-red-200 rounded-md'>

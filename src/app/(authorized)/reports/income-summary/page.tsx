@@ -1,9 +1,8 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import Card from '@/components/card';
-import { authOptions } from '@/utils/authOptions';
+import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import IncomeSummaryClient from './IncomeSummaryClient';
 
@@ -22,7 +21,7 @@ export default async function IncomeSummaryPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session?.user?.id) {
     redirect('/auth/signin');
   }

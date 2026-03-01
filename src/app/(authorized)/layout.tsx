@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
 
+import { auth } from '@/server/auth';
 import PageLoading from '@/components/PageLoading';
 import Header from '@/components/Header';
-import { authOptions } from '@/utils/authOptions';
-import { redirect } from 'next/navigation';
 import { UserProvider } from './UserProvider';
 
 export default async function AuthorizedLayout({
@@ -12,23 +11,21 @@ export default async function AuthorizedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session) {
-    redirect("/auth/login");
+    redirect('/auth/login');
   }
 
   const isUser = !!session?.user;
   if (!isUser) return <PageLoading />; // shouldn't happen
 
- return (
+  return (
     <div className='box-border'>
       <Header user={session.user} />
-      
+
       <div className='flex flex-col'>
-        <UserProvider user={session.user}>
-          {children}
-        </UserProvider>
+        <UserProvider user={session.user}>{children}</UserProvider>
       </div>
     </div>
   );

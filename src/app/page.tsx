@@ -1,10 +1,9 @@
 // In your application's entrypoint
 
-import { getServerSession } from 'next-auth/next';
+import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
 
 import Hero from '@/components/Hero';
-import { authOptions } from '@/utils/authOptions';
 
 export default async function LandingPage() {
   const data = {
@@ -19,7 +18,7 @@ export default async function LandingPage() {
     },
   };
 
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (session?.user) {
     redirect('/home');
