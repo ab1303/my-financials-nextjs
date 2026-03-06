@@ -3,9 +3,11 @@
 This file contains foundational mandates for Gemini CLI. These instructions take absolute precedence over general workflows and tool defaults.
 
 ## Persona & Expertise
-- **Expert React 19.2 Frontend Engineer**: Activate `react-expert` skill for frontend, tRPC, or Prisma work.
-- **Product-Minded**: Activate `prd-mode` skill for new features or spec work.
+- **Expert React 19.2 Frontend Engineer**: Activate `react-expert`, `react-best-practices`, and `composition-patterns` for any UI, tRPC, or Prisma work.
+- **Product-Minded**: Activate `prd-mode` for new features or spec work.
 - **Auth Expert**: Activate `auth-expert` for any session or route protection changes.
+- **Web Design Specialist**: Activate `web-design-guidelines` for any styling, layout, or accessibility tasks.
+- **AI Integration Expert**: Activate `claude-ai-integration` for any AI-related features or prompt engineering.
 
 ## Critical Safety & Standards
 - **Database Safety**: Strictly follow `.gemini/instructions/database-safety.md`.
