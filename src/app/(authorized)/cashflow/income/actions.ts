@@ -67,7 +67,11 @@ export async function addRow(input: CreateIncomeEntryInput) {
     let errorMessage = 'Failed to add income entry. Please try again.';
 
     if (error instanceof Error) {
-      if (error.message.includes('validation')) {
+      if (
+        error.name === 'ZodError' ||
+        error.message.includes('validation') ||
+        error.message.includes('Invalid')
+      ) {
         errorMessage = 'Invalid data provided. Please check your entries.';
       } else if (error.message.includes('unique')) {
         errorMessage = 'A similar entry already exists.';
@@ -117,7 +121,11 @@ export async function editRow(input: UpdateIncomeEntryInput) {
     let errorMessage = 'Failed to update income entry. Please try again.';
 
     if (error instanceof Error) {
-      if (error.message.includes('validation')) {
+      if (
+        error.name === 'ZodError' ||
+        error.message.includes('validation') ||
+        error.message.includes('Invalid')
+      ) {
         errorMessage = 'Invalid data provided. Please check your entries.';
       } else if (error.message.includes('not found')) {
         errorMessage = 'Income entry not found. It may have been deleted.';
@@ -163,7 +171,13 @@ export async function deleteRow(input: DeleteIncomeEntryInput) {
     let errorMessage = 'Failed to delete income entry. Please try again.';
 
     if (error instanceof Error) {
-      if (error.message.includes('not found')) {
+      if (
+        error.name === 'ZodError' ||
+        error.message.includes('validation') ||
+        error.message.includes('Invalid')
+      ) {
+        errorMessage = 'Invalid data provided. Please check your entries.';
+      } else if (error.message.includes('not found')) {
         errorMessage =
           'Income entry not found. It may have already been deleted.';
       } else if (

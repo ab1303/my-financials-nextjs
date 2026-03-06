@@ -104,19 +104,19 @@ describe('Income Server Actions', () => {
     it('should handle all income source types', async () => {
       const sources: Array<
         | 'EMPLOYMENT'
-        | 'BUSINESS'
-        | 'INVESTMENT'
+        | 'STOCKS'
+        | 'BONDS'
         | 'RENTAL'
-        | 'GIFT'
-        | 'ZAKAT'
+        | 'BUSINESS'
+        | 'FREELANCE'
         | 'OTHER'
       > = [
         'EMPLOYMENT',
-        'BUSINESS',
-        'INVESTMENT',
+        'STOCKS',
+        'BONDS',
         'RENTAL',
-        'GIFT',
-        'ZAKAT',
+        'BUSINESS',
+        'FREELANCE',
         'OTHER',
       ];
 
