@@ -284,17 +284,17 @@ model Expense {
 }
 
 model ExpenseEntry {
-  id         String          @id @default(cuid())
-  month      Int // 1-12 (January = 1, December = 12)
-  amount     Decimal         @db.Money
-  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
-  categoryId String
-  expense    Expense         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  expenseId  String
-  importImage    ImportImage?  @relation(fields: [importImageId], references: [id])
-  importImageId  String?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id            String          @id @default(cuid())
+  month         Int // 1-12 (January = 1, December = 12)
+  amount        Decimal         @db.Money
+  category      ExpenseCategory @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  expense       Expense         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expenseId     String
+  importImage   ImportImage?    @relation(fields: [importImageId], references: [id])
+  importImageId String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([expenseId, month])
 }
@@ -366,16 +366,16 @@ model BankAssetSnapshot {
 
 // Individual account balance entries within a snapshot
 model BankAssetEntry {
-  id         String            @id @default(cuid())
-  balance    Decimal           @db.Money
-  accountId  String
-  account    BankAccount       @relation(fields: [accountId], references: [id])
-  snapshotId String
-  snapshot   BankAssetSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
-  importImage    ImportImage?  @relation(fields: [importImageId], references: [id])
-  importImageId  String?
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  balance       Decimal           @db.Money
+  accountId     String
+  account       BankAccount       @relation(fields: [accountId], references: [id])
+  snapshotId    String
+  snapshot      BankAssetSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  importImage   ImportImage?      @relation(fields: [importImageId], references: [id])
+  importImageId String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@unique([accountId, snapshotId]) // One entry per account per snapshot
   @@index([snapshotId])
@@ -444,17 +444,17 @@ enum StorageProviderEnum {
 }
 
 model AIImportSession {
-  id                String            @id @default(cuid())
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String           @id @default(cuid())
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String
   importType        ImportTypeEnum
-  status            ImportStatusEnum  @default(PENDING)
+  status            ImportStatusEnum @default(PENDING)
   overallConfidence Float?
-  recordsCreated    Int               @default(0)
+  recordsCreated    Int              @default(0)
   metadata          Json?
   images            ImportImage[]
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([userId, createdAt])
 }
@@ -473,9 +473,10 @@ model ImportImage {
   confidence      Float?
   extractedData   Json?
   errorMessage    String?
+  expiresAt       DateTime?
   createdAt       DateTime            @default(now())
 
-  expenseEntries  ExpenseEntry[]
+  expenseEntries   ExpenseEntry[]
   bankAssetEntries BankAssetEntry[]
 
   @@index([sessionId])

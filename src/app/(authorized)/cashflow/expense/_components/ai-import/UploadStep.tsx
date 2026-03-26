@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUploadCloud, FiX } from 'react-icons/fi';
 import Image from 'next/image';
 import MONTHS_MAP from '@/constants/map';
+import { sanitizeImages } from '@/utils/image-sanitization';
 import type { UploadStepProps, UploadedFile } from './_types';
 
 export default function UploadStep({
@@ -14,6 +15,8 @@ export default function UploadStep({
   onStartImport,
   context,
 }: UploadStepProps) {
+  const [sanitizationError, setSanitizationError] = useState<string | null>(null);
+
   const acceptedFormats = useMemo(
     () => ({
       'image/png': ['.png'],
@@ -25,20 +28,32 @@ export default function UploadStep({
   );
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const newFiles: UploadedFile[] = acceptedFiles.map((file) => {
-        // Use URL.createObjectURL for synchronous preview
-        const preview = URL.createObjectURL(file);
+    async (acceptedFiles: File[]) => {
+      setSanitizationError(null);
 
-        return {
-          id: Math.random().toString(36).substr(2, 9),
-          file,
-          preview,
-          status: 'pending',
-        };
-      });
+      try {
+        // Sanitize images to remove EXIF metadata
+        const sanitizedFiles = await sanitizeImages(acceptedFiles);
 
-      onFilesSelected([...files, ...newFiles]);
+        const newFiles: UploadedFile[] = sanitizedFiles.map((file) => {
+          // Use URL.createObjectURL for synchronous preview
+          const preview = URL.createObjectURL(file);
+
+          return {
+            id: Math.random().toString(36).substr(2, 9),
+            file,
+            preview,
+            status: 'pending',
+          };
+        });
+
+        onFilesSelected([...files, ...newFiles]);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to sanitize images';
+        setSanitizationError(errorMessage);
+        console.error('Image sanitization failed:', error);
+      }
     },
     [files, onFilesSelected],
   );
@@ -52,6 +67,19 @@ export default function UploadStep({
 
   return (
     <div className='space-y-6'>
+      {/* Sanitization Error Banner */}
+      {sanitizationError && (
+        <div className='bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3'>
+          <FiX className='h-5 w-5 text-red-600 flex-shrink-0 mt-0.5' />
+          <div>
+            <h3 className='text-sm font-semibold text-red-900'>
+              Image Processing Error
+            </h3>
+            <p className='text-sm text-red-800 mt-1'>{sanitizationError}</p>
+          </div>
+        </div>
+      )}
+
       {/* Context Display */}
       <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
         <h3 className='text-sm font-semibold text-blue-900 mb-2'>

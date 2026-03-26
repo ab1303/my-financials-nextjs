@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { getStorageAdapter } from '@/server/services/ai-import/image-storage.adapter';
+import { setImageExpiration } from '@/server/services/ai-import/cleanup.service';
 import {
   validateMimeType,
   validateFileSize,
@@ -94,6 +95,9 @@ export async function POST(request: NextRequest) {
             storageProvider: 'LOCAL', // Determined by adapter
           },
         });
+
+        // Set expiration timestamp (TTL)
+        await setImageExpiration(importImage.id);
 
         uploadedImages.push({
           id: importImage.id,

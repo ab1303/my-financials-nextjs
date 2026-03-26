@@ -5,5 +5,8 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
   },
-  "prisma.pinToPrisma6": true
+  "prisma.pinToPrisma6": true,
+  "chat.tools.terminal.autoApprove": {
+    "docker-compose": true
+  }
 }

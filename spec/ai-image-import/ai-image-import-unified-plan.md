@@ -61,4 +61,12 @@ We will not build "Audit Trail" or "Bank Assets" features using insecure raw URL
 
 ## 4. Current Status
 - **Phase 1-3**: Completed (Infrastructure, Pipeline, Basic UI).
-- **Next Task**: Phase 4, Step 1 (Database Update for `expiresAt`).
+- **Phase 4**: ✅ Completed (Secure Audit Trail & Verification)
+  - Database: `expiresAt` field added with migration `20260325101743_add_expires_at_to_import_image`
+  - Backend: Secure proxy route `GET /api/ai-import/image/[id]` implemented with ownership checks
+  - Backend: Cleanup service `deleteExpiredImages()` and `setImageExpiration()` implemented
+  - Frontend: Canvas sanitization added to UploadStep for EXIF metadata removal
+  - Frontend: ImportAuditIcon and ImageLightbox components created
+  - Frontend: Audit trail integrated into CategoryBreakdownModal
+
+- **Next Task**: Phase 5 - Bank Assets Integration

@@ -10,6 +10,7 @@ import { Card } from '@/components';
 import { Modal, Label } from '@/components/ui';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import { inputStyles, buttonStyles } from '@/styles/theme';
+import ImportAuditIcon from './ai-import/ImportAuditIcon';
 import {
   addRow,
   editRow,
@@ -379,7 +380,14 @@ function CategoryBreakdownContent({
                             value={entry.amount.toFixed(2)}
                           />
                         </span>
-                        <div className='flex space-x-3'>
+                        <div className='flex space-x-3 items-center'>
+                          {/* Import Audit Icon */}
+                          {entry.importImageId && (
+                            <ImportAuditIcon
+                              importImageId={entry.importImageId}
+                              fileName={entry.importImage?.fileName}
+                            />
+                          )}
                           <button
                             type='button'
                             className={clsx(

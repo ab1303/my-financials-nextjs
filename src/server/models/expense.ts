@@ -18,6 +18,11 @@ export type ExpenseEntryModel = {
   categoryId: string;
   expenseId: string;
   categoryName?: string; // Populated from join
+  importImageId?: string | null; // Link to imported image
+  importImage?: {
+    id: string;
+    fileName: string;
+  } | null;
 };
 
 // More flexible type for service layer operations

@@ -26,35 +26,41 @@ Key capabilities:
 
 ### 1.3 Implementation Status
 
-#### ✅ Completed (Weeks 1-3, February 2026)
+#### ✅ Completed (Weeks 1-4, February-March 2026)
 
-- **Phase 1: Infrastructure & Image Upload** (8/9 items)
+- **Phase 1: Infrastructure & Image Upload** (9/9 items) ✅
   - Prisma schema with AIImportSession, ImportImage models
   - Storage adapter system (Local, Vercel Blob, S3 placeholder)
   - Image upload API endpoint (`POST /api/ai-import/upload`)
   - File validation (MIME type, size, dimensions)
   - Migration applied: `20260228120102_add_ai_import_infrastructure`
+  - TTL expiration field added to ImportImage
 
-- **Phase 2: AI Vision Pipeline** (7/9 items)
+- **Phase 2: AI Vision Pipeline** (9/9 items) ✅
   - AI Vision Service with OpenAI GPT-4o integration
   - Category Matcher with fuzzy matching and semantic mappings
   - Expense Mapper Service for database record creation
   - Parse API endpoint with SSE streaming (`POST /api/ai-import/parse`)
   - Real-time progress updates to client UI
+  - setImageExpiration integration on upload
 
-- **Phase 3: Expense Import UI** (10/12 items)
+- **Phase 3: Expense Import UI** (12/12 items) ✅
   - AIImportWizard modal component (3-step flow)
-  - UploadStep with drag-and-drop file zone
+  - UploadStep with drag-and-drop file zone + Canvas sanitization
   - ProcessingStep with progress animation and SSE handling
   - ResultsStep with confidence score and summary
   - Integration with Expenses page ("AI Import" button)
 
-#### 🔄 In Progress
+- **Phase 4: Secure Audit Trail & Verification** (6/6 items) ✅
+  - `expiresAt` field added to ImportImage (Prisma migration: `20260325101743_add_expires_at_to_import_image`)
+  - `GET /api/ai-import/image/[id]` secure proxy route with ownership checks
+  - `deleteExpiredImages()` cleanup service and `setImageExpiration()` helper
+  - Client-side Canvas sanitization in UploadStep (EXIF metadata stripping)
+  - ImportAuditIcon component (camera icon on imported records)
+  - ImageLightbox component (secure image viewer modal)
+  - Integration with CategoryBreakdownModal (audit trail visible on entries)
 
-- **Phase 4: Audit Trail & Post-Edit** (0/6 items)
-  - ImportAuditIcon component (camera icon on records)
-  - ImageLightbox component (image viewer modal)
-  - Integration with CategoryBreakdownModal
+#### 🔄 In Progress
 
 #### ⏳ Not Started
 
