@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { FiX, FiAlertCircle, FiLoader } from 'react-icons/fi';
-import Image from 'next/image';
 
 export interface ImageLightboxProps {
   imageId: string;
@@ -89,10 +88,11 @@ export default function ImageLightbox({
   }, [isOpen, imageId, imageUrl]);
 
   return (
-    <Transition show={isOpen}>
+    <Transition appear show={isOpen} as={Fragment}>
       <Dialog onClose={onClose} className='relative z-50'>
         {/* Backdrop */}
         <Transition.Child
+          as={Fragment}
           enter='ease-out duration-300'
           enterFrom='opacity-0'
           enterTo='opacity-100'
@@ -107,6 +107,7 @@ export default function ImageLightbox({
         <div className='fixed inset-0 overflow-y-auto'>
           <div className='flex min-h-full items-center justify-center p-4'>
             <Transition.Child
+              as={Fragment}
               enter='ease-out duration-300'
               enterFrom='opacity-0 scale-95'
               enterTo='opacity-100 scale-100'
@@ -178,9 +179,15 @@ export default function ImageLightbox({
                   {/* Image Display */}
                   {loadingState === 'success' && imageUrl && (
                     <div className='relative w-full bg-gray-100 rounded-lg overflow-hidden'>
-                      {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                      <img
+                      {/* Blob URL: Next.js <Image> does not support blob: URLs, use native img */}
+                      {/* alt describes the auditable source image content */}
+                      <img // eslint-disable-line @next/next/no-img-element
                         src={imageUrl}
+                        alt={
+                          fileName
+                            ? `Source image: ${fileName}`
+                            : 'Source image used for this import'
+                        }
                         className='w-full h-auto max-h-[70vh] object-contain'
                       />
                     </div>
@@ -190,8 +197,8 @@ export default function ImageLightbox({
                   {loadingState === 'success' && (
                     <div className='mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500'>
                       <p>
-                        This image is protected and only you can view it. It will
-                        be automatically deleted after 7 days.
+                        This image is protected and only you can view it. It
+                        will be automatically deleted after 7 days.
                       </p>
                     </div>
                   )}

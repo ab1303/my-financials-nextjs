@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { getStorageAdapter } from '@/server/services/ai-import/image-storage.adapter';
-import { setImageExpiration } from '@/server/services/ai-import/cleanup.service';
+import {
+  setImageExpiration,
+  deleteExpiredImages,
+} from '@/server/services/ai-import/cleanup.service';
 import {
   validateMimeType,
   validateFileSize,
@@ -133,6 +136,12 @@ export async function POST(request: NextRequest) {
         mimeType: img.mimeType,
       })),
     };
+
+    // Fire-and-forget cleanup of expired images — no cron needed.
+    // Runs asynchronously on each upload so expired files are eventually removed.
+    deleteExpiredImages().catch((err) =>
+      console.error('[ai-import/upload] Background cleanup failed:', err),
+    );
 
     if (errors.length > 0) {
       return NextResponse.json(
