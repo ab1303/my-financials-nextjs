@@ -48,7 +48,6 @@ export interface AIExtractionResponse {
   confidence: number; // 0-1
   entries: Record<string, unknown>[];
   warnings: string[];
-  raw?: unknown; // Raw AI response for debugging
 }
 
 export interface ExpenseExtractionResult extends AIExtractionResponse {

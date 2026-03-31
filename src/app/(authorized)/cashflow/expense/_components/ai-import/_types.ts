@@ -15,6 +15,7 @@ export interface UploadedFile {
   error?: string;
   confidence?: number;
   extractedData?: Record<string, unknown>;
+  redacted?: boolean;
 }
 
 export interface ExpenseImportContext {

@@ -2,10 +2,11 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FiUploadCloud, FiX } from 'react-icons/fi';
+import { FiUploadCloud, FiX, FiShield } from 'react-icons/fi';
 import Image from 'next/image';
 import MONTHS_MAP from '@/constants/map';
 import { sanitizeImages } from '@/utils/image-sanitization';
+import ImageRedactor from './ImageRedactor';
 import type { UploadStepProps, UploadedFile } from './_types';
 
 export default function UploadStep({
@@ -18,6 +19,24 @@ export default function UploadStep({
   const [sanitizationError, setSanitizationError] = useState<string | null>(
     null,
   );
+  const [redactingFileId, setRedactingFileId] = useState<string | null>(null);
+
+  const redactingFile = redactingFileId
+    ? (files.find((f) => f.id === redactingFileId) ?? null)
+    : null;
+
+  function handleRedactApply(redactedFile: File) {
+    if (!redactingFileId) return;
+    const newPreview = URL.createObjectURL(redactedFile);
+    onFilesSelected(
+      files.map((f) =>
+        f.id === redactingFileId
+          ? { ...f, file: redactedFile, preview: newPreview, redacted: true }
+          : f,
+      ),
+    );
+    setRedactingFileId(null);
+  }
 
   const acceptedFormats = useMemo(
     () => ({
@@ -161,6 +180,30 @@ export default function UploadStep({
                   <FiX className='h-4 w-4' />
                 </button>
 
+                {/* Redact Button — only shown when not yet redacted */}
+                {!uploadedFile.redacted && (
+                  <button
+                    onClick={() => setRedactingFileId(uploadedFile.id)}
+                    className='absolute top-2 left-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity'
+                    aria-label='Redact sensitive information'
+                    title='Redact PII before sending to AI'
+                  >
+                    <FiShield className='h-4 w-4' />
+                  </button>
+                )}
+
+                {/* Redacted Badge — always visible once redacted */}
+                {uploadedFile.redacted && (
+                  <button
+                    onClick={() => setRedactingFileId(uploadedFile.id)}
+                    className='absolute top-2 left-2 flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-2 py-0.5 rounded-full transition-colors'
+                    title='Re-open redaction editor'
+                  >
+                    <FiShield className='h-3 w-3' />
+                    Redacted
+                  </button>
+                )}
+
                 {/* Status Indicator */}
                 <div className='absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2 text-white text-xs truncate'>
                   {uploadedFile.file.name}
@@ -169,6 +212,16 @@ export default function UploadStep({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Redactor Modal */}
+      {redactingFile && (
+        <ImageRedactor
+          file={redactingFile.file}
+          preview={redactingFile.preview}
+          onApply={handleRedactApply}
+          onCancel={() => setRedactingFileId(null)}
+        />
       )}
 
       {/* Start Import Button */}

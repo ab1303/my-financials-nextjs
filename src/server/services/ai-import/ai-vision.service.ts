@@ -76,6 +76,11 @@ Your task is to extract expense data from screenshots containing expense summari
 
 IMPORTANT: You MUST respond ONLY with valid JSON. No additional text before or after.
 
+PRIVACY RULES — strictly enforced:
+- DO NOT extract or include in your response: full names, email addresses, phone numbers, BSB numbers, account numbers, street addresses, or any other personally identifiable information.
+- Extract ONLY category names and dollar amounts. Nothing else.
+- If an area of the image is blacked out or redacted, ignore it entirely.
+
 Available categories for matching:
 ${expenseCategories.map((cat) => `- ${cat}`).join('\n')}
 
@@ -130,7 +135,6 @@ Return ONLY a JSON object with this structure:
       confidence: validated.confidence,
       entries: validated.entries,
       warnings: validated.warnings,
-      raw: parsed,
     };
   } catch (error) {
     console.error('[AIVisionService] Failed to extract expense data:', error);
@@ -152,9 +156,14 @@ Your task is to extract bank account balance data from screenshots.
 
 IMPORTANT: You MUST respond ONLY with valid JSON. No additional text before or after.
 
+PRIVACY RULES — strictly enforced:
+- DO NOT extract or include in your response: full names, email addresses, phone numbers, BSB numbers (e.g., 06-2000), account numbers (e.g., 12345678), street addresses, or any other personally identifiable information.
+- Extract ONLY the bank name (from app branding/logo), account nicknames, and balance amounts. Nothing else.
+- If an area of the image is blacked out or redacted, ignore it entirely.
+
 When extracting bank data:
 1. Extract the bank name from app branding, header, or context
-2. List all visible accounts with their names and balances
+2. List all visible accounts with their nicknames and balances only
 3. Handle currency symbols and formatting (assume AUD if not specified)
 4. Provide a confidence score reflecting image quality and readability
 5. Note any ambiguities or unclear values in warnings`;
@@ -205,7 +214,6 @@ Return ONLY a JSON object with this structure:
       entries: validated.entries,
       bankName: validated.bankName,
       warnings: validated.warnings,
-      raw: parsed,
     };
   } catch (error) {
     console.error(
