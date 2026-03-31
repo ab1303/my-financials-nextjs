@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Select from 'react-select';
 import { getSelectStyles } from '@/lib/select-styles';
+
+type SelectOption = { value: string; label: string };
 import { NumericFormat } from 'react-number-format';
 import { Disclosure } from '@headlessui/react';
 
@@ -222,7 +224,7 @@ export default function HoldingFormModal({
                   onChange={(selected) => field.onChange(selected?.value)}
                   className='mt-1'
                   isDisabled={isEditMode}
-                  styles={getSelectStyles()}
+                  styles={getSelectStyles<SelectOption>()}
                 />
               )}
             />
@@ -282,7 +284,7 @@ export default function HoldingFormModal({
                     )}
                     onChange={(selected) => field.onChange(selected?.value)}
                     className='mt-1'
-                    styles={getSelectStyles()}
+                    styles={getSelectStyles<SelectOption>()}
                   />
                 )}
               />
@@ -307,7 +309,7 @@ export default function HoldingFormModal({
                     )}
                     onChange={(selected) => field.onChange(selected?.value)}
                     className='mt-1'
-                    styles={getSelectStyles()}
+                    styles={getSelectStyles<SelectOption>()}
                   />
                 )}
               />

@@ -284,7 +284,7 @@ export default function IncomeTableClient({
               >
                 <div className='flex flex-col items-center'>
                   <div className='text-muted-foreground/50 mb-2'>
-                    <Plus size={24} />
+                    <Plus className='w-6 h-6' />
                   </div>
                   <p className='text-base font-medium text-foreground mb-1'>
                     {!calendarYearId

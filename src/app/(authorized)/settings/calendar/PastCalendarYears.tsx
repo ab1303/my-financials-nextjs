@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Disclosure } from '@headlessui/react';
 import { ChevronDown } from 'lucide-react';
@@ -32,7 +32,7 @@ export default function PastCalendarYears({
               <div className='border border-gray-200 rounded-lg overflow-hidden'>
                 <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors'>
                   <div className='flex items-center gap-3'>
-                    <FiChevronDown
+                    <ChevronDown
                       className={clsx(
                         'w-5 h-5 text-gray-500 transition-transform',
                         open ? 'transform rotate-180' : '',

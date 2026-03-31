@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components';
@@ -195,7 +195,7 @@ export default function CalendarForm({
                   </Label>
                   {/* Info icon with tooltip using Heroicons via React Icons */}
                   <span className='relative group'>
-                    <HiOutlineInformationCircle
+                    <Info
                       className='w-4 h-4 text-gray-400 cursor-pointer'
                       aria-label='Info'
                     />

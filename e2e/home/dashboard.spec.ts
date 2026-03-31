@@ -11,20 +11,18 @@ test.describe('Home Dashboard', () => {
     await expect(page).toHaveURL(/\/home/);
 
     // Page should have loaded successfully
-    await expect(page.locator('main')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('main')).toBeVisible({ timeout: 5000 });
   });
 
   test('dashboard displays welcome message or user info', async ({ page }) => {
     // Check for user name or welcome message (adjust selector)
-    const userDisplay = page.locator('text=/Test User|Welcome|Dashboard/i');
+    const userDisplay = page.getByRole('heading', { name: 'Dashboard' });
     await expect(userDisplay).toBeVisible({ timeout: 5000 });
   });
 
   test('sidebar navigation is visible', async ({ page }) => {
-    // Look for main navigation elements
-    const sidebar = page.locator(
-      '[role="navigation"], aside, [data-testid="sidebar"]',
-    );
+    // Look for main navigation elements (desktop sidebar is second aside)
+    const sidebar = page.locator('aside').last();
     await expect(sidebar).toBeVisible({ timeout: 5000 });
   });
 

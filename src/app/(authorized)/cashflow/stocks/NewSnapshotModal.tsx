@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
 import Select from 'react-select';
 import { getSelectStyles } from '@/lib/select-styles';
+
+type SelectOption = { value: string; label: string };
 import { NumericFormat } from 'react-number-format';
 
 import { Modal } from '@/components/ui/Modal';
@@ -187,7 +189,7 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
-                          styles={getSelectStyles()}
+                          styles={getSelectStyles<SelectOption>()}
                         />
                       )}
                     />
@@ -253,7 +255,7 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
-                          styles={getSelectStyles()}
+                          styles={getSelectStyles<SelectOption>()}
                         />
                       )}
                     />
@@ -391,7 +393,7 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
-                          styles={getSelectStyles()}
+                          styles={getSelectStyles<SelectOption>()}
                         />
                       )}
                     />
@@ -515,7 +517,7 @@ export default function NewSnapshotModal({
               }
               className='flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium'
             >
-              <Plus size={16} />
+              <Plus className='w-4 h-4' />
               Add Another Holding
             </button>
           </div>

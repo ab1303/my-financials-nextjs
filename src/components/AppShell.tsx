@@ -33,14 +33,14 @@ export default function AppShell({ user, children }: AppShellProps) {
         sidebarCollapsed={collapsed}
         onToggleSidebar={toggleCollapsed}
       />
-      <main
+      <div
         className={cn(
           'flex flex-col transition-[margin] duration-300 ease-in-out',
           collapsed ? 'lg:ml-16' : 'lg:ml-64',
         )}
       >
         {children}
-      </main>
+      </div>
     </div>
   );
 }

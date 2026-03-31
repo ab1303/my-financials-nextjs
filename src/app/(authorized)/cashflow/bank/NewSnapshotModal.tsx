@@ -216,7 +216,7 @@ export default function NewSnapshotModal({
                   variant='secondary'
                   onClick={handleAddEntry}
                 >
-                  <Plus className='mr-1' />
+                  <Plus className='mr-1 w-4 h-4' />
                   Add Account
                 </Button>
               </div>

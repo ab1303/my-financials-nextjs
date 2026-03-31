@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import clsx from 'clsx';
 
@@ -40,7 +40,7 @@ export default function EditableTableCell({
       />
       <div className='flex items-center min-w-[5rem]'>
         {inProgress && (
-          <ImSpinner2
+          <Loader2
             className={clsx('animate-spin', colorStyles.primary.text)}
           />
         )}
@@ -60,7 +60,7 @@ export default function EditableTableCell({
               onClick={() => OnValueChange(value)}
               aria-label='Save changes'
             >
-              ✓
+              âœ“
             </button>
             <button
               type='button'
@@ -74,7 +74,7 @@ export default function EditableTableCell({
               onClick={() => setValue(originalValue)}
               aria-label='Cancel changes'
             >
-              ↩
+              â†©
             </button>
           </div>
         )}

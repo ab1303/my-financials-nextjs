@@ -229,7 +229,7 @@ export default function ZakatTableClient({
           aria-label='Add new payment'
           title='Add Payment'
         >
-          <Plus size={14} />
+          <Plus className='w-3.5 h-3.5' />
         </button>
       </div>
 

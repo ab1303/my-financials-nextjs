@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useId, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
 import Select from 'react-select';
 import { Disclosure } from '@headlessui/react';
-import { ChevronDown, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
@@ -451,7 +451,7 @@ export default function BankAssetsClient({ initialData }: Props) {
             }
             className='inline-flex items-center gap-2 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors'
           >
-            <Trash2 size={16} />
+            <Trash2 className='w-4 h-4' />
             Delete Snapshot
           </button>
         </div>
@@ -513,7 +513,7 @@ export default function BankAssetsClient({ initialData }: Props) {
             Take your first snapshot to start tracking your cash position.
           </p>
           <Button variant='default' onClick={() => setIsModalOpen(true)}>
-            <Plus className='mr-2' />
+            <Plus className='mr-2 w-4 h-4' />
             New Snapshot
           </Button>
         </div>
@@ -525,7 +525,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                 <div className='border border-border rounded-lg overflow-hidden'>
                   <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted/50 hover:bg-muted transition-colors'>
                     <div className='flex items-center gap-4'>
-                      <FiChevronDown
+                      <ChevronDown
                         className={clsx(
                           'w-5 h-5 text-muted-foreground transition-transform',
                           open ? 'transform rotate-180' : '',
@@ -593,7 +593,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                         className='px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors'
                                         title='Save'
                                       >
-                                        ✓
+                                        <Check className='w-3 h-3' />
                                       </button>
                                       <button
                                         onClick={handleCancelEditAccountName}
@@ -601,7 +601,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                         className='px-2 py-1 text-xs bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 transition-colors'
                                         title='Cancel'
                                       >
-                                        ✕
+                                        <X className='w-3 h-3' />
                                       </button>
                                     </div>
                                   ) : (
@@ -703,7 +703,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       {totals && (totals as SnapshotTotals).banks.length > 0 && (
         <div className='flex justify-center gap-3 pt-4'>
           <Button variant='default' onClick={() => setIsModalOpen(true)}>
-            <Plus className='mr-2' />
+            <Plus className='mr-2 w-4 h-4' />
             New Snapshot
           </Button>
           <Button

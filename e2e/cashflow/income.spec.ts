@@ -11,7 +11,7 @@ test.describe('Income Management', () => {
     page,
   }) => {
     // Check page title
-    await expect(page.locator('text=Income')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Income Tracking' })).toBeVisible();
 
     // Check for fiscal year dropdown
     const yearSelector = page.locator('select, [role="combobox"]').first();

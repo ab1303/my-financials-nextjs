@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Fragment, useId, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -295,7 +295,7 @@ export default function StockAssetsClient({ initialData }: Props) {
               variant='primary'
               onClick={() => setIsNewSnapshotModalOpen(true)}
             >
-              <Plus className='mr-2' />
+              <Plus className='mr-2 w-4 h-4' />
               New Snapshot
             </Button>
             {selectedSnapshotId && (
@@ -342,7 +342,7 @@ export default function StockAssetsClient({ initialData }: Props) {
               variant='primary'
               onClick={() => setIsNewSnapshotModalOpen(true)}
             >
-              <Plus className='mr-2' />
+              <Plus className='mr-2 w-4 h-4' />
               New Snapshot
             </Button>
           </div>
@@ -359,7 +359,7 @@ export default function StockAssetsClient({ initialData }: Props) {
               href='/settings/business'
               className='inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium'
             >
-              Go to Settings → Business
+              Go to Settings â†’ Business
             </a>
           </div>
         ) : (
@@ -370,7 +370,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                   <div className='border border-gray-200 rounded-lg overflow-hidden'>
                     <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors'>
                       <div className='flex items-center gap-4'>
-                        <FiChevronDown
+                        <ChevronDown
                           className={clsx(
                             'w-5 h-5 text-gray-500 transition-transform',
                             open ? 'transform rotate-180' : '',
@@ -551,10 +551,12 @@ export default function StockAssetsClient({ initialData }: Props) {
                                     {metrics.isSold ? (
                                       metrics.isCGTEligible ? (
                                         <span className='text-green-600 font-semibold'>
-                                          ✓
+                                          âœ“
                                         </span>
                                       ) : (
-                                        <span className='text-red-600'>✗</span>
+                                        <span className='text-red-600'>
+                                          âœ—
+                                        </span>
                                       )
                                     ) : (
                                       <span className='text-gray-400 text-xs'>
@@ -603,7 +605,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                             setIsHoldingFormModalOpen(true);
                           }}
                         >
-                          <Plus className='mr-2' size={16} />
+                          <Plus className='mr-2 w-4 h-4' />
                           Add Holding
                         </Button>
                       </div>
