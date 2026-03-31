@@ -7,7 +7,9 @@ test.describe('Bank Settings', () => {
   });
 
   test('should load banks settings page', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Bank Accounts' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Bank Accounts' }),
+    ).toBeVisible();
   });
 
   test('should display banks list', async ({ page }) => {

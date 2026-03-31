@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Fragment, useId, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';

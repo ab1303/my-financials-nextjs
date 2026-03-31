@@ -7,7 +7,9 @@ test.describe('Donations Management', () => {
   });
 
   test('should load donations page', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Donation Tracking' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Donation Tracking' }),
+    ).toBeVisible();
   });
 
   test('should display donations list if data exists', async ({ page }) => {

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Disclosure } from '@headlessui/react';
 import { ChevronDown } from 'lucide-react';
