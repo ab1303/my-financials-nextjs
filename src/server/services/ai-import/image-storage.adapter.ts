@@ -2,6 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { mkdir } from 'fs/promises';
 import { randomUUID } from 'crypto';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /**
  * Storage adapter interface for image uploads
@@ -154,12 +161,13 @@ export class VercelBlobStorageAdapter implements IImageStorageAdapter {
 }
 
 /**
- * AWS S3 Storage adapter for production (alternative to Vercel Blob)
+ * AWS S3 Storage adapter for production
  * Requires AWS_S3_BUCKET, AWS_S3_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
  */
 export class S3StorageAdapter implements IImageStorageAdapter {
   private bucket: string;
   private region: string;
+  private client: S3Client;
 
   constructor() {
     this.bucket = process.env.AWS_S3_BUCKET || '';
@@ -170,6 +178,14 @@ export class S3StorageAdapter implements IImageStorageAdapter {
         'AWS_S3_BUCKET and AWS_S3_REGION environment variables are required for S3StorageAdapter',
       );
     }
+
+    this.client = new S3Client({
+      region: this.region,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      },
+    });
   }
 
   async uploadImage(
@@ -178,19 +194,66 @@ export class S3StorageAdapter implements IImageStorageAdapter {
     userId: string,
     originalFileName: string,
   ): Promise<StorageResult> {
-    // Implementation for S3 would use AWS SDK
-    // This is a placeholder for Phase 6
-    throw new Error(
-      'S3StorageAdapter not implemented yet. Use LocalStorageAdapter or VercelBlobStorageAdapter instead.',
+    const ext = this.getExtensionFromMimeType(mimeType);
+    const key = `ai-imports/${userId}/${randomUUID()}.${ext}`;
+
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: file,
+        ContentType: mimeType,
+        // Private by default — no ACL set; relies on bucket policy blocking public access
+      }),
     );
+
+    return {
+      // Store the S3 key (not a URL) so the secure proxy handles retrieval
+      storageUrl: key,
+      fileName: originalFileName,
+      fileSize: file.length,
+      mimeType,
+    };
   }
 
-  async deleteImage(_storageUrl: string): Promise<void> {
-    throw new Error('S3StorageAdapter not implemented yet');
+  async deleteImage(storageUrl: string): Promise<void> {
+    try {
+      await this.client.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucket,
+          Key: storageUrl,
+        }),
+      );
+    } catch (error) {
+      console.warn(`Failed to delete S3 object: ${storageUrl}`, error);
+    }
   }
 
-  async getImageBuffer(_storageUrl: string): Promise<Buffer> {
-    throw new Error('S3StorageAdapter not implemented yet');
+  async getImageBuffer(storageUrl: string): Promise<Buffer> {
+    // Use a short-lived pre-signed URL (60s) to fetch the object securely
+    const signedUrl = await getSignedUrl(
+      this.client,
+      new GetObjectCommand({ Bucket: this.bucket, Key: storageUrl }),
+      { expiresIn: 60 },
+    );
+
+    const response = await fetch(signedUrl);
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch S3 object: ${storageUrl} (${response.status})`,
+      );
+    }
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  private getExtensionFromMimeType(mimeType: string): string {
+    const mimeToExt: Record<string, string> = {
+      'image/png': 'png',
+      'image/jpeg': 'jpg',
+      'image/webp': 'webp',
+      'image/heic': 'heic',
+    };
+    return mimeToExt[mimeType] ?? 'bin';
   }
 }
 

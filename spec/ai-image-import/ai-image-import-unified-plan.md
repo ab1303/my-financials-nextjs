@@ -69,4 +69,19 @@ We will not build "Audit Trail" or "Bank Assets" features using insecure raw URL
   - Frontend: ImportAuditIcon and ImageLightbox components created
   - Frontend: Audit trail integrated into CategoryBreakdownModal
 
-- **Next Task**: Phase 5 - Bank Assets Integration
+- **Phase 5**: ✅ Completed (Bank Assets Integration)
+  - Backend: `bank-asset-mapper.service.ts` with Levenshtein fuzzy matching and upsert logic
+  - Backend: `BANK_ASSET` branch wired into `parse/route.ts` (SSE streaming, extraction + mapping)
+  - Backend: `getBankAssetSnapshots` updated to include `importImage` relation on entries
+  - Frontend: `BankAssetImportContext` + `ImportContext` discriminated union added to `_types.ts`
+  - Frontend: `ProcessingStep.tsx` updated with conditional schema parse for `BANK_ASSET`
+  - Frontend: `BankAssetAIImportWizard.tsx` created (snapshot date picker + reused wizard steps)
+  - Frontend: `BankAssetsClient.tsx` updated with AI Import button and `ImportAuditIcon` on entries
+  - Bug fix: `getExpenseEntriesForMonth` now includes `importImage` join for audit trail
+
+- **Phase 6**: 🔄 In Progress (Cloud & Production Readiness)
+  - Storage: `S3StorageAdapter` implemented with AWS SDK v3 (`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`)
+  - Storage: Private bucket pattern — stores S3 key (not URL), retrieval via 60s pre-signed URL through secure proxy
+  - AI Usage Logging: **Out of scope** (deferred)
+
+- **Next Task**: Phase 7 - Polish & Hardening

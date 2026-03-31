@@ -60,12 +60,26 @@ Key capabilities:
   - ImageLightbox component (secure image viewer modal)
   - Integration with CategoryBreakdownModal (audit trail visible on entries)
 
+- **Phase 5: Bank Assets Import** (8/8 items) ✅
+  - `bank-asset-mapper.service.ts` with Levenshtein fuzzy matching and upsert logic
+  - `BANK_ASSET` branch wired into SSE parse route (`extractBankAssetData` + `mapBankAssetData`)
+  - `BankAssetImportContext` + `ImportContext` discriminated union in `_types.ts`
+  - `ProcessingStep.tsx` updated with conditional schema selection for `BANK_ASSET` vs `EXPENSE`
+  - `BankAssetAIImportWizard.tsx` — new component with snapshot date picker, reuses wizard steps
+  - `BankAssetsClient.tsx` updated with AI Import button and `ImportAuditIcon` on entry rows
+  - `getBankAssetSnapshots` updated to include `importImage` relation on entries
+  - Bug fix: `getExpenseEntriesForMonth` now includes `importImage` join for audit trail
+
 #### 🔄 In Progress
+
+- **Phase 6: Cloud Storage & Production Readiness** (1/7 items)
+  - ✅ S3StorageAdapter implemented with AWS SDK v3 (`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`)
+    - Private bucket pattern: stores S3 key (not URL), retrieval via 60s pre-signed URL routed through secure proxy
+    - `uploadImage()`, `deleteImage()`, `getImageBuffer()` all implemented
+  - ⏳ AI Usage Logging: **out of scope** (deferred to separate feature)
 
 #### ⏳ Not Started
 
-- **Phase 5: Bank Assets Import** (0/8 items)
-- **Phase 6: Cloud Storage & Production Readiness** (0/7 items)
 - **Phase 7: Polish & Hardening** (0/7 items)
 
 **Build Status**: ✅ Production build verified (9.0s, 0 errors)
