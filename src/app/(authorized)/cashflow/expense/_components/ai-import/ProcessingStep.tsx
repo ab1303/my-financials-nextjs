@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 import { FiLoader, FiCheck, FiX } from 'react-icons/fi';
 import type { ProcessingStepProps, ImageResult } from './_types';
-import { ExpenseImportRequestSchema, SSEEventSchema } from './_schema';
+import {
+  ExpenseImportRequestSchema,
+  BankAssetImportRequestSchema,
+  SSEEventSchema,
+} from './_schema';
 
 export default function ProcessingStep({
   files,
@@ -41,11 +45,21 @@ export default function ProcessingStep({
         const imageIds = uploadedImages.map((img) => img.imageId);
 
         // Step 2: Parse images with SSE
-        const parseRequest = ExpenseImportRequestSchema.parse({
-          imageIds,
-          importType: 'EXPENSE',
-          context,
-        });
+        const parseRequest =
+          context.importType === 'BANK_ASSET'
+            ? BankAssetImportRequestSchema.parse({
+                imageIds,
+                importType: 'BANK_ASSET',
+                context: { snapshotDate: context.snapshotDate },
+              })
+            : ExpenseImportRequestSchema.parse({
+                imageIds,
+                importType: 'EXPENSE',
+                context: {
+                  calendarYearId: context.calendarYearId,
+                  month: context.month,
+                },
+              });
 
         const parseResponse = await fetch('/api/ai-import/parse', {
           method: 'POST',

@@ -181,6 +181,12 @@ export const getBankAssetSnapshots = async (
               bank: true,
             },
           },
+          importImage: {
+            select: {
+              id: true,
+              fileName: true,
+            },
+          },
         },
         orderBy: {
           account: {

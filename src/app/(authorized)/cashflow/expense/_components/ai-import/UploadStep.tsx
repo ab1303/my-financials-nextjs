@@ -15,7 +15,9 @@ export default function UploadStep({
   onStartImport,
   context,
 }: UploadStepProps) {
-  const [sanitizationError, setSanitizationError] = useState<string | null>(null);
+  const [sanitizationError, setSanitizationError] = useState<string | null>(
+    null,
+  );
 
   const acceptedFormats = useMemo(
     () => ({
@@ -86,10 +88,21 @@ export default function UploadStep({
           Import Details
         </h3>
         <div className='text-sm text-blue-800'>
-          <p>
-            <span className='font-medium'>Month:</span>{' '}
-            {MONTHS_MAP.get(context.month) || `Month ${context.month}`}
-          </p>
+          {context.importType === 'EXPENSE' ? (
+            <p>
+              <span className='font-medium'>Month:</span>{' '}
+              {MONTHS_MAP.get(context.month) || `Month ${context.month}`}
+            </p>
+          ) : (
+            <p>
+              <span className='font-medium'>Snapshot Date:</span>{' '}
+              {new Date(context.snapshotDate).toLocaleDateString('en-AU', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </p>
+          )}
         </div>
       </div>
 

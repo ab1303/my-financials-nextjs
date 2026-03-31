@@ -22,6 +22,8 @@ import { Button } from '@/components';
 import { Modal } from '@/components/ui/Modal';
 import NewSnapshotModal from './NewSnapshotModal';
 import { updateAccountName } from './actions';
+import BankAssetAIImportWizard from './_components/BankAssetAIImportWizard';
+import ImportAuditIcon from '../expense/_components/ai-import/ImportAuditIcon';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 
@@ -71,6 +73,7 @@ export default function BankAssetsClient({ initialData }: Props) {
   );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAIImportOpen, setIsAIImportOpen] = useState(false);
 
   // Snapshot selection state
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(
@@ -670,6 +673,16 @@ export default function BankAssetsClient({ initialData }: Props) {
                                     >
                                       <FiTrash2 className='w-4 h-4' />
                                     </button>
+                                    {snapshotEntry?.importImageId && (
+                                      <ImportAuditIcon
+                                        importImageId={
+                                          snapshotEntry.importImageId
+                                        }
+                                        fileName={
+                                          snapshotEntry.importImage?.fileName
+                                        }
+                                      />
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -686,15 +699,35 @@ export default function BankAssetsClient({ initialData }: Props) {
         </div>
       ) : null}
 
-      {/* New Snapshot Button (bottom) */}
+      {/* New Snapshot / AI Import Buttons (bottom) */}
       {totals && (totals as SnapshotTotals).banks.length > 0 && (
-        <div className='flex justify-center pt-4'>
+        <div className='flex justify-center gap-3 pt-4'>
           <Button variant='primary' onClick={() => setIsModalOpen(true)}>
             <FiPlus className='mr-2' />
             New Snapshot
           </Button>
+          <Button
+            variant='secondary'
+            onClick={() => setIsAIImportOpen(true)}
+            disabled={!selectedYear}
+          >
+            AI Import
+          </Button>
         </div>
       )}
+
+      {/* Bank Asset AI Import Wizard */}
+      <BankAssetAIImportWizard
+        isOpen={isAIImportOpen}
+        onClose={() => setIsAIImportOpen(false)}
+        onImportComplete={() => {
+          setIsAIImportOpen(false);
+          setSelectedSnapshotId(null);
+          utils.bankAsset.getSnapshots.invalidate();
+          utils.bankAsset.getMostRecentSnapshot.invalidate();
+          utils.bankAsset.getSnapshotTotals.invalidate();
+        }}
+      />
 
       {/* New Snapshot Modal */}
       <NewSnapshotModal

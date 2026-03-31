@@ -123,6 +123,9 @@ export const getExpenseEntriesForMonth = async (
     include: {
       expense: true,
       category: true,
+      importImage: {
+        select: { id: true, fileName: true },
+      },
     },
     orderBy: {
       category: { name: 'asc' },
@@ -136,6 +139,8 @@ export const getExpenseEntriesForMonth = async (
     categoryId: entry.categoryId,
     expenseId: entry.expenseId,
     categoryName: entry.category.name,
+    importImageId: entry.importImageId ?? undefined,
+    importImage: entry.importImage ?? undefined,
   }));
 };
 

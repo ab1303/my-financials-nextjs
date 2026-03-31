@@ -1,4 +1,4 @@
-// AI Import Wizard Types for Expense Tracking
+// AI Import Wizard Types for Expense and Bank Asset Tracking
 
 export interface UploadedFile {
   id: string;
@@ -18,9 +18,17 @@ export interface UploadedFile {
 }
 
 export interface ExpenseImportContext {
+  importType: 'EXPENSE';
   calendarYearId: string;
   month: number;
 }
+
+export interface BankAssetImportContext {
+  importType: 'BANK_ASSET';
+  snapshotDate: string; // ISO date string e.g. "2026-03-31"
+}
+
+export type ImportContext = ExpenseImportContext | BankAssetImportContext;
 
 export interface ImportSessionResult {
   sessionId: string;
@@ -46,10 +54,17 @@ export interface AIImportWizardProps {
   onImportComplete?: () => void;
 }
 
+export interface BankAssetAIImportWizardProps {
+  isOpen: boolean;
+  onClose: () => void;
+  defaultSnapshotDate?: string;
+  onImportComplete?: () => void;
+}
+
 export interface ProcessingStepProps {
   files: UploadedFile[];
   onComplete: (result: ImportSessionResult) => void;
-  context: ExpenseImportContext;
+  context: ImportContext;
 }
 
 export interface ResultsStepProps {
@@ -63,7 +78,7 @@ export interface UploadStepProps {
   onFilesSelected: (files: UploadedFile[]) => void;
   onRemoveFile: (fileId: string) => void;
   onStartImport: () => void;
-  context: ExpenseImportContext;
+  context: ImportContext;
 }
 
 export type WizardStep = 'upload' | 'processing' | 'results';

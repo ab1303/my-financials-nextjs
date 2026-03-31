@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { getStorageAdapter } from '@/server/services/ai-import/image-storage.adapter';
-import { extractExpenseData } from '@/server/services/ai-import/ai-vision.service';
+import {
+  extractExpenseData,
+  extractBankAssetData,
+} from '@/server/services/ai-import/ai-vision.service';
 import {
   mapExpenseData,
   type ExpenseMapResult,
 } from '@/server/services/ai-import/expense-mapper.service';
+import {
+  mapBankAssetData,
+  type BankAssetMapResult,
+} from '@/server/services/ai-import/bank-asset-mapper.service';
 import { UploadRequestSchema } from '@/server/services/ai-import/validation';
 import { ImportStatusEnum, ImportTypeEnum } from '@prisma/client';
 
@@ -61,6 +68,18 @@ export async function POST(request: NextRequest) {
           {
             error: 'Missing required context for EXPENSE import',
             required: ['calendarId', 'month'],
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    if (importType === 'BANK_ASSET') {
+      if (!context.snapshotDate) {
+        return NextResponse.json(
+          {
+            error: 'Missing required context for BANK_ASSET import',
+            required: ['snapshotDate'],
           },
           { status: 400 },
         );
@@ -178,8 +197,37 @@ export async function POST(request: NextRequest) {
                   imageId,
                 );
               } else if (importType === 'BANK_ASSET') {
-                // TODO: Implement in Phase 5
-                throw new Error('BANK_ASSET import not yet implemented');
+                const bankExtractionResult =
+                  await extractBankAssetData(imageBuffer);
+
+                controller.enqueue(
+                  encoder.encode(
+                    `data: ${JSON.stringify({
+                      type: 'extraction',
+                      imageId,
+                      message: `Extracted ${bankExtractionResult.entries.length} accounts from image`,
+                      entriesExtracted: bankExtractionResult.entries.length,
+                      confidence: bankExtractionResult.confidence,
+                    })}\n\n`,
+                  ),
+                );
+
+                const bankMapResult: BankAssetMapResult =
+                  await mapBankAssetData(
+                    bankExtractionResult,
+                    new Date(context.snapshotDate as string),
+                    userId,
+                    imageId,
+                  );
+
+                // Normalise shape to match ExpenseMapResult for shared downstream logic
+                mapResult = {
+                  success: bankMapResult.success,
+                  entriesCreated: bankMapResult.entriesCreated,
+                  confidence: bankMapResult.confidence,
+                  warnings: bankMapResult.warnings,
+                  errors: bankMapResult.errors,
+                };
               }
 
               if (mapResult) {

@@ -1,37 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { FiX } from 'react-icons/fi';
-import UploadStep from './UploadStep';
-import ProcessingStep from './ProcessingStep';
-import ResultsStep from './ResultsStep';
+import UploadStep from '../../expense/_components/ai-import/UploadStep';
+import ProcessingStep from '../../expense/_components/ai-import/ProcessingStep';
+import ResultsStep from '../../expense/_components/ai-import/ResultsStep';
 import type {
-  AIImportWizardProps,
+  BankAssetAIImportWizardProps,
   WizardStep,
   UploadedFile,
   ImportSessionResult,
-  ExpenseImportContext,
-} from './_types';
+  BankAssetImportContext,
+} from '../../expense/_components/ai-import/_types';
 
-export default function AIImportWizard({
+export default function BankAssetAIImportWizard({
   isOpen,
   onClose,
-  calendarYearId,
+  defaultSnapshotDate,
   onImportComplete,
-}: AIImportWizardProps) {
+}: BankAssetAIImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>('upload');
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [importResult, setImportResult] = useState<ImportSessionResult | null>(
     null,
   );
-  // Default to current month
-  const month = new Date().getMonth() + 1;
 
-  const context: ExpenseImportContext = {
-    importType: 'EXPENSE',
-    calendarYearId,
-    month,
+  // Default to today's date in ISO format (YYYY-MM-DD)
+  const todayIso = new Date().toISOString().split('T')[0]!;
+  const [snapshotDate, setSnapshotDate] = useState<string>(
+    defaultSnapshotDate ?? todayIso,
+  );
+
+  const context: BankAssetImportContext = {
+    importType: 'BANK_ASSET',
+    snapshotDate,
   };
 
   const handleFilesSelected = (newFiles: UploadedFile[]) => {
@@ -56,7 +59,6 @@ export default function AIImportWizard({
     if (onImportComplete) {
       onImportComplete();
     }
-    // Reset state for next import
     setCurrentStep('upload');
     setFiles([]);
     setImportResult(null);
@@ -69,9 +71,10 @@ export default function AIImportWizard({
   };
 
   return (
-    <Transition show={isOpen}>
+    <Transition as={Fragment} show={isOpen}>
       <Dialog onClose={onClose} className='relative z-50'>
         <Transition.Child
+          as={Fragment}
           enter='ease-out duration-300'
           enterFrom='opacity-0'
           enterTo='opacity-100'
@@ -85,6 +88,7 @@ export default function AIImportWizard({
         <div className='fixed inset-0 overflow-y-auto'>
           <div className='flex min-h-full items-center justify-center p-4'>
             <Transition.Child
+              as={Fragment}
               enter='ease-out duration-300'
               enterFrom='opacity-0 scale-95'
               enterTo='opacity-100 scale-100'
@@ -97,7 +101,7 @@ export default function AIImportWizard({
                 <div className='flex items-center justify-between border-b border-gray-200 p-6'>
                   <div>
                     <Dialog.Title className='text-lg font-semibold text-gray-900'>
-                      AI Import Wizard
+                      AI Import — Bank Assets
                     </Dialog.Title>
                     <p className='mt-1 text-sm text-gray-600'>
                       {currentStep === 'upload' && 'Step 1: Select Images'}
@@ -116,7 +120,7 @@ export default function AIImportWizard({
                 </div>
 
                 {/* Progress Indicator */}
-                <div className='flex gaps-2 border-b border-gray-200 px-6 py-3'>
+                <div className='flex border-b border-gray-200 px-6 py-3'>
                   {['upload', 'processing', 'results'].map((step, index) => (
                     <div key={step} className='flex items-center'>
                       <div
@@ -136,7 +140,7 @@ export default function AIImportWizard({
                       </div>
                       {index < 2 && (
                         <div
-                          className={`h-1 mx-2 flex-1 ${
+                          className={`h-1 mx-2 ${
                             ['upload', 'processing', 'results'].indexOf(
                               currentStep,
                             ) > index
@@ -149,6 +153,28 @@ export default function AIImportWizard({
                     </div>
                   ))}
                 </div>
+
+                {/* Snapshot Date Picker (upload step only) */}
+                {currentStep === 'upload' && (
+                  <div className='border-b border-gray-200 px-6 py-3'>
+                    <label
+                      htmlFor='snapshot-date'
+                      className='block text-sm font-medium text-gray-700'
+                    >
+                      Snapshot Date
+                    </label>
+                    <input
+                      id='snapshot-date'
+                      type='date'
+                      value={snapshotDate}
+                      onChange={(e) => setSnapshotDate(e.target.value)}
+                      className='mt-1 block w-48 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                    />
+                    <p className='mt-1 text-xs text-gray-500'>
+                      The date the bank balances were captured.
+                    </p>
+                  </div>
+                )}
 
                 {/* Content */}
                 <div className='p-6'>

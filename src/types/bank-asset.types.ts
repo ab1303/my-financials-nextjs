@@ -16,6 +16,7 @@ export type BankAccountWithBank = BankAccount & {
 
 export type BankAssetEntryWithAccount = BankAssetEntry & {
   account: BankAccountWithBank;
+  importImage?: { id: string; fileName: string } | null;
 };
 
 export type BankAssetSnapshotWithEntries = BankAssetSnapshot & {
