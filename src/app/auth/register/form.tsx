@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/Label';
 
 export default function RegisterForm() {
   const [email, setEmail] = useState('');
@@ -21,7 +24,6 @@ export default function RegisterForm() {
 
     onSuccess() {
       toast.success('Registration successful!');
-
       router.push('/auth/login');
     },
   });
@@ -34,98 +36,68 @@ export default function RegisterForm() {
       return;
     }
 
-    registerMutation.mutate({
-      email,
-      password,
-      passwordConfirm,
-    });
+    registerMutation.mutate({ email, password, passwordConfirm });
   };
 
   return (
-    <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-      <div>
-        <label
-          htmlFor='email'
-          className='mb-2 block text-sm font-medium text-gray-900'
-        >
-          Your email
-        </label>
-        <input
+    <form className='space-y-5' onSubmit={handleSubmit}>
+      <div className='space-y-1.5'>
+        <Label htmlFor='email'>Email address</Label>
+        <Input
           type='email'
           name='email'
           id='email'
-          className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-cyan-600 focus:ring-cyan-600 sm:text-sm'
+          placeholder='name@company.com'
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          autoComplete='email'
         />
       </div>
-      <div>
-        <label
-          htmlFor='password'
-          className='mb-2 block text-sm font-medium text-gray-900'
-        >
-          Your password
-        </label>
-        <input
+
+      <div className='space-y-1.5'>
+        <Label htmlFor='password'>Password</Label>
+        <Input
           type='password'
           name='password'
           id='password'
-          className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-cyan-600 focus:ring-cyan-600 sm:text-sm'
+          placeholder='••••••••'
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          autoComplete='new-password'
         />
       </div>
-      <div>
-        <label
-          htmlFor='confirm-password'
-          className='mb-2 block text-sm font-medium text-gray-900'
-        >
-          Confirm password
-        </label>
-        <input
+
+      <div className='space-y-1.5'>
+        <Label htmlFor='confirm-password'>Confirm password</Label>
+        <Input
           type='password'
           name='confirm-password'
           id='confirm-password'
-          className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-cyan-600 focus:ring-cyan-600 sm:text-sm'
+          placeholder='••••••••'
           required
           value={passwordConfirm}
           onChange={(e) => setPasswordConfirm(e.target.value)}
+          autoComplete='new-password'
         />
       </div>
-      <div className='flex items-start'>
-        <div className='flex h-5 items-center'>
-          <input
-            id='remember'
-            aria-describedby='remember'
-            name='remember'
-            type='checkbox'
-            className='focus:ring-3 h-4 w-4 rounded border-gray-300 bg-gray-50 focus:ring-cyan-200'
-            required
-          />
-        </div>
-        <div className='ml-3 text-sm'>
-          <label htmlFor='remember' className='font-medium text-gray-900'>
-            I accept the{' '}
-            <a href='#' className='text-teal-500 hover:underline'>
-              Terms and Conditions
-            </a>
-          </label>
-        </div>
-      </div>
-      <button
+
+      <Button
         type='submit'
-        className='w-full rounded-lg bg-cyan-600 px-5 py-3 text-center text-base font-medium text-white hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 sm:w-auto'
+        className='w-full'
+        isLoading={registerMutation.isPending}
       >
         Create account
-      </button>
-      <div className='text-sm font-medium text-gray-500'>
+      </Button>
+
+      <p className='text-center text-sm text-muted-foreground'>
         Already have an account?{' '}
-        <Link href='/auth/login' className='text-teal-500 hover:underline'>
-          Login here
+        <Link href='/auth/login' className='text-primary hover:underline font-medium'>
+          Sign in
         </Link>
-      </div>
+      </p>
     </form>
   );
 }
+

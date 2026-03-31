@@ -1,5 +1,5 @@
 import Select from 'react-select';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
 

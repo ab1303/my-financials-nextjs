@@ -8,7 +8,7 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 import Table from '@/components/table';
 import { tableStyles } from '@/styles/theme';

@@ -9,7 +9,7 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { FaPlus } from 'react-icons/fa';
 
 import Table from '@/components/table';

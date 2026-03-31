@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import Select from 'react-select';
 import { NumericFormat } from 'react-number-format';

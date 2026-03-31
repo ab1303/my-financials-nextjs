@@ -3,10 +3,13 @@
 import type { FormEvent } from 'react';
 
 import { useRef } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/Label';
 
 export default function LoginForm() {
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -39,73 +42,54 @@ export default function LoginForm() {
       router.push('/home');
     }
   }
+
   return (
-    <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-      <div>
-        <label
-          htmlFor='email'
-          className='mb-2 block text-sm font-medium text-gray-900'
-        >
-          Your email
-        </label>
-        <input
+    <form className='space-y-5' onSubmit={handleSubmit}>
+      <div className='space-y-1.5'>
+        <Label htmlFor='email'>Email address</Label>
+        <Input
           type='email'
           name='email'
           id='email'
-          className='block border bg-gray-50 p-2.5 text-gray-900 sm:text-sm'
           placeholder='name@company.com'
           required
           ref={emailInputRef}
+          autoComplete='email'
         />
       </div>
-      <div>
-        <label
-          htmlFor='password'
-          className='mb-2 block text-sm font-medium text-gray-900'
-        >
-          Your password
-        </label>
-        <input
+
+      <div className='space-y-1.5'>
+        <div className='flex items-center justify-between'>
+          <Label htmlFor='password'>Password</Label>
+          <a
+            href='#'
+            className='text-xs text-primary hover:underline'
+          >
+            Forgot password?
+          </a>
+        </div>
+        <Input
           type='password'
           name='password'
           id='password'
           placeholder='••••••••'
-          className='block border bg-gray-50 p-2.5 text-gray-900 sm:text-sm'
           required
           ref={passwordInputRef}
+          autoComplete='current-password'
         />
       </div>
-      <div className='flex items-start'>
-        <div className='flex h-5 items-center'>
-          <input
-            id='remember'
-            aria-describedby='remember'
-            name='remember'
-            type='checkbox'
-            className='focus:ring-3 h-4 w-4 rounded border-gray-300 bg-gray-50 focus:ring-cyan-200'
-          />
-        </div>
-        <div className='ml-3 text-sm'>
-          <label htmlFor='remember' className='font-medium text-gray-900'>
-            Remember me
-          </label>
-        </div>
-        <a href='#' className='ml-auto text-sm text-teal-500 hover:underline'>
-          Lost Password?
-        </a>
-      </div>
-      <button
-        type='submit'
-        className='w-full rounded-lg bg-cyan-600 px-5 py-3 text-center text-base font-medium text-white hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 sm:w-auto'
-      >
-        Login to your account
-      </button>
-      <div className='text-sm font-medium text-gray-500'>
-        Not registered?{' '}
-        <Link href='/auth/register' className='text-teal-500 hover:underline'>
+
+      <Button type='submit' className='w-full'>
+        Sign in
+      </Button>
+
+      <p className='text-center text-sm text-muted-foreground'>
+        Don&apos;t have an account?{' '}
+        <Link href='/auth/register' className='text-primary hover:underline font-medium'>
           Create account
         </Link>
-      </div>
+      </p>
     </form>
   );
 }
+

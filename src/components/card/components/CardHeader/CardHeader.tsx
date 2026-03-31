@@ -10,10 +10,11 @@ type CommonComponents = {
 
 const CardHeader: React.FC<{ children?: React.ReactNode }> &
   CommonComponents = (props) => (
-  <div className='px-6 py-4 border-b border-gray-200' {...props}></div>
+  <div className='px-6 py-4 border-b border-border' {...props}></div>
 );
 
 CardHeader.Text = CardHeaderText;
 CardHeader.Title = CardHeaderTitle;
 
 export default CardHeader;
+

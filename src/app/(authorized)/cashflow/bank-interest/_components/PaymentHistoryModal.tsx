@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 

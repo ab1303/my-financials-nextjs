@@ -6,7 +6,6 @@ import { ThemeProvider } from '@/components/theme-provider';
 import type { Metadata } from 'next';
 
 // styles
-import 'react-toastify/dist/ReactToastify.css';
 import '@/styles/globals.css';
 import 'react-day-picker/dist/style.css';
 

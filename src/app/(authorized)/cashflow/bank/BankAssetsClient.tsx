@@ -8,7 +8,7 @@ import { Disclosure } from '@headlessui/react';
 import { FiChevronDown, FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
 import type { CalendarYearType, OptionType } from '@/types';

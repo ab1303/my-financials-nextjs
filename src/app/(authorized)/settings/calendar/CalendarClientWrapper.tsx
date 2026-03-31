@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import CalendarForm from './form';
 import CalendarTableClient from './CalendarTableClient';
 import PastCalendarYears from './PastCalendarYears';

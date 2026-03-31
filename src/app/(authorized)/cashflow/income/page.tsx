@@ -68,20 +68,23 @@ export default async function IncomePage({
   };
 
   return (
-    <>
-      <Card.Header>
-        <div className='flex justify-between mt-4 text-left'>
-          <Card.Header.Title>Income Tracking</Card.Header.Title>
-        </div>
-      </Card.Header>
-      <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
+    <main className='container mx-auto px-4 py-6 max-w-6xl'>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+          Income Tracking
+        </h1>
+        <p className='text-muted-foreground mt-1 text-sm'>
+          Track and manage your income entries across fiscal years
+        </p>
+      </div>
+      <div className='rounded-xl border border-border bg-card shadow p-6'>
         <IncomeForm
           initialData={initialData}
           yearIdParam={selectedCalendarYearId}
         >
-          <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
+          <Suspense fallback={<p className='font-medium text-muted-foreground'>Loading table...</p>}>
             {selectedCalendarYear && (
-              <div className='font-mono text-gray-500 mb-3'>
+              <div className='font-mono text-muted-foreground mb-3 text-sm'>
                 {selectedCalendarYear.description} Income
               </div>
             )}
@@ -90,6 +93,6 @@ export default async function IncomePage({
           </Suspense>
         </IncomeForm>
       </div>
-    </>
+    </main>
   );
 }

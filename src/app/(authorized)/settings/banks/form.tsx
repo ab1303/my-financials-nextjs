@@ -7,7 +7,7 @@ import type { MouseEventHandler } from 'react';
 import { ImSpinner2 } from 'react-icons/im';
 import { FormProvider, useForm } from 'react-hook-form';
 import Select, { components } from 'react-select';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import type { OptionProps, SingleValue, GroupBase } from 'react-select';
 import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
@@ -67,16 +67,10 @@ const Option = (
     trpc.bank.removeBankDetails.useMutation({
       onSuccess() {
         queryClient.refetchQueries({ queryKey: [['getAllBanks']] });
-        toast('Bank details deleted successfully', {
-          type: 'success',
-          position: 'top-right',
-        });
+        toast.success('Bank details deleted successfully');
       },
       onError(error) {
-        toast(error.message, {
-          type: 'error',
-          position: 'top-right',
-        });
+        toast.error(error.message);
       },
     });
 

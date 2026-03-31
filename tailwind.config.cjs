@@ -136,6 +136,6 @@ module.exports = {
   },
 
   plugins: [
-    // Removed flowbite plugin as part of flowbite decomposition
+    require('tailwindcss-animate'),
   ],
 };

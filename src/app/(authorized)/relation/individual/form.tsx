@@ -8,7 +8,7 @@ import { ImSpinner2 } from 'react-icons/im';
 import { FormProvider, useForm } from 'react-hook-form';
 import Select, { components } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import type { OptionProps, SingleValue, GroupBase } from 'react-select';
 import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
@@ -92,16 +92,10 @@ const Option = (
         queryClient.refetchQueries({
           queryKey: [['individual', 'getAllIndividuals']],
         });
-        toast('Individual details deleted successfully', {
-          type: 'success',
-          position: 'top-right',
-        });
+        toast.success('Individual details deleted successfully');
       },
       onError(error) {
-        toast(error.message, {
-          type: 'error',
-          position: 'top-right',
-        });
+        toast.error(error.message);
       },
     });
 

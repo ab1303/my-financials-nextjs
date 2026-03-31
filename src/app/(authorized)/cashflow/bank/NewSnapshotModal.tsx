@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { NumericFormat } from 'react-number-format';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import CreatableSelect from 'react-select/creatable';
 
 import { trpc } from '@/server/trpc/client';

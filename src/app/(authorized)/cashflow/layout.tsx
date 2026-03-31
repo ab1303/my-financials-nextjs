@@ -6,9 +6,9 @@ export default async function CashFlowRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className='min-h-screen bg-gray-100 flex flex-col px-6 lg:px-8'>
-      <div className='container min-w-full mx-auto'>
-        <div className='mx-auto md:w-3/5 xl:w-3/5'>{children}</div>
+    <div className='min-h-screen bg-background'>
+      <div className='container mx-auto px-4 py-6 max-w-5xl'>
+        {children}
       </div>
     </div>
   );

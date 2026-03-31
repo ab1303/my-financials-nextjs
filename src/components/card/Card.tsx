@@ -1,7 +1,6 @@
 import React from 'react';
-import clsx from 'clsx';
+import { cn } from '@/lib/utils';
 
-import { cardStyles } from '@/styles/theme';
 import CardBody from './components/CardBody';
 import CardHeader from './components/CardHeader';
 
@@ -22,8 +21,15 @@ const Card: React.FC<CardProps> & CommonComponents = ({
   className,
   ...props
 }) => {
+  const variantClasses = {
+    base: 'rounded-xl border border-border bg-card text-card-foreground shadow',
+    interactive: 'rounded-xl border border-border bg-card text-card-foreground shadow hover:shadow-md transition-shadow cursor-pointer',
+    elevated: 'rounded-xl border border-border bg-card text-card-foreground shadow-md',
+    flat: 'rounded-xl border border-border bg-card text-card-foreground',
+  };
+
   return (
-    <div className={clsx(cardStyles[variant], 'mt-6', className)} {...props}>
+    <div className={cn(variantClasses[variant], 'mt-6', className)} {...props}>
       {children}
     </div>
   );
@@ -33,3 +39,4 @@ Card.Header = CardHeader;
 Card.Body = CardBody;
 
 export default Card;
+

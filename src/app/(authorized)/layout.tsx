@@ -21,12 +21,12 @@ export default async function AuthorizedLayout({
   if (!isUser) return <PageLoading />; // shouldn't happen
 
   return (
-    <div className='box-border'>
+    <div className='min-h-screen bg-background'>
       <Header user={session.user} />
-
-      <div className='flex flex-col'>
+      <main className='flex flex-col'>
         <UserProvider user={session.user}>{children}</UserProvider>
-      </div>
+      </main>
     </div>
   );
 }
+

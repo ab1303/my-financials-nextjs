@@ -95,4 +95,5 @@ Modal.Header = Header;
 Modal.Body = Body;
 Modal.Footer = Footer;
 
+export { Modal };
 export default Modal;

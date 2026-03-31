@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useId } from 'react';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { NumericFormat } from 'react-number-format';
 import Select from 'react-select';
 import clsx from 'clsx';
