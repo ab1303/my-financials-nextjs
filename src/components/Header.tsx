@@ -19,7 +19,11 @@ export default function Header({ user }: HeaderProps) {
     <div>
       <header className='sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
         <div className='flex justify-between h-14 px-4'>
-          <button className='p-2' onClick={() => setShowSideNav(true)} aria-label='Open navigation'>
+          <button
+            className='p-2'
+            onClick={() => setShowSideNav(true)}
+            aria-label='Open navigation'
+          >
             <svg
               xmlns='http://www.w3.org/2000/svg'
               viewBox='0 0 512 512'
@@ -53,4 +57,3 @@ export default function Header({ user }: HeaderProps) {
     </div>
   );
 }
-

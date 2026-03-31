@@ -1,10 +1,13 @@
 'use client';
 
-import { Dialog, Transition } from '@headlessui/react';
-import React, { Fragment, ReactNode } from 'react';
-import clsx from 'clsx';
-
-import { enhancedModalStyles } from '@/styles/theme';
+import React, { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader as ShadcnDialogHeader,
+  DialogFooter as ShadcnDialogFooter,
+} from '@/components/ui/dialog';
 
 type ModalRootProps = {
   show: boolean;
@@ -20,44 +23,16 @@ const ModalRoot = ({
   panelClassName,
 }: ModalRootProps) => {
   return (
-    <Transition appear show={show} as={Fragment}>
-      <Dialog as='div' className='relative z-50' onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter='ease-out duration-200'
-          enterFrom='opacity-0'
-          enterTo='opacity-100'
-          leave='ease-in duration-150'
-          leaveFrom='opacity-100'
-          leaveTo='opacity-0'
-        >
-          <div className='fixed inset-0 bg-black/40 backdrop-blur-sm' />
-        </Transition.Child>
-
-        <div className='fixed inset-0 overflow-y-auto'>
-          <div className='flex min-h-full items-start justify-center p-4'>
-            <Transition.Child
-              as={Fragment}
-              enter='ease-out duration-200'
-              enterFrom='opacity-0 scale-95'
-              enterTo='opacity-100 scale-100'
-              leave='ease-in duration-150'
-              leaveFrom='opacity-100 scale-100'
-              leaveTo='opacity-0 scale-95'
-            >
-              <Dialog.Panel
-                className={clsx(
-                  'w-full max-w-2xl transform overflow-hidden rounded-lg bg-white text-left align-middle shadow-xl transition-all',
-                  panelClassName,
-                )}
-              >
-                {children}
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
+    <Dialog
+      open={show}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className={cn('max-w-2xl', panelClassName)}>
+        {children}
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -68,9 +43,7 @@ const Header = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <div className={clsx('px-6 pt-6 pb-4 border-b border-gray-200', className)}>
-    {children}
-  </div>
+  <div className={cn('pb-4 border-b border-border', className)}>{children}</div>
 );
 
 const Body = ({
@@ -81,11 +54,17 @@ const Body = ({
   children: ReactNode;
   className?: string;
   variant?: 'base' | 'compact' | 'spacious' | 'flowbite';
-}) => (
-  <div className={clsx(enhancedModalStyles.body[variant], className)}>
-    {children}
-  </div>
-);
+}) => {
+  const variantClasses = {
+    base: 'py-4',
+    compact: 'py-2',
+    spacious: 'py-6',
+    flowbite: 'py-4',
+  };
+  return (
+    <div className={cn(variantClasses[variant], className)}>{children}</div>
+  );
+};
 
 const Footer = ({
   children,
@@ -95,8 +74,8 @@ const Footer = ({
   className?: string;
 }) => (
   <div
-    className={clsx(
-      'px-6 pt-4 pb-6 border-t border-gray-200 flex justify-end gap-3',
+    className={cn(
+      'pt-4 border-t border-border flex justify-end gap-3',
       className,
     )}
   >
@@ -104,4 +83,16 @@ const Footer = ({
   </div>
 );
 
-export const Modal = Object.assign(ModalRoot, { Header, Body, Footer });
+type CommonComponents = {
+  Header: typeof Header;
+  Body: typeof Body;
+  Footer: typeof Footer;
+};
+
+const Modal: React.FC<ModalRootProps> & CommonComponents =
+  ModalRoot as React.FC<ModalRootProps> & CommonComponents;
+Modal.Header = Header;
+Modal.Body = Body;
+Modal.Footer = Footer;
+
+export default Modal;
