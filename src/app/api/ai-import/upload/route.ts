@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
-import { getStorageAdapter } from '@/server/services/ai-import/image-storage.adapter';
+import {
+  getStorageAdapter,
+  getStorageProviderEnum,
+} from '@/server/services/ai-import/image-storage.adapter';
 import {
   setImageExpiration,
   deleteExpiredImages,
@@ -95,7 +98,7 @@ export async function POST(request: NextRequest) {
             fileSize: storageResult.fileSize,
             mimeType: storageResult.mimeType,
             storageUrl: storageResult.storageUrl,
-            storageProvider: 'LOCAL', // Determined by adapter
+            storageProvider: getStorageProviderEnum(),
           },
         });
 

@@ -18,6 +18,7 @@ export const serverSchema = z.object({
   ),
   DISCORD_CLIENT_ID: z.string().optional(),
   DISCORD_CLIENT_SECRET: z.string().optional(),
+  IMAGE_STORAGE_PROVIDER: z.enum(['local', 's3']).default('local'),
 });
 
 /**

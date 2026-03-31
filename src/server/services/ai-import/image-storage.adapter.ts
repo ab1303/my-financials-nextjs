@@ -103,64 +103,6 @@ export class LocalStorageAdapter implements IImageStorageAdapter {
 }
 
 /**
- * Vercel Blob Storage adapter for production
- * Requires VERCEL_BLOB_TOKEN environment variable
- */
-export class VercelBlobStorageAdapter implements IImageStorageAdapter {
-  private token: string;
-
-  constructor() {
-    this.token = process.env.VERCEL_BLOB_TOKEN || '';
-    if (!this.token) {
-      throw new Error(
-        'VERCEL_BLOB_TOKEN environment variable is not set. Cannot initialize VercelBlobStorageAdapter.',
-      );
-    }
-  }
-
-  async uploadImage(
-    file: Buffer,
-    mimeType: string,
-    userId: string,
-    originalFileName: string,
-  ): Promise<StorageResult> {
-    const { put } = await import('@vercel/blob');
-
-    const fileName = `${randomUUID()}-${originalFileName}`;
-    const blobPath = `ai-imports/${userId}/${fileName}`;
-
-    const blob = await put(blobPath, file, {
-      access: 'private',
-      contentType: mimeType,
-    });
-
-    return {
-      storageUrl: blob.url,
-      fileName: originalFileName,
-      fileSize: file.length,
-      mimeType,
-    };
-  }
-
-  async deleteImage(storageUrl: string): Promise<void> {
-    const { del } = await import('@vercel/blob');
-    try {
-      await del(storageUrl);
-    } catch (error) {
-      console.warn(`Failed to delete blob: ${storageUrl}`, error);
-    }
-  }
-
-  async getImageBuffer(storageUrl: string): Promise<Buffer> {
-    const response = await fetch(storageUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image from blob storage: ${storageUrl}`);
-    }
-    return Buffer.from(await response.arrayBuffer());
-  }
-}
-
-/**
  * AWS S3 Storage adapter for production
  * Requires AWS_S3_BUCKET, AWS_S3_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
  */
@@ -264,12 +206,24 @@ export function getStorageAdapter(): IImageStorageAdapter {
   const provider = process.env.IMAGE_STORAGE_PROVIDER || 'local';
 
   switch (provider.toLowerCase()) {
-    case 'vercel-blob':
-      return new VercelBlobStorageAdapter();
     case 's3':
       return new S3StorageAdapter();
     case 'local':
     default:
       return new LocalStorageAdapter();
+  }
+}
+
+/**
+ * Returns the Prisma StorageProviderEnum value matching the current env config.
+ */
+export function getStorageProviderEnum(): 'LOCAL' | 'S3' {
+  const provider = process.env.IMAGE_STORAGE_PROVIDER || 'local';
+  switch (provider.toLowerCase()) {
+    case 's3':
+      return 'S3';
+    case 'local':
+    default:
+      return 'LOCAL';
   }
 }
