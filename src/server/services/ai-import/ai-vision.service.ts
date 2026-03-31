@@ -1,6 +1,6 @@
 import { generateText } from 'ai';
 import { z } from 'zod';
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import type {
   ExpenseExtractionResult,
   BankAssetExtractionResult,
@@ -9,7 +9,32 @@ import type {
 /**
  * AI Vision Service using Vercel AI SDK
  * Handles image parsing and structured data extraction via AI models
+ *
+ * Supports two providers via AI_PROVIDER env var:
+ * - "github" (default): GitHub Models free tier (OpenAI-compatible API)
+ * - "openai": Direct OpenAI API (paid)
  */
+
+const GITHUB_MODELS_BASE_URL = 'https://models.inference.ai.azure.com';
+
+function getAIProvider() {
+  const provider = process.env.AI_PROVIDER ?? 'github';
+  const modelId = process.env.AI_VISION_MODEL ?? 'gpt-4o-mini';
+  const apiKey = process.env.AI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error(
+      `AI_API_KEY is required. Set a ${provider === 'github' ? 'GitHub Personal Access Token' : 'OpenAI API key'} in your environment.`,
+    );
+  }
+
+  const openai = createOpenAI({
+    apiKey,
+    ...(provider === 'github' && { baseURL: GITHUB_MODELS_BASE_URL }),
+  });
+
+  return openai.chat(modelId);
+}
 
 // Schemas for validation
 const ExpenseEntrySchema = z.object({
@@ -70,8 +95,9 @@ Return ONLY a JSON object with this structure:
 }`;
 
   try {
+    const model = getAIProvider();
     const { text } = await generateText({
-      model: openai('gpt-4o'),
+      model,
       system: systemPrompt,
       messages: [
         {
@@ -143,8 +169,9 @@ Return ONLY a JSON object with this structure:
 }`;
 
   try {
+    const model = getAIProvider();
     const { text } = await generateText({
-      model: openai('gpt-4o'),
+      model,
       system: systemPrompt,
       messages: [
         {

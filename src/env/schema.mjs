@@ -19,6 +19,9 @@ export const serverSchema = z.object({
   DISCORD_CLIENT_ID: z.string().optional(),
   DISCORD_CLIENT_SECRET: z.string().optional(),
   IMAGE_STORAGE_PROVIDER: z.enum(['local', 's3']).default('local'),
+  AI_PROVIDER: z.enum(['openai', 'github']).default('github'),
+  AI_VISION_MODEL: z.string().default('gpt-4o-mini'),
+  AI_API_KEY: z.string().optional(),
 });
 
 /**
