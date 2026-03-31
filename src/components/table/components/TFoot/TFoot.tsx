@@ -8,9 +8,9 @@ type CommonComponents = {
   TR: typeof TFootTR;
 };
 
-const TFoot: React.FC<{ children?: React.ReactNode }> & CommonComponents = ({ children }) => (
-  <tfoot className='bg-gray-100'>{children}</tfoot>
-);
+const TFoot: React.FC<{ children?: React.ReactNode }> & CommonComponents = ({
+  children,
+}) => <tfoot className='bg-muted/50'>{children}</tfoot>;
 
 TFoot.TH = TFootTH;
 TFoot.TR = TFootTR;

@@ -14,6 +14,7 @@ import { FaPlus } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
 import Table from '@/components/table';
+import { Button } from '@/components/ui/button';
 import { useIncomeEntryState } from './StateProvider';
 
 import { getTableColumns } from './_table/columns';
@@ -247,15 +248,15 @@ export default function IncomeTableClient({
   return (
     <div className='relative overflow-auto'>
       <div className='flex justify-end mb-3'>
-        <button
+        <Button
+          variant='default'
           onClick={handleAddEntry}
           disabled={isPending}
-          className='inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
           aria-label='Add new income entry'
         >
           <FaPlus className='w-4 h-4' />
           Add Entry
-        </button>
+        </Button>
       </div>
       <Table>
         <Table.THead>
@@ -279,18 +280,18 @@ export default function IncomeTableClient({
             <Table.TBody.TR>
               <td
                 colSpan={4}
-                className='text-center py-12 text-gray-500 px-6 bg-gray-50'
+                className='text-center py-12 text-muted-foreground px-6 bg-muted/30'
               >
                 <div className='flex flex-col items-center'>
-                  <div className='text-gray-400 mb-2'>
+                  <div className='text-muted-foreground/50 mb-2'>
                     <FaPlus size={24} />
                   </div>
-                  <p className='text-base font-medium text-gray-900 mb-1'>
+                  <p className='text-base font-medium text-foreground mb-1'>
                     {!calendarYearId
                       ? 'Select a fiscal year'
                       : 'No income entries recorded'}
                   </p>
-                  <p className='text-sm text-gray-500'>
+                  <p className='text-sm text-muted-foreground'>
                     {!calendarYearId
                       ? 'Please select a fiscal year to view income entries'
                       : 'Click the + button above to add your first income entry'}

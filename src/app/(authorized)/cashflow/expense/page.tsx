@@ -99,12 +99,12 @@ export default async function ExpensePage({
 
         {/* Total Expense Display */}
         {selectedCalendarYearId && (
-          <div className='mb-6 p-4 bg-gray-50 border border-gray-200 rounded-md'>
+          <div className='mb-6 p-4 bg-muted/50 border border-border rounded-lg'>
             <div className='flex justify-between items-center'>
-              <span className='text-sm font-medium text-gray-700'>
+              <span className='text-sm font-medium text-muted-foreground'>
                 Total Expenses for {selectedCalendarYear?.description}:
               </span>
-              <span className='text-lg font-bold text-gray-900'>
+              <span className='text-lg font-bold text-foreground'>
                 ${totalExpense?.toFixed(2) || '0.00'}
               </span>
             </div>

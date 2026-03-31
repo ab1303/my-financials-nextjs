@@ -13,6 +13,7 @@ import { FaListUl } from 'react-icons/fa';
 import { FiUpload } from 'react-icons/fi';
 
 import Table from '@/components/table';
+import { Button } from '@/components/ui/button';
 import MONTHS_MAP from '@/constants/map';
 import type { MonthlyExpenseSummary } from '@/server/models/expense';
 
@@ -65,7 +66,7 @@ export default function ExpenseTableClient({
           <div className='flex justify-center'>
             <button
               onClick={() => setSelectedMonth(row.original.month)}
-              className='text-blue-600 hover:text-blue-800 transition-colors'
+              className='text-primary hover:text-primary/80 transition-colors'
               aria-label={`View category breakdown for ${MONTHS_MAP.get(row.original.month)}`}
             >
               <FaListUl className='h-5 w-5' />
@@ -93,13 +94,10 @@ export default function ExpenseTableClient({
     <>
       {/* AI Import Button */}
       <div className='mb-4 flex justify-end'>
-        <button
-          onClick={() => setIsImportWizardOpen(true)}
-          className='flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors'
-        >
+        <Button variant='default' onClick={() => setIsImportWizardOpen(true)}>
           <FiUpload className='h-4 w-4' />
           AI Import
-        </button>
+        </Button>
       </div>
 
       <div className='overflow-x-auto'>

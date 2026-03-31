@@ -24,12 +24,12 @@ const Table: React.FC<TableProps> & CommonComponents = ({
 }) => (
   <div
     className={clsx(
-      'overflow-x-auto shadow-sm border border-gray-200 rounded-lg',
+      'overflow-x-auto shadow-sm border border-border rounded-lg',
       className,
     )}
   >
     <table
-      className={clsx('min-w-full divide-y divide-gray-200', tableClassName)}
+      className={clsx('min-w-full divide-y divide-border', tableClassName)}
     >
       {children}
     </table>

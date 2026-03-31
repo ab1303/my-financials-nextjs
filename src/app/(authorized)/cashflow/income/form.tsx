@@ -7,6 +7,7 @@ import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
 
 import { Card } from '@/components';
+import { getSelectStyles } from '@/lib/select-styles';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
@@ -130,7 +131,7 @@ export default function IncomeForm({
       <div className='mx-10'>
         <Label>Fiscal Year</Label>
         <div className='mt-3'>
-          <Select
+          <Select<OptionType>
             isClearable
             className='w-3/5'
             value={selectedIncomeYear}
@@ -139,27 +140,7 @@ export default function IncomeForm({
             getOptionValue={(option) => option.id}
             onChange={onYearChange}
             placeholder='Select fiscal year...'
-            styles={{
-              control: (provided, state) =>
-                ({
-                  ...provided,
-                  borderColor: state.isFocused ? '#14b8a6' : '#d1d5db',
-                  boxShadow: state.isFocused ? '0 0 0 1px #14b8a6' : 'none',
-                  '&:hover': {
-                    borderColor: '#14b8a6',
-                  },
-                }) as typeof provided,
-              option: (provided, state) =>
-                ({
-                  ...provided,
-                  backgroundColor: state.isSelected
-                    ? '#14b8a6'
-                    : state.isFocused
-                      ? '#f0fdfa'
-                      : 'white',
-                  color: state.isSelected ? 'white' : '#374151',
-                }) as typeof provided,
-            }}
+            styles={getSelectStyles()}
           />
         </div>
       </div>
@@ -168,7 +149,7 @@ export default function IncomeForm({
         <div className='mt-3'>
           <NumericFormat
             id={`${id}-total-income`}
-            className='w-3/5 block px-3 py-2 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 font-medium'
+            className='w-3/5 block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
             prefix='$'
             displayType='text'
             thousandSeparator

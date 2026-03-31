@@ -10,7 +10,7 @@ type CommonComponents = {
 
 const TBody: React.FC<{ children?: React.ReactNode }> & CommonComponents = ({
   children,
-}) => <tbody className='bg-white divide-y divide-gray-200'>{children}</tbody>;
+}) => <tbody className='bg-card divide-y divide-border'>{children}</tbody>;
 
 TBody.TD = TBodyTD;
 TBody.TR = TBodyTR;

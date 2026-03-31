@@ -4,7 +4,7 @@ const THeadTH: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
     <th
       scope='col'
-      className='group px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider'
+      className='group px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'
     >
       <span>{children}</span>
     </th>
