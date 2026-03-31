@@ -67,7 +67,12 @@ export default function ConfirmationDialog({
   const { Icon } = config;
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <AlertDialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <AlertDialogContent className='max-w-md'>
         <AlertDialogHeader>
           <div className='flex items-center space-x-3 mb-2'>
@@ -99,11 +104,7 @@ export default function ConfirmationDialog({
         )}
 
         <AlertDialogFooter>
-          <Button
-            variant='outline'
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button variant='outline' onClick={onClose} disabled={isLoading}>
             {cancelButtonText}
           </Button>
           <Button
@@ -120,4 +121,3 @@ export default function ConfirmationDialog({
     </AlertDialog>
   );
 }
-

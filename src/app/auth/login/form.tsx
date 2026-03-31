@@ -61,10 +61,7 @@ export default function LoginForm() {
       <div className='space-y-1.5'>
         <div className='flex items-center justify-between'>
           <Label htmlFor='password'>Password</Label>
-          <a
-            href='#'
-            className='text-xs text-primary hover:underline'
-          >
+          <a href='#' className='text-xs text-primary hover:underline'>
             Forgot password?
           </a>
         </div>
@@ -85,11 +82,13 @@ export default function LoginForm() {
 
       <p className='text-center text-sm text-muted-foreground'>
         Don&apos;t have an account?{' '}
-        <Link href='/auth/register' className='text-primary hover:underline font-medium'>
+        <Link
+          href='/auth/register'
+          className='text-primary hover:underline font-medium'
+        >
           Create account
         </Link>
       </p>
     </form>
   );
 }
-

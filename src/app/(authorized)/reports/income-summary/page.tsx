@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import Card from '@/components/card';
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import IncomeSummaryClient from './IncomeSummaryClient';
@@ -34,11 +33,16 @@ export default async function IncomeSummaryPage({
   const fiscalYears = allCalendarYears.filter((year) => year.type === 'FISCAL');
 
   return (
-    <Card className='m-4 p-6'>
-      <Card.Header>
-        <Card.Header.Title>Income Summary</Card.Header.Title>
-      </Card.Header>
-      <Card.Body>
+    <main className='container mx-auto px-4 py-6 max-w-6xl'>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+          Income Summary
+        </h1>
+        <p className='text-muted-foreground mt-1 text-sm'>
+          Analyze income trends, monthly summaries, and source breakdowns
+        </p>
+      </div>
+      <div className='rounded-xl border border-border bg-card shadow p-6'>
         <Suspense fallback={<div>Loading summary data...</div>}>
           <IncomeSummaryClient
             fiscalYears={fiscalYears}
@@ -46,7 +50,7 @@ export default async function IncomeSummaryPage({
             initialCalendarYearId={params.calendarYearId}
           />
         </Suspense>
-      </Card.Body>
-    </Card>
+      </div>
+    </main>
   );
 }

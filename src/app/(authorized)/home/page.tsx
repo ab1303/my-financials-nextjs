@@ -6,7 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { TrendingUp, DollarSign, Receipt, CircleDollarSign } from 'lucide-react';
+import {
+  TrendingUp,
+  DollarSign,
+  Receipt,
+  CircleDollarSign,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -123,19 +128,28 @@ export default function HomePage() {
           <CardContent>
             <div className='space-y-3'>
               <Link href='/cashflow/income'>
-                <Button variant='ghost' className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'>
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'
+                >
                   <TrendingUp className='h-4 w-4 text-primary' />
                   View Income Transactions
                 </Button>
               </Link>
               <Link href='/cashflow/donations'>
-                <Button variant='ghost' className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'>
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'
+                >
                   <DollarSign className='h-4 w-4 text-primary' />
                   View Donations
                 </Button>
               </Link>
               <Link href='/cashflow/expense'>
-                <Button variant='ghost' className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'>
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'
+                >
                   <Receipt className='h-4 w-4 text-destructive' />
                   View Expenses
                 </Button>
@@ -154,19 +168,28 @@ export default function HomePage() {
           <CardContent>
             <div className='space-y-3'>
               <Link href='/reports/income-summary'>
-                <Button variant='ghost' className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'>
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'
+                >
                   <TrendingUp className='h-4 w-4' />
                   Income Summary Report
                 </Button>
               </Link>
               <Link href='/cashflow/bank'>
-                <Button variant='ghost' className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'>
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'
+                >
                   <DollarSign className='h-4 w-4' />
                   Bank Assets
                 </Button>
               </Link>
               <Link href='/cashflow/stocks'>
-                <Button variant='ghost' className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'>
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'
+                >
                   <TrendingUp className='h-4 w-4' />
                   Stock Portfolio
                 </Button>
@@ -178,4 +201,3 @@ export default function HomePage() {
     </main>
   );
 }
-

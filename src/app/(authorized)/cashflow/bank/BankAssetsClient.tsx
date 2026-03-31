@@ -18,7 +18,7 @@ import type {
   SnapshotTotals,
 } from '@/types/bank-asset.types';
 import { Label } from '@/components/ui/Label';
-import { Button } from '@/components';
+import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/Modal';
 import NewSnapshotModal from './NewSnapshotModal';
 import { updateAccountName } from './actions';
@@ -373,8 +373,8 @@ export default function BankAssetsClient({ initialData }: Props) {
                 className={clsx(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                   selectedType === type
-                    ? 'bg-teal-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80',
                 )}
               >
                 {type}
@@ -407,7 +407,7 @@ export default function BankAssetsClient({ initialData }: Props) {
               id={`${id}-snapshot`}
               value={selectedSnapshotId || ''}
               onChange={(e) => setSelectedSnapshotId(e.target.value)}
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+              className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
             >
               {[...allSnapshots]
                 .sort(
@@ -433,7 +433,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       {/* Snapshot Date Display */}
       {snapshot && (
         <div className='flex items-center justify-between'>
-          <div className='text-gray-600 font-medium'>
+          <div className='text-muted-foreground font-medium'>
             Snapshot as of:{' '}
             {new Date(snapshot.snapshotDate).toLocaleDateString('en-AU', {
               day: '2-digit',
@@ -459,11 +459,11 @@ export default function BankAssetsClient({ initialData }: Props) {
 
       {/* Grand Total Card */}
       {totals && (
-        <div className='bg-teal-50 border-2 border-teal-200 rounded-lg p-6'>
-          <div className='text-sm font-medium text-teal-700 uppercase tracking-wide'>
+        <div className='bg-primary/10 border-2 border-primary/30 rounded-lg p-6'>
+          <div className='text-sm font-medium text-primary uppercase tracking-wide'>
             Total Cash Position
           </div>
-          <div className='mt-2 text-3xl font-bold text-teal-900'>
+          <div className='mt-2 text-3xl font-bold text-foreground'>
             <NumericFormat
               value={Number(totals.grandTotal)}
               displayType='text'
@@ -478,41 +478,41 @@ export default function BankAssetsClient({ initialData }: Props) {
 
       {/* Bank Accordions */}
       {!selectedYear ? (
-        <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
-          <p className='text-gray-600 mb-2'>
+        <div className='text-center py-12 bg-muted/50 rounded-lg border-2 border-dashed border-border'>
+          <p className='text-muted-foreground mb-2'>
             {yearOptions.length === 0
               ? `No ${selectedType} calendar years available.`
               : 'Please select a calendar year to view bank assets.'}
           </p>
         </div>
       ) : isLoading ? (
-        <div className='text-center py-8 text-gray-500'>
+        <div className='text-center py-8 text-muted-foreground'>
           Loading bank assets...
         </div>
       ) : banks.length === 0 ? (
-        <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
-          <p className='text-gray-700 mb-4 font-medium'>
+        <div className='text-center py-12 bg-muted/50 rounded-lg border-2 border-dashed border-border'>
+          <p className='text-foreground mb-4 font-medium'>
             You need to add banks first.
           </p>
-          <p className='text-sm text-gray-600 mb-6'>
+          <p className='text-sm text-muted-foreground mb-6'>
             Configure your banks in Settings before tracking cash assets.
           </p>
           <a
             href='/settings/banks'
-            className='inline-flex items-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium'
+            className='inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium'
           >
             Go to Settings → Banks
           </a>
         </div>
       ) : !totals || (totals && totals.banks.length === 0) ? (
-        <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
-          <p className='text-gray-700 mb-4 font-medium'>
+        <div className='text-center py-12 bg-muted/50 rounded-lg border-2 border-dashed border-border'>
+          <p className='text-foreground mb-4 font-medium'>
             No snapshots recorded.
           </p>
-          <p className='text-sm text-gray-600 mb-6'>
+          <p className='text-sm text-muted-foreground mb-6'>
             Take your first snapshot to start tracking your cash position.
           </p>
-          <Button variant='primary' onClick={() => setIsModalOpen(true)}>
+          <Button variant='default' onClick={() => setIsModalOpen(true)}>
             <FiPlus className='mr-2' />
             New Snapshot
           </Button>
@@ -522,20 +522,20 @@ export default function BankAssetsClient({ initialData }: Props) {
           {(totals as SnapshotTotals).banks.map((bank: BankTotalSummary) => (
             <Disclosure key={bank.bankId}>
               {({ open }) => (
-                <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                  <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors'>
+                <div className='border border-border rounded-lg overflow-hidden'>
+                  <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted/50 hover:bg-muted transition-colors'>
                     <div className='flex items-center gap-4'>
                       <FiChevronDown
                         className={clsx(
-                          'w-5 h-5 text-gray-500 transition-transform',
+                          'w-5 h-5 text-muted-foreground transition-transform',
                           open ? 'transform rotate-180' : '',
                         )}
                       />
-                      <span className='text-lg font-semibold text-gray-900'>
+                      <span className='text-lg font-semibold text-foreground'>
                         {bank.bankName}
                       </span>
                     </div>
-                    <div className='text-lg font-bold text-gray-900'>
+                    <div className='text-lg font-bold text-foreground'>
                       <NumericFormat
                         value={Number(bank.total)}
                         displayType='text'
@@ -547,23 +547,23 @@ export default function BankAssetsClient({ initialData }: Props) {
                     </div>
                   </Disclosure.Button>
 
-                  <Disclosure.Panel className='px-6 py-4 bg-white'>
+                  <Disclosure.Panel className='px-6 py-4 bg-card'>
                     <div className='overflow-x-auto'>
-                      <table className='min-w-full divide-y divide-gray-200'>
-                        <thead className='bg-gray-50'>
+                      <table className='min-w-full divide-y divide-border'>
+                        <thead className='bg-muted/50'>
                           <tr>
-                            <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                            <th className='px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                               Account Name
                             </th>
-                            <th className='px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                            <th className='px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                               Balance
                             </th>
-                            <th className='px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                            <th className='px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                               Actions
                             </th>
                           </tr>
                         </thead>
-                        <tbody className='bg-white divide-y divide-gray-200'>
+                        <tbody className='bg-card divide-y divide-border'>
                           {bank.accounts.map((account: AccountBalance) => {
                             // Find the entry ID from the snapshot entries
                             const snapshotEntry = snapshot?.entries.find(
@@ -571,7 +571,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                             );
                             return (
                               <tr key={account.accountId}>
-                                <td className='px-4 py-3 text-sm text-gray-900'>
+                                <td className='px-4 py-3 text-sm text-foreground'>
                                   {editingAccountName?.accountId ===
                                   account.accountId ? (
                                     <div className='flex items-center gap-2'>
@@ -584,13 +584,13 @@ export default function BankAssetsClient({ initialData }: Props) {
                                         }}
                                         onKeyDown={handleAccountNameKeyDown}
                                         autoFocus
-                                        className='flex-1 px-2 py-1 border border-teal-500 rounded text-sm focus:outline-none focus:ring-1 focus:ring-teal-600'
+                                        className='flex-1 px-2 py-1 border border-ring rounded text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
                                         placeholder='Account name'
                                       />
                                       <button
                                         onClick={handleSaveAccountName}
                                         disabled={isUpdatingAccountName}
-                                        className='px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 disabled:opacity-50 transition-colors'
+                                        className='px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors'
                                         title='Save'
                                       >
                                         ✓
@@ -598,7 +598,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                       <button
                                         onClick={handleCancelEditAccountName}
                                         disabled={isUpdatingAccountName}
-                                        className='px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50 transition-colors'
+                                        className='px-2 py-1 text-xs bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 transition-colors'
                                         title='Cancel'
                                       >
                                         ✕
@@ -615,7 +615,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                             account.accountName,
                                           )
                                         }
-                                        className='ml-2 p-1 text-gray-400 opacity-40 group-hover:opacity-100 hover:text-gray-600 hover:bg-gray-100 rounded transition-all'
+                                        className='ml-2 p-1 text-muted-foreground opacity-40 group-hover:opacity-100 hover:text-foreground hover:bg-muted rounded transition-all'
                                         aria-label={`Edit ${account.accountName}`}
                                         title='Edit account name'
                                       >
@@ -631,7 +631,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                       </p>
                                     )}
                                 </td>
-                                <td className='px-4 py-3 text-sm text-right font-mono text-gray-900'>
+                                <td className='px-4 py-3 text-sm text-right font-mono text-foreground'>
                                   <NumericFormat
                                     value={Number(account.balance)}
                                     displayType='text'
@@ -653,7 +653,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                           Number(account.balance),
                                         )
                                       }
-                                      className='p-1 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded transition-colors'
+                                      className='p-1 text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors'
                                       aria-label={`Edit ${account.accountName}`}
                                       title='Edit balance'
                                     >
@@ -702,7 +702,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       {/* New Snapshot / AI Import Buttons (bottom) */}
       {totals && (totals as SnapshotTotals).banks.length > 0 && (
         <div className='flex justify-center gap-3 pt-4'>
-          <Button variant='primary' onClick={() => setIsModalOpen(true)}>
+          <Button variant='default' onClick={() => setIsModalOpen(true)}>
             <FiPlus className='mr-2' />
             New Snapshot
           </Button>
@@ -746,7 +746,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       {/* Edit Entry Modal */}
       <Modal show={!!editingEntry} onClose={() => setEditingEntry(null)}>
         <Modal.Header>
-          <h2 className='text-xl font-semibold text-gray-900'>
+          <h2 className='text-xl font-semibold text-foreground'>
             Edit Account Details
           </h2>
         </Modal.Header>
@@ -765,16 +765,16 @@ export default function BankAssetsClient({ initialData }: Props) {
                     if (e.key === 'Escape') setIsEditingModalName(false);
                   }}
                   autoFocus
-                  className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
                   placeholder='Account name'
                 />
               ) : (
                 <div
                   onClick={() => setIsEditingModalName(true)}
-                  className='group mt-1 flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer hover:border-teal-400 hover:bg-white transition-colors'
+                  className='group mt-1 flex items-center justify-between px-3 py-2 bg-muted/50 rounded-lg border border-input cursor-pointer hover:border-primary/50 hover:bg-background transition-colors'
                 >
-                  <span className='text-gray-900'>{editAccountName}</span>
-                  <FiEdit2 className='w-4 h-4 text-gray-400 opacity-40 group-hover:opacity-100 transition-opacity' />
+                  <span className='text-foreground'>{editAccountName}</span>
+                  <FiEdit2 className='w-4 h-4 text-muted-foreground opacity-40 group-hover:opacity-100 transition-opacity' />
                 </div>
               )}
             </div>
@@ -791,7 +791,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                 prefix='$'
                 decimalScale={2}
                 fixedDecimalScale
-                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+                className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
               />
             </div>
           </div>
@@ -807,7 +807,7 @@ export default function BankAssetsClient({ initialData }: Props) {
           </Button>
           <Button
             type='button'
-            variant='primary'
+            variant='default'
             onClick={handleSaveEdit}
             disabled={updateEntryMutation.isPending}
           >
@@ -819,7 +819,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       {/* Delete Confirmation Modal */}
       <Modal show={!!deleteConfirm} onClose={() => setDeleteConfirm(null)}>
         <Modal.Header>
-          <h2 className='text-xl font-semibold text-gray-900'>
+          <h2 className='text-xl font-semibold text-foreground'>
             {deleteConfirm?.snapshotId && !deleteConfirm?.entryId
               ? 'Delete Entire Snapshot'
               : 'Delete Account'}
@@ -830,7 +830,7 @@ export default function BankAssetsClient({ initialData }: Props) {
           <div className='space-y-4'>
             {deleteConfirm?.snapshotId && !deleteConfirm?.entryId ? (
               <>
-                <p className='text-gray-700'>
+                <p className='text-foreground'>
                   Are you sure you want to delete the entire snapshot from{' '}
                   <span className='font-semibold'>
                     {snapshot &&
@@ -857,7 +857,7 @@ export default function BankAssetsClient({ initialData }: Props) {
               </>
             ) : (
               <>
-                <p className='text-gray-700'>
+                <p className='text-foreground'>
                   Are you sure you want to delete{' '}
                   <span className='font-semibold'>
                     {deleteConfirm?.accountName}
@@ -866,7 +866,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                 </p>
               </>
             )}
-            <p className='text-sm text-gray-500'>
+            <p className='text-sm text-muted-foreground'>
               This action cannot be undone.
             </p>
           </div>
@@ -882,12 +882,11 @@ export default function BankAssetsClient({ initialData }: Props) {
           </Button>
           <Button
             type='button'
-            variant='primary'
+            variant='destructive'
             onClick={handleConfirmDelete}
             disabled={
               deleteEntryMutation.isPending || deleteSnapshotMutation.isPending
             }
-            className='!bg-red-600 hover:!bg-red-700'
           >
             {deleteEntryMutation.isPending || deleteSnapshotMutation.isPending
               ? 'Deleting...'

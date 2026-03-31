@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
-import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import {
   createZakatYearHandler,
@@ -63,13 +62,16 @@ export default async function ZakatPage({
   };
 
   return (
-    <>
-      <Card.Header>
-        <div className='flex justify-between mt-4 text-left'>
-          <Card.Header.Title>Zakat Payments</Card.Header.Title>
-        </div>
-      </Card.Header>
-      <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
+    <main className='container mx-auto px-4 py-6 max-w-6xl'>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+          Zakat Payments
+        </h1>
+        <p className='text-muted-foreground mt-1 text-sm'>
+          Manage zakat obligations and payment records by year
+        </p>
+      </div>
+      <div className='rounded-xl border border-border bg-card shadow p-6'>
         <ZakatForm
           initialData={initialData}
           yearIdParam={selectedCalendarYearId}
@@ -84,6 +86,6 @@ export default async function ZakatPage({
           </Suspense>
         </ZakatForm>
       </div>
-    </>
+    </main>
   );
 }

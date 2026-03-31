@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
-import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalIncomeHandler } from '@/server/controllers/income.controller';
 import { auth } from '@/server/auth';
@@ -82,7 +81,13 @@ export default async function IncomePage({
           initialData={initialData}
           yearIdParam={selectedCalendarYearId}
         >
-          <Suspense fallback={<p className='font-medium text-muted-foreground'>Loading table...</p>}>
+          <Suspense
+            fallback={
+              <p className='font-medium text-muted-foreground'>
+                Loading table...
+              </p>
+            }
+          >
             {selectedCalendarYear && (
               <div className='font-mono text-muted-foreground mb-3 text-sm'>
                 {selectedCalendarYear.description} Income

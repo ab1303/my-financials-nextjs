@@ -17,4 +17,3 @@ CardHeader.Text = CardHeaderText;
 CardHeader.Title = CardHeaderTitle;
 
 export default CardHeader;
-

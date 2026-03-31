@@ -23,8 +23,10 @@ const Card: React.FC<CardProps> & CommonComponents = ({
 }) => {
   const variantClasses = {
     base: 'rounded-xl border border-border bg-card text-card-foreground shadow',
-    interactive: 'rounded-xl border border-border bg-card text-card-foreground shadow hover:shadow-md transition-shadow cursor-pointer',
-    elevated: 'rounded-xl border border-border bg-card text-card-foreground shadow-md',
+    interactive:
+      'rounded-xl border border-border bg-card text-card-foreground shadow hover:shadow-md transition-shadow cursor-pointer',
+    elevated:
+      'rounded-xl border border-border bg-card text-card-foreground shadow-md',
     flat: 'rounded-xl border border-border bg-card text-card-foreground',
   };
 
@@ -39,4 +41,3 @@ Card.Header = CardHeader;
 Card.Body = CardBody;
 
 export default Card;
-

@@ -1,4 +1,3 @@
-import Card from '@/components/card';
 import CalendarClientWrapper from './CalendarClientWrapper';
 import { Suspense } from 'react';
 import type { FormInput } from './_schema';
@@ -109,13 +108,16 @@ export default async function CalendarYearPage() {
   const calendarYearsData = await getCalendarYearsHandler();
 
   return (
-    <div className='max-w-6xl mx-auto mt-8'>
-      <Card.Header>
-        <div className='flex justify-between mt-4 text-left'>
-          <Card.Header.Title>Calendar Year(s)</Card.Header.Title>
-        </div>
-      </Card.Header>
-      <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
+    <main className='container mx-auto px-4 py-6 max-w-6xl'>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+          Calendar Year(s)
+        </h1>
+        <p className='text-muted-foreground mt-1 text-sm'>
+          Manage fiscal and zakat calendar years for reporting
+        </p>
+      </div>
+      <div className='rounded-xl border border-border bg-card shadow p-6'>
         <Suspense fallback={<p className='font-medium'>Loading...</p>}>
           <CalendarClientWrapper
             tableData={calendarYearsData}
@@ -124,6 +126,6 @@ export default async function CalendarYearPage() {
           />
         </Suspense>
       </div>
-    </div>
+    </main>
   );
 }

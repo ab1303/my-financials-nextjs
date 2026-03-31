@@ -3,8 +3,7 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-export interface TextInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
 }
 
@@ -24,4 +23,3 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
   },
 );
 TextInput.displayName = 'TextInput';
-

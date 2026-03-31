@@ -167,13 +167,19 @@ export default function SideNav({
       name: 'CashFlow',
       icon: Wallet,
       items: cashflowItems,
-      defaultOpen: pathname.startsWith('/cashflow/income') || pathname.startsWith('/cashflow/donations') || pathname.startsWith('/cashflow/expense') || pathname.startsWith('/cashflow/bank-interest'),
+      defaultOpen:
+        pathname.startsWith('/cashflow/income') ||
+        pathname.startsWith('/cashflow/donations') ||
+        pathname.startsWith('/cashflow/expense') ||
+        pathname.startsWith('/cashflow/bank-interest'),
     },
     {
       name: 'Asset(s)',
       icon: Building2,
       items: assetItems,
-      defaultOpen: pathname.startsWith('/cashflow/bank') || pathname.startsWith('/cashflow/stocks'),
+      defaultOpen:
+        pathname.startsWith('/cashflow/bank') ||
+        pathname.startsWith('/cashflow/stocks'),
     },
     {
       name: 'Relation(s)',

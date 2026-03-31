@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
-import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalExpensesHandler } from '@/server/controllers/expense.controller';
 import { auth } from '@/server/auth';
@@ -80,56 +79,56 @@ export default async function ExpensePage({
     : 0;
 
   return (
-    <section>
-      <Card>
-        <Card.Header>
-          <Card.Header.Title>Monthly Expense Tracking</Card.Header.Title>
-        </Card.Header>
+    <main className='container mx-auto px-4 py-6 max-w-6xl'>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+          Monthly Expense Tracking
+        </h1>
+        <p className='text-muted-foreground mt-1 text-sm'>
+          Track and manage your monthly expenses across fiscal years
+        </p>
+      </div>
+      <div className='rounded-xl border border-border bg-card shadow p-6'>
+        {/* Fiscal Year Selection Form */}
+        <div className='mb-6 pt-6'>
+          <ExpenseForm
+            expenseYearData={expenseYearData}
+            selectedCalendarYear={selectedCalendarYear}
+          />
+        </div>
 
-        <Card.Body>
-          {/* Fiscal Year Selection Form */}
-          <div className='mb-6 pt-6'>
-            <ExpenseForm
-              expenseYearData={expenseYearData}
-              selectedCalendarYear={selectedCalendarYear}
-            />
+        {/* Total Expense Display */}
+        {selectedCalendarYearId && (
+          <div className='mb-6 p-4 bg-gray-50 border border-gray-200 rounded-md'>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm font-medium text-gray-700'>
+                Total Expenses for {selectedCalendarYear?.description}:
+              </span>
+              <span className='text-lg font-bold text-gray-900'>
+                ${totalExpense?.toFixed(2) || '0.00'}
+              </span>
+            </div>
           </div>
+        )}
 
-          {/* Total Expense Display */}
-          {selectedCalendarYearId && (
-            <div className='mb-6 p-4 bg-gray-50 border border-gray-200 rounded-md'>
-              <div className='flex justify-between items-center'>
-                <span className='text-sm font-medium text-gray-700'>
-                  Total Expenses for {selectedCalendarYear?.description}:
-                </span>
-                <span className='text-lg font-bold text-gray-900'>
-                  ${totalExpense?.toFixed(2) || '0.00'}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Monthly Expense Table */}
-          {selectedCalendarYearId ? (
-            <Suspense fallback={<div>Loading expenses...</div>}>
-              <ExpenseTableServer
-                calendarYearId={selectedCalendarYearId}
-                userId={session.user.id}
-              />
-            </Suspense>
-          ) : (
-            <div className='p-4 bg-yellow-50 border border-yellow-200 rounded-md'>
-              <p className='text-yellow-800 font-medium'>
-                No fiscal year found
-              </p>
-              <p className='text-yellow-600 text-sm mt-1'>
-                Please create a fiscal year in Calendar Year management to start
-                tracking expenses.
-              </p>
-            </div>
-          )}
-        </Card.Body>
-      </Card>
-    </section>
+        {/* Monthly Expense Table */}
+        {selectedCalendarYearId ? (
+          <Suspense fallback={<div>Loading expenses...</div>}>
+            <ExpenseTableServer
+              calendarYearId={selectedCalendarYearId}
+              userId={session.user.id}
+            />
+          </Suspense>
+        ) : (
+          <div className='p-4 bg-yellow-50 border border-yellow-200 rounded-md'>
+            <p className='text-yellow-800 font-medium'>No fiscal year found</p>
+            <p className='text-yellow-600 text-sm mt-1'>
+              Please create a fiscal year in Calendar Year management to start
+              tracking expenses.
+            </p>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

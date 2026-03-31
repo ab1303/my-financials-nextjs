@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
-import Card from '@/components/card';
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 
@@ -69,18 +68,24 @@ export default async function BankAssetsPage({
   };
 
   return (
-    <>
-      <Card.Header>
-        <div className='flex justify-between mt-4 text-left'>
-          <Card.Header.Title>Bank Assets - Cash Tracking</Card.Header.Title>
-        </div>
-      </Card.Header>
-
-      <div className='bg-white shadow mt-4 py-8 px-6 sm:px-10 rounded-lg'>
-        <Suspense fallback={<p className='font-medium'>Loading...</p>}>
+    <main className='container mx-auto px-4 py-6 max-w-6xl'>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+          Bank Assets — Cash Tracking
+        </h1>
+        <p className='text-muted-foreground mt-1 text-sm'>
+          Manage and track your bank account snapshots
+        </p>
+      </div>
+      <div className='rounded-xl border border-border bg-card shadow p-6'>
+        <Suspense
+          fallback={
+            <p className='font-medium text-muted-foreground'>Loading...</p>
+          }
+        >
           <BankAssetsClient initialData={initialData} />
         </Suspense>
       </div>
-    </>
+    </main>
   );
 }
