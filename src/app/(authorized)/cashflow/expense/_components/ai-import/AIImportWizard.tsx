@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { FiX } from 'react-icons/fi';
+import { X } from 'lucide-react';
 import UploadStep from './UploadStep';
 import ProcessingStep from './ProcessingStep';
 import ResultsStep from './ResultsStep';
@@ -110,7 +110,7 @@ export default function AIImportWizard({
                       onClick={onClose}
                       className='text-gray-400 hover:text-gray-600 transition-colors'
                     >
-                      <FiX className='h-6 w-6' />
+                      <X className='h-6 w-6' />
                     </button>
                   )}
                 </div>

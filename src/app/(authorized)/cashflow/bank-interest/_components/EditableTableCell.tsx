@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import clsx from 'clsx';
 
-import { ImSpinner2 } from 'react-icons/im';
+import { Loader2 } from 'lucide-react';
 import { inputStyles, buttonStyles, colorStyles } from '@/styles/theme';
 import { stylingUtils } from '@/styles/styling';
 

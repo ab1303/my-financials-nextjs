@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiPlus } from 'react-icons/fi';
+import { Plus } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
 import CreatableSelect from 'react-select/creatable';
@@ -216,7 +216,7 @@ export default function NewSnapshotModal({
                   variant='secondary'
                   onClick={handleAddEntry}
                 >
-                  <FiPlus className='mr-1' />
+                  <Plus className='mr-1' />
                   Add Account
                 </Button>
               </div>

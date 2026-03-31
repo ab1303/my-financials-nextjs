@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import Select from 'react-select';
+import { getSelectStyles } from '@/lib/select-styles';
 import { NumericFormat } from 'react-number-format';
 import { Disclosure } from '@headlessui/react';
 
@@ -193,10 +194,10 @@ export default function HoldingFormModal({
   return (
     <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-2xl'>
       <Modal.Header>
-        <h2 className='text-xl font-semibold text-gray-900'>
+        <h2 className='text-xl font-semibold text-foreground'>
           {isEditMode ? 'Edit Stock Holding' : 'Add Stock Holding'}
         </h2>
-        <p className='text-sm text-gray-600 mt-1'>
+        <p className='text-sm text-muted-foreground mt-1'>
           {isEditMode
             ? 'Update holding details and sale information'
             : 'Add a new stock to your snapshot'}
@@ -221,7 +222,7 @@ export default function HoldingFormModal({
                   onChange={(selected) => field.onChange(selected?.value)}
                   className='mt-1'
                   isDisabled={isEditMode}
-                  classNamePrefix='react-select'
+                  styles={getSelectStyles()}
                 />
               )}
             />
@@ -240,7 +241,7 @@ export default function HoldingFormModal({
                 {...register('ticker')}
                 type='text'
                 placeholder='e.g., CBA'
-                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
               />
               {errors.ticker && (
                 <p className='mt-1 text-sm text-red-600'>
@@ -255,7 +256,7 @@ export default function HoldingFormModal({
                 {...register('companyName')}
                 type='text'
                 placeholder='e.g., Commonwealth Bank'
-                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
               />
               {errors.companyName && (
                 <p className='mt-1 text-sm text-red-600'>
@@ -281,7 +282,7 @@ export default function HoldingFormModal({
                     )}
                     onChange={(selected) => field.onChange(selected?.value)}
                     className='mt-1'
-                    classNamePrefix='react-select'
+                    styles={getSelectStyles()}
                   />
                 )}
               />
@@ -306,7 +307,7 @@ export default function HoldingFormModal({
                     )}
                     onChange={(selected) => field.onChange(selected?.value)}
                     className='mt-1'
-                    classNamePrefix='react-select'
+                    styles={getSelectStyles()}
                   />
                 )}
               />
@@ -333,7 +334,7 @@ export default function HoldingFormModal({
                     decimalScale={6}
                     fixedDecimalScale
                     placeholder='0.000000'
-                    className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                    className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                   />
                 )}
               />
@@ -358,7 +359,7 @@ export default function HoldingFormModal({
                     fixedDecimalScale
                     prefix='$'
                     placeholder='$0.00'
-                    className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                    className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                   />
                 )}
               />
@@ -377,7 +378,7 @@ export default function HoldingFormModal({
               <input
                 {...register('buyDate')}
                 type='date'
-                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
               />
               {errors.buyDate && (
                 <p className='mt-1 text-sm text-red-600'>
@@ -400,7 +401,7 @@ export default function HoldingFormModal({
                     fixedDecimalScale
                     prefix='$'
                     placeholder='$0.00'
-                    className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                    className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                   />
                 )}
               />
@@ -422,18 +423,14 @@ export default function HoldingFormModal({
               <>
                 <Disclosure.Button
                   onClick={() => setIsSaleExpanded(!open)}
-                  className='flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium'
+                  className='flex items-center gap-2 text-primary hover:text-primary/80 font-medium'
                 >
-                  {open ? (
-                    <FiChevronUp size={18} />
-                  ) : (
-                    <FiChevronDown size={18} />
-                  )}
+                  {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   Sale Information
                 </Disclosure.Button>
 
                 <Disclosure.Panel className='mt-4 space-y-4'>
-                  <div className='p-3 bg-blue-50 rounded-md text-sm text-blue-700'>
+                  <div className='p-3 bg-muted/50 rounded-md text-sm text-muted-foreground'>
                     Enter all three fields to record a sale, or leave all empty
                     for unsold holdings.
                   </div>
@@ -455,7 +452,7 @@ export default function HoldingFormModal({
                             fixedDecimalScale
                             prefix='$'
                             placeholder='$0.00'
-                            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                            className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                           />
                         )}
                       />
@@ -471,7 +468,7 @@ export default function HoldingFormModal({
                       <input
                         {...register('saleDate')}
                         type='date'
-                        className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                        className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                       />
                       {(errors as any).saleDate && (
                         <p className='mt-1 text-sm text-red-600'>
@@ -495,7 +492,7 @@ export default function HoldingFormModal({
                             decimalScale={6}
                             fixedDecimalScale
                             placeholder='0.000000'
-                            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                            className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                           />
                         )}
                       />

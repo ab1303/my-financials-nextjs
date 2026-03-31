@@ -10,7 +10,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { toast } from 'sonner';
-import { FaPlus } from 'react-icons/fa';
+import { Plus } from 'lucide-react';
 
 import Table from '@/components/table';
 import { tableCellStyles } from '@/styles/theme';
@@ -229,7 +229,7 @@ export default function ZakatTableClient({
           aria-label='Add new payment'
           title='Add Payment'
         >
-          <FaPlus size={14} />
+          <Plus size={14} />
         </button>
       </div>
 

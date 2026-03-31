@@ -1,4 +1,5 @@
 import Select from 'react-select';
+import { getSelectStyles } from '@/lib/select-styles';
 import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
@@ -71,43 +72,8 @@ export default function BeneficiarySelectionCell({
       menuPortalTarget={document.body}
       menuPosition='fixed'
       styles={{
-        control: (provided) =>
-          ({
-            ...provided,
-            minHeight: 'auto',
-            fontSize: '0.875rem',
-            borderColor: '#d1d5db',
-            '&:hover': {
-              borderColor: '#d1d5db',
-            },
-          }) as typeof provided,
-        valueContainer: (provided) =>
-          ({
-            ...provided,
-            padding: '0.25rem 0.5rem',
-          }) as typeof provided,
-        input: (provided) =>
-          ({
-            ...provided,
-            margin: 0,
-            padding: 0,
-          }) as typeof provided,
-        indicatorSeparator: () => ({ display: 'none' }),
-        indicatorsContainer: (provided) =>
-          ({
-            ...provided,
-            height: 'auto',
-          }) as typeof provided,
-        menu: (provided) =>
-          ({
-            ...provided,
-            zIndex: 9999,
-          }) as typeof provided,
-        menuPortal: (provided) =>
-          ({
-            ...provided,
-            zIndex: 9999,
-          }) as typeof provided,
+        ...getSelectStyles<OptionType>(),
+        menuPortal: (base) => ({ ...base, zIndex: 9999 }) as typeof base,
       }}
     />
   );

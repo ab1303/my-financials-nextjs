@@ -4,6 +4,7 @@ import { useEffect, useState, useId } from 'react';
 import { toast } from 'sonner';
 import { NumericFormat } from 'react-number-format';
 import Select from 'react-select';
+import { getSelectStyles } from '@/lib/select-styles';
 import clsx from 'clsx';
 
 import { Card } from '@/components';
@@ -203,16 +204,18 @@ function CategoryBreakdownContent({
       <Modal.Body className='space-y-6'>
         {/* Add New Entry Form - Top Position */}
         {editEntryId === null && (
-          <div className='bg-gray-50 rounded-lg p-4 border border-gray-200'>
+          <div className='bg-muted/50 rounded-lg p-4 border border-border'>
             <div className='mb-3'>
-              <span className='text-sm font-semibold text-gray-700'>
+              <span className='text-sm font-semibold text-muted-foreground'>
                 Add New Expense
               </span>
             </div>
             <div className='grid grid-cols-12 gap-3 items-end'>
               <div className='col-span-5'>
-                <Label className='text-xs text-gray-600 mb-1'>Category</Label>
-                <Select
+                <Label className='text-xs text-muted-foreground mb-1'>
+                  Category
+                </Label>
+                <Select<OptionType>
                   instanceId={`category-add-${selectId}`}
                   options={categoryOptions}
                   value={
@@ -234,6 +237,7 @@ function CategoryBreakdownContent({
                   menuPortalTarget={document.body}
                   menuPosition='fixed'
                   styles={{
+                    ...getSelectStyles<OptionType>(),
                     menuPortal: (base) =>
                       ({ ...base, zIndex: 9999 }) as typeof base,
                   }}
@@ -292,12 +296,12 @@ function CategoryBreakdownContent({
                       editEntryId === entry.id ? 'bg-teal-500' : 'bg-gray-300',
                     )}
                   />
-                  <div className='flex-1 bg-white border border-gray-200 rounded-lg shadow-sm p-4'>
+                  <div className='flex-1 bg-card border border-border rounded-lg shadow-sm p-4'>
                     {editEntryId === entry.id ? (
                       <div className='grid grid-cols-12 gap-3 items-center'>
                         {/* Edit Mode */}
                         <div className='col-span-5'>
-                          <Select
+                          <Select<OptionType>
                             instanceId={`category-edit-${selectId}`}
                             options={categoryOptions}
                             value={
@@ -319,6 +323,7 @@ function CategoryBreakdownContent({
                             menuPortalTarget={document.body}
                             menuPosition='fixed'
                             styles={{
+                              ...getSelectStyles<OptionType>(),
                               menuPortal: (base) =>
                                 ({ ...base, zIndex: 9999 }) as typeof base,
                             }}
@@ -344,7 +349,7 @@ function CategoryBreakdownContent({
                             type='button'
                             className={clsx(
                               buttonStyles.iconCompact,
-                              'text-gray-400 hover:text-teal-600 hover:bg-gray-50',
+                              'text-muted-foreground hover:text-primary hover:bg-muted/30',
                             )}
                             onClick={() => handleEditEntry(entry.id)}
                             disabled={isLoading}
@@ -356,7 +361,7 @@ function CategoryBreakdownContent({
                             type='button'
                             className={clsx(
                               buttonStyles.iconCompact,
-                              'text-gray-400 hover:text-gray-600 hover:bg-gray-50',
+                              'text-muted-foreground hover:text-foreground hover:bg-muted/30',
                             )}
                             onClick={cancelEdit}
                             disabled={isLoading}
@@ -369,10 +374,10 @@ function CategoryBreakdownContent({
                     ) : (
                       <div className='flex justify-between items-center'>
                         {/* Display Mode */}
-                        <span className='text-sm font-medium text-gray-900'>
+                        <span className='text-sm font-medium text-foreground'>
                           {entry.categoryName}
                         </span>
-                        <span className='text-lg font-semibold text-gray-900'>
+                        <span className='text-lg font-semibold text-foreground'>
                           <NumericFormat
                             prefix='$'
                             displayType='text'
@@ -392,7 +397,7 @@ function CategoryBreakdownContent({
                             type='button'
                             className={clsx(
                               buttonStyles.iconCompact,
-                              'text-gray-400 hover:text-teal-600 hover:bg-gray-50',
+                              'text-muted-foreground hover:text-primary hover:bg-muted/30',
                             )}
                             onClick={() => startEdit(entry)}
                             disabled={isLoading}
@@ -404,7 +409,7 @@ function CategoryBreakdownContent({
                             type='button'
                             className={clsx(
                               buttonStyles.iconCompact,
-                              'text-gray-400 hover:text-red-600 hover:bg-gray-50',
+                              'text-muted-foreground hover:text-destructive hover:bg-muted/30',
                             )}
                             onClick={() => handleDeleteEntry(entry.id)}
                             disabled={isLoading}

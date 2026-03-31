@@ -2,6 +2,7 @@
 
 import { Label } from '@/components/ui/Label';
 import Select from 'react-select';
+import { getSelectStyles } from '@/lib/select-styles';
 import React, { useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 
@@ -116,8 +117,8 @@ export default function BankInterestForm({
                 }}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   currentYearType === type
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
               >
                 {type}
@@ -129,7 +130,7 @@ export default function BankInterestForm({
       <div className='mx-10'>
         <Label>Financial Year</Label>
         <div className='mt-3'>
-          <Select
+          <Select<OptionType>
             isClearable
             className='w-3/5 mr-2'
             value={selectedYear}
@@ -140,13 +141,14 @@ export default function BankInterestForm({
               setSelectedYear(option);
               updateURLSearchParams('year', option?.label);
             }}
+            styles={getSelectStyles<OptionType>()}
           />
         </div>
       </div>
       <div className='mx-10'>
         <Label>Bank</Label>
         <div className='mt-1'>
-          <Select
+          <Select<OptionType>
             instanceId={uniqSelectBankId}
             isClearable
             className='w-3/5 mr-2'
@@ -154,6 +156,7 @@ export default function BankInterestForm({
             options={bankOptions}
             getOptionValue={(option) => option.id}
             onChange={(option) => handleOptionChange(option)}
+            styles={getSelectStyles<OptionType>()}
           />
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
+import { Check, X, AlertCircle } from 'lucide-react';
 import ConfidenceBadge from './ConfidenceBadge';
 import type { ResultsStepProps } from './_types';
 
@@ -18,7 +18,7 @@ export default function ResultsStep({
     <div className='space-y-6'>
       {/* Success Banner */}
       <div className='bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3'>
-        <FiCheck className='h-5 w-5 text-green-600 flex-shrink-0 mt-0.5' />
+        <Check className='h-5 w-5 text-green-600 flex-shrink-0 mt-0.5' />
         <div>
           <h3 className='text-sm font-semibold text-green-900'>
             Import Complete
@@ -62,7 +62,7 @@ export default function ResultsStep({
       {/* Low Confidence Warning */}
       {result.overallConfidence < 0.6 && (
         <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start space-x-3'>
-          <FiAlertCircle className='h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5' />
+          <AlertCircle className='h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5' />
           <div>
             <h4 className='text-sm font-semibold text-yellow-900'>
               Low Confidence Warning
@@ -87,13 +87,13 @@ export default function ResultsStep({
               >
                 <div className='flex-shrink-0 mt-0.5'>
                   {image.status === 'success' && (
-                    <FiCheck className='h-4 w-4 text-green-600' />
+                    <Check className='h-4 w-4 text-green-600' />
                   )}
                   {image.status === 'partial' && (
-                    <FiAlertCircle className='h-4 w-4 text-yellow-600' />
+                    <AlertCircle className='h-4 w-4 text-yellow-600' />
                   )}
                   {image.status === 'failed' && (
-                    <FiX className='h-4 w-4 text-red-600' />
+                    <X className='h-4 w-4 text-red-600' />
                   )}
                 </div>
                 <div className='flex-1 min-w-0'>

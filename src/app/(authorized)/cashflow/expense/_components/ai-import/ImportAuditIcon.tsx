@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FiCamera } from 'react-icons/fi';
+import { Camera } from 'lucide-react';
 import ImageLightbox from './ImageLightbox';
 
 export interface ImportAuditIconProps {
@@ -32,7 +32,7 @@ export default function ImportAuditIcon({
         }
         aria-label={`View source image ${fileName ? `(${fileName})` : ''}`}
       >
-        <FiCamera className='h-4 w-4' />
+        <Camera className='h-4 w-4' />
       </button>
 
       <ImageLightbox

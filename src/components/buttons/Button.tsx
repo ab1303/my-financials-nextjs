@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import * as React from 'react';
-import { ImSpinner2 } from 'react-icons/im';
+import { Loader2 } from 'lucide-react';
 
 import { buttonStyles } from '@/styles/theme';
 
@@ -78,7 +78,7 @@ export default function Button({
             variant === 'light' ? 'text-black' : 'text-white',
           )}
         >
-          <ImSpinner2 className='animate-spin' />
+          <Loader2 className='animate-spin' />
         </div>
       )}
       {children}

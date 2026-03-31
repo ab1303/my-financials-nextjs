@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { FiX, FiAlertCircle, FiLoader } from 'react-icons/fi';
+import { X, AlertCircle, Loader2 } from 'lucide-react';
 
 export interface ImageLightboxProps {
   imageId: string;
@@ -122,7 +122,7 @@ export default function ImageLightbox({
                   className='absolute top-4 right-4 z-50 p-2 rounded-lg bg-white/90 hover:bg-white text-gray-600 hover:text-gray-900 transition-colors'
                   aria-label='Close lightbox'
                 >
-                  <FiX className='h-6 w-6' />
+                  <X className='h-6 w-6' />
                 </button>
 
                 {/* Content */}
@@ -137,7 +137,7 @@ export default function ImageLightbox({
                   {/* Loading State */}
                   {loadingState === 'loading' && (
                     <div className='flex flex-col items-center justify-center py-12'>
-                      <FiLoader className='h-8 w-8 text-blue-600 animate-spin mb-4' />
+                      <Loader2 className='h-8 w-8 text-blue-600 animate-spin mb-4' />
                       <p className='text-gray-600'>Loading image...</p>
                     </div>
                   )}
@@ -145,7 +145,7 @@ export default function ImageLightbox({
                   {/* Error State */}
                   {loadingState === 'error' && (
                     <div className='bg-red-50 border border-red-200 rounded-lg p-6 flex items-start space-x-4'>
-                      <FiAlertCircle className='h-6 w-6 text-red-600 flex-shrink-0 mt-0.5' />
+                      <AlertCircle className='h-6 w-6 text-red-600 flex-shrink-0 mt-0.5' />
                       <div>
                         <h3 className='text-sm font-semibold text-red-900'>
                           Failed to Load Image
@@ -160,7 +160,7 @@ export default function ImageLightbox({
                   {/* Expired State */}
                   {loadingState === 'expired' && (
                     <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-6 flex items-start space-x-4'>
-                      <FiAlertCircle className='h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5' />
+                      <AlertCircle className='h-6 w-6 text-yellow-600 flex-shrink-0 mt-0.5' />
                       <div>
                         <h3 className='text-sm font-semibold text-yellow-900'>
                           Image Expired

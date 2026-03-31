@@ -1,7 +1,7 @@
 'use client';
 
 import { Disclosure } from '@headlessui/react';
-import { FiChevronDown } from 'react-icons/fi';
+import { ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 
 import CalendarTableClient from './CalendarTableClient';

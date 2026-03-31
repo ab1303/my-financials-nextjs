@@ -11,7 +11,7 @@ import {
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
 import type { CalendarYearType } from './_types';
-import { HiPencil, HiTrash, HiCheck, HiXMark } from 'react-icons/hi2';
+import { Pencil, Trash2, Check, X } from 'lucide-react';
 
 const columnHelper = createColumnHelper<CalendarYearType>();
 
@@ -67,7 +67,7 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
                 className='p-1 rounded hover:bg-gray-100 transition-colors'
                 onClick={() => onEdit(row)}
               >
-                <HiPencil className='w-4 h-4 text-blue-500' />
+                <Pencil className='w-4 h-4 text-blue-500' />
               </button>
             )}
 
@@ -83,7 +83,7 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
                     setDeletingId(null);
                   }}
                 >
-                  <HiCheck className='w-4 h-4 text-green-600' />
+                  <Check className='w-4 h-4 text-green-600' />
                 </button>
                 <button
                   type='button'
@@ -92,7 +92,7 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
                   className='p-1 rounded hover:bg-gray-100 transition-colors'
                   onClick={() => setDeletingId(null)}
                 >
-                  <HiXMark className='w-4 h-4 text-gray-500' />
+                  <X className='w-4 h-4 text-gray-500' />
                 </button>
               </>
             ) : (
@@ -103,7 +103,7 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
                 className='p-1 rounded hover:bg-red-100 transition-colors'
                 onClick={() => setDeletingId(row.id)}
               >
-                <HiTrash className='w-4 h-4 text-red-500' />
+                <Trash2 className='w-4 h-4 text-red-500' />
               </button>
             )}
           </div>

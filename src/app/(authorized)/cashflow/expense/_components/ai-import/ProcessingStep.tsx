@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FiLoader, FiCheck, FiX } from 'react-icons/fi';
+import { Loader2, Check, X } from 'lucide-react';
 import type { ProcessingStepProps, ImageResult } from './_types';
 import {
   ExpenseImportRequestSchema,
@@ -224,13 +224,13 @@ export default function ProcessingStep({
               <div className='flex items-center space-x-3 flex-1 min-w-0'>
                 <div className='flex-shrink-0'>
                   {result.status === 'success' && (
-                    <FiCheck className='h-5 w-5 text-green-600' />
+                    <Check className='h-5 w-5 text-green-600' />
                   )}
                   {result.status === 'failed' && (
-                    <FiX className='h-5 w-5 text-red-600' />
+                    <X className='h-5 w-5 text-red-600' />
                   )}
                   {result.status === 'partial' && (
-                    <FiLoader className='h-5 w-5 text-yellow-600 animate-spin' />
+                    <Loader2 className='h-5 w-5 text-yellow-600 animate-spin' />
                   )}
                 </div>
                 <div className='min-w-0'>

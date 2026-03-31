@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FiUploadCloud, FiX, FiShield } from 'react-icons/fi';
+import { UploadCloud, X, Shield } from 'lucide-react';
 import Image from 'next/image';
 import MONTHS_MAP from '@/constants/map';
 import { sanitizeImages } from '@/utils/image-sanitization';
@@ -91,7 +91,7 @@ export default function UploadStep({
       {/* Sanitization Error Banner */}
       {sanitizationError && (
         <div className='bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3'>
-          <FiX className='h-5 w-5 text-red-600 flex-shrink-0 mt-0.5' />
+          <X className='h-5 w-5 text-red-600 flex-shrink-0 mt-0.5' />
           <div>
             <h3 className='text-sm font-semibold text-red-900'>
               Image Processing Error
@@ -135,7 +135,7 @@ export default function UploadStep({
         }`}
       >
         <input {...getInputProps()} />
-        <FiUploadCloud className='mx-auto h-12 w-12 text-gray-400 mb-4' />
+        <UploadCloud className='mx-auto h-12 w-12 text-gray-400 mb-4' />
         <p className='text-lg font-medium text-gray-900 mb-2'>
           {isDragActive
             ? 'Drop your banking screenshots here'
@@ -177,7 +177,7 @@ export default function UploadStep({
                   className='absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity'
                   aria-label='Remove image'
                 >
-                  <FiX className='h-4 w-4' />
+                  <X className='h-4 w-4' />
                 </button>
 
                 {/* Redact Button — only shown when not yet redacted */}
@@ -188,7 +188,7 @@ export default function UploadStep({
                     aria-label='Redact sensitive information'
                     title='Redact PII before sending to AI'
                   >
-                    <FiShield className='h-4 w-4' />
+                    <Shield className='h-4 w-4' />
                   </button>
                 )}
 
@@ -199,7 +199,7 @@ export default function UploadStep({
                     className='absolute top-2 left-2 flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-2 py-0.5 rounded-full transition-colors'
                     title='Re-open redaction editor'
                   >
-                    <FiShield className='h-3 w-3' />
+                    <Shield className='h-3 w-3' />
                     Redacted
                   </button>
                 )}

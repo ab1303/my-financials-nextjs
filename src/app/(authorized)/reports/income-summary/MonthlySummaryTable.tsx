@@ -6,7 +6,7 @@ import type {
   SourceBreakdown,
 } from '@/server/models/income';
 import { NumericFormat } from 'react-number-format';
-import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import SourceBreakdownRow from './SourceBreakdownRow';
 
 type MonthlySummaryTableProps = {
@@ -128,9 +128,9 @@ export default function MonthlySummaryTable({
                 >
                   <td className='px-6 py-4'>
                     {isExpanded ? (
-                      <FaChevronDown className='h-4 w-4 text-gray-400' />
+                      <ChevronDown className='h-4 w-4 text-gray-400' />
                     ) : (
-                      <FaChevronRight className='h-4 w-4 text-gray-400' />
+                      <ChevronRight className='h-4 w-4 text-gray-400' />
                     )}
                   </td>
                   <td className='whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900'>

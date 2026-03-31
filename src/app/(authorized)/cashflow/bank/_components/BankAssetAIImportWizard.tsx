@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { FiX } from 'react-icons/fi';
+import { X } from 'lucide-react';
 import UploadStep from '../../expense/_components/ai-import/UploadStep';
 import ProcessingStep from '../../expense/_components/ai-import/ProcessingStep';
 import ResultsStep from '../../expense/_components/ai-import/ResultsStep';
@@ -114,7 +114,7 @@ export default function BankAssetAIImportWizard({
                       onClick={onClose}
                       className='text-gray-400 hover:text-gray-600 transition-colors'
                     >
-                      <FiX className='h-6 w-6' />
+                      <X className='h-6 w-6' />
                     </button>
                   )}
                 </div>

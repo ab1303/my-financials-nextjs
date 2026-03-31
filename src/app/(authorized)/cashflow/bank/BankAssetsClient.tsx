@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
 import Select from 'react-select';
 import { Disclosure } from '@headlessui/react';
-import { FiChevronDown, FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { ChevronDown, Plus, Pencil, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
@@ -451,7 +451,7 @@ export default function BankAssetsClient({ initialData }: Props) {
             }
             className='inline-flex items-center gap-2 px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors'
           >
-            <FiTrash2 size={16} />
+            <Trash2 size={16} />
             Delete Snapshot
           </button>
         </div>
@@ -513,7 +513,7 @@ export default function BankAssetsClient({ initialData }: Props) {
             Take your first snapshot to start tracking your cash position.
           </p>
           <Button variant='default' onClick={() => setIsModalOpen(true)}>
-            <FiPlus className='mr-2' />
+            <Plus className='mr-2' />
             New Snapshot
           </Button>
         </div>
@@ -619,7 +619,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                         aria-label={`Edit ${account.accountName}`}
                                         title='Edit account name'
                                       >
-                                        <FiEdit2 className='w-4 h-4' />
+                                        <Pencil className='w-4 h-4' />
                                       </button>
                                     </div>
                                   )}
@@ -657,7 +657,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                       aria-label={`Edit ${account.accountName}`}
                                       title='Edit balance'
                                     >
-                                      <FiEdit2 className='w-4 h-4' />
+                                      <Pencil className='w-4 h-4' />
                                     </button>
                                     <button
                                       onClick={() =>
@@ -671,7 +671,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                       aria-label={`Delete ${account.accountName}`}
                                       title='Delete account'
                                     >
-                                      <FiTrash2 className='w-4 h-4' />
+                                      <Trash2 className='w-4 h-4' />
                                     </button>
                                     {snapshotEntry?.importImageId && (
                                       <ImportAuditIcon
@@ -703,7 +703,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       {totals && (totals as SnapshotTotals).banks.length > 0 && (
         <div className='flex justify-center gap-3 pt-4'>
           <Button variant='default' onClick={() => setIsModalOpen(true)}>
-            <FiPlus className='mr-2' />
+            <Plus className='mr-2' />
             New Snapshot
           </Button>
           <Button
@@ -774,7 +774,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                   className='group mt-1 flex items-center justify-between px-3 py-2 bg-muted/50 rounded-lg border border-input cursor-pointer hover:border-primary/50 hover:bg-background transition-colors'
                 >
                   <span className='text-foreground'>{editAccountName}</span>
-                  <FiEdit2 className='w-4 h-4 text-muted-foreground opacity-40 group-hover:opacity-100 transition-opacity' />
+                  <Pencil className='w-4 h-4 text-muted-foreground opacity-40 group-hover:opacity-100 transition-opacity' />
                 </div>
               )}
             </div>

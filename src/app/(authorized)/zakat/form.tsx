@@ -2,6 +2,7 @@
 
 import { Label } from '@/components/ui/Label';
 import Select from 'react-select';
+import { getSelectStyles } from '@/lib/select-styles';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
@@ -53,7 +54,7 @@ function NumericFormatWithIndicator<BaseType = InputAttributes>({
         <div role='status' className='flex items-center'>
           <svg
             aria-hidden='true'
-            className='w-4 h-4 text-gray-200 animate-spin fill-blue-600'
+            className='w-4 h-4 text-muted-foreground animate-spin fill-primary'
             viewBox='0 0 100 101'
             fill='none'
             xmlns='http://www.w3.org/2000/svg'
@@ -153,13 +154,14 @@ export default function ZakatForm({
       <div className='mx-10'>
         <Label>Zakat Year</Label>
         <div className='mt-3'>
-          <Select
+          <Select<OptionType>
             isClearable
             className='w-3/5'
             value={selectedYear}
             options={zakatYearOptions}
             instanceId={uniqFiscalYearId}
             getOptionValue={(option) => option.id}
+            styles={getSelectStyles<OptionType>()}
             onChange={(option) => {
               setSelectedYear(option);
               const selectedYearData = zakatYearData.find(

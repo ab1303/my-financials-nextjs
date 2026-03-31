@@ -1,7 +1,7 @@
 import type { CellContext, RowData } from '@tanstack/react-table';
 import type { Dispatch, MouseEvent, SetStateAction } from 'react';
 import { castDraft, produce } from 'immer';
-import { FaPen, FaTrash, FaSave, FaUndo } from 'react-icons/fa';
+import { Pen, Trash2, Save, Undo2 } from 'lucide-react';
 import { useState } from 'react';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { tableCellStyles } from '@/styles/theme';
@@ -120,7 +120,7 @@ export const EditCell = <TData, TValue>({
               aria-label='Cancel editing'
               title='Cancel'
             >
-              <FaUndo size={12} />
+              <Undo2 size={12} />
             </button>
             <button
               className={`${tableCellStyles.actions.iconButton} ${tableCellStyles.actions.saveButton}`}
@@ -130,7 +130,7 @@ export const EditCell = <TData, TValue>({
               aria-label='Save changes'
               title='Save'
             >
-              <FaSave size={12} />
+              <Save size={12} />
             </button>
           </div>
         ) : (
@@ -142,7 +142,7 @@ export const EditCell = <TData, TValue>({
               aria-label='Edit row'
               title='Edit'
             >
-              <FaPen size={12} />
+              <Pen size={12} />
             </button>
             <button
               className={`${tableCellStyles.actions.iconButton} ${tableCellStyles.actions.deleteButton}`}
@@ -151,7 +151,7 @@ export const EditCell = <TData, TValue>({
               aria-label='Delete row'
               title='Delete'
             >
-              <FaTrash size={12} />
+              <Trash2 size={12} />
             </button>
           </div>
         )}

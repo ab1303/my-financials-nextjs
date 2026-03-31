@@ -7,33 +7,38 @@ import { useState } from 'react';
 import SideNav from '../layouts/SideNav';
 import { APP_NAME } from '@/constants';
 import { ThemeToggle } from './ui/theme-toggle';
+import Breadcrumb from './Breadcrumb';
+import { Menu } from 'lucide-react';
 
 type HeaderProps = {
   user: User;
+  sidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
 };
 
-export default function Header({ user }: HeaderProps) {
+export default function Header({
+  user,
+  sidebarCollapsed,
+  onToggleSidebar,
+}: HeaderProps) {
   const [showSideNav, setShowSideNav] = useState(false);
 
   return (
     <div>
       <header className='sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
         <div className='flex justify-between h-14 px-4'>
+          {/* Mobile hamburger — only shown on mobile */}
           <button
-            className='p-2'
+            className='p-2 lg:hidden'
             onClick={() => setShowSideNav(true)}
             aria-label='Open navigation'
           >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              viewBox='0 0 512 512'
-              className='w-6 h-6 text-foreground'
-            >
-              <rect width='352' height='32' x='80' y='96'></rect>
-              <rect width='352' height='32' x='80' y='240'></rect>
-              <rect width='352' height='32' x='80' y='384'></rect>
-            </svg>
+            <Menu className='w-6 h-6 text-foreground' />
           </button>
+          {/* Desktop: breadcrumb in left area */}
+          <div className='hidden lg:flex items-center'>
+            <Breadcrumb />
+          </div>
           <span className='flex-grow flex items-center justify-center font-extrabold font-serif text-xl text-primary'>
             {APP_NAME}
           </span>
@@ -53,6 +58,8 @@ export default function Header({ user }: HeaderProps) {
         userRole={user.role}
         showSideNav={showSideNav}
         notifyCloseSideNav={() => setShowSideNav(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={onToggleSidebar}
       />
     </div>
   );

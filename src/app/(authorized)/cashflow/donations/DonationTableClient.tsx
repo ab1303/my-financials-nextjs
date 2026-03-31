@@ -10,7 +10,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { toast } from 'sonner';
-import { FaPlus } from 'react-icons/fa';
+import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import Table from '@/components/table';
@@ -296,7 +296,7 @@ export default function DonationTableClient({
           aria-label='Add new donation'
           title='Add Donation'
         >
-          <FaPlus size={16} />
+          <Plus size={16} />
         </button>
       </div>
 
@@ -323,18 +323,18 @@ export default function DonationTableClient({
               <Table.TBody.TR>
                 <td
                   colSpan={6}
-                  className='text-center py-12 text-gray-500 px-6 bg-gray-50'
+                  className='text-center py-12 text-muted-foreground px-6 bg-muted/30'
                 >
                   <div className='flex flex-col items-center'>
-                    <div className='text-gray-400 mb-2'>
-                      <FaPlus size={24} />
+                    <div className='text-muted-foreground/50 mb-2'>
+                      <Plus size={24} />
                     </div>
-                    <p className='text-base font-medium text-gray-900 mb-1'>
+                    <p className='text-base font-medium text-foreground mb-1'>
                       {!calendarYearId
                         ? 'Select a fiscal year'
                         : 'No donations recorded'}
                     </p>
-                    <p className='text-sm text-gray-500'>
+                    <p className='text-sm text-muted-foreground'>
                       {!calendarYearId
                         ? 'Please select a fiscal year to view donations'
                         : 'Click the + button above to add your first donation record'}

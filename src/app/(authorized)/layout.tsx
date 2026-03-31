@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { auth } from '@/server/auth';
 import PageLoading from '@/components/PageLoading';
-import Header from '@/components/Header';
+import AppShell from '@/components/AppShell';
 import { UserProvider } from './UserProvider';
 
 export default async function AuthorizedLayout({
@@ -21,11 +21,8 @@ export default async function AuthorizedLayout({
   if (!isUser) return <PageLoading />; // shouldn't happen
 
   return (
-    <div className='min-h-screen bg-background'>
-      <Header user={session.user} />
-      <main className='flex flex-col'>
-        <UserProvider user={session.user}>{children}</UserProvider>
-      </main>
-    </div>
+    <AppShell user={session.user}>
+      <UserProvider user={session.user}>{children}</UserProvider>
+    </AppShell>
   );
 }

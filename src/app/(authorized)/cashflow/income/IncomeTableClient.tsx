@@ -10,7 +10,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { toast } from 'sonner';
-import { FaPlus } from 'react-icons/fa';
+import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import Table from '@/components/table';
@@ -254,7 +254,7 @@ export default function IncomeTableClient({
           disabled={isPending}
           aria-label='Add new income entry'
         >
-          <FaPlus className='w-4 h-4' />
+          <Plus className='w-4 h-4' />
           Add Entry
         </Button>
       </div>
@@ -284,7 +284,7 @@ export default function IncomeTableClient({
               >
                 <div className='flex flex-col items-center'>
                   <div className='text-muted-foreground/50 mb-2'>
-                    <FaPlus size={24} />
+                    <Plus size={24} />
                   </div>
                   <p className='text-base font-medium text-foreground mb-1'>
                     {!calendarYearId

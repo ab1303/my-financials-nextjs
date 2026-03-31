@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FiCheck, FiTrash2, FiX } from 'react-icons/fi';
+import { Check, Trash2, X } from 'lucide-react';
 
 interface RedactionRect {
   x: number;
@@ -209,7 +209,7 @@ export default function ImageRedactor({
             className='text-gray-400 hover:text-gray-600 p-1 rounded'
             aria-label='Cancel redaction'
           >
-            <FiX className='h-5 w-5' />
+            <X className='h-5 w-5' />
           </button>
         </div>
 
@@ -246,7 +246,7 @@ export default function ImageRedactor({
             disabled={rects.length === 0}
             className='flex items-center gap-1.5 text-sm text-gray-600 hover:text-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'
           >
-            <FiTrash2 className='h-4 w-4' />
+            <Trash2 className='h-4 w-4' />
             Clear all ({rects.length})
           </button>
 
@@ -261,7 +261,7 @@ export default function ImageRedactor({
               onClick={handleApply}
               className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors'
             >
-              <FiCheck className='h-4 w-4' />
+              <Check className='h-4 w-4' />
               {rects.length > 0
                 ? `Apply ${rects.length} redaction${rects.length !== 1 ? 's' : ''}`
                 : 'Apply (no redactions)'}

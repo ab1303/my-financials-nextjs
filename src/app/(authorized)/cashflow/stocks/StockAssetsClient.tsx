@@ -4,8 +4,9 @@ import { Fragment, useId, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
 import Select from 'react-select';
+import { getSelectStyles } from '@/lib/select-styles';
 import { Disclosure, Dialog, Transition } from '@headlessui/react';
-import { FiChevronDown, FiPlus, FiTrash2, FiEdit2 } from 'react-icons/fi';
+import { ChevronDown, Plus, Trash2, Pencil } from 'lucide-react';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
@@ -250,7 +251,7 @@ export default function StockAssetsClient({ initialData }: Props) {
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <div>
           <Label htmlFor={`${id}-year`}>Fiscal Year</Label>
-          <Select
+          <Select<OptionType>
             inputId={`${id}-year`}
             options={yearOptions}
             value={selectedYear}
@@ -258,19 +259,21 @@ export default function StockAssetsClient({ initialData }: Props) {
             getOptionValue={(option) => option.id}
             isDisabled={yearOptions.length === 0}
             className='mt-1'
+            styles={getSelectStyles<OptionType>()}
           />
         </div>
 
         {snapshotOptions.length > 0 && (
           <div>
             <Label htmlFor={`${id}-snapshot`}>Snapshot Date</Label>
-            <Select
+            <Select<OptionType>
               inputId={`${id}-snapshot`}
               options={snapshotOptions}
               value={selectedSnapshot}
               onChange={handleSnapshotChange}
               getOptionValue={(option) => option.id}
               className='mt-1'
+              styles={getSelectStyles<OptionType>()}
             />
           </div>
         )}
@@ -284,7 +287,7 @@ export default function StockAssetsClient({ initialData }: Props) {
       {/* Stock Holdings Accordions */}
       <div>
         <div className='flex justify-between items-center mb-4'>
-          <h2 className='text-lg font-semibold text-gray-900'>
+          <h2 className='text-lg font-semibold text-foreground'>
             Stock Holdings
           </h2>
           <div className='flex gap-2'>
@@ -292,7 +295,7 @@ export default function StockAssetsClient({ initialData }: Props) {
               variant='primary'
               onClick={() => setIsNewSnapshotModalOpen(true)}
             >
-              <FiPlus className='mr-2' />
+              <Plus className='mr-2' />
               New Snapshot
             </Button>
             {selectedSnapshotId && (
@@ -308,7 +311,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                   }
                 }}
               >
-                <FiTrash2 className='mr-2' />
+                <Trash2 className='mr-2' />
                 Delete
               </Button>
             )}
@@ -339,7 +342,7 @@ export default function StockAssetsClient({ initialData }: Props) {
               variant='primary'
               onClick={() => setIsNewSnapshotModalOpen(true)}
             >
-              <FiPlus className='mr-2' />
+              <Plus className='mr-2' />
               New Snapshot
             </Button>
           </div>
@@ -570,7 +573,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                       className='text-indigo-600 hover:text-indigo-700 inline-block'
                                       title='Edit holding'
                                     >
-                                      <FiEdit2 size={16} />
+                                      <Pencil size={16} />
                                     </button>
                                     <button
                                       onClick={() => {
@@ -583,7 +586,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                       className='text-red-600 hover:text-red-700 inline-block'
                                       title='Delete holding'
                                     >
-                                      <FiTrash2 size={16} />
+                                      <Trash2 size={16} />
                                     </button>
                                   </td>
                                 </tr>
@@ -600,7 +603,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                             setIsHoldingFormModalOpen(true);
                           }}
                         >
-                          <FiPlus className='mr-2' size={16} />
+                          <Plus className='mr-2' size={16} />
                           Add Holding
                         </Button>
                       </div>

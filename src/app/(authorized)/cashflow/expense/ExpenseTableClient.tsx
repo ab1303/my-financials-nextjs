@@ -9,8 +9,7 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { FaListUl } from 'react-icons/fa';
-import { FiUpload } from 'react-icons/fi';
+import { List, Upload } from 'lucide-react';
 
 import Table from '@/components/table';
 import { Button } from '@/components/ui/button';
@@ -69,7 +68,7 @@ export default function ExpenseTableClient({
               className='text-primary hover:text-primary/80 transition-colors'
               aria-label={`View category breakdown for ${MONTHS_MAP.get(row.original.month)}`}
             >
-              <FaListUl className='h-5 w-5' />
+              <List className='h-5 w-5' />
             </button>
           </div>
         );
@@ -95,7 +94,7 @@ export default function ExpenseTableClient({
       {/* AI Import Button */}
       <div className='mb-4 flex justify-end'>
         <Button variant='default' onClick={() => setIsImportWizardOpen(true)}>
-          <FiUpload className='h-4 w-4' />
+          <Upload className='h-4 w-4' />
           AI Import
         </Button>
       </div>
@@ -120,15 +119,37 @@ export default function ExpenseTableClient({
           </Table.THead>
 
           <Table.TBody>
-            {table.getRowModel().rows.map((row) => (
-              <Table.TBody.TR key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Table.TBody.TD key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Table.TBody.TD>
-                ))}
+            {table.getRowModel().rows.length === 0 ? (
+              <Table.TBody.TR>
+                <td
+                  colSpan={3}
+                  className='text-center py-12 text-muted-foreground px-6 bg-muted/30'
+                >
+                  <div className='flex flex-col items-center'>
+                    <List className='h-6 w-6 text-muted-foreground/50 mb-2' />
+                    <p className='text-base font-medium text-foreground mb-1'>
+                      No expenses recorded
+                    </p>
+                    <p className='text-sm text-muted-foreground'>
+                      Select a fiscal year to view expense records
+                    </p>
+                  </div>
+                </td>
               </Table.TBody.TR>
-            ))}
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <Table.TBody.TR key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <Table.TBody.TD key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </Table.TBody.TD>
+                  ))}
+                </Table.TBody.TR>
+              ))
+            )}
           </Table.TBody>
 
           <Table.TFoot>

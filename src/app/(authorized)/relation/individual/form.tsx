@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { z } from 'zod';
 import { useId, useState } from 'react';
 import type { MouseEventHandler } from 'react';
-import { ImSpinner2 } from 'react-icons/im';
+import { Loader2 } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
 import Select, { components } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
@@ -103,7 +103,7 @@ const Option = (
     <div className='flex justify-between'>
       <BaseOption {...props} />
       {isPending ? (
-        <ImSpinner2 className='animate-spin' />
+        <Loader2 className='animate-spin' />
       ) : (
         <DeleteIcon
           onClick={() => deleteIndividual({ individualId: props.data.id })}

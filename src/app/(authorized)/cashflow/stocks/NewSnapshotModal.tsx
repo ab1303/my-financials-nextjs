@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { Plus, Trash2 } from 'lucide-react';
 import Select from 'react-select';
+import { getSelectStyles } from '@/lib/select-styles';
 import { NumericFormat } from 'react-number-format';
 
 import { Modal } from '@/components/ui/Modal';
@@ -114,10 +115,10 @@ export default function NewSnapshotModal({
   return (
     <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-4xl'>
       <Modal.Header>
-        <h2 className='text-xl font-semibold text-gray-900'>
+        <h2 className='text-xl font-semibold text-foreground'>
           New Stock Snapshot
         </h2>
-        <p className='text-sm text-gray-600 mt-1'>
+        <p className='text-sm text-muted-foreground mt-1'>
           Record your current stock portfolio position
         </p>
       </Modal.Header>
@@ -130,7 +131,7 @@ export default function NewSnapshotModal({
             <input
               {...register('snapshotDate')}
               type='date'
-              className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+              className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
             />
             {errors.snapshotDate && (
               <p className='mt-1 text-sm text-red-600'>
@@ -141,26 +142,26 @@ export default function NewSnapshotModal({
 
           {/* Holdings */}
           <div>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+            <h3 className='text-lg font-semibold text-foreground mb-4'>
               Stock Holdings
             </h3>
 
             {fields.map((field, index) => (
               <div
                 key={field.id}
-                className='mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50'
+                className='mb-6 p-4 border border-border rounded-lg bg-muted/30'
               >
                 <div className='flex justify-between items-center mb-4'>
-                  <h4 className='font-medium text-gray-900'>
+                  <h4 className='font-medium text-foreground'>
                     Holding #{index + 1}
                   </h4>
                   {fields.length > 1 && (
                     <button
                       type='button'
                       onClick={() => remove(index)}
-                      className='text-red-600 hover:text-red-700 flex items-center gap-1'
+                      className='text-destructive hover:text-destructive/80 flex items-center gap-1'
                     >
-                      <FiTrash2 size={16} />
+                      <Trash2 size={16} />
                       Remove
                     </button>
                   )}
@@ -186,6 +187,7 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
+                          styles={getSelectStyles()}
                         />
                       )}
                     />
@@ -205,7 +207,7 @@ export default function NewSnapshotModal({
                       {...register(`holdings.${index}.ticker`)}
                       type='text'
                       placeholder='e.g., CBA'
-                      className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                      className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                     />
                     {errors.holdings?.[index]?.ticker && (
                       <p className='mt-1 text-sm text-red-600'>
@@ -223,7 +225,7 @@ export default function NewSnapshotModal({
                       {...register(`holdings.${index}.companyName`)}
                       type='text'
                       placeholder='e.g., Commonwealth Bank'
-                      className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                      className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                     />
                     {errors.holdings?.[index]?.companyName && (
                       <p className='mt-1 text-sm text-red-600'>
@@ -251,6 +253,7 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
+                          styles={getSelectStyles()}
                         />
                       )}
                     />
@@ -279,7 +282,7 @@ export default function NewSnapshotModal({
                           allowNegative={false}
                           decimalScale={6}
                           placeholder='0.000000'
-                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                          className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                         />
                       )}
                     />
@@ -310,7 +313,7 @@ export default function NewSnapshotModal({
                           fixedDecimalScale
                           prefix='$'
                           placeholder='$0.00'
-                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                          className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                         />
                       )}
                     />
@@ -329,7 +332,7 @@ export default function NewSnapshotModal({
                     <input
                       {...register(`holdings.${index}.buyDate`)}
                       type='date'
-                      className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                      className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                     />
                     {errors.holdings?.[index]?.buyDate && (
                       <p className='mt-1 text-sm text-red-600'>
@@ -358,7 +361,7 @@ export default function NewSnapshotModal({
                           fixedDecimalScale
                           prefix='$'
                           placeholder='$0.00'
-                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                          className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                         />
                       )}
                     />
@@ -388,6 +391,7 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
+                          styles={getSelectStyles()}
                         />
                       )}
                     />
@@ -422,7 +426,7 @@ export default function NewSnapshotModal({
                           fixedDecimalScale
                           prefix='$'
                           placeholder='$0.00'
-                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                          className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                         />
                       )}
                     />
@@ -441,7 +445,7 @@ export default function NewSnapshotModal({
                     <input
                       {...register(`holdings.${index}.saleDate`)}
                       type='date'
-                      className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                      className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                     />
                     {errors.holdings?.[index]?.saleDate && (
                       <p className='mt-1 text-sm text-red-600'>
@@ -472,7 +476,7 @@ export default function NewSnapshotModal({
                           allowNegative={false}
                           decimalScale={6}
                           placeholder='0.000000'
-                          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                          className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                         />
                       )}
                     />
@@ -511,7 +515,7 @@ export default function NewSnapshotModal({
               }
               className='flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium'
             >
-              <FiPlus size={16} />
+              <Plus size={16} />
               Add Another Holding
             </button>
           </div>
