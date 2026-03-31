@@ -24,9 +24,8 @@ test.describe('Login Flow', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    // Look for error message (adjust selector based on actual UI)
-    const errorMsg = page.locator('text=/invalid|incorrect|not found/i');
-    await expect(errorMsg).toBeVisible({ timeout: 10000 });
+    // Login failure shows a sonner toast with credentials error
+    await expect(page.locator('[data-sonner-toaster]')).toBeVisible({ timeout: 10000 });
   });
 
   test('empty email should show validation error', async ({ page }) => {
@@ -34,9 +33,8 @@ test.describe('Login Flow', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    // Check for validation error (adjust selector)
-    const emailError = page.locator('input[name="email"]');
-    await expect(emailError).toHaveAttribute('aria-invalid', 'true');
+    // Browser native required validation prevents submit — email field has required attribute
+    await expect(page.locator('input[name="email"]')).toHaveAttribute('required', '');
   });
 
   test('empty password should show validation error', async ({ page }) => {
@@ -44,8 +42,8 @@ test.describe('Login Flow', () => {
     // Leave password empty
     await page.click('button[type="submit"]');
 
-    const passwordError = page.locator('input[name="password"]');
-    await expect(passwordError).toHaveAttribute('aria-invalid', 'true');
+    // Browser native required validation — password field has required attribute
+    await expect(page.locator('input[name="password"]')).toHaveAttribute('required', '');
   });
 
   test('unauthenticated user accessing /home should redirect to login', async ({

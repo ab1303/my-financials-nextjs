@@ -7,7 +7,7 @@ test.describe('Calendar Year Settings', () => {
   });
 
   test('should load calendar settings page', async ({ page }) => {
-    await expect(page.locator('text=/Calendar|Fiscal Year/i')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Calendar Year(s)' })).toBeVisible();
   });
 
   test('should display calendar years list', async ({ page }) => {

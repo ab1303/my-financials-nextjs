@@ -8,7 +8,7 @@ test.describe('Income Summary Reports', () => {
 
   test('should load income summary report page', async ({ page }) => {
     await expect(
-      page.locator('text=/Income Summary|Income Report/i'),
+      page.getByRole('heading', { name: 'Income Summary' }),
     ).toBeVisible();
   });
 

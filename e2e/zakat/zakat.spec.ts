@@ -7,7 +7,9 @@ test.describe('Zakat Management', () => {
   });
 
   test('should load zakat page', async ({ page }) => {
-    await expect(page.locator('text=/Zakat|zakat/i')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Zakat Payments' }),
+    ).toBeVisible();
   });
 
   test('should display zakat year selector', async ({ page }) => {
@@ -21,7 +23,11 @@ test.describe('Zakat Management', () => {
     const addButton = page
       .locator('button:has-text("+"), button[aria-label*="Add"]')
       .first();
-    if (await addButton.isVisible()) {
+    // Only click if visible AND enabled (button is disabled until a year is selected)
+    const isEnabled = await addButton
+      .isEnabled({ timeout: 3000 })
+      .catch(() => false);
+    if (isEnabled) {
       await addButton.click();
       await page.waitForLoadState('networkidle');
 

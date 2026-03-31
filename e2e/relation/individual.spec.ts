@@ -2,12 +2,13 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Individual Entity Management', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/cashflow/relation/individual');
+    await page.goto('/relation/individual');
   });
 
   test('user can view list of individuals', async ({ page }) => {
-    const table = page.locator('table, [role="grid"]').first();
-    await expect(table).toBeVisible({ timeout: 10000 });
+    // Individual page uses a Select/form component, not a table
+    const heading = page.getByRole('heading', { name: 'Individual Relations' });
+    await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
   test('user can create a new individual', async ({ page }) => {
@@ -80,8 +81,8 @@ test.describe('Individual Entity Management', () => {
   });
 
   test('user can edit existing individual', async ({ page }) => {
-    const table = page.locator('table, [role="grid"]').first();
-    await expect(table).toBeVisible({ timeout: 10000 });
+    const heading = page.getByRole('heading', { name: 'Individual Relations' });
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
     const editBtn = page
       .locator(
@@ -114,8 +115,8 @@ test.describe('Individual Entity Management', () => {
   });
 
   test('user can delete individual', async ({ page }) => {
-    const table = page.locator('table, [role="grid"]').first();
-    await expect(table).toBeVisible({ timeout: 10000 });
+    const heading = page.getByRole('heading', { name: 'Individual Relations' });
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
     const deleteBtn = page
       .locator(
