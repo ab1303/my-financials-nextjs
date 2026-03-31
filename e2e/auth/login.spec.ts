@@ -24,8 +24,10 @@ test.describe('Login Flow', () => {
     await page.fill('input[name="password"]', 'TestPassword123!');
     await page.click('button[type="submit"]');
 
-    // Login failure shows a sonner toast with credentials error
-    await expect(page.locator('[data-sonner-toaster]')).toBeVisible({ timeout: 10000 });
+    // Login failure shows a sonner toast — check for individual toast item (li)
+    await expect(page.locator('li[data-sonner-toast]')).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test('empty email should show validation error', async ({ page }) => {
@@ -34,7 +36,10 @@ test.describe('Login Flow', () => {
     await page.click('button[type="submit"]');
 
     // Browser native required validation prevents submit — email field has required attribute
-    await expect(page.locator('input[name="email"]')).toHaveAttribute('required', '');
+    await expect(page.locator('input[name="email"]')).toHaveAttribute(
+      'required',
+      '',
+    );
   });
 
   test('empty password should show validation error', async ({ page }) => {
@@ -43,7 +48,10 @@ test.describe('Login Flow', () => {
     await page.click('button[type="submit"]');
 
     // Browser native required validation — password field has required attribute
-    await expect(page.locator('input[name="password"]')).toHaveAttribute('required', '');
+    await expect(page.locator('input[name="password"]')).toHaveAttribute(
+      'required',
+      '',
+    );
   });
 
   test('unauthenticated user accessing /home should redirect to login', async ({
