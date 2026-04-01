@@ -78,9 +78,9 @@ export default async function ZakatPage({
           addZakatCalendarYear={addZakatCalendarYear}
         >
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
-            <div className='font-mono text-gray-500 mb-3'>
+            <p className='text-sm font-semibold text-foreground mb-4'>
               {selectedCalendarYear?.description} Payments
-            </div>
+            </p>
 
             <ZakatPaymentsTableServer calendarYearId={selectedCalendarYearId} />
           </Suspense>

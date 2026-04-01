@@ -447,7 +447,7 @@ export const tableCellStyles = {
   // Action button styling within table cells
   actions: {
     iconButton:
-      'rounded-full h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center border transition-colors duration-150 touch-manipulation',
+      'rounded-full h-7 w-7 flex items-center justify-center border transition-colors duration-150 touch-manipulation',
     editButton:
       'bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 border-blue-200',
     deleteButton:

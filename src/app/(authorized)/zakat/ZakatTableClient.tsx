@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 
+import clsx from 'clsx';
 import Table from '@/components/table';
 import { tableCellStyles } from '@/styles/theme';
 import { Button } from '@/components';
@@ -239,7 +240,14 @@ export default function ZakatTableClient({
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.THead.TR key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <Table.THead.TH key={header.id}>
+                  <Table.THead.TH
+                    key={header.id}
+                    className={clsx(
+                      header.column.id === 'edit' && 'text-center',
+                      header.column.columnDef.meta?.align === 'right' &&
+                        'text-right',
+                    )}
+                  >
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext(),
@@ -267,7 +275,12 @@ export default function ZakatTableClient({
                         <Table.TBody.TD
                           key={cell.id}
                           style={{ width: cell.column.getSize() }}
-                          className='min-w-0' // Prevent content overflow
+                          className={clsx(
+                            'min-w-0',
+                            cell.column.id === 'edit' && 'text-center',
+                            cell.column.columnDef.meta?.align === 'right' &&
+                              'text-right',
+                          )}
                         >
                           {flexRender(
                             cell.column.columnDef.cell,

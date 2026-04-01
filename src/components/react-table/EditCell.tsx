@@ -120,7 +120,7 @@ export const EditCell = <TData, TValue>({
               aria-label='Cancel editing'
               title='Cancel'
             >
-              <Undo2 size={12} />
+              <Undo2 size={14} />
             </button>
             <button
               className={`${tableCellStyles.actions.iconButton} ${tableCellStyles.actions.saveButton}`}
@@ -130,7 +130,7 @@ export const EditCell = <TData, TValue>({
               aria-label='Save changes'
               title='Save'
             >
-              <Save size={12} />
+              <Save size={14} />
             </button>
           </div>
         ) : (
@@ -142,7 +142,7 @@ export const EditCell = <TData, TValue>({
               aria-label='Edit row'
               title='Edit'
             >
-              <Pen size={12} />
+              <Pen size={14} />
             </button>
             <button
               className={`${tableCellStyles.actions.iconButton} ${tableCellStyles.actions.deleteButton}`}
@@ -151,7 +151,7 @@ export const EditCell = <TData, TValue>({
               aria-label='Delete row'
               title='Delete'
             >
-              <Trash2 size={12} />
+              <Trash2 size={14} />
             </button>
           </div>
         )}

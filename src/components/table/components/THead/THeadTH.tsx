@@ -1,10 +1,17 @@
 import React from 'react';
+import clsx from 'clsx';
 
-const THeadTH: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+const THeadTH: React.FC<{ children?: React.ReactNode; className?: string }> = ({
+  children,
+  className,
+}) => {
   return (
     <th
       scope='col'
-      className='group px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider'
+      className={clsx(
+        'group px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider',
+        className,
+      )}
     >
       <span>{children}</span>
     </th>

@@ -6,7 +6,6 @@ import { getSelectStyles } from '@/lib/select-styles';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
-import clsx from 'clsx';
 
 import { Card } from '@/components';
 import { stylingUtils } from '@/styles/styling';

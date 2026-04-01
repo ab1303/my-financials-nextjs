@@ -19,6 +19,7 @@ declare module '@tanstack/react-table' {
     required?: boolean;
     pattern?: string;
     selectOptions?: Array<OptionType>;
+    align?: 'left' | 'center' | 'right';
   }
 }
 
@@ -148,11 +149,26 @@ export const TableCell = <TData, TValue>({
   } else {
     controlRenderer = {
       INPUT: () => <span>input jsx</span>,
-      SELECT: () => <span>{value as ReactNode}</span>,
-      DATE: () => <>{(value as Date).toDateString()}</>,
+      SELECT: () => {
+        const selectedOption = columnMeta?.selectOptions?.find(
+          (o) => o.id === (value as string),
+        );
+        return <span>{selectedOption?.label ?? (value as ReactNode)}</span>;
+      },
+      DATE: () => {
+        const d = new Date(value as Date | string);
+        if (isNaN(d.getTime())) return <>-</>;
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = d.toLocaleDateString('en-US', { month: 'short' });
+        const year = d.getFullYear();
+        return (
+          <span className='tabular-nums'>{`${day}-${month}-${year}`}</span>
+        );
+      },
       AMOUNT: () => (
         <NumericFormat
           itemRef=''
+          className='tabular-nums'
           prefix='$'
           displayType='text'
           thousandSeparator

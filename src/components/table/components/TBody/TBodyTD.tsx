@@ -1,21 +1,19 @@
 import React from 'react';
-
-// const Wrapper = styled('td')`
-//   ${cell};
-//   font-size: ${({ theme }: any) => theme.fontSizes.sm};
-//   padding-top: ${({ theme }: any) => theme.space[2]}};
-//   padding-bottom: ${({ theme }: any) => theme.space[2]}};
-//   border-top-width: 1px;
-// `;
+import clsx from 'clsx';
 
 type TBodyTDProps = {
   children?: React.ReactNode;
-} & React.ComponentPropsWithoutRef<'div'>;
+  className?: string;
+} & React.ComponentPropsWithoutRef<'td'>;
 
-const TBodyTD = ({ children, ...rest }: TBodyTDProps) => {
+const TBodyTD = ({ children, className, ...rest }: TBodyTDProps) => {
   return (
-    <td role='cell' className='px-6 py-4' {...rest}>
-      <span className='text-sm'>{children}</span>
+    <td
+      role='cell'
+      className={clsx('px-6 py-2.5 whitespace-nowrap', className)}
+      {...rest}
+    >
+      <span className='text-sm text-foreground'>{children}</span>
     </td>
   );
 };

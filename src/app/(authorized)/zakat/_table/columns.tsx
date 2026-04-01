@@ -7,9 +7,12 @@ import { BeneficiaryEnumType } from '@prisma/client';
 import BeneficiarySelectionCell from './BeneficiarySelectionCell';
 import { castDraft, produce } from 'immer';
 
-const beneficiaryOptions = Object.entries(
-  BeneficiaryEnumType,
-).flatMap<OptionType>(([k, v]) => ({ id: k, label: v }));
+const beneficiaryOptions = Object.entries(BeneficiaryEnumType).map<OptionType>(
+  ([k]) => ({
+    id: k,
+    label: k.charAt(0).toUpperCase() + k.slice(1).toLowerCase(),
+  }),
+);
 
 const columnHelper = createColumnHelper<ZakatPaymentType>();
 
@@ -19,6 +22,7 @@ export function getTableColumns(
 ) {
   return [
     columnHelper.accessor('datePaid', {
+      size: 140,
       header: () => <span>Date Paid</span>,
       cell: TableCell,
       meta: {
@@ -27,14 +31,14 @@ export function getTableColumns(
       },
     }),
     columnHelper.accessor('amount', {
-      size: 220,
-      maxSize: 220,
+      size: 130,
       header: () => <span>Amount Paid</span>,
       cell: TableCell,
-      meta: { type: 'AMOUNT', propName: 'amount' },
+      meta: { type: 'AMOUNT', propName: 'amount', align: 'right' },
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('beneficiaryType', {
+      size: 160,
       header: () => <span>Beneficiary Type</span>,
       cell: TableCell,
       meta: {
@@ -102,6 +106,7 @@ export function getTableColumns(
     }),
     columnHelper.display({
       id: 'edit',
+      header: () => <span>Actions</span>,
       cell: ({ row, table }) => <EditCell row={row} table={table} />,
     }),
   ];

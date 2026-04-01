@@ -43,6 +43,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# playwright
+.playwright-mcp
+
 # typescript
 *.tsbuildinfo
 .gemini/settings.json
