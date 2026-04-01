@@ -1,7 +1,7 @@
-import { initTRPC, TRPCError } from "@trpc/server";
-import superjson from "superjson";
+import { initTRPC, TRPCError } from '@trpc/server';
+import superjson from 'superjson';
 
-import { type Context } from "./context";
+import { type Context } from './context';
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -23,7 +23,7 @@ export const publicProcedure = t.procedure;
  */
 const isAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
   return next({
     ctx: {
@@ -37,3 +37,25 @@ const isAuthed = t.middleware(({ ctx, next }) => {
  * Protected procedure
  **/
 export const protectedProcedure = t.procedure.use(isAuthed);
+
+/**
+ * Middleware to ensure user has admin role
+ */
+const isAdmin = t.middleware(({ ctx, next }) => {
+  if (!ctx.session || !ctx.session.user) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+  if ((ctx.session.user as { role?: string }).role !== 'admin') {
+    throw new TRPCError({ code: 'FORBIDDEN' });
+  }
+  return next({
+    ctx: {
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+
+/**
+ * Admin-only procedure — requires authenticated user with role='admin'
+ */
+export const adminProcedure = t.procedure.use(isAdmin);

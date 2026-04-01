@@ -15,6 +15,7 @@ import Table from '@/components/table';
 import { Button } from '@/components/ui/button';
 import MONTHS_MAP from '@/constants/map';
 import type { MonthlyExpenseSummary } from '@/server/models/expense';
+import AIUsageCard from '@/components/AIUsageCard';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
 import AIImportWizard from './_components/ai-import/AIImportWizard';
@@ -24,11 +25,17 @@ const columnHelper = createColumnHelper<MonthlyExpenseSummary>();
 type ExpenseTableClientProps = {
   calendarYearId: string;
   monthlySummaries: MonthlyExpenseSummary[];
+  dateFrom: Date;
+  dateTo: Date;
+  calendarLabel: string;
 };
 
 export default function ExpenseTableClient({
   calendarYearId,
   monthlySummaries,
+  dateFrom,
+  dateTo,
+  calendarLabel,
 }: ExpenseTableClientProps) {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
@@ -91,8 +98,14 @@ export default function ExpenseTableClient({
 
   return (
     <>
-      {/* AI Import Button */}
-      <div className='mb-4 flex justify-end'>
+      {/* AI Import Button + AI Usage Card */}
+      <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
+        <AIUsageCard
+          importType='EXPENSE'
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          dateLabel={calendarLabel}
+        />
         <Button variant='default' onClick={() => setIsImportWizardOpen(true)}>
           <Upload className='h-4 w-4' />
           AI Import

@@ -31,6 +31,7 @@ import {
   getTermStatusLabel,
 } from '@/utils/stock-asset-calculations';
 import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
+import AIUsageCard from '@/components/AIUsageCard';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 
@@ -222,6 +223,34 @@ export default function StockAssetsClient({ initialData }: Props) {
     await deleteSnapshot.mutateAsync({ snapshotId: deleteConfirm.snapshotId });
   };
 
+  // Compute date range for AI usage card from selected calendar year
+  const selectedCalendarYearFull = useMemo(() => {
+    if (!selectedYear?.id) return null;
+    return (
+      initialData.calendarYears.find((cy) => cy.id === selectedYear.id) ?? null
+    );
+  }, [selectedYear, initialData.calendarYears]);
+
+  const aiUsageDateRange = useMemo(() => {
+    if (!selectedCalendarYearFull) return null;
+    return {
+      dateFrom: new Date(
+        selectedCalendarYearFull.fromYear,
+        selectedCalendarYearFull.fromMonth - 1,
+        1,
+      ),
+      dateTo: new Date(
+        selectedCalendarYearFull.toYear,
+        selectedCalendarYearFull.toMonth,
+        0,
+        23,
+        59,
+        59,
+      ),
+      label: selectedCalendarYearFull.description,
+    };
+  }, [selectedCalendarYearFull]);
+
   // Get accounts from snapshot
   const accounts = useMemo(() => {
     if (!snapshots || snapshots.length === 0) return [];
@@ -278,6 +307,16 @@ export default function StockAssetsClient({ initialData }: Props) {
           </div>
         )}
       </div>
+
+      {/* AI Usage Card */}
+      {aiUsageDateRange && (
+        <AIUsageCard
+          importType='STOCK'
+          dateFrom={aiUsageDateRange.dateFrom}
+          dateTo={aiUsageDateRange.dateTo}
+          dateLabel={aiUsageDateRange.label}
+        />
+      )}
 
       {/* Grand Total Summary Cards */}
       {totals && totals.currencies && (

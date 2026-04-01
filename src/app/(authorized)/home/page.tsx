@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import {
   Card,
   CardContent,
@@ -11,9 +12,15 @@ import {
   DollarSign,
   Receipt,
   CircleDollarSign,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { auth } from '@/server/auth';
+import {
+  AIUsageDashboardCard,
+  AIUsageDashboardCardSkeleton,
+} from './_components/AIUsageDashboardCard';
 
 export const metadata: Metadata = {
   title: 'Dashboard — My Financials',
@@ -21,7 +28,16 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.ico' },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Auth is lightweight — check once, cheap condition before expensive fetches
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  // Current calendar month for dashboard AI usage scope
+  const now = new Date();
+  const dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+  const dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
   return (
     <main className='px-4 sm:px-6 lg:px-8 py-8'>
       <div className='mb-8'>
@@ -198,6 +214,48 @@ export default function HomePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI Usage This Month — each card is an independent async RSC behind Suspense */}
+      {userId ? (
+        <section className='mt-8' aria-labelledby='ai-usage-heading'>
+          <div className='mb-4 flex items-center gap-2'>
+            <Sparkles className='h-5 w-5 text-primary' aria-hidden='true' />
+            <h2
+              id='ai-usage-heading'
+              className='text-lg font-semibold tracking-tight text-foreground'
+            >
+              AI Import Cost —{' '}
+              {now.toLocaleString('en-AU', { month: 'long', year: 'numeric' })}
+            </h2>
+          </div>
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+            <Suspense fallback={<AIUsageDashboardCardSkeleton />}>
+              <AIUsageDashboardCard
+                userId={userId}
+                importType='EXPENSE'
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+              />
+            </Suspense>
+            <Suspense fallback={<AIUsageDashboardCardSkeleton />}>
+              <AIUsageDashboardCard
+                userId={userId}
+                importType='BANK_ASSET'
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+              />
+            </Suspense>
+            <Suspense fallback={<AIUsageDashboardCardSkeleton />}>
+              <AIUsageDashboardCard
+                userId={userId}
+                importType='STOCK'
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+              />
+            </Suspense>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

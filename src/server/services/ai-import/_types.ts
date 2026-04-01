@@ -43,6 +43,12 @@ export interface BankAssetImportContext {
 
 export type ImportContext = ExpenseImportContext | BankAssetImportContext;
 
+export interface AITokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
 export interface AIExtractionResponse {
   success: boolean;
   confidence: number; // 0-1
@@ -55,6 +61,7 @@ export interface ExpenseExtractionResult extends AIExtractionResponse {
     categoryName: string;
     amount: number;
   }>;
+  usage: AITokenUsage;
 }
 
 export interface BankAssetExtractionResult extends AIExtractionResponse {
@@ -64,6 +71,7 @@ export interface BankAssetExtractionResult extends AIExtractionResponse {
     balance: number;
     currency?: string;
   }>;
+  usage: AITokenUsage;
 }
 
 /**

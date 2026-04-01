@@ -112,11 +112,29 @@ export default async function ExpensePage({
         )}
 
         {/* Monthly Expense Table */}
-        {selectedCalendarYearId ? (
+        {selectedCalendarYearId && selectedCalendarYear ? (
           <Suspense fallback={<div>Loading expenses...</div>}>
             <ExpenseTableServer
               calendarYearId={selectedCalendarYearId}
               userId={session.user.id}
+              dateFrom={
+                new Date(
+                  selectedCalendarYear.fromYear,
+                  selectedCalendarYear.fromMonth - 1,
+                  1,
+                )
+              }
+              dateTo={
+                new Date(
+                  selectedCalendarYear.toYear,
+                  selectedCalendarYear.toMonth,
+                  0,
+                  23,
+                  59,
+                  59,
+                )
+              }
+              calendarLabel={selectedCalendarYear.description}
             />
           </Suspense>
         ) : (

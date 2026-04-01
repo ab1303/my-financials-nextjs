@@ -29,6 +29,7 @@ import {
   Wallet,
   PanelLeftClose,
   PanelLeftOpen,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useOutsideAlerter from '@/hooks/useOutsideAlerter';
@@ -80,6 +81,7 @@ const settingsItems: NavItem[] = [
   { name: 'Profile', href: '/settings/profile', icon: User },
   { name: 'Bank(s)', href: '/settings/banks', icon: Landmark },
   { name: 'Calendar Year(s)', href: '/settings/calendar', icon: Calendar },
+  { name: 'AI Spend', href: '/settings/ai-usage', icon: Sparkles },
 ];
 
 function NavGroupItem({

@@ -24,6 +24,7 @@ import NewSnapshotModal from './NewSnapshotModal';
 import { updateAccountName } from './actions';
 import BankAssetAIImportWizard from './_components/BankAssetAIImportWizard';
 import ImportAuditIcon from '../expense/_components/ai-import/ImportAuditIcon';
+import AIUsageCard from '@/components/AIUsageCard';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 
@@ -170,6 +171,34 @@ export default function BankAssetsClient({ initialData }: Props) {
 
   // Loading state - true only if query is actively fetching
   const isLoading = isLoadingSnapshots && !!selectedYear?.id;
+
+  // Compute date range for AI usage card from selected calendar year
+  const selectedCalendarYearFull = useMemo(() => {
+    if (!selectedYear?.id) return null;
+    return (
+      initialData.calendarYears.find((cy) => cy.id === selectedYear.id) ?? null
+    );
+  }, [selectedYear, initialData.calendarYears]);
+
+  const aiUsageDateRange = useMemo(() => {
+    if (!selectedCalendarYearFull) return null;
+    return {
+      dateFrom: new Date(
+        selectedCalendarYearFull.fromYear,
+        selectedCalendarYearFull.fromMonth - 1,
+        1,
+      ),
+      dateTo: new Date(
+        selectedCalendarYearFull.toYear,
+        selectedCalendarYearFull.toMonth,
+        0,
+        23,
+        59,
+        59,
+      ),
+      label: selectedCalendarYearFull.description,
+    };
+  }, [selectedCalendarYearFull]);
 
   // Update entry mutation
   const updateEntryMutation = trpc.bankAsset.updateEntry.useMutation({
@@ -429,6 +458,16 @@ export default function BankAssetsClient({ initialData }: Props) {
           </div>
         )}
       </div>
+
+      {/* AI Usage Card */}
+      {aiUsageDateRange && (
+        <AIUsageCard
+          importType='BANK_ASSET'
+          dateFrom={aiUsageDateRange.dateFrom}
+          dateTo={aiUsageDateRange.dateTo}
+          dateLabel={aiUsageDateRange.label}
+        />
+      )}
 
       {/* Snapshot Date Display */}
       {snapshot && (

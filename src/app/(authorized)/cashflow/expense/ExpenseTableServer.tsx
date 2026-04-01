@@ -4,11 +4,17 @@ import ExpenseTableClient from './ExpenseTableClient';
 export type ExpenseTableServerProps = {
   calendarYearId: string;
   userId: string;
+  dateFrom: Date;
+  dateTo: Date;
+  calendarLabel: string;
 };
 
 export default async function ExpenseTableServer({
   calendarYearId,
   userId,
+  dateFrom,
+  dateTo,
+  calendarLabel,
 }: ExpenseTableServerProps) {
   const expenseData = await getExpenseDataHandler(calendarYearId, userId);
 
@@ -30,6 +36,9 @@ export default async function ExpenseTableServer({
     <ExpenseTableClient
       calendarYearId={calendarYearId}
       monthlySummaries={expenseData.monthlySummaries}
+      dateFrom={dateFrom}
+      dateTo={dateTo}
+      calendarLabel={calendarLabel}
     />
   );
 }

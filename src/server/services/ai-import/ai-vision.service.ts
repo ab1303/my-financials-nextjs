@@ -101,7 +101,7 @@ Return ONLY a JSON object with this structure:
 
   try {
     const model = getAIProvider();
-    const { text } = await generateText({
+    const { text, usage } = await generateText({
       model,
       system: systemPrompt,
       messages: [
@@ -135,6 +135,11 @@ Return ONLY a JSON object with this structure:
       confidence: validated.confidence,
       entries: validated.entries,
       warnings: validated.warnings,
+      usage: {
+        promptTokens: usage.inputTokens ?? 0,
+        completionTokens: usage.outputTokens ?? 0,
+        totalTokens: usage.totalTokens ?? 0,
+      },
     };
   } catch (error) {
     console.error('[AIVisionService] Failed to extract expense data:', error);
@@ -179,7 +184,7 @@ Return ONLY a JSON object with this structure:
 
   try {
     const model = getAIProvider();
-    const { text } = await generateText({
+    const { text, usage } = await generateText({
       model,
       system: systemPrompt,
       messages: [
@@ -214,6 +219,11 @@ Return ONLY a JSON object with this structure:
       entries: validated.entries,
       bankName: validated.bankName,
       warnings: validated.warnings,
+      usage: {
+        promptTokens: usage.inputTokens ?? 0,
+        completionTokens: usage.outputTokens ?? 0,
+        totalTokens: usage.totalTokens ?? 0,
+      },
     };
   } catch (error) {
     console.error(

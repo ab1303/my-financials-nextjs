@@ -75,6 +75,7 @@ model User {
   StockSnapshot     StockSnapshot[]
   AIImportSession   AIImportSession[]
   ImportImage       ImportImage[]
+  AIUsageLog        AIUsageLog[]
 }
 
 model VerificationToken {
@@ -427,6 +428,7 @@ model StockHolding {
 enum ImportTypeEnum {
   EXPENSE
   BANK_ASSET
+  STOCK
 }
 
 enum ImportStatusEnum {
@@ -452,6 +454,7 @@ model AIImportSession {
   recordsCreated    Int              @default(0)
   metadata          Json?
   images            ImportImage[]
+  usageLogs         AIUsageLog[]
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -480,4 +483,25 @@ model ImportImage {
 
   @@index([sessionId])
   @@index([userId])
+}
+
+model AIUsageLog {
+  id               String          @id @default(cuid())
+  sessionId        String
+  session          AIImportSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageId          String?
+  importType       ImportTypeEnum
+  model            String
+  promptTokens     Int
+  completionTokens Int
+  totalTokens      Int
+  estimatedCostUSD Float
+  createdAt        DateTime        @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, importType, createdAt])
+  @@index([importType, createdAt])
+  @@index([sessionId])
 }

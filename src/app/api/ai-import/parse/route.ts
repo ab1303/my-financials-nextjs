@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { getStorageAdapter } from '@/server/services/ai-import/image-storage.adapter';
@@ -16,6 +17,7 @@ import {
 } from '@/server/services/ai-import/bank-asset-mapper.service';
 import { UploadRequestSchema } from '@/server/services/ai-import/validation';
 import { ImportStatusEnum, ImportTypeEnum } from '@prisma/client';
+import { calculateEstimatedCost, AI_MODEL_NAME } from '@/constants/ai-pricing';
 
 /**
  * POST /api/ai-import/parse
@@ -176,6 +178,35 @@ export async function POST(request: NextRequest) {
                   [], // Will fetch available categories in mapExpenseData
                 );
 
+                // Non-blocking usage logging — runs after SSE response chunk is flushed
+                after(async () => {
+                  try {
+                    const estimatedCostUSD = calculateEstimatedCost(
+                      extractionResult.usage.promptTokens,
+                      extractionResult.usage.completionTokens,
+                    );
+                    await prisma.aIUsageLog.create({
+                      data: {
+                        sessionId: importSession.id,
+                        userId,
+                        imageId,
+                        importType: ImportTypeEnum.EXPENSE,
+                        model: AI_MODEL_NAME,
+                        promptTokens: extractionResult.usage.promptTokens,
+                        completionTokens:
+                          extractionResult.usage.completionTokens,
+                        totalTokens: extractionResult.usage.totalTokens,
+                        estimatedCostUSD,
+                      },
+                    });
+                  } catch (logError) {
+                    console.error(
+                      '[ai-import/parse] Failed to log AI usage:',
+                      logError,
+                    );
+                  }
+                });
+
                 controller.enqueue(
                   encoder.encode(
                     `data: ${JSON.stringify({
@@ -199,6 +230,35 @@ export async function POST(request: NextRequest) {
               } else if (importType === 'BANK_ASSET') {
                 const bankExtractionResult =
                   await extractBankAssetData(imageBuffer);
+
+                // Non-blocking usage logging — runs after SSE response chunk is flushed
+                after(async () => {
+                  try {
+                    const estimatedCostUSD = calculateEstimatedCost(
+                      bankExtractionResult.usage.promptTokens,
+                      bankExtractionResult.usage.completionTokens,
+                    );
+                    await prisma.aIUsageLog.create({
+                      data: {
+                        sessionId: importSession.id,
+                        userId,
+                        imageId,
+                        importType: ImportTypeEnum.BANK_ASSET,
+                        model: AI_MODEL_NAME,
+                        promptTokens: bankExtractionResult.usage.promptTokens,
+                        completionTokens:
+                          bankExtractionResult.usage.completionTokens,
+                        totalTokens: bankExtractionResult.usage.totalTokens,
+                        estimatedCostUSD,
+                      },
+                    });
+                  } catch (logError) {
+                    console.error(
+                      '[ai-import/parse] Failed to log AI usage:',
+                      logError,
+                    );
+                  }
+                });
 
                 controller.enqueue(
                   encoder.encode(
