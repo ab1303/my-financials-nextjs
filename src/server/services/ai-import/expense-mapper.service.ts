@@ -1,6 +1,6 @@
 import { prisma } from '@/server/db/client';
-import { matchCategoryWithSemantics } from './category-matcher.service';
-import type { ExpenseExtractionResult } from './_types';
+import { matchCategoryWithEmbedding } from './category-matcher.service';
+import type { ExpenseExtractionResult, AITokenUsage } from './_types';
 
 export interface ExpenseMapResult {
   success: boolean;
@@ -8,6 +8,7 @@ export interface ExpenseMapResult {
   confidence: number;
   warnings: string[];
   errors: string[];
+  embeddingUsage: AITokenUsage; // NEW — accumulated embedding token usage
 }
 
 /**
@@ -25,6 +26,13 @@ export async function mapExpenseData(
   const warnings = [...extractionResult.warnings];
   const errors: string[] = [];
   let entriesCreated = 0;
+
+  // Initialize embedding usage accumulator
+  const accumulatedEmbeddingUsage: AITokenUsage = {
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  };
 
   try {
     // Fetch all available expense categories
@@ -66,11 +74,16 @@ export async function mapExpenseData(
           continue;
         }
 
-        // Match category name to database category
-        const matchedCategory = matchCategoryWithSemantics(
-          entry.categoryName,
-          availableCategories,
-        );
+        // Match category name to database category using AI embeddings
+        const { categoryName: matchedCategory, embeddingUsage: entryEmbeddingUsage } =
+          await matchCategoryWithEmbedding(
+            entry.categoryName,
+            availableCategories,
+          );
+
+        // Accumulate embedding tokens
+        accumulatedEmbeddingUsage.promptTokens += entryEmbeddingUsage.promptTokens;
+        accumulatedEmbeddingUsage.totalTokens += entryEmbeddingUsage.totalTokens;
 
         if (!matchedCategory) {
           errors.push(
@@ -118,6 +131,7 @@ export async function mapExpenseData(
       confidence: extractionResult.confidence,
       warnings,
       errors,
+      embeddingUsage: accumulatedEmbeddingUsage,
     };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -127,6 +141,7 @@ export async function mapExpenseData(
       confidence: 0,
       warnings,
       errors: [...errors, `Failed to map expense data: ${errorMsg}`],
+      embeddingUsage: accumulatedEmbeddingUsage,
     };
   }
 }

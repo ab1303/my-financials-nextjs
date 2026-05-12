@@ -116,3 +116,17 @@ export interface ParseResponse {
     errors?: string[];
   }>;
 }
+
+/**
+ * Result of an embedding-based category match attempt.
+ */
+export interface EmbeddingMatchResult {
+  /** Whether a match was found above the similarity threshold */
+  matched: boolean;
+  /** The matched category name, or null if no match */
+  categoryName: string | null;
+  /** Cosine similarity score (0–1) of the best match */
+  similarity: number;
+  /** Which matching method produced this result */
+  method: 'exact' | 'substring' | 'embedding' | 'fuzzy';
+}

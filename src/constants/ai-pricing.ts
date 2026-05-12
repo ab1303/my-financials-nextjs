@@ -21,3 +21,18 @@ export function calculateEstimatedCost(
     completionTokens * GPT4O_OUTPUT_COST_PER_TOKEN
   );
 }
+
+/**
+ * Embedding model pricing for text-embedding-3-small.
+ * Rate: $0.02 / 1M tokens (input only — embeddings have no output tokens).
+ * Source: https://openai.com/api/pricing/
+ */
+export const EMBEDDING_MODEL_NAME = 'text-embedding-3-small' as const;
+export const EMBEDDING_INPUT_COST_PER_TOKEN = 0.02 / 1_000_000; // $0.00000002
+
+/**
+ * Calculate estimated USD cost for embedding token usage.
+ */
+export function calculateEmbeddingCost(tokens: number): number {
+  return tokens * EMBEDDING_INPUT_COST_PER_TOKEN;
+}

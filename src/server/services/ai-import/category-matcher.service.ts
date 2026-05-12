@@ -131,105 +131,82 @@ export function matchCategories(
 }
 
 /**
- * Semantic category matching using predefined mappings
- * Handles common variations like "Petrol" -> "Transportation"
+ * Semantic category matching using AI embeddings
+ * Replaces the static SEMANTIC_MAPPINGS with dynamic embedding-based matching
  */
-const SEMANTIC_MAPPINGS: Record<string, string> = {
-  // Transportation aliases
-  petrol: 'Transportation',
-  fuel: 'Transportation',
-  gas: 'Transportation',
-  parking: 'Transportation',
-  taxi: 'Transportation',
-  uber: 'Transportation',
-  car: 'Transportation',
 
-  // Food aliases
-  groceries: 'Food',
-  dining: 'Food',
-  restaurant: 'Food',
-  lunch: 'Food',
-  dinner: 'Food',
-  breakfast: 'Food',
-  cafe: 'Food',
-
-  // Utilities aliases
-  electricity: 'Utilities',
-  water: 'Utilities',
-  internet: 'Utilities',
-  phone: 'Utilities',
-  mobile: 'Utilities',
-
-  // Housing aliases
-  rent: 'Housing',
-  mortgage: 'Housing',
-  house: 'Housing',
-  property: 'Housing',
-
-  // Entertainment aliases
-  streaming: 'Entertainment',
-  movies: 'Entertainment',
-  cinema: 'Entertainment',
-  games: 'Entertainment',
-  hobby: 'Entertainment',
-
-  // Healthcare aliases
-  doctor: 'Healthcare',
-  pharmacy: 'Healthcare',
-  medicine: 'Healthcare',
-  hospital: 'Healthcare',
-  dental: 'Healthcare',
-  medical: 'Healthcare',
-
-  // Insurance aliases
-  car_insurance: 'Insurance',
-  home_insurance: 'Insurance',
-  travel_insurance: 'Insurance',
-
-  // Personal aliases
-  clothing: 'Personal',
-  clothes: 'Personal',
-  salon: 'Personal',
-  haircut: 'Personal',
-  beauty: 'Personal',
-  grooming: 'Personal',
-
-  // Education aliases
-  tuition: 'Education',
-  course: 'Education',
-  school: 'Education',
-  book: 'Education',
-  training: 'Education',
-};
+import {
+  ensureCategoryEmbeddings,
+  findBestEmbeddingMatch,
+} from './embedding.service';
+import type { AITokenUsage } from './_types';
 
 /**
- * Enhanced matching with semantic understanding
- * First tries semantic mapping, then falls back to fuzzy matching
+ * Enhanced matching with AI embeddings.
+ * Tiered strategy: exact → substring → embedding → fuzzy.
+ *
+ * Returns the matched category name and accumulated embedding token usage.
  */
-export function matchCategoryWithSemantics(
+export async function matchCategoryWithEmbedding(
   extractedName: string,
   availableCategories: string[],
-): string | null {
+): Promise<{
+  categoryName: string | null;
+  embeddingUsage: AITokenUsage;
+}> {
   const normalized = extractedName.toLowerCase().trim();
+  const zeroUsage: AITokenUsage = {
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  };
 
-  // Strategy 1: Semantic mapping
-  const semanticMatch = SEMANTIC_MAPPINGS[normalized];
-  if (semanticMatch && availableCategories.includes(semanticMatch)) {
-    return semanticMatch;
+  // Strategy 1: Exact match (case-insensitive) — instant, no API call
+  const exactMatch = availableCategories.find(
+    (cat) => cat.toLowerCase() === normalized,
+  );
+  if (exactMatch) {
+    return { categoryName: exactMatch, embeddingUsage: zeroUsage };
   }
 
-  // Strategy 2: Check if any semantic value matches
-  for (const [key, semanticCat] of Object.entries(SEMANTIC_MAPPINGS)) {
-    if (
-      normalized.includes(key) ||
-      key.includes(normalized.replace(/\s+/g, '_'))
-    ) {
-      if (availableCategories.includes(semanticCat)) {
-        return semanticCat;
-      }
+  // Strategy 2: Substring match — instant, no API call
+  const substringMatch = availableCategories.find(
+    (cat) =>
+      normalized.includes(cat.toLowerCase()) ||
+      cat.toLowerCase().includes(normalized),
+  );
+  if (substringMatch) {
+    return { categoryName: substringMatch, embeddingUsage: zeroUsage };
+  }
+
+  // Strategy 3: Embedding cosine similarity
+  try {
+    // Ensure category embeddings are cached (no-op if already cached)
+    const cacheUsage = await ensureCategoryEmbeddings(availableCategories);
+
+    const { match, usage: queryUsage } =
+      await findBestEmbeddingMatch(extractedName);
+
+    const totalUsage: AITokenUsage = {
+      promptTokens: cacheUsage.promptTokens + queryUsage.promptTokens,
+      completionTokens: 0,
+      totalTokens: cacheUsage.totalTokens + queryUsage.totalTokens,
+    };
+
+    if (match.matched && match.categoryName) {
+      return { categoryName: match.categoryName, embeddingUsage: totalUsage };
     }
-  }
 
-  // Strategy 3: Fall back to regular fuzzy matching
-  return matchCategory(extractedName, availableCategories);
+    return { categoryName: null, embeddingUsage: totalUsage };
+  } catch (error) {
+    // Graceful degradation: fall back to Levenshtein fuzzy matching
+    console.warn(
+      '[CategoryMatcher] Embedding unavailable, falling back to fuzzy matching:',
+      error instanceof Error ? error.message : error,
+    );
+
+    const fuzzyMatch = matchCategory(extractedName, availableCategories);
+    return { categoryName: fuzzyMatch, embeddingUsage: zeroUsage };
+  }
 }
+

@@ -17,7 +17,12 @@ import {
 } from '@/server/services/ai-import/bank-asset-mapper.service';
 import { UploadRequestSchema } from '@/server/services/ai-import/validation';
 import { ImportStatusEnum, ImportTypeEnum } from '@prisma/client';
-import { calculateEstimatedCost, AI_MODEL_NAME } from '@/constants/ai-pricing';
+import {
+  calculateEstimatedCost,
+  AI_MODEL_NAME,
+  EMBEDDING_MODEL_NAME,
+  calculateEmbeddingCost,
+} from '@/constants/ai-pricing';
 
 /**
  * POST /api/ai-import/parse
@@ -227,6 +232,35 @@ export async function POST(request: NextRequest) {
                   userId,
                   imageId,
                 );
+
+                // Log embedding token usage (if any embedding calls were made)
+                if (mapResult && mapResult.embeddingUsage.totalTokens > 0) {
+                  after(async () => {
+                    try {
+                      const embeddingCost = calculateEmbeddingCost(
+                        mapResult!.embeddingUsage.totalTokens,
+                      );
+                      await prisma.aIUsageLog.create({
+                        data: {
+                          sessionId: importSession.id,
+                          userId,
+                          imageId,
+                          importType: ImportTypeEnum.EXPENSE,
+                          model: EMBEDDING_MODEL_NAME,
+                          promptTokens: mapResult!.embeddingUsage.promptTokens,
+                          completionTokens: 0,
+                          totalTokens: mapResult!.embeddingUsage.totalTokens,
+                          estimatedCostUSD: embeddingCost,
+                        },
+                      });
+                    } catch (logError) {
+                      console.error(
+                        '[ai-import/parse] Failed to log embedding usage:',
+                        logError,
+                      );
+                    }
+                  });
+                }
               } else if (importType === 'BANK_ASSET') {
                 const bankExtractionResult =
                   await extractBankAssetData(imageBuffer);
@@ -287,6 +321,11 @@ export async function POST(request: NextRequest) {
                   confidence: bankMapResult.confidence,
                   warnings: bankMapResult.warnings,
                   errors: bankMapResult.errors,
+                  embeddingUsage: {
+                    promptTokens: 0,
+                    completionTokens: 0,
+                    totalTokens: 0,
+                  },
                 };
               }
 
