@@ -10,6 +10,23 @@
 
 ---
 
+## Implementation Readiness Status
+
+✅ **All 8 unresolved assumptions have been clarified.** See [semantic-category-matching-context.md](./semantic-category-matching-context.md) for detailed decisions on:
+- Inline cost calculation ($0.02/1M tokens for text-embedding-3-small)
+- Webhook-based cache invalidation with fingerprint safety net
+- 3-retry exponential backoff (1/2/4s) then fuzzy match fallback
+- 0.75 minimum cosine similarity threshold
+- Promise-based concurrency lock to prevent duplicate API calls
+- SSE warning event for degraded matching notifications
+- In-memory cache acceptable up to 1000 categories (~1.5 MB)
+- Phase 2 batch re-matching feature for historical imports
+
+**Implementation Phase 1**: Core embedding service, category matcher update, integration points
+**Phase 2 (Future)**: Batch re-matching feature for historical expense records
+
+---
+
 ## Table of Contents
 
 1. [Embedding Service](#1-embedding-service)

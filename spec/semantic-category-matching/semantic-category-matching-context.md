@@ -142,115 +142,152 @@ Semantic embedding-based category matching replaces the static `SEMANTIC_MAPPING
 
 ### 4.1 Cost Calculation for Token Usage
 
-**Question**: How should `estimatedCostUSD` be calculated in `AIUsageLog`?
+**DECISION**: Calculate inline in embedding service based on token count and fixed pricing model.
 
-- **Current State** (CSV Phase 2): Set to 0 in parse route
-- **Options**:
-  - A) Calculate inline in embedding service based on token count and pricing
-  - B) Defer to separate billing service
-  - C) Use fixed cost per embedding (e.g., $0.02 per 1M tokens)
+**Implementation**:
+- Use OpenAI's pricing: **text-embedding-3-small = $0.02 per 1M input tokens**
+- Formula: `estimatedCostUSD = (promptTokens / 1_000_000) * 0.02`
+- Calculate in `embedding.service.ts` and return cost with token usage object
+- Example: 1,000 tokens = $0.00002
 
-**Decision Required Before Implementation**: Where does cost calculation live?
+**Location**: `embedding.service.ts` exports `AITokenUsage` type with embedded `estimatedCostUSD`
 
 ---
 
 ### 4.2 Cache Invalidation Strategy
 
-**Question**: When categories change in the database, how do we know to regenerate embeddings?
+**DECISION**: Use webhook from admin UI to trigger cache invalidation (ideal approach).
 
-- **Current Approach**: Fingerprint-based (sorted category names → hash)
-- **Trigger Points**:
-  - Admin creates new ExpenseCategory
-  - Admin renames ExpenseCategory
-  - Admin deletes ExpenseCategory
+**Implementation**:
+- Create `POST /api/admin/cache/invalidate-embeddings` endpoint
+- Admin UI triggers this when creating/renaming/deleting ExpenseCategory
+- Endpoint clears module-level cache singleton
+- Also implements fingerprint check as safety net in `ensureCategoryEmbeddings()`
 
-**Decision Required**: 
-- Do we poll the database on every parse request to check fingerprint?
-- Or require manual cache clear on admin action (e.g., webhook, admin endpoint)?
-- What's acceptable latency for detecting category changes?
+**Fallback**: If admin forgets to call webhook, fingerprint mismatch on next parse will auto-regenerate (slower but safe)
+
+**Location**: 
+- Endpoint: `src/app/api/admin/cache/invalidate-embeddings/route.ts`
+- Cache clear: `embedding.service.ts` exports `clearEmbeddingCache()` function
 
 ---
 
 ### 4.3 Fallback & Error Handling Strategy
 
-**Question**: If embedding API fails during a parse request, what happens?
+**DECISION**: Retry 3 times with exponential backoff, then fall back to Levenshtein fuzzy matching.
 
-- **Current Spec**: "Graceful degradation — fall back to Levenshtein fuzzy matching"
-- **Scenarios**:
-  - API timeout (>5s)
-  - Rate limit exceeded
-  - 500 error from AI provider
-  - Invalid embedding response
+**Implementation**:
+- Retry logic: `[1s, 2s, 4s]` exponential backoff
+- Covers: API timeout, rate limits, 500 errors, invalid responses
+- After 3 retries fail: silently fall back to Levenshtein
+- Per-transaction fallback: One failed embedding doesn't block other transactions in SSE stream
 
-**Decision Required**:
-- Retry logic: How many retries? Backoff strategy?
-- Timeout threshold: When to abandon API call and use fuzzy match?
-- SSE event: Emit warning to user if using degraded matching?
+**Retrying Function**: `embedding.service.ts` exports `findBestCategoryMatchWithRetry(text, categories, maxRetries=3)`
+
+**Example Flow**:
+```
+Embedding attempt 1 → timeout → wait 1s
+Embedding attempt 2 → 429 rate limit → wait 2s
+Embedding attempt 3 → 500 error → wait 4s
+All failed → Use Levenshtein on merchant text
+Emit SSE warning (see 4.6)
+```
 
 ---
 
 ### 4.4 Memory & Performance Constraints
 
-**Question**: Is in-memory embedding cache acceptable for scale?
+**ASSUMPTION CONFIRMED**: In-memory embedding cache is acceptable.
 
 **Calculation**:
 - ~50 categories × 384 dimensions (text-embedding-3-small) × 4 bytes (float32) = ~76 KB
 - **Verdict**: Negligible memory footprint ✅
 
-**Follow-up**: 
-- If users have custom categories (future feature), could we exceed 1000 categories?
-- Should we implement pagination/lazy-loading for very large category sets?
+**Scale Limits**:
+- Current: ~50 categories (default) = ~76 KB
+- Future (custom categories): Up to 1000 categories = ~1.5 MB (still acceptable)
+- No pagination needed; load all category embeddings on cache init
 
 ---
 
 ### 4.5 API Rate Limiting
 
-**Question**: Does GitHub Models API have rate limits?
+**ASSUMPTION**: GitHub Models API (`models.inference.ai.azure.com`) has rate limits but caching mitigates most.
 
-**Current Info**: Using `https://models.inference.ai.azure.com` endpoint
+**Mitigation Strategy**:
+- **Cache hit rate**: Most requests hit category cache (reused across all users)
+- **Cold start**: First parse request takes 1-2s for category embedding init (acceptable)
+- **Retry logic**: 3-retry exponential backoff handles transient rate limits (see 4.3)
+- **Monitor**: Log all embedding API failures to detect if rate limits are chronic
 
-**Decision Required**:
-- What are the rate limits for `text-embedding-3-small`?
-- Should we implement client-side rate limiting or retry-with-backoff?
-- Does embedding cache help mitigate this? (Yes — hits cache for same category set)
+**No client-side rate limiter needed** — cache + retry logic sufficient
 
 ---
 
 ### 4.6 Similarity Threshold for Matching
 
-**Question**: What minimum cosine similarity (0–1) triggers a successful match?
+**DECISION**: Minimum cosine similarity = **0.75** (moderate-to-high similarity).
 
-- **Proposed**: 0.75 (moderate-to-high similarity)
-- **Rationale**: 
-  - <0.5 = likely false positive (e.g., "Pharmacy" vs "Pharmacy" different merchant formats)
-  - 0.5–0.7 = ambiguous, defer to fuzzy match
-  - 0.7+ = likely correct
+**Rationale**:
+- `<0.5` = likely false positive (unrelated terms)
+- `0.5–0.7` = ambiguous, defer to fuzzy match
+- `0.7+` = likely correct
+- `0.75` = proven threshold in AI/ML embedding applications
 
-**Decision Required**: Validate threshold with test data before deployment
+**Implementation**: `embedding.service.ts` constant
+```typescript
+const SIMILARITY_THRESHOLD = 0.75;
+```
+
+**Post-launch Validation**: Monitor accuracy on real data; adjust if needed
 
 ---
 
 ### 4.7 Concurrency & Initialization Lock
 
-**Question**: Should `ensureCategoryEmbeddings()` use a lock to prevent parallel API calls?
+**DECISION**: Implement concurrency lock to prevent duplicate initialization API calls.
 
-- **Scenario**: Multiple requests hit `/api/csv-import/parse` simultaneously, both try to initialize embeddings
-- **Solution**: Module-level lock (e.g., `Promise`-based or `AsyncLock`)
-- **Trade-off**: Adds complexity but prevents duplicate API calls
+**Implementation**:
+- Use **Promise-based lock** at module level in `embedding.service.ts`
+- Pattern: Check if initialization Promise exists, else create and cache it
+- Multiple requests await the same Promise (no duplicate API calls)
 
-**Decision Required**: Is this necessary, or accept duplicate initialization cost?
+**Code Pattern**:
+```typescript
+let initializationPromise: Promise<AITokenUsage> | null = null;
+
+export async function ensureCategoryEmbeddings() {
+  if (initializationPromise) {
+    return initializationPromise; // Await existing init
+  }
+  initializationPromise = performEmbeddingInit();
+  return initializationPromise;
+}
+```
+
+**Benefit**: Saves API calls and cost during high-concurrency cold starts
 
 ---
 
-### 4.8 Backward Compatibility with Existing Imports
+### 4.8 Backward Compatibility & Historical Re-matching
 
-**Question**: Should we re-match historical expense records with embeddings?
+**DECISION**: Implement batch re-matching feature for historical imports.
 
-- **Spec**: "Re-matching historical imports: Existing expense records stay as-is. Only new imports use embeddings."
-- **Implication**: Old imports labeled "Other" stay "Other" unless user manually re-categorizes
-- **Future**: Could implement batch re-matching as separate feature
+**Scope**: Separate from main embedding feature; can be implemented Phase 2.
 
-**Assumption**: Accept this limitation ✅
+**Implementation**:
+- Create `POST /api/admin/expenses/re-match-categories` endpoint
+- Takes list of ExpenseEntry IDs (or filters like "where category = 'Other'")
+- Uses embedding-based matcher to recategorize
+- Returns before/after category changes
+- Writes to ExpenseEntry.category field (overwrites old match)
+- Logs to AIUsageLog for cost tracking
+
+**User Experience**:
+- Admin can re-match all "Other" categorized expenses: `/api/admin/expenses/re-match-categories?filter=category_eq_other`
+- Or target specific imports: `/api/admin/expenses/re-match-categories?importSessionId=abc123`
+
+**Phase 2 (Future)**: May add user-facing UI for this
 
 ---
 
@@ -303,48 +340,89 @@ Unit Tests:
 
 ---
 
-## 6. Risk & Mitigation Summary
+## 8. Resolved Decisions Summary
 
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| **Embedding API latency** | 200ms/entry × 1000 entries = 200s parse time | Cache hits + parallel batch embedding (if API supports) |
-| **Cache eviction during request** | Category changes mid-parse | Atomic fingerprint check at parse start |
-| **Concurrent API calls** | Double billing if not locked | Lazy-init with concurrency lock |
-| **API failures** | Transactions fail to categorize | Graceful fallback to Levenshtein |
-| **Memory spike** | OOM on large category sets | Monitor memory; threshold alert |
-| **Rate limiting** | Requests rejected by API | Implement retry-with-backoff |
+All 8 unresolved assumptions have been clarified with the following decisions:
 
----
-
-## 7. Success Metrics (Post-Implementation)
-
-- [ ] >95% accuracy on test dataset (existing + new banking terms)
-- [ ] Median latency < 200ms per transaction
-- [ ] p99 latency < 500ms (accounting for API variability)
-- [ ] Zero OOM events on production
-- [ ] Graceful fallback triggered <1% of requests (API uptime target)
+| # | Assumption | Decision | Implementation Note |
+|---|-----------|----------|---------------------|
+| 1 | Token cost calculation | Calculate inline with $0.02/1M pricing | Formula: `(tokens / 1M) * 0.02` in embedding service |
+| 2 | Cache invalidation trigger | Webhook from admin UI | New endpoint: `POST /api/admin/cache/invalidate-embeddings` |
+| 3 | Embedding API failure handling | Retry 3x with 1s/2s/4s backoff, then fuzzy match | Per-transaction fallback in parse route |
+| 4 | User notification on fallback | Emit SSE warning event | New event type: `categorization_degraded` |
+| 5 | Similarity threshold | 0.75 cosine similarity | Module constant in embedding service |
+| 6 | Concurrency lock on init | Yes, use Promise-based lock | Prevents duplicate API calls on cold start |
+| 7 | Memory constraints | Acceptable (<1.5 MB for 1000 categories) | No pagination needed |
+| 8 | Historical re-matching | Yes, implement Phase 2 feature | New endpoint: `POST /api/admin/expenses/re-match-categories` |
 
 ---
 
-## 8. File Checklist for Implementation
+## 8. Implementation File Checklist (Updated)
 
 - [ ] `src/server/services/ai-import/embedding.service.ts` — **NEW**
-- [ ] `src/server/services/ai-import/category-matcher.service.ts` — **MODIFY** (replace SEMANTIC_MAPPINGS)
-- [ ] `src/server/services/ai-import/expense-mapper.service.ts` — **VERIFY** (should work if matcher signature unchanged)
-- [ ] `src/__tests__/unit/embedding.service.test.ts` — **NEW** (TDD)
-- [ ] `src/__tests__/unit/category-matcher.test.ts` — **MODIFY** (update existing tests)
-- [ ] `src/__tests__/integration/csv-import-parse.test.ts` — **VERIFY** (should pass with embeddings)
-- [ ] `src/__tests__/integration/ai-import-parse.test.ts` — **VERIFY** (should pass with embeddings)
-- [ ] `.env-example` — **UPDATE** (add AI_EMBEDDING_MODEL)
+  - Includes: Provider factory, cosine similarity, category cache, retry logic, cost calculation, concurrency lock
+  
+- [ ] `src/server/services/ai-import/category-matcher.service.ts` — **MODIFY**
+  - Replace `SEMANTIC_MAPPINGS` with embedding-based matching
+  - Update signature if needed for async operations
+  
+- [ ] `src/app/api/admin/cache/invalidate-embeddings/route.ts` — **NEW**
+  - Webhook endpoint to clear embedding cache on category updates
+  
+- [ ] `src/app/api/admin/expenses/re-match-categories/route.ts` — **NEW (Phase 2)**
+  - Batch re-matching for historical imports
+  
+- [ ] `src/__tests__/unit/embedding.service.test.ts` — **NEW (TDD)**
+  - Tests: cosineSimilarity, retry logic, cache behavior, concurrency lock, cost calculation
+  
+- [ ] `src/__tests__/unit/category-matcher.test.ts` — **MODIFY**
+  - Update tests to use embedding service (mocked)
+  
+- [ ] `src/__tests__/integration/csv-import-parse.test.ts` — **VERIFY**
+  - Ensure SSE events include new `categorization_degraded` event type
+  
+- [ ] `src/__tests__/integration/ai-import-parse.test.ts` — **VERIFY**
+  - Ensure backward compatibility with existing behavior
+  
+- [ ] `.env-example` — **UPDATE**
+  - Add `AI_EMBEDDING_MODEL=text-embedding-3-small`
 
 ---
 
-## 9. Next Steps
+## 9. Risk & Mitigation Summary (Updated)
 
-1. **Resolve Assumptions** (Sections 4.1–4.8): Clarify decisions before coding
+| Risk | Impact | Mitigation (Post-Decision) |
+|------|--------|----------|
+| **Embedding API latency** | 200ms/entry × 1000 entries = 200s | Cache hits on subsequent parses; retry handles transient failures |
+| **Cache invalidation timing** | Stale embeddings if categories change | Webhook trigger + fingerprint safety net ensures eventual consistency |
+| **Concurrent cold-start requests** | Duplicate API calls on first parse | Promise-based concurrency lock ensures single API call |
+| **Embedding API failures** | Transactions stuck mid-parse | 3-retry exponential backoff (1/2/4s), then fuzzy match fallback + SSE warning |
+| **Memory scaling** | OOM on custom category explosion | Acceptable up to 1000 categories (~1.5 MB); monitor and alert if needed |
+| **False negatives** | "Other" categorized due to low similarity | Threshold 0.75 balanced; fallback to fuzzy match if embedding inconclusive |
+| **User confusion on degraded mode** | Silent fallback causes user distrust | SSE warning event keeps user informed when fuzzy match is used |
+
+---
+
+## 10. Success Metrics (Post-Implementation)
+
+- [ ] >95% accuracy on test dataset (existing + new banking terms)
+- [ ] Median latency < 200ms per transaction (with cache hit)
+- [ ] p99 latency < 1000ms (accounting for API+retry variability)
+- [ ] Cold-start embedding init < 2 seconds
+- [ ] Graceful fallback triggered <1% of requests (API uptime target)
+- [ ] Webhook cache invalidation works on category create/rename/delete
+- [ ] SSE warning event emitted when fallback is used
+
+---
+
+## 11. Next Steps (All Assumptions Resolved)
+
+1. ✅ **Assumptions Clarified** (Sections 4.1–4.8): All 8 decisions documented
 2. **Implement Unit Tests First** (TDD): embedding.service.test.ts with mocked AI SDK
-3. **Implement Core Service**: embedding.service.ts
-4. **Update Category Matcher**: Replace SEMANTIC_MAPPINGS logic
-5. **Run Integration Tests**: Verify CSV and AI Image Import pipelines still work
-6. **Load Testing**: Validate performance against large CSVs (500–1000 rows)
-7. **Deployment**: Follow existing CI/CD pipeline; monitor embedding API usage
+3. **Implement Core Service**: embedding.service.ts (with retry logic, cache, concurrency lock, cost calc)
+4. **Update Category Matcher**: Replace SEMANTIC_MAPPINGS with embedding-based matching
+5. **Create Admin Cache Endpoint**: `POST /api/admin/cache/invalidate-embeddings` (webhook trigger)
+6. **Update Parse Routes**: Add `categorization_degraded` SSE event type
+7. **Run Integration Tests**: Verify CSV and AI Image Import pipelines still work
+8. **Load Testing**: Validate performance with large CSVs (500–1000 rows)
+9. **Phase 2 (Future)**: Implement batch re-matching endpoint

@@ -8,6 +8,22 @@
 
 ---
 
+## Implementation Readiness Status
+
+✅ **All 8 unresolved assumptions have been clarified.** See [semantic-category-matching-context.md](./semantic-category-matching-context.md) for:
+- Cost calculation strategy (inline $0.02/1M pricing)
+- Cache invalidation mechanism (webhook trigger)
+- API failure handling (3-retry backoff → fuzzy match)
+- Similarity threshold (0.75 cosine similarity)
+- Concurrency lock approach (Promise-based)
+- User notification strategy (SSE warning event)
+- Memory constraints (acceptable up to 1000 categories)
+- Historical re-matching scope (Phase 2 feature)
+
+**Status**: Ready to begin Phase 1 TDD implementation.
+
+---
+
 ## 1. Problem Statement
 
 ### 1.1 Original Context: AI Image Import
