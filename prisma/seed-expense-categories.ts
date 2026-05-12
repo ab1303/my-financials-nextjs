@@ -3,26 +3,45 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const expenseCategories = [
-  { name: 'Housing' },
-  { name: 'Utilities' },
-  { name: 'Transportation' },
-  { name: 'Food' },
-  { name: 'Healthcare' },
-  { name: 'Insurance' },
-  { name: 'Entertainment' },
-  { name: 'Education' },
-  { name: 'Personal' },
-  { name: 'Other' },
+  { name: 'Shopping', iconName: 'shopping-bag' },
+  { name: 'Groceries', iconName: 'shopping-cart' },
+  { name: 'Eating out & takeaway', iconName: 'utensils' },
+  { name: 'Entertainment', iconName: 'theater-masks' },
+  { name: 'Home', iconName: 'home' },
+  { name: 'Utilities', iconName: 'lightbulb' },
+  { name: 'Cash', iconName: 'wallet' },
+  { name: 'Gifts & donations', iconName: 'gift' },
+  { name: 'Vehicle & transport', iconName: 'car' },
+  { name: 'Health & medical', iconName: 'heart-pulse' },
+  { name: 'Education', iconName: 'book' },
+  { name: 'Travel & holidays', iconName: 'plane' },
+  { name: 'Childcare', iconName: 'baby' },
+  { name: 'Tax paid', iconName: 'receipt' },
+  { name: 'Sport & fitness', iconName: 'dumbbell' },
+  { name: 'Personal care', iconName: 'sparkles' },
+  { name: 'Insurance', iconName: 'shield' },
+  { name: 'Fees & interest', iconName: 'percent' },
+  { name: 'Business', iconName: 'briefcase' },
+  { name: 'Home loan', iconName: 'house' },
+  { name: 'Pets', iconName: 'paw' },
+  { name: 'Professional services', iconName: 'handshake' },
 ];
 
 async function seedExpenseCategories() {
   console.log('Seeding expense categories...');
 
+  // First, delete all expense entries (they reference categories)
+  const deletedEntries = await prisma.expenseEntry.deleteMany({});
+  console.log(`🗑️  Deleted ${deletedEntries.count} expense entries`);
+
+  // Then, delete all old categories
+  const deletedCount = await prisma.expenseCategory.deleteMany({});
+  console.log(`🗑️  Deleted ${deletedCount.count} old categories`);
+
+  // Finally, create all new categories
   for (const category of expenseCategories) {
-    await prisma.expenseCategory.upsert({
-      where: { name: category.name },
-      update: {},
-      create: category,
+    await prisma.expenseCategory.create({
+      data: category,
     });
     console.log(`✓ ${category.name}`);
   }

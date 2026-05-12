@@ -266,6 +266,7 @@ model IncomeEntry {
 model ExpenseCategory {
   id        String         @id @default(cuid())
   name      String         @unique
+  iconName  String?
   isActive  Boolean        @default(true)
   createdAt DateTime       @default(now())
   entries   ExpenseEntry[]
