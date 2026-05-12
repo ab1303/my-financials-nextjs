@@ -2,8 +2,9 @@
 
 > **Version**: 1.1  
 > **Date**: 2026-05-12  
-> **Status**: Draft  
+> **Status**: Ready for Implementation  
 > **Related**: [AI Image Import PRD](../ai-image-import/ai-image-import-prd.md), [AI Usage Logging HLD](../ai-usage-logging/ai-usage-logging-hld.md)
+> **Context Mapping**: [Semantic Category Matching - Context & Dependencies](./semantic-category-matching-context.md)
 
 ---
 

@@ -2,8 +2,9 @@
 
 > **Version**: 1.1
 > **Date**: 2026-05-12
-> **Status**: Draft
+> **Status**: Ready for Implementation
 > **Parent**: [Semantic Category Matching HLD](./semantic-category-matching-hld.md)
+> **Context Mapping**: [Semantic Category Matching - Context & Dependencies](./semantic-category-matching-context.md)
 
 > **Context update**: The embedding service described here is a shared backend component invoked by two pipelines — (A) the existing AI Image Import pipeline (`/api/ai-import/parse`) and (B) the new CSV/OFX Import pipeline (`/api/csv-import/parse`). The implementation details in sections 1–5 are identical for both paths. Section 6 covers parse route integration for both.
 

@@ -197,3 +197,36 @@ export const FileUploadSchema = z.object({
 
 export type FileUploadInput = z.infer<typeof FileUploadSchema>;
 export type UploadRequest = z.infer<typeof UploadRequestSchema>;
+
+/**
+ * CSV import validation schema
+ */
+export const CsvParseRequestSchema = z.object({
+  fileId: z.string().min(1, 'fileId is required'),
+  importType: z.literal('EXPENSE'),
+  context: z.object({
+    calendarId: z.string().min(1, 'calendarId is required'),
+  }),
+});
+
+export type CsvParseRequestType = z.infer<typeof CsvParseRequestSchema>;
+
+/**
+ * Allowed MIME types for CSV uploads
+ */
+export const ALLOWED_CSV_MIME_TYPES = [
+  'text/csv',
+  'application/csv',
+  'application/octet-stream',
+  'text/plain',
+];
+
+/**
+ * Maximum CSV file size: 5MB
+ */
+export const MAX_CSV_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
+/**
+ * Maximum CSV rows
+ */
+export const MAX_CSV_ROWS = 1000;

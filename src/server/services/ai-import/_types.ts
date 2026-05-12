@@ -130,3 +130,47 @@ export interface EmbeddingMatchResult {
   /** Which matching method produced this result */
   method: 'exact' | 'substring' | 'embedding' | 'fuzzy';
 }
+
+/**
+ * CSV Transaction from CommBank CSV format
+ */
+export interface CsvTransaction {
+  date: string; // 'DD/MM/YYYY'
+  amount: number; // positive absolute value
+  description: string;
+  month: number; // 1-12
+  year: number;
+  balance?: number;
+}
+
+/**
+ * Result of CSV parsing operation
+ */
+export interface CsvParseResult {
+  success: boolean;
+  transactions?: CsvTransaction[];
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Response from CSV upload endpoint
+ */
+export interface CsvUploadResponse {
+  fileId: string;
+  fileName: string;
+  fileSize: number;
+  rowCount: number;
+  transactions: CsvTransaction[];
+}
+
+/**
+ * Request body for CSV parse endpoint
+ */
+export interface CsvParseRequest {
+  fileId: string;
+  importType: 'EXPENSE';
+  context: {
+    calendarId: string;
+  };
+}
