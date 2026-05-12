@@ -6,86 +6,75 @@
 
 import { embed, embedMany } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
-import type { AITokenUsage, EmbeddingMatchResult } from './_types';
+import type { ExpenseCategory } from '@prisma/client';
+import type { AITokenUsage } from './_types';
 
-const GITHUB_MODELS_BASE_URL = 'https://models.inference.ai.azure.com';
+// --- 1. Pure Functions ---
 
-/**
- * Get embedding provider based on AI_PROVIDER environment variable.
- * Mirrors the pattern from ai-vision.service.ts but for embeddings.
- */
-function getEmbeddingProvider() {
-  const provider = process.env.AI_PROVIDER ?? 'github';
-  const modelId = process.env.AI_EMBEDDING_MODEL ?? 'text-embedding-3-small';
-  const apiKey = process.env.AI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('AI_API_KEY is required for embedding service.');
-  }
-
-  const openai = createOpenAI({
-    apiKey,
-    ...(provider === 'github' && { baseURL: GITHUB_MODELS_BASE_URL }),
-  });
-
-  return openai.embedding(modelId);
-}
-
-/**
- * Compute cosine similarity between two vectors.
- * Returns value between -1 and 1 (1 = identical direction).
- */
 export function cosineSimilarity(a: number[], b: number[]): number {
-  if (a.length !== b.length) {
-    throw new Error(`Vector dimension mismatch: ${a.length} vs ${b.length}`);
-  }
+  if (!Array.isArray(a) || !Array.isArray(b)) throw new Error('Inputs must be arrays');
+  if (a.length !== b.length) throw new Error(`Vector dimension mismatch: ${a.length} vs ${b.length}`);
+  if (a.length === 0) return 0;
 
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
+  let dot = 0, normA = 0, normB = 0;
   for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i]! * b[i]!;
+    dot += a[i]! * b[i]!;
     normA += a[i]! * a[i]!;
     normB += b[i]! * b[i]!;
   }
-
   const denominator = Math.sqrt(normA) * Math.sqrt(normB);
   if (denominator === 0) return 0;
-
-  return dotProduct / denominator;
+  return Math.max(-1, Math.min(1, dot / denominator));
 }
 
+function getCategoryFingerprint(categories: ExpenseCategory[]): string {
+  return categories
+    .map((c) => c.name.trim())
+    .sort((a, b) => a.localeCompare(b))
+    .join('|');
+}
+
+// --- 2. Embedding Provider ---
+
+export function getEmbeddingProvider() {
+  const apiKey = process.env.AI_API_KEY;
+  if (!apiKey) throw new Error('AI_API_KEY is required for embedding service.');
+  const provider = process.env.AI_PROVIDER || 'github';
+  const model = process.env.AI_EMBEDDING_MODEL || 'text-embedding-3-small';
+
+  const openai = createOpenAI({
+    apiKey,
+    ...(provider === 'github' && { baseURL: 'https://models.inference.ai.azure.com' }),
+  });
+
+  return openai.embedding(model);
+}
+
+// --- 3. Module-level Cache ---
+
 interface CachedEmbeddings {
-  fingerprint: string; // sorted category names joined — detects changes
-  embeddings: Map<string, number[]>; // categoryName → embedding vector
+  fingerprint: string;
+  embeddings: Map<string, number[]>; // categoryName -> vector
 }
 
 let cachedEmbeddings: CachedEmbeddings | null = null;
 let initializationPromise: Promise<AITokenUsage> | null = null;
 
-/**
- * Generate a fingerprint from category names to detect when
- * the category list has changed (requires re-embedding).
- */
-function getCategoryFingerprint(categories: string[]): string {
-  return [...categories].sort().join('|');
-}
+// --- 4. Ensure Category Embeddings ---
 
-/**
- * Embed all category names and cache the results.
- * Uses a Promise lock to prevent parallel embedMany() calls.
- *
- * Returns token usage for AIUsageLog tracking.
- */
 export async function ensureCategoryEmbeddings(
-  categoryNames: string[],
+  categories: ExpenseCategory[]
 ): Promise<AITokenUsage> {
-  const fingerprint = getCategoryFingerprint(categoryNames);
+  const fingerprint = getCategoryFingerprint(categories);
 
   // Cache hit — categories haven't changed
   if (cachedEmbeddings?.fingerprint === fingerprint) {
-    return { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+    return {
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      estimatedCostUSD: 0,
+    };
   }
 
   // Concurrency lock — if another request is already initializing, await it
@@ -96,6 +85,8 @@ export async function ensureCategoryEmbeddings(
   initializationPromise = (async () => {
     try {
       const model = getEmbeddingProvider();
+
+      const categoryNames = categories.map((c) => c.name);
 
       const { embeddings, usage } = await embedMany({
         model,
@@ -109,10 +100,15 @@ export async function ensureCategoryEmbeddings(
 
       cachedEmbeddings = { fingerprint, embeddings: embeddingMap };
 
+      const promptTokens = usage?.tokens ?? 0;
+      const totalTokens = usage?.tokens ?? 0;
+      const estimatedCostUSD = Number(((totalTokens / 1_000_000) * 0.02).toFixed(6));
+
       return {
-        promptTokens: usage?.tokens ?? 0,
+        promptTokens,
         completionTokens: 0,
-        totalTokens: usage?.tokens ?? 0,
+        totalTokens,
+        estimatedCostUSD,
       };
     } finally {
       initializationPromise = null;
@@ -131,79 +127,82 @@ function getSimilarityThreshold(): number {
   const parsed = parseFloat(envThreshold);
   if (isNaN(parsed) || parsed < 0 || parsed > 1) {
     console.warn(
-      `Invalid AI_EMBEDDING_SIMILARITY_THRESHOLD: "${envThreshold}". Using default ${DEFAULT_SIMILARITY_THRESHOLD}.`,
+      `Invalid AI_EMBEDDING_SIMILARITY_THRESHOLD: "${envThreshold}". Using default ${DEFAULT_SIMILARITY_THRESHOLD}.`
     );
     return DEFAULT_SIMILARITY_THRESHOLD;
   }
   return parsed;
 }
 
-/**
- * Embed a single extracted category name and find the best matching
- * category from the cached embeddings using cosine similarity.
- *
- * Returns the match result and token usage.
- */
-export async function findBestEmbeddingMatch(
-  extractedName: string,
-): Promise<{ match: EmbeddingMatchResult; usage: AITokenUsage }> {
-  if (!cachedEmbeddings) {
-    throw new Error(
-      'Category embeddings not initialized. Call ensureCategoryEmbeddings() first.',
-    );
-  }
+// --- 5. Find Best Category Match ---
+
+export async function findBestCategoryMatch(
+  text: string,
+  categories: ExpenseCategory[]
+): Promise<{ category: ExpenseCategory; similarity: number } | null> {
+  if (!categories || categories.length === 0) return null;
+
+  await ensureCategoryEmbeddings(categories);
 
   const model = getEmbeddingProvider();
-  const { embedding, usage } = await embed({
+  const { embedding } = await embed({
     model,
-    value: extractedName,
+    value: text,
   });
 
   const threshold = getSimilarityThreshold();
-  let bestMatch: string | null = null;
+  let bestMatch: ExpenseCategory | null = null;
   let bestScore = 0;
 
-  for (const [categoryName, categoryEmbedding] of cachedEmbeddings.embeddings) {
-    const similarity = cosineSimilarity(embedding, categoryEmbedding);
-    if (similarity > bestScore) {
-      bestScore = similarity;
-      bestMatch = categoryName;
+  if (cachedEmbeddings) {
+    for (const category of categories) {
+      const categoryEmbedding = cachedEmbeddings.embeddings.get(category.name);
+      if (!categoryEmbedding) continue;
+
+      const similarity = cosineSimilarity(embedding, categoryEmbedding);
+      if (similarity > bestScore) {
+        bestScore = similarity;
+        bestMatch = category;
+      }
     }
   }
 
-  const tokenUsage: AITokenUsage = {
-    promptTokens: usage?.tokens ?? 0,
-    completionTokens: 0,
-    totalTokens: usage?.tokens ?? 0,
-  };
-
   if (bestMatch && bestScore >= threshold) {
-    return {
-      match: {
-        matched: true,
-        categoryName: bestMatch,
-        similarity: bestScore,
-        method: 'embedding',
-      },
-      usage: tokenUsage,
-    };
+    return { category: bestMatch, similarity: bestScore };
   }
 
-  return {
-    match: {
-      matched: false,
-      categoryName: null,
-      similarity: bestScore,
-      method: 'embedding',
-    },
-    usage: tokenUsage,
-  };
+  return null;
 }
 
-/**
- * Clear the cached embeddings. Used in tests and for future
- * admin-triggered cache invalidation.
- */
+// --- 6. Find Best Category Match With Retry ---
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function findBestCategoryMatchWithRetry(
+  text: string,
+  categories: ExpenseCategory[],
+  maxRetries: number = 3
+): Promise<{ category: ExpenseCategory; similarity: number } | null> {
+  const backoffs = [1000, 2000, 4000];
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await findBestCategoryMatch(text, categories);
+    } catch (error: any) {
+      const isRetryable =
+        error?.code === 'ETIMEDOUT' ||
+        error?.status === 429 ||
+        error?.status === 500;
+      if (!isRetryable || attempt >= maxRetries) return null;
+      await sleep(backoffs[attempt] || 4000);
+    }
+  }
+  return null;
+}
+
+// --- 7. Clear Embedding Cache ---
+
 export function clearEmbeddingCache(): void {
   cachedEmbeddings = null;
   initializationPromise = null;

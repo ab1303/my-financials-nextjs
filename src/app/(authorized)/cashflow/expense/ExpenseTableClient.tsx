@@ -9,7 +9,7 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { List, Upload } from 'lucide-react';
+import { List, Upload, FileText } from 'lucide-react';
 
 import Table from '@/components/table';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import AIUsageCard from '@/components/AIUsageCard';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
 import AIImportWizard from './_components/ai-import/AIImportWizard';
+import CSVImportWizard from './_components/csv-import/CSVImportWizard';
 
 const columnHelper = createColumnHelper<MonthlyExpenseSummary>();
 
@@ -40,6 +41,7 @@ export default function ExpenseTableClient({
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [isImportWizardOpen, setIsImportWizardOpen] = useState(false);
+  const [isCSVImportWizardOpen, setIsCSVImportWizardOpen] = useState(false);
 
   const columns = [
     columnHelper.accessor('month', {
@@ -98,7 +100,7 @@ export default function ExpenseTableClient({
 
   return (
     <>
-      {/* AI Import Button + AI Usage Card */}
+      {/* Import Buttons + AI Usage Card */}
       <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
         <AIUsageCard
           importType='EXPENSE'
@@ -106,10 +108,19 @@ export default function ExpenseTableClient({
           dateTo={dateTo}
           dateLabel={calendarLabel}
         />
-        <Button variant='default' onClick={() => setIsImportWizardOpen(true)}>
-          <Upload className='h-4 w-4' />
-          AI Import
-        </Button>
+        <div className='flex gap-2'>
+          <Button
+            variant='default'
+            onClick={() => setIsCSVImportWizardOpen(true)}
+          >
+            <FileText className='h-4 w-4' />
+            CSV Import
+          </Button>
+          <Button variant='default' onClick={() => setIsImportWizardOpen(true)}>
+            <Upload className='h-4 w-4' />
+            AI Import
+          </Button>
+        </div>
       </div>
 
       <div className='overflow-x-auto'>
@@ -199,6 +210,14 @@ export default function ExpenseTableClient({
       <AIImportWizard
         isOpen={isImportWizardOpen}
         onClose={() => setIsImportWizardOpen(false)}
+        calendarYearId={calendarYearId}
+        onImportComplete={() => router.refresh()}
+      />
+
+      {/* CSV Import Wizard Modal */}
+      <CSVImportWizard
+        isOpen={isCSVImportWizardOpen}
+        onClose={() => setIsCSVImportWizardOpen(false)}
         calendarYearId={calendarYearId}
         onImportComplete={() => router.refresh()}
       />

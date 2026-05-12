@@ -78,7 +78,7 @@ export async function mapExpenseData(
         const { categoryName: matchedCategory, embeddingUsage: entryEmbeddingUsage } =
           await matchCategoryWithEmbedding(
             entry.categoryName,
-            availableCategories,
+            categories,
           );
 
         // Accumulate embedding tokens

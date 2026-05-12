@@ -137,7 +137,7 @@ export function matchCategories(
 
 import {
   ensureCategoryEmbeddings,
-  findBestEmbeddingMatch,
+  findBestCategoryMatch,
 } from './embedding.service';
 import type { AITokenUsage } from './_types';
 
@@ -149,7 +149,7 @@ import type { AITokenUsage } from './_types';
  */
 export async function matchCategoryWithEmbedding(
   extractedName: string,
-  availableCategories: string[],
+  availableCategories: { name: string; id: string; createdAt: Date; iconName: string | null; isActive: boolean }[],
 ): Promise<{
   categoryName: string | null;
   embeddingUsage: AITokenUsage;
@@ -163,20 +163,20 @@ export async function matchCategoryWithEmbedding(
 
   // Strategy 1: Exact match (case-insensitive) — instant, no API call
   const exactMatch = availableCategories.find(
-    (cat) => cat.toLowerCase() === normalized,
+    (cat) => cat.name.toLowerCase() === normalized,
   );
   if (exactMatch) {
-    return { categoryName: exactMatch, embeddingUsage: zeroUsage };
+    return { categoryName: exactMatch.name, embeddingUsage: zeroUsage };
   }
 
   // Strategy 2: Substring match — instant, no API call
   const substringMatch = availableCategories.find(
     (cat) =>
-      normalized.includes(cat.toLowerCase()) ||
-      cat.toLowerCase().includes(normalized),
+      normalized.includes(cat.name.toLowerCase()) ||
+      cat.name.toLowerCase().includes(normalized),
   );
   if (substringMatch) {
-    return { categoryName: substringMatch, embeddingUsage: zeroUsage };
+    return { categoryName: substringMatch.name, embeddingUsage: zeroUsage };
   }
 
   // Strategy 3: Embedding cosine similarity
@@ -184,20 +184,21 @@ export async function matchCategoryWithEmbedding(
     // Ensure category embeddings are cached (no-op if already cached)
     const cacheUsage = await ensureCategoryEmbeddings(availableCategories);
 
-    const { match, usage: queryUsage } =
-      await findBestEmbeddingMatch(extractedName);
+    const categoryNames = availableCategories.map((c) => c.name);
+    const result = await findBestCategoryMatch(extractedName, availableCategories);
 
-    const totalUsage: AITokenUsage = {
-      promptTokens: cacheUsage.promptTokens + queryUsage.promptTokens,
-      completionTokens: 0,
-      totalTokens: cacheUsage.totalTokens + queryUsage.totalTokens,
-    };
-
-    if (match.matched && match.categoryName) {
-      return { categoryName: match.categoryName, embeddingUsage: totalUsage };
+    if (!result) {
+      // No match found above threshold
+      return { categoryName: null, embeddingUsage: cacheUsage };
     }
 
-    return { categoryName: null, embeddingUsage: totalUsage };
+    const totalUsage: AITokenUsage = {
+      promptTokens: cacheUsage.promptTokens,
+      completionTokens: 0,
+      totalTokens: cacheUsage.totalTokens,
+    };
+
+    return { categoryName: result.category.name, embeddingUsage: totalUsage };
   } catch (error) {
     // Graceful degradation: fall back to Levenshtein fuzzy matching
     console.warn(
@@ -205,8 +206,11 @@ export async function matchCategoryWithEmbedding(
       error instanceof Error ? error.message : error,
     );
 
-    const fuzzyMatch = matchCategory(extractedName, availableCategories);
-    return { categoryName: fuzzyMatch, embeddingUsage: zeroUsage };
+    const fuzzyMatch = matchCategory(
+      extractedName,
+      availableCategories.map((c) => c.name),
+    );
+    return { categoryName: fuzzyMatch, embeddingUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } };
   }
 }
 

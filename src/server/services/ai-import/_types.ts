@@ -47,6 +47,7 @@ export interface AITokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+  estimatedCostUSD?: number;
 }
 
 export interface AIExtractionResponse {
