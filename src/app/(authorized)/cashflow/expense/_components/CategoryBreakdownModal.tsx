@@ -6,6 +6,7 @@ import { NumericFormat } from 'react-number-format';
 import Select from 'react-select';
 import { getSelectStyles } from '@/lib/select-styles';
 import clsx from 'clsx';
+import { cn } from '@/lib/utils';
 
 import { Card } from '@/components';
 import { Modal, Label } from '@/components/ui';
@@ -239,14 +240,18 @@ function CategoryBreakdownContent({
                   styles={{
                     ...getSelectStyles<OptionType>(),
                     menuPortal: (base) =>
-                      ({ ...base, zIndex: 9999 }) as typeof base,
+                      ({
+                        ...base,
+                        zIndex: 9999,
+                        pointerEvents: 'auto',
+                      }) as typeof base,
                   }}
                 />
               </div>
               <div className='col-span-4'>
                 <Label className='text-xs text-gray-600 mb-1'>Amount $</Label>
                 <NumericFormat
-                  className={inputStyles.base}
+                  className={cn(inputStyles.base, 'bg-white')}
                   prefix='$'
                   displayType='input'
                   thousandSeparator
@@ -325,13 +330,17 @@ function CategoryBreakdownContent({
                             styles={{
                               ...getSelectStyles<OptionType>(),
                               menuPortal: (base) =>
-                                ({ ...base, zIndex: 9999 }) as typeof base,
+                                ({
+                                  ...base,
+                                  zIndex: 9999,
+                                  pointerEvents: 'auto',
+                                }) as typeof base,
                             }}
                           />
                         </div>
                         <div className='col-span-4'>
                           <NumericFormat
-                            className={inputStyles.base}
+                            className={cn(inputStyles.base, 'bg-white')}
                             prefix='$'
                             displayType='input'
                             thousandSeparator

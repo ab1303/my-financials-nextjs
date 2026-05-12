@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader as ShadcnDialogHeader,
   DialogFooter as ShadcnDialogFooter,
+  DialogTitle,
 } from '@/components/ui/dialog';
 
 type ModalRootProps = {
@@ -43,7 +44,14 @@ const Header = ({
   children: ReactNode;
   className?: string;
 }) => (
-  <div className={cn('pb-4 border-b border-border', className)}>{children}</div>
+  <DialogTitle
+    className={cn(
+      'pb-4 border-b border-border text-base font-normal leading-normal tracking-normal',
+      className,
+    )}
+  >
+    {children}
+  </DialogTitle>
 );
 
 const Body = ({

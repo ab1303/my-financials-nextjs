@@ -1,9 +1,11 @@
 # Low Level Design: Semantic Embedding-based Category Matching
 
-> **Version**: 1.0
-> **Date**: 2026-04-02
+> **Version**: 1.1
+> **Date**: 2026-05-12
 > **Status**: Draft
 > **Parent**: [Semantic Category Matching HLD](./semantic-category-matching-hld.md)
+
+> **Context update**: The embedding service described here is a shared backend component invoked by two pipelines — (A) the existing AI Image Import pipeline (`/api/ai-import/parse`) and (B) the new CSV/OFX Import pipeline (`/api/csv-import/parse`). The implementation details in sections 1–5 are identical for both paths. Section 6 covers parse route integration for both.
 
 ---
 
@@ -493,9 +495,23 @@ export function calculateEmbeddingCost(tokens: number): number {
 
 ## 6. Parse Route Changes
 
-### File: `src/app/api/ai-import/parse/route.ts`
+The same embedding token logging pattern applies to **both** parse routes.
+
+### 6.1 File: `src/app/api/ai-import/parse/route.ts` (AI Image Import)
 
 After the existing `mapExpenseData()` call, log embedding tokens to `AIUsageLog`:
+
+### 6.2 File: `src/app/api/csv-import/parse/route.ts` (CSV / OFX Import — new)
+
+This is a new route (not yet implemented). It will:
+
+1. Parse the uploaded CSV or OFX file into a list of `{ merchantDescription: string, amount: number, date: string }` entries
+2. Call `mapExpenseData()` with merchant descriptions as the category input (same service as image import path)
+3. Log embedding token usage to `AIUsageLog` using the same pattern below
+
+> The key difference from the image path: inputs are raw merchant strings from the CSV `MEMO`/description column, **not** GPT-4o-extracted category labels. The embedding service handles both identically.
+
+### 6.3 Shared Logging Pattern (both routes)
 
 ```typescript
 // After mapping completes and vision usage is already logged:
@@ -615,7 +631,9 @@ vi.mock('ai', () => ({
 | `src/server/services/ai-import/expense-mapper.service.ts`   | **Modified** — update import, add async matching, return `embeddingUsage`                                      | ~15                  |
 | `src/server/services/ai-import/_types.ts`                   | **Modified** — add `EmbeddingMatchResult` interface                                                            | ~12                  |
 | `src/constants/ai-pricing.ts`                               | **Modified** — add embedding pricing constants                                                                 | ~15                  |
-| `src/app/api/ai-import/parse/route.ts`                      | **Modified** — log embedding tokens to `AIUsageLog`                                                            | ~15                  |
+| `src/app/api/ai-import/parse/route.ts`                      | **Modified** — log embedding tokens to `AIUsageLog` (image import path)                                        | ~15                  |
+| `src/app/api/csv-import/parse/route.ts`                     | **New** — CSV/OFX parse route; calls `expense-mapper` with merchant descriptions; logs embedding token usage   | ~120                 |
+| `src/app/api/csv-import/upload/route.ts`                    | **New** — CSV/OFX file upload endpoint (validates CSV/OFX MIME types)                                          | ~60                  |
 | `.env-example`                                              | **Modified** — add 2 new env vars                                                                              | ~8                   |
 | `src/__tests__/services/embedding.service.test.ts`          | **New**                                                                                                        | ~80                  |
 | `src/__tests__/services/category-matcher.test.ts`           | **New/Modified**                                                                                               | ~60                  |

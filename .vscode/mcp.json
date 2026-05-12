@@ -1,39 +1,32 @@
 {
-  "servers": {
-    "Prisma-Local": {
-      "command": "npx",
-      "args": ["-y", "prisma", "mcp"],
-      "type": "stdio"
-    },
-    "postgres": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "mcp/postgres", "${input:pg_url}"],
-      "type": "stdio"
-    },
-    "my-financials": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-postgres",
-        "postgresql://postgres:postgres@host.docker.internal:5432/financials"
-      ],
-      "type": "stdio"
-    },
-    "playwright": {
-      "command": "playwright-mcp",
-      "type": "stdio"
-    },
-    "next-devtools": {
-      "command": "npx",
-      "args": ["-y", "next-devtools-mcp@latest"],
-      "type": "stdio"
-    }
-  },
   "inputs": [
     {
       "type": "promptString",
       "id": "pg_url",
-      "description": "PostgreSQL URL (e.g. postgresql://user:pass@host.docker.internal:5432/mydb)"
+      "description": "PostgreSQL URL (e.g. postgresql://postgres:postgres@host.docker.internal:5432/financials)"
     }
-  ]
+  ],
+  "servers": {
+    "my-financials": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "mcp/postgres",
+        "postgresql://postgres:postgres@host.docker.internal:5432/financials"
+      ],
+      "type": "stdio"
+    },
+    "MCP_DOCKER": {
+      "command": "docker",
+      "args": ["mcp", "gateway", "run"],
+      "env": {
+        "LOCALAPPDATA": "C:\\Users\\1454667\\AppData\\Local",
+        "ProgramData": "C:\\ProgramData",
+        "ProgramFiles": "C:\\Program Files"
+      },
+      "type": "stdio"
+    }
+  }
 }

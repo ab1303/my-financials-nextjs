@@ -40,6 +40,9 @@ yarn-error.log*
 .env
 .env*.local
 
+# MCP config (contains local credentials)
+.vscode/mcp.json
+
 # vercel
 .vercel
 

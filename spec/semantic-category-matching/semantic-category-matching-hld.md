@@ -1,15 +1,32 @@
 # High Level Design: Semantic Embedding-based Category Matching
 
-> **Version**: 1.0  
-> **Date**: 2026-04-02  
+> **Version**: 1.1  
+> **Date**: 2026-05-12  
 > **Status**: Draft  
-> **Depends on**: [AI Image Import PRD](../ai-image-import/ai-image-import-prd.md), [AI Usage Logging HLD](../ai-usage-logging/ai-usage-logging-hld.md)
+> **Related**: [AI Image Import PRD](../ai-image-import/ai-image-import-prd.md), [AI Usage Logging HLD](../ai-usage-logging/ai-usage-logging-hld.md)
 
 ---
 
 ## 1. Problem Statement
 
-The AI Image Import feature extracts expense category names from banking app screenshots using GPT-4o vision. After extraction, `matchCategoryWithSemantics()` in `src/server/services/ai-import/category-matcher.service.ts` maps these free-text labels to the application's `ExpenseCategory` records.
+### 1.1 Original Context: AI Image Import
+
+The AI Image Import feature was designed to extract expense category names from banking app screenshots using GPT-4o vision. After extraction, `matchCategoryWithSemantics()` in `src/server/services/ai-import/category-matcher.service.ts` maps these free-text labels to the application's `ExpenseCategory` records.
+
+### 1.2 Updated Context: CSV / OFX Transaction Import (Primary Path)
+
+CommBank (and other banking apps) enforce `FLAG_SECURE` / screenshot restrictions in their native apps, blocking the image import approach for spending summaries. The practical alternative is exporting transaction history as **CSV or OFX files** from the bank's web interface.
+
+However, CSV/OFX exports contain **raw merchant transaction descriptions** (e.g. `"WOOLWORTHS 1294 HORNSBY NS AUS Card xx5441"`, `"CHEMIST WAREHOUSE HORNSBY NS"`, `"TRANSPORTFORNSW TAP SYDNEY"`) — **not** pre-labelled category names. There is no category column in the exported data.
+
+The semantic matching layer therefore serves two input paths:
+
+| Input Source                  | Input Type                       | Example Input                                                    | Expected Category |
+| ----------------------------- | -------------------------------- | ---------------------------------------------------------------- | ----------------- |
+| AI Image Import (screenshots) | Extracted category label         | `"chemist"`, `"dining"`                                          | Healthcare, Food  |
+| CSV / OFX Import              | Merchant transaction description | `"CHEMIST WAREHOUSE HORNSBY NS"`, `"WOOLWORTHS 1294 HORNSBY NS"` | Healthcare, Food  |
+
+Both paths feed into the same embedding-based matching engine. The CSV/OFX path is the **primary use case** for CommBank users.
 
 **Current implementation limitations:**
 
@@ -22,6 +39,8 @@ The AI Image Import feature extracts expense category names from banking app scr
 
 **Example failures with current system:**
 
+_From AI Image Import (screenshot-extracted labels):_
+
 | Extracted Term | Expected Category     | Actual Result         |
 | -------------- | --------------------- | --------------------- |
 | `"chemist"`    | Healthcare            | ❌ No match → "Other" |
@@ -30,6 +49,19 @@ The AI Image Import feature extracts expense category names from banking app scr
 | `"childcare"`  | Education             | ❌ No match → "Other" |
 | `"strata"`     | Housing               | ❌ No match → "Other" |
 | `"Netflix"`    | Entertainment         | ❌ No match → "Other" |
+
+_From CSV / OFX Import (raw merchant descriptions):_
+
+| Merchant Description                           | Expected Category | Actual Result         |
+| ---------------------------------------------- | ----------------- | --------------------- |
+| `"WOOLWORTHS 1294 HORNSBY NS AUS Card xx5441"` | Food              | ❌ No match → "Other" |
+| `"CHEMIST WAREHOUSE HORNSBY NS"`               | Healthcare        | ❌ No match → "Other" |
+| `"TRANSPORTFORNSW TAP SYDNEY"`                 | Transportation    | ❌ No match → "Other" |
+| `"TPG INTERNET PTY LTD NORTH RYDE"`            | Utilities         | ❌ No match → "Other" |
+| `"DEFT PAYMENTS DEFT 28408579"`                | Housing           | ❌ No match → "Other" |
+| `"FLEXISCHOOLS*ACC TOPUP"`                     | Education         | ❌ No match → "Other" |
+| `"MICROSOFT*XBOX MSBILL.INFO AU"`              | Entertainment     | ❌ No match → "Other" |
+| `"ALLIANZ INSURE C1 SYDNEY NS"`                | Insurance         | ❌ No match → "Other" |
 
 ## 2. Goals
 
@@ -54,26 +86,37 @@ The AI Image Import feature extracts expense category names from banking app scr
 
 ## 4. Architecture Overview
 
+Two input pipelines feed the shared Embedding Layer. The CSV/OFX pipeline is the primary path for CommBank users where screenshot capture is blocked.
+
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    AI Image Import Pipeline                         │
-│                                                                     │
-│  ┌──────────────┐   ┌──────────────────┐   ┌────────────────────┐  │
-│  │  Upload API  │──▶│  Parse Route     │──▶│  Expense Mapper    │  │
-│  │  /api/ai-    │   │  /api/ai-        │   │  Service           │  │
-│  │  import/     │   │  import/parse    │   │                    │  │
-│  │  upload      │   │                  │   │  mapExpenseData()  │  │
-│  └──────────────┘   │ extractExpense() │   │         │          │  │
-│                     │       │          │   │         ▼          │  │
-│                     │       ▼          │   │ ┌──────────────┐   │  │
-│                     │  GPT-4o Vision   │   │ │  REPLACED:   │   │  │
-│                     │  → entries[]     │   │ │  matchWith   │   │  │
-│                     └──────────────────┘   │ │  Embedding() │   │  │
-│                                            │ └──────┬───────┘   │  │
-│                                            └────────┼───────────┘  │
-│                                                     │              │
+┌──────────────────────────────────────────────────────────────────────┐
+│              Path A: AI Image Import Pipeline                        │
+│              (screenshots, where permitted by banking app)           │
+│                                                                      │
+│  ┌──────────────┐   ┌──────────────────┐   ┌────────────────────┐   │
+│  │  Upload API  │──▶│  Parse Route     │──▶│  Expense Mapper    │   │
+│  │  /api/ai-    │   │  /api/ai-        │   │  mapExpenseData()  │   │
+│  │  import/     │   │  import/parse    │   │         │          │   │
+│  │  upload      │   │  GPT-4o Vision   │   │         ▼          │   │
+│  └──────────────┘   │  → entries[]     │   │  matchWithEmbed()  │   │
+│                     └──────────────────┘   └────────┬───────────┘   │
+└────────────────────────────────────────────────────┼───────────────┘
+                                                     │
+┌────────────────────────────────────────────────────┼───────────────┐
+│              Path B: CSV / OFX Import Pipeline      │               │
+│              (primary path for CommBank — no screenshot needed)     │
+│                                                                      │
+│  ┌──────────────┐   ┌──────────────────┐   ┌────────────────────┐   │
+│  │  Upload API  │──▶│  Parse Route     │──▶│  Expense Mapper    │   │
+│  │  /api/csv-   │   │  /api/csv-       │   │  mapExpenseData()  │   │
+│  │  import/     │   │  import/parse    │   │         │          │   │
+│  │  upload      │   │  CSV/OFX parser  │   │         ▼          │   │
+│  └──────────────┘   │  → transactions[]│   │  matchWithEmbed()  │   │
+│                     └──────────────────┘   └────────┬───────────┘   │
+└────────────────────────────────────────────────────┼───────────────┘
+                                                     │
 │  ┌──────────────────────────────────────────────────┼────────────┐ │
-│  │              Embedding Layer (NEW)                │            │ │
+│  │              Embedding Layer (SHARED)             │            │ │
 │  │                                                   ▼            │ │
 │  │  ┌────────────────────┐    ┌─────────────────────────────┐    │ │
 │  │  │ Category Embedding │    │  Embedding Matching Engine  │    │ │
@@ -115,7 +158,8 @@ The AI Image Import feature extracts expense category names from banking app scr
 | `src/server/services/ai-import/expense-mapper.service.ts`   | Update import from `matchCategoryWithSemantics` → `matchCategoryWithEmbedding`; make matching call `await`-ed (now async)                                                          |
 | `src/server/services/ai-import/_types.ts`                   | Add `EmbeddingMatchResult` interface for structured match results with similarity score                                                                                            |
 | `src/constants/ai-pricing.ts`                               | Add `text-embedding-3-small` pricing constants (`EMBEDDING_INPUT_COST_PER_TOKEN`)                                                                                                  |
-| `src/app/api/ai-import/parse/route.ts`                      | Accumulate and log embedding token usage alongside vision token usage in `AIUsageLog`                                                                                              |
+| `src/app/api/ai-import/parse/route.ts`                      | Accumulate and log embedding token usage alongside vision token usage in `AIUsageLog` (image import path)                                                                          |
+| `src/app/api/csv-import/parse/route.ts`                     | New route for CSV/OFX import — calls `expense-mapper` with parsed merchant descriptions; logs embedding token usage                                                                |
 | `.env-example`                                              | Document new optional env vars: `AI_EMBEDDING_MODEL`, `AI_EMBEDDING_SIMILARITY_THRESHOLD`                                                                                          |
 
 ### 5.3 No New UI Components
@@ -144,28 +188,33 @@ First import request after server start (or after cache invalidation):
 ### 6.2 Per-Entry Matching (During Import)
 
 ```
-For each extracted expense entry from GPT-4o vision output:
-  → matchCategoryWithEmbedding(extractedName, availableCategories)
+Input: either (A) category label from GPT-4o vision, or (B) raw merchant description from CSV/OFX
+  → matchCategoryWithEmbedding(inputText, availableCategories)
 
   Tiered strategy:
-  ┌─────────────────────────────────────────────────────────────┐
-  │ Priority 1: Exact match (case-insensitive)        < 1ms    │
-  │   "Food" → "Food"  ✓                                       │
-  ├─────────────────────────────────────────────────────────────┤
-  │ Priority 2: Substring match (bidirectional)        < 1ms   │
-  │   "Food & Drink" → "Food"  ✓                               │
-  ├─────────────────────────────────────────────────────────────┤
-  │ Priority 3: Embedding cosine similarity          50-150ms   │
-  │   embed(extractedName) via AI SDK                           │
-  │   Compare against all cached category embeddings            │
-  │   Best match with similarity ≥ threshold → return           │
-  │   "chemist" → "Healthcare" (similarity: 0.82)  ✓           │
-  ├─────────────────────────────────────────────────────────────┤
-  │ Priority 4: Fallback to "Other"                    < 1ms   │
-  │   No match above threshold → return null                    │
-  │   expense-mapper assigns "Other" category                   │
-  └─────────────────────────────────────────────────────────────┘
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ Priority 1: Exact match (case-insensitive)               < 1ms     │
+  │   "Food" → "Food"  ✓  (image path only — CSV never gives exact)   │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Priority 2: Substring match (bidirectional)               < 1ms    │
+  │   "Food & Drink" → "Food"  ✓                                       │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Priority 3: Embedding cosine similarity                 50-150ms   │
+  │   embed(inputText) via AI SDK                                       │
+  │   Compare against all cached category embeddings                    │
+  │   Best match with similarity ≥ threshold → return                   │
+  │   "chemist" → "Healthcare" (0.82)  ✓  (image path)                 │
+  │   "CHEMIST WAREHOUSE HORNSBY NS" → "Healthcare" (0.79)  ✓  (CSV)  │
+  │   "TRANSPORTFORNSW TAP SYDNEY" → "Transportation" (0.81)  ✓  (CSV)│
+  │   "DEFT PAYMENTS DEFT 28408579" → "Housing" (0.76)  ✓  (CSV)      │
+  ├─────────────────────────────────────────────────────────────────────┤
+  │ Priority 4: Fallback to "Other"                           < 1ms    │
+  │   No match above threshold → return null                            │
+  │   expense-mapper assigns "Other" category                           │
+  └─────────────────────────────────────────────────────────────────────┘
 ```
+
+> **Note — CSV merchant descriptions vs category names**: Raw merchant names like `"WOOLWORTHS 1294 HORNSBY NS AUS Card xx5441"` contain location/card noise. The embedding model handles this well because `text-embedding-3-small` encodes semantic meaning, not surface patterns. In practice, `"WOOLWORTHS"` embeds closest to `"Food"` regardless of trailing location/card text.
 
 ### 6.3 Error / Degradation Flow
 
