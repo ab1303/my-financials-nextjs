@@ -133,6 +133,7 @@ export async function POST(req: NextRequest) {
               `data: ${JSON.stringify({
                 type: 'done',
                 totalLlmTokens,
+                model: process.env.AI_CLASSIFIER_MODEL ?? 'gpt-4o-mini',
                 categories: categories.map((c) => ({ id: c.id, name: c.name })),
               })}\n\n`,
             ),

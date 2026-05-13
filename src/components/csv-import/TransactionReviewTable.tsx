@@ -67,13 +67,23 @@ export interface ClassifiedMonth {
 export interface TransactionReviewTableProps {
   months: ClassifiedMonth[];
   categories: Array<{ id: string; name: string }>;
+  llmModel: string;
   onConfirm: (months: ClassifiedMonth[]) => Promise<void>;
   isConfirming: boolean;
+}
+
+// GPT-4o-mini: $0.15/1M input, $0.60/1M output tokens
+// Conservative: treat all tokens as input price for a safe ceiling estimate
+function estimateCostUSD(totalTokens: number, model: string): string {
+  const pricePerMillion = model.includes('gpt-4o-mini') ? 0.60 : model.includes('gpt-4o') ? 15.0 : 0.60;
+  const cost = (totalTokens / 1_000_000) * pricePerMillion;
+  return cost < 0.01 ? '<$0.01' : `~$${cost.toFixed(3)}`;
 }
 
 export default function TransactionReviewTable({
   months: initialMonths,
   categories,
+  llmModel,
   onConfirm,
   isConfirming,
 }: TransactionReviewTableProps) {
@@ -123,19 +133,6 @@ export default function TransactionReviewTable({
     [],
   );
 
-  const handleAcceptAll = useCallback(() => {
-    setMonths((prev) =>
-      prev.map((m) => ({
-        ...m,
-        transactions: m.transactions.map((t) => ({
-          ...t,
-          confirmedCategory: t.llmCategory,
-          overridden: false,
-        })),
-      })),
-    );
-  }, []);
-
   const handleConfirm = useCallback(async () => {
     await onConfirm(months);
   }, [months, onConfirm]);
@@ -157,9 +154,9 @@ export default function TransactionReviewTable({
   };
 
   return (
-    <div className='space-y-6'>
-      {/* Header with stats */}
-      <div className='flex items-center justify-between'>
+    <div className='flex h-full min-h-0 flex-col'>
+      {/* Header — fixed */}
+      <div className='mb-4 flex flex-shrink-0 items-start justify-between'>
         <div>
           <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
             Review Classifications
@@ -169,19 +166,22 @@ export default function TransactionReviewTable({
             {totalOverrides} changes applied
           </p>
         </div>
-        <div className='text-right text-xs text-gray-500 dark:text-gray-400'>
-          <p>Tokens: {totalUsage.totalTokens}</p>
+        <div className='space-y-0.5 text-right text-xs text-gray-500 dark:text-gray-400'>
+          <p className='font-medium text-gray-700 dark:text-gray-300'>{llmModel}</p>
+          <p>{totalUsage.totalTokens.toLocaleString()} tokens used</p>
+          <p className='text-teal-600 dark:text-teal-400'>
+            Est. cost: {estimateCostUSD(totalUsage.totalTokens, llmModel)}
+          </p>
         </div>
       </div>
 
-      {/* Month sections */}
-      <div className='space-y-4'>
+      {/* Month sections — scrollable */}
+      <div className='min-h-0 flex-1 space-y-4 overflow-y-auto pr-1'>
         {months.map((month, monthIdx) => (
           <div
             key={month.month}
             className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'
           >
-            {/* Month header */}
             <button
               onClick={() => handleToggleMonth(month.month)}
               className='flex w-full items-center justify-between bg-gray-50 px-4 py-3 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700'
@@ -202,7 +202,6 @@ export default function TransactionReviewTable({
               </span>
             </button>
 
-            {/* Month content */}
             {expandedMonths.has(month.month) && (
               <div className='overflow-x-auto'>
                 <table className='w-full min-w-[600px]'>
@@ -243,10 +242,7 @@ export default function TransactionReviewTable({
                             {isLikelyUnknownMerchant(tx.description) && (
                               <AlertCircle className='h-4 w-4 flex-shrink-0 text-amber-500' />
                             )}
-                            <span
-                              className='truncate font-medium'
-                              title={tx.description}
-                            >
+                            <span className='truncate font-medium' title={tx.description}>
                               {tx.description}
                             </span>
                           </div>
@@ -265,7 +261,6 @@ export default function TransactionReviewTable({
                             }
                             className='w-full min-w-[140px] rounded border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
                           >
-                            {/* fallback option when confirmedCategory not in list */}
                             {!categories.some((c) => c.name === tx.confirmedCategory) && (
                               <option value={tx.confirmedCategory}>{tx.confirmedCategory}</option>
                             )}
@@ -286,23 +281,15 @@ export default function TransactionReviewTable({
         ))}
       </div>
 
-      {/* Action buttons */}
-      <div className='flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700'>
-        <button
-          onClick={handleAcceptAll}
-          disabled={isConfirming}
-          className='rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-        >
-          Accept All
-        </button>
-
+      {/* Action button — always visible, never scrolls away */}
+      <div className='flex flex-shrink-0 items-center justify-end border-t border-gray-200 pt-4 mt-4 dark:border-gray-700'>
         <button
           onClick={handleConfirm}
           disabled={isConfirming}
           className='flex items-center space-x-2 rounded bg-teal-600 px-6 py-2 font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50'
         >
           {isConfirming && <Loader2 className='h-4 w-4 animate-spin' />}
-          <span>{isConfirming ? 'Saving...' : 'Confirm & Save'}</span>
+          <span>{isConfirming ? 'Saving…' : 'Confirm & Import'}</span>
         </button>
       </div>
     </div>

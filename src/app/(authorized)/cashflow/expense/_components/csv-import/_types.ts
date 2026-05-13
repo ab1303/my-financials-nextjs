@@ -78,7 +78,7 @@ export interface CSVResultsStepProps {
 export interface CSVClassifyingStepProps {
   file: UploadedCSVFile;
   context: CSVImportContext;
-  onComplete: (months: ClassifiedMonth[], categories: Array<{ id: string; name: string }>) => void;
+  onComplete: (months: ClassifiedMonth[], categories: Array<{ id: string; name: string }>, model: string) => void;
   onError: (message: string) => void;
 }
 

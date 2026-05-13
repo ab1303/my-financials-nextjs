@@ -37,6 +37,7 @@ export default function CSVImportWizard({
   const [importResult, setImportResult] = useState<CSVImportResult | null>(null);
   const [classifiedMonths, setClassifiedMonths] = useState<ClassifiedMonth[]>([]);
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [llmModel, setLlmModel] = useState<string>('gpt-4o-mini');
   const [isConfirming, setIsConfirming] = useState(false);
 
   const context: CSVImportContext = {
@@ -61,9 +62,11 @@ export default function CSVImportWizard({
   const handleClassifyComplete = (
     months: ClassifiedMonth[],
     cats: Array<{ id: string; name: string }>,
+    model: string,
   ) => {
     setClassifiedMonths(months);
     setCategories(cats);
+    setLlmModel(model);
     setCurrentStep('review');
   };
 
@@ -132,12 +135,17 @@ export default function CSVImportWizard({
     }
   };
 
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
   const handleDone = () => {
+    resetState();
     onClose();
     if (onImportComplete) {
       onImportComplete();
     }
-    resetState();
   };
 
   const handleImportMore = () => {
@@ -150,10 +158,12 @@ export default function CSVImportWizard({
     setImportResult(null);
     setClassifiedMonths([]);
     setCategories([]);
+    setLlmModel('gpt-4o-mini');
     setIsConfirming(false);
   }
 
   const currentStepIndex = STEP_KEYS.indexOf(currentStep);
+  // Never close on backdrop click — user may have unsaved overrides
   const canClose = currentStep !== 'classifying' && !isConfirming;
 
   const stepSubtitle: Record<CSVWizardStep, string> = {
@@ -165,7 +175,7 @@ export default function CSVImportWizard({
 
   return (
     <Transition show={isOpen}>
-      <Dialog onClose={canClose ? onClose : () => undefined} className='relative z-50'>
+      <Dialog onClose={() => undefined} className='relative z-50'>
         <Transition.Child
           enter='ease-out duration-300'
           enterFrom='opacity-0'
@@ -177,73 +187,84 @@ export default function CSVImportWizard({
           <div className='fixed inset-0 bg-black/50' />
         </Transition.Child>
 
-        <div className='fixed inset-0 overflow-y-auto'>
-          <div className='flex min-h-full items-center justify-center p-4'>
-            <Transition.Child
-              enter='ease-out duration-300'
-              enterFrom='opacity-0 scale-95'
-              enterTo='opacity-100 scale-100'
-              leave='ease-in duration-200'
-              leaveFrom='opacity-100 scale-100'
-              leaveTo='opacity-0 scale-95'
-            >
-              <Dialog.Panel className='w-full max-w-5xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all dark:bg-gray-900'>
-                {/* Header */}
-                <div className='flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700'>
-                  <div>
-                    <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-white'>
-                      CSV Import Wizard
-                    </Dialog.Title>
-                    <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>
-                      {stepSubtitle[currentStep]}
-                    </p>
-                  </div>
-                  {canClose && (
-                    <button
-                      onClick={onClose}
-                      className='text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                      aria-label='Close wizard'
-                    >
-                      <X className='h-6 w-6' />
-                    </button>
-                  )}
+        <div className='fixed inset-0 flex items-center justify-center p-4'>
+          <Transition.Child
+            enter='ease-out duration-300'
+            enterFrom='opacity-0 scale-95'
+            enterTo='opacity-100 scale-100'
+            leave='ease-in duration-200'
+            leaveFrom='opacity-100 scale-100'
+            leaveTo='opacity-0 scale-95'
+          >
+            <div className='w-full max-w-5xl'>
+            <Dialog.Panel className='flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
+              {/* Header — fixed */}
+              <div className='flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700'>
+                <div>
+                  <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-white'>
+                    CSV Import Wizard
+                  </Dialog.Title>
+                  <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>
+                    {stepSubtitle[currentStep]}
+                  </p>
                 </div>
+                {canClose && (
+                  <button
+                    onClick={handleClose}
+                    className='text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                    aria-label='Close wizard'
+                  >
+                    <X className='h-6 w-6' />
+                  </button>
+                )}
+              </div>
 
-                {/* Progress Indicator */}
-                <div className='flex items-center gap-1 border-b border-gray-200 px-6 py-3 dark:border-gray-700'>
-                  {STEPS.map((step, index) => (
-                    <div key={step.key} className='flex items-center'>
-                      <div className='flex flex-col items-center'>
-                        <div
-                          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                            currentStep === step.key
-                              ? 'bg-teal-600 text-white'
-                              : currentStepIndex > index
-                                ? 'bg-green-600 text-white'
-                                : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                          }`}
-                        >
-                          {currentStepIndex > index ? '✓' : index + 1}
-                        </div>
-                        <span className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-                          {step.label}
-                        </span>
+              {/* Progress Indicator — fixed */}
+              <div className='flex flex-shrink-0 items-center gap-1 border-b border-gray-200 px-6 py-3 dark:border-gray-700'>
+                {STEPS.map((step, index) => (
+                  <div key={step.key} className='flex items-center'>
+                    <div className='flex flex-col items-center'>
+                      <div
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                          currentStep === step.key
+                            ? 'bg-teal-600 text-white'
+                            : currentStepIndex > index
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                        }`}
+                      >
+                        {currentStepIndex > index ? '✓' : index + 1}
                       </div>
-                      {index < STEPS.length - 1 && (
-                        <div
-                          className={`mx-2 mb-4 h-1 w-10 ${
-                            currentStepIndex > index
-                              ? 'bg-green-600'
-                              : 'bg-gray-200 dark:bg-gray-700'
-                          }`}
-                        />
-                      )}
+                      <span className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+                        {step.label}
+                      </span>
                     </div>
-                  ))}
-                </div>
+                    {index < STEPS.length - 1 && (
+                      <div
+                        className={`mx-2 mb-4 h-1 w-10 ${
+                          currentStepIndex > index
+                            ? 'bg-green-600'
+                            : 'bg-gray-200 dark:bg-gray-700'
+                        }`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
 
-                {/* Content */}
-                <div className='p-6'>
+              {/* Content — review step manages its own internal scroll; other steps scroll here */}
+              {currentStep === 'review' ? (
+                <div className='flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-4'>
+                  <TransactionReviewTable
+                    months={classifiedMonths}
+                    categories={categories}
+                    llmModel={llmModel}
+                    onConfirm={handleConfirmReview}
+                    isConfirming={isConfirming}
+                  />
+                </div>
+              ) : (
+                <div className='flex-1 overflow-y-auto p-6'>
                   {currentStep === 'upload' && (
                     <CSVUploadStep
                       file={file}
@@ -263,15 +284,6 @@ export default function CSVImportWizard({
                     />
                   )}
 
-                  {currentStep === 'review' && (
-                    <TransactionReviewTable
-                      months={classifiedMonths}
-                      categories={categories}
-                      onConfirm={handleConfirmReview}
-                      isConfirming={isConfirming}
-                    />
-                  )}
-
                   {currentStep === 'results' && importResult && file && (
                     <CSVResultsStep
                       result={importResult}
@@ -281,9 +293,10 @@ export default function CSVImportWizard({
                     />
                   )}
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
+              )}
+            </Dialog.Panel>
+            </div>
+          </Transition.Child>
         </div>
       </Dialog>
     </Transition>

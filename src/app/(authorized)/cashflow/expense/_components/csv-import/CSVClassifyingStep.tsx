@@ -114,8 +114,9 @@ export default function CSVClassifyingStep({
       } else if (type === 'done') {
         hasCompletedRef.current = true;
         const cats = (event.categories ?? []) as Array<{ id: string; name: string }>;
+        const model = (event.model as string) ?? 'gpt-4o-mini';
         setStatusMessage('Classification complete');
-        onComplete(classifiedMonthsRef.current, cats);
+        onComplete(classifiedMonthsRef.current, cats, model);
       } else if (type === 'error') {
         onError((event.message as string) ?? 'Classification error');
       }
