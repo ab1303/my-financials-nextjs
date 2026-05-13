@@ -7,17 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // NOTE: When using postgresql, mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-  // Further reading:
-  // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-  // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
   url      = env("DATABASE_URL")
-}
-
-model Example {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 // Necessary for Next auth
@@ -61,22 +51,22 @@ model User {
   password      String
   role          RoleEnumType? @default(user)
 
-  createdAt                    DateTime                      @default(now())
-  updatedAt                    DateTime                      @updatedAt
-  accounts                     Account[]
-  sessions                     Session[]
-  Individual                   Individual[]
-  Business                     Business[]
-  Relationship                 Relationship[]
-  Income                       Income[]
-  Expense                      Expense[]
-  BankAccount                  BankAccount[]
-  BankAssetSnapshot            BankAssetSnapshot[]
-  StockSnapshot                StockSnapshot[]
-  AIImportSession              AIImportSession[]
-  ImportImage                  ImportImage[]
-  AIUsageLog                   AIUsageLog[]
-  transactionCategoryOverrides TransactionCategoryOverride[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  accounts            Account[]
+  sessions            Session[]
+  individuals         Individual[]
+  businesses          Business[]
+  relationshipTypes   RelationshipType[]
+  incomeLedgers       IncomeLedger[]
+  expenseLedgers      ExpenseLedger[]
+  bankAccounts        BankAccount[]
+  bankBalanceSnapshots BankBalanceSnapshot[]
+  portfolioSnapshots  PortfolioSnapshot[]
+  importSessions      ImportSession[]
+  importImages        ImportImage[]
+  aiUsageLogs         AIUsageLog[]
+  merchantCategoryMaps MerchantCategoryMap[]
 }
 
 model VerificationToken {
@@ -108,92 +98,88 @@ enum IncomeSourceEnumType {
   OTHER
 }
 
-// Relationship lookup table (user-scoped)
-model Relationship {
+// RelationshipType — lookup table of relationship labels (e.g. "Mother", "Spouse")
+model RelationshipType {
   id          String       @id @default(cuid())
-  name        String // e.g., "Mother", "Father", "Friend", "Spouse"
+  name        String
   userId      String
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   individuals Individual[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  @@unique([name, userId]) // Unique relationship name per user (case-sensitive, but we'll handle case-insensitive in code)
+  @@unique([name, userId])
 }
 
 model Individual {
-  id             String        @id @default(cuid())
-  name           String
-  firstName      String?
-  lastName       String?
-  relationshipId String?
-  relationship   Relationship? @relation(fields: [relationshipId], references: [id])
+  id               String            @id @default(cuid())
+  name             String
+  firstName        String?
+  lastName         String?
+  relationshipId   String?
+  relationship     RelationshipType? @relation(fields: [relationshipId], references: [id])
+  addressLine      String?
+  streetAddress    String?
+  suburb           String?
+  postcode         Int?
+  state            String?
+  addressFormat    String?           @default("AU")
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zakatPayments    ZakatPayment[]
+  donationPayments DonationPayment[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
-  // Address fields (matching Business model)
-  addressLine   String?
-  streetAddress String?
-  suburb        String?
-  postcode      Int?
-  state         String?
-
-  // Address format - "AU" uses structured fields above, "GLOBAL" stores full address in addressLine
-  addressFormat String? @default("AU") // "AU" or "GLOBAL" to indicate which format was used
-
-  userId          String
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ZakatPayment    ZakatPayment[]
-  DonationPayment DonationPayment[]
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-  @@unique([name, userId]) // Unique individual name per user (case-sensitive, but we'll handle case-insensitive in code)
+  @@unique([name, userId])
 }
 
-// Business
-
+// Business — an organisation (bank, charity, or brokerage) the user transacts with
 model Business {
-  id              String            @id @default(cuid())
-  name            String
-  addressLine     String?
-  streetAddress   String?
-  suburb          String?
-  postcode        Int?
-  state           String?
-  type            BusinessEnumType?
-  PaymentHistory  Payment[]
-  BankInterest    BankInterest[]
-  ZakatPayment    ZakatPayment[]
-  DonationPayment DonationPayment[]
-  BankAccount     BankAccount[]
-  StockHolding    StockHolding[]
-  userId          String
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String               @id @default(cuid())
+  name             String
+  addressLine      String?
+  streetAddress    String?
+  suburb           String?
+  postcode         Int?
+  state            String?
+  type             BusinessEnumType?
+  bankInterestPayments BankInterestPayment[]
+  bankInterestLiabilities BankInterestLiability[]
+  zakatPayments    ZakatPayment[]
+  donationPayments DonationPayment[]
+  bankAccounts     BankAccount[]
+  stockHoldings    StockHolding[]
+  userId           String
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Payment {
-  id             String        @id @default(cuid())
-  datePaid       DateTime
-  amount         Decimal       @db.Money
-  business       Business?     @relation(fields: [businessId], references: [id])
-  businessId     String?
-  BankInterest   BankInterest? @relation(fields: [bankInterestId], references: [id])
-  bankInterestId String?
+// BankInterestPayment — a payment made against a monthly bank interest tax liability
+model BankInterestPayment {
+  id                      String                 @id @default(cuid())
+  datePaid                DateTime
+  amount                  Decimal                @db.Money
+  business                Business?              @relation(fields: [businessId], references: [id])
+  businessId              String?
+  bankInterestLiability   BankInterestLiability? @relation(fields: [bankInterestLiabilityId], references: [id])
+  bankInterestLiabilityId String?
 }
 
-model BankInterest {
-  id         String       @id @default(cuid())
+// BankInterestLiability — monthly interest tax liability owed to the ATO for a given bank
+model BankInterestLiability {
+  id         String                @id @default(cuid())
   month      Int
   year       Int
-  amountDue  Decimal      @db.Money
-  bank       Business     @relation(fields: [bankId], references: [id])
+  amountDue  Decimal               @db.Money
+  bank       Business              @relation(fields: [bankId], references: [id])
   bankId     String
-  calendar   CalendarYear @relation(fields: [calendarId], references: [id], onDelete: Restrict)
+  calendar   CalendarYear          @relation(fields: [calendarId], references: [id], onDelete: Restrict)
   calendarId String
-  payments   Payment[]
+  payments   BankInterestPayment[]
 }
 
-// Zakat
-model Zakat {
+// ZakatObligation — per-calendar-year header for zakat obligations
+model ZakatObligation {
   id         String         @id @default(cuid())
   calendar   CalendarYear   @relation(fields: [calendarId], references: [id], onDelete: Restrict)
   calendarId String         @unique
@@ -210,12 +196,12 @@ model ZakatPayment {
   businessId      String?
   individual      Individual?         @relation(fields: [individualId], references: [id])
   individualId    String?
-  Zakat           Zakat               @relation(fields: [zakatId], references: [id])
-  zakatId         String
+  zakatObligation ZakatObligation     @relation(fields: [zakatObligationId], references: [id])
+  zakatObligationId String
 }
 
-// Donations
-model Donation {
+// DonationLedger — per-calendar-year header for donation tracking
+model DonationLedger {
   id         String            @id @default(cuid())
   calendar   CalendarYear      @relation(fields: [calendarId], references: [id])
   calendarId String            @unique
@@ -227,79 +213,82 @@ model DonationPayment {
   datePaid        DateTime
   amount          Decimal             @db.Money
   beneficiaryType BeneficiaryEnumType
-  taxCategory     String // Tax category for donation classification
+  taxCategory     String
   business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
   individual      Individual?         @relation(fields: [individualId], references: [id])
   individualId    String?
-  donation        Donation            @relation(fields: [donationId], references: [id])
-  donationId      String
+  donationLedger  DonationLedger      @relation(fields: [donationLedgerId], references: [id])
+  donationLedgerId String
 }
 
-// Income
-model Income {
-  id         String        @id @default(cuid())
-  calendar   CalendarYear  @relation(fields: [calendarId], references: [id])
-  calendarId String
-  userId     String
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  entries    IncomeEntry[]
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-
-  @@unique([calendarId, userId])
-}
-
-model IncomeEntry {
-  id         String               @id @default(cuid())
-  dateEarned DateTime
-  amount     Decimal              @db.Money
-  source     IncomeSourceEnumType
-  income     Income               @relation(fields: [incomeId], references: [id], onDelete: Cascade)
-  incomeId   String
-  createdAt  DateTime             @default(now())
-  updatedAt  DateTime             @updatedAt
-
-  @@index([incomeId, dateEarned])
-}
-
-// Expenses
-model ExpenseCategory {
-  id        String         @id @default(cuid())
-  name      String         @unique
-  iconName  String?
-  isActive  Boolean        @default(true)
-  createdAt DateTime       @default(now())
-  entries   ExpenseEntry[]
-}
-
-model Expense {
+// IncomeLedger — per-user per-calendar-year container for income records
+model IncomeLedger {
   id         String         @id @default(cuid())
   calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
   calendarId String
   userId     String
   user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  entries    ExpenseEntry[]
+  records    IncomeRecord[]
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
   @@unique([calendarId, userId])
 }
 
-model ExpenseEntry {
-  id            String          @id @default(cuid())
-  month         Int // 1-12 (January = 1, December = 12)
-  amount        Decimal         @db.Money
-  category      ExpenseCategory @relation(fields: [categoryId], references: [id])
-  categoryId    String
-  expense       Expense         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  expenseId     String
-  importImage   ImportImage?    @relation(fields: [importImageId], references: [id])
-  importImageId String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+// IncomeRecord — an individual income event (dated, with source)
+model IncomeRecord {
+  id             String               @id @default(cuid())
+  dateEarned     DateTime
+  amount         Decimal              @db.Money
+  source         IncomeSourceEnumType
+  incomeLedger   IncomeLedger         @relation(fields: [incomeLedgerId], references: [id], onDelete: Cascade)
+  incomeLedgerId String
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
-  @@index([expenseId, month])
+  @@index([incomeLedgerId, dateEarned])
+}
+
+// Expenses
+model ExpenseCategory {
+  id                    String                  @id @default(cuid())
+  name                  String                  @unique
+  iconName              String?
+  isActive              Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  monthlyExpenseSummaries MonthlyExpenseSummary[]
+}
+
+// ExpenseLedger — per-user per-fiscal-year container (header) for expense summaries
+model ExpenseLedger {
+  id                    String                  @id @default(cuid())
+  calendar              CalendarYear            @relation(fields: [calendarId], references: [id])
+  calendarId            String
+  userId                String
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthlyExpenseSummaries MonthlyExpenseSummary[]
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  @@unique([calendarId, userId])
+}
+
+// MonthlyExpenseSummary — consolidated spend per category per month (aggregate, not individual transaction)
+model MonthlyExpenseSummary {
+  id              String          @id @default(cuid())
+  month           Int // 1-12 (January = 1, December = 12)
+  amount          Decimal         @db.Money
+  category        ExpenseCategory @relation(fields: [categoryId], references: [id])
+  categoryId      String
+  expenseLedger   ExpenseLedger   @relation(fields: [expenseLedgerId], references: [id], onDelete: Cascade)
+  expenseLedgerId String
+  importImage     ImportImage?    @relation(fields: [importImageId], references: [id])
+  importImageId   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([expenseLedgerId, month])
 }
 
 // Calendar Year
@@ -322,72 +311,68 @@ enum CurrencyEnumType {
 }
 
 model CalendarYear {
-  id           String            @id @default(cuid())
-  description  String
-  fromYear     Int
-  fromMonth    Int
-  toYear       Int
-  toMonth      Int
-  type         CalendarEnumType?
-  Zakat        Zakat[]
-  BankInterest BankInterest[]
-  Income       Income[]
-  Expense      Expense[]
-  Donation     Donation[]
+  id                      String                  @id @default(cuid())
+  description             String
+  fromYear                Int
+  fromMonth               Int
+  toYear                  Int
+  toMonth                 Int
+  type                    CalendarEnumType?
+  zakatObligations        ZakatObligation[]
+  bankInterestLiabilities BankInterestLiability[]
+  incomeLedgers           IncomeLedger[]
+  expenseLedgers          ExpenseLedger[]
+  donationLedgers         DonationLedger[]
 }
 
-// Bank Assets - Cash Tracking
-
-// Bank Account (user's individual accounts within a bank)
+// BankAccount — user's individual account at a bank
 model BankAccount {
-  id        String           @id @default(cuid())
-  name      String // e.g., "Savings", "Term Deposit", "Everyday"
-  bankId    String // Reference to Business (type=BANK)
-  bank      Business         @relation(fields: [bankId], references: [id])
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  entries   BankAssetEntry[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id           String               @id @default(cuid())
+  name         String
+  bankId       String
+  bank         Business             @relation(fields: [bankId], references: [id])
+  userId       String
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balanceRecords BankBalanceRecord[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
 
-  @@unique([name, bankId, userId]) // Unique account name per bank per user
+  @@unique([name, bankId, userId])
   @@index([userId, bankId])
 }
 
-// Snapshot header (one per snapshot date)
-model BankAssetSnapshot {
-  id           String           @id @default(cuid())
-  snapshotDate DateTime
-  userId       String
-  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  entries      BankAssetEntry[]
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+// BankBalanceSnapshot — point-in-time snapshot header (one per date)
+model BankBalanceSnapshot {
+  id             String               @id @default(cuid())
+  snapshotDate   DateTime
+  userId         String
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balanceRecords BankBalanceRecord[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
   @@index([userId, snapshotDate])
 }
 
-// Individual account balance entries within a snapshot
-model BankAssetEntry {
-  id            String            @id @default(cuid())
-  balance       Decimal           @db.Money
-  accountId     String
-  account       BankAccount       @relation(fields: [accountId], references: [id])
-  snapshotId    String
-  snapshot      BankAssetSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
-  importImage   ImportImage?      @relation(fields: [importImageId], references: [id])
+// BankBalanceRecord — a single account's balance at one snapshot date
+model BankBalanceRecord {
+  id           String              @id @default(cuid())
+  balance      Decimal             @db.Money
+  accountId    String
+  account      BankAccount         @relation(fields: [accountId], references: [id])
+  snapshotId   String
+  snapshot     BankBalanceSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  importImage  ImportImage?        @relation(fields: [importImageId], references: [id])
   importImageId String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
 
-  @@unique([accountId, snapshotId]) // One entry per account per snapshot
+  @@unique([accountId, snapshotId])
   @@index([snapshotId])
 }
 
-// Stock Assets Tracking
-
-// Snapshot header (one per snapshot date)
-model StockSnapshot {
+// PortfolioSnapshot — point-in-time portfolio snapshot header (one per date)
+model PortfolioSnapshot {
   id           String         @id @default(cuid())
   snapshotDate DateTime
   userId       String
@@ -399,7 +384,7 @@ model StockSnapshot {
   @@index([userId, snapshotDate])
 }
 
-// Individual stock holdings within a snapshot
+// StockHolding — individual holding within a portfolio snapshot
 model StockHolding {
   id           String                 @id @default(cuid())
   ticker       String
@@ -416,7 +401,7 @@ model StockHolding {
   accountId    String
   account      Business               @relation(fields: [accountId], references: [id])
   snapshotId   String
-  snapshot     StockSnapshot          @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  snapshot     PortfolioSnapshot      @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
   createdAt    DateTime               @default(now())
   updatedAt    DateTime               @updatedAt
 
@@ -425,7 +410,7 @@ model StockHolding {
   @@index([ticker])
 }
 
-// AI Image Import
+// AI / Import Infrastructure
 
 enum ImportTypeEnum {
   EXPENSE
@@ -446,7 +431,8 @@ enum StorageProviderEnum {
   S3
 }
 
-model AIImportSession {
+// ImportSession — tracks any file import operation (image or CSV)
+model ImportSession {
   id                String           @id @default(cuid())
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            String
@@ -467,7 +453,7 @@ model ImportImage {
   id              String              @id @default(cuid())
   user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
-  session         AIImportSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session         ImportSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId       String
   fileName        String
   fileSize        Int
@@ -480,19 +466,19 @@ model ImportImage {
   expiresAt       DateTime?
   createdAt       DateTime            @default(now())
 
-  expenseEntries   ExpenseEntry[]
-  bankAssetEntries BankAssetEntry[]
+  monthlyExpenseSummaries MonthlyExpenseSummary[]
+  bankBalanceRecords       BankBalanceRecord[]
 
   @@index([sessionId])
   @@index([userId])
 }
 
 model AIUsageLog {
-  id               String          @id @default(cuid())
+  id               String        @id @default(cuid())
   sessionId        String
-  session          AIImportSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session          ImportSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   userId           String
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   imageId          String?
   importType       ImportTypeEnum
   model            String
@@ -500,7 +486,7 @@ model AIUsageLog {
   completionTokens Int
   totalTokens      Int
   estimatedCostUSD Float
-  createdAt        DateTime        @default(now())
+  createdAt        DateTime      @default(now())
 
   @@index([userId, createdAt])
   @@index([userId, importType, createdAt])
@@ -508,8 +494,8 @@ model AIUsageLog {
   @@index([sessionId])
 }
 
-// Transaction Category Overrides - User-provided or LLM-confirmed category mappings
-model TransactionCategoryOverride {
+// MerchantCategoryMap — per-user merchant-to-category dictionary for Phase 2 RAG
+model MerchantCategoryMap {
   id          String   @id @default(cuid())
   userId      String
   description String   // lowercased, trimmed bank transaction description

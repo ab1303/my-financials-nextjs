@@ -92,32 +92,36 @@ export async function POST(req: NextRequest) {
 
         totalEntries += mapResult.entriesCreated;
 
-        // Create/update TransactionCategoryOverride records
-        for (const tx of month.transactions) {
-          const descKey = tx.description.toLowerCase().trim();
-          const categoryId = categoryMap.get(tx.confirmedCategory);
+        // Create/update TransactionCategoryOverride records (best-effort — failures don't mark month as failed)
+        try {
+          for (const tx of month.transactions) {
+            const descKey = tx.description.toLowerCase().trim();
+            const categoryId = categoryMap.get(tx.confirmedCategory);
 
-          if (categoryId) {
-            await prisma.transactionCategoryOverride.upsert({
-              where: {
-                userId_description: {
+            if (categoryId) {
+              await prisma.transactionCategoryOverride.upsert({
+                where: {
+                  userId_description: {
+                    userId: session.user.id,
+                    description: descKey,
+                  },
+                },
+                update: {
+                  category: tx.confirmedCategory,
+                  source: tx.overridden ? 'user_override' : 'llm_confirmed',
+                  updatedAt: new Date(),
+                },
+                create: {
                   userId: session.user.id,
                   description: descKey,
+                  category: tx.confirmedCategory,
+                  source: tx.overridden ? 'user_override' : 'llm_confirmed',
                 },
-              },
-              update: {
-                category: tx.confirmedCategory,
-                source: tx.overridden ? 'user_override' : 'llm_confirmed',
-                updatedAt: new Date(),
-              },
-              create: {
-                userId: session.user.id,
-                description: descKey,
-                category: tx.confirmedCategory,
-                source: tx.overridden ? 'user_override' : 'llm_confirmed',
-              },
-            });
+              });
+            }
           }
+        } catch (overrideError: any) {
+          console.warn(`Could not save category overrides for ${month.month}:`, overrideError.message);
         }
       } catch (monthError: any) {
         failedMonths++;
@@ -127,19 +131,28 @@ export async function POST(req: NextRequest) {
 
     // Log LLM usage if tokens were used
     if (llmUsage.totalTokens > 0) {
-      await prisma.aIUsageLog.create({
-        data: {
-          userId: session.user.id,
-          sessionId: importSession.id,
-          model: process.env.AI_CLASSIFIER_MODEL ?? 'gpt-4o-mini',
-          importType: 'EXPENSE',
-          promptTokens: llmUsage.promptTokens,
-          completionTokens: llmUsage.completionTokens,
-          totalTokens: llmUsage.totalTokens,
-          estimatedCostUSD: 0,
-          imageId: null,
-        },
-      });
+      // gpt-4o-mini: $0.15/1M input + $0.60/1M output tokens
+      const estimatedCostUSD =
+        (llmUsage.promptTokens / 1_000_000) * 0.15 +
+        (llmUsage.completionTokens / 1_000_000) * 0.60;
+
+      try {
+        await prisma.aIUsageLog.create({
+          data: {
+            userId: session.user.id,
+            sessionId: importSession.id,
+            model: process.env.AI_CLASSIFIER_MODEL ?? 'gpt-4o-mini',
+            importType: 'EXPENSE',
+            promptTokens: llmUsage.promptTokens,
+            completionTokens: llmUsage.completionTokens,
+            totalTokens: llmUsage.totalTokens,
+            estimatedCostUSD,
+            imageId: null,
+          },
+        });
+      } catch (usageLogError: any) {
+        console.error('Failed to save AI usage log:', usageLogError.message);
+      }
     }
 
     // Determine final status
