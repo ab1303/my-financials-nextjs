@@ -1,13 +1,19 @@
 import { generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { randomUUID } from 'crypto';
-import type { CsvTransaction, ClassifiedTransaction } from './_types';
-import type { ExpenseCategory } from '@prisma/client';
+import type { CsvTransaction, ClassifiedTransaction, ClassifiedCreditTransaction } from './_types';
+import { IncomeSourceEnumType, type ExpenseCategory } from '@prisma/client';
 
 /**
  * AI Classifier Service for CSV transactions
  * Converts raw bank descriptions to expense categories via LLM
  */
+
+const CREDIT_LABELS = [
+  ...Object.values(IncomeSourceEnumType),
+  'Transfer',
+  'Excluded',
+];
 
 function getAIProvider() {
   const provider = process.env.AI_PROVIDER ?? 'github';
@@ -131,6 +137,111 @@ ${transactionsList}`;
       llmCategory: tx.description,
       confirmedCategory: tx.description,
       overridden: false,
+    }));
+
+    return {
+      classified,
+      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    };
+  }
+}
+
+export async function classifyCreditTransactions(
+  transactions: CsvTransaction[],
+): Promise<{
+  classified: ClassifiedCreditTransaction[];
+  usage: { promptTokens: number; completionTokens: number; totalTokens: number };
+}> {
+  if (!transactions.length) {
+    return {
+      classified: [],
+      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    };
+  }
+
+  try {
+    const systemPrompt = `You are a financial transaction classifier for an Australian personal finance app.
+Classify each CREDIT (incoming) bank transaction description into exactly one of the following income categories.
+Available categories:
+${CREDIT_LABELS.map((l) => `- ${l}`).join('\n')}
+
+Rules:
+- Respond ONLY with a JSON array. No other text, no markdown.
+- Use ONLY the exact labels listed above.
+- EMPLOYMENT: salary, wages, payroll, pay from employer
+- STOCKS: dividends, share income, ASX payments
+- BONDS: bond interest, fixed income
+- RENTAL: rent received, property income
+- BUSINESS: business income, invoice payments
+- FREELANCE: contractor payments, gig economy
+- OTHER: interest earned, government payments, tax refunds
+- Transfer: internal bank transfer (savings, offset)
+- Excluded: refunds, reversals, or items to ignore
+- One object per transaction, preserving input order.`;
+
+    const transactionsList = transactions
+      .map((tx, idx) => `${idx + 1}. ${tx.description} (amount: $${tx.amount})`)
+      .join('\n');
+
+    const userPrompt = `Classify each Australian bank credit transaction.
+Return JSON array: [{"description": "<original>", "category": "<label>"}]
+Transactions:
+${transactionsList}`;
+
+    const model = getAIProvider();
+    const { text, usage } = await generateText({
+      model,
+      system: systemPrompt,
+      prompt: userPrompt,
+    });
+
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error('Could not extract JSON array from AI response');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]) as Array<{
+      description: string;
+      category: string;
+    }>;
+
+    const classified: ClassifiedCreditTransaction[] = transactions.map((tx, idx) => {
+      const parsedItem = parsed[idx];
+      const raw = parsedItem?.category ?? 'OTHER';
+      const llmCategory = CREDIT_LABELS.includes(raw) ? raw : 'OTHER';
+
+      return {
+        id: randomUUID(),
+        description: tx.description,
+        amount: tx.amount,
+        date: new Date(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!)).toISOString().split('T')[0]!,
+        llmCategory,
+        confirmedCategory: llmCategory,
+        overridden: false,
+        type: 'CREDIT' as const,
+      };
+    });
+
+    return {
+      classified,
+      usage: {
+        promptTokens: usage.inputTokens ?? 0,
+        completionTokens: usage.outputTokens ?? 0,
+        totalTokens: usage.totalTokens ?? 0,
+      },
+    };
+  } catch (error) {
+    console.error('[CSVClassifierService] Failed to classify credit transactions:', error);
+
+    const classified: ClassifiedCreditTransaction[] = transactions.map((tx) => ({
+      id: randomUUID(),
+      description: tx.description,
+      amount: tx.amount,
+      date: new Date(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!)).toISOString().split('T')[0]!,
+      llmCategory: 'OTHER',
+      confirmedCategory: 'OTHER',
+      overridden: false,
+      type: 'CREDIT' as const,
     }));
 
     return {

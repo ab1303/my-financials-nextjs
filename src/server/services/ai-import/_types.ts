@@ -97,6 +97,7 @@ export interface UploadResponse {
     fileSize: number;
     mimeType: string;
   }>;
+  bankAccountId?: string;
 }
 
 /**
@@ -191,6 +192,41 @@ export interface ClassifiedTransaction {
 }
 
 /**
+ * Classified debit transaction - extends ClassifiedTransaction with explicit DEBIT type.
+ * Used in the new Transactions feature (Phase A3+).
+ */
+export interface ClassifiedTransactionV2 extends ClassifiedTransaction {
+  type: 'DEBIT';
+}
+
+/**
+ * Classified credit transaction from LLM - income, transfer, or excluded.
+ */
+export interface ClassifiedCreditTransaction {
+  id: string;
+  description: string;
+  amount: number; // positive absolute value
+  date: string; // ISO date string
+  llmCategory: string; // IncomeSourceEnumType value | "Transfer" | "Excluded"
+  confirmedCategory: string; // starts = llmCategory; user may change
+  overridden: boolean; // true if user changed from llmCategory
+  type: 'CREDIT';
+}
+
+/**
+ * A month's worth of classified credit transactions, grouped for review.
+ */
+export interface ClassifiedCreditMonth {
+  month: string; // "YYYY-MM"
+  transactions: ClassifiedCreditTransaction[];
+  totalUsage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
+/**
  * Request body for CSV classify endpoint
  */
 export interface ClassifyRequest {
@@ -214,4 +250,5 @@ export interface ConfirmImportRequest {
     transactions: ClassifiedTransaction[];
   }>;
 }
+
 
