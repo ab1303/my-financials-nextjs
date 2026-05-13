@@ -18,11 +18,16 @@ export function validateCsvHeaders(headers: string[]): boolean {
  * Throws error if invalid data
  */
 export function parseCsvRow(row: Record<string, string>): CsvTransaction | null {
-  // Get values with case-insensitive lookup
+  // Get values with case-insensitive lookup and unquote
   const getField = (key: string): string => {
     const key_lower = key.toLowerCase();
     const found = Object.entries(row).find(([k]) => k.toLowerCase() === key_lower);
-    return found ? found[1].trim() : '';
+    let value = found ? found[1].trim() : '';
+    // Remove surrounding quotes if present (CommBank format uses quotes for fields with special chars)
+    if (value.startsWith('"') && value.endsWith('"')) {
+      value = value.slice(1, -1);
+    }
+    return value;
   };
 
   const amountStr = getField('amount');
@@ -32,7 +37,7 @@ export function parseCsvRow(row: Record<string, string>): CsvTransaction | null 
 
   const amountNum = parseFloat(amountStr);
   if (isNaN(amountNum)) {
-    throw new Error(`Invalid amount: ${amountStr}`);
+    throw new Error(`Invalid amount: "${amountStr}"`);
   }
 
   // Only process debits (negative amounts)
@@ -78,10 +83,22 @@ export function parseCsvRow(row: Record<string, string>): CsvTransaction | null 
 }
 
 /**
+ * Detect if a CSV line looks like a CommBank data row (starts with DD/MM/YYYY date)
+ * CommBank exports may not include a header row
+ */
+function looksLikeDataRow(line: string): boolean {
+  const fields = parseCSVLine(line);
+  return /^\d{2}\/\d{2}\/\d{4}$/.test(fields[0]?.trim() ?? '');
+}
+
+/**
  * Parse CommBank CSV content
- * Expects headers: Date, Amount, Description, Balance
+ * Supports both formats:
+ *   - With headers: Date, Amount, Description, Balance
+ *   - Without headers: CommBank web export (positional columns: date, amount, description, balance)
  * Filters to debit transactions only (negative amounts in CSV become positive)
  * Normalizes amounts to positive values
+ * Handles quoted fields (CommBank format uses quotes for fields with special chars)
  */
 export async function parseCommBankCsv(csvContent: string): Promise<CsvParseResult> {
   if (!csvContent || !csvContent.trim()) {
@@ -92,47 +109,52 @@ export async function parseCommBankCsv(csvContent: string): Promise<CsvParseResu
   }
 
   const lines = csvContent.trim().split('\n');
-  if (lines.length < 2) {
+  if (lines.length < 1) {
     return {
       success: false,
-      error: 'CSV must contain headers and at least one row',
+      error: 'CSV must contain at least one data row',
     };
   }
 
-  // Parse header line
-  const headerLine = lines[0];
-  if (!headerLine) {
+  const firstLine = lines[0];
+  if (!firstLine) {
     return {
       success: false,
-      error: 'CSV must contain a header row',
-    };
-  }
-  const headers = headerLine.split(',').map(h => h.trim());
-
-  if (!validateCsvHeaders(headers)) {
-    return {
-      success: false,
-      error: 'Missing required headers. Expected: Date, Amount, Description, Balance',
+      error: 'CSV appears to be empty',
     };
   }
 
-  // Create header-to-index map (case-insensitive)
-  const headerMap: Record<string, number> = {};
-  headers.forEach((header, index) => {
-    headerMap[header.toLowerCase()] = index;
-  });
+  // CommBank web exports have no header row — detect by checking if first line is a data row
+  let headers: string[];
+  let dataStartIndex: number;
+
+  if (looksLikeDataRow(firstLine)) {
+    // Headerless format: assign positional column names
+    headers = ['Date', 'Amount', 'Description', 'Balance'];
+    dataStartIndex = 0;
+  } else {
+    // Has headers — validate them
+    headers = parseCSVLine(firstLine);
+    if (!validateCsvHeaders(headers)) {
+      return {
+        success: false,
+        error: 'Missing required headers. Expected: Date, Amount, Description, Balance',
+      };
+    }
+    dataStartIndex = 1;
+  }
 
   const transactions: CsvTransaction[] = [];
 
   // Parse data rows
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = dataStartIndex; i < lines.length; i++) {
     const line = lines[i];
     if (!line) {
       continue; // Skip empty lines
     }
     const trimmedLine = line.trim();
 
-    const values = trimmedLine.split(',').map(v => v.trim());
+    const values = parseCSVLine(trimmedLine);
 
     // Create row object with case-insensitive keys
     const row: Record<string, string> = {};
@@ -165,4 +187,40 @@ export async function parseCommBankCsv(csvContent: string): Promise<CsvParseResu
     transactions,
     message: `Successfully parsed ${transactions.length} debit transactions`,
   };
+}
+
+/**
+ * Parse a CSV line handling quoted fields and escaped quotes
+ * Handles CommBank format which uses quotes around fields containing commas or special chars
+ */
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && nextChar === '"') {
+        // Escaped quote - add one quote and skip next
+        current += '"';
+        i++;
+      } else {
+        // Toggle quote state
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === ',' && !insideQuotes) {
+      // Field separator (only if not inside quotes)
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  // Add last field
+  result.push(current.trim());
+  return result;
 }

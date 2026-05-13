@@ -49,17 +49,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Group by month
-    const monthMap = new Map<number, CsvTransaction[]>();
+    const monthMap = new Map<string, CsvTransaction[]>();
     for (const tx of transactions) {
       const key = `${tx.year}-${tx.month}`;
-      const monthNum = parseInt(key.replace('-', ''));
-      if (!monthMap.has(monthNum)) {
-        monthMap.set(monthNum, []);
+      if (!monthMap.has(key)) {
+        monthMap.set(key, []);
       }
-      monthMap.get(monthNum)!.push(tx);
+      monthMap.get(key)!.push(tx);
     }
 
-    const months = Array.from(monthMap.keys()).sort((a, b) => a - b);
+    const months = Array.from(monthMap.keys()).sort();
 
     // Set up SSE stream
     const encoder = new TextEncoder();
@@ -73,7 +72,8 @@ export async function POST(req: NextRequest) {
         try {
           for (const monthKey of months) {
             const monthTransactions = monthMap.get(monthKey)!;
-            const monthNum = monthKey % 100; // Extract month from composite key
+            // Extract month from key (format: "YYYY-M")
+            const monthNum = parseInt(monthKey.split('-')[1]!);
 
             try {
               monthsProcessed++;

@@ -180,6 +180,9 @@ Events:
 - ✅ Whitespace trimming
 - ✅ Case-insensitive header validation
 - ✅ Extra column handling
+- ✅ **[NEW]** Quoted field parsing (handles CommBank exports with quoted descriptions)
+- ✅ **[NEW]** Escaped quote handling (`""` within quoted fields)
+- ✅ **[NEW]** Comma-safe field extraction (descriptions can contain commas)
 
 ### Upload Processing
 - ✅ File validation (MIME type, size, structure)
@@ -269,6 +272,10 @@ pnpm run build              # Production build (clean compilation)
 ## Implementation Notes
 - CSV parser does not require external dependencies (no papaparse needed)
 - Pure string parsing with comprehensive validation
+- **[Updated]** Uses proper RFC 4180 CSV parsing with quoted field support
+  - Handles CommBank exports with quotes around special characters
+  - Supports escaped quotes (`""`) within quoted fields
+  - Correctly parses fields containing commas when quoted
 - All amounts stored as positive values (debit context is implicit)
 - Metadata stored as JSON for flexibility
 - SSE implementation follows Next.js Response streaming patterns

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const formData = await req.formData();
-    const file = formData.get('files');
+    const file = formData.get('file');
 
     // Validate file exists and is a File object
     if (!file || typeof file === 'string' || !('arrayBuffer' in file)) {
