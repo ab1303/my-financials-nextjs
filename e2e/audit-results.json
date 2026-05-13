@@ -1,0 +1,444 @@
+[
+  {
+    "path": "/",
+    "label": "Root / Landing",
+    "title": "Dashboard — My Financials",
+    "consoleErrors": [
+      "ClientFetchError: Failed to fetch. Read more at https://errors.authjs.dev#autherror\n    at fetchData (http://localhost:3000/_next/static/chunks/node_modules__pnpm_56efe2d1._.js:2844:22)\n    at async getSession (http://localhost:3000/_next/static/chunks/node_modules__pnpm_56efe2d1._.js:3011:21)\n    at async SessionProvider.useEffect [as _getSession] (http://localhost:3000/_next/static/chunks/node_modules__pnpm_56efe2d1._.js:3154:51)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/api/auth/session → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "redirectedTo": "http://localhost:3000/home",
+    "loadStatus": "redirect",
+    "notes": []
+  },
+  {
+    "path": "/auth/login",
+    "label": "Login",
+    "title": "My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/home?_rsc=vmuo9 → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": [
+      "No <main> element – possible layout issue"
+    ]
+  },
+  {
+    "path": "/auth/register",
+    "label": "Register",
+    "title": "My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/_next/static/chunks/node_modules__pnpm_ea62bba6._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/home?_rsc=vmuo9 → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": [
+      "No <main> element – possible layout issue"
+    ]
+  },
+  {
+    "path": "/home",
+    "label": "Home / Dashboard",
+    "title": "Dashboard — My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": []
+  },
+  {
+    "path": "/cashflow/income",
+    "label": "Cashflow – Income",
+    "title": "",
+    "consoleErrors": [],
+    "networkErrors": [],
+    "pageErrors": [
+      "TypeError: Cannot read properties of undefined (reading 'aggregate')"
+    ],
+    "loadStatus": "error",
+    "notes": [
+      "Next.js application error boundary triggered",
+      "No <main> element – possible layout issue"
+    ]
+  },
+  {
+    "path": "/cashflow/expense",
+    "label": "Cashflow – Expense",
+    "title": "",
+    "consoleErrors": [],
+    "networkErrors": [
+      "GET http://localhost:3000/_next/static/chunks/src_app_(authorized)_layout_tsx_84116b41._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/node_modules__pnpm_ea62bba6._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/src_app_(authorized)_home_page_tsx_59443243._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/src_a3caf1f3._.js → net::ERR_ABORTED"
+    ],
+    "pageErrors": [
+      "TypeError: Cannot read properties of undefined (reading 'findUnique')"
+    ],
+    "loadStatus": "error",
+    "notes": [
+      "Next.js application error boundary triggered",
+      "No <main> element – possible layout issue"
+    ]
+  },
+  {
+    "path": "/cashflow/donations",
+    "label": "Cashflow – Donations",
+    "title": "",
+    "consoleErrors": [],
+    "networkErrors": [],
+    "pageErrors": [
+      "PrismaClientValidationError: \nInvalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$utils$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__[\"prisma\"].donationPayment.aggregate()` invocation in\nC:\\My Github\\my-financials-nextjs\\.next\\dev\\server\\chunks\\ssr\\_c9e4edd9._.js:107:181\n\n  104     });\n  105 };\n  106 const getTotalDonations = async (calendarYearId)=>{\n→ 107     const result = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$server$2f$utils$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__[\"prisma\"].donationPayment.aggregate({\n            select: {\n              _sum: {\n                select: {\n                  amount: true\n                }\n              }\n            },\n            where: {\n              donation: {\n              ~~~~~~~~\n                calendarId: \"\"\n              },\n          ?   AND?: DonationPaymentWhereInput | DonationPaymentWhereInput[],\n          ?   OR?: DonationPaymentWhereInput[],\n          ?   NOT?: DonationPaymentWhereInput | DonationPaymentWhereInput[],\n          ?   id?: StringFilter | String,\n          ?   datePaid?: DateTimeFilter | DateTime,\n          ?   amount?: DecimalFilter | Decimal,\n          ?   beneficiaryType?: EnumBeneficiaryEnumTypeFilter | BeneficiaryEnumType,\n          ?   taxCategory?: StringFilter | String,\n          ?   businessId?: StringNullableFilter | String | Null,\n          ?   individualId?: StringNullableFilter | String | Null,\n          ?   donationLedgerId?: StringFilter | String,\n          ?   business?: BusinessNullableScalarRelationFilter | BusinessWhereInput | Null,\n          ?   individual?: IndividualNullableScalarRelationFilter | IndividualWhereInput | Null,\n          ?   donationLedger?: DonationLedgerScalarRelationFilter | DonationLedgerWhereInput\n            }\n          })\n\nUnknown argument `donation`. Available options are marked with ?."
+    ],
+    "loadStatus": "error",
+    "notes": [
+      "Next.js application error boundary triggered",
+      "No <main> element – possible layout issue"
+    ]
+  },
+  {
+    "path": "/cashflow/bank-interest",
+    "label": "Cashflow – Bank Interest",
+    "title": "My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": []
+  },
+  {
+    "path": "/cashflow/bank",
+    "label": "Cashflow – Bank (CSV Import)",
+    "title": "Bank Assets | My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "%c << query #3 %cbankAsset.getSnapshots%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: Object, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 154, context: Object}",
+      "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "%c << query #5 %cbankAsset.getSnapshots%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: Object, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 45, context: Object}"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/_next/static/chunks/src_app_(authorized)_layout_tsx_84116b41._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/src_a3caf1f3._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/node_modules__pnpm_ea62bba6._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/src_app_(authorized)_home_page_tsx_59443243._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED",
+      "HTTP 500 http://localhost:3000/api/trpc/bankAsset.getSnapshots?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22calendarYearId%22%3A%22cmg7xykxt0000nte0x9n25avu%22%7D%7D%7D"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": []
+  },
+  {
+    "path": "/cashflow/stocks",
+    "label": "Cashflow – Stocks",
+    "title": "",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "%c << query #4 %cstockAsset.getSnapshots%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: Object, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 294, context: Object}",
+      "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "%c << query #5 %cstockAsset.getSnapshots%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: Object, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 76, context: Object}",
+      "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "%c << query #6 %cstockAsset.getSnapshots%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: Object, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 119, context: Object}",
+      "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "%c << query #7 %cstockAsset.getSnapshots%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: Object, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 82, context: Object}"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "HTTP 500 http://localhost:3000/api/trpc/stockAsset.getSnapshots?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22calendarYearId%22%3A%22cmg7xykxt0000nte0x9n25avu%22%2C%22calendarType%22%3A%22FISCAL%22%7D%7D%7D",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "HTTP 500 http://localhost:3000/api/trpc/stockAsset.getSnapshots?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22calendarYearId%22%3A%22cmg7xykxt0000nte0x9n25avu%22%2C%22calendarType%22%3A%22FISCAL%22%7D%7D%7D",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "HTTP 500 http://localhost:3000/api/trpc/stockAsset.getSnapshots?batch=1&input=%7B%220%22%3A%7B%22json%22%3A%7B%22calendarYearId%22%3A%22cmg7xykxt0000nte0x9n25avu%22%2C%22calendarType%22%3A%22FISCAL%22%7D%7D%7D",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED",
+      "GET http://localhost:3000/cashflow/stocks?yearId=cmg7xykxt0000nte0x9n25avu&_rsc=1b3ue → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "error",
+    "notes": [
+      "Navigation failed: page.goto: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/cashflow/stocks\", waiting until \"networkidle\"\u001b[22m\n"
+    ]
+  },
+  {
+    "path": "/relation/individual",
+    "label": "Relations – Individual",
+    "title": "My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "%c << query #2 %cindividual.getAllRelationships%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: undefined, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 227, context: Object}",
+      "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "%c << query #3 %cindividual.getAllRelationships%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: undefined, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 58, context: Object}",
+      "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "%c << query #4 %cindividual.getAllRelationships%c %O \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n   \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: bold; \n    background-color: #3fb0d8;\n    color: white;\n    padding: 2px;\n  ; font-weight: normal; {input: undefined, result: TRPCClientError: Cannot read properties of undefined (reading 'findMany')\n    at TRPCClientError.fr…, elapsedMs: 66, context: Object}"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED",
+      "HTTP 500 http://localhost:3000/api/trpc/individual.getAllRelationships?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%7D%7D%7D",
+      "HTTP 500 http://localhost:3000/api/trpc/individual.getAllRelationships?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%7D%7D%7D"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": []
+  },
+  {
+    "path": "/relation/business",
+    "label": "Relations – Business",
+    "title": "My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/home?_rsc=vmuo9 → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": []
+  },
+  {
+    "path": "/zakat",
+    "label": "Zakat",
+    "title": "",
+    "consoleErrors": [],
+    "networkErrors": [],
+    "pageErrors": [
+      "TypeError: Cannot read properties of undefined (reading 'findUnique')"
+    ],
+    "loadStatus": "error",
+    "notes": [
+      "Next.js application error boundary triggered",
+      "No <main> element – possible layout issue"
+    ]
+  },
+  {
+    "path": "/settings/profile",
+    "label": "Settings – Profile",
+    "title": "My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": []
+  },
+  {
+    "path": "/settings/banks",
+    "label": "Settings – Banks",
+    "title": "My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/home?_rsc=vmuo9 → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": []
+  },
+  {
+    "path": "/settings/calendar",
+    "label": "Settings – Calendar",
+    "title": "My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/__nextjs_font/geist-latin.woff2 → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "loadStatus": "ok",
+    "notes": []
+  },
+  {
+    "path": "/settings/ai-usage",
+    "label": "Settings – AI Usage",
+    "title": "Dashboard — My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/_next/static/chunks/src_app_(authorized)_home_page_tsx_59443243._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/src_app_(authorized)_layout_tsx_84116b41._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/node_modules__pnpm_ea62bba6._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/_next/static/chunks/src_a3caf1f3._.js → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED",
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED"
+    ],
+    "pageErrors": [],
+    "redirectedTo": "http://localhost:3000/home",
+    "loadStatus": "redirect",
+    "notes": []
+  },
+  {
+    "path": "/reports/income-summary",
+    "label": "Reports – Income Summary",
+    "title": "Income Summary | My Financials",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "Failed to fetch monthly summary: Error: Failed to fetch monthly summary\n    at IncomeSummaryClient.useEffect.fetchSummary (http://localhost:3000/_next/static/chunks/src_29017c9e._.js:589:35)"
+    ],
+    "networkErrors": [
+      "GET http://localhost:3000/fonts/inter-var-latin.woff2 → net::ERR_ABORTED",
+      "HTTP 500 http://localhost:3000/api/income/monthly-summary?calendarYearId=cmg7xykxt0000nte0x9n25avu&userId=cmp3yvx810000nt800aayqyrz"
+    ],
+    "pageErrors": [],
+    "redirectedTo": "http://localhost:3000/reports/income-summary?calendarYearId=cmg7xykxt0000nte0x9n25avu",
+    "loadStatus": "redirect",
+    "notes": []
+  }
+]
