@@ -86,7 +86,7 @@ export async function editRow(input: UpdateZakatPaymentInput) {
         amount: validatedInput.amount,
         beneficiaryType: validatedInput.beneficiaryType,
         beneficiaryId: validatedInput.beneficiaryId,
-        zakatId: '', // This will be ignored in the update
+        zakatObligationId: '', // This will be ignored in the update
       },
       validatedInput.id,
     );

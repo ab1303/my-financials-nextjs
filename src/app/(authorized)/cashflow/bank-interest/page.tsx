@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
+import type { Metadata } from 'next';
 
 import BankInterestForm from './form';
 import BankInterestTableServer from './BankInterestTableServer';
@@ -10,6 +11,10 @@ import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.cont
 // types
 import type { OptionType } from '@/types';
 import type { CalendarEnumType } from '@prisma/client';
+
+export const metadata: Metadata = {
+  title: 'Bank Interest | My Financials',
+};
 
 // page dynamically rendered
 //https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional

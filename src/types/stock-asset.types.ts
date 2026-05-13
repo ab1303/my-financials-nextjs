@@ -1,5 +1,5 @@
 import type {
-  StockSnapshot,
+  PortfolioSnapshot,
   StockHolding,
   Business,
   CurrencyEnumType,
@@ -12,7 +12,7 @@ export type StockHoldingWithAccount = StockHolding & {
   account: Pick<Business, 'id' | 'name'>;
 };
 
-export type StockSnapshotWithHoldings = StockSnapshot & {
+export type StockSnapshotWithHoldings = PortfolioSnapshot & {
   holdings: StockHoldingWithAccount[];
 };
 

@@ -18,7 +18,7 @@ export const addIncomeCalendarYearDetails = async ({
   calendarId,
   userId,
 }: Omit<IncomeModel, 'id'>) => {
-  return await prisma.income.create({
+  return await prisma.incomeLedger.create({
     data: {
       calendarId,
       userId,
@@ -36,7 +36,7 @@ export const getIncome = async (
   calendarYearId: string,
   userId: string,
 ): Promise<IncomeModel> => {
-  const income = await prisma.income.findUnique({
+  const income = await prisma.incomeLedger.findUnique({
     where: {
       calendarId_userId: {
         calendarId: calendarYearId,
@@ -71,17 +71,17 @@ export const getIncomeEntries = async (
   userId: string,
   prismaClient = prisma,
 ): Promise<Array<IncomeEntryModel>> => {
-  const where: Partial<Prisma.IncomeEntryWhereInput> = {
-    income: {
+  const where: Partial<Prisma.IncomeRecordWhereInput> = {
+    incomeLedger: {
       calendarId: calendarYearId,
       userId,
     },
   };
 
-  const incomeEntries = await prismaClient.incomeEntry.findMany({
+  const incomeEntries = await prismaClient.incomeRecord.findMany({
     where,
     include: {
-      income: true,
+      incomeLedger: true,
     },
     orderBy: {
       dateEarned: 'desc',
@@ -93,7 +93,7 @@ export const getIncomeEntries = async (
     dateEarned: entry.dateEarned,
     amount: entry.amount.toNumber(),
     source: entry.source,
-    incomeId: entry.incomeId,
+    incomeLedgerId: entry.incomeLedgerId,
   }));
 };
 
@@ -106,12 +106,12 @@ export const getIncomeEntries = async (
  */
 export const addIncomeEntry = async (
   incomeId: string,
-  entry: Omit<IncomeEntryInput, 'id' | 'incomeId'>,
+  entry: Omit<IncomeEntryInput, 'id' | 'incomeLedgerId'>,
   prismaClient = prisma,
 ) => {
-  return await prismaClient.incomeEntry.create({
+  return await prismaClient.incomeRecord.create({
     data: {
-      incomeId,
+      incomeLedgerId: incomeId,
       dateEarned: entry.dateEarned,
       amount: entry.amount,
       source: entry.source,
@@ -127,14 +127,14 @@ export const addIncomeEntry = async (
  */
 export const updateIncomeEntry = async (
   entryId: string,
-  entry: Omit<IncomeEntryInput, 'id' | 'incomeId'>,
+  entry: Omit<IncomeEntryInput, 'id' | 'incomeLedgerId'>,
   prismaClient = prisma,
 ) => {
-  const where: Prisma.IncomeEntryWhereUniqueInput = {
+  const where: Prisma.IncomeRecordWhereUniqueInput = {
     id: entryId,
   };
 
-  await prismaClient.incomeEntry.update({
+  await prismaClient.incomeRecord.update({
     where,
     data: {
       dateEarned: entry.dateEarned,
@@ -153,7 +153,7 @@ export const deleteIncomeEntry = async (
   entryId: string,
   prismaClient = prisma,
 ) => {
-  await prismaClient.incomeEntry.delete({
+  await prismaClient.incomeRecord.delete({
     where: {
       id: entryId,
     },
@@ -172,9 +172,9 @@ export const getTotalIncome = async (
   userId: string,
   prismaClient = prisma,
 ): Promise<number> => {
-  const result = await prismaClient.incomeEntry.aggregate({
+  const result = await prismaClient.incomeRecord.aggregate({
     where: {
-      income: {
+      incomeLedger: {
         calendarId: calendarYearId,
         userId,
       },
@@ -199,9 +199,9 @@ export const getMonthlyIncomeSummary = async (
   userId: string,
 ): Promise<Array<MonthlyIncomeSummary>> => {
   // Fetch all entries for the calendar year
-  const entries = await prisma.incomeEntry.findMany({
+  const entries = await prisma.incomeRecord.findMany({
     where: {
-      income: {
+      incomeLedger: {
         calendarId: calendarYearId,
         userId,
       },
@@ -270,9 +270,9 @@ export const getSourceBreakdown = async (
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
   // Fetch entries for the specific month
-  const entries = await prisma.incomeEntry.findMany({
+  const entries = await prisma.incomeRecord.findMany({
     where: {
-      income: {
+      incomeLedger: {
         calendarId: calendarYearId,
         userId,
       },

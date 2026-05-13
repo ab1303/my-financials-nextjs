@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const { fileId, calendarYearId, llmUsage, months } = parse.data;
 
     // Load import session
-    const importSession = await prisma.aIImportSession.findUnique({
+    const importSession = await prisma.importSession.findUnique({
       where: { id: fileId },
     });
 
@@ -92,14 +92,14 @@ export async function POST(req: NextRequest) {
 
         totalEntries += mapResult.entriesCreated;
 
-        // Create/update TransactionCategoryOverride records (best-effort — failures don't mark month as failed)
+        // Create/update MerchantCategoryMap records (best-effort — failures don't mark month as failed)
         try {
           for (const tx of month.transactions) {
             const descKey = tx.description.toLowerCase().trim();
             const categoryId = categoryMap.get(tx.confirmedCategory);
 
             if (categoryId) {
-              await prisma.transactionCategoryOverride.upsert({
+              await prisma.merchantCategoryMap.upsert({
                 where: {
                   userId_description: {
                     userId: session.user.id,
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Update session status
-    await prisma.aIImportSession.update({
+    await prisma.importSession.update({
       where: { id: importSession.id },
       data: {
         status: finalStatus,

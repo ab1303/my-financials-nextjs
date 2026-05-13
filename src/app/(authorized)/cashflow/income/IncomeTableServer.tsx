@@ -31,7 +31,7 @@ export default async function IncomeTableServer({
         amount: entry.amount,
         source: entry.source,
         dateEarned: entry.dateEarned,
-        incomeId: entry.incomeId,
+        incomeLedgerId: entry.incomeLedgerId,
       })) || [];
 
     return (

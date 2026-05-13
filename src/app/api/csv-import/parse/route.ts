@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const { calendarId } = context;
 
     // Load import session
-    const importSession = await prisma.aIImportSession.findUnique({
+    const importSession = await prisma.importSession.findUnique({
       where: { id: fileId },
     });
 
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
           }
 
           // Update session status
-          await prisma.aIImportSession.update({
+          await prisma.importSession.update({
             where: { id: importSession.id },
             data: { status: finalStatus },
           });

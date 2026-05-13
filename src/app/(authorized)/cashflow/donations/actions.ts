@@ -115,7 +115,7 @@ export async function editRow(input: UpdateDonationPaymentInput) {
         beneficiaryType: validatedInput.beneficiaryType,
         taxCategory: validatedInput.taxCategory,
         beneficiaryId: validatedInput.beneficiaryId,
-        donationId: '', // This will be ignored in the update
+        donationLedgerId: '', // This will be ignored in the update
       },
       validatedInput.id,
     );

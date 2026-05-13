@@ -10,7 +10,7 @@ export const addZakatCalendarYearDetails = async ({
   calendarId,
   amountDue,
 }: Omit<ZakatModel, 'id'>) => {
-  return await prisma.zakat.create({
+  return await prisma.zakatObligation.create({
     data: {
       calendarId,
       amountDue,
@@ -19,7 +19,7 @@ export const addZakatCalendarYearDetails = async ({
 };
 
 export const getZakat = async (calendarYearId: string): Promise<ZakatModel> => {
-  const zakatPayment = await prisma.zakat.findUnique({
+  const zakatPayment = await prisma.zakatObligation.findUnique({
     where: { calendarId: calendarYearId },
   });
 
@@ -41,7 +41,7 @@ export const getZakatPayments = async (
   calendarYearId: string,
 ): Promise<Array<ZakatPaymentModel>> => {
   const where: Partial<Prisma.ZakatPaymentWhereInput> = {
-    Zakat: {
+    zakatObligation: {
       calendarId: calendarYearId,
     },
   };
@@ -51,7 +51,7 @@ export const getZakatPayments = async (
     include: {
       business: true,
       individual: true,
-      Zakat: true,
+      zakatObligation: true,
     },
   });
 
@@ -61,7 +61,7 @@ export const getZakatPayments = async (
     amount: zp.amount.toNumber(),
     businessId: zp.businessId,
     individualId: zp.individualId,
-    zakatId: zp.zakatId,
+    zakatObligationId: zp.zakatObligationId,
     beneficiaryType: zp.beneficiaryType,
   }));
 };
@@ -90,11 +90,11 @@ export const updateZakatPayment = async (
 
 export const addZakatPaymentDetail = async (
   zakatId: string,
-  payment: Omit<ZakatPaymentInput, 'id' | 'zakatId'>,
+  payment: Omit<ZakatPaymentInput, 'id' | 'zakatObligationId'>,
 ) => {
   return await prisma.zakatPayment.create({
     data: {
-      zakatId,
+      zakatObligationId: zakatId,
       datePaid: payment.datePaid,
       amount: payment.amount,
       beneficiaryType: payment.beneficiaryType,

@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const { fileId, calendarId } = parse.data;
 
     // Load import session
-    const importSession = await prisma.aIImportSession.findUnique({
+    const importSession = await prisma.importSession.findUnique({
       where: { id: fileId },
     });
 

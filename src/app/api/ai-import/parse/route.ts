@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create import session
-    const importSession = await prisma.aIImportSession.create({
+    const importSession = await prisma.importSession.create({
       data: {
         userId,
         importType: importType as ImportTypeEnum,
@@ -392,7 +392,7 @@ export async function POST(request: NextRequest) {
               : ImportStatusEnum.FAILED;
 
           // Update import session with final results
-          await prisma.aIImportSession.update({
+          await prisma.importSession.update({
             where: { id: importSession.id },
             data: {
               status: finalStatus,
@@ -424,7 +424,7 @@ export async function POST(request: NextRequest) {
           console.error('[ai-import/parse] Stream error:', error);
 
           // Update session as failed
-          await prisma.aIImportSession.update({
+          await prisma.importSession.update({
             where: { id: importSession.id },
             data: {
               status: ImportStatusEnum.FAILED,

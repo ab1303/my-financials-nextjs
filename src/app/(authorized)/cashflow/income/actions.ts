@@ -57,7 +57,7 @@ export async function addRow(input: CreateIncomeEntryInput) {
         dateEarned: newEntry.dateEarned,
         amount: newEntry.amount.toNumber(),
         source: newEntry.source,
-        incomeId: newEntry.incomeId,
+        incomeLedgerId: newEntry.incomeLedgerId,
       },
     };
   } catch (error) {

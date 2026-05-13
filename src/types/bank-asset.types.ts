@@ -3,8 +3,8 @@
 
 import type {
   BankAccount,
-  BankAssetSnapshot,
-  BankAssetEntry,
+  BankBalanceSnapshot,
+  BankBalanceRecord,
   Business,
 } from '@prisma/client';
 
@@ -14,13 +14,13 @@ export type BankAccountWithBank = BankAccount & {
   bank: Pick<Business, 'id' | 'name'>;
 };
 
-export type BankAssetEntryWithAccount = BankAssetEntry & {
+export type BankAssetEntryWithAccount = BankBalanceRecord & {
   account: BankAccountWithBank;
   importImage?: { id: string; fileName: string } | null;
 };
 
-export type BankAssetSnapshotWithEntries = BankAssetSnapshot & {
-  entries: BankAssetEntryWithAccount[];
+export type BankAssetSnapshotWithEntries = BankBalanceSnapshot & {
+  balanceRecords: BankAssetEntryWithAccount[];
 };
 
 // Aggregated types for display

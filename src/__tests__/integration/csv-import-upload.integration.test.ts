@@ -103,7 +103,7 @@ describe('POST /api/csv-import/upload', () => {
     expect(response.status).toBe(400);
   });
 
-  it('returns 200 with valid CSV and creates AIImportSession', async () => {
+  it('returns 200 with valid CSV and creates ImportSession', async () => {
     const mockSessionRecord = {
       id: 'session-123',
       userId: 'test-user-123',
@@ -118,7 +118,7 @@ describe('POST /api/csv-import/upload', () => {
       },
     };
 
-    vi.mocked(prisma.aIImportSession.create).mockResolvedValueOnce(mockSessionRecord as any);
+    vi.mocked(prisma.importSession.create).mockResolvedValueOnce(mockSessionRecord as any);
 
     const formData = new FormData();
     const blob = new Blob([validCsvContent], { type: 'text/csv' });
@@ -178,7 +178,7 @@ describe('POST /api/csv-import/upload', () => {
       },
     };
 
-    vi.mocked(prisma.aIImportSession.create).mockResolvedValueOnce(mockSessionRecord as any);
+    vi.mocked(prisma.importSession.create).mockResolvedValueOnce(mockSessionRecord as any);
 
     const formData = new FormData();
     const blob = new Blob([validCsvContent], { type: 'application/octet-stream' });

@@ -66,7 +66,7 @@ export default function IncomeTableClient({
       dateEarned: new Date(),
       amount: 0,
       source: 'EMPLOYMENT',
-      incomeId: '',
+      incomeLedgerId: '',
     };
 
     // Add the temporary row to the state

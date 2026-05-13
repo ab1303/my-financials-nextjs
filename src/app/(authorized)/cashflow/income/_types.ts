@@ -19,7 +19,7 @@ export type IncomeEntryType = {
   dateEarned: Date;
   amount: number;
   source: IncomeSourceEnumType;
-  incomeId: string;
+  incomeLedgerId: string;
 };
 
 export const INCOME_SOURCE_LABELS: Record<IncomeSourceEnumType, string> = {

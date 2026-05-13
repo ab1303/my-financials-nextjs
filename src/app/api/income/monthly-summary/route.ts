@@ -1,22 +1,31 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/server/auth';
 import { monthlyIncomeSummaryHandler } from '@/server/controllers/income.controller';
 
 export async function GET(request: Request) {
   try {
+    // Get userId from authenticated session (security fix)
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const calendarYearId = searchParams.get('calendarYearId');
-    const userId = searchParams.get('userId');
 
-    if (!calendarYearId || !userId) {
+    if (!calendarYearId) {
       return NextResponse.json(
-        { error: 'Missing required parameters' },
+        { error: 'Missing calendarYearId parameter' },
         { status: 400 },
       );
     }
 
     const monthlySummary = await monthlyIncomeSummaryHandler(
       calendarYearId,
-      userId,
+      session.user.id,
     );
     return NextResponse.json(monthlySummary);
   } catch (error) {

@@ -47,7 +47,7 @@ export async function addRow(input: CreateExpenseEntryInput) {
       month: validatedInput.month,
       amount: validatedInput.amount,
       categoryId: validatedInput.categoryId,
-      expenseId: expenseResult.expenseCalendarId,
+      expenseLedgerId: expenseResult.expenseCalendarId,
     });
 
     return {
@@ -58,7 +58,7 @@ export async function addRow(input: CreateExpenseEntryInput) {
         month: newEntry.month,
         amount: newEntry.amount,
         categoryId: newEntry.categoryId,
-        expenseId: newEntry.expenseId,
+        expenseLedgerId: newEntry.expenseLedgerId,
       },
     };
   } catch (error) {
@@ -124,7 +124,7 @@ export async function editRow(input: UpdateExpenseEntryInput) {
         month: updatedEntry.month,
         amount: updatedEntry.amount,
         categoryId: updatedEntry.categoryId,
-        expenseId: updatedEntry.expenseId,
+        expenseLedgerId: updatedEntry.expenseLedgerId,
       },
     };
   } catch (error) {

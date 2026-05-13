@@ -121,11 +121,11 @@ export const createBankAssetSnapshot = async (
     }
 
     // Create the snapshot
-    const snapshot = await tx.bankAssetSnapshot.create({
+    const snapshot = await tx.bankBalanceSnapshot.create({
       data: {
         snapshotDate,
         userId,
-        entries: {
+        balanceRecords: {
           create: entries.map((entry) => ({
             accountId: entry.accountId,
             balance: entry.balance,
@@ -133,7 +133,7 @@ export const createBankAssetSnapshot = async (
         },
       },
       include: {
-        entries: {
+        balanceRecords: {
           include: {
             account: {
               include: {
@@ -157,7 +157,7 @@ export const getBankAssetSnapshots = async (
     toDate?: Date;
   },
 ) => {
-  const where: Prisma.BankAssetSnapshotWhereInput = {
+  const where: Prisma.BankBalanceSnapshotWhereInput = {
     userId,
   };
 
@@ -171,10 +171,10 @@ export const getBankAssetSnapshots = async (
     }
   }
 
-  return await prisma.bankAssetSnapshot.findMany({
+  return await prisma.bankBalanceSnapshot.findMany({
     where,
     include: {
-      entries: {
+      balanceRecords: {
         include: {
           account: {
             include: {
@@ -214,13 +214,13 @@ export const getMostRecentSnapshot = async (
 };
 
 export const getSnapshotById = async (snapshotId: string, userId: string) => {
-  return await prisma.bankAssetSnapshot.findFirst({
+  return await prisma.bankBalanceSnapshot.findFirst({
     where: {
       id: snapshotId,
       userId,
     },
     include: {
-      entries: {
+      balanceRecords: {
         include: {
           account: {
             include: {
@@ -244,7 +244,7 @@ export const updateBankAssetEntry = async (
   userId: string,
 ) => {
   // Verify the entry belongs to the user's snapshot
-  const entry = await prisma.bankAssetEntry.findFirst({
+  const entry = await prisma.bankBalanceRecord.findFirst({
     where: {
       id: entryId,
       snapshot: {
@@ -257,7 +257,7 @@ export const updateBankAssetEntry = async (
     throw new Error('Entry not found or does not belong to user');
   }
 
-  return await prisma.bankAssetEntry.update({
+  return await prisma.bankBalanceRecord.update({
     where: {
       id: entryId,
     },
@@ -276,7 +276,7 @@ export const updateBankAssetEntry = async (
 
 export const deleteBankAssetEntry = async (entryId: string, userId: string) => {
   // Verify the entry belongs to the user's snapshot
-  const entry = await prisma.bankAssetEntry.findFirst({
+  const entry = await prisma.bankBalanceRecord.findFirst({
     where: {
       id: entryId,
       snapshot: {
@@ -289,7 +289,7 @@ export const deleteBankAssetEntry = async (entryId: string, userId: string) => {
     throw new Error('Entry not found or does not belong to user');
   }
 
-  return await prisma.bankAssetEntry.delete({
+  return await prisma.bankBalanceRecord.delete({
     where: {
       id: entryId,
     },
@@ -301,7 +301,7 @@ export const deleteBankAssetSnapshot = async (
   userId: string,
 ) => {
   // Verify the snapshot belongs to the user
-  const snapshot = await prisma.bankAssetSnapshot.findFirst({
+  const snapshot = await prisma.bankBalanceSnapshot.findFirst({
     where: {
       id: snapshotId,
       userId,
@@ -313,7 +313,7 @@ export const deleteBankAssetSnapshot = async (
   }
 
   // Delete snapshot (cascade will delete entries)
-  return await prisma.bankAssetSnapshot.delete({
+  return await prisma.bankBalanceSnapshot.delete({
     where: {
       id: snapshotId,
     },
@@ -329,7 +329,7 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
   }
 
   // Calculate totals by bank
-  const bankTotals = snapshot.entries.reduce(
+  const bankTotals = snapshot.balanceRecords.reduce(
     (acc, entry) => {
       const bankId = entry.account.bankId;
       const bankName = entry.account.bank.name;

@@ -25,13 +25,13 @@ describe('Income Service - Unit Tests (Mocked)', () => {
       const mockEntries = [
         {
           id: 'entry-1',
-          incomeId,
+          incomeLedgerId: incomeId,
           dateEarned: new Date('2024-01-15'),
           amount: new Decimal('5000.00'),
           source: 'EMPLOYMENT' as const,
           createdAt: new Date(),
           updatedAt: new Date(),
-          income: {
+          incomeLedger: {
             id: incomeId,
             calendarId: calendarYearId,
             userId,
@@ -41,13 +41,13 @@ describe('Income Service - Unit Tests (Mocked)', () => {
         },
         {
           id: 'entry-2',
-          incomeId,
+          incomeLedgerId: incomeId,
           dateEarned: new Date('2024-02-15'),
           amount: new Decimal('5000.00'),
           source: 'EMPLOYMENT' as const,
           createdAt: new Date(),
           updatedAt: new Date(),
-          income: {
+          incomeLedger: {
             id: incomeId,
             calendarId: calendarYearId,
             userId,
@@ -57,7 +57,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
         },
       ];
 
-      mockCtx.prisma.incomeEntry.findMany.mockResolvedValue(mockEntries);
+      mockCtx.prisma.incomeRecord.findMany.mockResolvedValue(mockEntries);
 
       const result = await getIncomeEntries(
         calendarYearId,
@@ -68,15 +68,15 @@ describe('Income Service - Unit Tests (Mocked)', () => {
       expect(result).toHaveLength(2);
       expect(result[0]?.amount).toBe(5000);
       expect(result[0]?.source).toBe('EMPLOYMENT');
-      expect(mockCtx.prisma.incomeEntry.findMany).toHaveBeenCalledWith({
+      expect(mockCtx.prisma.incomeRecord.findMany).toHaveBeenCalledWith({
         where: {
-          income: {
+          incomeLedger: {
             calendarId: calendarYearId,
             userId,
           },
         },
         include: {
-          income: true,
+          incomeLedger: true,
         },
         orderBy: {
           dateEarned: 'desc',
@@ -85,7 +85,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
     });
 
     it('should return empty array when no entries exist', async () => {
-      mockCtx.prisma.incomeEntry.findMany.mockResolvedValue([]);
+      mockCtx.prisma.incomeRecord.findMany.mockResolvedValue([]);
 
       const result = await getIncomeEntries(
         calendarYearId,
@@ -94,7 +94,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
       );
 
       expect(result).toEqual([]);
-      expect(mockCtx.prisma.incomeEntry.findMany).toHaveBeenCalled();
+      expect(mockCtx.prisma.incomeRecord.findMany).toHaveBeenCalled();
     });
   });
 
@@ -108,7 +108,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
 
       const mockCreatedEntry = {
         id: 'new-entry-id',
-        incomeId,
+        incomeLedgerId: incomeId,
         dateEarned: entryData.dateEarned,
         amount: new Decimal('5000.00'),
         source: entryData.source,
@@ -116,15 +116,15 @@ describe('Income Service - Unit Tests (Mocked)', () => {
         updatedAt: new Date(),
       };
 
-      mockCtx.prisma.incomeEntry.create.mockResolvedValue(mockCreatedEntry);
+      mockCtx.prisma.incomeRecord.create.mockResolvedValue(mockCreatedEntry);
 
       const result = await addIncomeEntry(incomeId, entryData, mockCtx.prisma);
 
       expect(result.id).toBe('new-entry-id');
       expect(result.amount.toNumber()).toBe(5000);
-      expect(mockCtx.prisma.incomeEntry.create).toHaveBeenCalledWith({
+      expect(mockCtx.prisma.incomeRecord.create).toHaveBeenCalledWith({
         data: {
-          incomeId,
+          incomeLedgerId: incomeId,
           dateEarned: entryData.dateEarned,
           amount: entryData.amount,
           source: entryData.source,
@@ -160,7 +160,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
 
         const mockEntry = {
           id: `entry-${source}`,
-          incomeId,
+          incomeLedgerId: incomeId,
           dateEarned: entryData.dateEarned,
           amount: new Decimal('1000.00'),
           source,
@@ -168,7 +168,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
           updatedAt: new Date(),
         };
 
-        mockCtx.prisma.incomeEntry.create.mockResolvedValue(mockEntry);
+        mockCtx.prisma.incomeRecord.create.mockResolvedValue(mockEntry);
 
         const result = await addIncomeEntry(
           incomeId,
@@ -192,7 +192,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
 
       const mockUpdatedEntry = {
         id: entryId,
-        incomeId,
+        incomeLedgerId: incomeId,
         dateEarned: updatedData.dateEarned,
         amount: new Decimal('6000.00'),
         source: updatedData.source,
@@ -200,11 +200,11 @@ describe('Income Service - Unit Tests (Mocked)', () => {
         updatedAt: new Date(),
       };
 
-      mockCtx.prisma.incomeEntry.update.mockResolvedValue(mockUpdatedEntry);
+      mockCtx.prisma.incomeRecord.update.mockResolvedValue(mockUpdatedEntry);
 
       await updateIncomeEntry(entryId, updatedData, mockCtx.prisma);
 
-      expect(mockCtx.prisma.incomeEntry.update).toHaveBeenCalledWith({
+      expect(mockCtx.prisma.incomeRecord.update).toHaveBeenCalledWith({
         where: { id: entryId },
         data: {
           dateEarned: updatedData.dateEarned,
@@ -219,9 +219,9 @@ describe('Income Service - Unit Tests (Mocked)', () => {
     it('should delete an income entry', async () => {
       const entryId = 'entry-to-delete';
 
-      mockCtx.prisma.incomeEntry.delete.mockResolvedValue({
+      mockCtx.prisma.incomeRecord.delete.mockResolvedValue({
         id: entryId,
-        incomeId,
+        incomeLedgerId: incomeId,
         dateEarned: new Date(),
         amount: new Decimal('1000.00'),
         source: 'EMPLOYMENT',
@@ -231,7 +231,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
 
       await deleteIncomeEntry(entryId, mockCtx.prisma);
 
-      expect(mockCtx.prisma.incomeEntry.delete).toHaveBeenCalledWith({
+      expect(mockCtx.prisma.incomeRecord.delete).toHaveBeenCalledWith({
         where: { id: entryId },
       });
     });
@@ -249,7 +249,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
         _min: { amount: null },
       };
 
-      mockCtx.prisma.incomeEntry.aggregate.mockResolvedValue(mockAggregate);
+      mockCtx.prisma.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
 
       const total = await getTotalIncome(
         calendarYearId,
@@ -258,9 +258,9 @@ describe('Income Service - Unit Tests (Mocked)', () => {
       );
 
       expect(total).toBe(15000);
-      expect(mockCtx.prisma.incomeEntry.aggregate).toHaveBeenCalledWith({
+      expect(mockCtx.prisma.incomeRecord.aggregate).toHaveBeenCalledWith({
         where: {
-          income: {
+          incomeLedger: {
             calendarId: calendarYearId,
             userId,
           },
@@ -282,7 +282,7 @@ describe('Income Service - Unit Tests (Mocked)', () => {
         _min: { amount: null },
       };
 
-      mockCtx.prisma.incomeEntry.aggregate.mockResolvedValue(mockAggregate);
+      mockCtx.prisma.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
 
       const total = await getTotalIncome(
         calendarYearId,
@@ -303,14 +303,14 @@ describe('Income Service - Unit Tests (Mocked)', () => {
         _min: { amount: null },
       };
 
-      mockCtx.prisma.incomeEntry.aggregate.mockResolvedValue(mockAggregate);
+      mockCtx.prisma.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
 
       await getTotalIncome(calendarYearId, differentUserId, mockCtx.prisma);
 
-      expect(mockCtx.prisma.incomeEntry.aggregate).toHaveBeenCalledWith(
+      expect(mockCtx.prisma.incomeRecord.aggregate).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            income: {
+            incomeLedger: {
               calendarId: calendarYearId,
               userId: differentUserId,
             },

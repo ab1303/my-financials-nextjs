@@ -1,5 +1,9 @@
 import LoginForm from './form';
 
 export default function LoginPage() {
-  return <LoginForm />;
+  return (
+    <main className='w-full'>
+      <LoginForm />
+    </main>
+  );
 }

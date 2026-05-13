@@ -114,8 +114,8 @@ ${transactionsList}`;
     return {
       classified,
       usage: {
-        promptTokens: usage.promptTokens ?? 0,
-        completionTokens: usage.completionTokens ?? 0,
+        promptTokens: usage.inputTokens ?? 0,
+        completionTokens: usage.outputTokens ?? 0,
         totalTokens: usage.totalTokens ?? 0,
       },
     };

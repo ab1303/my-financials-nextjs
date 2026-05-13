@@ -84,8 +84,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create AIImportSession
-    const importSession = await prisma.aIImportSession.create({
+    // Create ImportSession
+    const importSession = await prisma.importSession.create({
       data: {
         userId: session.user.id,
         importType: 'EXPENSE',

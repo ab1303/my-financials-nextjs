@@ -32,7 +32,7 @@ export const createStockSnapshot = async (
     }
 
     // Create the snapshot
-    const snapshot = await tx.stockSnapshot.create({
+    const snapshot = await tx.portfolioSnapshot.create({
       data: {
         snapshotDate: input.snapshotDate,
         userId,
@@ -79,7 +79,7 @@ export const getStockSnapshots = async (
     toDate?: Date;
   },
 ) => {
-  const where: Prisma.StockSnapshotWhereInput = {
+  const where: Prisma.PortfolioSnapshotWhereInput = {
     userId,
   };
 
@@ -93,7 +93,7 @@ export const getStockSnapshots = async (
     }
   }
 
-  return await prisma.stockSnapshot.findMany({
+  return await prisma.portfolioSnapshot.findMany({
     where,
     include: {
       holdings: {
@@ -131,7 +131,7 @@ export const getMostRecentSnapshot = async (
 };
 
 export const getSnapshotById = async (snapshotId: string, userId: string) => {
-  return await prisma.stockSnapshot.findFirst({
+  return await prisma.portfolioSnapshot.findFirst({
     where: {
       id: snapshotId,
       userId,
@@ -161,7 +161,7 @@ export const createStockHolding = async (
   input: CreateStockHoldingInput,
 ) => {
   // Verify the snapshot belongs to the user
-  const snapshot = await prisma.stockSnapshot.findFirst({
+  const snapshot = await prisma.portfolioSnapshot.findFirst({
     where: {
       id: input.snapshotId,
       userId,
@@ -293,7 +293,7 @@ export const deleteStockSnapshot = async (
   userId: string,
 ) => {
   // Verify the snapshot belongs to the user
-  const snapshot = await prisma.stockSnapshot.findFirst({
+  const snapshot = await prisma.portfolioSnapshot.findFirst({
     where: {
       id: snapshotId,
       userId,
@@ -305,7 +305,7 @@ export const deleteStockSnapshot = async (
   }
 
   // Delete snapshot (cascade will delete holdings)
-  return await prisma.stockSnapshot.delete({
+  return await prisma.portfolioSnapshot.delete({
     where: {
       id: snapshotId,
     },

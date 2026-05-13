@@ -31,7 +31,7 @@ async function seedExpenseCategories() {
   console.log('Seeding expense categories...');
 
   // First, delete all expense entries (they reference categories)
-  const deletedEntries = await prisma.expenseEntry.deleteMany({});
+  const deletedEntries = await prisma.monthlyExpenseSummary.deleteMany({});
   console.log(`🗑️  Deleted ${deletedEntries.count} expense entries`);
 
   // Then, delete all old categories

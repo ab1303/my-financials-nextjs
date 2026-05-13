@@ -1,56 +1,56 @@
-import { Prisma, Relationship } from '@prisma/client';
+import { Prisma, RelationshipType } from '@prisma/client';
 import { prisma } from '../utils/prisma';
 
 export const addRelationship = async (
-  input: Prisma.RelationshipUncheckedCreateInput,
+  input: Prisma.RelationshipTypeUncheckedCreateInput,
 ) => {
-  const result = await prisma.relationship.create({ data: { ...input } });
-  return result as Relationship;
+  const result = await prisma.relationshipType.create({ data: { ...input } });
+  return result as RelationshipType;
 };
 
 export const getRelationships = async (
-  where?: Prisma.RelationshipWhereInput,
-  select?: Prisma.RelationshipSelect,
+  where?: Prisma.RelationshipTypeWhereInput,
+  select?: Prisma.RelationshipTypeSelect,
 ) => {
-  return (await prisma.relationship.findMany({
+  return (await prisma.relationshipType.findMany({
     where,
     select,
     orderBy: { name: 'asc' }, // Sort relationships alphabetically for consistent dropdown ordering
-  })) as Array<Relationship>;
+  })) as Array<RelationshipType>;
 };
 
 export const getRelationshipById = async (id: string) => {
-  return (await prisma.relationship.findUnique({
+  return (await prisma.relationshipType.findUnique({
     where: { id },
-  })) as Relationship | null;
+  })) as RelationshipType | null;
 };
 
 export const getRelationshipByNameAndUser = async (
   name: string,
   userId: string,
 ) => {
-  return (await prisma.relationship.findUnique({
+  return (await prisma.relationshipType.findUnique({
     where: {
       name_userId: {
         name,
         userId,
       },
     },
-  })) as Relationship | null;
+  })) as RelationshipType | null;
 };
 
 export const updateRelationship = async (
   id: string,
-  input: Prisma.RelationshipUncheckedUpdateInput,
+  input: Prisma.RelationshipTypeUncheckedUpdateInput,
 ) => {
-  return (await prisma.relationship.update({
+  return (await prisma.relationshipType.update({
     where: { id },
     data: { ...input },
-  })) as Relationship;
+  })) as RelationshipType;
 };
 
 export const deleteRelationship = async (id: string) => {
-  return await prisma.relationship.delete({
+  return await prisma.relationshipType.delete({
     where: { id },
   });
 };

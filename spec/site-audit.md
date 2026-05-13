@@ -247,8 +247,56 @@ GET /__nextjs_font/geist-latin.woff2 → 404 Not Found
 > **Note on generic titles:** Several settings pages use the default `"My Financials"` title. While not a functional issue, adding descriptive `<title>` values would improve UX and browser history readability.
 
 ---
+
+---
 
-## Recommended Fix Priority
+## Fix Status — Subagent Remediation (2026-05-13)
+
+All issues were fixed via a fleet of 8 parallel Next.js Expert subagents plus manual follow-up fixes for missed references surfaced by `pnpm run build`.
+
+| Issue | Agent | Status | Files Changed |
+|---|---|---|---|
+| CRIT-01 Income crashes | `fix-income` | ✅ DONE | `income.service.ts`, `income.ts` model, `income.service.test.ts`, `IncomeTableServer.tsx`, `IncomeTableClient.tsx`, `income/_types.ts`, `income/actions.ts` |
+| CRIT-02 Expense crashes | `fix-expense` | ✅ DONE | `expense.service.ts`, `expense.ts` model, `expense-mapper.service.ts`, `expense/actions.ts` |
+| CRIT-03 Donations crashes | `fix-donation-zakat` | ✅ DONE | `donation.service.ts`, `donation.ts` model, `donations/actions.ts` |
+| CRIT-04 Stocks crashes | `fix-stocks` | ✅ DONE | `stock-asset.service.ts`, `stock-asset.types.ts` |
+| CRIT-05 Zakat crashes | `fix-donation-zakat` | ✅ DONE | `zakat.service.ts`, `zakat.ts` model, `zakat/actions.ts` |
+| HIGH-01 Bank Assets crashes | `fix-bank-assets` | ✅ DONE | `bank-asset.service.ts`, `bank-asset-mapper.service.ts`, `BankAssetsClient.tsx`, `NewSnapshotModal.tsx`, `bank-asset.types.ts` |
+| HIGH-02 Individual Relations 500 | `fix-relationship` | ✅ DONE | `relationship.service.ts` |
+| HIGH-03 AI Usage redirect | N/A | ✅ BY DESIGN | Admin-only route guard; `abdul@example.com` is not admin |
+| HIGH-04 Income Summary auth | `fix-medium-low` | ✅ DONE | `api/income/monthly-summary/route.ts`, `api/income/source-breakdown/route.ts` |
+| MED-01 Root redirect race | N/A | ✅ ACCEPTABLE | `SessionProvider` fires before redirect; not a bug |
+| MED-02 Bank Interest title | `fix-medium-low` | ✅ DONE | `cashflow/bank-interest/page.tsx` |
+| MED-03 Auth pages `<main>` | `fix-medium-low` | ✅ DONE | `auth/login/page.tsx`, `auth/register/page.tsx` |
+| LOW-01 Missing font | `fix-medium-low` | ✅ DONE | Removed duplicate `@font-face` from `globals.css`; app already uses `next/font/google` |
+
+### Additional fixes surfaced during `pnpm run build` validation
+
+These were missed by the subagents (they existed in app-layer files outside the service layer):
+
+| File | Fix |
+|---|---|
+| `prisma/seed-expense-categories.ts` | `expenseEntry` → `monthlyExpenseSummary` |
+| `cashflow/bank/BankAssetsClient.tsx` | `snapshot?.entries` → `snapshot?.balanceRecords` (3 occurrences) |
+| `cashflow/bank/NewSnapshotModal.tsx` | `entries: BankAssetEntry[]` → `balanceRecords: BankBalanceRecord[]`; `mostRecentSnapshot.entries` → `mostRecentSnapshot.balanceRecords` |
+| `cashflow/donations/actions.ts` | `donationId: ''` → `donationLedgerId: ''` |
+| `cashflow/expense/actions.ts` | `expenseId` → `expenseLedgerId` (3 fields) |
+| `cashflow/income/actions.ts` | `incomeId` → `incomeLedgerId` |
+| `cashflow/income/IncomeTableServer.tsx` | `entry.incomeId` → `entry.incomeLedgerId` |
+| `cashflow/income/IncomeTableClient.tsx` | `incomeId: ''` → `incomeLedgerId: ''` |
+| `cashflow/income/_types.ts` | `incomeId: string` → `incomeLedgerId: string` |
+| `zakat/actions.ts` | `zakatId: ''` → `zakatObligationId: ''` |
+| `server/services/bank-interest.service.ts` | `bankInterest` → `bankInterestLiability`; `payment` → `bankInterestPayment`; `BankInterestCreateManyInput` → `BankInterestLiabilityCreateManyInput`; FK `bankInterestId` → `bankInterestLiabilityId` |
+| `server/services/ai-import/csv-classifier.service.ts` | AI SDK: `usage.promptTokens` → `usage.inputTokens`; `usage.completionTokens` → `usage.outputTokens` |
+| `server/trpc/router/example.ts` | Removed `prisma.example.findMany()` — `Example` model removed from schema |
+| `types/bank-asset.types.ts` | `BankAssetSnapshot` → `BankBalanceSnapshot`; `BankAssetEntry` → `BankBalanceRecord`; `entries` → `balanceRecords` |
+| `types/stock-asset.types.ts` | `StockSnapshot` → `PortfolioSnapshot` |
+
+### Build Result
+
+`pnpm run build` — ✅ **Passed** — 31 routes compiled, TypeScript clean, no errors.
+
+
 
 | # | Issue | Severity | Likely Root Cause |
 |---|---|---|---|

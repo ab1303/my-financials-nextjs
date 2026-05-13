@@ -11,7 +11,7 @@ export type IncomeEntryModel = {
   dateEarned: Date;
   amount: number;
   source: IncomeSourceEnumType;
-  incomeId: string;
+  incomeLedgerId: string;
 };
 
 // More flexible type for service layer operations
@@ -20,7 +20,7 @@ export type IncomeEntryInput = {
   dateEarned: Date;
   amount: number;
   source: IncomeSourceEnumType;
-  incomeId?: string;
+  incomeLedgerId?: string;
 };
 
 // Type for monthly aggregation results

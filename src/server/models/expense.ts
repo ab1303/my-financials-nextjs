@@ -16,7 +16,7 @@ export type ExpenseEntryModel = {
   month: number; // 1-12 (January = 1, December = 12)
   amount: number;
   categoryId: string;
-  expenseId: string;
+  expenseLedgerId: string;
   categoryName?: string; // Populated from join
   importImageId?: string | null; // Link to imported image
   importImage?: {
@@ -31,7 +31,7 @@ export type ExpenseEntryInput = {
   month: number;
   amount: number;
   categoryId: string;
-  expenseId?: string;
+  expenseLedgerId?: string;
 };
 
 // Type for monthly aggregation results

@@ -24,7 +24,7 @@ type BankAssetEntry = {
 type BankAssetSnapshot = {
   id: string;
   snapshotDate: Date | string;
-  entries: BankAssetEntry[];
+  balanceRecords: BankAssetEntry[];
 };
 
 type NewSnapshotModalProps = {
@@ -96,7 +96,7 @@ export default function NewSnapshotModal({
   // Pre-fill form with most recent snapshot data
   useEffect(() => {
     if (mostRecentSnapshot?.entries && entries.length === 0) {
-      const snapshotEntries = mostRecentSnapshot.entries.map((entry: any) => ({
+      const snapshotEntries = mostRecentSnapshot.balanceRecords.map((entry: any) => ({
         bankId: entry.account.bankId,
         accountId: entry.account.id,
         balance: Number(entry.balance),

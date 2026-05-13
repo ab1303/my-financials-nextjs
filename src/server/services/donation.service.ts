@@ -9,7 +9,7 @@ import type { Prisma } from '@prisma/client';
 export const addDonationCalendarYearDetails = async ({
   calendarId,
 }: Omit<DonationModel, 'id'>) => {
-  return await prisma.donation.create({
+  return await prisma.donationLedger.create({
     data: {
       calendarId,
     },
@@ -19,7 +19,7 @@ export const addDonationCalendarYearDetails = async ({
 export const getDonation = async (
   calendarYearId: string,
 ): Promise<DonationModel> => {
-  const donation = await prisma.donation.findUnique({
+  const donation = await prisma.donationLedger.findUnique({
     where: { calendarId: calendarYearId },
   });
 
@@ -39,7 +39,7 @@ export const getDonationPayments = async (
   calendarYearId: string,
 ): Promise<Array<DonationPaymentModel>> => {
   const where: Partial<Prisma.DonationPaymentWhereInput> = {
-    donation: {
+    donationLedger: {
       calendarId: calendarYearId,
     },
   };
@@ -49,7 +49,7 @@ export const getDonationPayments = async (
     include: {
       business: true,
       individual: true,
-      donation: true,
+      donationLedger: true,
     },
   });
 
@@ -59,7 +59,7 @@ export const getDonationPayments = async (
     amount: dp.amount.toNumber(),
     businessId: dp.businessId,
     individualId: dp.individualId,
-    donationId: dp.donationId,
+    donationLedgerId: dp.donationLedgerId,
     beneficiaryType: dp.beneficiaryType,
     taxCategory: dp.taxCategory,
   }));
@@ -89,12 +89,12 @@ export const updateDonationPayment = async (
 };
 
 export const addDonationPaymentDetail = async (
-  donationId: string,
-  payment: Omit<DonationPaymentInput, 'id' | 'donationId'>,
+  donationLedgerId: string,
+  payment: Omit<DonationPaymentInput, 'id' | 'donationLedgerId'>,
 ) => {
   return await prisma.donationPayment.create({
     data: {
-      donationId,
+      donationLedgerId,
       datePaid: payment.datePaid,
       amount: payment.amount,
       beneficiaryType: payment.beneficiaryType,
@@ -120,7 +120,7 @@ export const getTotalDonations = async (
 ): Promise<number> => {
   const result = await prisma.donationPayment.aggregate({
     where: {
-      donation: {
+      donationLedger: {
         calendarId: calendarYearId,
       },
     },

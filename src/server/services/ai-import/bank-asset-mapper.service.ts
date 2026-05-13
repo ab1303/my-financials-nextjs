@@ -179,7 +179,7 @@ export async function mapBankAssetData(
 
   // Create or find snapshot for this date + user
   // If a snapshot already exists for the same date, upsert entries into it
-  const existingSnapshot = await prisma.bankAssetSnapshot.findFirst({
+  const existingSnapshot = await prisma.bankBalanceSnapshot.findFirst({
     where: {
       userId,
       snapshotDate: {
@@ -199,7 +199,7 @@ export async function mapBankAssetData(
       `A snapshot already exists for ${snapshotDate.toDateString()} — adding entries to it.`,
     );
   } else {
-    const snapshot = await prisma.bankAssetSnapshot.create({
+    const snapshot = await prisma.bankBalanceSnapshot.create({
       data: { snapshotDate, userId },
     });
     snapshotId = snapshot.id;
@@ -208,7 +208,7 @@ export async function mapBankAssetData(
   // Upsert each entry (update balance if account already in snapshot)
   let entriesCreated = 0;
   for (const entry of mappedEntries) {
-    await prisma.bankAssetEntry.upsert({
+    await prisma.bankBalanceRecord.upsert({
       where: {
         accountId_snapshotId: {
           accountId: entry.accountId,

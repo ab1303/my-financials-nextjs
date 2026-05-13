@@ -605,7 +605,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                         <tbody className='bg-card divide-y divide-border'>
                           {bank.accounts.map((account: AccountBalance) => {
                             // Find the entry ID from the snapshot entries
-                            const snapshotEntry = snapshot?.entries.find(
+                            const snapshotEntry = snapshot?.balanceRecords.find(
                               (e) => e.accountId === account.accountId,
                             );
                             return (
@@ -887,10 +887,10 @@ export default function BankAssetsClient({ initialData }: Props) {
                 <p className='text-sm'>
                   This will delete{' '}
                   <span className='font-semibold'>
-                    {snapshot?.entries.length}
+                    {snapshot?.balanceRecords.length}
                   </span>{' '}
                   account
-                  {snapshot?.entries.length !== 1 ? 's' : ''} from this
+                  {snapshot?.balanceRecords.length !== 1 ? 's' : ''} from this
                   snapshot.
                 </p>
               </>

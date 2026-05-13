@@ -19,7 +19,7 @@ export const addExpenseCalendarYearDetails = async ({
   calendarId,
   userId,
 }: Omit<ExpenseModel, 'id'>) => {
-  return await prisma.expense.create({
+  return await prisma.expenseLedger.create({
     data: {
       calendarId,
       userId,
@@ -37,7 +37,7 @@ export const getExpense = async (
   calendarYearId: string,
   userId: string,
 ): Promise<ExpenseModel> => {
-  const expense = await prisma.expense.findUnique({
+  const expense = await prisma.expenseLedger.findUnique({
     where: {
       calendarId_userId: {
         calendarId: calendarYearId,
@@ -72,17 +72,17 @@ export const getExpenseEntries = async (
   userId: string,
   prismaClient = prisma,
 ): Promise<Array<ExpenseEntryWithCategory>> => {
-  const where: Partial<Prisma.ExpenseEntryWhereInput> = {
-    expense: {
+  const where: Partial<Prisma.MonthlyExpenseSummaryWhereInput> = {
+    expenseLedger: {
       calendarId: calendarYearId,
       userId,
     },
   };
 
-  const expenseEntries = await prismaClient.expenseEntry.findMany({
+  const expenseEntries = await prismaClient.monthlyExpenseSummary.findMany({
     where,
     include: {
-      expense: true,
+      expenseLedger: true,
       category: true,
     },
     orderBy: [{ month: 'asc' }, { category: { name: 'asc' } }],
@@ -93,7 +93,7 @@ export const getExpenseEntries = async (
     month: entry.month,
     amount: entry.amount.toNumber(),
     categoryId: entry.categoryId,
-    expenseId: entry.expenseId,
+    expenseLedgerId: entry.expenseLedgerId,
     categoryName: entry.category.name,
   }));
 };
@@ -110,18 +110,18 @@ export const getExpenseEntriesForMonth = async (
   userId: string,
   month: number,
 ): Promise<Array<ExpenseEntryWithCategory>> => {
-  const where: Partial<Prisma.ExpenseEntryWhereInput> = {
-    expense: {
+  const where: Partial<Prisma.MonthlyExpenseSummaryWhereInput> = {
+    expenseLedger: {
       calendarId: calendarYearId,
       userId,
     },
     month,
   };
 
-  const expenseEntries = await prisma.expenseEntry.findMany({
+  const expenseEntries = await prisma.monthlyExpenseSummary.findMany({
     where,
     include: {
-      expense: true,
+      expenseLedger: true,
       category: true,
       importImage: {
         select: { id: true, fileName: true },
@@ -137,7 +137,7 @@ export const getExpenseEntriesForMonth = async (
     month: entry.month,
     amount: entry.amount.toNumber(),
     categoryId: entry.categoryId,
-    expenseId: entry.expenseId,
+    expenseLedgerId: entry.expenseLedgerId,
     categoryName: entry.category.name,
     importImageId: entry.importImageId ?? undefined,
     importImage: entry.importImage ?? undefined,
@@ -167,10 +167,10 @@ export const getMonthlyExpenseSummaries = async (
   }
 
   // Aggregate by month
-  const monthlyAggregates = await prisma.expenseEntry.groupBy({
+  const monthlyAggregates = await prisma.monthlyExpenseSummary.groupBy({
     by: ['month'],
     where: {
-      expenseId: expense.id,
+      expenseLedgerId: expense.id,
     },
     _sum: {
       amount: true,
@@ -219,9 +219,9 @@ export const getTotalExpenses = async (
     return 0;
   }
 
-  const result = await prisma.expenseEntry.aggregate({
+  const result = await prisma.monthlyExpenseSummary.aggregate({
     where: {
-      expenseId: expense.id,
+      expenseLedgerId: expense.id,
     },
     _sum: {
       amount: true,
@@ -239,18 +239,18 @@ export const getTotalExpenses = async (
 export const addExpenseEntry = async (
   expenseEntryInput: ExpenseEntryInput,
 ): Promise<ExpenseEntryModel> => {
-  const { month, amount, categoryId, expenseId } = expenseEntryInput;
+  const { month, amount, categoryId, expenseLedgerId } = expenseEntryInput;
 
-  if (!expenseId) {
+  if (!expenseLedgerId) {
     throw new Error('Expense ID is required to add an entry');
   }
 
-  const newEntry = await prisma.expenseEntry.create({
+  const newEntry = await prisma.monthlyExpenseSummary.create({
     data: {
       month,
       amount,
       categoryId,
-      expenseId,
+      expenseLedgerId,
     },
   });
 
@@ -259,7 +259,7 @@ export const addExpenseEntry = async (
     month: newEntry.month,
     amount: newEntry.amount.toNumber(),
     categoryId: newEntry.categoryId,
-    expenseId: newEntry.expenseId,
+    expenseLedgerId: newEntry.expenseLedgerId,
   };
 };
 
@@ -271,9 +271,9 @@ export const addExpenseEntry = async (
  */
 export const updateExpenseEntry = async (
   id: string,
-  updates: Partial<Omit<ExpenseEntryInput, 'expenseId'>>,
+  updates: Partial<Omit<ExpenseEntryInput, 'expenseLedgerId'>>,
 ): Promise<ExpenseEntryModel> => {
-  const updatedEntry = await prisma.expenseEntry.update({
+  const updatedEntry = await prisma.monthlyExpenseSummary.update({
     where: { id },
     data: updates,
   });
@@ -283,7 +283,7 @@ export const updateExpenseEntry = async (
     month: updatedEntry.month,
     amount: updatedEntry.amount.toNumber(),
     categoryId: updatedEntry.categoryId,
-    expenseId: updatedEntry.expenseId,
+    expenseLedgerId: updatedEntry.expenseLedgerId,
   };
 };
 
@@ -295,7 +295,7 @@ export const updateExpenseEntry = async (
 export const deleteExpenseEntry = async (
   id: string,
 ): Promise<ExpenseEntryModel> => {
-  const deletedEntry = await prisma.expenseEntry.delete({
+  const deletedEntry = await prisma.monthlyExpenseSummary.delete({
     where: { id },
   });
 
@@ -304,7 +304,7 @@ export const deleteExpenseEntry = async (
     month: deletedEntry.month,
     amount: deletedEntry.amount.toNumber(),
     categoryId: deletedEntry.categoryId,
-    expenseId: deletedEntry.expenseId,
+    expenseLedgerId: deletedEntry.expenseLedgerId,
   };
 };
 
@@ -341,10 +341,10 @@ export const getCategoryBreakdownForMonth = async (
     return [];
   }
 
-  const categoryAggregates = await prisma.expenseEntry.groupBy({
+  const categoryAggregates = await prisma.monthlyExpenseSummary.groupBy({
     by: ['categoryId'],
     where: {
-      expenseId: expense.id,
+      expenseLedgerId: expense.id,
       month,
     },
     _sum: {

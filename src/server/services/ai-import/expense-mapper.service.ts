@@ -45,7 +45,7 @@ export async function mapExpenseData(
     const availableCategories = categories.map((cat) => cat.name);
 
     // Ensure parent Expense record exists
-    let expense = await prisma.expense.findUnique({
+    let expense = await prisma.expenseLedger.findUnique({
       where: {
         calendarId_userId: {
           calendarId,
@@ -55,7 +55,7 @@ export async function mapExpenseData(
     });
 
     if (!expense) {
-      expense = await prisma.expense.create({
+      expense = await prisma.expenseLedger.create({
         data: {
           calendarId,
           userId,
@@ -99,12 +99,12 @@ export async function mapExpenseData(
         }
 
         // Create expense entry
-        await prisma.expenseEntry.create({
+        await prisma.monthlyExpenseSummary.create({
           data: {
             month,
             amount: String(entry.amount), // Decimal as string
             categoryId,
-            expenseId: expense.id,
+            expenseLedgerId: expense.id,
             importImageId,
           },
         });

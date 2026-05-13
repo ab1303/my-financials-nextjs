@@ -68,7 +68,7 @@ describe('POST /api/csv-import/parse (SSE)', () => {
   });
 
   it('returns 404 for non-existent session', async () => {
-    vi.mocked(prisma.aIImportSession.findUnique).mockResolvedValueOnce(null);
+    vi.mocked(prisma.importSession.findUnique).mockResolvedValueOnce(null);
 
     const request = new NextRequest('http://localhost:3000/api/csv-import/parse', {
       method: 'POST',
@@ -89,7 +89,7 @@ describe('POST /api/csv-import/parse (SSE)', () => {
       userId: 'other-user-id',
     };
 
-    vi.mocked(prisma.aIImportSession.findUnique).mockResolvedValueOnce(otherUserSession as any);
+    vi.mocked(prisma.importSession.findUnique).mockResolvedValueOnce(otherUserSession as any);
 
     const request = new NextRequest('http://localhost:3000/api/csv-import/parse', {
       method: 'POST',
@@ -105,11 +105,11 @@ describe('POST /api/csv-import/parse (SSE)', () => {
   });
 
   it('streams SSE events for valid session', async () => {
-    vi.mocked(prisma.aIImportSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
+    vi.mocked(prisma.importSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
     vi.mocked(mapExpenseData).mockResolvedValue([
       { id: 'entry-1', amount: 50, categoryId: 'cat-1' },
     ] as any);
-    vi.mocked(prisma.aIImportSession.update).mockResolvedValueOnce({ status: 'COMPLETED' } as any);
+    vi.mocked(prisma.importSession.update).mockResolvedValueOnce({ status: 'COMPLETED' } as any);
     vi.mocked(prisma.aIUsageLog.create).mockResolvedValue({ id: 'log-1' } as any);
 
     const request = new NextRequest('http://localhost:3000/api/csv-import/parse', {
@@ -133,9 +133,9 @@ describe('POST /api/csv-import/parse (SSE)', () => {
   });
 
   it('groups transactions by month and processes sequentially', async () => {
-    vi.mocked(prisma.aIImportSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
+    vi.mocked(prisma.importSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
     vi.mocked(mapExpenseData).mockResolvedValue([{ id: 'entry' }] as any);
-    vi.mocked(prisma.aIImportSession.update).mockResolvedValueOnce({} as any);
+    vi.mocked(prisma.importSession.update).mockResolvedValueOnce({} as any);
     vi.mocked(prisma.aIUsageLog.create).mockResolvedValue({} as any);
 
     const request = new NextRequest('http://localhost:3000/api/csv-import/parse', {
@@ -159,9 +159,9 @@ describe('POST /api/csv-import/parse (SSE)', () => {
   });
 
   it('marks session as COMPLETED when all months succeed', async () => {
-    vi.mocked(prisma.aIImportSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
+    vi.mocked(prisma.importSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
     vi.mocked(mapExpenseData).mockResolvedValue([{ id: 'entry' }] as any);
-    vi.mocked(prisma.aIImportSession.update).mockResolvedValueOnce({} as any);
+    vi.mocked(prisma.importSession.update).mockResolvedValueOnce({} as any);
     vi.mocked(prisma.aIUsageLog.create).mockResolvedValue({} as any);
 
     const request = new NextRequest('http://localhost:3000/api/csv-import/parse', {
@@ -175,7 +175,7 @@ describe('POST /api/csv-import/parse (SSE)', () => {
 
     await POST(request);
 
-    expect(vi.mocked(prisma.aIImportSession.update)).toHaveBeenCalledWith(
+    expect(vi.mocked(prisma.importSession.update)).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           status: 'COMPLETED',
@@ -185,9 +185,9 @@ describe('POST /api/csv-import/parse (SSE)', () => {
   });
 
   it('includes correct event shape in SSE response', async () => {
-    vi.mocked(prisma.aIImportSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
+    vi.mocked(prisma.importSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
     vi.mocked(mapExpenseData).mockResolvedValue([{ id: 'entry-1' }, { id: 'entry-2' }] as any);
-    vi.mocked(prisma.aIImportSession.update).mockResolvedValueOnce({} as any);
+    vi.mocked(prisma.importSession.update).mockResolvedValueOnce({} as any);
     vi.mocked(prisma.aIUsageLog.create).mockResolvedValue({} as any);
 
     const request = new NextRequest('http://localhost:3000/api/csv-import/parse', {
@@ -221,9 +221,9 @@ describe('POST /api/csv-import/parse (SSE)', () => {
   });
 
   it('creates AIUsageLog entries per month', async () => {
-    vi.mocked(prisma.aIImportSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
+    vi.mocked(prisma.importSession.findUnique).mockResolvedValueOnce(mockImportSession as any);
     vi.mocked(mapExpenseData).mockResolvedValue([{ id: 'entry' }] as any);
-    vi.mocked(prisma.aIImportSession.update).mockResolvedValueOnce({} as any);
+    vi.mocked(prisma.importSession.update).mockResolvedValueOnce({} as any);
     vi.mocked(prisma.aIUsageLog.create).mockResolvedValue({} as any);
 
     const request = new NextRequest('http://localhost:3000/api/csv-import/parse', {

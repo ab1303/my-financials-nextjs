@@ -1,15 +1,24 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/server/auth';
 import { sourceBreakdownHandler } from '@/server/controllers/income.controller';
 
 export async function GET(request: Request) {
   try {
+    // Get userId from authenticated session (security fix)
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const calendarYearId = searchParams.get('calendarYearId');
     const monthStr = searchParams.get('month');
     const yearStr = searchParams.get('year');
-    const userId = searchParams.get('userId');
 
-    if (!calendarYearId || !monthStr || !yearStr || !userId) {
+    if (!calendarYearId || !monthStr || !yearStr) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
         { status: 400 },
@@ -30,7 +39,7 @@ export async function GET(request: Request) {
       calendarYearId,
       month,
       year,
-      userId,
+      session.user.id,
     );
     return NextResponse.json(sourceBreakdown);
   } catch (error) {

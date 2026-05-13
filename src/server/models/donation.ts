@@ -10,7 +10,7 @@ export type DonationModel = {
 export type DonationPaymentModel = PaymentModel & {
   beneficiaryType: BeneficiaryEnumType;
   taxCategory: string;
-  donationId: string | null;
+  donationLedgerId: string | null;
 };
 
 // More flexible type for service layer operations
@@ -23,5 +23,5 @@ export type DonationPaymentInput = {
   beneficiaryId?: string | null;
   businessId?: string | null;
   individualId?: string | null;
-  donationId?: string | null;
+  donationLedgerId?: string | null;
 };
