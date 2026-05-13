@@ -28,6 +28,7 @@ export default function CSVClassifyingStep({
     const abortController = new AbortController();
 
     async function startClassification() {
+      void context.bankAccountId;
       try {
         const response = await fetch('/api/transactions/csv/classify', {
           method: 'POST',
@@ -207,3 +208,4 @@ export default function CSVClassifyingStep({
     </div>
   );
 }
+

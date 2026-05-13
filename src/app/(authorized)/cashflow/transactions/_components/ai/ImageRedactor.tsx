@@ -35,10 +35,8 @@ export default function ImageRedactor({
   const containerRef = useRef<HTMLDivElement>(null);
   const [rects, setRects] = useState<RedactionRect[]>([]);
   const [draw, setDraw] = useState<DrawState | null>(null);
-  // Natural image dimensions for scaling
   const imgDimsRef = useRef<{ w: number; h: number } | null>(null);
 
-  // Draw everything on canvas: image + committed rects + current in-progress rect
   const render = useCallback(
     (committed: RedactionRect[], active?: DrawState) => {
       const canvas = canvasRef.current;
@@ -76,7 +74,6 @@ export default function ImageRedactor({
     [preview],
   );
 
-  // Initialise canvas size to match container width, preserving aspect ratio
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -94,12 +91,10 @@ export default function ImageRedactor({
     img.src = preview;
   }, [preview, render]);
 
-  // Re-render whenever rects or draw state changes
   useEffect(() => {
     render(rects, draw ?? undefined);
   }, [rects, draw, render]);
 
-  // Convert mouse/touch event position to canvas-relative coords
   function getCanvasPos(e: React.MouseEvent | React.TouchEvent): {
     x: number;
     y: number;
@@ -111,7 +106,6 @@ export default function ImageRedactor({
       'touches' in e ? e.touches[0]!.clientX : (e as React.MouseEvent).clientX;
     const clientY =
       'touches' in e ? e.touches[0]!.clientY : (e as React.MouseEvent).clientY;
-    // Scale from display size to canvas backing size
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     return {
@@ -141,7 +135,6 @@ export default function ImageRedactor({
     if (!draw?.isDrawing) return;
     const w = Math.abs(draw.currentX - draw.startX);
     const h = Math.abs(draw.currentY - draw.startY);
-    // Ignore tiny accidental clicks (< 8px)
     if (w > 8 && h > 8) {
       const newRect: RedactionRect = {
         x: Math.min(draw.startX, draw.currentX),
@@ -164,7 +157,6 @@ export default function ImageRedactor({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Final render with all rects baked in (no in-progress rect)
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -193,7 +185,6 @@ export default function ImageRedactor({
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70'>
       <div className='bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh] w-full max-w-2xl mx-4'>
-        {/* Header */}
         <div className='flex items-center justify-between px-5 py-4 border-b border-gray-200'>
           <div>
             <h2 className='text-base font-semibold text-gray-900'>
@@ -213,14 +204,12 @@ export default function ImageRedactor({
           </button>
         </div>
 
-        {/* Instruction bar */}
         <div className='bg-amber-50 border-b border-amber-100 px-5 py-2 text-xs text-amber-800 flex items-center gap-2'>
           <span className='inline-block w-4 h-4 bg-black rounded-sm flex-shrink-0' />
           Click and drag on the image to draw a black redaction box. Draw as
           many as needed.
         </div>
 
-        {/* Canvas */}
         <div
           ref={containerRef}
           className='flex-1 overflow-auto p-4 bg-gray-100'
@@ -239,7 +228,6 @@ export default function ImageRedactor({
           />
         </div>
 
-        {/* Footer */}
         <div className='flex items-center justify-between px-5 py-4 border-t border-gray-200 gap-3'>
           <button
             onClick={handleClearAll}

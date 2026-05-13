@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2, Check, X } from 'lucide-react';
-import type { ExtractedImageResult } from './_types';
+import type { ExtractedImageResult, UploadedFile } from './_types';
 import { SSEEventSchema } from './_schema';
 
 interface ProcessingStepProps {
-  files: Array<{ file: File }>;
+  files: UploadedFile[];
   bankAccountId?: string | null;
   onComplete: (sessionId: string, images: ExtractedImageResult[]) => void;
   context: { calendarYearId: string; month: number };
@@ -150,7 +150,8 @@ export default function ProcessingStep({
                       ...currentExtractedImages,
                       {
                         imageId: validatedEvent.imageId,
-                        fileName: uploadedFileNameById.get(validatedEvent.imageId) ?? '',
+                        fileName:
+                          uploadedFileNameById.get(validatedEvent.imageId) ?? '',
                         confidence: 0,
                         entries: [],
                         status: 'failed' as const,
@@ -254,9 +255,6 @@ export default function ProcessingStep({
                   )}
                   {result.status === 'failed' && (
                     <X className='h-5 w-5 text-red-600' />
-                  )}
-                  {result.status === 'partial' && (
-                    <Loader2 className='h-5 w-5 text-yellow-600 animate-spin' />
                   )}
                 </div>
                 <div className='min-w-0'>

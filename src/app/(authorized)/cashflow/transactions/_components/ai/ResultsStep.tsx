@@ -1,7 +1,6 @@
 'use client';
 
-import { Check, X, AlertCircle } from 'lucide-react';
-import ConfidenceBadge from './ConfidenceBadge';
+import { Check, AlertCircle } from 'lucide-react';
 import type { AIImportSessionResult } from './_types';
 
 interface ResultsStepProps {

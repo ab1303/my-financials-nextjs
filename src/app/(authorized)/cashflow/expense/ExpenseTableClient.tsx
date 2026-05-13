@@ -9,17 +9,15 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { List, Upload, FileText } from 'lucide-react';
+import { List } from 'lucide-react';
+import Link from 'next/link';
 
 import Table from '@/components/table';
-import { Button } from '@/components/ui/button';
 import MONTHS_MAP from '@/constants/map';
 import type { MonthlyExpenseSummary } from '@/server/models/expense';
 import AIUsageCard from '@/components/AIUsageCard';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
-import AIImportWizard from './_components/ai-import/AIImportWizard';
-import CSVImportWizard from './_components/csv-import/CSVImportWizard';
 
 const columnHelper = createColumnHelper<MonthlyExpenseSummary>();
 
@@ -40,8 +38,6 @@ export default function ExpenseTableClient({
 }: ExpenseTableClientProps) {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [isImportWizardOpen, setIsImportWizardOpen] = useState(false);
-  const [isCSVImportWizardOpen, setIsCSVImportWizardOpen] = useState(false);
 
   const columns = [
     columnHelper.accessor('month', {
@@ -109,17 +105,12 @@ export default function ExpenseTableClient({
           dateLabel={calendarLabel}
         />
         <div className='flex gap-2'>
-          <Button
-            variant='default'
-            onClick={() => setIsCSVImportWizardOpen(true)}
+          <Link
+            href='/cashflow/transactions'
+            className='inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors'
           >
-            <FileText className='h-4 w-4' />
-            CSV Import
-          </Button>
-          <Button variant='default' onClick={() => setIsImportWizardOpen(true)}>
-            <Upload className='h-4 w-4' />
-            AI Import
-          </Button>
+            Import transactions →
+          </Link>
         </div>
       </div>
 
@@ -206,21 +197,6 @@ export default function ExpenseTableClient({
         />
       )}
 
-      {/* AI Import Wizard Modal */}
-      <AIImportWizard
-        isOpen={isImportWizardOpen}
-        onClose={() => setIsImportWizardOpen(false)}
-        calendarYearId={calendarYearId}
-        onImportComplete={() => router.refresh()}
-      />
-
-      {/* CSV Import Wizard Modal */}
-      <CSVImportWizard
-        isOpen={isCSVImportWizardOpen}
-        onClose={() => setIsCSVImportWizardOpen(false)}
-        calendarYearId={calendarYearId}
-        onImportComplete={() => router.refresh()}
-      />
     </>
   );
 }

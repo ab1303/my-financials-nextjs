@@ -46,6 +46,37 @@ export interface CSVImportWizardProps {
 
 export type CSVWizardStep = 'upload' | 'classifying' | 'review' | 'results';
 
+export interface CSVUploadStepProps {
+  file: UploadedCSVFile | null;
+  onFileSelected: (file: UploadedCSVFile) => void;
+  onRemoveFile: () => void;
+  onStartImport: () => void;
+  isLoading?: boolean;
+  bankAccounts: Array<{ id: string; name: string; bankName: string }>;
+  selectedBankAccountId: string | null;
+  onBankAccountChange: (id: string) => void;
+}
+
+export interface CSVClassifyingStepProps {
+  file: UploadedCSVFile;
+  context: CSVImportContext;
+  onComplete: (
+    debitMonths: ClassifiedMonth[],
+    creditMonths: ClassifiedCreditMonth[],
+    categories: Array<{ id: string; name: string }>,
+    incomeSourceLabels: string[],
+    model: string,
+  ) => void;
+  onError: (message: string) => void;
+}
+
+export interface CSVResultsStepProps {
+  result: CSVImportResult;
+  file: UploadedCSVFile;
+  onDone: () => void;
+  onImportMore: () => void;
+}
+
 export {
   ClassifiedTransactionV2,
   ClassifiedCreditTransaction,

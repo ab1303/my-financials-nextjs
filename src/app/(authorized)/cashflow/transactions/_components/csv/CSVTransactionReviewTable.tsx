@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import TransactionReviewTable, { type ClassifiedMonth as SharedClassifiedMonth } from '@/components/csv-import/TransactionReviewTable';
-import type { ClassifiedCreditMonth, ClassifiedCreditTransaction } from '@/server/services/ai-import/_types';
+import type { ClassifiedCreditMonth } from '@/server/services/ai-import/_types';
 import type { ClassifiedMonth } from './_types';
 
 interface CSVTransactionReviewTableProps {
@@ -164,7 +164,7 @@ export default function CSVTransactionReviewTable({
               setLocalDebitMonths(updatedMonths as ClassifiedMonth[]);
             }}
             isConfirming={false}
-            onUpdateMonths={setLocalDebitMonths as React.Dispatch<React.SetStateAction<ClassifiedMonth[]>>}
+            onUpdateMonths={(months) => setLocalDebitMonths(months as ClassifiedMonth[])}
           />
         )}
         {activeTab === 'credits' && (
@@ -188,3 +188,5 @@ export default function CSVTransactionReviewTable({
     </div>
   );
 }
+
+

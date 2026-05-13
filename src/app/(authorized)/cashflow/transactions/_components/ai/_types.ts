@@ -1,3 +1,21 @@
+export interface UploadedFile {
+  id: string;
+  file: File;
+  preview: string;
+  status:
+    | 'pending'
+    | 'uploading'
+    | 'uploaded'
+    | 'analyzing'
+    | 'saving'
+    | 'success'
+    | 'error';
+  error?: string;
+  confidence?: number;
+  extractedData?: Record<string, unknown>;
+  redacted?: boolean;
+}
+
 export interface ExtractedImageResult {
   imageId: string;
   fileName: string;

@@ -42,7 +42,7 @@ describe('ReviewStep', () => {
 
   it('renders extracted entries', () => {
     render(<ReviewStep {...defaultProps} />);
-    expect(screen.getByText('Groceries')).toBeDefined();
+    expect(screen.getAllByText('Groceries').length).toBeGreaterThan(0);
   });
 
   it('shows total confirmed count', () => {
@@ -63,3 +63,4 @@ describe('ReviewStep', () => {
     expect(screen.getByText(/1 entries to import/)).toBeDefined();
   });
 });
+

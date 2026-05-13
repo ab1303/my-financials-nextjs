@@ -11,6 +11,7 @@ import type {
   AIImportSessionResult,
   AIImportWizardProps,
   ExtractedImageResult,
+  UploadedFile,
   WizardStep,
 } from './_types';
 
@@ -21,7 +22,7 @@ export default function AIImportWizard({
   onImportComplete,
 }: AIImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>('upload');
-  const [files, setFiles] = useState<Array<{ id: string; file: File; preview: string; status: string; redacted?: boolean }>>([]);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
   const [importResult, setImportResult] = useState<AIImportSessionResult | null>(null);
   const [selectedBankAccountId, setSelectedBankAccountId] = useState<string | null>(null);
   const [extractedImages, setExtractedImages] = useState<ExtractedImageResult[]>([]);
@@ -32,12 +33,12 @@ export default function AIImportWizard({
   const steps: WizardStep[] = ['upload', 'processing', 'review', 'results'];
   const currentStepIndex = steps.indexOf(currentStep);
 
-  const handleFilesSelected = (newFiles: typeof files) => {
+  const handleFilesSelected = (newFiles: UploadedFile[]) => {
     setFiles(newFiles);
   };
 
   const handleRemoveFile = (fileId: string) => {
-    setFiles(files.filter((f) => f.id !== fileId));
+    setFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
   const handleStartImport = () => {
