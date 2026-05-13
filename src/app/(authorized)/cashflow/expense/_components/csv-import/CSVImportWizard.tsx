@@ -3,9 +3,12 @@
 import { useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
 import CSVUploadStep from './CSVUploadStep';
-import CSVProcessingStep from './CSVProcessingStep';
+import CSVClassifyingStep from './CSVClassifyingStep';
 import CSVResultsStep from './CSVResultsStep';
+import TransactionReviewTable from '@/components/csv-import/TransactionReviewTable';
+import type { ClassifiedMonth } from '@/components/csv-import/TransactionReviewTable';
 import type {
   CSVImportWizardProps,
   CSVWizardStep,
@@ -13,6 +16,15 @@ import type {
   CSVImportResult,
   CSVImportContext,
 } from './_types';
+
+const STEPS: { key: CSVWizardStep; label: string }[] = [
+  { key: 'upload', label: 'Upload' },
+  { key: 'classifying', label: 'Classify' },
+  { key: 'review', label: 'Review' },
+  { key: 'results', label: 'Done' },
+];
+
+const STEP_KEYS = STEPS.map((s) => s.key);
 
 export default function CSVImportWizard({
   isOpen,
@@ -22,9 +34,10 @@ export default function CSVImportWizard({
 }: CSVImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<CSVWizardStep>('upload');
   const [file, setFile] = useState<UploadedCSVFile | null>(null);
-  const [importResult, setImportResult] = useState<CSVImportResult | null>(
-    null,
-  );
+  const [importResult, setImportResult] = useState<CSVImportResult | null>(null);
+  const [classifiedMonths, setClassifiedMonths] = useState<ClassifiedMonth[]>([]);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const context: CSVImportContext = {
     importType: 'EXPENSE',
@@ -41,13 +54,82 @@ export default function CSVImportWizard({
 
   const handleStartImport = () => {
     if (file) {
-      setCurrentStep('processing');
+      setCurrentStep('classifying');
     }
   };
 
-  const handleProcessingComplete = (result: CSVImportResult) => {
-    setImportResult(result);
-    setCurrentStep('results');
+  const handleClassifyComplete = (
+    months: ClassifiedMonth[],
+    cats: Array<{ id: string; name: string }>,
+  ) => {
+    setClassifiedMonths(months);
+    setCategories(cats);
+    setCurrentStep('review');
+  };
+
+  const handleClassifyError = (message: string) => {
+    toast.error(`Classification failed: ${message}`);
+    setCurrentStep('upload');
+  };
+
+  const handleConfirmReview = async (confirmedMonths: ClassifiedMonth[]) => {
+    if (!file) return;
+    setIsConfirming(true);
+
+    const totalLlmUsage = confirmedMonths.reduce(
+      (acc, m) => ({
+        promptTokens: acc.promptTokens + (m.totalUsage?.promptTokens ?? 0),
+        completionTokens: acc.completionTokens + (m.totalUsage?.completionTokens ?? 0),
+        totalTokens: acc.totalTokens + (m.totalUsage?.totalTokens ?? 0),
+      }),
+      { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    );
+
+    try {
+      const res = await fetch('/api/csv-import/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileId: file.id,
+          calendarYearId,
+          llmUsage: totalLlmUsage,
+          months: confirmedMonths.map((m) => ({
+            month: m.month,
+            transactions: m.transactions,
+          })),
+        }),
+      });
+
+      const data = (await res.json()) as {
+        success?: boolean;
+        savedMonths?: number;
+        totalEntries?: number;
+        status?: 'COMPLETED' | 'PARTIAL' | 'FAILED';
+        error?: string;
+      };
+
+      if (!res.ok) {
+        throw new Error(data.error ?? 'Confirm request failed');
+      }
+
+      const result: CSVImportResult = {
+        sessionId: file.id,
+        status: data.status ?? 'COMPLETED',
+        recordsCreated: data.totalEntries ?? 0,
+        monthsProcessed: data.savedMonths ?? confirmedMonths.length,
+        totalMonths: confirmedMonths.length,
+        errors: [],
+      };
+
+      setImportResult(result);
+      setCurrentStep('results');
+      toast.success(`Imported ${data.totalEntries ?? 0} transactions successfully`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save transactions';
+      toast.error(message);
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   const handleDone = () => {
@@ -55,21 +137,35 @@ export default function CSVImportWizard({
     if (onImportComplete) {
       onImportComplete();
     }
-    // Reset state for next import
-    setCurrentStep('upload');
-    setFile(null);
-    setImportResult(null);
+    resetState();
   };
 
   const handleImportMore = () => {
+    resetState();
+  };
+
+  function resetState() {
     setCurrentStep('upload');
     setFile(null);
     setImportResult(null);
+    setClassifiedMonths([]);
+    setCategories([]);
+    setIsConfirming(false);
+  }
+
+  const currentStepIndex = STEP_KEYS.indexOf(currentStep);
+  const canClose = currentStep !== 'classifying' && !isConfirming;
+
+  const stepSubtitle: Record<CSVWizardStep, string> = {
+    upload: 'Step 1: Select CSV File',
+    classifying: 'Step 2: AI Classification',
+    review: 'Step 3: Review & Confirm',
+    results: 'Step 4: Results',
   };
 
   return (
     <Transition show={isOpen}>
-      <Dialog onClose={onClose} className='relative z-50'>
+      <Dialog onClose={canClose ? onClose : () => undefined} className='relative z-50'>
         <Transition.Child
           enter='ease-out duration-300'
           enterFrom='opacity-0'
@@ -91,23 +187,20 @@ export default function CSVImportWizard({
               leaveFrom='opacity-100 scale-100'
               leaveTo='opacity-0 scale-95'
             >
-              <Dialog.Panel className='w-full max-w-2xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all'>
+              <Dialog.Panel className='w-full max-w-3xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all'>
                 {/* Header */}
                 <div className='flex items-center justify-between border-b border-gray-200 p-6'>
                   <div>
                     <Dialog.Title className='text-lg font-semibold text-gray-900'>
                       CSV Import Wizard
                     </Dialog.Title>
-                    <p className='mt-1 text-sm text-gray-600'>
-                      {currentStep === 'upload' && 'Step 1: Select CSV File'}
-                      {currentStep === 'processing' && 'Step 2: Processing'}
-                      {currentStep === 'results' && 'Step 3: Results'}
-                    </p>
+                    <p className='mt-1 text-sm text-gray-600'>{stepSubtitle[currentStep]}</p>
                   </div>
-                  {currentStep !== 'processing' && (
+                  {canClose && (
                     <button
                       onClick={onClose}
-                      className='text-gray-400 hover:text-gray-600 transition-colors'
+                      className='text-gray-400 transition-colors hover:text-gray-600'
+                      aria-label='Close wizard'
                     >
                       <X className='h-6 w-6' />
                     </button>
@@ -115,34 +208,28 @@ export default function CSVImportWizard({
                 </div>
 
                 {/* Progress Indicator */}
-                <div className='flex gap-2 border-b border-gray-200 px-6 py-3'>
-                  {['upload', 'processing', 'results'].map((step, index) => (
-                    <div key={step} className='flex items-center'>
-                      <div
-                        className={`flex items-center justify-center h-8 w-8 rounded-full text-sm font-semibold ${
-                          currentStep === step
-                            ? 'bg-blue-600 text-white'
-                            : ['upload', 'processing'].includes(currentStep) &&
-                                index <
-                                  ['upload', 'processing', 'results'].indexOf(
-                                    currentStep,
-                                  )
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-200 text-gray-600'
-                        }`}
-                      >
-                        {index + 1}
-                      </div>
-                      {index < 2 && (
+                <div className='flex items-center gap-1 border-b border-gray-200 px-6 py-3'>
+                  {STEPS.map((step, index) => (
+                    <div key={step.key} className='flex items-center'>
+                      <div className='flex flex-col items-center'>
                         <div
-                          className={`h-1 mx-2 flex-1 ${
-                            ['upload', 'processing', 'results'].indexOf(
-                              currentStep,
-                            ) > index
-                              ? 'bg-green-600'
-                              : 'bg-gray-200'
+                          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                            currentStep === step.key
+                              ? 'bg-teal-600 text-white'
+                              : currentStepIndex > index
+                                ? 'bg-green-600 text-white'
+                                : 'bg-gray-200 text-gray-600'
                           }`}
-                          style={{ width: '40px' }}
+                        >
+                          {currentStepIndex > index ? '✓' : index + 1}
+                        </div>
+                        <span className='mt-1 text-xs text-gray-500'>{step.label}</span>
+                      </div>
+                      {index < STEPS.length - 1 && (
+                        <div
+                          className={`mx-2 mb-4 h-1 w-10 ${
+                            currentStepIndex > index ? 'bg-green-600' : 'bg-gray-200'
+                          }`}
                         />
                       )}
                     </div>
@@ -161,11 +248,21 @@ export default function CSVImportWizard({
                     />
                   )}
 
-                  {currentStep === 'processing' && file && (
-                    <CSVProcessingStep
+                  {currentStep === 'classifying' && file && (
+                    <CSVClassifyingStep
                       file={file}
-                      onComplete={handleProcessingComplete}
                       context={context}
+                      onComplete={handleClassifyComplete}
+                      onError={handleClassifyError}
+                    />
+                  )}
+
+                  {currentStep === 'review' && (
+                    <TransactionReviewTable
+                      months={classifiedMonths}
+                      categories={categories}
+                      onConfirm={handleConfirmReview}
+                      isConfirming={isConfirming}
                     />
                   )}
 

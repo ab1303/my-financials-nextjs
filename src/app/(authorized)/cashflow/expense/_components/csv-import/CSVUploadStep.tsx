@@ -180,7 +180,7 @@ export default function CSVUploadStep({
                         <span className='font-medium'>${tx.amount.toFixed(2)}</span>
                       </div>
                       <div className='text-gray-500 mt-1'>
-                        {new Date(tx.date).toLocaleDateString()}
+                        {tx.date}
                       </div>
                     </div>
                   ))}

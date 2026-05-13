@@ -127,12 +127,13 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          // Emit done event
+          // Emit done event — include categories so the client can populate dropdowns
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({
                 type: 'done',
                 totalLlmTokens,
+                categories: categories.map((c) => ({ id: c.id, name: c.name })),
               })}\n\n`,
             ),
           );

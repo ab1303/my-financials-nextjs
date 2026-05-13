@@ -75,4 +75,11 @@ export interface CSVResultsStepProps {
   onImportMore: () => void;
 }
 
-export type CSVWizardStep = 'upload' | 'processing' | 'results';
+export interface CSVClassifyingStepProps {
+  file: UploadedCSVFile;
+  context: CSVImportContext;
+  onComplete: (months: ClassifiedMonth[], categories: Array<{ id: string; name: string }>) => void;
+  onError: (message: string) => void;
+}
+
+export type CSVWizardStep = 'upload' | 'classifying' | 'review' | 'results';
