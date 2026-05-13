@@ -14,7 +14,7 @@
     "type-check": "tsc --noEmit",
     "postinstall": "prisma generate",
     "start": "next start",
-    "test": "vitest --project unit --run",
+    "test": "vitest --run",
     "test:unit": "vitest --project unit",
     "test:unit:watch": "vitest --project unit",
     "test:integration": "vitest --project integration --run",
@@ -139,3 +139,4 @@
     "initVersion": "6.8.0"
   }
 }
+

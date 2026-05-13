@@ -52,7 +52,7 @@ export function isLikelyUnknownMerchant(description: string): boolean {
  * Month of transactions with usage statistics
  */
 export interface ClassifiedMonth {
-  month: string; // "YYYY-MM"
+  month: string;
   transactions: ClassifiedTransaction[];
   totalUsage: {
     promptTokens: number;
@@ -70,6 +70,7 @@ export interface TransactionReviewTableProps {
   llmModel?: string;
   onConfirm: (months: ClassifiedMonth[]) => Promise<void>;
   isConfirming: boolean;
+  onUpdateMonths?: (months: ClassifiedMonth[]) => void;
 }
 
 // GPT-4o-mini: $0.15/1M input, $0.60/1M output tokens
@@ -86,6 +87,7 @@ export default function TransactionReviewTable({
   llmModel = 'gpt-4o-mini',
   onConfirm,
   isConfirming,
+  onUpdateMonths,
 }: TransactionReviewTableProps) {
   const [months, setMonths] = useState<ClassifiedMonth[]>(
     initialMonths.map((m) => ({
@@ -127,35 +129,30 @@ export default function TransactionReviewTable({
         updatedTransactions[txIdx] = updated;
 
         next[monthIdx] = { ...month, transactions: updatedTransactions };
+        onUpdateMonths?.(next);
         return next;
       });
     },
-    [],
+    [onUpdateMonths],
   );
 
   const handleConfirm = useCallback(async () => {
     await onConfirm(months);
   }, [months, onConfirm]);
 
-  // Count total overrides
   const totalOverrides = months.reduce(
     (sum, m) => sum + m.transactions.filter((t) => t.overridden).length,
     0,
   );
 
-  // Calculate total usage
   const totalUsage = {
     promptTokens: months.reduce((sum, m) => sum + m.totalUsage.promptTokens, 0),
-    completionTokens: months.reduce(
-      (sum, m) => sum + m.totalUsage.completionTokens,
-      0,
-    ),
+    completionTokens: months.reduce((sum, m) => sum + m.totalUsage.completionTokens, 0),
     totalTokens: months.reduce((sum, m) => sum + m.totalUsage.totalTokens, 0),
   };
 
   return (
     <div className='flex h-full min-h-0 flex-col'>
-      {/* Header — fixed */}
       <div className='mb-4 flex flex-shrink-0 items-start justify-between'>
         <div>
           <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
@@ -175,7 +172,6 @@ export default function TransactionReviewTable({
         </div>
       </div>
 
-      {/* Month sections — scrollable */}
       <div className='min-h-0 flex-1 space-y-4 overflow-y-auto pr-1'>
         {months.map((month, monthIdx) => (
           <div
@@ -256,9 +252,7 @@ export default function TransactionReviewTable({
                         <td className='px-4 py-3 text-sm'>
                           <select
                             value={tx.confirmedCategory}
-                            onChange={(e) =>
-                              handleCategoryChange(monthIdx, txIdx, e.target.value)
-                            }
+                            onChange={(e) => handleCategoryChange(monthIdx, txIdx, e.target.value)}
                             className='w-full min-w-[140px] rounded border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
                           >
                             {!categories.some((c) => c.name === tx.confirmedCategory) && (
@@ -281,8 +275,7 @@ export default function TransactionReviewTable({
         ))}
       </div>
 
-      {/* Action button — always visible, never scrolls away */}
-      <div className='flex flex-shrink-0 items-center justify-end border-t border-gray-200 pt-4 mt-4 dark:border-gray-700'>
+      <div className='mt-4 flex flex-shrink-0 items-center justify-end border-t border-gray-200 pt-4 dark:border-gray-700'>
         <button
           onClick={handleConfirm}
           disabled={isConfirming}
@@ -295,4 +288,3 @@ export default function TransactionReviewTable({
     </div>
   );
 }
-
