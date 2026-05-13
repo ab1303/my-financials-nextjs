@@ -48,13 +48,13 @@ export const theme = {
 
 // Common input styling classes for consistent styling across the app
 export const inputStyles = {
-  base: 'block w-full px-3 py-2 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500',
+  base: 'block w-full px-3 py-2 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:focus:border-teal-400',
   withIcon:
-    'block w-full pl-10 px-3 py-2 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500',
+    'block w-full pl-10 px-3 py-2 text-sm border border-gray-300 bg-gray-50 text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:focus:border-teal-400',
   error:
-    'block w-full px-3 py-2 text-sm border border-red-300 bg-red-50 text-red-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500',
+    'block w-full px-3 py-2 text-sm border border-red-300 bg-red-50 text-red-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 dark:bg-red-950 dark:text-red-300 dark:border-red-800',
   disabled:
-    'block w-full px-3 py-2 text-sm border border-gray-200 bg-gray-100 text-gray-500 rounded-lg cursor-not-allowed',
+    'block w-full px-3 py-2 text-sm border border-gray-200 bg-gray-100 text-gray-500 rounded-lg cursor-not-allowed dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700',
 };
 
 // Button styling for consistency
@@ -62,7 +62,7 @@ export const buttonStyles = {
   primary:
     'inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
   secondary:
-    'inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700',
   icon: 'inline-flex items-center justify-center w-10 h-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
   iconSmall:
     'inline-flex items-center justify-center w-8 h-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
@@ -120,8 +120,8 @@ export const tableStyles = {
   },
   // Table wrapper (the div that contains the table)
   wrapper: {
-    base: 'overflow-x-auto shadow-sm border border-gray-200 rounded-lg',
-    withBorder: 'overflow-x-auto shadow-sm border border-gray-200 rounded-lg',
+    base: 'overflow-x-auto shadow-sm border border-gray-200 rounded-lg dark:border-gray-700',
+    withBorder: 'overflow-x-auto shadow-sm border border-gray-200 rounded-lg dark:border-gray-700',
     simple: 'overflow-x-auto rounded-lg',
   },
   // Table element itself
@@ -134,11 +134,11 @@ export const tableStyles = {
 
 // Card and panel styling
 export const cardStyles = {
-  base: 'bg-white border border-gray-200 rounded-lg shadow-sm',
+  base: 'bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700',
   interactive:
-    'bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow',
-  elevated: 'bg-white border border-gray-200 rounded-lg shadow-md',
-  flat: 'bg-white border border-gray-200 rounded-lg',
+    'bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700',
+  elevated: 'bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700',
+  flat: 'bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700',
 };
 
 // Modal and overlay styling
@@ -156,8 +156,8 @@ export const formStyles = {
   fieldsetSm: 'space-y-3',
   fieldsetLg: 'space-y-8',
   field: 'space-y-1',
-  label: 'block text-sm font-medium text-gray-700',
-  helpText: 'text-sm text-gray-500',
+  label: 'block text-sm font-medium text-gray-700 dark:text-gray-300',
+  helpText: 'text-sm text-gray-500 dark:text-gray-400',
   errorText: 'text-sm text-red-600',
 };
 
@@ -432,14 +432,14 @@ export const enhancedInputStyles = {
 export const tableCellStyles = {
   // Input fields within table cells
   input: {
-    base: 'w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white',
+    base: 'w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 dark:text-white dark:border-gray-600',
     amount:
-      'w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white text-right font-mono',
-    date: 'block w-full pl-10 px-2 py-1 text-sm border border-gray-300 bg-white text-gray-900 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500',
+      'w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white text-right font-mono dark:bg-gray-800 dark:text-white dark:border-gray-600',
+    date: 'block w-full pl-10 px-2 py-1 text-sm border border-gray-300 bg-white text-gray-900 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-800 dark:text-white dark:border-gray-600',
   },
   // Select/dropdown styling within table cells
   select: {
-    base: 'w-full text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white',
+    base: 'w-full text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-gray-800 dark:text-white dark:border-gray-600',
     container: 'relative z-50', // High z-index for dropdown positioning
     menu: 'z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto',
     menuPortal: 'z-[9999]', // Extremely high z-index for portal

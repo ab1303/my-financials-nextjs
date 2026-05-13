@@ -202,7 +202,7 @@ export default function NewSnapshotModal({
                 type='date'
                 value={snapshotDate}
                 onChange={(e) => setSnapshotDate(e.target.value)}
-                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-800 dark:text-white dark:border-gray-600'
                 required
               />
             </div>
@@ -222,7 +222,7 @@ export default function NewSnapshotModal({
               </div>
 
               {entries.length === 0 ? (
-                <p className='text-gray-500 text-sm text-center py-8 border-2 border-dashed border-gray-300 rounded-lg'>
+                <p className='text-gray-500 dark:text-gray-400 text-sm text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg'>
                   No accounts added yet. Click &quot;Add Account&quot; to start.
                 </p>
               ) : (
@@ -239,7 +239,7 @@ export default function NewSnapshotModal({
                     return (
                       <div
                         key={index}
-                        className='p-4 bg-gray-50 rounded-lg space-y-3'
+                        className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg space-y-3'
                       >
                         {/* Bank Selector */}
                         <div>

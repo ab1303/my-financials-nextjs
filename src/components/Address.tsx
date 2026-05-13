@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
+import { getSelectStyles } from '@/lib/select-styles';
 import { useDebouncedCallback } from 'use-debounce';
 import usePlacesAutocomplete, { getGeocode } from 'use-places-autocomplete';
 import clsx from 'clsx';
@@ -181,7 +182,7 @@ export default function AddressComponent<T extends FieldValues>({
         <div className='mb-4'>
           <Label>Address Format</Label>
           <div className='mt-1'>
-            <Select
+            <Select<{ value: 'AU' | 'GLOBAL'; label: string }>
               instanceId={`${uniqId}-format`}
               value={{
                 value: addressFormat,
@@ -198,6 +199,7 @@ export default function AddressComponent<T extends FieldValues>({
               }}
               isClearable={false}
               isSearchable={false}
+              styles={getSelectStyles<{ value: 'AU' | 'GLOBAL'; label: string }>()}
             />
           </div>
         </div>
@@ -222,13 +224,14 @@ export default function AddressComponent<T extends FieldValues>({
                       instanceId={uniqId}
                       {...selectProps}
                       styles={{
-                        control: (base) =>
-                          ({
-                            ...base,
-                            borderColor:
-                              addressFields.addressLineError &&
-                              'rgba(194, 65, 12)',
-                          }) as typeof base,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        ...(getSelectStyles() as any),
+                        control: (base: import('react-select').CSSObjectWithLabel, state: import('react-select').ControlProps<{ label: string }, false>) => ({
+                          ...getSelectStyles<{ label: string }>().control!(base, state),
+                          ...(addressFields.addressLineError
+                            ? { borderColor: 'rgba(194, 65, 12)' }
+                            : {}),
+                        }),
                       }}
                       value={{ label: String(value) }}
                       loadOptions={fetchSuggestions}

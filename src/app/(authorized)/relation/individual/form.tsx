@@ -14,6 +14,7 @@ import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
+import { getSelectStyles } from '@/lib/select-styles';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 
@@ -385,6 +386,7 @@ export default function IndividualForm() {
                   instanceId={uniqSelectIndividualId}
                   getOptionValue={(option) => option.id}
                   onChange={(option) => handleOptionChange(option)}
+                  styles={getSelectStyles<IndividualOptionType>()}
                 />
               </div>
             </div>
@@ -419,6 +421,7 @@ export default function IndividualForm() {
                   instanceId={uniqSelectRelationshipId}
                   getOptionValue={(option) => option.id}
                   placeholder='Select or type a relationship...'
+                  styles={getSelectStyles<RelationshipOptionType>()}
                   onInputChange={(inputValue, { action }) => {
                     if (action === 'input-change') {
                       formFieldSetValue('relationshipName', inputValue);

@@ -29,15 +29,15 @@ function ImportCard({ title, description, onClick, icon }: ImportCardProps) {
       tabIndex={0}
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      className="cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md"
+      className="cursor-pointer rounded-xl border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md"
     >
       <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400">
           {icon}
         </div>
         <div>
-          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-          <p className="mt-0.5 text-sm text-gray-500">{description}</p>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
+          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
         </div>
       </div>
     </div>
@@ -54,8 +54,8 @@ export default function TransactionsClient({ bankAccounts }: Props) {
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-semibold text-gray-900">Transactions</h1>
-      <p className="mt-1 text-sm text-gray-500">
+      <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Transactions</h1>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Import and manage your bank transactions
       </p>
 

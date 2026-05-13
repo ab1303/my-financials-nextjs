@@ -13,6 +13,7 @@ import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
+import { getSelectStyles } from '@/lib/select-styles';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 import { BusinessEnumType } from '@/types/enum';
@@ -238,6 +239,7 @@ export default function BusinessForm() {
                   instanceId={uniqSelectBusinessId}
                   getOptionValue={(option) => option.id}
                   onChange={(option) => handleOptionChange(option)}
+                  styles={getSelectStyles<BusinessOptionType>()}
                 />
               </div>
             </div>
@@ -264,7 +266,7 @@ export default function BusinessForm() {
                 <select
                   id='type'
                   className={clsx(
-                    'block w-full max-w-md px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500',
+                    'block w-full max-w-md px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-800 dark:text-white dark:border-gray-600',
                     {
                       'border-red-500 focus:ring-red-500 focus:border-red-500':
                         errors.type,

@@ -6,7 +6,7 @@ type CardHeaderTextProps = {
 
 const CardHeaderText = ({ children, ...props }: CardHeaderTextProps) => {
   return (
-    <span className='font-light text-gray-600' {...props}>
+    <span className='font-light text-gray-600 dark:text-gray-300' {...props}>
       {children}
     </span>
   );

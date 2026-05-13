@@ -13,6 +13,7 @@ import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
+import { getSelectStyles } from '@/lib/select-styles';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 import type { BankType } from '@/types';
@@ -214,6 +215,7 @@ export default function BanksForm() {
                   instanceId={uniqSelectBankId}
                   getOptionValue={(option) => option.id}
                   onChange={(option) => handleOptionChange(option)}
+                  styles={getSelectStyles<BankOptionType>()}
                 />
               </div>
             </div>

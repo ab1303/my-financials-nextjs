@@ -83,7 +83,7 @@ export default function ExpenseForm({
     <div className='w-full max-w-md'>
       <label
         htmlFor={`expense-year-${id}`}
-        className='block text-sm font-medium text-gray-700 mb-2'
+        className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default'
       >
         Fiscal Year
       </label>
