@@ -12,7 +12,7 @@ import { Card } from '@/components';
 import { Modal, Label } from '@/components/ui';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import { inputStyles, buttonStyles } from '@/styles/theme';
-import ImportAuditIcon from './ai-import/ImportAuditIcon';
+import ImportAuditIcon from '@/components/ImportAuditIcon';
 import {
   addRow,
   editRow,

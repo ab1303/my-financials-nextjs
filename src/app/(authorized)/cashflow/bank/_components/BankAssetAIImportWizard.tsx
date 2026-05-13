@@ -3,16 +3,24 @@
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
-import UploadStep from '../../expense/_components/ai-import/UploadStep';
-import ProcessingStep from '../../expense/_components/ai-import/ProcessingStep';
-import ResultsStep from '../../expense/_components/ai-import/ResultsStep';
-import type {
-  BankAssetAIImportWizardProps,
-  WizardStep,
-  UploadedFile,
-  ImportSessionResult,
-  BankAssetImportContext,
-} from '../../expense/_components/ai-import/_types';
+import UploadStep from '../../transactions/_components/ai/UploadStep';
+import BankProcessingStep from './BankAIProcessingStep';
+import ResultsStep from '../../transactions/_components/ai/ResultsStep';
+import type { UploadedFile, AIImportSessionResult } from '../../transactions/_components/ai/_types';
+
+type WizardStep = 'upload' | 'processing' | 'results';
+
+interface BankAssetImportContext {
+  importType: 'BANK_ASSET';
+  snapshotDate: string;
+}
+
+interface BankAssetAIImportWizardProps {
+  isOpen: boolean;
+  onClose: () => void;
+  defaultSnapshotDate?: string;
+  onImportComplete?: () => void;
+}
 
 export default function BankAssetAIImportWizard({
   isOpen,
@@ -22,7 +30,7 @@ export default function BankAssetAIImportWizard({
 }: BankAssetAIImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>('upload');
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [importResult, setImportResult] = useState<ImportSessionResult | null>(
+  const [importResult, setImportResult] = useState<AIImportSessionResult | null>(
     null,
   );
 
@@ -49,7 +57,7 @@ export default function BankAssetAIImportWizard({
     setCurrentStep('processing');
   };
 
-  const handleProcessingComplete = (result: ImportSessionResult) => {
+  const handleProcessingComplete = (result: AIImportSessionResult) => {
     setImportResult(result);
     setCurrentStep('results');
   };
@@ -184,15 +192,17 @@ export default function BankAssetAIImportWizard({
                       onFilesSelected={handleFilesSelected}
                       onRemoveFile={handleRemoveFile}
                       onStartImport={handleStartImport}
-                      context={context}
+                      bankAccounts={[]}
+                      selectedBankAccountId={null}
+                      onBankAccountChange={() => {}}
                     />
                   )}
 
                   {currentStep === 'processing' && (
-                    <ProcessingStep
+                    <BankProcessingStep
                       files={files}
+                      snapshotDate={snapshotDate}
                       onComplete={handleProcessingComplete}
-                      context={context}
                     />
                   )}
 

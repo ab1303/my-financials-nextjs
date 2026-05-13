@@ -23,7 +23,7 @@ import { Modal } from '@/components/ui/Modal';
 import NewSnapshotModal from './NewSnapshotModal';
 import { updateAccountName } from './actions';
 import BankAssetAIImportWizard from './_components/BankAssetAIImportWizard';
-import ImportAuditIcon from '../expense/_components/ai-import/ImportAuditIcon';
+import ImportAuditIcon from '@/components/ImportAuditIcon';
 import AIUsageCard from '@/components/AIUsageCard';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
