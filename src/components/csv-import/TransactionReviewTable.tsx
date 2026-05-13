@@ -157,68 +157,70 @@ export default function TransactionReviewTable({
   };
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header with stats */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
             Review Classifications
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            {months.reduce((sum, m) => sum + m.transactions.length, 0)} transactions • {totalOverrides} changes applied
+          <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>
+            {months.reduce((sum, m) => sum + m.transactions.length, 0)} transactions •{' '}
+            {totalOverrides} changes applied
           </p>
         </div>
-        <div className="text-right text-xs text-gray-500">
+        <div className='text-right text-xs text-gray-500 dark:text-gray-400'>
           <p>Tokens: {totalUsage.totalTokens}</p>
         </div>
       </div>
 
       {/* Month sections */}
-      <div className="space-y-4">
+      <div className='space-y-4'>
         {months.map((month, monthIdx) => (
-          <div key={month.month} className="border rounded-lg overflow-hidden">
+          <div
+            key={month.month}
+            className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'
+          >
             {/* Month header */}
             <button
               onClick={() => handleToggleMonth(month.month)}
-              className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 flex items-center justify-between"
+              className='flex w-full items-center justify-between bg-gray-50 px-4 py-3 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700'
             >
-              <div className="flex items-center space-x-2">
+              <div className='flex items-center space-x-2'>
                 {expandedMonths.has(month.month) ? (
-                  <ChevronUp className="h-4 w-4 text-gray-600" />
+                  <ChevronUp className='h-4 w-4 text-gray-600 dark:text-gray-400' />
                 ) : (
-                  <ChevronDown className="h-4 w-4 text-gray-600" />
+                  <ChevronDown className='h-4 w-4 text-gray-600 dark:text-gray-400' />
                 )}
-                <span className="font-medium text-gray-900">
-                  {month.month}
-                </span>
-                <span className="text-sm text-gray-600">
+                <span className='font-medium text-gray-900 dark:text-white'>{month.month}</span>
+                <span className='text-sm text-gray-600 dark:text-gray-400'>
                   ({month.transactions.length} transactions)
                 </span>
               </div>
-              <span className="text-xs text-gray-500">
+              <span className='text-xs text-gray-500 dark:text-gray-400'>
                 {month.transactions.filter((t) => t.overridden).length} changes
               </span>
             </button>
 
             {/* Month content */}
             {expandedMonths.has(month.month) && (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-100 border-b">
+              <div className='overflow-x-auto'>
+                <table className='w-full min-w-[600px]'>
+                  <thead className='border-b bg-gray-100 dark:border-gray-700 dark:bg-gray-800'>
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      <th className='w-28 px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300'>
                         Date
                       </th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      <th className='px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300'>
                         Description
                       </th>
-                      <th className="px-4 py-2 text-right text-xs font-semibold text-gray-700">
+                      <th className='w-24 px-4 py-2 text-right text-xs font-semibold text-gray-700 dark:text-gray-300'>
                         Amount
                       </th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      <th className='w-36 px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300'>
                         LLM Suggested
                       </th>
-                      <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700">
+                      <th className='w-44 px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300'>
                         Your Category
                       </th>
                     </tr>
@@ -227,43 +229,46 @@ export default function TransactionReviewTable({
                     {month.transactions.map((tx, txIdx) => (
                       <tr
                         key={tx.id}
-                        className={`border-b transition-colors ${
+                        className={`border-b transition-colors dark:border-gray-700 ${
                           tx.overridden
-                            ? 'bg-amber-50 hover:bg-amber-100'
-                            : 'hover:bg-gray-50'
+                            ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                         }`}
                       >
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          {new Date(tx.date).toLocaleDateString('en-AU')}
+                        <td className='px-4 py-3 text-sm text-gray-900 dark:text-gray-200'>
+                          {tx.date}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          <div className="flex items-center space-x-2">
+                        <td className='max-w-[240px] px-4 py-3 text-sm text-gray-900 dark:text-gray-200'>
+                          <div className='flex items-center space-x-2'>
                             {isLikelyUnknownMerchant(tx.description) && (
-                              <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                              <AlertCircle className='h-4 w-4 flex-shrink-0 text-amber-500' />
                             )}
-                            <span className="font-medium">
+                            <span
+                              className='truncate font-medium'
+                              title={tx.description}
+                            >
                               {tx.description}
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-right text-gray-900 font-medium">
+                        <td className='px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-gray-200'>
                           ${tx.amount.toFixed(2)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
                           {tx.llmCategory}
                         </td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className='px-4 py-3 text-sm'>
                           <select
                             value={tx.confirmedCategory}
                             onChange={(e) =>
-                              handleCategoryChange(
-                                monthIdx,
-                                txIdx,
-                                e.target.value,
-                              )
+                              handleCategoryChange(monthIdx, txIdx, e.target.value)
                             }
-                            className="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-0 bg-white text-sm"
+                            className='w-full min-w-[140px] rounded border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
                           >
+                            {/* fallback option when confirmedCategory not in list */}
+                            {!categories.some((c) => c.name === tx.confirmedCategory) && (
+                              <option value={tx.confirmedCategory}>{tx.confirmedCategory}</option>
+                            )}
                             {categories.map((cat) => (
                               <option key={cat.id} value={cat.name}>
                                 {cat.name}
@@ -282,11 +287,11 @@ export default function TransactionReviewTable({
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className='flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700'>
         <button
           onClick={handleAcceptAll}
           disabled={isConfirming}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className='rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
         >
           Accept All
         </button>
@@ -294,9 +299,9 @@ export default function TransactionReviewTable({
         <button
           onClick={handleConfirm}
           disabled={isConfirming}
-          className="flex items-center space-x-2 px-6 py-2 bg-teal-600 text-white rounded font-medium hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className='flex items-center space-x-2 rounded bg-teal-600 px-6 py-2 font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50'
         >
-          {isConfirming && <Loader2 className="h-4 w-4 animate-spin" />}
+          {isConfirming && <Loader2 className='h-4 w-4 animate-spin' />}
           <span>{isConfirming ? 'Saving...' : 'Confirm & Save'}</span>
         </button>
       </div>

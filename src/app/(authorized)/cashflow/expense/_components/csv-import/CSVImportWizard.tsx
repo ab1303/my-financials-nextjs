@@ -187,19 +187,21 @@ export default function CSVImportWizard({
               leaveFrom='opacity-100 scale-100'
               leaveTo='opacity-0 scale-95'
             >
-              <Dialog.Panel className='w-full max-w-3xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all'>
+              <Dialog.Panel className='w-full max-w-5xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all dark:bg-gray-900'>
                 {/* Header */}
-                <div className='flex items-center justify-between border-b border-gray-200 p-6'>
+                <div className='flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700'>
                   <div>
-                    <Dialog.Title className='text-lg font-semibold text-gray-900'>
+                    <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-white'>
                       CSV Import Wizard
                     </Dialog.Title>
-                    <p className='mt-1 text-sm text-gray-600'>{stepSubtitle[currentStep]}</p>
+                    <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>
+                      {stepSubtitle[currentStep]}
+                    </p>
                   </div>
                   {canClose && (
                     <button
                       onClick={onClose}
-                      className='text-gray-400 transition-colors hover:text-gray-600'
+                      className='text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                       aria-label='Close wizard'
                     >
                       <X className='h-6 w-6' />
@@ -208,7 +210,7 @@ export default function CSVImportWizard({
                 </div>
 
                 {/* Progress Indicator */}
-                <div className='flex items-center gap-1 border-b border-gray-200 px-6 py-3'>
+                <div className='flex items-center gap-1 border-b border-gray-200 px-6 py-3 dark:border-gray-700'>
                   {STEPS.map((step, index) => (
                     <div key={step.key} className='flex items-center'>
                       <div className='flex flex-col items-center'>
@@ -218,17 +220,21 @@ export default function CSVImportWizard({
                               ? 'bg-teal-600 text-white'
                               : currentStepIndex > index
                                 ? 'bg-green-600 text-white'
-                                : 'bg-gray-200 text-gray-600'
+                                : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                           }`}
                         >
                           {currentStepIndex > index ? '✓' : index + 1}
                         </div>
-                        <span className='mt-1 text-xs text-gray-500'>{step.label}</span>
+                        <span className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+                          {step.label}
+                        </span>
                       </div>
                       {index < STEPS.length - 1 && (
                         <div
                           className={`mx-2 mb-4 h-1 w-10 ${
-                            currentStepIndex > index ? 'bg-green-600' : 'bg-gray-200'
+                            currentStepIndex > index
+                              ? 'bg-green-600'
+                              : 'bg-gray-200 dark:bg-gray-700'
                           }`}
                         />
                       )}
