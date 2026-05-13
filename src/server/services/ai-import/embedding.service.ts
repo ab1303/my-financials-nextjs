@@ -41,10 +41,13 @@ export function getEmbeddingProvider() {
   if (!apiKey) throw new Error('AI_API_KEY is required for embedding service.');
   const provider = process.env.AI_PROVIDER || 'github';
   const model = process.env.AI_EMBEDDING_MODEL || 'text-embedding-3-small';
+  const baseURL = process.env.AI_BASE_URL;
 
   const openai = createOpenAI({
     apiKey,
-    ...(provider === 'github' && { baseURL: 'https://models.inference.ai.azure.com' }),
+    ...(baseURL
+      ? { baseURL }
+      : provider === 'github' && { baseURL: 'https://models.inference.ai.azure.com' }),
   });
 
   return openai.embedding(model);

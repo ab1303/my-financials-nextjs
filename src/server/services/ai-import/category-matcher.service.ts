@@ -138,6 +138,7 @@ export function matchCategories(
 import {
   ensureCategoryEmbeddings,
   findBestCategoryMatch,
+  findBestCategoryMatchWithRetry,
 } from './embedding.service';
 import type { AITokenUsage } from './_types';
 
@@ -179,13 +180,12 @@ export async function matchCategoryWithEmbedding(
     return { categoryName: substringMatch.name, embeddingUsage: zeroUsage };
   }
 
-  // Strategy 3: Embedding cosine similarity
+  // Strategy 3: Embedding cosine similarity (with retry for rate-limit resilience)
   try {
     // Ensure category embeddings are cached (no-op if already cached)
     const cacheUsage = await ensureCategoryEmbeddings(availableCategories);
 
-    const categoryNames = availableCategories.map((c) => c.name);
-    const result = await findBestCategoryMatch(extractedName, availableCategories);
+    const result = await findBestCategoryMatchWithRetry(extractedName, availableCategories);
 
     if (!result) {
       // No match found above threshold

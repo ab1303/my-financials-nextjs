@@ -1,5 +1,4 @@
 /// <reference types="vitest/config" />
-import { resolve } from 'path';
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import react from '@vitejs/plugin-react';
@@ -28,6 +27,7 @@ export default defineConfig({
           name: 'integration',
           include: ['src/__tests__/integration/**/*.integration.test.ts'],
           setupFiles: ['./vitest.integration.setup.ts'],
+          environment: 'node',
           testTimeout: 15000,
           hookTimeout: 15000,
         }

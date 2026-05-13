@@ -15,12 +15,11 @@ import type {
  * - "openai": Direct OpenAI API (paid)
  */
 
-const GITHUB_MODELS_BASE_URL = 'https://models.inference.ai.azure.com';
-
 function getAIProvider() {
   const provider = process.env.AI_PROVIDER ?? 'github';
   const modelId = process.env.AI_VISION_MODEL ?? 'gpt-4o-mini';
   const apiKey = process.env.AI_API_KEY;
+  const baseURL = process.env.AI_BASE_URL;
 
   if (!apiKey) {
     throw new Error(
@@ -30,7 +29,9 @@ function getAIProvider() {
 
   const openai = createOpenAI({
     apiKey,
-    ...(provider === 'github' && { baseURL: GITHUB_MODELS_BASE_URL }),
+    ...(baseURL
+      ? { baseURL }
+      : provider === 'github' && { baseURL: 'https://models.inference.ai.azure.com' }),
   });
 
   return openai.chat(modelId);
