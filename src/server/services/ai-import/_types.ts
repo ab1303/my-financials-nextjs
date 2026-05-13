@@ -175,3 +175,41 @@ export interface CsvParseRequest {
     calendarId: string;
   };
 }
+
+/**
+ * Classified transaction after LLM categorization
+ */
+export interface ClassifiedTransaction {
+  id: string; // crypto.randomUUID()
+  description: string;
+  amount: number;
+  date: string; // ISO date string
+  llmCategory: string; // LLM's suggestion
+  confirmedCategory: string; // starts = llmCategory; user may change
+  overridden: boolean; // true if user changed from llmCategory
+}
+
+/**
+ * Request body for CSV classify endpoint
+ */
+export interface ClassifyRequest {
+  fileId: string;
+  calendarId: string;
+}
+
+/**
+ * Confirm import request with reviewed classifications
+ */
+export interface ConfirmImportRequest {
+  fileId: string;
+  calendarYearId: string;
+  llmUsage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  months: Array<{
+    month: string; // "YYYY-MM"
+    transactions: ClassifiedTransaction[];
+  }>;
+}

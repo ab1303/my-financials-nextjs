@@ -212,6 +212,48 @@ export const CsvParseRequestSchema = z.object({
 export type CsvParseRequestType = z.infer<typeof CsvParseRequestSchema>;
 
 /**
+ * CSV classify request validation schema
+ */
+export const ClassifyRequestSchema = z.object({
+  fileId: z.string().min(1),
+  calendarId: z.string().min(1),
+});
+
+/**
+ * Classified transaction schema
+ */
+export const ClassifiedTransactionSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  amount: z.number().positive(),
+  date: z.string(),
+  llmCategory: z.string(),
+  confirmedCategory: z.string().min(1),
+  overridden: z.boolean(),
+});
+
+/**
+ * Confirm import request validation schema
+ */
+export const ConfirmImportRequestSchema = z.object({
+  fileId: z.string().min(1),
+  calendarYearId: z.string().min(1),
+  llmUsage: z.object({
+    promptTokens: z.number().int().min(0),
+    completionTokens: z.number().int().min(0),
+    totalTokens: z.number().int().min(0),
+  }),
+  months: z
+    .array(
+      z.object({
+        month: z.string().regex(/^\d{4}-\d{2}$/),
+        transactions: z.array(ClassifiedTransactionSchema).min(1),
+      }),
+    )
+    .min(1),
+});
+
+/**
  * Allowed MIME types for CSV uploads
  */
 export const ALLOWED_CSV_MIME_TYPES = [

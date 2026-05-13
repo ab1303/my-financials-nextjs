@@ -1,4 +1,5 @@
 // CSV Import Wizard Types for Expense Tracking
+import type { ClassifiedTransaction } from '@/server/services/ai-import/_types';
 
 export interface UploadedCSVFile {
   id: string;
@@ -34,6 +35,16 @@ export interface CSVImportResult {
     month: number;
     message: string;
   }>;
+}
+
+export interface ClassifiedMonth {
+  month: string; // "YYYY-MM"
+  transactions: ClassifiedTransaction[];
+  totalUsage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
 }
 
 export interface CSVImportWizardProps {

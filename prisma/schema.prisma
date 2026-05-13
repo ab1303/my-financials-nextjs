@@ -61,21 +61,22 @@ model User {
   password      String
   role          RoleEnumType? @default(user)
 
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  accounts          Account[]
-  sessions          Session[]
-  Individual        Individual[]
-  Business          Business[]
-  Relationship      Relationship[]
-  Income            Income[]
-  Expense           Expense[]
-  BankAccount       BankAccount[]
-  BankAssetSnapshot BankAssetSnapshot[]
-  StockSnapshot     StockSnapshot[]
-  AIImportSession   AIImportSession[]
-  ImportImage       ImportImage[]
-  AIUsageLog        AIUsageLog[]
+  createdAt                    DateTime                      @default(now())
+  updatedAt                    DateTime                      @updatedAt
+  accounts                     Account[]
+  sessions                     Session[]
+  Individual                   Individual[]
+  Business                     Business[]
+  Relationship                 Relationship[]
+  Income                       Income[]
+  Expense                      Expense[]
+  BankAccount                  BankAccount[]
+  BankAssetSnapshot            BankAssetSnapshot[]
+  StockSnapshot                StockSnapshot[]
+  AIImportSession              AIImportSession[]
+  ImportImage                  ImportImage[]
+  AIUsageLog                   AIUsageLog[]
+  transactionCategoryOverrides TransactionCategoryOverride[]
 }
 
 model VerificationToken {
@@ -505,4 +506,19 @@ model AIUsageLog {
   @@index([userId, importType, createdAt])
   @@index([importType, createdAt])
   @@index([sessionId])
+}
+
+// Transaction Category Overrides - User-provided or LLM-confirmed category mappings
+model TransactionCategoryOverride {
+  id          String   @id @default(cuid())
+  userId      String
+  description String   // lowercased, trimmed bank transaction description
+  category    String   // expense category name
+  source      String   // "llm_confirmed" or "user_override"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, description])
+  @@index([userId])
 }
