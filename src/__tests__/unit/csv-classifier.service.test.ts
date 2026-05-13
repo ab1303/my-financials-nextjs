@@ -36,6 +36,7 @@ describe('csv-classifier.service', () => {
     {
       date: '02/07/2025',
       amount: 15.99,
+      type: 'DEBIT',
       description: 'NETFLIX SUBSCRIPTION',
       month: 7,
       year: 2025,
@@ -43,6 +44,7 @@ describe('csv-classifier.service', () => {
     {
       date: '03/07/2025',
       amount: 1200.0,
+      type: 'DEBIT',
       description: 'DEFT PAYMENTS STRATA',
       month: 7,
       year: 2025,

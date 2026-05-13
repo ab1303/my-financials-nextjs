@@ -67,7 +67,7 @@ export interface ClassifiedMonth {
 export interface TransactionReviewTableProps {
   months: ClassifiedMonth[];
   categories: Array<{ id: string; name: string }>;
-  llmModel: string;
+  llmModel?: string;
   onConfirm: (months: ClassifiedMonth[]) => Promise<void>;
   isConfirming: boolean;
 }
@@ -83,7 +83,7 @@ function estimateCostUSD(totalTokens: number, model: string): string {
 export default function TransactionReviewTable({
   months: initialMonths,
   categories,
-  llmModel,
+  llmModel = 'gpt-4o-mini',
   onConfirm,
   isConfirming,
 }: TransactionReviewTableProps) {
@@ -295,3 +295,4 @@ export default function TransactionReviewTable({
     </div>
   );
 }
+

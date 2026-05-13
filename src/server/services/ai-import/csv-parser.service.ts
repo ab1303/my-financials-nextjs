@@ -14,7 +14,7 @@ export function validateCsvHeaders(headers: string[]): boolean {
 
 /**
  * Parse a single CSV row into a CsvTransaction
- * Returns null if the transaction is a credit (positive amount)
+ * Returns null if the transaction amount is zero
  * Throws error if invalid data
  */
 export function parseCsvRow(row: Record<string, string>): CsvTransaction | null {
@@ -40,10 +40,14 @@ export function parseCsvRow(row: Record<string, string>): CsvTransaction | null 
     throw new Error(`Invalid amount: "${amountStr}"`);
   }
 
-  // Only process debits (negative amounts)
-  if (amountNum >= 0) {
+  // Skip zero amounts (neither debit nor credit)
+  if (amountNum === 0) {
     return null;
   }
+
+  // Derive transaction type from sign before making amount absolute
+  const type: 'DEBIT' | 'CREDIT' = amountNum < 0 ? 'DEBIT' : 'CREDIT';
+  const amount = Math.abs(amountNum);
 
   const dateStr = getField('date');
   if (!dateStr) {
@@ -74,7 +78,8 @@ export function parseCsvRow(row: Record<string, string>): CsvTransaction | null 
 
   return {
     date: dateStr,
-    amount: Math.abs(amountNum),
+    amount,
+    type,
     description,
     month,
     year,
@@ -96,7 +101,7 @@ function looksLikeDataRow(line: string): boolean {
  * Supports both formats:
  *   - With headers: Date, Amount, Description, Balance
  *   - Without headers: CommBank web export (positional columns: date, amount, description, balance)
- * Filters to debit transactions only (negative amounts in CSV become positive)
+  * Includes both debit and credit transactions
  * Normalizes amounts to positive values
  * Handles quoted fields (CommBank format uses quotes for fields with special chars)
  */
@@ -178,14 +183,14 @@ export async function parseCommBankCsv(csvContent: string): Promise<CsvParseResu
   if (transactions.length === 0) {
     return {
       success: false,
-      error: 'No debit transactions found in CSV',
+      error: 'No transactions found in CSV',
     };
   }
 
   return {
     success: true,
     transactions,
-    message: `Successfully parsed ${transactions.length} debit transactions`,
+    message: `Successfully parsed ${transactions.length} transactions`,
   };
 }
 
@@ -224,3 +229,5 @@ function parseCSVLine(line: string): string[] {
   result.push(current.trim());
   return result;
 }
+
+

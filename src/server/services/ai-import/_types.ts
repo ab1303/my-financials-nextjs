@@ -137,7 +137,8 @@ export interface EmbeddingMatchResult {
  */
 export interface CsvTransaction {
   date: string; // 'DD/MM/YYYY'
-  amount: number; // positive absolute value
+  amount: number; // always positive absolute value
+  type: 'DEBIT' | 'CREDIT';  // derived from raw CSV amount sign
   description: string;
   month: number; // 1-12
   year: number;
@@ -213,3 +214,4 @@ export interface ConfirmImportRequest {
     transactions: ClassifiedTransaction[];
   }>;
 }
+

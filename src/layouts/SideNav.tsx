@@ -18,6 +18,7 @@ import {
   ChevronRight,
   ChevronLeft,
   DollarSign,
+  ArrowLeftRight,
   Landmark,
   CandlestickChart,
   Users,
@@ -60,6 +61,7 @@ const cashflowItems: NavItem[] = [
   { name: 'Income', href: '/cashflow/income', icon: DollarSign },
   { name: 'Donations', href: '/cashflow/donations', icon: Gift },
   { name: 'Expenses', href: '/cashflow/expense', icon: Receipt },
+  { name: 'Transactions', href: '/cashflow/transactions', icon: ArrowLeftRight },
   { name: 'Bank Interest', href: '/cashflow/bank-interest', icon: Percent },
 ];
 
@@ -205,6 +207,7 @@ export default function SideNav({
         pathname.startsWith('/cashflow/income') ||
         pathname.startsWith('/cashflow/donations') ||
         pathname.startsWith('/cashflow/expense') ||
+        pathname.startsWith('/cashflow/transactions') ||
         pathname.startsWith('/cashflow/bank-interest'),
     },
     {

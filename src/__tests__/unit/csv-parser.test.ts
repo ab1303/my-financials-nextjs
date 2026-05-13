@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { parseCommBankCsv, validateCsvHeaders, parseCsvRow } from '@/server/services/ai-import/csv-parser.service';
-import { CsvTransaction } from '@/server/services/ai-import/_types';
 
 describe('parseCommBankCsv', () => {
   const validCsv = [
@@ -10,24 +9,36 @@ describe('parseCommBankCsv', () => {
     '03/01/2024,-20.50,Coffee,929.50',
   ].join('\n');
 
-  it('parses valid CSV and filters debits only', async () => {
+  it('parses valid CSV including both debits and credits', async () => {
     const result = await parseCommBankCsv(validCsv);
     expect(result.success).toBe(true);
-    expect(result.transactions).toHaveLength(2);
+    expect(result.transactions).toHaveLength(3);
     expect(result.transactions![0]).toMatchObject({
       date: '01/01/2024',
       amount: 50,
+      type: 'DEBIT',
       description: 'Groceries',
       month: 1,
       year: 2024,
       balance: 950,
     });
     expect(result.transactions![1]).toMatchObject({
+      date: '02/01/2024',
+      amount: 1000,
+      type: 'CREDIT',
+      description: 'Salary',
+      month: 1,
+      year: 2024,
+      balance: 1950,
+    });
+    expect(result.transactions![2]).toMatchObject({
       date: '03/01/2024',
       amount: 20.5,
+      type: 'DEBIT',
       description: 'Coffee',
       month: 1,
       year: 2024,
+      balance: 929.5,
     });
   });
 
@@ -41,6 +52,7 @@ describe('parseCommBankCsv', () => {
     expect(result.transactions![0]).toMatchObject({
       month: 12,
       year: 2023,
+      type: 'DEBIT',
     });
   });
 
@@ -99,17 +111,17 @@ describe('parseCommBankCsv', () => {
     expect(result.success).toBe(true);
     expect(result.transactions![0].description).toBe('Lunch');
     expect(result.transactions![0].amount).toBe(5);
+    expect(result.transactions![0].type).toBe('DEBIT');
   });
 
-  it('returns error when no debit transactions found', async () => {
+  it('returns error when no transactions found', async () => {
     const csv = [
       'Date,Amount,Description,Balance',
-      '01/01/2024,100.00,Salary,1100.00',
-      '02/01/2024,50.00,Transfer,1150.00',
+      '01/01/2024,0.00,Zero,0.00',
     ].join('\n');
     const result = await parseCommBankCsv(csv);
     expect(result.success).toBe(false);
-    expect(result.error).toMatch(/No debit transactions/);
+    expect(result.error).toMatch(/No transactions found/);
   });
 
   it('handles mixed positive and negative amounts', async () => {
@@ -121,7 +133,8 @@ describe('parseCommBankCsv', () => {
     ].join('\n');
     const result = await parseCommBankCsv(csv);
     expect(result.success).toBe(true);
-    expect(result.transactions).toHaveLength(2);
+    expect(result.transactions).toHaveLength(3);
+    expect(result.transactions!.map(t => t.type)).toEqual(['DEBIT', 'CREDIT', 'DEBIT']);
   });
 
   it('handles dates in different months', async () => {
@@ -172,18 +185,35 @@ describe('parseCsvRow', () => {
     expect(result).toMatchObject({
       date: '01/01/2024',
       amount: 50,
+      type: 'DEBIT',
       description: 'Groceries',
       month: 1,
       year: 2024,
     });
   });
 
-  it('returns null for credit transaction', () => {
+  it('returns CREDIT type for positive amount', () => {
     const row = {
       Date: '01/01/2024',
-      Amount: '100.00',
+      Amount: '1000.00',
       Description: 'Salary',
       Balance: '1100.00',
+    };
+    const result = parseCsvRow(row);
+    expect(result).not.toBeNull();
+    expect(result).toMatchObject({
+      type: 'CREDIT',
+      amount: 1000,
+      description: 'Salary',
+    });
+  });
+
+  it('returns null for zero amount', () => {
+    const row = {
+      Date: '01/01/2024',
+      Amount: '0.00',
+      Description: 'Zero',
+      Balance: '0.00',
     };
     expect(parseCsvRow(row)).toBeNull();
   });
@@ -206,5 +236,52 @@ describe('parseCsvRow', () => {
       Balance: '950.00',
     };
     expect(() => parseCsvRow(row)).toThrow(/Invalid date/);
+  });
+});
+
+describe('DEBIT/CREDIT type detection', () => {
+  it('sets type DEBIT for negative amounts', async () => {
+    const csv = ['Date,Amount,Description,Balance', '01/01/2024,-50.00,Groceries,950.00'].join('\n');
+    const result = await parseCommBankCsv(csv);
+    expect(result.success).toBe(true);
+    expect(result.transactions![0].type).toBe('DEBIT');
+  });
+
+  it('sets type CREDIT for positive amounts', async () => {
+    const csv = ['Date,Amount,Description,Balance', '01/01/2024,1000.00,Salary Deposit,1000.00'].join('\n');
+    const result = await parseCommBankCsv(csv);
+    expect(result.success).toBe(true);
+    expect(result.transactions).toHaveLength(1);
+    expect(result.transactions![0]).toMatchObject({
+      type: 'CREDIT',
+      amount: 1000,
+      description: 'Salary Deposit',
+    });
+  });
+
+  it('parses mixed CSV with both debits and credits', async () => {
+    const csv = [
+      'Date,Amount,Description,Balance',
+      '01/01/2024,-50.00,Groceries,950.00',
+      '02/01/2024,1000.00,Salary,1950.00',
+      '03/01/2024,-20.50,Coffee,929.50',
+    ].join('\n');
+    const result = await parseCommBankCsv(csv);
+    expect(result.success).toBe(true);
+    expect(result.transactions).toHaveLength(3);
+    const types = result.transactions!.map(t => t.type);
+    expect(types).toEqual(['DEBIT', 'CREDIT', 'DEBIT']);
+  });
+
+  it('sets amount to positive absolute value regardless of type', async () => {
+    const csv = [
+      'Date,Amount,Description,Balance',
+      '01/01/2024,-123.45,Expense,876.55',
+      '02/01/2024,500.00,Income,1376.55',
+    ].join('\n');
+    const result = await parseCommBankCsv(csv);
+    expect(result.success).toBe(true);
+    expect(result.transactions![0].amount).toBe(123.45);
+    expect(result.transactions![1].amount).toBe(500.00);
   });
 });

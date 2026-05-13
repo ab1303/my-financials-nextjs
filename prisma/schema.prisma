@@ -67,6 +67,7 @@ model User {
   importImages        ImportImage[]
   aiUsageLogs         AIUsageLog[]
   merchantCategoryMaps MerchantCategoryMap[]
+  transactions        Transaction[]
 }
 
 model VerificationToken {
@@ -339,6 +340,7 @@ model BankAccount {
 
   @@unique([name, bankId, userId])
   @@index([userId, bankId])
+  transactions Transaction[]
 }
 
 // BankBalanceSnapshot — point-in-time snapshot header (one per date)
@@ -443,6 +445,7 @@ model ImportSession {
   metadata          Json?
   images            ImportImage[]
   usageLogs         AIUsageLog[]
+  transactions      Transaction[]
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -507,4 +510,50 @@ model MerchantCategoryMap {
 
   @@unique([userId, description])
   @@index([userId])
+}
+
+
+// ─── Transactions ──────────────────────────────────────────────────────────
+
+enum TransactionTypeEnum {
+  DEBIT
+  CREDIT
+}
+
+enum TransactionSourceEnum {
+  LLM_CLASSIFIED
+  USER_OVERRIDE
+}
+
+enum TransactionStatusEnum {
+  PENDING
+  CONFIRMED
+  EXCLUDED
+}
+
+// Transaction — staging record for every line in a CSV or AI-extracted receipt
+model Transaction {
+  id              String                  @id @default(cuid())
+  date            DateTime
+  description     String
+  amount          Decimal                 @db.Money
+  type            TransactionTypeEnum
+  category        String
+  source          TransactionSourceEnum
+  status          TransactionStatusEnum   @default(PENDING)
+  confirmedAt     DateTime?
+
+  bankAccount     BankAccount?            @relation(fields: [bankAccountId], references: [id])
+  bankAccountId   String?
+  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  importSession   ImportSession?          @relation(fields: [importSessionId], references: [id])
+  importSessionId String?
+
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([userId, bankAccountId, date])
+  @@index([userId, type, status])
+  @@index([importSessionId])
 }

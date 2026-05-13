@@ -56,6 +56,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       date: '01/07/2025',
       amount: 85.5,
+      type: 'DEBIT',
       description: 'WOOLWORTHS 1294 HORNSBY NS',
       month: 7,
       year: 2025,
@@ -63,6 +64,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       date: '02/07/2025',
       amount: 15.99,
+      type: 'DEBIT',
       description: 'NETFLIX',
       month: 7,
       year: 2025,
@@ -70,6 +72,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       date: '03/07/2025',
       amount: 1200.0,
+      type: 'DEBIT',
       description: 'DEFT PAYMENTS STRATA',
       month: 7,
       year: 2025,
@@ -77,6 +80,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       date: '04/07/2025',
       amount: 45.0,
+      type: 'DEBIT',
       description: 'CHEMIST WAREHOUSE',
       month: 7,
       year: 2025,
@@ -84,6 +88,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       date: '05/07/2025',
       amount: 25.5,
+      type: 'DEBIT',
       description: 'TRANSPORT NSW OPAL',
       month: 7,
       year: 2025,
@@ -91,6 +96,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       date: '06/07/2025',
       amount: 35.0,
+      type: 'DEBIT',
       description: 'UBER EATS DELIVERY',
       month: 7,
       year: 2025,
