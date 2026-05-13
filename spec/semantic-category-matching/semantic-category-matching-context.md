@@ -3,11 +3,79 @@
 > **Created**: 2026-05-12  
 > **Phase**: Pre-implementation planning  
 > **Related Specs**: semantic-category-matching-hld.md, semantic-category-matching-lld.md  
-> **Dependencies**: CSV Import Phase 2 (completed), AI Image Import (existing)
+> **Dependencies**: CSV Import Phase 2 (completed), AI Image Import (existing),
+>                   CSV Categorisation LLM Classification (Phase 1),
+>                   CSV Categorisation RAG (Phase 2)
 
 ---
 
-## 1. Feature Overview
+## ⚠️ Important Revision: CSV Categorisation Limitation Discovered
+
+> **Revision date**: 2026-05-13
+> **Trigger**: Integration testing with real CommBank July 2025 CSV export
+
+### What Was Discovered
+
+Integration testing revealed that the embedding cosine similarity approach **does NOT work** for raw CommBank transaction descriptions passed directly to `matchCategoryWithEmbedding()`.
+
+**Actual similarity scores observed** (far below 0.75 threshold):
+
+| Raw Description | Top Match | Score | Correct Category |
+|-----------------|-----------|-------|-----------------|
+| `WOOLWORTHS 1294 HORNSBY NS AUS Card xx5441...` | Shopping | 0.27 | Groceries ❌ |
+| `NETFLIX.COM Melbourne AU AUS Card xx5441...` | Shopping | 0.24 | Entertainment ❌ |
+| `Direct Debit 077380 DEFT PAYMENTS DEFT...` | Cash | 0.30 | Home ❌ |
+
+### Root Cause
+
+Mapping merchant brand names to category names requires **world knowledge** — the model must know that Woolworths is a grocery chain, that Netflix is an entertainment service, and that DEFT PAYMENTS is a strata/rent platform. This knowledge cannot be recovered from cosine similarity between surface text.
+
+`matchCategoryWithEmbedding()` was designed to match already-extracted category labels (e.g., `"grocery shopping"`, `"streaming service"`) against DB category names — which is exactly what the AI Image Import pipeline provides via GPT-4o Vision. The function works correctly and as designed for this purpose (similarity scores of 0.75+ observed).
+
+### The Architectural Bug
+
+The CSV import pipeline in `src/app/api/csv-import/parse/route.ts` was incorrectly bypassing the LLM extraction step, passing `tx.description` directly as `categoryName`:
+
+```typescript
+// WRONG — this was always broken; discovered via integration testing
+categoryName: tx.description,  // "WOOLWORTHS 1294 HORNSBY NS AUS..."
+```
+
+The AI Image Import pipeline works correctly because GPT-4o first extracts a clean category label (`"Groceries"`) before calling `matchCategoryWithEmbedding()`.
+
+### What This Means for This Spec
+
+**The `embedding.service.ts` and `matchCategoryWithEmbedding()` remain correct and valuable.** They are the right tool for the label→DB-category matching step and should not be changed. The 0.75 threshold is correct for their intended use case.
+
+The fix is to add an upstream LLM classification step for CSV imports — not to modify the embedding service.
+
+### Two New Approaches Planned
+
+| Phase | Approach | Document |
+|-------|----------|----------|
+| Phase 1 (immediate) | LLM Classification — batch prompt to classify raw descriptions | `spec/csv-categorisation-llm-classification/csv-categorisation-llm-classification.md` |
+| Phase 2 (long-term) | RAG with User Examples — retrieve past categorised transactions as few-shot context | `spec/csv-categorisation-rag-examples/csv-categorisation-rag-examples.md` |
+
+The `semantic-category-matching` feature (this spec) is a **prerequisite** for both approaches: it handles the final label→DB-category lookup step after the LLM or RAG layer produces a clean category label.
+
+### Pipeline Comparison (Updated)
+
+```
+Image Import (WORKS):
+  Screenshot → GPT-4o Vision → "grocery shopping" → matchCategoryWithEmbedding() → Groceries ✓
+
+CSV Import (WAS BROKEN):
+  Raw description → [skip] → matchCategoryWithEmbedding("WOOLWORTHS 1294...") → 0.27 → wrong ❌
+
+CSV Import (PHASE 1 FIX):
+  Raw description → LLM classify → "Groceries" → matchCategoryWithEmbedding("Groceries") → ✓
+
+CSV Import (PHASE 2 TARGET):
+  Raw description → pgvector retrieve similar past txns → "Groceries" (direct or LLM few-shot)
+                 → matchCategoryWithEmbedding("Groceries") → ✓
+```
+
+
 
 Semantic embedding-based category matching replaces the static `SEMANTIC_MAPPINGS` dictionary with AI embeddings via OpenAI's `text-embedding-3-small` model. This enables automatic, accurate categorization of transactions for two input pipelines:
 
@@ -240,6 +308,15 @@ const SIMILARITY_THRESHOLD = 0.75;
 ```
 
 **Post-launch Validation**: Monitor accuracy on real data; adjust if needed
+
+> **⚠️ Revision (2026-05-13)**: The 0.75 threshold is correct and proven **for
+> already-extracted category labels** (e.g. `"grocery shopping"`, `"streaming"`,
+> `"chemist"`). It **cannot** be applied to raw bank transaction descriptions regardless
+> of threshold value — even a threshold of 0.10 would return wrong categories, because
+> the fundamental problem is that brand-name-to-category mapping requires world knowledge
+> unavailable through text similarity alone. See the revision notice above for full
+> context. The embedding service is not the right tool for classifying raw descriptions;
+> an upstream LLM classification step is required (see Phase 1 spec).
 
 ---
 
