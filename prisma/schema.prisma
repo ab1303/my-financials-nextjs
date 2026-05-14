@@ -534,26 +534,30 @@ enum TransactionStatusEnum {
 
 // Transaction — staging record for every line in a CSV or AI-extracted receipt
 model Transaction {
-  id              String                  @id @default(cuid())
-  date            DateTime
-  description     String
-  amount          Decimal                 @db.Money
-  type            TransactionTypeEnum
-  category        String
-  offsetCategory  String?                 // non-null only when category = 'Reimbursement'
-  source          TransactionSourceEnum
-  status          TransactionStatusEnum   @default(PENDING)
-  confirmedAt     DateTime?
+  id                  String                @id @default(cuid())
+  date                DateTime
+  description         String
+  amount              Decimal               @db.Money
+  type                TransactionTypeEnum
+  category            String
+  offsetCategory      String?               // non-null only when category = 'Reimbursement'
+  offsetTransactionId String?
+  source              TransactionSourceEnum
+  status              TransactionStatusEnum @default(PENDING)
+  confirmedAt         DateTime?
 
-  bankAccount     BankAccount?            @relation(fields: [bankAccountId], references: [id])
-  bankAccountId   String?
-  user            User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String
-  importSession   ImportSession?          @relation(fields: [importSessionId], references: [id])
-  importSessionId String?
+  bankAccount         BankAccount?          @relation(fields: [bankAccountId], references: [id])
+  bankAccountId       String?
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String
+  importSession       ImportSession?        @relation(fields: [importSessionId], references: [id])
+  importSessionId     String?
 
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
+  offsetTransaction Transaction? @relation("ReimbursementLink", fields: [offsetTransactionId], references: [id])
+  reimbursements    Transaction[] @relation("ReimbursementLink")
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
   @@index([userId, bankAccountId, date])
   @@index([userId, type, status])

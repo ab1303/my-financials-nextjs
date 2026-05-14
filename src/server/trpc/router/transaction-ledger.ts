@@ -17,7 +17,7 @@ import {
 } from '@/server/services/transactions/ledger.service';
 import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
 
-type PrismaTransaction = {
+type PrismaReimbursement = {
   id: string;
   date: Date;
   description: string;
@@ -30,10 +30,27 @@ type PrismaTransaction = {
   confirmedAt: Date | null;
   bankAccountId: string | null;
   bankAccount?: { name: string; bank?: { name: string | null } | null } | null;
+};
+
+type PrismaTransaction = {
+  id: string;
+  date: Date;
+  description: string;
+  amount: Decimal;
+  type: TransactionTypeEnum;
+  category: string;
+  offsetCategory: string | null;
+  offsetTransactionId: string | null;
+  source: TransactionSourceEnum;
+  status: TransactionStatusEnum;
+  confirmedAt: Date | null;
+  bankAccountId: string | null;
+  bankAccount?: { name: string; bank?: { name: string | null } | null } | null;
   userId: string;
   importSessionId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  reimbursements: PrismaReimbursement[];
 };
 
 export interface TransactionRow {
@@ -50,6 +67,8 @@ export interface TransactionRow {
   bankAccountName: string | null;
   bankName: string | null;
   offsetCategory: string | null;
+  offsetTransactionId: string | null;
+  reimbursements: TransactionRow[];
 }
 
 export interface GetAllOutput {
@@ -84,6 +103,7 @@ const updateCategorySchema = z
     id: z.string().min(1),
     newCategory: z.string().min(1),
     offsetCategory: z.string().optional(),
+    offsetTransactionId: z.string().optional(),
   })
   .refine(
     (data) =>
@@ -170,7 +190,26 @@ export const transactionLedgerRouter = router({
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
         skip: (input.page - 1) * input.limit,
         take: input.limit,
-        include: { bankAccount: { select: { name: true, bank: { select: { name: true } } } } },
+        include: {
+          bankAccount: { select: { name: true, bank: { select: { name: true } } } },
+          reimbursements: {
+            where: { category: REIMBURSEMENT_CATEGORY },
+            select: {
+              id: true,
+              date: true,
+              description: true,
+              amount: true,
+              type: true,
+              category: true,
+              offsetCategory: true,
+              source: true,
+              status: true,
+              confirmedAt: true,
+              bankAccountId: true,
+              bankAccount: { select: { name: true, bank: { select: { name: true } } } },
+            },
+          },
+        },
       }),
       ctx.prisma.transaction.count({ where }),
     ]);
@@ -189,6 +228,24 @@ export const transactionLedgerRouter = router({
       bankAccountName: tx.bankAccount?.name ?? null,
       bankName: tx.bankAccount?.bank?.name ?? null,
       offsetCategory: tx.offsetCategory ?? null,
+      offsetTransactionId: tx.offsetTransactionId ?? null,
+      reimbursements: (tx.reimbursements ?? []).map((r) => ({
+        id: r.id,
+        date: r.date.toISOString(),
+        description: r.description,
+        amount: Number(r.amount),
+        type: r.type,
+        category: r.category,
+        offsetCategory: r.offsetCategory ?? null,
+        source: r.source,
+        status: r.status,
+        confirmedAt: r.confirmedAt ? r.confirmedAt.toISOString() : null,
+        bankAccountId: r.bankAccountId,
+        bankAccountName: r.bankAccount?.name ?? null,
+        bankName: r.bankAccount?.bank?.name ?? null,
+        offsetTransactionId: null,
+        reimbursements: [],
+      })),
     }));
 
     return {
@@ -224,6 +281,7 @@ export const transactionLedgerRouter = router({
         status: true,
         category: true,
         offsetCategory: true,
+        offsetTransactionId: true,
         amount: true,
         date: true,
       },
@@ -238,6 +296,22 @@ export const transactionLedgerRouter = router({
         code: 'BAD_REQUEST',
         message: 'Reimbursement category is only valid for CREDIT transactions',
       });
+    }
+
+    if (input.offsetTransactionId) {
+      const linked = await ctx.prisma.transaction.findUnique({
+        where: { id: input.offsetTransactionId },
+        select: { userId: true, type: true, status: true },
+      });
+      if (!linked || linked.userId !== userId) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Linked transaction not found' });
+      }
+      if (linked.type !== TransactionTypeEnum.DEBIT || linked.status !== TransactionStatusEnum.CONFIRMED) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Linked transaction must be a confirmed expense (DEBIT)',
+        });
+      }
     }
 
     let newStatus: TransactionStatusEnum = transaction.status;
@@ -265,6 +339,8 @@ export const transactionLedgerRouter = router({
         status: newStatus,
         ...(newConfirmedAt ? { confirmedAt: newConfirmedAt } : {}),
         offsetCategory: input.newCategory === REIMBURSEMENT_CATEGORY ? (input.offsetCategory ?? null) : null,
+        offsetTransactionId:
+          input.newCategory === REIMBURSEMENT_CATEGORY ? (input.offsetTransactionId ?? null) : null,
       },
     });
 
@@ -345,4 +421,40 @@ export const transactionLedgerRouter = router({
 
     return { success: true };
   }),
+
+  searchDebitTransactions: protectedProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        limit: z.number().int().min(1).max(20).default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const transactions = await ctx.prisma.transaction.findMany({
+        where: {
+          userId,
+          type: TransactionTypeEnum.DEBIT,
+          status: TransactionStatusEnum.CONFIRMED,
+          ...(input.search?.trim()
+            ? {
+                OR: [
+                  { description: { contains: input.search.trim(), mode: 'insensitive' } },
+                  { category: { contains: input.search.trim(), mode: 'insensitive' } },
+                ],
+              }
+            : {}),
+        },
+        orderBy: [{ date: 'desc' }],
+        take: input.limit,
+        select: { id: true, date: true, description: true, amount: true, category: true },
+      });
+      return transactions.map((tx) => ({
+        id: tx.id,
+        date: tx.date.toISOString().slice(0, 10),
+        description: tx.description,
+        amount: Number(tx.amount),
+        category: tx.category,
+      }));
+    }),
 });

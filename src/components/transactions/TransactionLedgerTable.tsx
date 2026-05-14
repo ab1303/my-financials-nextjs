@@ -110,9 +110,14 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   });
 
   const handleCategoryChange = useCallback(
-    (id: string, newCategory: string, offsetCategory?: string) => {
+    (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null) => {
       setSavingId(id);
-      updateCategoryMutation.mutate({ id, newCategory, ...(offsetCategory ? { offsetCategory } : {}) });
+      updateCategoryMutation.mutate({
+        id,
+        newCategory,
+        ...(offsetCategory ? { offsetCategory } : {}),
+        ...(offsetTransactionId !== undefined ? { offsetTransactionId: offsetTransactionId ?? undefined } : {}),
+      });
     },
     [updateCategoryMutation],
   );
@@ -214,6 +219,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
           <table className="min-w-full">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
+                <th className="w-8 px-1 py-3" />
                 {['Date', 'Description', 'Amount', 'Type', 'Category', 'Source', 'Status', 'Bank Account'].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
                     {h}
@@ -230,6 +236,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
                   incomeSourceLabels={incomeSourceLabels}
                   onCategoryChange={handleCategoryChange}
                   isSaving={savingId === transaction.id}
+                  colCount={9}
                 />
               ))}
             </tbody>
