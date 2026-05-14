@@ -7,8 +7,8 @@ import { individualRouter } from './individual';
 import { bankAssetRouter } from './bank-asset';
 import { stockAssetRouter } from './stock-asset';
 import { aiUsageRouter } from './ai-usage';
-
 import { exampleRouter } from './example';
+import { transactionLedgerRouter } from './transaction-ledger';
 
 export const appRouter = router({
   example: exampleRouter,
@@ -20,6 +20,7 @@ export const appRouter = router({
   bankAsset: bankAssetRouter,
   stockAsset: stockAssetRouter,
   aiUsage: aiUsageRouter,
+  transactionLedger: transactionLedgerRouter,
 });
 
 // export type definition of API

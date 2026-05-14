@@ -1,8 +1,7 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import TransactionsClient from '@/app/(authorized)/cashflow/transactions/_components/TransactionsClient';
 
-// Mock the wizard components
 vi.mock('@/app/(authorized)/cashflow/transactions/_components/csv/CSVImportWizard', () => ({
   default: ({ isOpen }: { isOpen: boolean }) =>
     isOpen ? <div data-testid="csv-wizard">CSV Wizard</div> : null,
@@ -10,6 +9,9 @@ vi.mock('@/app/(authorized)/cashflow/transactions/_components/csv/CSVImportWizar
 vi.mock('@/app/(authorized)/cashflow/transactions/_components/ai/AIImportWizard', () => ({
   default: ({ isOpen }: { isOpen: boolean }) =>
     isOpen ? <div data-testid="ai-wizard">AI Wizard</div> : null,
+}));
+vi.mock('@/components/transactions/TransactionLedgerTable', () => ({
+  default: () => <div data-testid="ledger-table">Ledger</div>,
 }));
 
 const mockBankAccounts = [
@@ -31,15 +33,13 @@ describe('TransactionsClient', () => {
 
   it('opens CSV wizard when CSV card is clicked', () => {
     render(<TransactionsClient bankAccounts={mockBankAccounts} />);
-    const csvCard = screen.getByText('CSV Bank Statement').closest('div');
-    fireEvent.click(csvCard!);
+    fireEvent.click(screen.getByRole('button', { name: /CSV Bank Statement/i }));
     expect(screen.getByTestId('csv-wizard')).toBeDefined();
   });
 
   it('opens AI wizard when AI card is clicked', () => {
     render(<TransactionsClient bankAccounts={mockBankAccounts} />);
-    const aiCard = screen.getByText('AI Receipt / Invoice').closest('div');
-    fireEvent.click(aiCard!);
+    fireEvent.click(screen.getByRole('button', { name: /AI Receipt \/ Invoice/i }));
     expect(screen.getByTestId('ai-wizard')).toBeDefined();
   });
 
@@ -47,4 +47,10 @@ describe('TransactionsClient', () => {
     render(<TransactionsClient bankAccounts={mockBankAccounts} />);
     expect(screen.queryByTestId('csv-wizard')).toBeNull();
   });
+
+  it('renders TransactionLedgerTable below import cards', () => {
+    render(<TransactionsClient bankAccounts={mockBankAccounts} />);
+    expect(screen.getByTestId('ledger-table')).toBeDefined();
+  });
 });
+

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, type ReactNode, type KeyboardEvent } from 'react';
-
-import AIImportWizard from './ai/AIImportWizard';
+import { useState, useCallback, type ReactNode } from 'react';
 import CSVImportWizard from './csv/CSVImportWizard';
+import AIImportWizard from './ai/AIImportWizard';
+import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
 
 interface BankAccount {
   id: string;
@@ -19,20 +19,18 @@ interface ImportCardProps {
 }
 
 function ImportCard({ title, description, onClick, icon }: ImportCardProps) {
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter') onClick();
-  };
-
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onKeyDown={handleKeyDown}
-      className="cursor-pointer rounded-xl border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onClick();
+      }}
+      className="cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400">
           {icon}
         </div>
         <div>
@@ -51,6 +49,11 @@ interface Props {
 export default function TransactionsClient({ bankAccounts }: Props) {
   const [csvOpen, setCsvOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleImportComplete = useCallback(() => {
+    setRefreshKey((key) => key + 1);
+  }, []);
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
@@ -104,10 +107,15 @@ export default function TransactionsClient({ bankAccounts }: Props) {
         />
       </div>
 
+      <div className="mt-10">
+        <TransactionLedgerTable bankAccounts={bankAccounts} refreshKey={refreshKey} />
+      </div>
+
       <CSVImportWizard
         isOpen={csvOpen}
         onClose={() => setCsvOpen(false)}
         bankAccounts={bankAccounts}
+        onImportComplete={handleImportComplete}
       />
       <AIImportWizard
         isOpen={aiOpen}
@@ -117,3 +125,4 @@ export default function TransactionsClient({ bankAccounts }: Props) {
     </main>
   );
 }
+

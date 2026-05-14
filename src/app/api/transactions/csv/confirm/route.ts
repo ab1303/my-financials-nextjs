@@ -81,23 +81,6 @@ export async function POST(req: NextRequest) {
     const errors = [...debitResult.errors, ...creditResult.errors];
     const status = errors.length > 0 ? (totalEntries > 0 ? 'PARTIAL' : 'FAILED') : 'COMPLETED';
 
-    if (llmUsage.totalTokens > 0) {
-      await prisma.aIUsageLog.create({
-        data: {
-          userId: session.user.id,
-          sessionId: fileId,
-          model: process.env.AI_CLASSIFIER_MODEL ?? 'gpt-4o-mini',
-          importType: 'EXPENSE',
-          promptTokens: llmUsage.promptTokens,
-          completionTokens: llmUsage.completionTokens,
-          totalTokens: llmUsage.totalTokens,
-          estimatedCostUSD:
-            (llmUsage.promptTokens / 1_000_000) * 0.15 + (llmUsage.completionTokens / 1_000_000) * 0.6,
-          imageId: null,
-        },
-      });
-    }
-
     await prisma.importSession.update({
       where: { id: fileId },
       data: {

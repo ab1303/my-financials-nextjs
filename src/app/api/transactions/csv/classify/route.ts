@@ -83,6 +83,8 @@ export async function POST(req: NextRequest) {
     const encoder = new TextEncoder();
     let processed = 0;
     let totalLlmTokens = 0;
+    let totalPromptTokens = 0;
+    let totalCompletionTokens = 0;
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -100,6 +102,8 @@ export async function POST(req: NextRequest) {
 
               const result = await classifyTransactions(monthTransactions, categories);
               totalLlmTokens += result.usage.totalTokens;
+              totalPromptTokens += result.usage.promptTokens;
+              totalCompletionTokens += result.usage.completionTokens;
 
               controller.enqueue(
                 sseEvent(encoder, {
@@ -136,6 +140,8 @@ export async function POST(req: NextRequest) {
 
               const result = await classifyCreditTransactions(monthTransactions);
               totalLlmTokens += result.usage.totalTokens;
+              totalPromptTokens += result.usage.promptTokens;
+              totalCompletionTokens += result.usage.completionTokens;
 
               controller.enqueue(
                 sseEvent(encoder, {
@@ -154,6 +160,24 @@ export async function POST(req: NextRequest) {
                 }),
               );
             }
+          }
+
+          if (totalLlmTokens > 0) {
+            await prisma.aIUsageLog.create({
+              data: {
+                userId: session.user.id,
+                sessionId: fileId,
+                model: process.env.AI_CLASSIFIER_MODEL ?? 'gpt-4o-mini',
+                importType: 'EXPENSE',
+                promptTokens: totalPromptTokens,
+                completionTokens: totalCompletionTokens,
+                totalTokens: totalLlmTokens,
+                estimatedCostUSD:
+                  (totalPromptTokens / 1_000_000) * 0.15 +
+                  (totalCompletionTokens / 1_000_000) * 0.6,
+                imageId: null,
+              },
+            });
           }
 
           controller.enqueue(
