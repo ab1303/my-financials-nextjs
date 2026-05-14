@@ -104,14 +104,14 @@ export default function BankAssetAIImportWizard({
               leaveFrom='opacity-100 scale-100'
               leaveTo='opacity-0 scale-95'
             >
-              <Dialog.Panel className='w-full max-w-2xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all'>
+              <Dialog.Panel className='w-full max-w-2xl transform overflow-hidden rounded-lg bg-card shadow-xl transition-all'>
                 {/* Header */}
-                <div className='flex items-center justify-between border-b border-gray-200 p-6'>
+                <div className='flex items-center justify-between border-b border-border p-6'>
                   <div>
-                    <Dialog.Title className='text-lg font-semibold text-gray-900'>
+                    <Dialog.Title className='text-lg font-semibold text-foreground'>
                       AI Import — Bank Assets
                     </Dialog.Title>
-                    <p className='mt-1 text-sm text-gray-600'>
+                    <p className='mt-1 text-sm text-muted-foreground'>
                       {currentStep === 'upload' && 'Step 1: Select Images'}
                       {currentStep === 'processing' && 'Step 2: Processing'}
                       {currentStep === 'results' && 'Step 3: Results'}
@@ -120,7 +120,7 @@ export default function BankAssetAIImportWizard({
                   {currentStep !== 'processing' && (
                     <button
                       onClick={onClose}
-                      className='text-gray-400 hover:text-gray-600 transition-colors'
+                      className='text-muted-foreground hover:text-foreground transition-colors'
                     >
                       <X className='h-6 w-6' />
                     </button>
@@ -128,20 +128,20 @@ export default function BankAssetAIImportWizard({
                 </div>
 
                 {/* Progress Indicator */}
-                <div className='flex border-b border-gray-200 px-6 py-3'>
+                <div className='flex border-b border-border px-6 py-3'>
                   {['upload', 'processing', 'results'].map((step, index) => (
                     <div key={step} className='flex items-center'>
                       <div
                         className={`flex items-center justify-center h-8 w-8 rounded-full text-sm font-semibold ${
                           currentStep === step
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-teal-600 text-white'
                             : ['upload', 'processing'].includes(currentStep) &&
                                 index <
                                   ['upload', 'processing', 'results'].indexOf(
                                     currentStep,
                                   )
                               ? 'bg-green-600 text-white'
-                              : 'bg-gray-200 text-gray-600'
+                              : 'bg-muted text-muted-foreground'
                         }`}
                       >
                         {index + 1}
@@ -153,7 +153,7 @@ export default function BankAssetAIImportWizard({
                               currentStep,
                             ) > index
                               ? 'bg-green-600'
-                              : 'bg-gray-200'
+                              : 'bg-muted'
                           }`}
                           style={{ width: '40px' }}
                         />
@@ -164,10 +164,10 @@ export default function BankAssetAIImportWizard({
 
                 {/* Snapshot Date Picker (upload step only) */}
                 {currentStep === 'upload' && (
-                  <div className='border-b border-gray-200 px-6 py-3'>
+                  <div className='border-b border-border px-6 py-3'>
                     <label
                       htmlFor='snapshot-date'
-                      className='block text-sm font-medium text-gray-700'
+                      className='block text-sm font-medium text-foreground'
                     >
                       Snapshot Date
                     </label>
@@ -176,9 +176,9 @@ export default function BankAssetAIImportWizard({
                       type='date'
                       value={snapshotDate}
                       onChange={(e) => setSnapshotDate(e.target.value)}
-                      className='mt-1 block w-48 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                      className='mt-1 block w-48 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500'
                     />
-                    <p className='mt-1 text-xs text-gray-500'>
+                    <p className='mt-1 text-xs text-muted-foreground'>
                       The date the bank balances were captured.
                     </p>
                   </div>

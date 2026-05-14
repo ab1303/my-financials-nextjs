@@ -24,31 +24,31 @@ export default function PastCalendarYears({
 
   return (
     <div className='mt-12'>
-      <div className='font-mono text-gray-500 mb-4'>Past calendar year(s)</div>
+      <div className='font-mono text-muted-foreground mb-4'>Past calendar year(s)</div>
       <div className='space-y-3'>
         {groups.map((group) => (
           <Disclosure key={`${group.fromYear}-${group.toYear}`}>
             {({ open }) => (
-              <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors'>
+              <div className='border border-border rounded-lg overflow-hidden'>
+                <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/80 transition-colors'>
                   <div className='flex items-center gap-3'>
                     <ChevronDown
                       className={clsx(
-                        'w-5 h-5 text-gray-500 transition-transform',
+                        'w-5 h-5 text-muted-foreground transition-transform',
                         open ? 'transform rotate-180' : '',
                       )}
                     />
-                    <span className='text-base font-semibold text-gray-900'>
+                    <span className='text-base font-semibold text-foreground'>
                       {group.label}
                     </span>
                   </div>
-                  <span className='text-sm text-gray-500'>
+                  <span className='text-sm text-muted-foreground'>
                     {group.entries.length}{' '}
                     {group.entries.length === 1 ? 'entry' : 'entries'}
                   </span>
                 </Disclosure.Button>
 
-                <Disclosure.Panel className='px-4 py-4 bg-white'>
+                <Disclosure.Panel className='px-4 py-4 bg-card'>
                   <CalendarTableClient
                     tableData={group.entries}
                     onEdit={onEdit}

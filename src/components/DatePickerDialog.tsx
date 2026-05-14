@@ -108,7 +108,7 @@ export default function DatePickerDialog({
                 aria-labelledby={labelId}
                 aria-describedby={descriptionId}
                 style={floatingStyles}
-                className='rounded-lg bg-white border border-gray-200 shadow-xl p-4'
+                className='rounded-lg bg-card border border-border shadow-xl p-4'
                 {...getFloatingProps()}
               >
                 <DayPicker
@@ -125,24 +125,24 @@ export default function DatePickerDialog({
                       'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
                     month: 'space-y-4',
                     caption: 'flex justify-between items-center pt-1 pb-2 px-2',
-                    caption_label: 'text-base font-semibold text-gray-800',
+                    caption_label: 'text-base font-semibold text-foreground',
                     nav: 'flex items-center space-x-1',
                     nav_button:
-                      'h-7 w-7 bg-gray-50 border border-gray-200 text-gray-600 hover:text-gray-800 hover:bg-gray-100 hover:border-gray-300 rounded-md transition-all duration-150 flex items-center justify-center shadow-sm',
+                      'h-7 w-7 bg-muted border border-border text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-md transition-all duration-150 flex items-center justify-center shadow-sm',
                     nav_button_previous: '',
                     nav_button_next: '',
                     table: 'w-full border-collapse space-y-1',
                     head_row: 'flex',
                     head_cell:
-                      'text-gray-500 rounded-md w-9 font-normal text-[0.8rem]',
+                      'text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]',
                     row: 'flex w-full mt-2',
-                    cell: 'text-center text-sm p-0 relative [&:has([aria-selected])]:bg-gray-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
-                    day: 'h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-gray-100 rounded-md',
+                    cell: 'text-center text-sm p-0 relative [&:has([aria-selected])]:bg-muted first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
+                    day: 'h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-muted rounded-md text-foreground',
                     day_selected:
                       'bg-teal-600 text-white hover:bg-teal-600 hover:text-white focus:bg-teal-600 focus:text-white',
-                    day_today: 'bg-gray-100 text-gray-900',
-                    day_outside: 'text-gray-400 opacity-50',
-                    day_disabled: 'text-gray-400 opacity-50 cursor-not-allowed',
+                    day_today: 'bg-muted text-foreground font-semibold',
+                    day_outside: 'text-muted-foreground opacity-50',
+                    day_disabled: 'text-muted-foreground opacity-50 cursor-not-allowed',
                     day_hidden: 'invisible',
                   }}
                 />

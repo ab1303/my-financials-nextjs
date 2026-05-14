@@ -213,14 +213,14 @@ export default function ProcessingStep({
     <div className='space-y-6'>
       <div className='space-y-2'>
         <div className='flex justify-between items-center'>
-          <h3 className='text-sm font-semibold text-gray-900'>
+          <h3 className='text-sm font-semibold text-foreground'>
             Processing Images
           </h3>
-          <span className='text-sm font-medium text-gray-600'>
+          <span className='text-sm font-medium text-muted-foreground'>
             {overallProgress}%
           </span>
         </div>
-        <div className='w-full bg-gray-200 rounded-full h-2 overflow-hidden'>
+        <div className='w-full bg-muted rounded-full h-2 overflow-hidden'>
           <div
             className='bg-blue-600 h-full transition-all duration-300'
             style={{ width: `${overallProgress}%` }}
@@ -229,7 +229,7 @@ export default function ProcessingStep({
       </div>
 
       {currentImage && (
-        <p className='text-sm text-gray-600 text-center'>
+        <p className='text-sm text-muted-foreground text-center'>
           Processing: <span className='font-medium'>{currentImage}</span>
         </p>
       )}
@@ -246,7 +246,7 @@ export default function ProcessingStep({
           {extractedImages.map((result) => (
             <div
               key={result.imageId}
-              className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200'
+              className='flex items-center justify-between p-3 bg-muted rounded-lg border border-border'
             >
               <div className='flex items-center space-x-3 flex-1 min-w-0'>
                 <div className='flex-shrink-0'>
@@ -258,10 +258,10 @@ export default function ProcessingStep({
                   )}
                 </div>
                 <div className='min-w-0'>
-                  <p className='text-sm font-medium text-gray-900 truncate'>
+                  <p className='text-sm font-medium text-foreground truncate'>
                     {result.fileName || result.imageId}
                   </p>
-                  <p className='text-xs text-gray-600'>
+                  <p className='text-xs text-muted-foreground'>
                     {result.entries.length} entries extracted
                   </p>
                   {result.status === 'failed' && result.errorMessage && (

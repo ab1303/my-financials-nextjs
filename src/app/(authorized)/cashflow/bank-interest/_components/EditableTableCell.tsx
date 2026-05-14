@@ -4,7 +4,6 @@ import clsx from 'clsx';
 
 import { Loader2 } from 'lucide-react';
 import { inputStyles, buttonStyles, colorStyles } from '@/styles/theme';
-import { stylingUtils } from '@/styles/styling';
 
 type EditableTableCellProps = {
   inProgress?: boolean;
@@ -27,10 +26,7 @@ export default function EditableTableCell({
   return (
     <div className='flex flex-row items-center gap-2'>
       <NumericFormat
-        className={stylingUtils.overrideClasses(
-          inputStyles.base,
-          { bg: 'bg-white' }, // Override bg-gray-50 with bg-white
-        )}
+        className={inputStyles.base}
         prefix='$'
         displayType='input'
         thousandSeparator

@@ -184,20 +184,20 @@ export default function ImageRedactor({
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70'>
-      <div className='bg-white rounded-xl shadow-2xl flex flex-col max-h-[90vh] w-full max-w-2xl mx-4'>
-        <div className='flex items-center justify-between px-5 py-4 border-b border-gray-200'>
+      <div className='bg-card rounded-xl shadow-2xl flex flex-col max-h-[90vh] w-full max-w-2xl mx-4'>
+        <div className='flex items-center justify-between px-5 py-4 border-b border-border'>
           <div>
-            <h2 className='text-base font-semibold text-gray-900'>
+            <h2 className='text-base font-semibold text-foreground'>
               Redact Sensitive Information
             </h2>
-            <p className='text-xs text-gray-500 mt-0.5'>
+            <p className='text-xs text-muted-foreground mt-0.5'>
               Draw over any text you want to hide (name, account number, BSB,
               etc.) before sending to AI.
             </p>
           </div>
           <button
             onClick={onCancel}
-            className='text-gray-400 hover:text-gray-600 p-1 rounded'
+            className='text-muted-foreground hover:text-muted-foreground p-1 rounded'
             aria-label='Cancel redaction'
           >
             <X className='h-5 w-5' />
@@ -212,7 +212,7 @@ export default function ImageRedactor({
 
         <div
           ref={containerRef}
-          className='flex-1 overflow-auto p-4 bg-gray-100'
+          className='flex-1 overflow-auto p-4 bg-muted'
         >
           <canvas
             ref={canvasRef}
@@ -228,11 +228,11 @@ export default function ImageRedactor({
           />
         </div>
 
-        <div className='flex items-center justify-between px-5 py-4 border-t border-gray-200 gap-3'>
+        <div className='flex items-center justify-between px-5 py-4 border-t border-border gap-3'>
           <button
             onClick={handleClearAll}
             disabled={rects.length === 0}
-            className='flex items-center gap-1.5 text-sm text-gray-600 hover:text-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'
+            className='flex items-center gap-1.5 text-sm text-muted-foreground hover:text-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'
           >
             <Trash2 className='h-4 w-4' />
             Clear all ({rects.length})
@@ -241,7 +241,7 @@ export default function ImageRedactor({
           <div className='flex gap-3'>
             <button
               onClick={onCancel}
-              className='px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors'
+              className='px-4 py-2 text-sm font-medium text-foreground bg-card border border-input rounded-lg hover:bg-muted/50 transition-colors'
             >
               Cancel
             </button>

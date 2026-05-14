@@ -358,23 +358,23 @@ export default function StockAssetsClient({ initialData }: Props) {
         </div>
 
         {!selectedYear ? (
-          <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
-            <p className='text-gray-600'>
+          <div className='text-center py-12 bg-muted rounded-lg border-2 border-dashed border-input'>
+            <p className='text-muted-foreground'>
               {yearOptions.length === 0
                 ? `No ${selectedType} calendar years available.`
                 : 'Please select a calendar year to view stock assets.'}
             </p>
           </div>
         ) : isLoading ? (
-          <div className='text-center py-8 text-gray-500'>
+          <div className='text-center py-8 text-muted-foreground'>
             Loading stock assets...
           </div>
         ) : !snapshots || snapshots.length === 0 ? (
-          <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
-            <p className='text-gray-700 mb-4 font-medium'>
+          <div className='text-center py-12 bg-muted rounded-lg border-2 border-dashed border-input'>
+            <p className='text-foreground mb-4 font-medium'>
               No stock snapshots recorded.
             </p>
-            <p className='text-sm text-gray-600 mb-6'>
+            <p className='text-sm text-muted-foreground mb-6'>
               Take your first snapshot to start tracking your stock portfolio.
             </p>
             <Button
@@ -386,11 +386,11 @@ export default function StockAssetsClient({ initialData }: Props) {
             </Button>
           </div>
         ) : accounts.length === 0 ? (
-          <div className='text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300'>
-            <p className='text-gray-700 mb-4 font-medium'>
+          <div className='text-center py-12 bg-muted rounded-lg border-2 border-dashed border-input'>
+            <p className='text-foreground mb-4 font-medium'>
               You need to add brokerage accounts first.
             </p>
-            <p className='text-sm text-gray-600 mb-6'>
+            <p className='text-sm text-muted-foreground mb-6'>
               Configure your brokerage accounts in Settings before tracking
               stock assets.
             </p>
@@ -406,65 +406,65 @@ export default function StockAssetsClient({ initialData }: Props) {
             {accounts.map((account) => (
               <Disclosure key={account.accountId}>
                 {({ open }) => (
-                  <div className='border border-gray-200 rounded-lg overflow-hidden'>
-                    <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors'>
+                  <div className='border border-border rounded-lg overflow-hidden'>
+                    <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/50 transition-colors'>
                       <div className='flex items-center gap-4'>
                         <ChevronDown
                           className={clsx(
-                            'w-5 h-5 text-gray-500 transition-transform',
+                            'w-5 h-5 text-muted-foreground transition-transform',
                             open ? 'transform rotate-180' : '',
                           )}
                         />
-                        <span className='text-lg font-semibold text-gray-900'>
+                        <span className='text-lg font-semibold text-foreground'>
                           {account.accountName}
                         </span>
                       </div>
                     </Disclosure.Button>
 
-                    <Disclosure.Panel className='px-6 py-4 bg-white'>
+                    <Disclosure.Panel className='px-6 py-4 bg-card'>
                       <div className='overflow-x-auto'>
-                        <table className='min-w-full divide-y divide-gray-200'>
-                          <thead className='bg-gray-50'>
+                        <table className='min-w-full divide-y divide-border'>
+                          <thead className='bg-muted'>
                             <tr>
-                              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Stock
                               </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Qty
                               </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Buy Price
                               </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Buy Date
                               </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Curr Price
                               </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Value
                               </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 P/L
                               </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 P/L %
                               </th>
-                              <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Holding
                               </th>
-                              <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Term
                               </th>
-                              <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 CGT
                               </th>
-                              <th className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                              <th className='px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider'>
                                 Actions
                               </th>
                             </tr>
                           </thead>
-                          <tbody className='bg-white divide-y divide-gray-200'>
+                          <tbody className='bg-card divide-y divide-border'>
                             {account.holdings.map((holding: any) => {
                               const metrics = calculateHoldingMetrics(
                                 holding,
@@ -479,32 +479,32 @@ export default function StockAssetsClient({ initialData }: Props) {
                                 <tr
                                   key={holding.id}
                                   className={clsx(
-                                    'hover:bg-gray-50',
+                                    'hover:bg-muted/50',
                                     metrics.isSold && 'opacity-75',
                                   )}
                                 >
                                   {/* Stock: ticker + company */}
                                   <td className='px-6 py-4 text-sm'>
-                                    <div className='font-semibold text-gray-900'>
+                                    <div className='font-semibold text-foreground'>
                                       {holding.ticker}
                                       {metrics.isSold && (
-                                        <span className='ml-2 inline-block px-2 py-1 text-xs font-semibold bg-gray-200 text-gray-700 rounded'>
+                                        <span className='ml-2 inline-block px-2 py-1 text-xs font-semibold bg-muted text-foreground rounded'>
                                           SOLD
                                         </span>
                                       )}
                                     </div>
-                                    <div className='text-xs text-gray-500'>
+                                    <div className='text-xs text-muted-foreground'>
                                       {holding.companyName}
                                     </div>
                                   </td>
 
                                   {/* Quantity */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900'>
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-foreground'>
                                     {formatQuantity(metrics.remainingQuantity)}
                                   </td>
 
                                   {/* Buy Price */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-muted-foreground'>
                                     {formatPrice(
                                       Number(holding.buyPrice),
                                       holding.currency,
@@ -512,7 +512,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                   </td>
 
                                   {/* Buy Date */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-muted-foreground'>
                                     {new Date(
                                       holding.buyDate,
                                     ).toLocaleDateString('en-AU', {
@@ -522,7 +522,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                   </td>
 
                                   {/* Current Price */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-gray-600'>
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-muted-foreground'>
                                     {formatPrice(
                                       Number(holding.currentPrice),
                                       holding.currency,
@@ -530,7 +530,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                   </td>
 
                                   {/* Market Value */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900'>
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-foreground'>
                                     {formatCurrency(
                                       metrics.marketValue,
                                       holding.currency,
@@ -565,7 +565,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                   </td>
 
                                   {/* Holding Period */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center text-gray-600'>
+                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center text-muted-foreground'>
                                     {formatHoldingPeriod(
                                       metrics.holdingPeriodMonths,
                                     )}
@@ -598,7 +598,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                         </span>
                                       )
                                     ) : (
-                                      <span className='text-gray-400 text-xs'>
+                                      <span className='text-muted-foreground text-xs'>
                                         N/A
                                       </span>
                                     )}
@@ -715,7 +715,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                   leaveFrom='opacity-100 scale-100'
                   leaveTo='opacity-0 scale-95'
                 >
-                  <Dialog.Panel className='w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all'>
+                  <Dialog.Panel className='w-full max-w-md transform overflow-hidden rounded-lg bg-card p-6 text-left align-middle shadow-xl transition-all'>
                     <Dialog.Title
                       as='h3'
                       className='text-lg font-medium leading-6 text-red-600'
@@ -723,14 +723,14 @@ export default function StockAssetsClient({ initialData }: Props) {
                       Delete Snapshot
                     </Dialog.Title>
                     <div className='mt-2'>
-                      <p className='text-sm text-gray-600'>
+                      <p className='text-sm text-muted-foreground'>
                         Are you sure you want to delete the snapshot from{' '}
                         <span className='font-medium'>
                           {deleteConfirm.snapshotDate}
                         </span>
                         ?
                       </p>
-                      <p className='text-sm text-gray-500 mt-2'>
+                      <p className='text-sm text-muted-foreground mt-2'>
                         This action cannot be undone. All holdings in this
                         snapshot will be deleted.
                       </p>
@@ -791,7 +791,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                   leaveFrom='opacity-100 scale-100'
                   leaveTo='opacity-0 scale-95'
                 >
-                  <Dialog.Panel className='w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all'>
+                  <Dialog.Panel className='w-full max-w-md transform overflow-hidden rounded-lg bg-card p-6 text-left align-middle shadow-xl transition-all'>
                     <Dialog.Title
                       as='h3'
                       className='text-lg font-medium leading-6 text-red-600'
@@ -799,14 +799,14 @@ export default function StockAssetsClient({ initialData }: Props) {
                       Delete Holding
                     </Dialog.Title>
                     <div className='mt-2'>
-                      <p className='text-sm text-gray-600'>
+                      <p className='text-sm text-muted-foreground'>
                         Are you sure you want to delete{' '}
                         <span className='font-semibold'>
                           {deleteHoldingConfirm.ticker}
                         </span>
                         ?
                       </p>
-                      <p className='text-sm text-gray-500 mt-2'>
+                      <p className='text-sm text-muted-foreground mt-2'>
                         This action cannot be undone.
                       </p>
                     </div>

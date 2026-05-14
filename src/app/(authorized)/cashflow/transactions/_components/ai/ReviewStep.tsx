@@ -104,19 +104,19 @@ export default function ReviewStep({
   return (
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
-        <h3 className='text-base font-semibold text-gray-900'>
+        <h3 className='text-base font-semibold text-foreground'>
           Review Extracted Data
         </h3>
-        <span className='text-xs text-gray-500'>
+        <span className='text-xs text-muted-foreground'>
           {totalConfirmed} entries to import
         </span>
       </div>
 
       {localImages.map((img, imageIdx) => (
-        <div key={img.imageId} className='border border-gray-200 rounded-lg p-4'>
+        <div key={img.imageId} className='border border-border rounded-lg p-4'>
           <div className='flex items-center justify-between mb-3'>
             <div className='flex items-center gap-2'>
-              <span className='text-sm font-medium text-gray-800 truncate max-w-[200px]'>
+              <span className='text-sm font-medium text-foreground truncate max-w-[200px]'>
                 {img.fileName || img.imageId}
               </span>
               <ConfidenceBadge score={img.confidence} />
@@ -124,16 +124,16 @@ export default function ReviewStep({
           </div>
 
           {img.entries.length === 0 ? (
-            <p className='text-xs text-gray-400'>No entries extracted</p>
+            <p className='text-xs text-muted-foreground'>No entries extracted</p>
           ) : (
             <table className='w-full text-sm'>
               <thead>
-                <tr className='border-b border-gray-100'>
+                <tr className='border-b border-border'>
                   <th className='text-left py-1.5 pr-3 w-8'></th>
-                  <th className='text-left py-1.5 pr-3 text-xs text-gray-500 font-medium'>
+                  <th className='text-left py-1.5 pr-3 text-xs text-muted-foreground font-medium'>
                     Category
                   </th>
-                  <th className='text-right py-1.5 text-xs text-gray-500 font-medium'>
+                  <th className='text-right py-1.5 text-xs text-muted-foreground font-medium'>
                     Amount
                   </th>
                 </tr>
@@ -200,7 +200,7 @@ export default function ReviewStep({
         <button
           onClick={onBack}
           disabled={isConfirming}
-          className='text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50'
+          className='text-sm text-muted-foreground hover:text-foreground disabled:opacity-50'
         >
           ← Back
         </button>

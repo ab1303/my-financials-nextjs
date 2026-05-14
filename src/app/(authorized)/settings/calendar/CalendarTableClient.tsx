@@ -64,7 +64,7 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
                 type='button'
                 aria-label='Edit'
                 title='Edit calendar year'
-                className='p-1 rounded hover:bg-gray-100 transition-colors'
+                className='p-1 rounded hover:bg-muted transition-colors'
                 onClick={() => onEdit(row)}
               >
                 <Pencil className='w-4 h-4 text-blue-500' />
@@ -89,7 +89,7 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
                   type='button'
                   aria-label='Cancel delete'
                   title='Cancel delete'
-                  className='p-1 rounded hover:bg-gray-100 transition-colors'
+                  className='p-1 rounded hover:bg-muted transition-colors'
                   onClick={() => setDeletingId(null)}
                 >
                   <X className='w-4 h-4 text-gray-500' />

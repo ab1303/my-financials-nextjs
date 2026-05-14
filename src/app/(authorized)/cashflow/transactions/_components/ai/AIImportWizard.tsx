@@ -111,13 +111,13 @@ export default function AIImportWizard({
                 leaveFrom='opacity-100 scale-100'
                 leaveTo='opacity-0 scale-95'
               >
-                <Dialog.Panel className='w-full max-w-2xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all'>
-                  <div className='flex items-center justify-between border-b border-gray-200 p-6'>
+                <Dialog.Panel className='w-full max-w-2xl transform overflow-hidden rounded-lg bg-card shadow-xl transition-all'>
+                  <div className='flex items-center justify-between border-b border-border p-6'>
                     <div>
-                      <Dialog.Title className='text-lg font-semibold text-gray-900'>
+                      <Dialog.Title className='text-lg font-semibold text-foreground'>
                         AI Import Wizard
                       </Dialog.Title>
-                      <p className='mt-1 text-sm text-gray-600'>
+                      <p className='mt-1 text-sm text-muted-foreground'>
                         {currentStep === 'upload' && 'Step 1: Select Images'}
                         {currentStep === 'processing' && 'Step 2: Processing'}
                         {currentStep === 'review' && 'Step 3: Review'}
@@ -127,14 +127,14 @@ export default function AIImportWizard({
                     {currentStep !== 'processing' && (
                       <button
                         onClick={onClose}
-                        className='text-gray-400 hover:text-gray-600 transition-colors'
+                        className='text-muted-foreground hover:text-muted-foreground transition-colors'
                       >
                         <X className='h-6 w-6' />
                       </button>
                     )}
                   </div>
 
-                  <div className='flex gap-2 border-b border-gray-200 px-6 py-3'>
+                  <div className='flex gap-2 border-b border-border px-6 py-3'>
                     {steps.map((step, index) => (
                       <div key={step} className='flex items-center flex-1'>
                         <div
@@ -143,7 +143,7 @@ export default function AIImportWizard({
                               ? 'bg-blue-600 text-white'
                               : index < currentStepIndex
                                 ? 'bg-green-600 text-white'
-                                : 'bg-gray-200 text-gray-600'
+                                : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {index + 1}
@@ -153,7 +153,7 @@ export default function AIImportWizard({
                             className={`h-1 mx-2 flex-1 ${
                               currentStepIndex > index
                                 ? 'bg-green-600'
-                                : 'bg-gray-200'
+                                : 'bg-muted'
                             }`}
                             style={{ width: '40px' }}
                           />

@@ -110,13 +110,13 @@ export default function UploadStep({
       )}
 
       <div className='mb-4'>
-        <label className='block text-sm font-medium text-gray-700 mb-1'>
-          Bank Account <span className='text-gray-400 text-xs'>(optional)</span>
+        <label className='block text-sm font-medium text-foreground mb-1'>
+          Bank Account <span className='text-muted-foreground text-xs'>(optional)</span>
         </label>
         <select
           value={selectedBankAccountId ?? ''}
           onChange={(e) => onBankAccountChange(e.target.value || null)}
-          className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm'
+          className='w-full rounded-md border border-input px-3 py-2 text-sm'
         >
           <option value=''>Unknown / Not applicable</option>
           {bankAccounts.map((acc) => (
@@ -132,27 +132,27 @@ export default function UploadStep({
         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
           isDragActive
             ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 bg-gray-50 hover:border-gray-400'
+            : 'border-input bg-muted hover:border-gray-400'
         }`}
       >
         <input {...getInputProps()} />
-        <UploadCloud className='mx-auto h-12 w-12 text-gray-400 mb-4' />
-        <p className='text-lg font-medium text-gray-900 mb-2'>
+        <UploadCloud className='mx-auto h-12 w-12 text-muted-foreground mb-4' />
+        <p className='text-lg font-medium text-foreground mb-2'>
           {isDragActive
             ? 'Drop your banking screenshots here'
             : 'Drop your banking screenshots here'}
         </p>
-        <p className='text-sm text-gray-600 mb-4'>
+        <p className='text-sm text-muted-foreground mb-4'>
           or <span className='text-blue-600 font-medium'>click to browse</span>
         </p>
-        <p className='text-xs text-gray-500'>
+        <p className='text-xs text-muted-foreground'>
           PNG, JPG, HEIC, WebP • Max 10MB each • Up to 10 images
         </p>
       </div>
 
       {files.length > 0 && (
         <div className='space-y-4'>
-          <h3 className='text-sm font-semibold text-gray-900'>
+          <h3 className='text-sm font-semibold text-foreground'>
             Selected Images ({files.length})
           </h3>
           <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'>
@@ -225,7 +225,7 @@ export default function UploadStep({
         className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
           files.length > 0
             ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+            : 'bg-muted text-muted-foreground cursor-not-allowed'
         }`}
       >
         {files.length > 0

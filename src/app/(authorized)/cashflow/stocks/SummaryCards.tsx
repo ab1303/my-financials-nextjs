@@ -27,8 +27,8 @@ interface SummaryCardsProps {
 export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
   if (!currencyTotals || currencyTotals.length === 0) {
     return (
-      <div className='p-6 bg-gray-50 rounded-lg border border-gray-200 text-center'>
-        <p className='text-gray-600'>No holdings recorded yet</p>
+      <div className='p-6 bg-muted rounded-lg border border-border text-center'>
+        <p className='text-muted-foreground'>No holdings recorded yet</p>
       </div>
     );
   }
@@ -65,8 +65,8 @@ export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
 
             {/* Portfolio Value */}
             <div className='mb-4'>
-              <p className='text-sm text-gray-600 mb-1'>Portfolio Value</p>
-              <p className='text-2xl font-bold text-gray-900'>
+              <p className='text-sm text-muted-foreground mb-1'>Portfolio Value</p>
+              <p className='text-2xl font-bold text-foreground'>
                 {formatCurrency(total.totalValue, total.currency as any)}
               </p>
             </div>
@@ -74,8 +74,8 @@ export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
             {/* P/L Breakdown */}
             <div className='space-y-2'>
               {/* Unrealized P/L */}
-              <div className='flex justify-between items-center py-2 border-t border-gray-200 border-opacity-50'>
-                <p className='text-sm text-gray-600'>Unrealized P/L</p>
+              <div className='flex justify-between items-center py-2 border-t border-border border-opacity-50'>
+                <p className='text-sm text-muted-foreground'>Unrealized P/L</p>
                 <p
                   className={`font-semibold ${getPLColorClass(total.totalUnrealizedPL)}`}
                 >
@@ -84,8 +84,8 @@ export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
               </div>
 
               {/* Realized P/L */}
-              <div className='flex justify-between items-center py-2 border-t border-gray-200 border-opacity-50'>
-                <p className='text-sm text-gray-600'>Realized P/L</p>
+              <div className='flex justify-between items-center py-2 border-t border-border border-opacity-50'>
+                <p className='text-sm text-muted-foreground'>Realized P/L</p>
                 <p
                   className={`font-semibold ${getPLColorClass(total.totalRealizedPL)}`}
                 >
@@ -94,8 +94,8 @@ export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
               </div>
 
               {/* Total P/L */}
-              <div className='flex justify-between items-center py-3 border-t-2 border-gray-300'>
-                <p className='font-semibold text-gray-900'>Total P/L</p>
+              <div className='flex justify-between items-center py-3 border-t-2 border-border'>
+                <p className='font-semibold text-foreground'>Total P/L</p>
                 <p className={`text-lg font-bold ${totalPLColorClass}`}>
                   {formatPL(totalPL, total.currency as any)}
                 </p>

@@ -50,24 +50,24 @@ export default function CSVResultsStep({
         </div>
       </div>
 
-      <div className='space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4'>
+      <div className='space-y-3 rounded-lg border border-border bg-muted p-4'>
         <div className='flex items-center justify-between'>
-          <span className='text-sm font-medium text-gray-700'>Expenses Saved</span>
-          <span className='text-lg font-bold text-gray-900'>{result.debitsSaved}</span>
+          <span className='text-sm font-medium text-foreground'>Expenses Saved</span>
+          <span className='text-lg font-bold text-foreground'>{result.debitsSaved}</span>
         </div>
         <div className='flex items-center justify-between'>
-          <span className='text-sm font-medium text-gray-700'>Income Records Saved</span>
-          <span className='text-lg font-bold text-gray-900'>{result.creditsSaved}</span>
+          <span className='text-sm font-medium text-foreground'>Income Records Saved</span>
+          <span className='text-lg font-bold text-foreground'>{result.creditsSaved}</span>
         </div>
         {result.creditsExcluded > 0 && (
           <div className='flex items-center justify-between'>
-            <span className='text-sm font-medium text-gray-700'>Transfers/Excluded</span>
-            <span className='text-lg font-bold text-gray-400'>{result.creditsExcluded}</span>
+            <span className='text-sm font-medium text-foreground'>Transfers/Excluded</span>
+            <span className='text-lg font-bold text-muted-foreground'>{result.creditsExcluded}</span>
           </div>
         )}
-        <div className='flex items-center justify-between pt-3 border-t border-gray-200'>
-          <span className='text-sm font-medium text-gray-700'>Total Entries</span>
-          <span className='text-lg font-bold text-gray-900'>{result.totalEntries}</span>
+        <div className='flex items-center justify-between pt-3 border-t border-border'>
+          <span className='text-sm font-medium text-foreground'>Total Entries</span>
+          <span className='text-lg font-bold text-foreground'>{result.totalEntries}</span>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export default function CSVResultsStep({
           <h4 className='mb-3 text-sm font-semibold text-red-900'>Errors Encountered</h4>
           <div className='space-y-2'>
             {result.errors.map((error, idx) => (
-              <div key={idx} className='rounded border border-red-100 bg-white p-2 text-xs text-red-800'>
+              <div key={idx} className='rounded border border-red-200 bg-red-50/50 p-2 text-xs text-red-800 dark:text-red-300'>
                 <div className='font-medium'>Month {error.month}</div>
                 <div className='mt-1 text-red-700'>{error.message}</div>
               </div>
@@ -85,24 +85,24 @@ export default function CSVResultsStep({
         </div>
       )}
 
-      <div className='rounded-lg border border-gray-200 bg-gray-50 p-4'>
-        <h4 className='mb-2 text-sm font-semibold text-gray-900'>File Summary</h4>
-        <div className='space-y-1 text-xs text-gray-600'>
+      <div className='rounded-lg border border-border bg-muted p-4'>
+        <h4 className='mb-2 text-sm font-semibold text-foreground'>File Summary</h4>
+        <div className='space-y-1 text-xs text-muted-foreground'>
           <div className='flex justify-between'>
             <span>File Name:</span>
-            <span className='font-medium text-gray-900'>{file.fileName}</span>
+            <span className='font-medium text-foreground'>{file.fileName}</span>
           </div>
           <div className='flex justify-between'>
             <span>File Size:</span>
-            <span className='font-medium text-gray-900'>{(file.fileSize / 1024).toFixed(1)} KB</span>
+            <span className='font-medium text-foreground'>{(file.fileSize / 1024).toFixed(1)} KB</span>
           </div>
           <div className='flex justify-between'>
             <span>Total Rows:</span>
-            <span className='font-medium text-gray-900'>{file.rowCount}</span>
+            <span className='font-medium text-foreground'>{file.rowCount}</span>
           </div>
           <div className='flex justify-between'>
             <span>Session ID:</span>
-            <span className='truncate font-mono text-xs text-gray-900'>{result.sessionId}</span>
+            <span className='truncate font-mono text-xs text-foreground'>{result.sessionId}</span>
           </div>
         </div>
       </div>
