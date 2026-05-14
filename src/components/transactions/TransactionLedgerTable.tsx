@@ -106,10 +106,13 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
     },
   });
 
-  const handleCategoryChange = useCallback((id: string, newCategory: string) => {
-    setSavingId(id);
-    updateCategoryMutation.mutate({ id, newCategory });
-  }, [updateCategoryMutation]);
+  const handleCategoryChange = useCallback(
+    (id: string, newCategory: string, offsetCategory?: string) => {
+      setSavingId(id);
+      updateCategoryMutation.mutate({ id, newCategory, ...(offsetCategory ? { offsetCategory } : {}) });
+    },
+    [updateCategoryMutation],
+  );
 
   const handleReset = useCallback(() => {
     setBankAccountId(undefined);

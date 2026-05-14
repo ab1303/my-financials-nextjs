@@ -9,8 +9,7 @@ import { prisma } from '@/server/db/client';
 import type { ClassifiedCreditTransaction, ClassifiedTransactionV2 } from '@/server/services/ai-import/_types';
 
 import type { CreditMonth, DebitMonth, TransactionSaveResult } from './_types';
-
-const EXCLUDED_CREDIT_LABELS = ['Transfer', 'Excluded'];
+import { EXCLUDED_CREDIT_LABELS } from './constants';
 
 function createEmptyResult(): TransactionSaveResult {
   return {
@@ -231,7 +230,7 @@ export async function confirmCreditTransactions(
       }
 
       for (const tx of transactions as ClassifiedCreditTransaction[]) {
-        const isExcluded = EXCLUDED_CREDIT_LABELS.includes(tx.confirmedCategory);
+        const isExcluded = (EXCLUDED_CREDIT_LABELS as readonly string[]).includes(tx.confirmedCategory);
 
         if (isExcluded) {
           await createTransactionRecord({

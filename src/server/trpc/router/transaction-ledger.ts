@@ -12,7 +12,10 @@ import { router, protectedProcedure } from '@/server/trpc/trpc';
 import {
   rerollupExpenseSummary,
   updateIncomeRecordSource,
+  applyReimbursementOffset,
+  reverseReimbursementOffset,
 } from '@/server/services/transactions/ledger.service';
+import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
 
 type PrismaTransaction = {
   id: string;
@@ -21,6 +24,7 @@ type PrismaTransaction = {
   amount: Decimal;
   type: TransactionTypeEnum;
   category: string;
+  offsetCategory: string | null;
   source: TransactionSourceEnum;
   status: TransactionStatusEnum;
   confirmedAt: Date | null;
@@ -45,6 +49,7 @@ export interface TransactionRow {
   bankAccountId: string | null;
   bankAccountName: string | null;
   bankName: string | null;
+  offsetCategory: string | null;
 }
 
 export interface GetAllOutput {
@@ -73,7 +78,21 @@ const getAllInputSchema = z.object({
   amountMax: z.number().nonnegative().optional(),
 });
 
-const updateCategorySchema = z.object({ id: z.string().min(1), newCategory: z.string().min(1) });
+const updateCategorySchema = z
+  .object({
+    id: z.string().min(1),
+    newCategory: z.string().min(1),
+    offsetCategory: z.string().optional(),
+  })
+  .refine(
+    (data) =>
+      data.newCategory !== REIMBURSEMENT_CATEGORY ||
+      (!!data.offsetCategory && data.offsetCategory.length > 0),
+    {
+      message: 'offsetCategory is required when category is Reimbursement',
+      path: ['offsetCategory'],
+    },
+  );
 
 export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, userId: string) {
   const where: Prisma.TransactionWhereInput = { userId };
@@ -164,6 +183,7 @@ export const transactionLedgerRouter = router({
       bankAccountId: tx.bankAccountId,
       bankAccountName: tx.bankAccount?.name ?? null,
       bankName: tx.bankAccount?.bank?.name ?? null,
+      offsetCategory: tx.offsetCategory ?? null,
     }));
 
     return {
@@ -189,41 +209,133 @@ export const transactionLedgerRouter = router({
 
   updateCategory: protectedProcedure.input(updateCategorySchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
+
     const transaction = await ctx.prisma.transaction.findUnique({
       where: { id: input.id },
-      select: { id: true, userId: true, type: true, status: true, category: true, amount: true, date: true },
+      select: {
+        id: true,
+        userId: true,
+        type: true,
+        status: true,
+        category: true,
+        offsetCategory: true,
+        amount: true,
+        date: true,
+      },
     });
 
     if (!transaction || transaction.userId !== userId) {
       throw new TRPCError({ code: 'NOT_FOUND' });
     }
 
+    if (input.newCategory === REIMBURSEMENT_CATEGORY && transaction.type !== TransactionTypeEnum.CREDIT) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Reimbursement category is only valid for CREDIT transactions',
+      });
+    }
+
+    let newStatus: TransactionStatusEnum = transaction.status;
+    let newConfirmedAt: Date | undefined;
+
+    if (
+      input.newCategory === REIMBURSEMENT_CATEGORY &&
+      transaction.status === TransactionStatusEnum.EXCLUDED
+    ) {
+      newStatus = TransactionStatusEnum.CONFIRMED;
+      newConfirmedAt = new Date();
+    } else if (
+      transaction.category === REIMBURSEMENT_CATEGORY &&
+      input.newCategory !== REIMBURSEMENT_CATEGORY &&
+      transaction.status === TransactionStatusEnum.CONFIRMED
+    ) {
+      newStatus = TransactionStatusEnum.EXCLUDED;
+    }
+
     await ctx.prisma.transaction.update({
       where: { id: transaction.id },
-      data: { category: input.newCategory, source: TransactionSourceEnum.USER_OVERRIDE },
+      data: {
+        category: input.newCategory,
+        source: TransactionSourceEnum.USER_OVERRIDE,
+        status: newStatus,
+        ...(newConfirmedAt ? { confirmedAt: newConfirmedAt } : {}),
+        offsetCategory: input.newCategory === REIMBURSEMENT_CATEGORY ? (input.offsetCategory ?? null) : null,
+      },
     });
 
-    if (transaction.category !== input.newCategory) {
-      if (transaction.type === TransactionTypeEnum.DEBIT && transaction.status === TransactionStatusEnum.CONFIRMED) {
-        await rerollupExpenseSummary({
+    const categoryChanged = transaction.category !== input.newCategory;
+    const offsetCatChanged = transaction.offsetCategory !== (input.offsetCategory ?? null);
+
+    if (transaction.category !== REIMBURSEMENT_CATEGORY && input.newCategory === REIMBURSEMENT_CATEGORY) {
+      if (input.offsetCategory) {
+        await applyReimbursementOffset({
           prismaClient: ctx.prisma,
           userId,
-          oldCategory: transaction.category,
-          newCategory: input.newCategory,
+          offsetCategory: input.offsetCategory,
           amount: transaction.amount as Decimal,
           date: transaction.date,
         });
       }
-
-      if (transaction.type === TransactionTypeEnum.CREDIT && transaction.status === TransactionStatusEnum.CONFIRMED) {
-        await updateIncomeRecordSource({
+    } else if (transaction.category === REIMBURSEMENT_CATEGORY && input.newCategory !== REIMBURSEMENT_CATEGORY) {
+      if (transaction.offsetCategory) {
+        await reverseReimbursementOffset({
           prismaClient: ctx.prisma,
           userId,
-          newSource: input.newCategory as IncomeSourceEnumType,
+          offsetCategory: transaction.offsetCategory,
           amount: transaction.amount as Decimal,
-          transactionDate: transaction.date,
+          date: transaction.date,
         });
       }
+    } else if (
+      transaction.category === REIMBURSEMENT_CATEGORY &&
+      input.newCategory === REIMBURSEMENT_CATEGORY &&
+      offsetCatChanged
+    ) {
+      if (transaction.offsetCategory) {
+        await reverseReimbursementOffset({
+          prismaClient: ctx.prisma,
+          userId,
+          offsetCategory: transaction.offsetCategory,
+          amount: transaction.amount as Decimal,
+          date: transaction.date,
+        });
+      }
+      if (input.offsetCategory) {
+        await applyReimbursementOffset({
+          prismaClient: ctx.prisma,
+          userId,
+          offsetCategory: input.offsetCategory,
+          amount: transaction.amount as Decimal,
+          date: transaction.date,
+        });
+      }
+    } else if (
+      transaction.type === TransactionTypeEnum.DEBIT &&
+      transaction.status === TransactionStatusEnum.CONFIRMED &&
+      categoryChanged
+    ) {
+      await rerollupExpenseSummary({
+        prismaClient: ctx.prisma,
+        userId,
+        oldCategory: transaction.category,
+        newCategory: input.newCategory,
+        amount: transaction.amount as Decimal,
+        date: transaction.date,
+      });
+    } else if (
+      transaction.type === TransactionTypeEnum.CREDIT &&
+      transaction.status === TransactionStatusEnum.CONFIRMED &&
+      transaction.category !== REIMBURSEMENT_CATEGORY &&
+      input.newCategory !== REIMBURSEMENT_CATEGORY &&
+      categoryChanged
+    ) {
+      await updateIncomeRecordSource({
+        prismaClient: ctx.prisma,
+        userId,
+        newSource: input.newCategory as IncomeSourceEnumType,
+        amount: transaction.amount as Decimal,
+        transactionDate: transaction.date,
+      });
     }
 
     return { success: true };
