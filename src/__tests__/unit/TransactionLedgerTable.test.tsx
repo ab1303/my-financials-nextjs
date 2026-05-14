@@ -1,17 +1,21 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
 
 const mockRefetch = vi.fn();
 const mockMutate = vi.fn();
-const mockUseQuery = vi.fn();
+const mockUseAllQuery = vi.fn();
+const mockUseFilterOptionsQuery = vi.fn();
 const mockUseMutation = vi.fn();
 
 vi.mock('@/server/trpc/client', () => ({
   trpc: {
     transactionLedger: {
       getAll: {
-        useQuery: (...args: unknown[]) => mockUseQuery(...args),
+        useQuery: (...args: unknown[]) => mockUseAllQuery(...args),
+      },
+      getFilterOptions: {
+        useQuery: (...args: unknown[]) => mockUseFilterOptionsQuery(...args),
       },
       updateCategory: {
         useMutation: (...args: unknown[]) => mockUseMutation(...args),
@@ -28,6 +32,9 @@ describe('TransactionLedgerTable', () => {
     total: 0,
     page: 1,
     totalPages: 1,
+  };
+
+  const filterOptions = {
     expenseCategories: [
       { id: 'cat-1', name: 'Groceries' },
       { id: 'cat-2', name: 'Transport' },
@@ -37,11 +44,16 @@ describe('TransactionLedgerTable', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseQuery.mockReturnValue({
+    mockUseAllQuery.mockReturnValue({
       data: baseData,
       isLoading: false,
       isFetching: false,
       refetch: mockRefetch,
+    });
+    mockUseFilterOptionsQuery.mockReturnValue({
+      data: filterOptions,
+      isLoading: false,
+      isFetching: false,
     });
     mockUseMutation.mockReturnValue({
       mutate: mockMutate,
@@ -49,17 +61,18 @@ describe('TransactionLedgerTable', () => {
     });
   });
 
-  it('renders tab bar with 4 tabs', () => {
+  it('renders tab bar with 5 tabs', () => {
     render(<TransactionLedgerTable bankAccounts={bankAccounts} />);
 
     expect(screen.getByRole('button', { name: /all/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /expenses/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /income/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /excluded/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /uncategorized/i })).toBeDefined();
   });
 
   it('shows loading state while fetching', () => {
-    mockUseQuery.mockReturnValueOnce({
+    mockUseAllQuery.mockReturnValueOnce({
       data: undefined,
       isLoading: true,
       isFetching: true,
@@ -78,7 +91,7 @@ describe('TransactionLedgerTable', () => {
   });
 
   it('renders transaction rows when data is available', () => {
-    mockUseQuery.mockReturnValueOnce({
+    mockUseAllQuery.mockReturnValueOnce({
       data: {
         ...baseData,
         total: 1,
@@ -130,4 +143,3 @@ describe('TransactionLedgerTable', () => {
     });
   });
 });
-

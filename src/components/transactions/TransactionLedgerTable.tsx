@@ -2,12 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-
 import { trpc } from '@/server/trpc/client';
-import TransactionFilters from './TransactionFilters';
+import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
 
-type TabFilter = 'all' | 'expenses' | 'income' | 'excluded';
+type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'uncategorized';
 
 type GetAllInput = {
   page: number;
@@ -18,6 +17,9 @@ type GetAllInput = {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
+  uncategorized?: boolean;
+  amountMin?: number;
+  amountMax?: number;
 };
 
 interface TransactionLedgerTableProps {
@@ -32,42 +34,56 @@ const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'statu
   expenses: { type: 'DEBIT', status: 'CONFIRMED' },
   income: { type: 'CREDIT', status: 'CONFIRMED' },
   excluded: { status: 'EXCLUDED' },
+  uncategorized: {},
 };
 
-export default function TransactionLedgerTable({
-  bankAccounts,
-  refreshKey,
-}: TransactionLedgerTableProps) {
+function parseAmount(value: string) {
+  if (!value.trim()) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+export default function TransactionLedgerTable({ bankAccounts, refreshKey }: TransactionLedgerTableProps) {
+  const defaultFY = getPresetDateRange('this-fy')!;
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [page, setPage] = useState(1);
   const [bankAccountId, setBankAccountId] = useState<string | undefined>(undefined);
-  const [dateFrom, setDateFrom] = useState<string | undefined>(undefined);
-  const [dateTo, setDateTo] = useState<string | undefined>(undefined);
+  const [dateFrom, setDateFrom] = useState<string | undefined>(defaultFY.from);
+  const [dateTo, setDateTo] = useState<string | undefined>(defaultFY.to);
+  const [amountMin, setAmountMin] = useState('');
+  const [amountMax, setAmountMax] = useState('');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [resetKey, setResetKey] = useState(0);
   const previousRefreshKey = useRef(refreshKey);
 
-  const queryInput: GetAllInput = useMemo(
-    () => ({
+  const queryInput: GetAllInput = useMemo(() => {
+    const parsedAmountMin = parseAmount(amountMin);
+    const parsedAmountMax = parseAmount(amountMax);
+
+    return {
       page,
       limit: PAGE_SIZE,
       ...TAB_TO_PARAMS[activeTab],
+      ...(activeTab === 'uncategorized' ? { uncategorized: true } : {}),
       ...(bankAccountId ? { bankAccountId } : {}),
       ...(dateFrom ? { dateFrom } : {}),
       ...(dateTo ? { dateTo } : {}),
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
-    }),
-    [page, activeTab, bankAccountId, dateFrom, dateTo, debouncedSearch],
-  );
+      ...(parsedAmountMin !== undefined ? { amountMin: parsedAmountMin } : {}),
+      ...(parsedAmountMax !== undefined ? { amountMax: parsedAmountMax } : {}),
+    };
+  }, [page, activeTab, bankAccountId, dateFrom, dateTo, debouncedSearch, amountMin, amountMax]);
 
   const { data, isLoading, isFetching, refetch } = trpc.transactionLedger.getAll.useQuery(queryInput);
+  const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 300);
-
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
   }, [search]);
 
@@ -77,8 +93,6 @@ export default function TransactionLedgerTable({
       void refetch();
     }
   }, [refreshKey, refetch]);
-
-  const [savingId, setSavingId] = useState<string | null>(null);
 
   const updateCategoryMutation = trpc.transactionLedger.updateCategory.useMutation({
     onSuccess: () => {
@@ -92,22 +106,23 @@ export default function TransactionLedgerTable({
     },
   });
 
-  const handleCategoryChange = useCallback(
-    (id: string, newCategory: string) => {
-      setSavingId(id);
-      updateCategoryMutation.mutate({ id, newCategory });
-    },
-    [updateCategoryMutation],
-  );
+  const handleCategoryChange = useCallback((id: string, newCategory: string) => {
+    setSavingId(id);
+    updateCategoryMutation.mutate({ id, newCategory });
+  }, [updateCategoryMutation]);
 
   const handleReset = useCallback(() => {
     setBankAccountId(undefined);
-    setDateFrom(undefined);
-    setDateTo(undefined);
+    const fy = getPresetDateRange('this-fy')!;
+    setDateFrom(fy.from);
+    setDateTo(fy.to);
+    setAmountMin('');
+    setAmountMax('');
     setSearch('');
     setDebouncedSearch('');
     setPage(1);
     setActiveTab('all');
+    setResetKey((k) => k + 1);
   }, []);
 
   const handleTabChange = useCallback((tab: TabFilter) => {
@@ -117,13 +132,13 @@ export default function TransactionLedgerTable({
 
   const loading = isLoading || isFetching;
   const transactions = data?.transactions ?? [];
-  const expenseCategories = data?.expenseCategories ?? [];
-  const incomeSourceLabels = data?.incomeSourceLabels ?? [];
+  const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
+  const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
 
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap gap-4 border-b border-gray-200 dark:border-gray-700">
-        {(['all', 'expenses', 'income', 'excluded'] as const).map((tab) => (
+        {(['all', 'expenses', 'income', 'excluded', 'uncategorized'] as const).map((tab) => (
           <button
             key={tab}
             type="button"
@@ -145,31 +160,42 @@ export default function TransactionLedgerTable({
         dateFrom={dateFrom}
         dateTo={dateTo}
         search={search}
-        onBankChange={(value) => {
-          setBankAccountId(value);
+        amountMin={amountMin}
+        amountMax={amountMax}
+        onBankChange={(v) => {
+          setBankAccountId(v);
           setPage(1);
         }}
-        onDateFromChange={(value) => {
-          setDateFrom(value);
+        onDateFromChange={(v) => {
+          setDateFrom(v);
           setPage(1);
         }}
-        onDateToChange={(value) => {
-          setDateTo(value);
+        onDateToChange={(v) => {
+          setDateTo(v);
           setPage(1);
         }}
-        onSearchChange={(value) => {
-          setSearch(value);
+        onSearchChange={(v) => {
+          setSearch(v);
+          setPage(1);
+        }}
+        onAmountMinChange={(v) => {
+          setAmountMin(v);
+          setPage(1);
+        }}
+        onAmountMaxChange={(v) => {
+          setAmountMax(v);
           setPage(1);
         }}
         onReset={handleReset}
+        resetKey={resetKey}
       />
 
       {loading ? (
         <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
           <p className="text-sm text-gray-500 dark:text-gray-400">Loading transactions...</p>
           <div className="animate-pulse space-y-2">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="h-10 rounded bg-gray-100 dark:bg-gray-800" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-10 rounded bg-gray-100 dark:bg-gray-800" />
             ))}
           </div>
         </div>
@@ -182,30 +208,11 @@ export default function TransactionLedgerTable({
           <table className="min-w-full">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                  Description
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                  Amount
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                  Type
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                  Category
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                  Source
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-                  Bank Account
-                </th>
+                {['Date', 'Description', 'Amount', 'Type', 'Category', 'Source', 'Status', 'Bank Account'].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -232,7 +239,7 @@ export default function TransactionLedgerTable({
           <button
             type="button"
             disabled={page <= 1}
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            onClick={() => setPage((c) => Math.max(1, c - 1))}
             className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200"
           >
             Previous
@@ -240,7 +247,7 @@ export default function TransactionLedgerTable({
           <button
             type="button"
             disabled={(data?.totalPages ?? 1) <= page}
-            onClick={() => setPage((current) => current + 1)}
+            onClick={() => setPage((c) => c + 1)}
             className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200"
           >
             Next

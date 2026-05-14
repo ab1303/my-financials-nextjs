@@ -51,8 +51,10 @@ export default function TransactionRow({
   return (
     <tr className="border-b border-gray-200 dark:border-gray-700">
       <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.date.slice(0, 10)}</td>
-      <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{transaction.description}</td>
-      <td className={`px-4 py-3 text-sm font-medium ${amountClass}`}>{formatCurrency(transaction.amount)}</td>
+      <td className="max-w-[240px] px-4 py-3 text-sm text-gray-900 dark:text-white">
+        <span className="block truncate" title={transaction.description}>{transaction.description}</span>
+      </td>
+      <td className={`px-4 py-3 text-sm font-medium tabular-nums ${amountClass}`}>{formatCurrency(transaction.amount)}</td>
       <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.type}</td>
       <td className="px-4 py-3">
         <select

@@ -1,10 +1,18 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { Prisma, IncomeSourceEnumType, TransactionStatusEnum, TransactionSourceEnum, TransactionTypeEnum } from '@prisma/client';
+import {
+  Prisma,
+  IncomeSourceEnumType,
+  TransactionStatusEnum,
+  TransactionSourceEnum,
+  TransactionTypeEnum,
+} from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
-
 import { router, protectedProcedure } from '@/server/trpc/trpc';
-import { rerollupExpenseSummary, updateIncomeRecordSource } from '@/server/services/transactions/ledger.service';
+import {
+  rerollupExpenseSummary,
+  updateIncomeRecordSource,
+} from '@/server/services/transactions/ledger.service';
 
 type PrismaTransaction = {
   id: string;
@@ -17,12 +25,7 @@ type PrismaTransaction = {
   status: TransactionStatusEnum;
   confirmedAt: Date | null;
   bankAccountId: string | null;
-  bankAccount?: {
-    name: string;
-    bank?: {
-      name: string | null;
-    } | null;
-  } | null;
+  bankAccount?: { name: string; bank?: { name: string | null } | null } | null;
   userId: string;
   importSessionId: string | null;
   createdAt: Date;
@@ -49,6 +52,9 @@ export interface GetAllOutput {
   total: number;
   page: number;
   totalPages: number;
+}
+
+export interface GetFilterOptionsOutput {
   expenseCategories: Array<{ id: string; name: string }>;
   incomeSourceLabels: string[];
 }
@@ -62,17 +68,15 @@ const getAllInputSchema = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   search: z.string().optional(),
+  uncategorized: z.boolean().optional(),
+  amountMin: z.number().nonnegative().optional(),
+  amountMax: z.number().nonnegative().optional(),
 });
 
-const updateCategorySchema = z.object({
-  id: z.string().min(1),
-  newCategory: z.string().min(1),
-});
+const updateCategorySchema = z.object({ id: z.string().min(1), newCategory: z.string().min(1) });
 
-function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, userId: string) {
-  const where: Prisma.TransactionWhereInput = {
-    userId,
-  };
+export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, userId: string) {
+  const where: Prisma.TransactionWhereInput = { userId };
 
   if (input.type) {
     where.type = input.type;
@@ -86,17 +90,38 @@ function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, userId:
     where.bankAccountId = input.bankAccountId;
   }
 
+  if (input.uncategorized === true) {
+    where.category = '';
+  }
+
   if (input.dateFrom || input.dateTo) {
     const dateFilter: Prisma.DateTimeFilter = {};
+
     if (input.dateFrom) {
-      dateFilter.gte = new Date(input.dateFrom);
+      dateFilter.gte = new Date(`${input.dateFrom}T00:00:00`);
     }
+
     if (input.dateTo) {
-      const end = new Date(input.dateTo);
+      const end = new Date(`${input.dateTo}T00:00:00`);
       end.setHours(23, 59, 59, 999);
       dateFilter.lte = end;
     }
+
     where.date = dateFilter;
+  }
+
+  if (input.amountMin !== undefined || input.amountMax !== undefined) {
+    const amountFilter: Prisma.DecimalFilter = {};
+
+    if (input.amountMin !== undefined) {
+      amountFilter.gte = input.amountMin;
+    }
+
+    if (input.amountMax !== undefined) {
+      amountFilter.lte = input.amountMax;
+    }
+
+    where.amount = amountFilter;
   }
 
   if (input.search?.trim()) {
@@ -115,38 +140,15 @@ export const transactionLedgerRouter = router({
     const userId = ctx.session.user.id;
     const where = buildTransactionWhere(input, userId);
 
-    const [transactions, total, expenseCategories] = await Promise.all([
+    const [transactions, total] = await Promise.all([
       ctx.prisma.transaction.findMany({
         where,
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
         skip: (input.page - 1) * input.limit,
         take: input.limit,
-        include: {
-          bankAccount: {
-            select: {
-              name: true,
-              bank: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-        },
+        include: { bankAccount: { select: { name: true, bank: { select: { name: true } } } } },
       }),
       ctx.prisma.transaction.count({ where }),
-      ctx.prisma.expenseCategory.findMany({
-        where: {
-          isActive: true,
-        },
-        orderBy: {
-          name: 'asc',
-        },
-        select: {
-          id: true,
-          name: true,
-        },
-      }),
     ]);
 
     const outputTransactions: TransactionRow[] = (transactions as PrismaTransaction[]).map((tx) => ({
@@ -164,31 +166,32 @@ export const transactionLedgerRouter = router({
       bankName: tx.bankAccount?.bank?.name ?? null,
     }));
 
-    const totalPages = Math.max(1, Math.ceil(total / input.limit));
-
     return {
       transactions: outputTransactions,
       total,
       page: input.page,
-      totalPages,
+      totalPages: Math.max(1, Math.ceil(total / input.limit)),
+    } satisfies GetAllOutput;
+  }),
+
+  getFilterOptions: protectedProcedure.query(async ({ ctx }) => {
+    const expenseCategories = await ctx.prisma.expenseCategory.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    });
+
+    return {
       expenseCategories,
       incomeSourceLabels: Object.values(IncomeSourceEnumType) as string[],
-    } satisfies GetAllOutput;
+    } satisfies GetFilterOptionsOutput;
   }),
 
   updateCategory: protectedProcedure.input(updateCategorySchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
     const transaction = await ctx.prisma.transaction.findUnique({
       where: { id: input.id },
-      select: {
-        id: true,
-        userId: true,
-        type: true,
-        status: true,
-        category: true,
-        amount: true,
-        date: true,
-      },
+      select: { id: true, userId: true, type: true, status: true, category: true, amount: true, date: true },
     });
 
     if (!transaction || transaction.userId !== userId) {
@@ -197,10 +200,7 @@ export const transactionLedgerRouter = router({
 
     await ctx.prisma.transaction.update({
       where: { id: transaction.id },
-      data: {
-        category: input.newCategory,
-        source: TransactionSourceEnum.USER_OVERRIDE,
-      },
+      data: { category: input.newCategory, source: TransactionSourceEnum.USER_OVERRIDE },
     });
 
     if (transaction.category !== input.newCategory) {
@@ -229,4 +229,3 @@ export const transactionLedgerRouter = router({
     return { success: true };
   }),
 });
-
