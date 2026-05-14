@@ -244,15 +244,15 @@ export default function PaymentHistoryModal({
               <div
                 className={clsx(
                   'w-1 h-16 rounded-full',
-                  editPaymentId === record.id ? 'bg-teal-500' : 'bg-gray-300',
+                  editPaymentId === record.id ? 'bg-primary' : 'bg-border',
                 )}
               ></div>
-              <div className='flex-1 bg-white border border-gray-200 rounded-lg shadow-sm p-4'>
+              <div className='flex-1 bg-card border border-border rounded-lg shadow-sm p-4'>
                 <div className='flex justify-between items-center'>
-                  <span className='text-sm font-medium text-gray-900'>
+                  <span className='text-sm font-medium text-foreground'>
                     {record.datePaid.toDateString()}
                   </span>
-                  <span className='text-lg font-semibold text-gray-900'>
+                  <span className='text-lg font-semibold text-foreground'>
                     <NumericFormat
                       prefix='$'
                       displayType='text'
@@ -264,7 +264,7 @@ export default function PaymentHistoryModal({
                     <button
                       className={clsx(
                         buttonStyles.iconCompact,
-                        'text-gray-400 hover:text-teal-600 hover:bg-gray-50 focus:ring-teal-500',
+                        'text-muted-foreground hover:text-primary hover:bg-muted/30 focus:ring-primary',
                       )}
                       onClick={() => setEditPaymentId(record.id)}
                     >
@@ -273,7 +273,7 @@ export default function PaymentHistoryModal({
                     <button
                       className={clsx(
                         buttonStyles.iconCompact,
-                        'text-gray-400 hover:text-red-600 hover:bg-gray-50 focus:ring-red-500',
+                        'text-muted-foreground hover:text-destructive hover:bg-muted/30 focus:ring-destructive',
                       )}
                       onClick={() => handleRemovePayment(record.id)}
                     >

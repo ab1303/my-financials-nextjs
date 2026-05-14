@@ -249,9 +249,9 @@ function CategoryBreakdownContent({
                 />
               </div>
               <div className='col-span-4'>
-                <Label className='text-xs text-gray-600 mb-1'>Amount $</Label>
+                <Label className='text-xs text-muted-foreground mb-1'>Amount $</Label>
                 <NumericFormat
-                  className={cn(inputStyles.base, 'bg-white')}
+                  className={cn(inputStyles.base)}
                   prefix='$'
                   displayType='input'
                   thousandSeparator
@@ -285,7 +285,7 @@ function CategoryBreakdownContent({
         {/* Expense Entry List */}
         <div>
           {state.data.length === 0 ? (
-            <div className='text-center py-12 text-gray-500'>
+            <div className='text-center py-12 text-muted-foreground'>
               <p className='text-sm'>
                 No expenses recorded for this month. Click + to add your first
                 expense.
@@ -340,7 +340,7 @@ function CategoryBreakdownContent({
                         </div>
                         <div className='col-span-4'>
                           <NumericFormat
-                            className={cn(inputStyles.base, 'bg-white')}
+                            className={cn(inputStyles.base)}
                             prefix='$'
                             displayType='input'
                             thousandSeparator
@@ -485,6 +485,7 @@ export default function CategoryBreakdownModal(
   if (isLoading) {
     return (
       <Modal show={true} onClose={props.onClose}>
+        <Modal.Header>Expenses for {props.monthName}</Modal.Header>
         <Modal.Body>
           <div className='text-center py-8'>Loading...</div>
         </Modal.Body>

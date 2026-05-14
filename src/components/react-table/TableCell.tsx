@@ -4,6 +4,7 @@ import Select from 'react-select';
 
 import DatePickerDialog from '../DatePickerDialog';
 import { tableCellStyles } from '@/styles/theme';
+import { getCompactSelectStyles } from '@/lib/select-styles';
 import type { CellContext, RowData } from '@tanstack/react-table';
 import type { ReactNode } from 'react';
 
@@ -89,19 +90,9 @@ export const TableCell = <TData, TValue>({
               className={tableCellStyles.select.base}
               classNamePrefix='react-select'
               styles={{
+                ...getCompactSelectStyles<OptionType>(),
                 menuPortal: (base) =>
                   ({ ...base, zIndex: 9999 }) as typeof base,
-                control: (base, state) =>
-                  ({
-                    ...base,
-                    minHeight: '32px',
-                    fontSize: '0.875rem',
-                    borderColor: state.isFocused ? '#14b8a6' : '#d1d5db',
-                    boxShadow: state.isFocused ? '0 0 0 1px #14b8a6' : 'none',
-                    '&:hover': {
-                      borderColor: '#14b8a6',
-                    },
-                  }) as typeof base,
                 menu: (base) =>
                   ({
                     ...base,

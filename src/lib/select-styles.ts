@@ -92,3 +92,37 @@ export function getSelectStyles<
     }),
   };
 }
+
+/**
+ * Compact variant for table cells — same CSS-variable colours as getSelectStyles()
+ * but with reduced height and font size for inline editing.
+ */
+export function getCompactSelectStyles<
+  T = unknown,
+  IsMulti extends boolean = false,
+  Group extends GroupBase<T> = GroupBase<T>,
+>(): StylesConfig<T, IsMulti, Group> {
+  const base = getSelectStyles<T, IsMulti, Group>();
+  return {
+    ...base,
+    control: (provided, state) => ({
+      ...(base.control?.(provided, state) ?? provided),
+      minHeight: '32px',
+      fontSize: '0.875rem',
+    }),
+    valueContainer: (provided, state) => ({
+      ...(base.valueContainer?.(provided, state) ?? provided),
+      padding: '0.25rem 0.5rem',
+    }),
+    input: (provided, state) => ({
+      ...(base.input?.(provided, state) ?? provided),
+      margin: 0,
+      padding: 0,
+    }),
+    indicatorSeparator: () => ({ display: 'none' }),
+    indicatorsContainer: (provided, state) => ({
+      ...(base.indicatorsContainer?.(provided, state) ?? provided),
+      height: 'auto',
+    }),
+  };
+}

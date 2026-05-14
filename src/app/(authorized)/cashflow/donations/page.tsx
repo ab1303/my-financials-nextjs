@@ -1,10 +1,16 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalDonationsHandler } from '@/server/controllers/donation.controller';
 
 import DonationForm from './form';
 import DonationPaymentsTableServer from './DonationTableServer';
+
+export const metadata: Metadata = {
+  title: 'Donation Tracking | My Financials',
+  description: 'Monitor charitable giving and payment history by fiscal year',
+};
 
 // Next.js v15: searchParams is now a Promise
 function getSelectedParam(searchParam?: string | string[]) {
@@ -59,7 +65,7 @@ export default async function DonationPage({
         >
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             {selectedCalendarYear && (
-              <div className='font-mono text-gray-500 mb-3'>
+              <div className='font-mono text-muted-foreground mb-3'>
                 {selectedCalendarYear.description} Donations
               </div>
             )}

@@ -282,15 +282,15 @@ export default function DonationTableClient({
   return (
     <>
       <div className='mb-6 flex justify-between items-center'>
-        <h3 className='text-lg font-medium text-gray-900'>
+        <h3 className='text-lg font-medium text-foreground'>
           Payment Records
           {isPending && (
-            <span className='ml-2 text-sm text-gray-500'>(Updating...)</span>
+            <span className='ml-2 text-sm text-muted-foreground'>(Updating...)</span>
           )}
         </h3>
         <button
           type='button'
-          className='inline-flex items-center justify-center w-10 h-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-teal-100 text-teal-600 hover:bg-teal-200 focus:ring-teal-500 transition-colors'
+          className='inline-flex items-center justify-center w-10 h-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary/10 text-primary hover:bg-primary/20 focus:ring-primary transition-colors'
           onClick={handleAddPayment}
           disabled={!calendarYearId || isPending}
           aria-label='Add new donation'

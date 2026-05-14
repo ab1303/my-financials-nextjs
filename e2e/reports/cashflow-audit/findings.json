@@ -1,0 +1,80 @@
+[
+  {
+    "page": "donations",
+    "category": "load",
+    "severity": "ok",
+    "detail": "Page title: \"My Financials\""
+  },
+  {
+    "page": "donations",
+    "category": "load",
+    "severity": "ok",
+    "detail": "Heading visible: true"
+  },
+  {
+    "page": "donations",
+    "category": "load",
+    "severity": "ok",
+    "detail": "No React error boundary"
+  },
+  {
+    "page": "donations",
+    "category": "darkmode",
+    "severity": "ok",
+    "detail": "Dark mode active: false"
+  },
+  {
+    "page": "donations",
+    "category": "dropdown",
+    "severity": "ok",
+    "detail": "--- Testing fiscal year React Select ---"
+  },
+  {
+    "page": "donations",
+    "category": "dropdown",
+    "severity": "ok",
+    "detail": "Found 0 React Select control(s)"
+  },
+  {
+    "page": "donations",
+    "category": "dropdown",
+    "severity": "warn",
+    "detail": "No React Select control found at index 0"
+  },
+  {
+    "page": "donations",
+    "category": "ui",
+    "severity": "ok",
+    "detail": "Data table visible: true"
+  },
+  {
+    "page": "donations",
+    "category": "crud",
+    "severity": "ok",
+    "detail": "--- Testing CRUD ---"
+  },
+  {
+    "page": "donations",
+    "category": "crud",
+    "severity": "ok",
+    "detail": "Add button visible: icon=false, aria=true"
+  },
+  {
+    "page": "donations",
+    "category": "crud",
+    "severity": "ok",
+    "detail": "Edit button clicked and save attempted"
+  },
+  {
+    "page": "donations",
+    "category": "crud",
+    "severity": "ok",
+    "detail": "Delete buttons found: 0"
+  },
+  {
+    "page": "donations",
+    "category": "console",
+    "severity": "ok",
+    "detail": "No console errors"
+  }
+]

@@ -4,6 +4,8 @@ import Select from 'react-select';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 
+import { getSelectStyles } from '@/lib/select-styles';
+
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
 
@@ -95,8 +97,7 @@ export default function ExpenseForm({
         getOptionValue={(option) => option.id}
         placeholder='Select fiscal year...'
         isClearable={false}
-        className='react-select-container'
-        classNamePrefix='react-select'
+        styles={getSelectStyles<OptionType>()}
       />
     </div>
   );
