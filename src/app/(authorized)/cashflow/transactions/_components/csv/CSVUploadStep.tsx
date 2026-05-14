@@ -2,11 +2,16 @@
 
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, AlertCircle } from 'lucide-react';
+import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { CSVUploadStepProps, UploadedCSVFile } from './_types';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const DETECTION_METHOD_LABELS: Record<'registry' | 'auto-detect', string> = {
+  registry: 'Bank format recognised',
+  'auto-detect': 'Format auto-detected',
+};
 
 export default function CSVUploadStep({
   file,
@@ -21,7 +26,9 @@ export default function CSVUploadStep({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
-  const validateCSV = async (csvFile: File): Promise<UploadedCSVFile | null> => {
+  const validateCSV = async (
+    csvFile: File,
+  ): Promise<UploadedCSVFile | null> => {
     if (!selectedBankAccountId) {
       setValidationError('Please select a bank account before uploading.');
       return null;
@@ -58,13 +65,16 @@ export default function CSVUploadStep({
         rowCount: uploadResponse.rowCount,
         status: 'valid',
         transactions: uploadResponse.transactions,
+        detectionMethod: uploadResponse.detectionMethod,
+        bankName: uploadResponse.bankName,
       };
 
       onFileSelected(uploadedFile);
       setIsValidating(false);
       return uploadedFile;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to validate CSV';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to validate CSV';
       setValidationError(errorMessage);
       setIsValidating(false);
       return null;
@@ -106,13 +116,13 @@ export default function CSVUploadStep({
   return (
     <div className='space-y-6'>
       <div className='space-y-2 mb-6'>
-        <label className='text-sm font-medium text-foreground'>
+        <label className='text-sm font-medium text-gray-700'>
           Bank Account <span className='text-red-500'>*</span>
         </label>
         <select
           value={selectedBankAccountId ?? ''}
           onChange={(e) => onBankAccountChange(e.target.value)}
-          className='w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:bg-gray-800 dark:text-white dark:border-gray-600'
+          className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
           required
         >
           <option value=''>Select a bank account</option>
@@ -137,21 +147,32 @@ export default function CSVUploadStep({
             <input {...getInputProps()} />
             <Upload className='mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-500' />
             <h3 className='mb-1 text-lg font-semibold text-gray-900 dark:text-white'>
-              {isDragActive ? 'Drop your CSV file here' : 'Drop CSV file or click to select'}
+              {isDragActive
+                ? 'Drop your CSV file here'
+                : 'Drop CSV file or click to select'}
             </h3>
             <p className='mb-4 text-sm text-gray-600 dark:text-gray-400'>
-              Supports CommBank CSV format (Date, Amount, Description, Balance)
+              Export your transaction history as CSV from your bank's internet
+              banking
             </p>
             <p className='text-xs text-gray-500 dark:text-gray-400'>
               Maximum file size: 5MB | Maximum 1000 rows
             </p>
           </div>
 
+          <div className='rounded-md border border-teal-100 bg-teal-50 px-4 py-3 text-xs text-teal-800'>
+            <span className='font-semibold'>Supported banks:</span> CommBank,
+            NAB.{' '}
+            <span className='text-teal-600'>ANZ and Westpac coming soon.</span>
+          </div>
+
           {validationError && (
             <div className='flex items-start space-x-3 rounded-lg border border-red-200 bg-red-50 p-4'>
               <AlertCircle className='mt-0.5 h-5 w-5 flex-shrink-0 text-red-600' />
               <div>
-                <h4 className='text-sm font-semibold text-red-900'>Validation Error</h4>
+                <h4 className='text-sm font-semibold text-red-900'>
+                  Validation Error
+                </h4>
                 <p className='mt-1 text-sm text-red-800'>{validationError}</p>
               </div>
             </div>
@@ -177,17 +198,46 @@ export default function CSVUploadStep({
               </button>
             </div>
 
+            {file.detectionMethod && (
+              <div className='mt-3 flex items-center gap-1.5 text-xs text-teal-700 dark:text-teal-400'>
+                <CheckCircle className='h-3.5 w-3.5' />
+                <span>
+                  {DETECTION_METHOD_LABELS[file.detectionMethod]}
+                  {file.bankName ? ` — ${file.bankName}` : ''}
+                </span>
+              </div>
+            )}
+
             {file.transactions && file.transactions.length > 0 && (
               <div className='mt-4 border-t border-gray-200 dark:border-gray-700 pt-4'>
                 <p className='mb-2 text-xs font-medium text-gray-700 dark:text-gray-300'>
-                  Preview ({Math.min(3, file.transactions.length)} of {file.transactions.length})
+                  Preview ({Math.min(3, file.transactions.length)} of{' '}
+                  {file.transactions.length})
                 </p>
                 <div className='space-y-2'>
                   {file.transactions.slice(0, 3).map((tx, idx) => (
-                    <div key={idx} className='rounded border border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-xs text-gray-600 dark:text-gray-300'>
+                    <div
+                      key={idx}
+                      className='rounded border border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-xs text-gray-600 dark:text-gray-300'
+                    >
                       <div className='flex justify-between'>
                         <span>{tx.description}</span>
-                        <span className='font-medium'>${tx.amount.toFixed(2)}</span>
+                        <span
+                          className={`font-medium ${
+                            tx.type === 'CREDIT'
+                              ? 'text-green-600'
+                              : tx.type === 'DEBIT'
+                                ? 'text-red-600'
+                                : 'text-gray-800'
+                          }`}
+                        >
+                          {tx.type === 'DEBIT'
+                            ? '-'
+                            : tx.type === 'CREDIT'
+                              ? '+'
+                              : ''}
+                          ${tx.amount.toFixed(2)}
+                        </span>
                       </div>
                       <div className='mt-1 text-gray-500 dark:text-gray-400'>{tx.date}</div>
                     </div>
@@ -198,10 +248,18 @@ export default function CSVUploadStep({
           </div>
 
           <div className='flex justify-between gap-3'>
-            <Button variant='outline' onClick={onRemoveFile} disabled={isLoading}>
+            <Button
+              variant='outline'
+              onClick={onRemoveFile}
+              disabled={isLoading}
+            >
               Choose Different File
             </Button>
-            <Button variant='default' onClick={onStartImport} disabled={isLoading || !selectedBankAccountId || !file}>
+            <Button
+              variant='default'
+              onClick={onStartImport}
+              disabled={isLoading || !selectedBankAccountId || !file}
+            >
               {isLoading ? 'Processing...' : 'Import CSV'}
             </Button>
           </div>

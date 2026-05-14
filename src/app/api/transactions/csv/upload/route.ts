@@ -2,7 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
-import { parseCommBankCsv } from '@/server/services/ai-import/csv-parser.service';
+import {
+  getBankFormatByName,
+  getSupportedBankNamesText,
+} from '@/server/services/transactions/bank-format-registry';
+import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
+import {
+  detectCsvFormat,
+  extractHeadersAndSamples,
+} from '@/server/services/transactions/csv-format-detector.service';
+import type { BankCsvFormat } from '@/server/services/transactions/csv-format.types';
 import type { CsvTransaction } from '@/server/services/ai-import/_types';
 import {
   ALLOWED_CSV_MIME_TYPES,
@@ -21,8 +30,14 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file');
     const bankAccountId = formData.get('bankAccountId') as string;
 
-    if (typeof bankAccountId !== 'string' || bankAccountId.trim().length === 0) {
-      return NextResponse.json({ error: 'bankAccountId is required' }, { status: 400 });
+    if (
+      typeof bankAccountId !== 'string' ||
+      bankAccountId.trim().length === 0
+    ) {
+      return NextResponse.json(
+        { error: 'bankAccountId is required' },
+        { status: 400 },
+      );
     }
 
     if (!file || typeof file === 'string' || !('arrayBuffer' in file)) {
@@ -31,10 +46,14 @@ export async function POST(req: NextRequest) {
 
     const account = await prisma.bankAccount.findFirst({
       where: { id: bankAccountId, userId: session.user.id },
+      include: { bank: true },
     });
 
-    if (!account) {
-      return NextResponse.json({ error: 'Bank account not found' }, { status: 404 });
+    if (!account || !account.bank) {
+      return NextResponse.json(
+        { error: 'Bank account not found' },
+        { status: 404 },
+      );
     }
 
     const fileName = file.name;
@@ -64,7 +83,47 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const csvContent = buffer.toString('utf8');
-    const parseResult = await parseCommBankCsv(csvContent);
+
+    // -----------------------------------------------------------------------
+    // Tier 1: Registry lookup by bank name
+    // -----------------------------------------------------------------------
+    let detectedFormat: BankCsvFormat | undefined;
+    let detectionMethod: 'registry' | 'auto-detect' | null = null;
+
+    const registryFormat = getBankFormatByName(account.bank.name);
+    if (registryFormat) {
+      detectedFormat = registryFormat;
+      detectionMethod = 'registry';
+    } else {
+      // -----------------------------------------------------------------------
+      // Tier 2: Header auto-detection for unknown banks
+      // -----------------------------------------------------------------------
+      const extracted = extractHeadersAndSamples(csvContent);
+      if (extracted) {
+        const detection = detectCsvFormat(
+          extracted.headers,
+          extracted.sampleRows,
+        );
+        if (detection.matched && detection.format) {
+          detectedFormat = detection.format;
+          detectionMethod = 'auto-detect';
+        }
+      }
+    }
+
+    if (!detectedFormat) {
+      return NextResponse.json(
+        {
+          error: `Your bank's CSV format is not yet supported: "${account.bank.name}". Supported banks: ${getSupportedBankNamesText()}. More coming soon.`,
+        },
+        { status: 400 },
+      );
+    }
+
+    // -----------------------------------------------------------------------
+    // Parse CSV with resolved format
+    // -----------------------------------------------------------------------
+    const parseResult = await parseBankCsv(csvContent, detectedFormat);
 
     if (!parseResult.success) {
       return NextResponse.json({ error: parseResult.error }, { status: 400 });
@@ -72,10 +131,14 @@ export async function POST(req: NextRequest) {
 
     const { transactions } = parseResult;
 
-    if (!transactions || transactions.length === 0 || transactions.length > MAX_CSV_ROWS) {
+    if (
+      !transactions ||
+      transactions.length === 0 ||
+      transactions.length > MAX_CSV_ROWS
+    ) {
       return NextResponse.json(
         {
-          error: `Invalid number of transactions. Expected 1-${MAX_CSV_ROWS}, got ${transactions?.length || 0}`,
+          error: `Invalid number of transactions. Expected 1–${MAX_CSV_ROWS}, got ${transactions?.length ?? 0}`,
         },
         { status: 400 },
       );
@@ -90,6 +153,8 @@ export async function POST(req: NextRequest) {
           fileName,
           fileSize,
           bankAccountId,
+          bankName: account.bank.name,
+          detectionMethod,
           transactions,
         } as any,
       },
@@ -103,12 +168,19 @@ export async function POST(req: NextRequest) {
         rowCount: transactions.length,
         bankAccountId,
         bankAccountName: account.name,
+        bankName: account.bank.name,
+        detectionMethod,
         transactions: transactions as CsvTransaction[],
       },
       { status: 200 },
     );
   } catch (error: unknown) {
     console.error('CSV upload error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 },
+    );
   }
 }
+
+

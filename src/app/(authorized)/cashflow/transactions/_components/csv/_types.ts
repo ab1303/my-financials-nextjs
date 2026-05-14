@@ -16,10 +16,14 @@ export interface UploadedCSVFile {
   transactions?: Array<{
     date: string;
     amount: number;
+    type?: 'DEBIT' | 'CREDIT';
     description: string;
     month: number;
     year: number;
+    balance?: number;
   }>;
+  detectionMethod?: 'registry' | 'auto-detect' | null;
+  bankName?: string;
 }
 
 export interface CSVImportContext {
