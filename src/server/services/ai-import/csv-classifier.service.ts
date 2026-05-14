@@ -110,7 +110,7 @@ ${transactionsList}`;
         id: randomUUID(),
         description: tx.description,
         amount: tx.amount,
-        date: new Date(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!)).toISOString().split('T')[0]!,
+        date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!, // Use UTC to avoid timezone shift
         llmCategory,
         confirmedCategory: llmCategory,
         overridden: false,
@@ -133,7 +133,7 @@ ${transactionsList}`;
       id: randomUUID(),
       description: tx.description,
       amount: tx.amount,
-      date: new Date(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!)).toISOString().split('T')[0]!,
+      date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!, // Use UTC to avoid timezone shift
       llmCategory: tx.description,
       confirmedCategory: tx.description,
       overridden: false,
@@ -214,7 +214,7 @@ ${transactionsList}`;
         id: randomUUID(),
         description: tx.description,
         amount: tx.amount,
-        date: new Date(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!)).toISOString().split('T')[0]!,
+        date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!, // Use UTC to avoid timezone shift
         llmCategory,
         confirmedCategory: llmCategory,
         overridden: false,
@@ -237,7 +237,7 @@ ${transactionsList}`;
       id: randomUUID(),
       description: tx.description,
       amount: tx.amount,
-      date: new Date(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!)).toISOString().split('T')[0]!,
+      date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!, // Use UTC to avoid timezone shift
       llmCategory: 'OTHER',
       confirmedCategory: 'OTHER',
       overridden: false,

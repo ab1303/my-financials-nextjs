@@ -19,10 +19,12 @@ function CreditReviewPanel({
   months,
   incomeSourceLabels,
   onUpdate,
+  filterMode = 'income',
 }: {
   months: ClassifiedCreditMonth[];
   incomeSourceLabels: string[];
   onUpdate: (months: ClassifiedCreditMonth[]) => void;
+  filterMode?: 'income' | 'excluded';
 }) {
   const handleCategoryChange = (monthIdx: number, txIdx: number, newCategory: string) => {
     const updated = months.map((m, mi) => {
