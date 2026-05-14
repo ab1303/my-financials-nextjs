@@ -94,7 +94,10 @@ export default function IncomeSummaryClient({
     void fetchSummary();
   }, [selectedYearId, userId]);
 
-  const onYearChange = (option: OptionType | null, _actionMeta: ActionMeta<OptionType>) => {
+  const onYearChange = (
+    option: OptionType | null,
+    _actionMeta: ActionMeta<OptionType>,
+  ) => {
     if (!option) return;
 
     setSelectedYearId(option.value);
@@ -120,7 +123,7 @@ export default function IncomeSummaryClient({
       {/* Fiscal Year Selection */}
       <div className='w-full md:w-1/2'>
         <Label htmlFor='fiscal-year-select'>Fiscal Year</Label>
-        <Select
+        <Select<OptionType>
           id='fiscal-year-select'
           options={yearOptions}
           value={selectedYear}
@@ -135,7 +138,9 @@ export default function IncomeSummaryClient({
       {selectedYearId && !loading && (
         <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
           <div className='rounded-lg border bg-card p-4 shadow-sm'>
-            <h3 className='text-sm font-medium text-muted-foreground'>Total Income</h3>
+            <h3 className='text-sm font-medium text-muted-foreground'>
+              Total Income
+            </h3>
             <NumericFormat
               value={totalIncome}
               displayType='text'
