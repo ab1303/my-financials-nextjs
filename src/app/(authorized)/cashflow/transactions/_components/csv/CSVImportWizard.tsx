@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
+import Portal from '@/components/Portal';
 import CSVUploadStep from './CSVUploadStep';
 import CSVClassifyingStep from './CSVClassifyingStep';
 import CSVResultsStep from './CSVResultsStep';
@@ -197,133 +198,139 @@ export default function CSVImportWizard({
   };
 
   return (
-    <Transition show={isOpen}>
-      <Dialog onClose={() => undefined} className='relative z-50'>
-        <Transition.Child
-          enter='ease-out duration-300'
-          enterFrom='opacity-0'
-          enterTo='opacity-100'
-          leave='ease-in duration-200'
-          leaveFrom='opacity-100'
-          leaveTo='opacity-0'
-        >
-          <div className='fixed inset-0 bg-black/50' />
-        </Transition.Child>
-
-        <div className='fixed inset-0 flex items-center justify-center p-4'>
+    // Portal renders the entire Headless UI dialog tree into a <div id="portal-root">
+    // appended to <body>, completely outside this component's DOM ancestry.
+    // This guarantees the overlay and panel are never clipped by ancestor
+    // overflow:hidden / transform / filter stacking contexts.
+    <Portal>
+      <Transition show={isOpen}>
+        <Dialog onClose={() => undefined} className='relative z-50'>
           <Transition.Child
             enter='ease-out duration-300'
-            enterFrom='opacity-0 scale-95'
-            enterTo='opacity-100 scale-100'
+            enterFrom='opacity-0'
+            enterTo='opacity-100'
             leave='ease-in duration-200'
-            leaveFrom='opacity-100 scale-100'
-            leaveTo='opacity-0 scale-95'
+            leaveFrom='opacity-100'
+            leaveTo='opacity-0'
           >
-            <div className='w-full max-w-5xl'>
-              <Dialog.Panel className='flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
-                <div className='flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700'>
-                  <div>
-                    <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-white'>
-                      CSV Import Wizard
-                    </Dialog.Title>
-                    <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>
-                      {stepSubtitle[currentStep]}
-                    </p>
-                  </div>
-                  {canClose && (
-                    <button
-                      onClick={handleClose}
-                      className='text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
-                      aria-label='Close wizard'
-                    >
-                      <X className='h-6 w-6' />
-                    </button>
-                  )}
-                </div>
+            <div className='fixed inset-0 bg-black/50' />
+          </Transition.Child>
 
-                <div className='flex flex-shrink-0 items-center gap-1 border-b border-gray-200 px-6 py-3 dark:border-gray-700'>
-                  {STEPS.map((step, index) => (
-                    <div key={step.key} className='flex items-center'>
-                      <div className='flex flex-col items-center'>
-                        <div
-                          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
-                            currentStep === step.key
-                              ? 'bg-teal-600 text-white'
-                              : currentStepIndex > index
-                                ? 'bg-green-600 text-white'
-                                : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                          }`}
-                        >
-                          {currentStepIndex > index ? '✓' : index + 1}
+          <div className='fixed inset-0 flex items-center justify-center p-4'>
+            <Transition.Child
+              enter='ease-out duration-300'
+              enterFrom='opacity-0 scale-95'
+              enterTo='opacity-100 scale-100'
+              leave='ease-in duration-200'
+              leaveFrom='opacity-100 scale-100'
+              leaveTo='opacity-0 scale-95'
+            >
+              <div className='w-full max-w-5xl'>
+                <Dialog.Panel className='flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
+                  <div className='flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700'>
+                    <div>
+                      <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-white'>
+                        CSV Import Wizard
+                      </Dialog.Title>
+                      <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>
+                        {stepSubtitle[currentStep]}
+                      </p>
+                    </div>
+                    {canClose && (
+                      <button
+                        onClick={handleClose}
+                        className='text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+                        aria-label='Close wizard'
+                      >
+                        <X className='h-6 w-6' />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className='flex flex-shrink-0 items-center gap-1 border-b border-gray-200 px-6 py-3 dark:border-gray-700'>
+                    {STEPS.map((step, index) => (
+                      <div key={step.key} className='flex items-center'>
+                        <div className='flex flex-col items-center'>
+                          <div
+                            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                              currentStep === step.key
+                                ? 'bg-teal-600 text-white'
+                                : currentStepIndex > index
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                            }`}
+                          >
+                            {currentStepIndex > index ? '✓' : index + 1}
+                          </div>
+                          <span className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+                            {step.label}
+                          </span>
                         </div>
-                        <span className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-                          {step.label}
-                        </span>
+                        {index < STEPS.length - 1 && (
+                          <div
+                            className={`mx-2 mb-4 h-1 w-10 ${
+                              currentStepIndex > index
+                                ? 'bg-green-600'
+                                : 'bg-gray-200 dark:bg-gray-700'
+                            }`}
+                          />
+                        )}
                       </div>
-                      {index < STEPS.length - 1 && (
-                        <div
-                          className={`mx-2 mb-4 h-1 w-10 ${
-                            currentStepIndex > index
-                              ? 'bg-green-600'
-                              : 'bg-gray-200 dark:bg-gray-700'
-                          }`}
+                    ))}
+                  </div>
+
+                  {currentStep === 'review' ? (
+                    <div className='flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-4'>
+                      <CSVTransactionReviewTable
+                        debitMonths={classifiedMonths}
+                        creditMonths={classifiedCreditMonths}
+                        categories={categories}
+                        incomeSourceLabels={incomeSourceLabels}
+                        llmModel={llmModel}
+                        onConfirm={handleConfirmReview}
+                        isConfirming={isConfirming}
+                      />
+                    </div>
+                  ) : (
+                    <div className='flex-1 overflow-y-auto p-6'>
+                      {currentStep === 'upload' && (
+                        <CSVUploadStep
+                          file={file}
+                          onFileSelected={handleFileSelected}
+                          onRemoveFile={handleRemoveFile}
+                          onStartImport={handleStartImport}
+                          isLoading={false}
+                          bankAccounts={bankAccounts}
+                          selectedBankAccountId={bankAccountId}
+                          onBankAccountChange={setBankAccountId}
+                        />
+                      )}
+
+                      {currentStep === 'classifying' && file && (
+                        <CSVClassifyingStep
+                          file={file}
+                          context={context}
+                          onComplete={handleClassifyComplete}
+                          onError={handleClassifyError}
+                        />
+                      )}
+
+                      {currentStep === 'results' && importResult && file && (
+                        <CSVResultsStep
+                          result={importResult}
+                          file={file}
+                          onDone={handleDone}
+                          onImportMore={handleImportMore}
                         />
                       )}
                     </div>
-                  ))}
-                </div>
-
-                {currentStep === 'review' ? (
-                  <div className='flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6 pt-4'>
-                    <CSVTransactionReviewTable
-                      debitMonths={classifiedMonths}
-                      creditMonths={classifiedCreditMonths}
-                      categories={categories}
-                      incomeSourceLabels={incomeSourceLabels}
-                      llmModel={llmModel}
-                      onConfirm={handleConfirmReview}
-                      isConfirming={isConfirming}
-                    />
-                  </div>
-                ) : (
-                  <div className='flex-1 overflow-y-auto p-6'>
-                    {currentStep === 'upload' && (
-                      <CSVUploadStep
-                        file={file}
-                        onFileSelected={handleFileSelected}
-                        onRemoveFile={handleRemoveFile}
-                        onStartImport={handleStartImport}
-                        isLoading={false}
-                        bankAccounts={bankAccounts}
-                        selectedBankAccountId={bankAccountId}
-                        onBankAccountChange={setBankAccountId}
-                      />
-                    )}
-
-                    {currentStep === 'classifying' && file && (
-                      <CSVClassifyingStep
-                        file={file}
-                        context={context}
-                        onComplete={handleClassifyComplete}
-                        onError={handleClassifyError}
-                      />
-                    )}
-
-                    {currentStep === 'results' && importResult && file && (
-                      <CSVResultsStep
-                        result={importResult}
-                        file={file}
-                        onDone={handleDone}
-                        onImportMore={handleImportMore}
-                      />
-                    )}
-                  </div>
-                )}
-              </Dialog.Panel>
-            </div>
-          </Transition.Child>
-        </div>
-      </Dialog>
-    </Transition>
+                  )}
+                </Dialog.Panel>
+              </div>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
+    </Portal>
   );
 }

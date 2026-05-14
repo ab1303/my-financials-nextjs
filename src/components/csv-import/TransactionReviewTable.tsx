@@ -5,7 +5,9 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
-  Loader2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import type {
   ClassifiedTransaction,
@@ -68,8 +70,6 @@ export interface TransactionReviewTableProps {
   months: ClassifiedMonth[];
   categories: Array<{ id: string; name: string }>;
   llmModel?: string;
-  onConfirm: (months: ClassifiedMonth[]) => Promise<void>;
-  isConfirming: boolean;
   onUpdateMonths?: (months: ClassifiedMonth[]) => void;
 }
 
@@ -85,8 +85,6 @@ export default function TransactionReviewTable({
   months: initialMonths,
   categories,
   llmModel = 'gpt-4o-mini',
-  onConfirm,
-  isConfirming,
   onUpdateMonths,
 }: TransactionReviewTableProps) {
   const [months, setMonths] = useState<ClassifiedMonth[]>(
@@ -98,6 +96,19 @@ export default function TransactionReviewTable({
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(
     new Set(initialMonths.map((m) => m.month)),
   );
+
+  // Sort state (global for all months)
+  const [sortColumn, setSortColumn] = useState<'date' | 'description' | 'amount' | null>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = useCallback((col: 'date' | 'description' | 'amount') => {
+    if (sortColumn === col) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(col);
+      setSortDirection(col === 'date' ? 'desc' : 'asc');
+    }
+  }, [sortColumn]);
 
   const handleToggleMonth = useCallback((month: string) => {
     setExpandedMonths((prev) => {
@@ -113,32 +124,25 @@ export default function TransactionReviewTable({
 
   const handleCategoryChange = useCallback(
     (monthIdx: number, txIdx: number, newCategory: string) => {
-      setMonths((prev) => {
-        const next = [...prev];
-        const month = next[monthIdx];
-        if (!month) return prev;
-
-        const tx = month.transactions[txIdx];
-        if (!tx) return prev;
-
-        const updated = { ...tx };
-        updated.confirmedCategory = newCategory;
-        updated.overridden = newCategory !== updated.llmCategory;
-
-        const updatedTransactions = [...month.transactions];
-        updatedTransactions[txIdx] = updated;
-
-        next[monthIdx] = { ...month, transactions: updatedTransactions };
-        onUpdateMonths?.(next);
-        return next;
+      const next = months.map((m, mi) => {
+        if (mi !== monthIdx) return m;
+        return {
+          ...m,
+          transactions: m.transactions.map((tx, ti) => {
+            if (ti !== txIdx) return tx;
+            return {
+              ...tx,
+              confirmedCategory: newCategory,
+              overridden: newCategory !== tx.llmCategory,
+            };
+          }),
+        };
       });
+      setMonths(next);
+      onUpdateMonths?.(next);
     },
-    [onUpdateMonths],
+    [months, onUpdateMonths],
   );
-
-  const handleConfirm = useCallback(async () => {
-    await onConfirm(months);
-  }, [months, onConfirm]);
 
   const totalOverrides = months.reduce(
     (sum, m) => sum + m.transactions.filter((t) => t.overridden).length,
@@ -199,18 +203,48 @@ export default function TransactionReviewTable({
             </button>
 
             {expandedMonths.has(month.month) && (
-              <div className='overflow-x-auto'>
+              <div className='max-h-96 overflow-auto'>
                 <table className='w-full min-w-[600px]'>
-                  <thead className='border-b bg-gray-100 dark:border-gray-700 dark:bg-gray-800'>
+                  <thead className='sticky top-0 z-10 border-b bg-gray-100 dark:border-gray-700 dark:bg-gray-800'>
                     <tr>
-                      <th className='w-28 px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300'>
-                        Date
+                      <th
+                        className='w-28 px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none hover:bg-gray-200 dark:hover:bg-gray-700'
+                        onClick={() => handleSort('date')}
+                      >
+                        <span className='inline-flex items-center gap-1'>
+                          Date
+                          {sortColumn === 'date' ? (
+                            sortDirection === 'asc' ? <ArrowUp className='inline h-3 w-3' /> : <ArrowDown className='inline h-3 w-3' />
+                          ) : (
+                            <ArrowUpDown className='inline h-3 w-3 text-gray-400' />
+                          )}
+                        </span>
                       </th>
-                      <th className='px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300'>
-                        Description
+                      <th
+                        className='px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none hover:bg-gray-200 dark:hover:bg-gray-700'
+                        onClick={() => handleSort('description')}
+                      >
+                        <span className='inline-flex items-center gap-1'>
+                          Description
+                          {sortColumn === 'description' ? (
+                            sortDirection === 'asc' ? <ArrowUp className='inline h-3 w-3' /> : <ArrowDown className='inline h-3 w-3' />
+                          ) : (
+                            <ArrowUpDown className='inline h-3 w-3 text-gray-400' />
+                          )}
+                        </span>
                       </th>
-                      <th className='w-24 px-4 py-2 text-right text-xs font-semibold text-gray-700 dark:text-gray-300'>
-                        Amount
+                      <th
+                        className='w-24 px-4 py-2 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none hover:bg-gray-200 dark:hover:bg-gray-700'
+                        onClick={() => handleSort('amount')}
+                      >
+                        <span className='inline-flex items-center gap-1'>
+                          Amount
+                          {sortColumn === 'amount' ? (
+                            sortDirection === 'asc' ? <ArrowUp className='inline h-3 w-3' /> : <ArrowDown className='inline h-3 w-3' />
+                          ) : (
+                            <ArrowUpDown className='inline h-3 w-3 text-gray-400' />
+                          )}
+                        </span>
                       </th>
                       <th className='w-36 px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300'>
                         LLM Suggested
@@ -221,15 +255,35 @@ export default function TransactionReviewTable({
                     </tr>
                   </thead>
                   <tbody>
-                    {month.transactions.map((tx, txIdx) => (
-                      <tr
-                        key={tx.id}
-                        className={`border-b transition-colors dark:border-gray-700 ${
-                          tx.overridden
-                            ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/30'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                        }`}
-                      >
+                    {(() => {
+                      // Map original index for stable handleCategoryChange
+                      const txsWithIdx = month.transactions.map((tx, idx) => ({ tx, idx }));
+                      // Sort logic
+                      const sorted = [...txsWithIdx].sort((a, b) => {
+                        if (sortColumn === 'date') {
+                          return sortDirection === 'asc'
+                            ? a.tx.date.localeCompare(b.tx.date)
+                            : b.tx.date.localeCompare(a.tx.date);
+                        } else if (sortColumn === 'description') {
+                          return sortDirection === 'asc'
+                            ? a.tx.description.localeCompare(b.tx.description, undefined, { sensitivity: 'base' })
+                            : b.tx.description.localeCompare(a.tx.description, undefined, { sensitivity: 'base' });
+                        } else if (sortColumn === 'amount') {
+                          return sortDirection === 'asc'
+                            ? a.tx.amount - b.tx.amount
+                            : b.tx.amount - a.tx.amount;
+                        }
+                        return 0;
+                      });
+                      return sorted.map(({ tx, idx }) => (
+                        <tr
+                          key={tx.id}
+                          className={`border-b transition-colors dark:border-gray-700 ${
+                            tx.overridden
+                              ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/30'
+                              : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                          }`}
+                        >
                         <td className='px-4 py-3 text-sm text-gray-900 dark:text-gray-200'>
                           {tx.date}
                         </td>
@@ -252,7 +306,7 @@ export default function TransactionReviewTable({
                         <td className='px-4 py-3 text-sm'>
                           <select
                             value={tx.confirmedCategory}
-                            onChange={(e) => handleCategoryChange(monthIdx, txIdx, e.target.value)}
+                            onChange={(e) => handleCategoryChange(monthIdx, idx, e.target.value)}
                             className='w-full min-w-[140px] rounded border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
                           >
                             {!categories.some((c) => c.name === tx.confirmedCategory) && (
@@ -266,7 +320,8 @@ export default function TransactionReviewTable({
                           </select>
                         </td>
                       </tr>
-                    ))}
+                    ));
+                    })()}
                   </tbody>
                 </table>
               </div>
@@ -275,16 +330,7 @@ export default function TransactionReviewTable({
         ))}
       </div>
 
-      <div className='mt-4 flex flex-shrink-0 items-center justify-end border-t border-gray-200 pt-4 dark:border-gray-700'>
-        <button
-          onClick={handleConfirm}
-          disabled={isConfirming}
-          className='flex items-center space-x-2 rounded bg-teal-600 px-6 py-2 font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50'
-        >
-          {isConfirming && <Loader2 className='h-4 w-4 animate-spin' />}
-          <span>{isConfirming ? 'Saving…' : 'Confirm & Import'}</span>
-        </button>
-      </div>
+
     </div>
   );
 }

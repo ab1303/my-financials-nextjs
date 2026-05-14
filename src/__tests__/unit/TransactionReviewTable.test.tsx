@@ -51,8 +51,6 @@ describe('TransactionReviewTable', () => {
   const mockProps: TransactionReviewTableProps = {
     months: [mockMonth],
     categories: mockCategories,
-    onConfirm: vi.fn(),
-    isConfirming: false,
   };
 
   beforeEach(() => {
@@ -97,25 +95,7 @@ describe('TransactionReviewTable', () => {
     });
   });
 
-  it('should set overridden to true when category is changed', async () => {
-    const user = userEvent.setup();
-    const onConfirm = vi.fn();
-    const customProps = { ...mockProps, onConfirm };
 
-    render(<TransactionReviewTable {...customProps} />);
-
-    const selects = screen.getAllByRole('combobox');
-    await user.selectOption(selects[0]!, 'Home');
-
-    // Find and click confirm button
-    const confirmButton = screen.getByRole('button', { name: /Confirm & Save/i });
-    await user.click(confirmButton);
-
-    // Check that onConfirm was called with overridden: true
-    expect(onConfirm).toHaveBeenCalled();
-    const callArgs = onConfirm.mock.calls[0]![0];
-    expect(callArgs.months[0]!.transactions[0]!.overridden).toBe(true);
-  });
 
   it('should render warning flag for unknown merchant', () => {
     const unknownMerchantTx: ClassifiedTransaction = {
@@ -183,36 +163,11 @@ describe('TransactionReviewTable', () => {
     expect(warnings.length).toBe(0);
   });
 
-  it('should call onConfirm when Confirm & Save button is clicked', async () => {
-    const user = userEvent.setup();
-    const onConfirm = vi.fn().mockResolvedValueOnce(undefined);
 
-    render(<TransactionReviewTable {...mockProps} onConfirm={onConfirm} />);
 
-    const confirmButton = screen.getByRole('button', { name: /Confirm & Save/i });
-    await user.click(confirmButton);
 
-    expect(onConfirm).toHaveBeenCalled();
-  });
 
-  it('should disable Confirm & Save button when isConfirming is true', () => {
-    const { rerender } = render(<TransactionReviewTable {...mockProps} isConfirming={false} />);
 
-    let confirmButton = screen.getByRole('button', { name: /Confirm & Save/i });
-    expect(confirmButton).not.toBeDisabled();
-
-    rerender(<TransactionReviewTable {...mockProps} isConfirming={true} />);
-
-    confirmButton = screen.getByRole('button', { name: /Confirm & Save|Saving/i });
-    expect(confirmButton).toBeDisabled();
-  });
-
-  it('should show "Saving..." text when isConfirming is true', () => {
-    render(<TransactionReviewTable {...mockProps} isConfirming={true} />);
-
-    const savingButton = screen.getByRole('button', { name: /Saving/i });
-    expect(savingButton).toBeInTheDocument();
-  });
 
   it('should have Accept All button that resets changes', async () => {
     const user = userEvent.setup();

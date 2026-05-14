@@ -216,7 +216,6 @@ export type CsvParseRequestType = z.infer<typeof CsvParseRequestSchema>;
  */
 export const ClassifyRequestSchema = z.object({
   fileId: z.string().min(1),
-  calendarId: z.string().min(1),
 });
 
 /**

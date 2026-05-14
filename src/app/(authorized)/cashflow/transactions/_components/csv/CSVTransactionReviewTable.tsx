@@ -160,10 +160,6 @@ export default function CSVTransactionReviewTable({
             months={localDebitMonths as SharedClassifiedMonth[]}
             categories={categories}
             llmModel={llmModel}
-            onConfirm={async (updatedMonths) => {
-              setLocalDebitMonths(updatedMonths as ClassifiedMonth[]);
-            }}
-            isConfirming={false}
             onUpdateMonths={(months) => setLocalDebitMonths(months as ClassifiedMonth[])}
           />
         )}

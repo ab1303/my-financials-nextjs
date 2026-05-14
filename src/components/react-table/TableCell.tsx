@@ -96,6 +96,9 @@ export const TableCell = <TData, TValue>({
                 menu: (base) =>
                   ({
                     ...base,
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 'var(--radius)',
                     zIndex: 9999,
                   }) as typeof base,
               }}

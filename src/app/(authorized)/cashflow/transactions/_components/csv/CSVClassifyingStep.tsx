@@ -12,7 +12,7 @@ interface ProgressEntry {
 
 export default function CSVClassifyingStep({
   file,
-  context,
+  context: _context,
   onComplete,
   onError,
 }: CSVClassifyingStepProps) {
@@ -28,7 +28,6 @@ export default function CSVClassifyingStep({
     const abortController = new AbortController();
 
     async function startClassification() {
-      void context.bankAccountId;
       try {
         const response = await fetch('/api/transactions/csv/classify', {
           method: 'POST',

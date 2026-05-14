@@ -6,6 +6,8 @@ import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
 import CreatableSelect from 'react-select/creatable';
 
+import { getSelectStyles } from '@/lib/select-styles';
+
 import { trpc } from '@/server/trpc/client';
 import { Modal } from '@/components/ui/Modal';
 import { Label } from '@/components/ui/Label';
@@ -183,10 +185,10 @@ export default function NewSnapshotModal({
   return (
     <Modal show={isOpen} onClose={onClose} panelClassName='max-w-4xl'>
       <Modal.Header>
-        <h2 className='text-xl font-semibold text-gray-900'>
+        <h2 className='text-xl font-semibold text-foreground'>
           New Cash Snapshot
         </h2>
-        <p className='text-sm text-gray-600 mt-1'>
+        <p className='text-sm text-muted-foreground mt-1'>
           Record your current cash position across all bank accounts
         </p>
       </Modal.Header>
@@ -251,7 +253,7 @@ export default function NewSnapshotModal({
                               handleEntryChange(index, 'bankId', e.target.value)
                             }
                             required
-                            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+                            className='mt-1 block w-full px-3 py-2 border border-input rounded-lg shadow-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
                           >
                             <option value=''>-- Select Bank --</option>
                             {banks.map((bank) => (
@@ -317,23 +319,11 @@ export default function NewSnapshotModal({
                             isClearable
                             placeholder='Select or type to create account...'
                             className='mt-1'
-                            classNamePrefix='rs'
-                            styles={{
-                              control: (base) =>
-                                ({
-                                  ...base,
-                                  borderColor: entry.bankId
-                                    ? undefined
-                                    : '#d1d5db',
-                                  backgroundColor: entry.bankId
-                                    ? 'white'
-                                    : '#f3f4f6',
-                                }) as typeof base,
-                            }}
+                            styles={getSelectStyles<{ value: string; label: string }>()}
                             isLoading={createAccountMutation.isPending}
                           />
                           {!entry.bankId && (
-                            <p className='mt-1 text-xs text-gray-500'>
+                            <p className='mt-1 text-xs text-muted-foreground'>
                               Select a bank first to add accounts
                             </p>
                           )}
@@ -356,7 +346,7 @@ export default function NewSnapshotModal({
                             prefix='$'
                             decimalScale={2}
                             fixedDecimalScale
-                            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500'
+                            className='mt-1 block w-full px-3 py-2 border border-input rounded-lg shadow-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
                             placeholder='0.00'
                             required
                           />

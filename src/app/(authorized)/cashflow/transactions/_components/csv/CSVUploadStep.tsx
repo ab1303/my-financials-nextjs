@@ -106,13 +106,13 @@ export default function CSVUploadStep({
   return (
     <div className='space-y-6'>
       <div className='space-y-2 mb-6'>
-        <label className='text-sm font-medium text-gray-700'>
+        <label className='text-sm font-medium text-foreground'>
           Bank Account <span className='text-red-500'>*</span>
         </label>
         <select
           value={selectedBankAccountId ?? ''}
           onChange={(e) => onBankAccountChange(e.target.value)}
-          className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
+          className='w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:bg-gray-800 dark:text-white dark:border-gray-600'
           required
         >
           <option value=''>Select a bank account</option>
@@ -130,19 +130,19 @@ export default function CSVUploadStep({
             {...getRootProps()}
             className={`cursor-pointer rounded-lg border-2 border-dashed p-12 text-center transition-colors ${
               isDragActive
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-300 bg-gray-50 hover:border-gray-400'
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                : 'border-gray-300 bg-gray-50 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500'
             } ${isValidating ? 'cursor-not-allowed opacity-50' : ''}`}
           >
             <input {...getInputProps()} />
-            <Upload className='mx-auto mb-4 h-12 w-12 text-gray-400' />
-            <h3 className='mb-1 text-lg font-semibold text-gray-900'>
+            <Upload className='mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-500' />
+            <h3 className='mb-1 text-lg font-semibold text-gray-900 dark:text-white'>
               {isDragActive ? 'Drop your CSV file here' : 'Drop CSV file or click to select'}
             </h3>
-            <p className='mb-4 text-sm text-gray-600'>
+            <p className='mb-4 text-sm text-gray-600 dark:text-gray-400'>
               Supports CommBank CSV format (Date, Amount, Description, Balance)
             </p>
-            <p className='text-xs text-gray-500'>
+            <p className='text-xs text-gray-500 dark:text-gray-400'>
               Maximum file size: 5MB | Maximum 1000 rows
             </p>
           </div>
@@ -159,11 +159,11 @@ export default function CSVUploadStep({
         </>
       ) : (
         <>
-          <div className='rounded-lg border border-gray-200 bg-gray-50 p-4'>
+          <div className='rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-sm font-semibold text-gray-900'>{file.fileName}</p>
-                <p className='mt-1 text-xs text-gray-600'>
+                <p className='text-sm font-semibold text-gray-900 dark:text-white'>{file.fileName}</p>
+                <p className='mt-1 text-xs text-gray-600 dark:text-gray-400'>
                   {file.rowCount} rows | {(file.fileSize / 1024).toFixed(1)} KB
                 </p>
               </div>
@@ -178,18 +178,18 @@ export default function CSVUploadStep({
             </div>
 
             {file.transactions && file.transactions.length > 0 && (
-              <div className='mt-4 border-t border-gray-200 pt-4'>
-                <p className='mb-2 text-xs font-medium text-gray-700'>
+              <div className='mt-4 border-t border-gray-200 dark:border-gray-700 pt-4'>
+                <p className='mb-2 text-xs font-medium text-gray-700 dark:text-gray-300'>
                   Preview ({Math.min(3, file.transactions.length)} of {file.transactions.length})
                 </p>
                 <div className='space-y-2'>
                   {file.transactions.slice(0, 3).map((tx, idx) => (
-                    <div key={idx} className='rounded border border-gray-100 bg-white p-2 text-xs text-gray-600'>
+                    <div key={idx} className='rounded border border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-xs text-gray-600 dark:text-gray-300'>
                       <div className='flex justify-between'>
                         <span>{tx.description}</span>
                         <span className='font-medium'>${tx.amount.toFixed(2)}</span>
                       </div>
-                      <div className='mt-1 text-gray-500'>{tx.date}</div>
+                      <div className='mt-1 text-gray-500 dark:text-gray-400'>{tx.date}</div>
                     </div>
                   ))}
                 </div>
