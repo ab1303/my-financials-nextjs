@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/Label';
 import Select from 'react-select';
 import { NumericFormat } from 'react-number-format';
 import MonthlySummaryTable from './MonthlySummaryTable';
+import { getSelectStyles } from '@/lib/select-styles';
 
 type FiscalYearType = {
   id: string;
@@ -125,14 +126,15 @@ export default function IncomeSummaryClient({
           onChange={onYearChange}
           placeholder='Select fiscal year...'
           className='mt-1'
+          styles={getSelectStyles()}
         />
       </div>
 
       {/* Summary Statistics */}
       {selectedYearId && !loading && (
         <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-          <div className='rounded-lg border bg-white p-4 shadow-sm'>
-            <h3 className='text-sm font-medium text-gray-500'>Total Income</h3>
+          <div className='rounded-lg border bg-card p-4 shadow-sm'>
+            <h3 className='text-sm font-medium text-muted-foreground'>Total Income</h3>
             <NumericFormat
               value={totalIncome}
               displayType='text'
@@ -140,11 +142,11 @@ export default function IncomeSummaryClient({
               prefix='$'
               decimalScale={2}
               fixedDecimalScale
-              className='mt-1 text-2xl font-bold text-gray-900'
+              className='mt-1 text-2xl font-bold text-foreground'
             />
           </div>
-          <div className='rounded-lg border bg-white p-4 shadow-sm'>
-            <h3 className='text-sm font-medium text-gray-500'>
+          <div className='rounded-lg border bg-card p-4 shadow-sm'>
+            <h3 className='text-sm font-medium text-muted-foreground'>
               Average Monthly
             </h3>
             <NumericFormat
@@ -154,14 +156,14 @@ export default function IncomeSummaryClient({
               prefix='$'
               decimalScale={2}
               fixedDecimalScale
-              className='mt-1 text-2xl font-bold text-gray-900'
+              className='mt-1 text-2xl font-bold text-foreground'
             />
           </div>
-          <div className='rounded-lg border bg-white p-4 shadow-sm'>
-            <h3 className='text-sm font-medium text-gray-500'>
+          <div className='rounded-lg border bg-card p-4 shadow-sm'>
+            <h3 className='text-sm font-medium text-muted-foreground'>
               Months Recorded
             </h3>
-            <p className='mt-1 text-2xl font-bold text-gray-900'>
+            <p className='mt-1 text-2xl font-bold text-foreground'>
               {monthlySummary.length}
             </p>
           </div>
@@ -170,7 +172,7 @@ export default function IncomeSummaryClient({
 
       {/* Loading State */}
       {loading && (
-        <div className='py-8 text-center text-gray-500'>
+        <div className='py-8 text-center text-muted-foreground'>
           Loading monthly summary...
         </div>
       )}

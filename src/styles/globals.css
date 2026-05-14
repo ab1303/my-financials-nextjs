@@ -155,6 +155,36 @@
   .min-h-main {
     @apply min-h-[calc(100vh-56px)];
   }
+
+  /*
+   * Display tiles / cards: prevent the browser text-cursor (I-beam) from
+   * appearing on non-editable content inside card/tile rows.
+   *
+   * Rules:
+   *  - [data-tile] marks a display-only card row → all children inherit
+   *    select-none + cursor-default.
+   *  - Buttons, inputs, selects, and links inside the tile restore correct
+   *    cursors so interactivity is unaffected.
+   *
+   * Usage: add data-tile to the wrapping <div> of any display-only tile row.
+   * The `cardStyles.tile` entry in theme.ts already includes `select-none`.
+   */
+  [data-tile] {
+    user-select: none;
+    cursor: default;
+  }
+  [data-tile] button,
+  [data-tile] a,
+  [data-tile] [role='button'] {
+    cursor: pointer;
+  }
+  [data-tile] input,
+  [data-tile] textarea,
+  [data-tile] select,
+  [data-tile] [contenteditable='true'] {
+    user-select: auto;
+    cursor: text;
+  }
 }
 
 @layer components {

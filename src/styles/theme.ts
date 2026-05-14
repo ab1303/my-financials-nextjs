@@ -70,6 +70,8 @@ export const buttonStyles = {
     'inline-flex items-center justify-center w-12 h-12 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
   iconCompact:
     'p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed',
+  iconAdd:
+    'inline-flex items-center justify-center w-10 h-10 rounded-lg bg-teal-600 text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
 };
 
 // Container and layout utility classes
@@ -139,6 +141,14 @@ export const cardStyles = {
     'bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700',
   elevated: 'bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700',
   flat: 'bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700',
+  /**
+   * Use for display-only tile rows (e.g. expense entries, income rows).
+   * Combines card styling with `select-none` so text inside is never
+   * accidentally selectable / shows a text cursor.
+   * Pair with the `data-tile` attribute to also benefit from the global
+   * [data-tile] CSS rule in globals.css (restores pointer on buttons/inputs).
+   */
+  tile: 'flex-1 rounded-lg border border-border bg-card p-4 shadow-sm select-none',
 };
 
 // Modal and overlay styling

@@ -1,13 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState, useMemo, useCallback } from 'react';
 import type {
   MonthlyIncomeSummary,
   SourceBreakdown,
 } from '@/server/models/income';
 import { NumericFormat } from 'react-number-format';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import SourceBreakdownRow from './SourceBreakdownRow';
+
+type SortField = 'totalAmount' | 'entryCount';
+type SortOrder = 'asc' | 'desc';
 
 type MonthlySummaryTableProps = {
   monthlySummary: MonthlyIncomeSummary[];
@@ -42,6 +45,27 @@ export default function MonthlySummaryTable({
   const [loadingBreakdowns, setLoadingBreakdowns] = useState<Set<string>>(
     new Set(),
   );
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+
+  const handleSort = useCallback((field: SortField) => {
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
+        return field;
+      }
+      setSortOrder('desc');
+      return field;
+    });
+  }, []);
+
+  const sortedSummary = useMemo(() => {
+    if (!sortField) return monthlySummary;
+    return [...monthlySummary].sort((a, b) => {
+      const diff = a[sortField] - b[sortField];
+      return sortOrder === 'asc' ? diff : -diff;
+    });
+  }, [monthlySummary, sortField, sortOrder]);
 
   const toggleMonth = async (month: number, year: number) => {
     const key = `${year}-${month}`;
@@ -85,8 +109,8 @@ export default function MonthlySummaryTable({
 
   if (monthlySummary.length === 0) {
     return (
-      <div className='rounded-lg border bg-white p-8 text-center'>
-        <p className='text-gray-500'>
+      <div className='rounded-lg border bg-card p-8 text-center'>
+        <p className='text-muted-foreground'>
           No income data recorded for this fiscal year.
         </p>
       </div>
@@ -94,49 +118,68 @@ export default function MonthlySummaryTable({
   }
 
   return (
-    <div className='overflow-hidden rounded-lg border bg-white shadow'>
-      <table className='min-w-full divide-y divide-gray-200'>
-        <thead className='bg-gray-50'>
+    <div className='overflow-hidden rounded-lg border bg-card shadow'>
+      <table className='min-w-full divide-y divide-border'>
+        <thead className='bg-muted'>
           <tr>
-            <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500'>
+            <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground'>
               {/* Expand icon column */}
             </th>
-            <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500'>
+            <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground'>
               Month / Year
             </th>
-            <th className='px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500'>
-              Total Income
+            <th className='px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground'>
+              <button
+                onClick={() => handleSort('totalAmount')}
+                className='inline-flex items-center gap-1 hover:text-foreground transition-colors'
+              >
+                Total Income
+                {sortField === 'totalAmount' ? (
+                  sortOrder === 'asc' ? <ArrowUp className='h-3 w-3' /> : <ArrowDown className='h-3 w-3' />
+                ) : (
+                  <ArrowUpDown className='h-3 w-3 opacity-40' />
+                )}
+              </button>
             </th>
-            <th className='px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500'>
-              Entries
+            <th className='px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground'>
+              <button
+                onClick={() => handleSort('entryCount')}
+                className='inline-flex items-center gap-1 hover:text-foreground transition-colors'
+              >
+                Entries
+                {sortField === 'entryCount' ? (
+                  sortOrder === 'asc' ? <ArrowUp className='h-3 w-3' /> : <ArrowDown className='h-3 w-3' />
+                ) : (
+                  <ArrowUpDown className='h-3 w-3 opacity-40' />
+                )}
+              </button>
             </th>
           </tr>
         </thead>
-        <tbody className='divide-y divide-gray-200 bg-white'>
-          {monthlySummary.map((summary) => {
+        <tbody className='divide-y divide-border bg-card'>
+          {sortedSummary.map((summary) => {
             const key = `${summary.year}-${summary.month}`;
             const isExpanded = expandedMonths.has(key);
             const breakdown = sourceBreakdowns.get(key);
             const isLoading = loadingBreakdowns.has(key);
 
             return (
-              <>
+              <Fragment key={key}>
                 <tr
-                  key={key}
-                  className='cursor-pointer hover:bg-gray-50'
+                  className='cursor-pointer hover:bg-muted/50'
                   onClick={() => void toggleMonth(summary.month, summary.year)}
                 >
                   <td className='px-6 py-4'>
                     {isExpanded ? (
-                      <ChevronDown className='h-4 w-4 text-gray-400' />
+                      <ChevronDown className='h-4 w-4 text-muted-foreground' />
                     ) : (
-                      <ChevronRight className='h-4 w-4 text-gray-400' />
+                      <ChevronRight className='h-4 w-4 text-muted-foreground' />
                     )}
                   </td>
-                  <td className='whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900'>
+                  <td className='whitespace-nowrap px-6 py-4 text-sm font-medium text-foreground'>
                     {MONTH_NAMES[summary.month - 1]} {summary.year}
                   </td>
-                  <td className='whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900'>
+                  <td className='whitespace-nowrap px-6 py-4 text-right text-sm text-foreground'>
                     <NumericFormat
                       value={summary.totalAmount}
                       displayType='text'
@@ -146,15 +189,15 @@ export default function MonthlySummaryTable({
                       fixedDecimalScale
                     />
                   </td>
-                  <td className='whitespace-nowrap px-6 py-4 text-center text-sm text-gray-500'>
+                  <td className='whitespace-nowrap px-6 py-4 text-center text-sm text-muted-foreground'>
                     {summary.entryCount}
                   </td>
                 </tr>
                 {isExpanded && (
                   <tr>
-                    <td colSpan={4} className='bg-gray-50 px-12 py-4'>
+                    <td colSpan={4} className='bg-muted/50 px-12 py-4'>
                       {isLoading && (
-                        <div className='py-4 text-center text-sm text-gray-500'>
+                        <div className='py-4 text-center text-sm text-muted-foreground'>
                           Loading source breakdown...
                         </div>
                       )}
@@ -164,7 +207,7 @@ export default function MonthlySummaryTable({
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </tbody>

@@ -87,10 +87,7 @@ function AddEditPayment({
           ) : (
             <button
               type='button'
-              className={clsx(
-                buttonStyles.icon,
-                'bg-green-100 text-green-600 hover:bg-green-200 hover:text-green-700 focus:ring-green-500',
-              )}
+              className={buttonStyles.iconAdd}
               onClick={() => onAddPayment({ ...payment })}
             >
               <AddIcon />
