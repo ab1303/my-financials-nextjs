@@ -112,9 +112,16 @@ export default function TransactionRow({
       </td>
       <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.source}</td>
       <td className="px-4 py-3">
-        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClasses[transaction.status] ?? statusClasses.EXCLUDED}`}>
-          {transaction.status}
-        </span>
+        <div className="flex flex-col gap-1">
+          <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClasses[transaction.status] ?? statusClasses.EXCLUDED}`}>
+            {transaction.status}
+          </span>
+          {transaction.category === REIMBURSEMENT_CATEGORY && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-900/30 dark:text-teal-300">
+              ↩ {transaction.offsetCategory ?? 'Reimbursement'}
+            </span>
+          )}
+        </div>
       </td>
       <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
         {transaction.bankAccountName

@@ -6,7 +6,7 @@ import { trpc } from '@/server/trpc/client';
 import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
 
-type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'uncategorized';
+type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized';
 
 type GetAllInput = {
   page: number;
@@ -18,6 +18,7 @@ type GetAllInput = {
   dateTo?: string;
   search?: string;
   uncategorized?: boolean;
+  reimbursementOnly?: boolean;
   amountMin?: number;
   amountMax?: number;
 };
@@ -29,11 +30,12 @@ interface TransactionLedgerTableProps {
 
 const PAGE_SIZE = 50;
 
-const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'status'>>> = {
+const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'status' | 'reimbursementOnly'>>> = {
   all: {},
   expenses: { type: 'DEBIT', status: 'CONFIRMED' },
   income: { type: 'CREDIT', status: 'CONFIRMED' },
   excluded: { status: 'EXCLUDED' },
+  reimbursements: { type: 'CREDIT', status: 'CONFIRMED', reimbursementOnly: true },
   uncategorized: {},
 };
 
@@ -70,6 +72,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
       limit: PAGE_SIZE,
       ...TAB_TO_PARAMS[activeTab],
       ...(activeTab === 'uncategorized' ? { uncategorized: true } : {}),
+      ...(TAB_TO_PARAMS[activeTab].reimbursementOnly ? { reimbursementOnly: true } : {}),
       ...(bankAccountId ? { bankAccountId } : {}),
       ...(dateFrom ? { dateFrom } : {}),
       ...(dateTo ? { dateTo } : {}),
@@ -141,7 +144,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap gap-4 border-b border-gray-200 dark:border-gray-700">
-        {(['all', 'expenses', 'income', 'excluded', 'uncategorized'] as const).map((tab) => (
+        {(['all', 'expenses', 'income', 'reimbursements', 'excluded', 'uncategorized'] as const).map((tab) => (
           <button
             key={tab}
             type="button"

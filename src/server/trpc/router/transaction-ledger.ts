@@ -74,6 +74,7 @@ const getAllInputSchema = z.object({
   dateTo: z.string().optional(),
   search: z.string().optional(),
   uncategorized: z.boolean().optional(),
+  reimbursementOnly: z.boolean().optional(),
   amountMin: z.number().nonnegative().optional(),
   amountMax: z.number().nonnegative().optional(),
 });
@@ -111,6 +112,10 @@ export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, 
 
   if (input.uncategorized === true) {
     where.category = '';
+  }
+
+  if (input.reimbursementOnly === true) {
+    where.category = REIMBURSEMENT_CATEGORY;
   }
 
   if (input.dateFrom || input.dateTo) {
