@@ -59,6 +59,7 @@ function getLastFyRange(date: Date) {
       to: new Date(date.getFullYear(), 5, 30),
     };
   }
+
   return {
     from: new Date(date.getFullYear() - 2, 6, 1),
     to: new Date(date.getFullYear() - 1, 5, 30),
@@ -106,8 +107,45 @@ const DATE_PRESETS: Array<{ value: Exclude<DatePreset, 'custom'>; label: string 
   { value: 'last-fy', label: 'Last FY' },
 ];
 
+const PRESET_LABELS: Record<DatePreset, string> = {
+  'this-month': 'This Month',
+  'last-month': 'Last Month',
+  'this-quarter': 'This Quarter',
+  'this-fy': 'This FY',
+  'last-fy': 'Last FY',
+  custom: 'Custom',
+};
+
 const inputClass =
   'h-8 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:border-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500';
+
+function CalendarIcon() {
+  return (
+    <svg aria-hidden="true" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="none">
+      <path
+        d="M6 2.75V5M14 2.75V5M3.5 7.25h13M4.5 4.5h11A1.5 1.5 0 0 1 17 6v9.5A1.5 1.5 0 0 1 15.5 17h-11A1.5 1.5 0 0 1 3 15.5V6a1.5 1.5 0 0 1 1.5-1.5Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronIcon({ direction }: { direction: 'up' | 'down' }) {
+  return (
+    <svg aria-hidden="true" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="none">
+      <path
+        d={direction === 'up' ? 'M5 12.25 10 7.25l5 5' : 'M5 7.75 10 12.75l5-5'}
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export default function TransactionFilters({
   bankAccounts,
@@ -127,10 +165,12 @@ export default function TransactionFilters({
   resetKey,
 }: TransactionFiltersProps) {
   const [datePreset, setDatePreset] = useState<DatePreset>('this-fy');
+  const [isPeriodOpen, setIsPeriodOpen] = useState(false);
   const minDate = useMemo(() => getTwoYearsAgoDate(), []);
 
   useEffect(() => {
     setDatePreset('this-fy');
+    setIsPeriodOpen(false);
   }, [resetKey]);
 
   const applyPreset = (preset: DatePreset) => {
@@ -141,47 +181,20 @@ export default function TransactionFilters({
     onDateToChange(range.to);
   };
 
+  const handleReset = () => {
+    setDatePreset('this-fy');
+    setIsPeriodOpen(false);
+    onReset();
+  };
+
   const dateFromMax = dateTo ?? formatDate(getCurrentDate());
   const dateToMin = dateFrom ?? minDate;
+  const activePresetLabel = PRESET_LABELS[datePreset];
+  const periodChipActive = isPeriodOpen || datePreset !== 'this-fy';
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-700/60 dark:bg-gray-800/40">
-      {/* Period preset row */}
-      <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
-        <span className="mr-0.5 text-xs font-medium text-gray-400 dark:text-gray-500">Period</span>
-
-        {DATE_PRESETS.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={datePreset === value}
-            onClick={() => applyPreset(value)}
-            className={`rounded border px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
-              datePreset === value
-                ? 'border-teal-400 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300'
-                : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-white hover:text-gray-700 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-
-        <button
-          type="button"
-          aria-pressed={datePreset === 'custom'}
-          onClick={() => setDatePreset('custom')}
-          className={`rounded border px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
-            datePreset === 'custom'
-              ? 'border-teal-400 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300'
-              : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-white hover:text-gray-700 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
-          }`}
-        >
-          Custom
-        </button>
-      </div>
-
-      {/* Filter controls row */}
-      <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700/60 dark:bg-gray-800/40">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <label className="flex flex-col gap-0.5">
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Bank Account</span>
           <select
@@ -200,40 +213,6 @@ export default function TransactionFilters({
             ))}
           </select>
         </label>
-
-        {datePreset === 'custom' && (
-          <>
-            <label className="flex flex-col gap-0.5">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">From</span>
-              <input
-                aria-label="Date From"
-                name="dateFrom"
-                type="date"
-                min={minDate}
-                max={dateFromMax}
-                autoComplete="off"
-                value={dateFrom ?? ''}
-                onChange={(e) => onDateFromChange(e.target.value || undefined)}
-                className={inputClass}
-              />
-            </label>
-
-            <label className="flex flex-col gap-0.5">
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">To</span>
-              <input
-                aria-label="Date To"
-                name="dateTo"
-                type="date"
-                min={dateToMin}
-                max={formatDate(getCurrentDate())}
-                autoComplete="off"
-                value={dateTo ?? ''}
-                onChange={(e) => onDateToChange(e.target.value || undefined)}
-                className={inputClass}
-              />
-            </label>
-          </>
-        )}
 
         <label className="flex flex-col gap-0.5">
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Min $</span>
@@ -286,12 +265,102 @@ export default function TransactionFilters({
 
         <button
           type="button"
-          onClick={onReset}
-          className="mb-0.5 self-end text-xs text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:text-gray-500 dark:hover:text-gray-300"
+          aria-expanded={isPeriodOpen}
+          aria-label={`Period filter: ${activePresetLabel}. Click to ${isPeriodOpen ? 'collapse' : 'expand'}`}
+          onClick={() => setIsPeriodOpen((open) => !open)}
+          className={`self-end inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+            periodChipActive
+              ? 'border-teal-400 bg-teal-50 text-teal-700 dark:border-teal-600 dark:bg-teal-950/40 dark:text-teal-300'
+              : 'border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500'
+          }`}
+        >
+          <CalendarIcon />
+          <span>{activePresetLabel}</span>
+          <ChevronIcon direction={isPeriodOpen ? 'up' : 'down'} />
+        </button>
+
+        <button
+          type="button"
+          onClick={handleReset}
+          className="self-end ml-auto text-xs text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:text-gray-500 dark:hover:text-gray-300"
         >
           Reset
         </button>
       </div>
+
+      {isPeriodOpen && (
+        <div className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700/60">
+          <div className="flex flex-wrap justify-end gap-1.5">
+            {DATE_PRESETS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={datePreset === value}
+                onClick={() => {
+                  applyPreset(value);
+                  setIsPeriodOpen(false);
+                }}
+                className={`rounded-full border px-3 py-0.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                  datePreset === value
+                    ? 'border-teal-500 bg-teal-500 text-white dark:border-teal-400 dark:bg-teal-600'
+                    : 'border-gray-300 text-gray-500 hover:border-teal-400 hover:text-teal-600 dark:border-gray-600 dark:text-gray-400 dark:hover:border-teal-500 dark:hover:text-teal-300'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              aria-pressed={datePreset === 'custom'}
+              onClick={() => setDatePreset('custom')}
+              className={`rounded-full border px-3 py-0.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                datePreset === 'custom'
+                  ? 'border-teal-500 bg-teal-500 text-white dark:border-teal-400 dark:bg-teal-600'
+                  : 'border-gray-300 text-gray-500 hover:border-teal-400 hover:text-teal-600 dark:border-gray-600 dark:text-gray-400 dark:hover:border-teal-500 dark:hover:text-teal-300'
+              }`}
+            >
+              Custom
+            </button>
+          </div>
+
+          {datePreset === 'custom' && (
+            <div className="mt-2 flex flex-wrap justify-end gap-x-3 gap-y-2">
+              <label className="flex flex-col gap-0.5">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">From</span>
+                <input
+                  aria-label="Date From"
+                  name="dateFrom"
+                  type="date"
+                  min={minDate}
+                  max={dateFromMax}
+                  autoComplete="off"
+                  value={dateFrom ?? ''}
+                  onChange={(e) => onDateFromChange(e.target.value || undefined)}
+                  className={inputClass}
+                />
+              </label>
+
+              <label className="flex flex-col gap-0.5">
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">To</span>
+                <input
+                  aria-label="Date To"
+                  name="dateTo"
+                  type="date"
+                  min={dateToMin}
+                  max={formatDate(getCurrentDate())}
+                  autoComplete="off"
+                  value={dateTo ?? ''}
+                  onChange={(e) => onDateToChange(e.target.value || undefined)}
+                  className={inputClass}
+                />
+              </label>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
+

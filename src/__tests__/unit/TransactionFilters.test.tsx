@@ -24,6 +24,10 @@ describe('TransactionFilters', () => {
     resetKey: 0,
   };
 
+  const openPeriodPanel = () => {
+    fireEvent.click(screen.getByRole('button', { name: /period filter/i }));
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -34,67 +38,131 @@ describe('TransactionFilters', () => {
     vi.useRealTimers();
   });
 
-  it('renders preset buttons', () => {
+  it('renders Period chip button with active preset label', () => {
     render(<TransactionFilters {...props} />);
 
-    expect(screen.getByRole('button', { name: /this month/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /last month/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /this quarter/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /this fy/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /last fy/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /custom/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /period filter: this fy/i })).toBeInTheDocument();
   });
 
-  it('calls onDateFromChange and onDateToChange when This Month is clicked', () => {
+  it('period panel is collapsed by default', () => {
     render(<TransactionFilters {...props} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /this month/i }));
+    expect(screen.queryByRole('button', { name: /^this month$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^last month$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^this quarter$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^last fy$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^custom$/i })).toBeNull();
+  });
+
+  it('clicking Period chip opens the accordion', () => {
+    render(<TransactionFilters {...props} />);
+
+    openPeriodPanel();
+
+    expect(screen.getByRole('button', { name: /^this month$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^custom$/i })).toBeInTheDocument();
+  });
+
+  it('clicking Period chip twice closes the accordion', () => {
+    render(<TransactionFilters {...props} />);
+
+    openPeriodPanel();
+    fireEvent.click(screen.getByRole('button', { name: /period filter/i }));
+
+    expect(screen.queryByRole('button', { name: /^this month$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^custom$/i })).toBeNull();
+  });
+
+  it('Period chip shows aria-expanded="false" when collapsed', () => {
+    render(<TransactionFilters {...props} />);
+
+    expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('Period chip shows aria-expanded="true" when expanded', () => {
+    render(<TransactionFilters {...props} />);
+
+    openPeriodPanel();
+
+    expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('clicking a preset pill calls date callbacks and closes the panel', () => {
+    render(<TransactionFilters {...props} />);
+
+    openPeriodPanel();
+    fireEvent.click(screen.getByRole('button', { name: /^this month$/i }));
 
     expect(props.onDateFromChange).toHaveBeenCalledWith('2024-08-01');
     expect(props.onDateToChange).toHaveBeenCalledWith('2024-08-15');
+    expect(screen.queryByRole('button', { name: /^this month$/i })).toBeNull();
   });
 
-  it('shows date inputs when Custom is selected', () => {
+  it('clicking Custom pill keeps panel open', () => {
     render(<TransactionFilters {...props} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /custom/i }));
+    openPeriodPanel();
+    fireEvent.click(screen.getByRole('button', { name: /^custom$/i }));
 
-    expect(screen.getByLabelText(/date from/i)).toBeDefined();
-    expect(screen.getByLabelText(/date to/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: /^custom$/i })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('hides date inputs for preset selections', () => {
+  it('clicking Custom shows date inputs', () => {
     render(<TransactionFilters {...props} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /this quarter/i }));
+    openPeriodPanel();
+    fireEvent.click(screen.getByRole('button', { name: /^custom$/i }));
+
+    expect(screen.getByLabelText(/date from/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/date to/i)).toBeInTheDocument();
+  });
+
+  it('hides date inputs for non-custom presets', () => {
+    render(<TransactionFilters {...props} />);
+
+    openPeriodPanel();
+    fireEvent.click(screen.getByRole('button', { name: /^this quarter$/i }));
 
     expect(screen.queryByLabelText(/date from/i)).toBeNull();
     expect(screen.queryByLabelText(/date to/i)).toBeNull();
   });
 
-  it('resets to This FY when resetKey changes', () => {
+  it('resets to This FY and collapses panel when resetKey changes', () => {
     const { rerender } = render(<TransactionFilters {...props} resetKey={0} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /custom/i }));
-    expect(screen.getByRole('button', { name: /custom/i })).toHaveAttribute('aria-pressed', 'true');
+    openPeriodPanel();
+    fireEvent.click(screen.getByRole('button', { name: /^custom$/i }));
+    expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'true');
 
     rerender(<TransactionFilters {...props} resetKey={1} />);
 
-    expect(screen.getByRole('button', { name: /this fy/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /period filter: this fy/i })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByLabelText(/date from/i)).toBeNull();
   });
 
-  it('calls amount callbacks when amount inputs change', () => {
+  it('amount min/max callbacks fire on input change', () => {
     render(<TransactionFilters {...props} />);
 
-    fireEvent.change(screen.getByLabelText(/min amount/i), {
+    fireEvent.change(screen.getByLabelText(/minimum amount/i), {
       target: { value: '500' },
     });
 
-    fireEvent.change(screen.getByLabelText(/max amount/i), {
+    fireEvent.change(screen.getByLabelText(/maximum amount/i), {
       target: { value: '1000' },
     });
 
     expect(props.onAmountMinChange).toHaveBeenCalledWith('500');
     expect(props.onAmountMaxChange).toHaveBeenCalledWith('1000');
+  });
+
+  it('bank account change callback fires', () => {
+    render(<TransactionFilters {...props} />);
+
+    fireEvent.change(screen.getByLabelText(/bank account/i), {
+      target: { value: 'acc-2' },
+    });
+
+    expect(props.onBankChange).toHaveBeenCalledWith('acc-2');
   });
 });
