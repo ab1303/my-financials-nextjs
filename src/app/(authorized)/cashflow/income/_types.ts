@@ -26,6 +26,7 @@ export const INCOME_SOURCE_LABELS: Record<IncomeSourceEnumType, string> = {
   EMPLOYMENT: 'Employment',
   STOCKS: 'Stocks',
   BONDS: 'Bonds',
+  DIVIDEND: 'Dividend',
   RENTAL: 'Rental',
   BUSINESS: 'Business',
   FREELANCE: 'Freelance',

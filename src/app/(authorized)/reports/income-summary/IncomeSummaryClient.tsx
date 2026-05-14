@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { CalendarEnumType } from '@prisma/client';
+import type { ActionMeta } from 'react-select';
 import type { MonthlyIncomeSummary } from '@/server/models/income';
 import { Label } from '@/components/ui/Label';
 import Select from 'react-select';
@@ -93,7 +94,7 @@ export default function IncomeSummaryClient({
     void fetchSummary();
   }, [selectedYearId, userId]);
 
-  const onYearChange = (option: OptionType | null) => {
+  const onYearChange = (option: OptionType | null, _actionMeta: ActionMeta<OptionType>) => {
     if (!option) return;
 
     setSelectedYearId(option.value);
@@ -126,7 +127,7 @@ export default function IncomeSummaryClient({
           onChange={onYearChange}
           placeholder='Select fiscal year...'
           className='mt-1'
-          styles={getSelectStyles()}
+          styles={getSelectStyles<OptionType>()}
         />
       </div>
 
