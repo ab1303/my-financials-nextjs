@@ -169,11 +169,12 @@ Rules:
 - Respond ONLY with a JSON array. No other text, no markdown.
 - Use ONLY the exact labels listed above.
 - EMPLOYMENT: salary, wages, payroll, pay from employer
-- STOCKS: dividends, share income, ASX payments
+- STOCKS: dividends from individual shares, stock income, ASX share payments
 - BONDS: bond interest, fixed income
 - RENTAL: rent received, property income
 - BUSINESS: business income, invoice payments
 - FREELANCE: contractor payments, gig economy
+- DIVIDEND: ETF distributions (IOZ, VAS, NDQ, A200, VDHG, DHHF etc.), managed fund distributions, trust distributions
 - OTHER: interest earned, government payments, tax refunds
 - Transfer: internal bank transfer (savings, offset)
 - Excluded: refunds, reversals, or items to ignore

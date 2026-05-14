@@ -44,39 +44,66 @@ function CreditReviewPanel({
     onUpdate(updated);
   };
 
-  if (months.length === 0) {
-    return <p className='py-4 text-sm text-gray-500'>No credit transactions found.</p>;
+  const isExcludedTx = (category: string) =>
+    category === 'Excluded' || category === 'Transfer';
+
+  const filteredMonths = months
+    .map((month, monthIdx) => ({
+      month,
+      monthIdx,
+      visible: month.transactions.filter((tx) =>
+        filterMode === 'excluded' ? isExcludedTx(tx.confirmedCategory) : !isExcludedTx(tx.confirmedCategory),
+      ),
+    }))
+    .filter(({ visible }) => visible.length > 0);
+
+  if (filteredMonths.length === 0) {
+    return (
+      <p className='py-4 text-sm text-gray-500 dark:text-gray-400'>
+        {filterMode === 'excluded' ? 'No excluded transactions.' : 'No income / credit transactions found.'}
+      </p>
+    );
   }
 
   return (
     <div className='space-y-6'>
-      {months.map((month, monthIdx) => (
+      {filteredMonths.map(({ month, monthIdx, visible }) => (
         <div key={month.month}>
-          <h3 className='mb-2 text-sm font-semibold text-gray-700'>{month.month}</h3>
+          <h3 className='mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200'>{month.month}</h3>
           <table className='w-full border-collapse text-sm'>
             <thead>
-              <tr className='border-b border-gray-200'>
-                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500'>Date</th>
-                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500'>Description</th>
-                <th className='py-2 pr-4 text-right text-xs font-medium text-gray-500'>Amount</th>
-                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500'>LLM Suggested</th>
-                <th className='py-2 text-left text-xs font-medium text-gray-500'>Your Classification</th>
+              <tr className='border-b border-gray-200 dark:border-gray-700'>
+                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>Date</th>
+                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>Description</th>
+                <th className='py-2 pr-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400'>Amount</th>
+                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>LLM Suggested</th>
+                <th className='py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>Your Classification</th>
               </tr>
             </thead>
             <tbody>
-              {month.transactions.map((tx, txIdx) => {
-                const isExcluded = tx.confirmedCategory === 'Excluded' || tx.confirmedCategory === 'Transfer';
+              {visible.map((tx) => {
+                const txIdx = month.transactions.indexOf(tx);
+                const excluded = isExcludedTx(tx.confirmedCategory);
                 return (
-                  <tr key={tx.id} className={`border-b border-gray-100 ${tx.overridden ? 'bg-amber-50' : ''}`}>
-                    <td className={`py-2 pr-4 ${isExcluded ? 'line-through text-gray-400' : 'text-gray-600'}`}>{tx.date}</td>
-                    <td className={`max-w-[200px] truncate py-2 pr-4 ${isExcluded ? 'line-through text-gray-400' : 'text-gray-900'}`}>{tx.description}</td>
-                    <td className={`py-2 pr-4 text-right ${isExcluded ? 'line-through text-gray-400' : 'text-gray-900'}`}>${tx.amount.toFixed(2)}</td>
-                    <td className='py-2 pr-4 text-xs text-gray-500'>{tx.llmCategory}</td>
+                  <tr
+                    key={tx.id}
+                    className={`border-b border-gray-100 dark:border-gray-700 ${tx.overridden ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`}
+                  >
+                    <td className={`py-2 pr-4 ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'}`}>
+                      {tx.date}
+                    </td>
+                    <td className={`max-w-[200px] truncate py-2 pr-4 ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
+                      {tx.description}
+                    </td>
+                    <td className={`py-2 pr-4 text-right ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
+                      ${tx.amount.toFixed(2)}
+                    </td>
+                    <td className='py-2 pr-4 text-xs text-gray-500 dark:text-gray-400'>{tx.llmCategory}</td>
                     <td className='py-2'>
                       <select
                         value={tx.confirmedCategory}
                         onChange={(e) => handleCategoryChange(monthIdx, txIdx, e.target.value)}
-                        className='w-full rounded border border-gray-300 px-2 py-1 text-xs'
+                        className='w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
                       >
                         {!incomeSourceLabels.includes(tx.confirmedCategory) && (
                           <option value={tx.confirmedCategory}>{tx.confirmedCategory}</option>
@@ -108,7 +135,7 @@ export default function CSVTransactionReviewTable({
   onConfirm,
   isConfirming,
 }: CSVTransactionReviewTableProps) {
-  const [activeTab, setActiveTab] = useState<'debits' | 'credits'>('debits');
+  const [activeTab, setActiveTab] = useState<'debits' | 'credits' | 'excluded'>('debits');
   const [localDebitMonths, setLocalDebitMonths] = useState(debitMonths);
   const [localCreditMonths, setLocalCreditMonths] = useState(creditMonths);
 
@@ -128,6 +155,11 @@ export default function CSVTransactionReviewTable({
         0,
       ),
     [localCreditMonths],
+  );
+
+  const nonExcludedCreditCount = useMemo(
+    () => totalCreditCount - excludedCount,
+    [totalCreditCount, excludedCount],
   );
 
   return (
@@ -151,9 +183,20 @@ export default function CSVTransactionReviewTable({
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Income / Credits ({totalCreditCount})
-          {excludedCount > 0 && <span className='ml-2 text-xs text-gray-400'>{excludedCount} excluded</span>}
+          Income / Credits ({nonExcludedCreditCount})
         </button>
+        {excludedCount > 0 && (
+          <button
+            onClick={() => setActiveTab('excluded')}
+            className={`pb-2 text-sm font-medium transition-colors ${
+              activeTab === 'excluded'
+                ? 'border-b-2 border-teal-500 text-teal-700'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Excluded ({excludedCount})
+          </button>
+        )}
       </div>
 
       <div className='min-h-0 flex-1 overflow-y-auto'>
@@ -170,6 +213,15 @@ export default function CSVTransactionReviewTable({
             months={localCreditMonths}
             incomeSourceLabels={incomeSourceLabels}
             onUpdate={setLocalCreditMonths}
+            filterMode="income"
+          />
+        )}
+        {activeTab === 'excluded' && (
+          <CreditReviewPanel
+            months={localCreditMonths}
+            incomeSourceLabels={incomeSourceLabels}
+            onUpdate={setLocalCreditMonths}
+            filterMode="excluded"
           />
         )}
       </div>
