@@ -3,21 +3,58 @@
 inter-account transfers, but silently buries **reimbursements** — money a third party pays
 you back after you fronted a shared cost. Because the offsetting credit is excluded, expense
 roll-ups are overstated: a $100 dinner you split equally shows as $100 expense with no
-$50 offset.---## File Inventory### Files to MODIFY| File | Change |
+$50 offset.---## File Inventory### Files to MODIFY (Phase 1 — complete)
+
+| File | Change |
 |---|---|
 | `prisma/schema.prisma` | Add `offsetCategory String?` nullable field to `Transaction` model |
-| `src/server/trpc/router/transaction-ledger.ts` | Extend `updateCategorySchema` with `offsetCategory`; add reimbursement promotion/demotion logic to mutation; extend `TransactionRow` interface and `getAll` map to surface `offsetCategory` |
+| `src/server/trpc/router/transaction-ledger.ts` | Extend `updateCategorySchema` with `offsetCategory`; add reimbursement promotion/demotion logic to mutation; extend `TransactionRow` interface and `getAll` map to surface `offsetCategory`; add `reimbursementOnly` filter to `getAllInputSchema` |
 | `src/server/services/transactions/ledger.service.ts` | Add `applyReimbursementOffset` and `reverseReimbursementOffset` functions |
 | `src/server/services/transactions/csv-confirm.service.ts` | Add `'Reimbursement'` to `EXCLUDED_CREDIT_LABELS` so LLM-pre-classified reimbursements land `EXCLUDED` (same as Transfer) |
 | `src/components/transactions/TransactionRow.tsx` | Add "Reimbursement" option to CREDIT+EXCLUDED dropdown; add conditional offset-category `<select>`; extend `onCategoryChange` callback signature |
-| `src/components/transactions/TransactionLedgerTable.tsx` | Forward `offsetCategory` argument through `handleCategoryChange` to the `updateCategory` mutation call |### Files to CREATE| File | Role |
+| `src/components/transactions/TransactionLedgerTable.tsx` | Forward `offsetCategory` argument through `handleCategoryChange` to the `updateCategory` mutation call; add "reimbursements" tab |
+
+### Files to CREATE (Phase 1 — complete)
+
+| File | Role |
 |---|---|
-| `src/server/services/transactions/constants.ts` | Single source of truth for `REIMBURSEMENT_CATEGORY` string and `EXCLUDED_CREDIT_LABELS` array; imported by router, service, and client |---## Schema Details### `Transaction` model addition```prisma
+| `src/server/services/transactions/constants.ts` | Single source of truth for `REIMBURSEMENT_CATEGORY` string and `EXCLUDED_CREDIT_LABELS` array; imported by router, service, and client |
+
+### Files to MODIFY (Phase 2 — specced)
+
+| File | Change |
+|---|---|
+| `prisma/schema.prisma` | Add `offsetTransactionId String?` self-referential FK + `offsetTransaction` and `reimbursements` Prisma relations to `Transaction` model |
+| `src/server/trpc/router/transaction-ledger.ts` | Extend `updateCategorySchema` with `offsetTransactionId`; validate linked DEBIT in mutation; extend `PrismaTransaction` + `TransactionRow` with `offsetTransactionId` and `reimbursements[]`; extend `getAll` include + map; add `searchDebitTransactions` query |
+| `src/components/transactions/TransactionRow.tsx` | Return React.Fragment; add accordion for DEBIT rows with reimbursements; add "Link to expense" combobox for CREDIT Reimbursement rows; extend `onCategoryChange` signature with `offsetTransactionId?` |
+| `src/components/transactions/TransactionLedgerTable.tsx` | Add empty chevron `<th>`; extend `handleCategoryChange` with `offsetTransactionId?`; pass `colCount={9}` to `TransactionRow` |
+
+### Files to CREATE (Phase 2 — specced)
+
+| File | Role |
+|---|---|
+| `src/components/transactions/ReimbursementSubRow.tsx` | Presentation-only sub-row component rendered inside the accordion beneath a DEBIT parent; shows ↩ prefix, teal background, offset category label |---## Schema Details### `Transaction` model additions
+
+**Phase 1 (complete):**
+```prisma
 model Transaction {
-  // ... all existing fields unchanged ...  offsetCategory  String?    // populated only when category = 'Reimbursement';
+  // ... all existing fields unchanged ...
+  offsetCategory  String?    // populated only when category = 'Reimbursement';
                              // names the ExpenseCategory being offset (free-text FK by name)
 }
-```**Why a dedicated field instead of encoding as `"Reimbursement:Food & Dining"`:**| Concern | Dedicated field | Encoded string |
+```
+
+**Phase 2 (specced):**
+```prisma
+model Transaction {
+  // ... all existing fields including offsetCategory ...
+  offsetTransactionId String?             // optional FK to the DEBIT transaction being reimbursed
+  offsetTransaction   Transaction?   @relation("ReimbursementLink", fields: [offsetTransactionId], references: [id])
+  reimbursements      Transaction[]  @relation("ReimbursementLink")
+}
+```
+
+**Why a dedicated field instead of encoding as `"Reimbursement:Food & Dining"`:**| Concern | Dedicated field | Encoded string |
 |---|---|---|
 | Queryability | `WHERE offsetCategory = 'Food & Dining'` | Requires `LIKE 'Reimbursement:%'` |
 | Existing `category` readers | Unaffected | Must parse every callsite |
