@@ -126,7 +126,7 @@ STACK CONSTRAINTS — must follow exactly:
 - tRPC routers: src/server/trpc/router/ — NOT src/server/api/
 - Prisma context: ctx.prisma — NOT ctx.db
 - tRPC client: import { trpc } from '@/server/trpc/client'
-- Toast: import { toast } from 'react-toastify' — NOT sonner
+- Toast: import { toast } from 'sonner' — NOT react-toastify
 - Package manager: pnpm ONLY — never npm or yarn
 - Run pnpm run build before marking phase complete
 - Stop dev server before any prisma migrate or prisma generate (Windows EPERM)

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import clsx from 'clsx';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import type { SingleValue } from 'react-select';
@@ -329,6 +330,18 @@ export default function TransactionRow({
             {transaction.category === REIMBURSEMENT_CATEGORY && (
               <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-900/30 dark:text-teal-300">
                 ↩ {transaction.offsetCategory ?? 'Reimbursement'}
+              </span>
+            )}
+            {transaction.category.toLowerCase() === 'gifts & donations' && transaction.type === 'DEBIT' && (
+              <span
+                className={clsx(
+                  'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                  transaction.isDonationLinked
+                    ? 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200'
+                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+                )}
+              >
+                {transaction.isDonationLinked ? '🔗 Linked' : '⚠️ Needs recipient'}
               </span>
             )}
           </div>

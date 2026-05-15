@@ -30,7 +30,8 @@ export const CreateDonationPaymentSchema = z.object({
   }),
   taxCategory: z.string().nonempty('Tax category is required'),
   beneficiaryId: z.string().nonempty('Please select a beneficiary'),
-  calendarYearId: z.string().nonempty('Calendar year is required'),
+  transactionId: z.string().optional(),
+  calendarYearId: z.string().nonempty('Calendar year is required.'),
 });
 
 export const UpdateDonationPaymentSchema = z.object({

@@ -54,6 +54,7 @@ export default async function DonationPaymentsTableServer({
         beneficiaryType: dp.beneficiaryType,
         taxCategory: dp.taxCategory,
         datePaid: dp.datePaid,
+        transactionId: dp.transactionId ?? undefined,
       })) || [];
 
     return (

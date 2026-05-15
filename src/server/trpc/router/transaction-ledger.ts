@@ -16,6 +16,7 @@ import {
   reverseReimbursementOffset,
 } from '@/server/services/transactions/ledger.service';
 import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
+import { getUnlinkedDonationTransactions } from '@/server/services/transactions/donation-link.service';
 
 type PrismaReimbursement = {
   id: string;
@@ -51,6 +52,7 @@ type PrismaTransaction = {
   createdAt: Date;
   updatedAt: Date;
   reimbursements: PrismaReimbursement[];
+  donationPayment: { id: string } | null;
 };
 
 export interface TransactionRow {
@@ -69,6 +71,7 @@ export interface TransactionRow {
   offsetCategory: string | null;
   offsetTransactionId: string | null;
   reimbursements: TransactionRow[];
+  isDonationLinked?: boolean;
 }
 
 export interface GetAllOutput {
@@ -214,6 +217,7 @@ export const transactionLedgerRouter = router({
               bankAccount: { select: { name: true, bank: { select: { name: true } } } },
             },
           },
+          donationPayment: { select: { id: true } },
         },
       }),
       ctx.prisma.transaction.count({ where }),
@@ -251,6 +255,10 @@ export const transactionLedgerRouter = router({
         offsetTransactionId: null,
         reimbursements: [],
       })),
+      isDonationLinked:
+        tx.category.toLowerCase() === 'gifts & donations' && tx.type === TransactionTypeEnum.DEBIT
+          ? tx.donationPayment !== null
+          : undefined,
     }));
 
     return {
@@ -461,5 +469,19 @@ export const transactionLedgerRouter = router({
         amount: Number(tx.amount),
         category: tx.category,
       }));
+    }),
+
+  getUnlinkedDonationTransactions: protectedProcedure
+    .input(
+      z.object({
+        dateFrom: z.string(), // ISO date string YYYY-MM-DD
+        dateTo: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const dateFrom = new Date(`${input.dateFrom}T00:00:00`);
+      const dateTo = new Date(`${input.dateTo}T23:59:59`);
+      return getUnlinkedDonationTransactions(userId, dateFrom, dateTo);
     }),
 });

@@ -60,6 +60,7 @@ export const getDonationPayments = async (
     businessId: dp.businessId,
     individualId: dp.individualId,
     donationLedgerId: dp.donationLedgerId,
+    transactionId: dp.transactionId ?? null,
     beneficiaryType: dp.beneficiaryType,
     taxCategory: dp.taxCategory,
   }));
@@ -103,6 +104,7 @@ export const addDonationPaymentDetail = async (
         payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
       individualId:
         payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
+      transactionId: payment.transactionId ?? null,
     },
   });
 };

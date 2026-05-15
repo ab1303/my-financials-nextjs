@@ -25,7 +25,7 @@ This instruction file contains patterns and best practices for implementing enti
   import { useId, useState } from 'react';
   import { FormProvider, useForm } from 'react-hook-form';
   import Select, { components } from 'react-select';
-  import { toast } from 'react-toastify';
+  import { toast } from 'sonner';
   import { TRPCError } from '@trpc/server';
   import { useQueryClient } from '@tanstack/react-query';
   ```

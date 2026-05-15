@@ -6,6 +6,7 @@ import { totalDonationsHandler } from '@/server/controllers/donation.controller'
 
 import DonationForm from './form';
 import DonationPaymentsTableServer from './DonationTableServer';
+import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
 
 export const metadata: Metadata = {
   title: 'Donation Tracking | My Financials',
@@ -63,6 +64,17 @@ export default async function DonationPage({
           initialData={initialData}
           yearIdParam={selectedCalendarYearId}
         >
+          {selectedCalendarYear && (
+            <Suspense fallback={null}>
+              <UnlinkedTransactionsBanner
+                fromYear={selectedCalendarYear.fromYear}
+                toYear={selectedCalendarYear.toYear}
+                dateFrom={`${selectedCalendarYear.fromYear}-07-01`}
+                dateTo={`${selectedCalendarYear.toYear}-06-30`}
+                calendarYearId={selectedCalendarYearId}
+              />
+            </Suspense>
+          )}
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             {selectedCalendarYear && (
               <div className='font-mono text-muted-foreground mb-3'>

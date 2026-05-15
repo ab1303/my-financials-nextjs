@@ -23,6 +23,7 @@ export type DonationPaymentType = {
   individualId?: string;
   // Computed field for table operations
   beneficiaryId: string;
+  transactionId?: string;
 };
 
 const BENEFICIARY_ENUM_KEYS = Object.entries(BeneficiaryEnumType).map(

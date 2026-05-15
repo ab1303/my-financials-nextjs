@@ -222,6 +222,8 @@ model DonationPayment {
   individualId    String?
   donationLedger  DonationLedger      @relation(fields: [donationLedgerId], references: [id])
   donationLedgerId String
+  transaction     Transaction?        @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  transactionId   String?             @unique
 }
 
 // IncomeLedger — per-user per-calendar-year container for income records
@@ -553,8 +555,9 @@ model Transaction {
   importSession       ImportSession?        @relation(fields: [importSessionId], references: [id])
   importSessionId     String?
 
-  offsetTransaction Transaction? @relation("ReimbursementLink", fields: [offsetTransactionId], references: [id])
+  offsetTransaction Transaction?  @relation("ReimbursementLink", fields: [offsetTransactionId], references: [id])
   reimbursements    Transaction[] @relation("ReimbursementLink")
+  donationPayment   DonationPayment?
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
