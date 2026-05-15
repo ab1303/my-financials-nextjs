@@ -9,7 +9,7 @@ description: >
   coding", "implement phases", "delegate implementation".
 metadata:
   author: local
-  version: "1.0.0"
+  version: "1.1.0"
   argument-hint: <feature-name> [--phase N]
 ---
 
@@ -115,7 +115,9 @@ Extract only the relevant `## Phase N` section, not the entire LLD.
 
 ### c) Current file contents for files the phase will touch
 Read each file listed in the phase's "Files to modify/create" table.
-Paste the full content inline in the prompt.
+Paste the full content inline in the prompt. If a file exceeds 300 lines,
+include only the relevant section (the function/component to modify) with a
+comment `// ... rest of file unchanged` at the truncation point.
 
 ### d) Project-wide constraints (always include)
 ```
@@ -124,13 +126,15 @@ STACK CONSTRAINTS — must follow exactly:
 - tRPC routers: src/server/trpc/router/ — NOT src/server/api/
 - Prisma context: ctx.prisma — NOT ctx.db
 - tRPC client: import { trpc } from '@/server/trpc/client'
-- Toast: import { toast } from 'sonner' — NOT react-toastify
+- Toast: import { toast } from 'react-toastify' — NOT sonner
 - Package manager: pnpm ONLY — never npm or yarn
 - Run pnpm run build before marking phase complete
 - Stop dev server before any prisma migrate or prisma generate (Windows EPERM)
 - Tests: Vitest + @testing-library/react in src/__tests__/unit/
 - Prisma mock: vitest-mock-extended at src/__tests__/mocks/prisma.mock.ts
 - TDD: write tests first, then implementation
+- All context needed is provided in this prompt. Do NOT explore the codebase
+  for additional files unless a compile error forces it.
 ```
 
 ### e) TDD test cases from the LLD

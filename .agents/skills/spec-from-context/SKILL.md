@@ -10,7 +10,7 @@ description: >
   "spec this out", "hand over to context engineer".
 metadata:
   author: local
-  version: "1.0.0"
+  version: "2.0.0"
   argument-hint: <feature-name>
 ---
 
@@ -88,37 +88,19 @@ If `spec/{feature}/` already has files, read them and include as "Prior art".
 
 ---
 
-## Step 3 — Build the Subagent Prompt
+## Step 3 — Write the Three Spec Files Directly
 
-Construct a comprehensive prompt for the `context-engineering:context-architect`
-subagent. The prompt MUST include:
+Using **only** the context bundle compiled in Step 2, write all three files
+yourself with the `create` tool. **Do not launch a subagent. Do not read any
+additional files from the codebase.** All required information was gathered in
+Step 2.
 
+Create the spec directory first if it does not exist:
+```powershell
+New-Item -ItemType Directory -Path "spec\{feature}" -Force | Out-Null
 ```
-## Task
-Create three spec files in spec/{feature}/:
-- spec/{feature}/context.md
-- spec/{feature}/hld.md
-- spec/{feature}/lld.md
 
-## Problem Statement
-{compiled problem statement}
-
-## Stack & Patterns
-{architecture facts}
-
-## Relevant Schema
-{verbatim prisma model blocks}
-
-## File Inventory
-{table of files to modify/create}
-
-## Design Decisions
-{numbered list of decisions already made}
-
-## Out of Scope (Phase 2+)
-{items explicitly deferred}
-
-## Spec File Requirements
+Then call `create` three times **in parallel** (one per file):
 
 ### context.md must contain:
 - Problem summary (2–3 sentences)
@@ -144,115 +126,27 @@ Create three spec files in spec/{feature}/:
 - Migration notes if schema changes are involved
 - Integration points and edge cases
 
-## Style
-- Use tables for inventories and interface definitions
-- Use fenced code blocks for TypeScript, Prisma schema, Zod
+### Style rules (all three files):
+- Use tables for file inventories and interface definitions
+- Use fenced code blocks: `typescript`, `prisma`, `bash`
 - Be thorough but not padded
-- Match the style of existing specs in this repo (see spec/transaction-ledger/ for reference)
-```
+- Match style of existing specs in `spec/transaction-ledger/`
 
 ---
 
-## Step 4 — Invoke the Subagent
-
-Use the `task` tool with:
-- `agent_type`: `context-engineering:context-architect`
-- `mode`: `background`
-- `name`: `{feature}-spec`
-- `description`: `Creating {feature} spec`
-
-Wait for the background agent to complete (you will be notified).
-
----
-
-## Step 5 — Extract and Save the Three Files
-
-The subagent returns its output as a single text response containing three
-fenced markdown blocks. Use PowerShell to extract and save them.
-
-### Extraction Pattern
-
-The agent output follows this structure:
-```
-## `spec/{feature}/context.md`
-```markdown
-{context file content}
-```
-
-## `spec/{feature}/hld.md`
-```markdown
-{hld file content}
-```
-
-## `spec/{feature}/lld.md`
-```markdown
-{lld file content}
-```
-```
-
-**Important:** The LLD block frequently contains nested fenced code blocks
-(TypeScript, Prisma, Zod) and may NOT have a closing ` ``` ` — the content
-runs to end of output. Use the following robust extraction approach:
-
-```powershell
-$content = Get-Content "<agent-output-file>" -Raw
-
-# Find the three ```markdown block start positions
-$pos = 0; $markers = @()
-while ($true) {
-    $idx = $content.IndexOf('```markdown', $pos)
-    if ($idx -eq -1) { break }
-    $markers += $idx
-    $pos = $idx + 11
-}
-# $markers[0] = context, $markers[1] = hld, $markers[2] = lld
-
-# Context: from marker[0]+11 to last ``` before marker[1]
-$ctxRaw = $content.Substring($markers[0] + 11, $markers[1] - $markers[0] - 11)
-$contextMd = $ctxRaw.Substring(0, $ctxRaw.LastIndexOf('```')).Trim()
-
-# HLD: from marker[1]+11 to last ``` before marker[2]
-$hldRaw = $content.Substring($markers[1] + 11, $markers[2] - $markers[1] - 11)
-$hldMd = $hldRaw.Substring(0, $hldRaw.LastIndexOf('```')).Trim()
-
-# LLD: from marker[2]+11 to end of file (no reliable closing ```)
-$lldMd = $content.Substring($markers[2] + 11).Trim()
-if ($lldMd.EndsWith('```')) { $lldMd = $lldMd.Substring(0, $lldMd.Length - 3).Trim() }
-
-# Write files
-$specDir = "spec\{feature}"
-New-Item -ItemType Directory -Path $specDir -Force | Out-Null
-Set-Content -Path "$specDir\context.md" -Value $contextMd -Encoding UTF8
-Set-Content -Path "$specDir\hld.md"    -Value $hldMd    -Encoding UTF8
-Set-Content -Path "$specDir\lld.md"    -Value $lldMd    -Encoding UTF8
-```
-
-### Fallback: Agent output saved to temp file
-
-When the agent output exceeds ~10KB, the `read_agent` tool saves to a temp file
-and returns the file path. In that case:
-
-1. Capture the temp file path from the `read_agent` response
-2. Run the PowerShell extraction script above against that temp file
-3. Verify file sizes are reasonable: context ≥ 1KB, hld ≥ 2KB, lld ≥ 5KB
-
----
-
-## Step 6 — Verify and Report
+## Step 4 — Verify and Report
 
 After writing the files:
 
 1. Run a quick sanity check:
    ```powershell
-   Get-ChildItem spec\{feature}\ | Select-Object Name, Length
-   Get-Content spec\{feature}\context.md | Select-Object -First 5
-   Get-Content spec\{feature}\lld.md | Select-Object -Last 5
+   Get-ChildItem spec\{feature}\ | Select-Object Name, @{N='KB';E={[math]::Round($_.Length/1KB,1)}}
    ```
 
 2. Report to the user:
    - ✅ Files created with sizes
    - First heading of each file
-   - Any extraction issues encountered
+   - Any content gaps noted
 
 ---
 
@@ -276,10 +170,7 @@ User: *"Spec this out under spec/reimbursements"*
 
 1. Feature name → `reimbursements`
 2. Gather context from session (problem, schema, files, decisions)
-3. Build subagent prompt with full context
-4. Invoke `context-engineering:context-architect` in background
-5. Wait for completion notification
-6. Extract three files from agent output using PowerShell pattern above
-7. Verify + report back
+3. Create directory + write all three files directly with `create` tool (parallel)
+4. Verify sizes + report back
 
-Total time: ~5–8 minutes (subagent runs ~400 seconds).
+Total time: ~30 seconds.
