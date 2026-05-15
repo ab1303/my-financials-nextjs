@@ -24,4 +24,10 @@ describe('buildTransactionWhere', () => {
       lte: new Date('2024-01-31T23:59:59.999'),
     });
   });
+
+  it('filters by category', () => {
+    const where = buildTransactionWhere({ category: 'Groceries' } as never, 'user-1');
+
+    expect(where.category).toBe('Groceries');
+  });
 });

@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
+import Select from 'react-select';
+import type { SingleValue } from 'react-select';
 import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
 import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
+import { getCompactSelectStyles } from '@/lib/select-styles';
 import ReimbursementSubRow from './ReimbursementSubRow';
 
 interface TransactionRowProps {
@@ -23,6 +26,11 @@ interface TransactionRowProps {
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
 }
+
+type CategoryOption = {
+  label: string;
+  value: string;
+};
 
 export default function TransactionRow({
   transaction,
@@ -44,6 +52,8 @@ export default function TransactionRow({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerSearch, setPickerSearch] = useState('');
   const [localOffsetTxId, setLocalOffsetTxId] = useState<string | null>(transaction.offsetTransactionId ?? null);
+  const categorySelectId = useId();
+  const offsetCategorySelectId = useId();
 
   useEffect(() => {
     setLocalCategory(transaction.category);
@@ -67,7 +77,35 @@ export default function TransactionRow({
 
   const showReimbursementOption =
     transaction.type === 'CREDIT' &&
-    (transaction.status === 'EXCLUDED' || transaction.category === REIMBURSEMENT_CATEGORY);
+    (transaction.status === 'EXCLUDED' ||
+      transaction.category === REIMBURSEMENT_CATEGORY ||
+      localCategory === REIMBURSEMENT_CATEGORY);
+
+  const categoryOptions = useMemo<CategoryOption[]>(
+    () => [
+      ...options.map((option) =>
+        typeof option === 'string'
+          ? { label: option, value: option }
+          : { label: option.name, value: option.name },
+      ),
+      ...(showReimbursementOption
+        ? [{ label: REIMBURSEMENT_CATEGORY, value: REIMBURSEMENT_CATEGORY }]
+        : []),
+    ],
+    [options, showReimbursementOption],
+  );
+
+  const offsetCategoryOptions = useMemo<CategoryOption[]>(
+    () => expenseCategories.map((category) => ({ label: category.name, value: category.name })),
+    [expenseCategories],
+  );
+
+  const selectedCategory =
+    categoryOptions.find((option) => option.value === localCategory) ?? null;
+
+  const selectedOffsetCategory =
+    offsetCategoryOptions.find((option) => option.value === localOffsetCategory) ?? null;
+  const compactSelectStyles = getCompactSelectStyles<CategoryOption>();
 
   const totalReimbursed = transaction.reimbursements.reduce((sum, reimbursement) => sum + reimbursement.amount, 0);
   const netAmount = transaction.amount - totalReimbursed;
@@ -123,43 +161,44 @@ export default function TransactionRow({
         <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.type}</td>
         <td className="px-4 py-3">
           <div className="flex flex-col gap-1">
-            <select
+            <Select
+              instanceId={categorySelectId}
+              inputId={categorySelectId}
               aria-label={`Category for ${transaction.description}`}
-              value={localCategory}
-              disabled={isSaving}
-              onChange={(e) => handleChange(e.target.value)}
-              className="w-full min-w-[140px] rounded border border-gray-300 bg-transparent px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:cursor-wait disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            >
-              {options.map((option) => {
-                const value = typeof option === 'string' ? option : option.name;
-                const key = typeof option === 'string' ? option : option.id;
-                return (
-                  <option key={key} value={value}>
-                    {value}
-                  </option>
-                );
-              })}
-              {showReimbursementOption && <option value={REIMBURSEMENT_CATEGORY}>{REIMBURSEMENT_CATEGORY}</option>}
-            </select>
+              isDisabled={isSaving}
+              isClearable={false}
+              value={selectedCategory}
+              options={categoryOptions}
+              onChange={(option: SingleValue<CategoryOption>) => handleChange(option?.value ?? '')}
+              styles={{
+                ...compactSelectStyles,
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              }}
+              className="w-full min-w-[140px]"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+            />
 
             {localCategory === REIMBURSEMENT_CATEGORY && (
               <>
-                <select
+                <Select
+                  instanceId={offsetCategorySelectId}
+                  inputId={offsetCategorySelectId}
                   aria-label={`Offsets expense category for ${transaction.description}`}
-                  value={localOffsetCategory}
-                  disabled={isSaving}
-                  onChange={(e) => handleOffsetChange(e.target.value)}
-                  className="w-full min-w-[140px] rounded border border-teal-400 bg-transparent px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:cursor-wait disabled:opacity-60 dark:border-teal-600 dark:bg-gray-800 dark:text-white"
-                >
-                  <option value="" disabled>
-                    Offsets category…
-                  </option>
-                  {expenseCategories.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  isDisabled={isSaving}
+                  isClearable={false}
+                  placeholder="Offsets category…"
+                  value={selectedOffsetCategory}
+                  options={offsetCategoryOptions}
+                  onChange={(option: SingleValue<CategoryOption>) => handleOffsetChange(option?.value ?? '')}
+                  styles={{
+                    ...compactSelectStyles,
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                  className="w-full min-w-[140px]"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                />
 
                 <div className="mt-1">
                   {localOffsetTxId ? (

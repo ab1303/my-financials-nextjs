@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { trpc } from '@/server/trpc/client';
+import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
 import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
 
@@ -14,6 +15,7 @@ type GetAllInput = {
   type?: 'DEBIT' | 'CREDIT';
   status?: 'PENDING' | 'CONFIRMED' | 'EXCLUDED';
   bankAccountId?: string;
+  category?: string;
   dateFrom?: string;
   dateTo?: string;
   search?: string;
@@ -53,6 +55,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [page, setPage] = useState(1);
   const [bankAccountId, setBankAccountId] = useState<string | undefined>(undefined);
+  const [category, setCategory] = useState<string | undefined>(undefined);
   const [dateFrom, setDateFrom] = useState<string | undefined>(defaultFY.from);
   const [dateTo, setDateTo] = useState<string | undefined>(defaultFY.to);
   const [amountMin, setAmountMin] = useState('');
@@ -74,13 +77,14 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
       ...(activeTab === 'uncategorized' ? { uncategorized: true } : {}),
       ...(TAB_TO_PARAMS[activeTab].reimbursementOnly ? { reimbursementOnly: true } : {}),
       ...(bankAccountId ? { bankAccountId } : {}),
+      ...(category ? { category } : {}),
       ...(dateFrom ? { dateFrom } : {}),
       ...(dateTo ? { dateTo } : {}),
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
       ...(parsedAmountMin !== undefined ? { amountMin: parsedAmountMin } : {}),
       ...(parsedAmountMax !== undefined ? { amountMax: parsedAmountMax } : {}),
-    };
-  }, [page, activeTab, bankAccountId, dateFrom, dateTo, debouncedSearch, amountMin, amountMax]);
+    } satisfies GetAllInput;
+  }, [page, activeTab, bankAccountId, category, dateFrom, dateTo, debouncedSearch, amountMin, amountMax]);
 
   const { data, isLoading, isFetching, refetch } = trpc.transactionLedger.getAll.useQuery(queryInput);
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
@@ -124,6 +128,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
 
   const handleReset = useCallback(() => {
     setBankAccountId(undefined);
+    setCategory(undefined);
     const fy = getPresetDateRange('this-fy')!;
     setDateFrom(fy.from);
     setDateTo(fy.to);
@@ -145,6 +150,18 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   const transactions = data?.transactions ?? [];
   const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
   const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
+  const categoryOptions = useMemo(
+    () =>
+      [
+        ...expenseCategories.map((item) => item.name),
+        ...incomeSourceLabels,
+        REIMBURSEMENT_CATEGORY,
+      ]
+        .filter((value, index, array) => array.indexOf(value) === index)
+        .sort((a, b) => a.localeCompare(b))
+        .map((value) => ({ label: value, value })),
+    [expenseCategories, incomeSourceLabels],
+  );
 
   return (
     <section className="space-y-4">
@@ -167,7 +184,9 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
 
       <TransactionFilters
         bankAccounts={bankAccounts}
+        categoryOptions={categoryOptions}
         bankAccountId={bankAccountId}
+        category={category}
         dateFrom={dateFrom}
         dateTo={dateTo}
         search={search}
@@ -175,6 +194,10 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
         amountMax={amountMax}
         onBankChange={(v) => {
           setBankAccountId(v);
+          setPage(1);
+        }}
+        onCategoryChange={(v) => {
+          setCategory(v);
           setPage(1);
         }}
         onDateFromChange={(v) => {

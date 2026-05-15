@@ -1,18 +1,25 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
+import Select from 'react-select';
+import type { SingleValue } from 'react-select';
+import { Label } from '@/components/ui/Label';
+import { getSelectStyles } from '@/lib/select-styles';
 
 export type DatePreset = 'this-month' | 'last-month' | 'this-quarter' | 'this-fy' | 'last-fy' | 'custom';
 
 interface TransactionFiltersProps {
-  bankAccounts: Array<{ id: string; name: string }>;
+  bankAccounts: Array<{ id: string; name: string; bankName: string }>;
+  categoryOptions: Array<{ label: string; value: string }>;
   bankAccountId: string | undefined;
+  category: string | undefined;
   dateFrom: string | undefined;
   dateTo: string | undefined;
   search: string;
   amountMin: string;
   amountMax: string;
   onBankChange: (id: string | undefined) => void;
+  onCategoryChange: (category: string | undefined) => void;
   onDateFromChange: (v: string | undefined) => void;
   onDateToChange: (v: string | undefined) => void;
   onSearchChange: (v: string) => void;
@@ -149,13 +156,16 @@ function ChevronIcon({ direction }: { direction: 'up' | 'down' }) {
 
 export default function TransactionFilters({
   bankAccounts,
+  categoryOptions,
   bankAccountId,
+  category,
   dateFrom,
   dateTo,
   search,
   amountMin,
   amountMax,
   onBankChange,
+  onCategoryChange,
   onDateFromChange,
   onDateToChange,
   onSearchChange,
@@ -167,6 +177,21 @@ export default function TransactionFilters({
   const [datePreset, setDatePreset] = useState<DatePreset>('this-fy');
   const [isPeriodOpen, setIsPeriodOpen] = useState(false);
   const minDate = useMemo(() => getTwoYearsAgoDate(), []);
+  const bankSelectId = useId();
+  const categorySelectId = useId();
+
+  const bankOptions = useMemo(
+    () =>
+      bankAccounts.map((account) => ({
+        label: account.bankName ? `${account.name} (${account.bankName})` : account.name,
+        value: account.id,
+      })),
+    [bankAccounts],
+  );
+
+  const selectedBank = bankOptions.find((option) => option.value === bankAccountId) ?? null;
+  const selectedCategory =
+    categoryOptions.find((option) => option.value === category) ?? null;
 
   useEffect(() => {
     setDatePreset('this-fy');
@@ -195,24 +220,24 @@ export default function TransactionFilters({
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700/60 dark:bg-gray-800/40">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <label className="flex flex-col gap-0.5">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Bank Account</span>
-          <select
-            aria-label="Bank Account"
+        <div className="flex min-w-[220px] flex-col gap-0.5">
+          <Label htmlFor={bankSelectId} className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            Bank Account
+          </Label>
+          <Select
+            instanceId={bankSelectId}
+            inputId={bankSelectId}
             name="bankAccountId"
-            autoComplete="off"
-            value={bankAccountId ?? ''}
-            onChange={(e) => onBankChange(e.target.value || undefined)}
-            className={`${inputClass} min-w-[140px]`}
-          >
-            <option value="">All Accounts</option>
-            {bankAccounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            isClearable
+            placeholder="All Accounts"
+            value={selectedBank}
+            options={bankOptions}
+            onChange={(option: SingleValue<(typeof bankOptions)[number]>) => onBankChange(option?.value)}
+            styles={getSelectStyles<(typeof bankOptions)[number]>()}
+            className="w-full"
+            menuPortalTarget={document.body}
+          />
+        </div>
 
         <label className="flex flex-col gap-0.5">
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Min $</span>
@@ -249,7 +274,7 @@ export default function TransactionFilters({
         </label>
 
         <label className="flex min-w-[160px] flex-1 flex-col gap-0.5">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Search</span>
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Description</span>
           <input
             aria-label="Search transactions"
             name="search"
@@ -262,6 +287,27 @@ export default function TransactionFilters({
             className={inputClass}
           />
         </label>
+
+        <div className="flex min-w-[220px] flex-col gap-0.5">
+          <Label htmlFor={categorySelectId} className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            Category
+          </Label>
+          <Select
+            instanceId={categorySelectId}
+            inputId={categorySelectId}
+            name="category"
+            isClearable
+            placeholder="All Categories"
+            value={selectedCategory}
+            options={categoryOptions}
+            onChange={(option: SingleValue<(typeof categoryOptions)[number]>) =>
+              onCategoryChange(option?.value)
+            }
+            styles={getSelectStyles<(typeof categoryOptions)[number]>()}
+            className="w-full"
+            menuPortalTarget={document.body}
+          />
+        </div>
 
         <button
           type="button"

@@ -1,7 +1,56 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 import TransactionRow from '@/components/transactions/TransactionRow';
+
+const mockUseSearchDebitTransactionsQuery = vi.fn();
+
+vi.mock('react-select', () => ({
+  default: ({
+    inputId,
+    placeholder,
+    options = [],
+    value,
+    onChange,
+    isDisabled,
+    ...props
+  }: {
+    inputId?: string;
+    placeholder?: string;
+    options?: Array<{ label: string; value: string }>;
+    value?: { label: string; value: string } | null;
+    onChange?: (option: { label: string; value: string } | null) => void;
+    isDisabled?: boolean;
+  } & Record<string, unknown>) => (
+    <select
+      id={inputId}
+      aria-label={(props['aria-label'] as string | undefined) ?? placeholder ?? 'select'}
+      value={value?.value ?? ''}
+      disabled={isDisabled}
+      onChange={(event) => {
+        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        onChange?.(selected);
+      }}
+    >
+      {placeholder ? <option value="">{placeholder}</option> : null}
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+
+vi.mock('@/server/trpc/client', () => ({
+  trpc: {
+    transactionLedger: {
+      searchDebitTransactions: {
+        useQuery: (...args: unknown[]) => mockUseSearchDebitTransactionsQuery(...args),
+      },
+    },
+  },
+}));
 
 describe('TransactionRow', () => {
   const expenseCategories = [
@@ -22,6 +71,7 @@ describe('TransactionRow', () => {
     status: 'CONFIRMED',
     bankAccountName: 'Everyday Account',
     bankName: 'Commonwealth Bank',
+    reimbursements: [],
   };
 
   const creditTransaction: LedgerTransactionRow = {
@@ -32,6 +82,15 @@ describe('TransactionRow', () => {
     category: 'EMPLOYMENT',
     source: 'USER_OVERRIDE',
   };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseSearchDebitTransactionsQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isFetching: false,
+    });
+  });
 
   it('renders date, description, and amount for a DEBIT transaction', () => {
     render(
@@ -66,7 +125,7 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByRole('combobox')).toBeDefined();
+    expect(screen.getByRole('combobox', { name: /category for supermarket/i })).toBeDefined();
     expect(screen.getByText('Groceries')).toBeDefined();
   });
 
@@ -84,7 +143,7 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByRole('combobox')).toBeDefined();
+    expect(screen.getByRole('combobox', { name: /category for supermarket/i })).toBeDefined();
     expect(screen.getByText('EMPLOYMENT')).toBeDefined();
   });
 
@@ -104,7 +163,7 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    fireEvent.change(screen.getByRole('combobox'), {
+    fireEvent.change(screen.getByRole('combobox', { name: /category for supermarket/i }), {
       target: { value: 'Transport' },
     });
 
@@ -125,7 +184,7 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByText('$123.45')).toHaveClass('text-red-600');
+    expect(screen.getByText('$123.45').closest('td')).toHaveClass('text-red-600');
 
     rerender(
       <table>
@@ -140,7 +199,7 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByText('$5,000.00')).toHaveClass('text-green-600');
+    expect(screen.getByText('$5,000.00').closest('td')).toHaveClass('text-green-600');
   });
 
   it('renders CONFIRMED badge in green', () => {

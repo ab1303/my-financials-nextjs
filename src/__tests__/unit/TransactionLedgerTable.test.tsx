@@ -7,6 +7,45 @@ const mockMutate = vi.fn();
 const mockUseAllQuery = vi.fn();
 const mockUseFilterOptionsQuery = vi.fn();
 const mockUseMutation = vi.fn();
+const mockUseSearchDebitTransactionsQuery = vi.fn();
+
+vi.mock('react-select', () => ({
+  default: ({
+    inputId,
+    name,
+    options = [],
+    value,
+    onChange,
+    placeholder,
+    isClearable,
+  }: {
+    inputId?: string;
+    name?: string;
+    options?: Array<{ label: string; value: string }>;
+    value?: { label: string; value: string } | null;
+    onChange?: (option: { label: string; value: string } | null) => void;
+    placeholder?: string;
+    isClearable?: boolean;
+  }) => (
+    <select
+      id={inputId}
+      name={name}
+      aria-label={placeholder ?? name}
+      value={value?.value ?? ''}
+      onChange={(event) => {
+        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        onChange?.(selected);
+      }}
+    >
+      {isClearable ? <option value="">All</option> : null}
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
 
 vi.mock('@/server/trpc/client', () => ({
   trpc: {
@@ -19,6 +58,9 @@ vi.mock('@/server/trpc/client', () => ({
       },
       updateCategory: {
         useMutation: (...args: unknown[]) => mockUseMutation(...args),
+      },
+      searchDebitTransactions: {
+        useQuery: (...args: unknown[]) => mockUseSearchDebitTransactionsQuery(...args),
       },
     },
   },
@@ -58,6 +100,11 @@ describe('TransactionLedgerTable', () => {
     mockUseMutation.mockReturnValue({
       mutate: mockMutate,
       isPending: false,
+    });
+    mockUseSearchDebitTransactionsQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isFetching: false,
     });
   });
 
@@ -107,6 +154,7 @@ describe('TransactionLedgerTable', () => {
             status: 'CONFIRMED',
             bankAccountName: 'Everyday Account',
             bankName: 'CommBank',
+            reimbursements: [],
           },
         ],
       },
@@ -118,7 +166,14 @@ describe('TransactionLedgerTable', () => {
     render(<TransactionLedgerTable bankAccounts={bankAccounts} />);
 
     expect(screen.getByText('Supermarket')).toBeDefined();
-    expect(screen.getByText('Groceries')).toBeDefined();
+    expect(screen.getAllByText('Groceries').length).toBeGreaterThan(0);
+  });
+
+  it('renders searchable bank and category filters', () => {
+    render(<TransactionLedgerTable bankAccounts={bankAccounts} />);
+
+    expect(screen.getByLabelText(/bank account/i)).toBeDefined();
+    expect(screen.getByLabelText(/category/i)).toBeDefined();
   });
 
   it('changes active tab when tab is clicked', async () => {

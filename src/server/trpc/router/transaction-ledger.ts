@@ -89,6 +89,7 @@ const getAllInputSchema = z.object({
   type: z.nativeEnum(TransactionTypeEnum).optional(),
   status: z.nativeEnum(TransactionStatusEnum).optional(),
   bankAccountId: z.string().optional(),
+  category: z.string().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   search: z.string().optional(),
@@ -128,6 +129,10 @@ export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, 
 
   if (input.bankAccountId) {
     where.bankAccountId = input.bankAccountId;
+  }
+
+  if (input.category) {
+    where.category = input.category;
   }
 
   if (input.uncategorized === true) {
