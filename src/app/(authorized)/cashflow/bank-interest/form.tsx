@@ -1,8 +1,7 @@
 'use client';
 
 import { Label } from '@/components/ui/Label';
-import Select from 'react-select';
-import { getSelectStyles } from '@/lib/select-styles';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import React, { useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 
@@ -141,7 +140,6 @@ export default function BankInterestForm({
               setSelectedYear(option);
               updateURLSearchParams('year', option?.label);
             }}
-            styles={getSelectStyles<OptionType>()}
           />
         </div>
       </div>
@@ -156,7 +154,6 @@ export default function BankInterestForm({
             options={bankOptions}
             getOptionValue={(option) => option.id}
             onChange={(option) => handleOptionChange(option)}
-            styles={getSelectStyles<OptionType>()}
           />
         </div>
       </div>

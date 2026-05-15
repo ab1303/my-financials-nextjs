@@ -1,5 +1,4 @@
-import Select from 'react-select';
-import { getSelectStyles } from '@/lib/select-styles';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
@@ -46,7 +45,7 @@ export default function BeneficiarySelectionCell({
   }
 
   return (
-    <Select
+    <Select<OptionType>
       isClearable
       isDisabled={
         beneficiaryType === 'BUSINESS' && getBusinessesQuery.isLoading
@@ -72,7 +71,6 @@ export default function BeneficiarySelectionCell({
       menuPortalTarget={document.body}
       menuPosition='fixed'
       styles={{
-        ...getSelectStyles<OptionType>(),
         menuPortal: (base) => ({ ...base, zIndex: 9999 }) as typeof base,
       }}
     />

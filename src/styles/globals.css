@@ -120,6 +120,21 @@
       pointer;
   }
 
+  /*
+   * Prevent I-beam (text) cursor on <label> elements.
+   * Form labels for interactive controls restore pointer via label:has(input).
+   */
+  label {
+    cursor: default;
+    user-select: none;
+  }
+  label:has(input),
+  label:has(select),
+  label:has(textarea) {
+    cursor: pointer;
+    user-select: auto;
+  }
+
   /* Write your own custom base styles here */
   /* h1 {
     @apply text-2xl font-bold md:text-4xl font-primary;

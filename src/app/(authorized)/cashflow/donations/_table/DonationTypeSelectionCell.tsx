@@ -1,6 +1,4 @@
-import Select from 'react-select';
-
-import { getCompactSelectStyles } from '@/lib/select-styles';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import type { OptionType } from '@/types';
 
 type DonationTypeSelectionCellProps = {
@@ -19,7 +17,7 @@ export default function DonationTypeSelectionCell({
   );
 
   return (
-    <Select
+    <Select<OptionType>
       isClearable
       onChange={(newValue) => onSelectionChange(newValue?.id)}
       options={donationTypeOptions}
@@ -30,8 +28,8 @@ export default function DonationTypeSelectionCell({
       getOptionLabel={(option) => option.label}
       menuPortalTarget={document.body}
       menuPosition='fixed'
+      compact
       styles={{
-        ...getCompactSelectStyles<OptionType>(),
         menuPortal: (provided) =>
           ({
             ...provided,

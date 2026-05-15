@@ -19,70 +19,65 @@ Never leave a color class without its dark variant on interactive or surfaced el
 
 ---
 
-## react-select Dark Mode — ALWAYS use `unstyled` + `classNames`
+## react-select Dark Mode — ALWAYS use `AppSelect`
 
 `react-select` does **not** automatically respect Tailwind dark mode. Its default styles
-inject inline CSS that always renders a white background. **Never** use the default styling
-or `classNamePrefix` alone — they will break dark mode.
+inject inline CSS that always renders a white background.
 
-### Required pattern
+**The project provides `src/components/ui/AppSelect.tsx`** — use it for all selects.
+It automatically applies dark-mode-compatible styles via CSS variables. Never import
+`Select` from `react-select` directly.
 
-Define `classNames` as a **`const`** (not a function) — the callbacks only use boolean flags
-(`isFocused`, `isDisabled`, `isSelected`) and never access option data, so no generic is needed:
+### Standard select
 
 ```tsx
-import Select, { type ClassNamesConfig } from 'react-select';
-import clsx from 'clsx';
+import { AppSelect } from '@/components/ui/AppSelect';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectClassNames: ClassNamesConfig<any, false> = {
-  control: ({ isFocused, isDisabled }) =>
-    clsx(
-      'rounded-md border text-sm min-h-[38px] transition-colors',
-      isDisabled
-        ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60'
-        : 'bg-white dark:bg-gray-950',
-      isFocused
-        ? 'border-teal-500 ring-1 ring-teal-500'
-        : 'border-gray-300 dark:border-gray-700',
-    ),
-  valueContainer: () => 'px-3 py-1 gap-1',
-  input: () => 'text-gray-900 dark:text-gray-100',
-  singleValue: () => 'text-gray-900 dark:text-gray-100',
-  placeholder: () => 'text-gray-400 dark:text-gray-500',
-  indicatorSeparator: () => 'bg-gray-300 dark:bg-gray-600',
-  dropdownIndicator: () => 'text-gray-400 dark:text-gray-500 px-2',
-  menu: () =>
-    'mt-1 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50',
-  option: ({ isFocused, isSelected }) =>
-    clsx(
-      'px-3 py-2 text-sm cursor-pointer',
-      isSelected
-        ? 'bg-teal-500 text-white'
-        : isFocused
-          ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-          : 'text-gray-700 dark:text-gray-200',
-    ),
-  noOptionsMessage: () => 'px-3 py-2 text-sm text-gray-500 dark:text-gray-400',
-};
-
-// Usage — always include `unstyled`, pass const directly (no call):
-<Select unstyled classNames={selectClassNames} ... />
+<AppSelect<OptionType>
+  options={options}
+  value={selected}
+  onChange={setSelected}
+  placeholder="Choose..."
+/>
 ```
 
-Adjust the focus ring colour to match the feature context (e.g. `amber-500` for donations,
-`teal-500` for general forms) but always keep the `dark:` variants.
+### Compact select (for table cells / inline editors)
+
+```tsx
+<AppSelect<OptionType> compact options={options} value={value} onChange={onChange} />
+```
+
+### Overriding specific style keys
+
+The `styles` prop is merged on top of the defaults:
+
+```tsx
+<AppSelect
+  styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+  menuPortalTarget={document.body}
+  ...
+/>
+```
 
 ### ❌ Never do this
 
 ```tsx
-// Missing unstyled — default inline styles override dark mode
-<Select classNamePrefix="rs" ... />
+// Direct react-select import — white background in dark mode
+import Select from 'react-select';
+<Select ... />
 
-// Generic function — causes TypeScript to infer option type as {} and break onChange types
-function selectClassNames<T>(): ClassNamesConfig<T, false> { ... }
-<Select classNames={selectClassNames()} ... />
+// Using unstyled + classNames pattern (superseded by AppSelect)
+<Select unstyled classNames={selectClassNames} ... />
 
-// Missing dark: variants — broken in dark mode
-<Select unstyled classNames={{ control: () => 'bg-white border' }} ... />
+// Calling getSelectStyles() manually (superseded by AppSelect)
+import { getSelectStyles } from '@/lib/select-styles';
+<Select styles={getSelectStyles()} ... />
 ```
+
+### How it works
+
+`AppSelect` wraps react-select and passes `styles={getSelectStyles()}` automatically.
+`getSelectStyles()` (in `src/lib/select-styles.ts`) uses CSS custom properties
+(`hsl(var(--background))`, `hsl(var(--foreground))`, etc.) that automatically reflect
+the current theme — no `dark:` conditionals needed in the component code.
+

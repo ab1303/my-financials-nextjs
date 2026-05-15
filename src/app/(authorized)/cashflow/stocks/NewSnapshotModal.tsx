@@ -5,8 +5,7 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
-import Select from 'react-select';
-import { getSelectStyles } from '@/lib/select-styles';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 
 type SelectOption = { value: string; label: string };
 import { NumericFormat } from 'react-number-format';
@@ -179,7 +178,7 @@ export default function NewSnapshotModal({
                       name={`holdings.${index}.accountId`}
                       control={control}
                       render={({ field }) => (
-                        <Select
+                        <Select<SelectOption>
                           {...field}
                           options={accountOptions}
                           value={accountOptions.find(
@@ -189,7 +188,6 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
-                          styles={getSelectStyles<SelectOption>()}
                         />
                       )}
                     />
@@ -245,7 +243,7 @@ export default function NewSnapshotModal({
                       name={`holdings.${index}.currency`}
                       control={control}
                       render={({ field }) => (
-                        <Select
+                        <Select<SelectOption>
                           {...field}
                           options={CURRENCY_OPTIONS}
                           value={CURRENCY_OPTIONS.find(
@@ -255,7 +253,6 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
-                          styles={getSelectStyles<SelectOption>()}
                         />
                       )}
                     />
@@ -383,7 +380,7 @@ export default function NewSnapshotModal({
                       name={`holdings.${index}.plannedTerm`}
                       control={control}
                       render={({ field }) => (
-                        <Select
+                        <Select<SelectOption>
                           {...field}
                           options={TERM_OPTIONS}
                           value={TERM_OPTIONS.find(
@@ -393,7 +390,6 @@ export default function NewSnapshotModal({
                             field.onChange(selected?.value)
                           }
                           className='mt-1'
-                          styles={getSelectStyles<SelectOption>()}
                         />
                       )}
                     />

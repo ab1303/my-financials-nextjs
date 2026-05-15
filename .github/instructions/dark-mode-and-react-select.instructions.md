@@ -19,24 +19,38 @@ Never leave a color class without its dark variant on interactive or surfaced el
 
 ---
 
-## react-select Dark Mode — ALWAYS use `unstyled` + `classNames`
+## react-select Dark Mode — ALWAYS use `AppSelect`
 
 `react-select` does **not** automatically respect Tailwind dark mode. Its default styles
-inject inline CSS that always renders a white background. **Never** use the default styling
-or `classNamePrefix` alone — they will break dark mode.
+inject inline CSS that always renders a white background.
 
-### Required pattern
+**Use `AppSelect` from `src/components/ui/AppSelect.tsx`** — it automatically applies
+dark-mode-compatible styles via CSS variables. See `.ai/instructions/dark-mode-and-react-select.md`
+for the canonical pattern.
 
-Use `unstyled` together with the `classNames` prop. Define it as a **`const`** (not a function)
-so the same object can be shared across multiple `<Select>` instances in the same file.
-See `.ai/instructions/dark-mode-and-react-select.md` for the canonical pattern.
+```tsx
+// ✅ Standard
+import { AppSelect } from '@/components/ui/AppSelect';
+<AppSelect<OptionType> options={options} value={value} onChange={onChange} />
+
+// ✅ Compact (table cells / inline editors)
+<AppSelect<OptionType> compact options={options} value={value} onChange={onChange} />
+
+// ✅ Style override (merged on top of defaults)
+<AppSelect styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }} ... />
+```
 
 ### ❌ Never do this
 
 ```tsx
-// Missing unstyled — default inline styles override dark mode
-<Select classNamePrefix="rs" ... />
+// Direct react-select import — white background in dark mode
+import Select from 'react-select';
+<Select ... />
 
-// Missing dark: variants — broken in dark mode
-<Select unstyled classNames={{ control: () => 'bg-white border' }} ... />
+// Using unstyled + classNames pattern (superseded by AppSelect)
+<Select unstyled classNames={selectClassNames} ... />
+
+// Calling getSelectStyles() manually (superseded by AppSelect)
+<Select styles={getSelectStyles()} ... />
 ```
+

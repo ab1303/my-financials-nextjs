@@ -6,14 +6,14 @@ import { useId, useState } from 'react';
 import type { MouseEventHandler } from 'react';
 import { Loader2 } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
-import Select, { components } from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { components } from 'react-select';
 import { toast } from 'sonner';
 import type { OptionProps, SingleValue, GroupBase } from 'react-select';
 import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { Card, AddressComponent, Button } from '@/components';
-import { getSelectStyles } from '@/lib/select-styles';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 import { BusinessEnumType } from '@/types/enum';
@@ -230,7 +230,7 @@ export default function BusinessForm() {
             <div>
               <Label htmlFor='business'>Business</Label>
               <div className='mt-1'>
-                <Select
+                <Select<BusinessOptionType>
                   isClearable
                   className='w-full max-w-md'
                   components={{ Option }}
@@ -239,7 +239,6 @@ export default function BusinessForm() {
                   instanceId={uniqSelectBusinessId}
                   getOptionValue={(option) => option.id}
                   onChange={(option) => handleOptionChange(option)}
-                  styles={getSelectStyles<BusinessOptionType>()}
                 />
               </div>
             </div>

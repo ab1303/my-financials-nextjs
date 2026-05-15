@@ -3,8 +3,7 @@
 import { Fragment, useId, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
-import Select from 'react-select';
-import { getSelectStyles } from '@/lib/select-styles';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { Disclosure, Dialog, Transition } from '@headlessui/react';
 import { ChevronDown, Plus, Trash2, Pencil } from 'lucide-react';
 import clsx from 'clsx';
@@ -288,7 +287,6 @@ export default function StockAssetsClient({ initialData }: Props) {
             getOptionValue={(option) => option.id}
             isDisabled={yearOptions.length === 0}
             className='mt-1'
-            styles={getSelectStyles<OptionType>()}
           />
         </div>
 
@@ -302,7 +300,6 @@ export default function StockAssetsClient({ initialData }: Props) {
               onChange={handleSnapshotChange}
               getOptionValue={(option) => option.id}
               className='mt-1'
-              styles={getSelectStyles<OptionType>()}
             />
           </div>
         )}

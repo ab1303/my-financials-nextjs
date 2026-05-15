@@ -7,7 +7,28 @@ including `<th>`, `<label>`, and `<span>` elements inside tables. This causes th
 text cursor to appear on table headers and non-interactive labels, which looks wrong and
 misleads users into thinking the text is editable.
 
-## Rules
+## Global CSS (applied automatically — no per-component fix needed)
+
+`src/styles/globals.css` handles labels globally:
+
+| Selector | Rule |
+|---|---|
+| `label` | `cursor: default; user-select: none` |
+| `label:has(input/select/textarea)` | `cursor: pointer; user-select: auto` (restored for wrapping labels) |
+
+You **do not** need to add `cursor-default` or `select-none` to `<label>` elements manually.
+
+```tsx
+// ✅ No class needed — global CSS handles cursor: default
+<label htmlFor="email" className="block text-sm font-medium">Email</label>
+
+// ✅ Wrapping label with input — global CSS restores cursor: pointer
+<label className="flex items-center gap-2">
+  <input type="checkbox" /> Accept terms
+</label>
+```
+
+## Per-component rules (still required)
 
 ### Table headers (`<th>`)
 
@@ -29,41 +50,12 @@ should not be able to select or "edit" header text.
 The shared `THeadTH` component already includes `select-none cursor-default`. Use it for
 all tables; do not create bare `<th>` elements.
 
-### Labels associated with inputs
-
-`<label>` elements that are linked to an interactive input via `htmlFor` / `id` should have
-`cursor-pointer` so clicking the label focuses the input (standard browser behaviour made
-explicit):
-
-```tsx
-// ✅ Correct — clicking label focuses the input
-<label htmlFor="email" className="block text-sm font-medium cursor-pointer">
-  Email
-</label>
-
-// ❌ Wrong — cursor: text default, visually misleading
-<label htmlFor="email" className="block text-sm font-medium">
-  Email
-</label>
-```
-
-### Display-only labels / headings
-
-Labels or headings that are not linked to an input should have `select-none cursor-default`
-to prevent the I-beam appearing:
-
-```tsx
-// ✅ Correct
-<p className="text-sm font-medium text-gray-500 select-none cursor-default">
-  Section heading
-</p>
-```
-
 ### Summary
 
-| Element | Class to add |
+| Element | Action needed |
 |---|---|
-| `<th>` table header | `select-none cursor-default` |
-| `<label htmlFor="...">` | `cursor-pointer` |
-| Display-only label/heading | `select-none cursor-default` |
-| Disabled input | `cursor-not-allowed` (already on disabled styles) |
+| `<th>` table header | Use `THeadTH` component (already has `select-none cursor-default`) |
+| `<label htmlFor="...">` | Nothing — global CSS handles `cursor: default` automatically |
+| `<label>` wrapping `<input>` | Nothing — global CSS restores `cursor: pointer` automatically |
+| Display-only `<p>` / heading | `select-none cursor-default` if needed |
+

@@ -1,10 +1,9 @@
 import { NumericFormat } from 'react-number-format';
 import { useState, useEffect, useId } from 'react';
-import Select from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 
 import DatePickerDialog from '../DatePickerDialog';
 import { tableCellStyles } from '@/styles/theme';
-import { getCompactSelectStyles } from '@/lib/select-styles';
 import type { CellContext, RowData } from '@tanstack/react-table';
 import type { ReactNode } from 'react';
 
@@ -80,7 +79,7 @@ export const TableCell = <TData, TValue>({
         );
         return (
           <div className={tableCellStyles.select.container}>
-            <Select
+            <Select<OptionType>
               isClearable
               instanceId={uniqSelectId}
               value={selectValue}
@@ -89,8 +88,8 @@ export const TableCell = <TData, TValue>({
               menuPortalTarget={document.body}
               className={tableCellStyles.select.base}
               classNamePrefix='react-select'
+              compact
               styles={{
-                ...getCompactSelectStyles<OptionType>(),
                 menuPortal: (base) =>
                   ({ ...base, zIndex: 9999 }) as typeof base,
                 menu: (base) =>

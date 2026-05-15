@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useId, useMemo, useState } from 'react';
-import Select from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import type { SingleValue } from 'react-select';
 import { Label } from '@/components/ui/Label';
-import { getSelectStyles } from '@/lib/select-styles';
 
 export type DatePreset = 'this-month' | 'last-month' | 'this-quarter' | 'this-fy' | 'last-fy' | 'custom';
 
@@ -233,7 +232,6 @@ export default function TransactionFilters({
             value={selectedBank}
             options={bankOptions}
             onChange={(option: SingleValue<(typeof bankOptions)[number]>) => onBankChange(option?.value)}
-            styles={getSelectStyles<(typeof bankOptions)[number]>()}
             className="w-full"
             menuPortalTarget={document.body}
           />
@@ -303,7 +301,6 @@ export default function TransactionFilters({
             onChange={(option: SingleValue<(typeof categoryOptions)[number]>) =>
               onCategoryChange(option?.value)
             }
-            styles={getSelectStyles<(typeof categoryOptions)[number]>()}
             className="w-full"
             menuPortalTarget={document.body}
           />

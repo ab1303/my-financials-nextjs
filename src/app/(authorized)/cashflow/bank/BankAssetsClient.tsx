@@ -3,8 +3,7 @@
 import { useId, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
-import Select from 'react-select';
-import { getSelectStyles } from '@/lib/select-styles';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { Disclosure } from '@headlessui/react';
 import { ChevronDown, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import clsx from 'clsx';
@@ -416,7 +415,7 @@ export default function BankAssetsClient({ initialData }: Props) {
         {/* Year Dropdown */}
         <div>
           <Label htmlFor={`${id}-year`}>Calendar Year</Label>
-          <Select
+          <Select<OptionType>
             id={`${id}-year`}
             instanceId={id}
             value={selectedYear}
@@ -426,7 +425,6 @@ export default function BankAssetsClient({ initialData }: Props) {
             placeholder='Select year...'
             className='mt-1'
             isClearable
-            styles={getSelectStyles<OptionType>()}
           />
         </div>
 

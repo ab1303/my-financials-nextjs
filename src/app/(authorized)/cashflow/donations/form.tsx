@@ -1,13 +1,12 @@
 'use client';
 
 import { Label } from '@/components/ui/Label';
-import Select from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
 
 import { Card } from '@/components';
-import { getSelectStyles } from '@/lib/select-styles';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
@@ -142,7 +141,6 @@ export default function DonationForm({
             getOptionValue={(option) => option.id}
             onChange={onYearChange}
             placeholder='Select fiscal year...'
-            styles={getSelectStyles()}
           />
         </div>
       </div>

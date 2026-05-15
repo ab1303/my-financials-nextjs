@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import AsyncSelect from 'react-select/async';
-import Select from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { getSelectStyles } from '@/lib/select-styles';
 import { useDebouncedCallback } from 'use-debounce';
 import usePlacesAutocomplete, { getGeocode } from 'use-places-autocomplete';
@@ -199,7 +199,6 @@ export default function AddressComponent<T extends FieldValues>({
               }}
               isClearable={false}
               isSearchable={false}
-              styles={getSelectStyles<{ value: 'AU' | 'GLOBAL'; label: string }>()}
             />
           </div>
         </div>

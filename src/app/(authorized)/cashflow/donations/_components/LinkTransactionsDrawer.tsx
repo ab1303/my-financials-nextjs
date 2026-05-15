@@ -6,48 +6,13 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { BeneficiaryEnumType } from '@prisma/client';
-import Select, { type ClassNamesConfig } from 'react-select';
-import clsx from 'clsx';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
 import { addRow } from '../actions';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyOption = any;
 
-/** Tailwind dark-mode classNames for react-select. The callbacks only use boolean flags
- *  (isFocused, isDisabled, isSelected) so the option data type doesn't matter here. */
-const selectClassNames: ClassNamesConfig<AnyOption, false> = {
-  control: ({ isFocused, isDisabled }) =>
-    clsx(
-      'rounded-md border text-sm min-h-[38px] transition-colors',
-      isDisabled
-        ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60'
-        : 'bg-white dark:bg-gray-950',
-      isFocused
-        ? 'border-amber-500 ring-1 ring-amber-500'
-        : 'border-gray-300 dark:border-gray-700',
-    ),
-  valueContainer: () => 'px-3 py-1 gap-1',
-  input: () => 'text-gray-900 dark:text-gray-100',
-  singleValue: () => 'text-gray-900 dark:text-gray-100',
-  placeholder: () => 'text-gray-400 dark:text-gray-500',
-  indicatorSeparator: () => 'bg-gray-300 dark:bg-gray-600',
-  dropdownIndicator: () => 'text-gray-400 dark:text-gray-500 px-2',
-  menu: () =>
-    'mt-1 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50',
-  option: ({ isFocused, isSelected }) =>
-    clsx(
-      'px-3 py-2 text-sm cursor-pointer',
-      isSelected
-        ? 'bg-amber-500 text-white'
-        : isFocused
-          ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
-          : 'text-gray-700 dark:text-gray-200',
-    ),
-  noOptionsMessage: () => 'px-3 py-2 text-sm text-gray-500 dark:text-gray-400',
-};
 
 type LinkTransactionsDrawerProps = {
   isOpen: boolean;
@@ -353,8 +318,6 @@ export default function LinkTransactionsDrawer({
                     render={({ field }) => (
                       <Select
                         inputId="beneficiaryType"
-                        unstyled
-                        classNames={selectClassNames}
                         isDisabled={!selectedTransaction}
                         options={[
                           { value: BeneficiaryEnumType.INDIVIDUAL, label: 'Individual' },
@@ -387,8 +350,6 @@ export default function LinkTransactionsDrawer({
                       return (
                         <Select
                           inputId="beneficiaryId"
-                          unstyled
-                          classNames={selectClassNames}
                           isDisabled={!selectedTransaction}
                           options={options}
                           value={selected}

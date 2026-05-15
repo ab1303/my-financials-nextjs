@@ -1,10 +1,8 @@
 'use client';
 
-import Select from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-
-import { getSelectStyles } from '@/lib/select-styles';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
@@ -89,7 +87,7 @@ export default function ExpenseForm({
       >
         Fiscal Year
       </label>
-      <Select
+      <Select<OptionType>
         instanceId={`expense-year-${id}`}
         options={expenseYearOptions}
         value={selectedExpenseYear}
@@ -97,7 +95,6 @@ export default function ExpenseForm({
         getOptionValue={(option) => option.id}
         placeholder='Select fiscal year...'
         isClearable={false}
-        styles={getSelectStyles<OptionType>()}
       />
     </div>
   );

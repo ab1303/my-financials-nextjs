@@ -1,8 +1,7 @@
 'use client';
 
 import { Label } from '@/components/ui/Label';
-import Select from 'react-select';
-import { getSelectStyles } from '@/lib/select-styles';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
@@ -160,7 +159,6 @@ export default function ZakatForm({
             options={zakatYearOptions}
             instanceId={uniqFiscalYearId}
             getOptionValue={(option) => option.id}
-            styles={getSelectStyles<OptionType>()}
             onChange={(option) => {
               setSelectedYear(option);
               const selectedYearData = zakatYearData.find(

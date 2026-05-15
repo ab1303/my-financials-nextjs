@@ -6,10 +6,9 @@ import type { CalendarEnumType } from '@prisma/client';
 import type { ActionMeta } from 'react-select';
 import type { MonthlyIncomeSummary } from '@/server/models/income';
 import { Label } from '@/components/ui/Label';
-import Select from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { NumericFormat } from 'react-number-format';
 import MonthlySummaryTable from './MonthlySummaryTable';
-import { getSelectStyles } from '@/lib/select-styles';
 
 type FiscalYearType = {
   id: string;
@@ -130,7 +129,6 @@ export default function IncomeSummaryClient({
           onChange={onYearChange}
           placeholder='Select fiscal year...'
           className='mt-1'
-          styles={getSelectStyles<OptionType>()}
         />
       </div>
 

@@ -1,8 +1,7 @@
-import Select from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
-import { getCompactSelectStyles } from '@/lib/select-styles';
 
 import type { OptionType } from '@/types';
 import type { BeneficiaryEnumType, Business } from '@prisma/client';
@@ -46,7 +45,7 @@ export default function BeneficiarySelectionCell({
   }
 
   return (
-    <Select
+    <Select<OptionType>
       isClearable
       isDisabled={
         beneficiaryType === 'BUSINESS' && getBusinessesQuery.isLoading
@@ -71,8 +70,8 @@ export default function BeneficiarySelectionCell({
       getOptionLabel={(option) => option.label}
       menuPortalTarget={document.body}
       menuPosition='fixed'
+      compact
       styles={{
-        ...getCompactSelectStyles<OptionType>(),
         menuPortal: (provided) =>
           ({
             ...provided,

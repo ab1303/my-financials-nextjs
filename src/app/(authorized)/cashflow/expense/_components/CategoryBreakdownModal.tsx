@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { toast } from 'sonner';
 import { NumericFormat } from 'react-number-format';
-import Select from 'react-select';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { X } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -14,7 +14,6 @@ import { Label } from '@/components/ui';
 import { AddIcon, PenIcon, CheckIcon, TrashIcon } from '@/components/icons';
 import { ArrowUpDown } from 'lucide-react';
 import { cardStyles } from '@/styles/theme';
-import { getSelectStyles } from '@/lib/select-styles';
 import { cn } from '@/lib/utils';
 import { inputStyles, buttonStyles } from '@/styles/theme';
 import ImportAuditIcon from '@/components/ImportAuditIcon';
@@ -264,7 +263,7 @@ function CategoryBreakdownContent({
                   placeholder='Select category...'
                   menuPortalTarget={document.body}
                   menuPosition='fixed'
-                  styles={{ ...getSelectStyles<OptionType>(), menuPortal: (base) => ({ ...base, zIndex: 9999, pointerEvents: 'auto' }) as typeof base }}
+                  styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999, pointerEvents: 'auto' }) as typeof base }}
                 />
               </div>
               <div className='col-span-4'>
@@ -317,7 +316,7 @@ function CategoryBreakdownContent({
                             placeholder='Select category...'
                             menuPortalTarget={document.body}
                             menuPosition='fixed'
-                            styles={{ ...getSelectStyles<OptionType>(), menuPortal: (base) => ({ ...base, zIndex: 9999, pointerEvents: 'auto' }) as typeof base }}
+                            styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999, pointerEvents: 'auto' }) as typeof base }}
                           />
                         </div>
                         <div className='col-span-4'>
