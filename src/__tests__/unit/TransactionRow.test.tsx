@@ -109,6 +109,8 @@ describe('TransactionRow', () => {
     expect(screen.getByText('2024-01-15')).toBeDefined();
     expect(screen.getByText('Supermarket')).toBeDefined();
     expect(screen.getByText('$123.45')).toBeDefined();
+    expect(screen.getByLabelText(/ai classified/i)).toBeDefined();
+    expect(screen.queryByText('LLM_CLASSIFIED')).toBeNull();
   });
 
   it('shows expense category select for DEBIT type', () => {
@@ -145,6 +147,8 @@ describe('TransactionRow', () => {
 
     expect(screen.getByRole('combobox', { name: /category for supermarket/i })).toBeDefined();
     expect(screen.getByText('EMPLOYMENT')).toBeDefined();
+    expect(screen.getByLabelText(/set by you/i)).toBeDefined();
+    expect(screen.queryByText('USER_OVERRIDE')).toBeNull();
   });
 
   it('calls onCategoryChange when select changes', () => {

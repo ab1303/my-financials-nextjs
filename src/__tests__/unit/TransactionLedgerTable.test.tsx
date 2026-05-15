@@ -167,6 +167,8 @@ describe('TransactionLedgerTable', () => {
 
     expect(screen.getByText('Supermarket')).toBeDefined();
     expect(screen.getAllByText('Groceries').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/ai classified/i)).toBeDefined();
+    expect(screen.queryByText('LLM_CLASSIFIED')).toBeNull();
   });
 
   it('renders searchable bank and category filters', () => {

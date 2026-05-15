@@ -7,6 +7,7 @@ import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants
 import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 import { getCompactSelectStyles } from '@/lib/select-styles';
+import TransactionSourceIndicator from './TransactionSourceIndicator';
 import ReimbursementSubRow from './ReimbursementSubRow';
 
 interface TransactionRowProps {
@@ -269,7 +270,9 @@ export default function TransactionRow({
             )}
           </div>
         </td>
-        <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.source}</td>
+        <td className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300">
+          <TransactionSourceIndicator source={transaction.source} />
+        </td>
         <td className="px-4 py-3">
           <div className="flex flex-col gap-1">
             <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClasses[transaction.status] ?? statusClasses.EXCLUDED}`}>

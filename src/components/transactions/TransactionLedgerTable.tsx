@@ -244,7 +244,12 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
               <tr>
                 <th className="w-8 px-1 py-3" />
                 {['Date', 'Description', 'Amount', 'Type', 'Category', 'Source', 'Status', 'Bank Account'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                  <th
+                    key={h}
+                    className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300 ${
+                      h === 'Source' ? 'w-20 text-center' : 'text-left'
+                    }`}
+                  >
                     {h}
                   </th>
                 ))}
