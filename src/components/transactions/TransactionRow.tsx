@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import type { SingleValue } from 'react-select';
 import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
@@ -33,6 +34,12 @@ type CategoryOption = {
   value: string;
 };
 
+type LinkOption = {
+  label: string;
+  value: string;
+  meta: string;
+};
+
 export default function TransactionRow({
   transaction,
   expenseCategories,
@@ -51,10 +58,12 @@ export default function TransactionRow({
   const [localOffsetCategory, setLocalOffsetCategory] = useState(transaction.offsetCategory ?? '');
   const [isExpanded, setIsExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerSearch, setPickerSearch] = useState('');
   const [localOffsetTxId, setLocalOffsetTxId] = useState<string | null>(transaction.offsetTransactionId ?? null);
+  const [selectedLinkOption, setSelectedLinkOption] = useState<LinkOption | null>(null);
   const categorySelectId = useId();
   const offsetCategorySelectId = useId();
+  const linkSelectId = useId();
+  const utils = trpc.useUtils();
 
   useEffect(() => {
     setLocalCategory(transaction.category);
@@ -68,10 +77,22 @@ export default function TransactionRow({
     setLocalOffsetTxId(transaction.offsetTransactionId ?? null);
   }, [transaction.offsetTransactionId]);
 
-  const searchQuery = trpc.transactionLedger.searchDebitTransactions.useQuery(
-    { search: pickerSearch, limit: 10 },
-    { enabled: pickerOpen },
-  );
+  useEffect(() => {
+    if (!transaction.offsetTransactionId) {
+      setSelectedLinkOption(null);
+      return;
+    }
+
+    setSelectedLinkOption((current) =>
+      current?.value === transaction.offsetTransactionId
+        ? current
+        : {
+            label: 'Linked expense',
+            value: transaction.offsetTransactionId ?? '',
+            meta: '',
+          },
+    );
+  }, [transaction.offsetTransactionId]);
 
   const amountClass = transaction.type === 'DEBIT' ? 'text-red-600' : 'text-green-600';
   const options = transaction.type === 'DEBIT' ? expenseCategories : incomeSourceLabels;
@@ -107,10 +128,27 @@ export default function TransactionRow({
   const selectedOffsetCategory =
     offsetCategoryOptions.find((option) => option.value === localOffsetCategory) ?? null;
   const compactSelectStyles = getCompactSelectStyles<CategoryOption>();
+  const linkSelectStyles = getCompactSelectStyles<LinkOption>();
 
   const totalReimbursed = transaction.reimbursements.reduce((sum, reimbursement) => sum + reimbursement.amount, 0);
   const netAmount = transaction.amount - totalReimbursed;
   const hasReimbursements = transaction.reimbursements.length > 0;
+
+  const loadLinkOptions = useCallback(
+    async (inputValue: string): Promise<LinkOption[]> => {
+      const matches = await utils.transactionLedger.searchDebitTransactions.fetch({
+        search: inputValue.trim() || undefined,
+        limit: 10,
+      });
+
+      return matches.map((match) => ({
+        value: match.id,
+        label: match.description,
+        meta: `${match.date} · ${formatCurrency(match.amount)}`,
+      }));
+    },
+    [utils],
+  );
 
   function handleChange(newCategory: string) {
     setLocalCategory(newCategory);
@@ -125,12 +163,24 @@ export default function TransactionRow({
     onCategoryChange(transaction.id, REIMBURSEMENT_CATEGORY, newOffsetCategory, localOffsetTxId);
   }
 
-  function handleLinkTransaction(linkedId: string | null) {
+  function handleLinkTransaction(linkedOption: LinkOption | null) {
+    const linkedId = linkedOption?.value ?? null;
+    setSelectedLinkOption(linkedOption);
     setLocalOffsetTxId(linkedId);
     setPickerOpen(false);
-    setPickerSearch('');
     onCategoryChange(transaction.id, REIMBURSEMENT_CATEGORY, localOffsetCategory || undefined, linkedId);
   }
+
+  function handleResetLinkPicker() {
+    setPickerOpen(false);
+  }
+
+  const formatLinkOptionLabel = (option: LinkOption) => (
+    <div className="flex w-full items-center justify-between gap-3">
+      <span className="truncate">{option.label}</span>
+      <span className="shrink-0 tabular-nums text-xs text-gray-500 dark:text-gray-400">{option.meta}</span>
+    </div>
+  );
 
   return (
     <>
@@ -206,7 +256,7 @@ export default function TransactionRow({
                     <div className="flex items-center gap-1 rounded border border-teal-300 bg-teal-50 px-2 py-1 text-xs dark:border-teal-700 dark:bg-teal-950/30">
                       <span className="text-teal-500">🔗</span>
                       <span className="truncate text-teal-700 dark:text-teal-300">
-                        {searchQuery.data?.find((t) => t.id === localOffsetTxId)?.description ?? 'Linked expense'}
+                        {selectedLinkOption?.label ?? 'Linked expense'}
                       </span>
                       <button
                         type="button"
@@ -226,42 +276,40 @@ export default function TransactionRow({
                       ＋ Link to original expense
                     </button>
                   ) : (
-                    <div className="relative">
-                      <input
+                    <div className="flex flex-col gap-1">
+                      <AsyncSelect<LinkOption, false>
+                        instanceId={linkSelectId}
+                        inputId={linkSelectId}
+                        aria-label={`Link original expense for ${transaction.description}`}
                         autoFocus
-                        type="text"
+                        cacheOptions
+                        defaultOptions
+                        isClearable
+                        isDisabled={isSaving}
+                        menuIsOpen
+                        menuPortalTarget={document.body}
+                        menuPosition="fixed"
                         placeholder="Search expenses…"
-                        value={pickerSearch}
-                        onChange={(e) => setPickerSearch(e.target.value)}
-                        className="w-full rounded border border-teal-400 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-teal-500 dark:bg-gray-800 dark:text-white"
+                        loadOptions={loadLinkOptions}
+                        value={selectedLinkOption}
+                        getOptionValue={(option) => option.value}
+                        formatOptionLabel={formatLinkOptionLabel}
+                        onChange={(option: SingleValue<LinkOption>) => handleLinkTransaction(option ?? null)}
+                        styles={{
+                          ...linkSelectStyles,
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                        }}
+                        className="w-full min-w-[280px]"
+                        noOptionsMessage={({ inputValue }) =>
+                          inputValue.trim() ? 'No matching expenses' : 'Type to search expenses'
+                        }
                       />
-                      {searchQuery.data && searchQuery.data.length > 0 && (
-                        <ul className="absolute z-10 mt-1 max-h-40 w-full overflow-y-auto rounded border border-gray-200 bg-white shadow-md dark:border-gray-600 dark:bg-gray-800">
-                          {searchQuery.data.map((tx) => (
-                            <li key={tx.id}>
-                              <button
-                                type="button"
-                                onClick={() => handleLinkTransaction(tx.id)}
-                                className="flex w-full items-center justify-between px-2 py-1.5 text-left text-xs hover:bg-teal-50 dark:hover:bg-teal-900/20"
-                              >
-                                <span className="truncate">{tx.description}</span>
-                                <span className="ml-2 shrink-0 tabular-nums text-gray-500">
-                                  {tx.date} · {formatCurrency(tx.amount)}
-                                </span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                       <button
                         type="button"
-                        onClick={() => {
-                          setPickerOpen(false);
-                          setPickerSearch('');
-                        }}
+                        onClick={handleResetLinkPicker}
                         className="mt-1 text-xs text-gray-400 hover:text-gray-600"
                       >
-                        Cancel
+                        Reset
                       </button>
                     </div>
                   )}

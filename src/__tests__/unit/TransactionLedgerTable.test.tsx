@@ -7,7 +7,13 @@ const mockMutate = vi.fn();
 const mockUseAllQuery = vi.fn();
 const mockUseFilterOptionsQuery = vi.fn();
 const mockUseMutation = vi.fn();
-const mockUseSearchDebitTransactionsQuery = vi.fn();
+const mockSearchDebitTransactionsFetch = vi.fn();
+
+vi.mock('react-select/async', () => ({
+  default: (props: Record<string, unknown>) => (
+    <div aria-label={(props['aria-label'] as string | undefined) ?? 'async-select'} />
+  ),
+}));
 
 vi.mock('react-select', () => ({
   default: ({
@@ -49,6 +55,13 @@ vi.mock('react-select', () => ({
 
 vi.mock('@/server/trpc/client', () => ({
   trpc: {
+    useUtils: () => ({
+      transactionLedger: {
+        searchDebitTransactions: {
+          fetch: (...args: unknown[]) => mockSearchDebitTransactionsFetch(...args),
+        },
+      },
+    }),
     transactionLedger: {
       getAll: {
         useQuery: (...args: unknown[]) => mockUseAllQuery(...args),
@@ -58,9 +71,6 @@ vi.mock('@/server/trpc/client', () => ({
       },
       updateCategory: {
         useMutation: (...args: unknown[]) => mockUseMutation(...args),
-      },
-      searchDebitTransactions: {
-        useQuery: (...args: unknown[]) => mockUseSearchDebitTransactionsQuery(...args),
       },
     },
   },
@@ -101,11 +111,7 @@ describe('TransactionLedgerTable', () => {
       mutate: mockMutate,
       isPending: false,
     });
-    mockUseSearchDebitTransactionsQuery.mockReturnValue({
-      data: [],
-      isLoading: false,
-      isFetching: false,
-    });
+    mockSearchDebitTransactionsFetch.mockResolvedValue([]);
   });
 
   it('renders tab bar with 5 tabs', () => {

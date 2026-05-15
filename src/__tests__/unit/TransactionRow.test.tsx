@@ -3,7 +3,13 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 import TransactionRow from '@/components/transactions/TransactionRow';
 
-const mockUseSearchDebitTransactionsQuery = vi.fn();
+const mockSearchDebitTransactionsFetch = vi.fn();
+
+vi.mock('react-select/async', () => ({
+  default: (props: Record<string, unknown>) => (
+    <div aria-label={(props['aria-label'] as string | undefined) ?? 'async-select'} />
+  ),
+}));
 
 vi.mock('react-select', () => ({
   default: ({
@@ -44,11 +50,13 @@ vi.mock('react-select', () => ({
 
 vi.mock('@/server/trpc/client', () => ({
   trpc: {
-    transactionLedger: {
-      searchDebitTransactions: {
-        useQuery: (...args: unknown[]) => mockUseSearchDebitTransactionsQuery(...args),
+    useUtils: () => ({
+      transactionLedger: {
+        searchDebitTransactions: {
+          fetch: (...args: unknown[]) => mockSearchDebitTransactionsFetch(...args),
+        },
       },
-    },
+    }),
   },
 }));
 
@@ -83,13 +91,16 @@ describe('TransactionRow', () => {
     source: 'USER_OVERRIDE',
   };
 
+  const reimbursementTransaction: LedgerTransactionRow = {
+    ...creditTransaction,
+    id: 'tx-3',
+    category: 'Reimbursement',
+    status: 'EXCLUDED',
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseSearchDebitTransactionsQuery.mockReturnValue({
-      data: [],
-      isLoading: false,
-      isFetching: false,
-    });
+    mockSearchDebitTransactionsFetch.mockResolvedValue([]);
   });
 
   it('renders date, description, and amount for a DEBIT transaction', () => {
@@ -172,6 +183,30 @@ describe('TransactionRow', () => {
     });
 
     expect(onCategoryChange).toHaveBeenCalledWith('tx-1', 'Transport');
+  });
+
+  it('lets the user exit the link picker with reset', () => {
+    render(
+      <table>
+        <tbody>
+          <TransactionRow
+            transaction={reimbursementTransaction}
+            expenseCategories={expenseCategories}
+            incomeSourceLabels={incomeSourceLabels}
+            onCategoryChange={vi.fn()}
+          />
+        </tbody>
+      </table>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /link to original expense/i }));
+
+    expect(screen.getByRole('button', { name: /reset/i })).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: /reset/i }));
+
+    expect(screen.queryByRole('button', { name: /reset/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /link to original expense/i })).toBeDefined();
   });
 
   it('renders amount in red for DEBIT and green for CREDIT', () => {
