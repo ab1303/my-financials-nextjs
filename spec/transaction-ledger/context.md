@@ -96,7 +96,7 @@ See `src/server/api/routers/` — routers use `protectedProcedure`, Zod input va
 `src/app/(authorized)/cashflow/transactions/_components/csv/CSVTransactionReviewTable.tsx` — tab bar with `activeTab` state, `border-b-2 border-teal-500` active style.
 
 ### Toast notifications
-`react-toastify` — `toast.success()` / `toast.error()` used throughout for mutations.
+`sonner` — `toast.success()` / `toast.error()` used throughout for mutations.
 
 ### Pagination pattern
 TanStack Query `useInfiniteQuery` or simple offset pagination via tRPC with `cursor` + `limit`.

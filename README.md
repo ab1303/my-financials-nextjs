@@ -25,7 +25,7 @@ We also [roll our own docs](https://beta.create.t3.gg) with some summary informa
 - Tailwind CSS for styling (tailwindcss)
 - React Query for data fetching and caching (@tanstack/react-query)
 - Immer for immutable state management (immer)
-- React Toastify for notifications (react-toastify)
+- Sonner for notifications (sonner)
 - React Select for select inputs (react-select)
 - React Icons for iconography (react-icons)
 - TanStack Table for interactive data tables (@tanstack/react-table)

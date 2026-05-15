@@ -299,7 +299,7 @@ Reports (NEW SECTION)
   - [x] Validation errors: Parsed from Zod with field-level detail
   - [x] Authentication errors: "Session expired" messages
   - [x] Database errors: Generic "unexpected error" with console logging
-  - [x] Toast notifications for all error scenarios (via react-toastify)
+  - [x] Toast notifications for all error scenarios (via sonner)
   - [x] API route error handling with proper HTTP status codes
   - [x] **Files:** `src/app/(authorized)/cashflow/income/actions.ts`, `src/app/(authorized)/reports/income-summary/*.tsx`
 

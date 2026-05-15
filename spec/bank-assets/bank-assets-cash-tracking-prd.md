@@ -304,7 +304,7 @@ Key capabilities:
 - **Icons**: react-icons library (FiEdit2, FiTrash2, FiChevronDown, FiPlus)
 - **Loading states**: Suspense fallbacks while fetching data
 - **Responsive design**: Accordion works on mobile, table scrolls horizontally if needed
-- **Toast notifications**: Success/error feedback using react-toastify (existing pattern)
+- **Toast notifications**: Success/error feedback using sonner (existing pattern)
 
 ## 6. Narrative
 

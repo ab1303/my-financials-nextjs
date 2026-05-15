@@ -25,7 +25,7 @@ Modernize the My Financials application's visual design and component system by 
 - **@headlessui/react** v2.2.9 (Dialog, Disclosure)
 - **Custom components**: Button, Card, Modal, Table wrappers with theme.ts utilities
 - **Icons**: react-icons (5.4.0)
-- **Toasts**: react-toastify
+- **Toasts**: sonner
 
 ### Design System
 

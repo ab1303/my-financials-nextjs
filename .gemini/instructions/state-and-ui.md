@@ -8,7 +8,7 @@
 - **Boundaries**: Use Client Component wrappers to bridge Server/Client boundaries when event handlers are needed.
 
 ## Notifications & Feedback
-- **Library**: Use `react-toastify` for all user notifications.
+- **Library**: Use `sonner` for all user notifications.
 - **Standard Actions**:
   - `toast.success()`: For successful create, update, or delete operations.
   - `toast.error()`: For failures, with descriptive error messages.

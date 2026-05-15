@@ -1824,7 +1824,7 @@ ALTER TABLE "StockHolding" ADD CONSTRAINT "StockHolding_snapshotId_fkey"
 - `react-number-format` - NumericFormat for currency input
 - `react-icons` - FiEdit2, FiTrash2, FiChevronDown, FiPlus, FiTrendingUp
 - `date-fns` - differenceInMonths, addMonths, format
-- `react-toastify` - Toast notifications
+- `sonner` - Toast notifications
 - `zod` - Schema validation
 
 ### No New Dependencies Required

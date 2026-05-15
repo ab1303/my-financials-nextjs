@@ -346,10 +346,10 @@ export function MyForm() {
 
 ## 9. NOTIFICATIONS & USER FEEDBACK
 
-### 9.1 React Toastify Usage
+### 9.1 Sonner Usage
 
 ```typescript
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 // Success (use after successful operations)
 toast.success('Entity created successfully!');

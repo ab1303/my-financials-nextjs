@@ -354,7 +354,7 @@ export async function addRow(
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { trpc } from '@/server/trpc/client';
 import type { UnlinkedDonationTransaction } from '@/server/services/transactions/donation-link.service';
 
