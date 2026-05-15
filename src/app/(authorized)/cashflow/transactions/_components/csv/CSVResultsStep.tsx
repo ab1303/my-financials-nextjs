@@ -65,6 +65,12 @@ export default function CSVResultsStep({
             <span className='text-lg font-bold text-muted-foreground'>{result.creditsExcluded}</span>
           </div>
         )}
+        {result.duplicatesSkipped > 0 && (
+          <div className='flex items-center justify-between'>
+            <span className='text-sm font-medium text-foreground'>Duplicates Skipped</span>
+            <span className='text-lg font-bold text-muted-foreground'>{result.duplicatesSkipped}</span>
+          </div>
+        )}
         <div className='flex items-center justify-between pt-3 border-t border-border'>
           <span className='text-sm font-medium text-foreground'>Total Entries</span>
           <span className='text-lg font-bold text-foreground'>{result.totalEntries}</span>

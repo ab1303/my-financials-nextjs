@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
     ]);
 
     const totalEntries = debitResult.totalEntries + creditResult.totalEntries;
+    const duplicatesSkipped = debitResult.duplicatesSkipped + creditResult.duplicatesSkipped;
     const creditsExcluded = creditMonths.reduce((count, month) => {
       return (
         count +
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
         debitsSaved: debitResult.totalEntries,
         creditsSaved: creditResult.totalEntries,
         creditsExcluded,
+        duplicatesSkipped,
         totalEntries,
         errors,
       },

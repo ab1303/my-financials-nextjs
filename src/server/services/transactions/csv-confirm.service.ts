@@ -8,6 +8,7 @@ import {
 import { prisma } from '@/server/db/client';
 import type { ClassifiedCreditTransaction, ClassifiedTransactionV2 } from '@/server/services/ai-import/_types';
 
+import { buildDedupSet, getDateRangeFromMonthKeys, isDuplicate, makeDedupKey } from './dedup.service';
 import type { CreditMonth, DebitMonth, TransactionSaveResult } from './_types';
 import { EXCLUDED_CREDIT_LABELS } from './constants';
 
@@ -15,6 +16,7 @@ function createEmptyResult(): TransactionSaveResult {
   return {
     savedMonths: 0,
     totalEntries: 0,
+    duplicatesSkipped: 0,
     errors: [],
   };
 }
@@ -133,6 +135,11 @@ export async function confirmDebitTransactions(
 ): Promise<TransactionSaveResult> {
   const result = createEmptyResult();
 
+  const monthKeys = debitMonths.map((m) => m.month);
+  if (monthKeys.length === 0) return result;
+  const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
+  const dedupSet = await buildDedupSet({ userId, bankAccountId, startDate, endDate });
+
   const categories = await prisma.expenseCategory.findMany({ where: { isActive: true } });
   const categoryMap = new Map(categories.map((category) => [category.name.toLowerCase(), category.id]));
 
@@ -149,6 +156,17 @@ export async function confirmDebitTransactions(
       const ledger = await getOrCreateExpenseLedger(calendarYear.id, userId);
 
       for (const tx of transactions as ClassifiedTransactionV2[]) {
+        const dedupKey = makeDedupKey({
+          date: tx.date,
+          description: tx.description,
+          amount: tx.amount,
+          type: 'DEBIT',
+        });
+        if (isDuplicate(dedupKey, dedupSet)) {
+          result.duplicatesSkipped += 1;
+          continue;
+        }
+
         const categoryId = categoryMap.get(tx.confirmedCategory.toLowerCase());
         if (!categoryId) {
           continue;
@@ -194,6 +212,7 @@ export async function confirmDebitTransactions(
         });
 
         result.totalEntries += 1;
+        dedupSet.add(dedupKey);
       }
 
       result.savedMonths += 1;
@@ -219,6 +238,11 @@ export async function confirmCreditTransactions(
 ): Promise<TransactionSaveResult> {
   const result = createEmptyResult();
 
+  const monthKeys = creditMonths.map((m) => m.month);
+  if (monthKeys.length === 0) return result;
+  const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
+  const dedupSet = await buildDedupSet({ userId, bankAccountId, startDate, endDate });
+
   for (const { month: monthKey, transactions } of creditMonths) {
     try {
       const { year, monthNum } = parseMonthKey(monthKey);
@@ -230,6 +254,17 @@ export async function confirmCreditTransactions(
       }
 
       for (const tx of transactions as ClassifiedCreditTransaction[]) {
+        const dedupKey = makeDedupKey({
+          date: tx.date,
+          description: tx.description,
+          amount: tx.amount,
+          type: 'CREDIT',
+        });
+        if (isDuplicate(dedupKey, dedupSet)) {
+          result.duplicatesSkipped += 1;
+          continue;
+        }
+
         const isExcluded = (EXCLUDED_CREDIT_LABELS as readonly string[]).includes(tx.confirmedCategory);
 
         if (isExcluded) {
@@ -272,6 +307,7 @@ export async function confirmCreditTransactions(
         }
 
         result.totalEntries += 1;
+        dedupSet.add(dedupKey);
       }
 
       result.savedMonths += 1;

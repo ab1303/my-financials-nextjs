@@ -37,6 +37,7 @@ export interface CSVImportResult {
   debitsSaved: number;
   creditsSaved: number;
   creditsExcluded: number;
+  duplicatesSkipped: number;
   totalEntries: number;
   errors: Array<{ month: string; message: string }>;
 }

@@ -137,6 +137,7 @@ export default function CSVImportWizard({
             sum + month.transactions.filter((tx) => tx.confirmedCategory === 'Transfer' || tx.confirmedCategory === 'Excluded').length,
           0,
         );
+      const duplicatesSkipped = data.duplicatesSkipped ?? 0;
 
       const result: CSVImportResult = {
         sessionId: data.sessionId ?? file.id,
@@ -144,6 +145,7 @@ export default function CSVImportWizard({
         debitsSaved,
         creditsSaved,
         creditsExcluded,
+        duplicatesSkipped,
         totalEntries: data.totalEntries ?? debitsSaved + creditsSaved + creditsExcluded,
         errors: data.errors ?? [],
       };

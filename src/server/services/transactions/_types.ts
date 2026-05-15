@@ -21,5 +21,6 @@ export interface MonthError {
 export interface TransactionSaveResult {
   savedMonths: number;
   totalEntries: number;
+  duplicatesSkipped: number;
   errors: MonthError[];
 }
