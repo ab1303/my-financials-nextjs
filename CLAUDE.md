@@ -12,9 +12,11 @@ This file contains foundational mandates for Claude Code agent. These instructio
 
 ## Critical Safety & Standards
 
-- **Database Safety**: Never run `prisma migrate reset` without explicit user consent and confirmed backup. Stop dev server before any Prisma CLI operation to prevent EPERM errors on Windows.
-- **Form Patterns**: Use `react-hook-form` + `zod` for all forms. Follow the Client Wrapper Pattern for interactive forms that call Server Actions.
-- **Auth & State**: Use NextAuth `auth()` in Server Components; use `useSession()` only in Client Components. Never pass `userId` from client to server — rely on server-side session.
+- **Database Safety**: Never run `prisma migrate reset` without explicit user consent and confirmed backup. Stop dev server before any Prisma CLI operation to prevent EPERM errors on Windows. See `.ai/instructions/database-safety.md`.
+- **Form Patterns**: Use `react-hook-form` + `zod` for all forms. Follow the Client Wrapper Pattern for interactive forms that call Server Actions. See `.ai/instructions/form-patterns.md`.
+- **Auth & State**: Use NextAuth `auth()` in Server Components; use `useSession()` only in Client Components. Never pass `userId` from client to server — rely on server-side session. See `.ai/instructions/auth.md`.
+- **Dark Mode & react-select**: Always use `unstyled` + `classNames` const on react-select. See `.ai/instructions/dark-mode-and-react-select.md`.
+- **Cursor/Labels**: Table `<th>` needs `select-none cursor-default`; `<label htmlFor>` needs `cursor-pointer`. See `.ai/instructions/cursor-and-text-selection.md`.
 - **Middleware (Next.js 16+)**: Use `middleware.ts` at project root; keep it lightweight (auth checks only). Do not import heavy server-side modules.
 - **Always use `pnpm`**: Never use `npm` or `yarn` for installs or scripts.
 - **Verify with `pnpm run build`**: Run a production build before declaring any feature complete. Fix all TypeScript, ESLint, and import errors that surface.

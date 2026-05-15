@@ -1,6 +1,7 @@
 # Notifications
 
-- Use React Toastify for user notifications.
+- Use `sonner` for all user notifications (`import { toast } from 'sonner'`).
+- The `<Toaster>` is mounted globally in `src/components/Providers.tsx` — do not add it again.
 - Standardize notification styles and placement.
 - Handle success/error messages for all user actions.
 - Use `toast.success()` for successful operations (create, update, delete).

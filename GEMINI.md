@@ -10,10 +10,12 @@ This file contains foundational mandates for Gemini CLI. These instructions take
 - **AI Integration Expert**: Activate `claude-ai-integration` for any AI-related features or prompt engineering.
 
 ## Critical Safety & Standards
-- **Database Safety**: Strictly follow `.gemini/instructions/database-safety.md`.
-- **Form Patterns**: Follow `.gemini/instructions/form-patterns.md`.
-- **Auth & State**: Follow `.gemini/instructions/auth.md` and `.gemini/instructions/state-and-ui.md`.
-- **Middleware (Next.js 16+)**: Follow `.gemini/instructions/middleware-and-icons.md`.
+- **Database Safety**: Strictly follow `.ai/instructions/database-safety.md`.
+- **Form Patterns**: Follow `.ai/instructions/form-patterns.md`.
+- **Auth & State**: Follow `.ai/instructions/auth.md` and `.ai/instructions/state-and-ui.md`.
+- **Middleware (Next.js 16+)**: Follow `.ai/instructions/middleware-and-icons.md`.
+- **Dark Mode & react-select**: Follow `.ai/instructions/dark-mode-and-react-select.md`.
+- **Cursor/Labels**: Follow `.ai/instructions/cursor-and-text-selection.md`.
 - **Always use `pnpm`**: Never use `npm` or `yarn`.
 - **Verify with `pnpm run build`**: Ensure the project builds before declaring any feature complete.
 - **Stop Dev Server before Prisma operations**: Prevent EPERM errors on Windows.

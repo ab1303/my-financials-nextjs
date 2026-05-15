@@ -51,3 +51,33 @@ Never pass all three docs at once — `context.md` is redundant once HLD + LLD e
 - Before deleting a feature directory, grep `src/` for all imports of its files. Extract anything imported outside the feature to `src/components/` first.
 - A file at `feature-a/_components/foo.tsx` is owned by `feature-a`. Cross-feature imports are hidden dependencies — they break silently on cleanup.
 
+## UI Rules (Recurring Issues)
+
+### Dark Mode
+- Always add `dark:` variants for every color utility. See `.ai/instructions/dark-mode-and-react-select.md`.
+
+### react-select dark mode
+- Always use `unstyled` + `classNames` **const** (not a function). See `.ai/instructions/dark-mode-and-react-select.md`.
+
+### Cursor on labels and table headers
+- Use the shared `THeadTH` component — it includes `select-none cursor-default`. See `.ai/instructions/cursor-and-text-selection.md`.
+
+### Nested forms
+- Never nest `<form>` inside `<form>`. Use `createPortal` for overlays/drawers. See `.ai/instructions/form-patterns.md`.
+
+## Canonical Instructions
+
+All coding standards live in `.ai/instructions/`. Read the relevant file before implementing:
+
+| Topic | File |
+|---|---|
+| Auth / session | `.ai/instructions/auth.md` |
+| Database / Prisma safety | `.ai/instructions/database-safety.md` |
+| Forms (react-hook-form, zod) | `.ai/instructions/form-patterns.md` |
+| Middleware & icons | `.ai/instructions/middleware-and-icons.md` |
+| State management & notifications | `.ai/instructions/state-and-ui.md` |
+| Dark mode & react-select | `.ai/instructions/dark-mode-and-react-select.md` |
+| Cursor & text selection | `.ai/instructions/cursor-and-text-selection.md` |
+
+`.github/instructions/` contains GitHub Copilot **scoped** rules (file-pattern bound). Do not duplicate general rules there — add them to `.ai/instructions/` instead.
+
