@@ -1,145 +1,123 @@
 'use client';
 
+import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useState } from 'react';
-import { NumericFormat } from 'react-number-format';
-import {
-  useReactTable,
-  createColumnHelper,
-  getCoreRowModel,
-  flexRender,
-} from '@tanstack/react-table';
-import { toast } from 'sonner';
 
+import MONTHS_MAP from '@/constants/map';
 import Table from '@/components/table';
 import { tableStyles } from '@/styles/theme';
-import MONTHS_MAP from '@/constants/map';
-import { trpc } from '@/server/trpc/client';
-import { TRPCError } from '@trpc/server';
 
+import CleanseDonationDrawer from './_components/CleanseDonationDrawer';
+import UnlinkedInterestBanner from './_components/UnlinkedInterestBanner';
 import { useBankInterestState } from './StateProvider';
-import PaymentHistoryModal from './_components/PaymentHistoryModal';
-import EditableTableCell from './_components/EditableTableCell';
-import type { BankInterestType } from './_types';
+import type { BankInterestType, CleansingStatus, YearlySummary } from './_types';
 
 const columnHelper = createColumnHelper<BankInterestType>();
+
+const STATUS_CONFIG: Record<CleansingStatus, { label: string; className: string }> = {
+  CLEANSED: { label: '✓ Cleansed', className: 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
+  MANUAL: { label: '📝 Manual', className: 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+  PARTIAL: { label: '◑ Partial', className: 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' },
+  PENDING: { label: '⚠ Pending', className: 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+  NONE: { label: '—', className: 'text-xs text-muted-foreground dark:text-muted-foreground' },
+};
 
 type BankInterestTableClientProps = {
   bankId: string;
   calendarYearId: string;
+  unlinkedCount: number;
+  yearlySummary: YearlySummary;
+  dateFrom: string;
+  dateTo: string;
+  onOpenDrawer?: () => void;
 };
 
-type EditedRowType = {
-  rowIndex: number;
-  updatedValue: number | null;
-};
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+}
 
 export default function BankInterestTableClient({
   bankId,
   calendarYearId,
+  unlinkedCount,
+  yearlySummary,
+  dateFrom,
+  dateTo,
+  onOpenDrawer,
 }: BankInterestTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<string, EditedRowType>>(
-    new Map(),
-  );
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { state: { data }, dispatch } = useBankInterestState();
 
-  const {
-    state: { data },
-    dispatch,
-  } = useBankInterestState();
-
-  const [selectedBankInterestId, setSelectedBankInterestId] = useState<
-    string | null
-  >(null);
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    onOpenDrawer?.();
+  };
 
   const columns = [
     columnHelper.accessor('month', {
-      size: 120,
+      size: 100,
       header: () => <span>Month</span>,
       cell: (info) => MONTHS_MAP.get(info.getValue()),
     }),
-    columnHelper.accessor('amountDue', {
-      size: 160,
-      header: () => <span>Amount Due</span>,
-      cell: ({ row, renderValue }) => {
-        let hasEditedRow = false;
-        let renderedValue = renderValue();
-
-        if (editedRows.has(row.original.id)) {
-          hasEditedRow = true;
-          renderedValue = editedRows.get(row.original.id)?.updatedValue || 0;
-        }
-
-        return (
-          <EditableTableCell
-            inProgress={hasEditedRow}
-            originalValue={renderedValue}
-            OnValueChange={(value) => {
-              console.log('updated value', value);
-              updateEditRows(row.original.id, {
-                rowIndex: row.index,
-                updatedValue: value,
-              });
-              // update details
-              updateBankInterestDetailsMutation.mutate({
-                bankId,
-                calendarYearId,
-                amount: value || 0,
-                bankInterestId: row.original.id,
-              });
-            }}
-          />
-        );
-      },
-      footer: (props) => props.column.id,
-    }),
-    columnHelper.accessor('amountPaid', {
+    columnHelper.accessor('receivedFromLedger', {
       size: 140,
-      header: () => <span>Amount Paid</span>,
-      cell: ({ row }) => {
-        const totalPaid = row.original.paymentHistory.reduce(
-          (total, { amount }) => (total += amount),
-          0,
-        );
-
-        return (
-          <NumericFormat
-            prefix='$'
-            displayType='text'
-            thousandSeparator
-            value={totalPaid}
-          />
-        );
-      },
-      footer: (props) => props.column.id,
+      header: () => <span>From Ledger</span>,
+      cell: ({ getValue }) => <span className="text-sm tabular-nums text-gray-900 dark:text-gray-100">{formatCurrency(getValue())}</span>,
     }),
-    columnHelper.accessor('paymentHistory', {
-      size: 100,
-      header: () => <span>Payment(s)</span>,
+    columnHelper.accessor('manualOverride', {
+      size: 140,
+      header: () => <span>Manual Override</span>,
+      cell: ({ getValue }) => <span className="text-sm tabular-nums text-muted-foreground dark:text-muted-foreground">{formatCurrency(getValue())}</span>,
+    }),
+    columnHelper.accessor('receivedTotal', {
+      size: 140,
+      header: () => <span>Total Received</span>,
+      cell: ({ getValue }) => <span className="text-sm font-medium tabular-nums text-gray-900 dark:text-gray-100">{formatCurrency(getValue())}</span>,
+      footer: () => <span className="text-sm font-semibold tabular-nums text-gray-900 dark:text-gray-100">{formatCurrency(yearlySummary.totalReceived)}</span>,
+    }),
+    columnHelper.accessor('amountCleansed', {
+      size: 140,
+      header: () => <span>Cleansed</span>,
+      cell: ({ getValue }) => <span className="text-sm tabular-nums text-green-700 dark:text-green-400">{formatCurrency(getValue())}</span>,
+      footer: () => <span className="text-sm font-semibold tabular-nums text-green-700 dark:text-green-400">{formatCurrency(yearlySummary.totalCleansed)}</span>,
+    }),
+    columnHelper.accessor('balance', {
+      size: 120,
+      header: () => <span>Balance</span>,
+      cell: ({ getValue }) => {
+        const value = getValue();
+        return <span className={`text-sm tabular-nums font-medium ${value > 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground dark:text-muted-foreground'}`}>{formatCurrency(value)}</span>;
+      },
+      footer: () => {
+        const remaining = yearlySummary.remaining;
+        return <span className={`text-sm font-semibold tabular-nums ${remaining > 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground dark:text-muted-foreground'}`}>{formatCurrency(remaining)}</span>;
+      },
+    }),
+    columnHelper.accessor('status', {
+      size: 120,
+      header: () => <span>Status</span>,
+      cell: ({ getValue }) => {
+        const config = STATUS_CONFIG[getValue()];
+        return <span className={config.className}>{config.label}</span>;
+      },
+    }),
+    columnHelper.display({
+      id: 'action',
+      size: 120,
+      header: () => <span>Action</span>,
       cell: ({ row }) => {
-        const { original } = row;
-
+        const { status } = row.original;
+        if (status === 'NONE' || status === 'CLEANSED' || status === 'MANUAL') return null;
         return (
-          <div className='flex flex-row content-around justify-between px-4 '>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-4 w-4 cursor-pointer'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-              onClick={() => {
-                setSelectedBankInterestId(original.id);
-              }}
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth='2'
-                d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
-              />
-            </svg>
-          </div>
+          <button
+            type="button"
+            onClick={openDrawer}
+            className="rounded-md bg-amber-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600"
+          >
+            Cleanse
+          </button>
         );
       },
-      footer: (info) => info.column.id,
     }),
   ];
 
@@ -147,56 +125,25 @@ export default function BankInterestTableClient({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    columnResizeMode: 'onChange',
   });
-
-  const updateBankInterestDetailsMutation =
-    trpc.bankInterest.updateBankInterestDetail.useMutation({
-      onError(error: unknown, { bankInterestId }) {
-        if (error instanceof TRPCError) {
-          toast.error(error.message);
-        }
-        updateEditRows(bankInterestId);
-      },
-
-      onSuccess(_, { bankInterestId, amount }) {
-        toast.success('Interest payment detail updated!');
-        updateEditRows(bankInterestId);
-
-        dispatch({
-          type: 'BANK_INTEREST/UPDATE_INTEREST_PAYMENT',
-          payload: {
-            amount,
-            bankInterestId,
-          },
-        });
-      },
-    });
-
-  const updateEditRows = (id: string, record?: EditedRowType) => {
-    setEditedRows((prev) => {
-      const result = new Map(prev);
-      if (!record) {
-        result.delete(id);
-      } else {
-        result.set(id, record);
-      }
-
-      return result;
-    });
-  };
 
   return (
     <>
-      {selectedBankInterestId && (
-        <PaymentHistoryModal
-          bankInterestId={selectedBankInterestId}
-          paymentHistory={
-            data.find((d) => d.id === selectedBankInterestId)?.paymentHistory ||
-            []
-          }
-          onClose={() => {
-            setSelectedBankInterestId(null);
+      <UnlinkedInterestBanner unlinkedCount={unlinkedCount} onCleanse={openDrawer} />
+
+      {drawerOpen && (
+        <CleanseDonationDrawer
+          isOpen={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          bankId={bankId}
+          calendarYearId={calendarYearId}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDonationSaved={(bankInterestLiabilityId, amountAdded, hasTransactionLink) => {
+            dispatch({
+              type: 'BANK_INTEREST/ADD_CLEANSING_DONATION',
+              payload: { bankInterestLiabilityId, amountAdded, hasTransactionLink },
+            });
           }}
         />
       )}
@@ -207,79 +154,33 @@ export default function BankInterestTableClient({
             <Table.THead.TR key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <Table.THead.TH key={header.id}>
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
+                  {flexRender(header.column.columnDef.header, header.getContext())}
                 </Table.THead.TH>
               ))}
             </Table.THead.TR>
           ))}
         </Table.THead>
         <Table.TBody>
-          {table.getRowModel().rows.map((row) => {
-            return (
-              <Table.TBody.TR key={row.id}>
-                {row.getVisibleCells().map((cell) => {
-                  return (
-                    <Table.TBody.TD key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </Table.TBody.TD>
-                  );
-                })}
-              </Table.TBody.TR>
-            );
-          })}
+          {table.getRowModel().rows.map((row) => (
+            <Table.TBody.TR key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <Table.TBody.TD key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </Table.TBody.TD>
+              ))}
+            </Table.TBody.TR>
+          ))}
         </Table.TBody>
         <Table.TFoot>
-          {!!data.length &&
-            table.getFooterGroups().map((footerGroup) => {
-              return (
-                <Table.TFoot.TR key={footerGroup.id}>
-                  {footerGroup.headers.map((header) => {
-                    switch (header.id) {
-                      case 'amountDue':
-                        const totalAmountDue = data.reduce(
-                          (total, { amountDue }) => (total += amountDue),
-                          0,
-                        );
-                        return (
-                          <Table.TFoot.TH key={header.id}>
-                            <NumericFormat
-                              prefix='$'
-                              displayType='text'
-                              thousandSeparator
-                              value={totalAmountDue}
-                            />
-                          </Table.TFoot.TH>
-                        );
-                      case 'amountPaid':
-                        const totalAmountPaid = data.reduce(
-                          (total, { amountPaid }) => (total += amountPaid),
-                          0,
-                        );
-                        return (
-                          <Table.TFoot.TH key={header.id}>
-                            <NumericFormat
-                              prefix='$'
-                              displayType='text'
-                              thousandSeparator
-                              value={totalAmountPaid}
-                            />
-                          </Table.TFoot.TH>
-                        );
-                      default:
-                        return (
-                          <Table.TFoot.TH key={header.id}></Table.TFoot.TH>
-                        );
-                    }
-                  })}
-                </Table.TFoot.TR>
-              );
-            })}
+          {!!data.length && table.getFooterGroups().map((footerGroup) => (
+            <Table.TFoot.TR key={footerGroup.id}>
+              {footerGroup.headers.map((header) => (
+                <Table.TFoot.TH key={header.id}>
+                  {header.column.columnDef.footer ? flexRender(header.column.columnDef.footer, header.getContext()) : null}
+                </Table.TFoot.TH>
+              ))}
+            </Table.TFoot.TR>
+          ))}
         </Table.TFoot>
       </Table>
     </>

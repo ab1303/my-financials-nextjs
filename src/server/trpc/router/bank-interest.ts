@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { router, protectedProcedure } from '@/server/trpc/trpc';
 import {
   createBankInterestPaymentOuputSchema,
@@ -15,6 +16,10 @@ import {
   updateBankInterestPaymentHandler,
   removeBankInterestPaymentHandler,
 } from '@/server/controllers/bank-interest.controller';
+import {
+  getInterestCleansingData,
+  getUnlinkedInterestTransactions,
+} from '@/server/services/bank-interest/interest-cleansing.service';
 
 export const bankInterestRouter = router({
   getYearlyBankInterestDetails: protectedProcedure
@@ -52,5 +57,24 @@ export const bankInterestRouter = router({
     .input(removeBankInterestPaymentSchema)
     .mutation(({ input: { bankInterestId, paymentId } }) =>
       removeBankInterestPaymentHandler(bankInterestId, paymentId)
+    ),
+  getInterestCleansingData: protectedProcedure
+    .input(z.object({ bankId: z.string(), calendarYearId: z.string() }))
+    .query(({ ctx, input }) =>
+      getInterestCleansingData(
+        input.bankId,
+        input.calendarYearId,
+        ctx.session.user.id,
+      ),
+    ),
+  getUnlinkedInterestTransactions: protectedProcedure
+    .input(z.object({ bankId: z.string(), dateFrom: z.string(), dateTo: z.string() }))
+    .query(({ ctx, input }) =>
+      getUnlinkedInterestTransactions(
+        input.bankId,
+        new Date(input.dateFrom),
+        new Date(input.dateTo),
+        ctx.session.user.id,
+      ),
     ),
 });

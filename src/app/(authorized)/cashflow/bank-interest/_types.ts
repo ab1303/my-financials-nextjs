@@ -1,15 +1,20 @@
-export type PaymentHistoryType = {
-  id: string;
-  datePaid: Date;
-  amount: number;
-  businessId: string | null;
-};
+export type CleansingStatus = 'CLEANSED' | 'PARTIAL' | 'PENDING' | 'MANUAL' | 'NONE';
 
 export type BankInterestType = {
   id: string;
   month: number;
   year: number;
-  amountDue: number;
-  amountPaid: number;
-  paymentHistory: Array<PaymentHistoryType>;
+  receivedFromLedger: number;
+  manualOverride: number;
+  receivedTotal: number;
+  amountCleansed: number;
+  balance: number;
+  status: CleansingStatus;
+  uncleansedTxCount: number;
+};
+
+export type YearlySummary = {
+  totalReceived: number;
+  totalCleansed: number;
+  remaining: number;
 };

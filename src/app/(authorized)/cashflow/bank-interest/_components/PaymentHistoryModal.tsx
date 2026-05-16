@@ -11,8 +11,12 @@ import { trpc } from '@/server/trpc/client';
 import { TRPCError } from '@trpc/server';
 import { inputStyles, buttonStyles } from '@/styles/theme';
 
-import { useBankInterestState } from '../StateProvider';
-import type { PaymentHistoryType } from '../_types';
+type PaymentHistoryType = {
+  id: string;
+  datePaid: Date;
+  amount: number;
+  businessId: string | null;
+};
 
 type PaymentType = Omit<PaymentHistoryType, 'id'>;
 
@@ -119,8 +123,6 @@ export default function PaymentHistoryModal({
 }: PaymentHistoryModalProps) {
   const [editPaymentId, setEditPaymentId] = useState<string | null>(null);
 
-  const { dispatch } = useBankInterestState();
-
   const addPaymentMutation =
     trpc.bankInterest.addBankInterestPayment.useMutation({
       onError(error: unknown) {
@@ -129,21 +131,8 @@ export default function PaymentHistoryModal({
         }
       },
 
-      onSuccess({ paymentId }, { amount, datePaid }) {
+      onSuccess() {
         toast.success('Interest payment detail created!');
-
-        dispatch({
-          type: 'BANK_INTEREST/Payments/ADD_PAYMENT',
-          payload: {
-            bankInterestId,
-            payment: {
-              amount,
-              datePaid,
-              businessId: 'to set', // TODO:
-              id: paymentId,
-            },
-          },
-        });
       },
     });
 
@@ -155,17 +144,8 @@ export default function PaymentHistoryModal({
         }
       },
 
-      onSuccess(_, { bankInterestId, paymentId, payment }) {
+      onSuccess() {
         toast.success('Interest payment detail updated!');
-
-        dispatch({
-          type: 'BANK_INTEREST/Payments/EDIT_PAYMENT',
-          payload: {
-            bankInterestId,
-            paymentId,
-            amount: payment,
-          },
-        });
       },
     });
 
@@ -177,16 +157,8 @@ export default function PaymentHistoryModal({
         }
       },
 
-      onSuccess(_, { bankInterestId, paymentId }) {
+      onSuccess() {
         toast.success('Interest payment detail removed!');
-
-        dispatch({
-          type: 'BANK_INTEREST/Payments/REMOVE_PAYMENT',
-          payload: {
-            bankInterestId,
-            paymentId,
-          },
-        });
       },
     });
 

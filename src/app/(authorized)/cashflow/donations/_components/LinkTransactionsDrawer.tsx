@@ -164,6 +164,7 @@ export default function LinkTransactionsDrawer({
         beneficiaryId: values.beneficiaryId,
         calendarYearId,
         transactionId: selectedTransaction.id,
+        donationPurpose: 'INTEREST_CLEANSING',
       });
 
       if (!result.success) {

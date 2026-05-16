@@ -1,37 +1,45 @@
 export const dynamic = 'force-dynamic';
 
-import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
+
+import { auth } from '@/server/auth';
+import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
+import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
+import { getInterestCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
+
+import type { CalendarEnumType } from '@prisma/client';
+
+import type { OptionType } from '@/types';
 
 import BankInterestForm from './form';
 import BankInterestTableServer from './BankInterestTableServer';
-import { Suspense } from 'react';
-import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-
-// types
-import type { OptionType } from '@/types';
-import type { CalendarEnumType } from '@prisma/client';
 
 export const metadata: Metadata = {
   title: 'Bank Interest | My Financials',
 };
 
-// page dynamically rendered
-//https://nextjs.org/docs/app/api-reference/file-conventions/page#searchparams-optional
+function getSelectedParam(searchParam?: string | string[]) {
+  const selectedSearch = searchParam || '';
+  const selected = Array.isArray(selectedSearch)
+    ? selectedSearch[0]
+    : selectedSearch;
+  return selected || '';
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(value);
+}
+
 export default async function BanksPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-
-  function getSelectedParam(searchParam?: string | string[]) {
-    const selectedSearch = searchParam || '';
-    const selected = Array.isArray(selectedSearch)
-      ? selectedSearch[0]
-      : selectedSearch;
-    return selected || '';
-  }
 
   const allYearlyData = await getCalendarYearsHandler();
   const yearlyData = allYearlyData.filter(
@@ -40,10 +48,7 @@ export default async function BanksPage({
 
   const banks = await allBankDetailsHandler();
   const bankOptions: OptionType[] = banks
-    ? banks.map((b) => ({
-        id: b.id,
-        label: b.name,
-      }))
+    ? banks.map((b) => ({ id: b.id, label: b.name }))
     : [];
 
   const yearParamLabel = getSelectedParam(params?.year);
@@ -60,21 +65,33 @@ export default async function BanksPage({
     ? selectedCalendarYear.id
     : '';
 
-  const initialData = {
-    bankOptions,
-    yearlyData,
-  };
+  const initialData = { bankOptions, yearlyData };
+
+  const session = await auth();
+  const cleansingData =
+    selectedBankId && selectedCalendarYearId && session?.user?.id
+      ? await getInterestCleansingData(
+          selectedBankId,
+          selectedCalendarYearId,
+          session.user.id,
+        )
+      : [];
+
+  const totalReceived = cleansingData.reduce((sum, d) => sum + d.receivedTotal, 0);
+  const totalCleansed = cleansingData.reduce((sum, d) => sum + d.amountCleansed, 0);
+  const remaining = cleansingData.reduce((sum, d) => sum + d.balance, 0);
+
   return (
-    <main className='container mx-auto px-4 py-6 max-w-6xl'>
+    <main className='container mx-auto max-w-6xl px-4 py-6'>
       <div className='mb-6'>
         <h1 className='text-2xl font-bold tracking-tight text-foreground'>
           Bank Interest Payout
         </h1>
-        <p className='text-muted-foreground mt-1 text-sm'>
+        <p className='mt-1 text-sm text-muted-foreground'>
           Track interest payments across bank accounts by year
         </p>
       </div>
-      <div className='rounded-xl border border-border bg-card shadow p-6'>
+      <div className='rounded-xl border border-border bg-card p-6 shadow'>
         <BankInterestForm
           initialData={initialData}
           bankIdParam={selectedBankId}
@@ -83,17 +100,60 @@ export default async function BanksPage({
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             {selectedBankId && selectedCalendarYearId ? (
               <>
-                <div className='font-mono text-gray-500 mb-3'>
+                <div className='mb-6 grid gap-4 md:grid-cols-3'>
+                  <div className='rounded-lg border border-border bg-card p-4 shadow-sm dark:bg-card'>
+                    <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+                      Interest Received
+                    </p>
+                    <p className='mt-1 text-2xl font-bold tabular-nums text-foreground'>
+                      {formatCurrency(totalReceived)}
+                    </p>
+                  </div>
+                  <div className='rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm dark:border-green-800 dark:bg-green-950'>
+                    <p className='text-xs font-medium uppercase tracking-wide text-green-700 dark:text-green-300'>
+                      Amount Cleansed
+                    </p>
+                    <p className='mt-1 text-2xl font-bold tabular-nums text-green-800 dark:text-green-200'>
+                      {formatCurrency(totalCleansed)}
+                    </p>
+                  </div>
+                  <div
+                    className={`rounded-lg border p-4 shadow-sm ${
+                      remaining > 0
+                        ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'
+                        : 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
+                    }`}
+                  >
+                    <p
+                      className={`text-xs font-medium uppercase tracking-wide ${
+                        remaining > 0
+                          ? 'text-amber-700 dark:text-amber-300'
+                          : 'text-green-700 dark:text-green-300'
+                      }`}
+                    >
+                      Remaining to Cleanse
+                    </p>
+                    <p
+                      className={`mt-1 text-2xl font-bold tabular-nums ${
+                        remaining > 0
+                          ? 'text-amber-800 dark:text-amber-200'
+                          : 'text-green-800 dark:text-green-200'
+                      }`}
+                    >
+                      {formatCurrency(remaining)}
+                    </p>
+                  </div>
+                </div>
+                <div className='mb-3 font-mono text-gray-500'>
                   {selectedBank?.label} Interest
                 </div>
-
                 <BankInterestTableServer
                   bankId={selectedBankId}
                   calendarYearId={selectedCalendarYearId}
                 />
               </>
             ) : (
-              <p className='text-gray-500 text-sm'>
+              <p className='text-sm text-gray-500'>
                 Please select a bank and year to view interest details.
               </p>
             )}

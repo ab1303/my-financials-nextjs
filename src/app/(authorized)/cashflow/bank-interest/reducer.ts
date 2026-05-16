@@ -1,27 +1,19 @@
+import { produce } from 'immer';
+
 import type { ActionMapUnion } from '@/types';
 
-import type { BankInterestType, PaymentHistoryType } from './_types';
-
-import { produce } from 'immer';
+import type { BankInterestType } from './_types';
 
 type BankInterestMessages = {
   'BANK_INTEREST/INITAL_DATA': BankInterestState;
-  'BANK_INTEREST/UPDATE_INTEREST_PAYMENT': {
-    bankInterestId: string;
-    amount: number;
+  'BANK_INTEREST/SET_MANUAL_OVERRIDE': {
+    bankInterestLiabilityId: string;
+    manualOverride: number;
   };
-  'BANK_INTEREST/Payments/ADD_PAYMENT': {
-    bankInterestId: string;
-    payment: PaymentHistoryType;
-  };
-  'BANK_INTEREST/Payments/EDIT_PAYMENT': {
-    bankInterestId: string;
-    paymentId: string;
-    amount: number;
-  };
-  'BANK_INTEREST/Payments/REMOVE_PAYMENT': {
-    bankInterestId: string;
-    paymentId: string;
+  'BANK_INTEREST/ADD_CLEANSING_DONATION': {
+    bankInterestLiabilityId: string;
+    amountAdded: number;
+    hasTransactionLink: boolean;
   };
 };
 
@@ -38,93 +30,34 @@ export const bankInterestReducer = produce<BankInterestState, [Actions]>(
         draft.data = action.payload.data;
         break;
       }
-      case 'BANK_INTEREST/UPDATE_INTEREST_PAYMENT': {
-        const { amount, bankInterestId } = action.payload;
-        const updatedInterestPayment = draft.data.find(
-          (r) => r.id === bankInterestId
-        );
-        if (updatedInterestPayment) {
-          updatedInterestPayment.amountDue = amount;
+      case 'BANK_INTEREST/SET_MANUAL_OVERRIDE': {
+        const { bankInterestLiabilityId, manualOverride } = action.payload;
+        const row = draft.data.find((r) => r.id === bankInterestLiabilityId);
+        if (row) {
+          row.manualOverride = manualOverride;
+          row.receivedTotal = row.receivedFromLedger + manualOverride;
+          row.balance = Math.max(0, row.receivedTotal - row.amountCleansed);
         }
         break;
       }
-
-      case 'BANK_INTEREST/Payments/ADD_PAYMENT': {
-        const { bankInterestId, payment } = action.payload;
-        const interestPaymentRow = draft.data.find(
-          (r) => r.id === bankInterestId
-        );
-
-        if (interestPaymentRow) {
-          interestPaymentRow.paymentHistory.push(payment);
-          const paymentsTotal = interestPaymentRow.paymentHistory.reduce(
-            (total, { amount }) => (total += amount),
-            0
-          );
-
-          interestPaymentRow.amountPaid = paymentsTotal;
+      case 'BANK_INTEREST/ADD_CLEANSING_DONATION': {
+        const { bankInterestLiabilityId, amountAdded, hasTransactionLink } =
+          action.payload;
+        const row = draft.data.find((r) => r.id === bankInterestLiabilityId);
+        if (row) {
+          row.amountCleansed += amountAdded;
+          row.balance = Math.max(0, row.receivedTotal - row.amountCleansed);
+          if (row.balance === 0) {
+            row.status = hasTransactionLink ? 'CLEANSED' : 'MANUAL';
+          } else {
+            row.status = 'PARTIAL';
+          }
+          if (hasTransactionLink) {
+            row.uncleansedTxCount = Math.max(0, row.uncleansedTxCount - 1);
+          }
         }
-
         break;
       }
-
-      case 'BANK_INTEREST/Payments/EDIT_PAYMENT': {
-        const { paymentId, bankInterestId, amount } = action.payload;
-        const interestPaymentRow = draft.data.find(
-          (r) => r.id === bankInterestId
-        );
-
-        if (!interestPaymentRow) {
-          return draft;
-        }
-
-        const paymentIndex = interestPaymentRow.paymentHistory.findIndex(
-          (p) => p.id === paymentId
-        );
-
-        if (paymentIndex === -1) {
-          return draft;
-        }
-
-        const paymentRow = interestPaymentRow.paymentHistory[paymentIndex];
-        if (!paymentRow) {
-          return draft;
-        }
-
-        paymentRow.amount = amount;
-
-        const paymentsTotal = interestPaymentRow.paymentHistory.reduce(
-          (total, { amount }) => (total += amount),
-          0
-        );
-
-        interestPaymentRow.amountPaid = paymentsTotal;
-        break;
-      }
-
-      case 'BANK_INTEREST/Payments/REMOVE_PAYMENT': {
-        const { paymentId, bankInterestId } = action.payload;
-        const interestPaymentRow = draft.data.find(
-          (r) => r.id === bankInterestId
-        );
-
-        if (interestPaymentRow) {
-          const paymentIndex = interestPaymentRow.paymentHistory.findIndex(
-            (p) => p.id === paymentId
-          );
-          if (paymentIndex !== -1)
-            interestPaymentRow.paymentHistory.splice(paymentIndex, 1);
-          const paymentsTotal = interestPaymentRow.paymentHistory.reduce(
-            (total, { amount }) => (total += amount),
-            0
-          );
-
-          interestPaymentRow.amountPaid = paymentsTotal;
-        }
-
-        break;
-      }
-
       default:
         return draft;
     }
