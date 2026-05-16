@@ -785,9 +785,9 @@ export default function BankAssetsClient({ initialData }: Props) {
       {/* Edit Entry Modal */}
       <Modal show={!!editingEntry} onClose={() => setEditingEntry(null)}>
         <Modal.Header>
-          <h2 className='text-xl font-semibold text-foreground'>
+          <span className='text-xl font-semibold text-foreground'>
             Edit Account Details
-          </h2>
+          </span>
         </Modal.Header>
 
         <Modal.Body>
@@ -858,11 +858,11 @@ export default function BankAssetsClient({ initialData }: Props) {
       {/* Delete Confirmation Modal */}
       <Modal show={!!deleteConfirm} onClose={() => setDeleteConfirm(null)}>
         <Modal.Header>
-          <h2 className='text-xl font-semibold text-foreground'>
+          <span className='text-xl font-semibold text-foreground'>
             {deleteConfirm?.snapshotId && !deleteConfirm?.entryId
               ? 'Delete Entire Snapshot'
               : 'Delete Account'}
-          </h2>
+          </span>
         </Modal.Header>
 
         <Modal.Body>

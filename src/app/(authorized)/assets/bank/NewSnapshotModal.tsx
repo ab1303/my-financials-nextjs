@@ -183,9 +183,9 @@ export default function NewSnapshotModal({
   return (
     <Modal show={isOpen} onClose={onClose} panelClassName='max-w-4xl'>
       <Modal.Header>
-        <h2 className='text-xl font-semibold text-foreground'>
+        <span className='text-xl font-semibold text-foreground'>
           New Cash Snapshot
-        </h2>
+        </span>
         <p className='text-sm text-muted-foreground mt-1'>
           Record your current cash position across all bank accounts
         </p>
