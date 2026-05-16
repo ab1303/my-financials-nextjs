@@ -7,6 +7,7 @@ import { individualRouter } from './individual';
 import { bankAssetRouter } from './bank-asset';
 import { stockAssetRouter } from './stock-asset';
 import { aiUsageRouter } from './ai-usage';
+import { assetDashboardRouter } from './asset-dashboard';
 import { exampleRouter } from './example';
 import { transactionLedgerRouter } from './transaction-ledger';
 import { userProfileRouter } from './user-profile';
@@ -27,6 +28,7 @@ export const appRouter = router({
   userProfile: userProfileRouter,
   transactionClearing: transactionClearingRouter,
   transfer: transferRouter,
+  assetDashboard: assetDashboardRouter,
 });
 
 // export type definition of API

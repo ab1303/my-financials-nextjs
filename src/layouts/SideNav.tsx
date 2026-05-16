@@ -31,6 +31,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
+  LayoutDashboard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useOutsideAlerter from '@/hooks/useOutsideAlerter';
@@ -66,6 +67,7 @@ const cashflowItems: NavItem[] = [
 ];
 
 const assetItems: NavItem[] = [
+  { name: 'Overview', href: '/assets', icon: LayoutDashboard },
   { name: 'Bank(s)', href: '/assets/bank', icon: Landmark },
   { name: 'Stock(s)', href: '/assets/stocks', icon: CandlestickChart },
 ];
