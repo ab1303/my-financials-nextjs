@@ -233,7 +233,7 @@ export default function TransactionFilters({
             options={bankOptions}
             onChange={(option: SingleValue<(typeof bankOptions)[number]>) => onBankChange(option?.value)}
             className="w-full"
-            menuPortalTarget={document.body}
+            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
           />
         </div>
 
@@ -302,7 +302,7 @@ export default function TransactionFilters({
               onCategoryChange(option?.value)
             }
             className="w-full"
-            menuPortalTarget={document.body}
+            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
           />
         </div>
 

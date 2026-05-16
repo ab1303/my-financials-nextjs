@@ -98,6 +98,11 @@ enum BeneficiaryEnumType {
   BUSINESS
 }
 
+enum DonationPurposeEnum {
+  VOLUNTARY
+  INTEREST_CLEANSING
+}
+
 enum IncomeSourceEnumType {
   EMPLOYMENT
   STOCKS
@@ -165,7 +170,8 @@ model Business {
   user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// BankInterestPayment — a payment made against a monthly bank interest tax liability
+// BankInterestPayment — DEPRECATED. Existing rows migrated to DonationPayment(INTEREST_CLEANSING).
+// This model will be dropped in a future migration once tRPC procedures referencing it are removed.
 model BankInterestPayment {
   id                      String                 @id @default(cuid())
   datePaid                DateTime
@@ -233,6 +239,7 @@ model DonationPayment {
   donationLedgerId String
   transaction     Transaction?        @relation(fields: [transactionId], references: [id], onDelete: SetNull)
   transactionId   String?             @unique
+  donationPurpose DonationPurposeEnum @default(VOLUNTARY)
 }
 
 // IncomeLedger — per-user per-calendar-year container for income records

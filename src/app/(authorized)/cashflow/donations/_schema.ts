@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BeneficiaryEnumType } from '@prisma/client';
+import { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
 
 export const FormDataSchema = z.object({
   calendarYearId: z.string().nonempty('Calendar year is required.'),
@@ -31,6 +31,7 @@ export const CreateDonationPaymentSchema = z.object({
   taxCategory: z.string().nonempty('Tax category is required'),
   beneficiaryId: z.string().nonempty('Please select a beneficiary'),
   transactionId: z.string().optional(),
+  donationPurpose: z.nativeEnum(DonationPurposeEnum).optional().default('VOLUNTARY'),
   calendarYearId: z.string().nonempty('Calendar year is required.'),
 });
 

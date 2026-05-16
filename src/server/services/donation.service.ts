@@ -63,6 +63,7 @@ export const getDonationPayments = async (
     transactionId: dp.transactionId ?? null,
     beneficiaryType: dp.beneficiaryType,
     taxCategory: dp.taxCategory,
+    donationPurpose: dp.donationPurpose,
   }));
 };
 
@@ -105,6 +106,7 @@ export const addDonationPaymentDetail = async (
       individualId:
         payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
       transactionId: payment.transactionId ?? null,
+      donationPurpose: payment.donationPurpose ?? 'VOLUNTARY',
     },
   });
 };

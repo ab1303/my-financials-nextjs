@@ -1,4 +1,4 @@
-import type { BeneficiaryEnumType } from '@prisma/client';
+import type { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
 
 import type { PaymentModel } from './payment';
 
@@ -10,6 +10,7 @@ export type DonationModel = {
 export type DonationPaymentModel = PaymentModel & {
   beneficiaryType: BeneficiaryEnumType;
   taxCategory: string;
+  donationPurpose?: DonationPurposeEnum | null;
   donationLedgerId: string | null;
   transactionId?: string | null;
 };
@@ -24,6 +25,7 @@ export type DonationPaymentInput = {
   beneficiaryId?: string | null;
   businessId?: string | null;
   individualId?: string | null;
+  donationPurpose?: DonationPurposeEnum | null;
   donationLedgerId?: string | null;
   transactionId?: string | null;
 };

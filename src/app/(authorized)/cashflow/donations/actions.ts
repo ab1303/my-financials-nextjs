@@ -61,6 +61,7 @@ export async function addRow(input: CreateDonationPaymentInput) {
         taxCategory: validatedInput.taxCategory,
         beneficiaryId: validatedInput.beneficiaryId,
         transactionId: validatedInput.transactionId,
+        donationPurpose: validatedInput.donationPurpose ?? 'VOLUNTARY',
       },
     );
 
@@ -73,6 +74,7 @@ export async function addRow(input: CreateDonationPaymentInput) {
         amount: newPayment.amount.toNumber(),
         beneficiaryType: newPayment.beneficiaryType,
         taxCategory: newPayment.taxCategory,
+        donationPurpose: newPayment.donationPurpose,
         beneficiaryId: validatedInput.beneficiaryId || '',
         transactionId: validatedInput.transactionId,
       },
