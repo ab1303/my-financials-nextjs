@@ -12,7 +12,7 @@ export async function voidSingleTransaction(
 ): Promise<void> {
   const tx = await ctx.prisma.transaction.findUnique({
     where: { id: transactionId },
-    include: { incomeRecord: true },
+    include: { incomeRecord: true, donationPayment: { select: { id: true } } },
   });
 
   if (!tx || tx.userId !== ctx.userId) {
@@ -40,7 +40,7 @@ export async function undoImportSession(
     include: {
       transactions: {
         where: { userId: ctx.userId, status: { not: 'VOIDED' } },
-        include: { incomeRecord: true },
+        include: { incomeRecord: true, donationPayment: { select: { id: true } } },
       },
     },
   });
@@ -84,8 +84,18 @@ async function reverseDownstream(
     date: Date;
     category: string;
     incomeRecord: { id: string } | null;
+    donationPayment: { id: string } | null;
   },
 ): Promise<void> {
+  // Unlink donation payment regardless of transaction status (onDelete:SetNull only fires
+  // on hard delete; voiding leaves a stale FK without this explicit clear).
+  if (tx.donationPayment) {
+    await db.donationPayment.update({
+      where: { id: tx.donationPayment.id },
+      data: { transactionId: null },
+    });
+  }
+
   if (tx.status !== 'CONFIRMED') return;
 
   if (tx.type === 'DEBIT') {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, type ReactNode } from 'react';
+import { History } from 'lucide-react';
 import CSVImportWizard from './csv/CSVImportWizard';
 import AIImportWizard from './ai/AIImportWizard';
 import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
@@ -50,6 +51,7 @@ interface Props {
 export default function TransactionsClient({ bankAccounts }: Props) {
   const [csvOpen, setCsvOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleImportComplete = useCallback(() => {
@@ -58,10 +60,21 @@ export default function TransactionsClient({ bankAccounts }: Props) {
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Transactions</h1>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        Import and manage your bank transactions
-      </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Transactions</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Import and manage your bank transactions
+          </p>
+        </div>
+        <button
+          onClick={() => setHistoryOpen(true)}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+        >
+          <History className="h-4 w-4" />
+          Import History
+        </button>
+      </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         <ImportCard
@@ -124,7 +137,7 @@ export default function TransactionsClient({ bankAccounts }: Props) {
         bankAccounts={bankAccounts}
       />
 
-      <ImportSessionHistory />
+      <ImportSessionHistory isOpen={historyOpen} onClose={() => setHistoryOpen(false)} />
     </main>
   );
 }

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { trpc } from '@/server/trpc/client';
 import { toast } from 'sonner';
+import { Modal } from '@/components/ui/Modal';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 interface SessionRow {
   id: string;
@@ -31,10 +33,17 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export default function ImportSessionHistory() {
-  const { data, refetch, isLoading } = trpc.transactionClearing.listImportSessions.useQuery({
-    limit: 20,
-  });
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function ImportSessionHistory({ isOpen, onClose }: Props) {
+  const { data, refetch, isLoading } = trpc.transactionClearing.listImportSessions.useQuery(
+    { limit: 20 },
+    { enabled: isOpen },
+  );
+
   const undoMutation = trpc.transactionClearing.undoImportSession.useMutation({
     onSuccess: (result) => {
       toast.success(`Undone — ${result.voided} transactions reversed`);
@@ -43,103 +52,127 @@ export default function ImportSessionHistory() {
     onError: (err) => toast.error(err.message),
   });
 
-  const [confirmId, setConfirmId] = useState<string | null>(null);
-  const pendingSession = data?.find((s: SessionRow) => s.id === confirmId);
+  const deleteMutation = trpc.transactionClearing.deletePendingSession.useMutation({
+    onSuccess: () => {
+      toast.success('Pending session removed');
+      void refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const [undoConfirmId, setUndoConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const undoSession = (data as SessionRow[] | undefined)?.find((s) => s.id === undoConfirmId);
 
   return (
-    <section className="mt-10">
-      <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Import History</h2>
+    <>
+      <Modal show={isOpen} onClose={onClose} panelClassName="max-w-3xl">
+        <Modal.Header>
+          <span className="text-xl font-semibold text-foreground">Import History</span>
+          <p className="text-sm text-muted-foreground mt-1">
+            Recent import sessions. Completed imports can be reversed — this removes all
+            associated transactions and financial records.
+          </p>
+        </Modal.Header>
 
-      {confirmId && pendingSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
-            <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
-              Undo Import?
-            </h3>
-            <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-              This will reverse {pendingSession.transactionCount} transactions and remove their
-              financial records.
-              <strong className="mt-2 block text-red-600 dark:text-red-400">
-                This action cannot be re-done.
-              </strong>
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setConfirmId(null)}
-                className="rounded px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  undoMutation.mutate({ importSessionId: confirmId });
-                  setConfirmId(null);
-                }}
-                disabled={undoMutation.isPending}
-                className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                Yes, Undo Import
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        <Modal.Body variant="spacious">
+          {isLoading && (
+            <p className="text-sm text-muted-foreground py-4 text-center">Loading…</p>
+          )}
 
-      {isLoading && <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>}
+          {!isLoading && (!data || data.length === 0) && (
+            <p className="text-sm text-muted-foreground py-4 text-center">No imports yet.</p>
+          )}
 
-      {!isLoading && data?.length === 0 && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">No imports yet.</p>
-      )}
-
-      {data && data.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                {['Date', 'Type', 'Records', 'Status', ''].map((h) => (
-                  <th
-                    key={h}
-                    className="cursor-default select-none px-4 py-3 font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {(data as SessionRow[]).map((session) => (
-                <tr
-                  key={session.id}
-                  className="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
-                >
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                    {new Date(session.createdAt).toLocaleDateString('en-AU')}
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                    {session.importType === 'EXPENSE' ? 'CSV' : session.importType}
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                    {session.transactionCount}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={session.status} />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {(session.status === 'COMPLETED' || session.status === 'PARTIAL') && (
-                      <button
-                        onClick={() => setConfirmId(session.id)}
-                        className="rounded px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+          {data && data.length > 0 && (
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted">
+                  <tr>
+                    {['Date', 'Type', 'Records', 'Status', ''].map((h) => (
+                      <th
+                        key={h}
+                        className="cursor-default select-none px-4 py-3 font-medium text-foreground"
                       >
-                        Undo
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {(data as SessionRow[]).map((session) => (
+                    <tr key={session.id} className="hover:bg-muted/50">
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {new Date(session.createdAt).toLocaleDateString('en-AU')}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {session.importType === 'EXPENSE' ? 'CSV' : session.importType}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {session.transactionCount}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={session.status} />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {(session.status === 'COMPLETED' || session.status === 'PARTIAL') && (
+                          <button
+                            onClick={() => setUndoConfirmId(session.id)}
+                            className="rounded px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                          >
+                            Undo
+                          </button>
+                        )}
+                        {session.status === 'PENDING' && (
+                          <button
+                            onClick={() => setDeleteConfirmId(session.id)}
+                            className="rounded px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
+
+      <ConfirmationDialog
+        isOpen={!!undoConfirmId}
+        onClose={() => setUndoConfirmId(null)}
+        onConfirm={() => {
+          if (undoConfirmId) {
+            undoMutation.mutate({ importSessionId: undoConfirmId });
+            setUndoConfirmId(null);
+          }
+        }}
+        title="Undo Import?"
+        message={`This will void all ${undoSession?.transactionCount ?? 0} transactions from this import and reverse their expense summaries and income records. This cannot be re-done.`}
+        confirmButtonText="Yes, Undo Import"
+        variant="danger"
+        isLoading={undoMutation.isPending}
+      />
+
+      <ConfirmationDialog
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => {
+          if (deleteConfirmId) {
+            deleteMutation.mutate({ importSessionId: deleteConfirmId });
+            setDeleteConfirmId(null);
+          }
+        }}
+        title="Delete Pending Session?"
+        message="This incomplete import session will be permanently removed. No transactions were created by it."
+        confirmButtonText="Delete"
+        variant="warning"
+        isLoading={deleteMutation.isPending}
+      />
+    </>
   );
 }

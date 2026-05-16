@@ -40,6 +40,32 @@ export const transactionClearingRouter = router({
       }
     }),
 
+  deletePendingSession: protectedProcedure
+    .input(z.object({ importSessionId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await ctx.prisma.importSession.findUnique({
+        where: { id: input.importSessionId },
+        include: { _count: { select: { transactions: true } } },
+      });
+      if (!session || session.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
+      }
+      if (session.status !== 'PENDING') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Only PENDING sessions can be deleted. Use Undo for completed imports.',
+        });
+      }
+      if (session._count.transactions > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'This session has transactions — use Undo instead.',
+        });
+      }
+      await ctx.prisma.importSession.delete({ where: { id: input.importSessionId } });
+      return { success: true };
+    }),
+
   listImportSessions: protectedProcedure
     .input(z.object({ limit: z.number().int().min(1).max(50).default(20) }))
     .query(async ({ ctx, input }) => {
