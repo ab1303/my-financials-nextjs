@@ -74,13 +74,13 @@ export default function CleansingDonationsList({
           aria-label="Add cleansing donation"
           title="Add cleansing donation"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
 
       {donations.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center border border-dashed border-border rounded-lg">
-          <div className="mb-2 text-muted-foreground/50"><Plus className="h-6 w-6" /></div>
+          <div className="mb-2 text-muted-foreground/50"><Plus className="h-6 w-6" aria-hidden="true" /></div>
           <p className="mb-1 text-sm font-medium text-foreground">No cleansing donations recorded</p>
           <p className="text-xs text-muted-foreground">Click + to record your first cleansing donation for this year</p>
         </div>

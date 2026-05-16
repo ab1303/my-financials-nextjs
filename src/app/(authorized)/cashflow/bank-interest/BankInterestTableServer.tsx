@@ -24,11 +24,6 @@ export default async function BankInterestTableServer({
 
   return (
     <div className="space-y-8">
-      <InterestCreditsTable
-        credits={data.monthlyCredits}
-        bankId={bankId}
-        calendarYearId={calendarYearId}
-      />
       <CleansingDonationsList
         donations={data.cleansingDonations}
         yearlySummary={data.yearlySummary}
@@ -37,6 +32,11 @@ export default async function BankInterestTableServer({
         dateFrom={dateFrom}
         dateTo={dateTo}
         unlinkedInterestCount={data.unlinkedInterestCount}
+      />
+      <InterestCreditsTable
+        credits={data.monthlyCredits}
+        bankId={bankId}
+        calendarYearId={calendarYearId}
       />
     </div>
   );
