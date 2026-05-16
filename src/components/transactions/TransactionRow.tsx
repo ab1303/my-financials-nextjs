@@ -11,6 +11,7 @@ import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/route
 import { getCompactSelectStyles } from '@/lib/select-styles';
 import TransactionSourceIndicator from './TransactionSourceIndicator';
 import ReimbursementSubRow from './ReimbursementSubRow';
+import VoidTransactionButton from './VoidTransactionButton';
 
 interface TransactionRowProps {
   transaction: LedgerTransactionRow;
@@ -24,6 +25,7 @@ interface TransactionRowProps {
   ) => void;
   isSaving?: boolean;
   colCount?: number;
+  onVoided?: () => void;
 }
 
 function formatCurrency(value: number): string {
@@ -47,12 +49,14 @@ export default function TransactionRow({
   incomeSourceLabels,
   onCategoryChange,
   isSaving = false,
-  colCount = 9,
+  colCount = 10,
+  onVoided,
 }: TransactionRowProps) {
   const statusClasses: Record<string, string> = {
     CONFIRMED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
     PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
     EXCLUDED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    VOIDED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   };
 
   const [localCategory, setLocalCategory] = useState(transaction.category);
@@ -350,6 +354,11 @@ export default function TransactionRow({
           {transaction.bankAccountName
             ? `${transaction.bankAccountName}${transaction.bankName ? ` (${transaction.bankName})` : ''}`
             : transaction.bankName ?? '-'}
+        </td>
+        <td className="px-4 py-3">
+          {transaction.status !== 'VOIDED' && onVoided && (
+            <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} />
+          )}
         </td>
       </tr>
 

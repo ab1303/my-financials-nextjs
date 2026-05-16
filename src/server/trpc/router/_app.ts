@@ -10,6 +10,7 @@ import { aiUsageRouter } from './ai-usage';
 import { exampleRouter } from './example';
 import { transactionLedgerRouter } from './transaction-ledger';
 import { userProfileRouter } from './user-profile';
+import { transactionClearingRouter } from './transaction-clearing';
 
 export const appRouter = router({
   example: exampleRouter,
@@ -23,6 +24,7 @@ export const appRouter = router({
   aiUsage: aiUsageRouter,
   transactionLedger: transactionLedgerRouter,
   userProfile: userProfileRouter,
+  transactionClearing: transactionClearingRouter,
 });
 
 // export type definition of API

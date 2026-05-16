@@ -264,8 +264,8 @@ model IncomeRecord {
   source         IncomeSourceEnumType
   incomeLedger   IncomeLedger         @relation(fields: [incomeLedgerId], references: [id], onDelete: Cascade)
   incomeLedgerId String
-  transaction     Transaction?        @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  transactionId   String?             @unique
+  transaction    Transaction?         @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  transactionId  String?              @unique
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 

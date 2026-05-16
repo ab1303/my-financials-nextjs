@@ -4,6 +4,7 @@ import { useState, useCallback, type ReactNode } from 'react';
 import CSVImportWizard from './csv/CSVImportWizard';
 import AIImportWizard from './ai/AIImportWizard';
 import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
+import ImportSessionHistory from '@/components/transactions/ImportSessionHistory';
 
 interface BankAccount {
   id: string;
@@ -122,6 +123,8 @@ export default function TransactionsClient({ bankAccounts }: Props) {
         onClose={() => setAiOpen(false)}
         bankAccounts={bankAccounts}
       />
+
+      <ImportSessionHistory />
     </main>
   );
 }
