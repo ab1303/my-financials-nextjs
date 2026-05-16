@@ -20,7 +20,7 @@ export const businessRouter = router({
       if (existing && existing.length > 0) {
         throw new TRPCError({ code: 'CONFLICT', message: 'A business with this name already exists.' });
       }
-      const business = await addBusinessDetails({ name: input.name, userId });
+      const business = await addBusinessDetails({ name: input.name, userId, type: 'PHILANTHROPY' });
       return { id: business.id, name: business.name };
     }),
 
