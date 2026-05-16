@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import { getServerSession } from 'next-auth';
 import { Suspense } from 'react';
 
+import { auth } from '@/server/auth';
 import Card from '@/components/card';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { authOptions } from '@/utils/authOptions';
 
 import NetWorthDashboardClient from './NetWorthDashboardClient';
 
@@ -14,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AssetsOverviewPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user?.id) {
     return (

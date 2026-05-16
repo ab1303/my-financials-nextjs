@@ -45,7 +45,7 @@ export const getNetWorthTrend = async (
   userId: string,
   filters?: NetWorthTrendFilters,
 ): Promise<NetWorthTrendResponse> => {
-  const cashWhere: Prisma.BankAssetSnapshotWhereInput = { userId };
+  const cashWhere: Prisma.BankBalanceSnapshotWhereInput = { userId };
 
   if (filters?.fromDate || filters?.toDate) {
     cashWhere.snapshotDate = {
@@ -55,18 +55,18 @@ export const getNetWorthTrend = async (
   }
 
   const [cashSnapshots, stockSnapshots] = await Promise.all([
-    prisma.bankAssetSnapshot.findMany({
+    prisma.bankBalanceSnapshot.findMany({
       where: cashWhere,
       orderBy: { snapshotDate: 'asc' },
       include: {
-        entries: {
+        balanceRecords: {
           select: {
             balance: true,
           },
         },
       },
     }),
-    prisma.stockSnapshot.findMany({
+    prisma.portfolioSnapshot.findMany({
       where: { userId },
       orderBy: { snapshotDate: 'asc' },
       include: {
@@ -106,7 +106,7 @@ export const getNetWorthTrend = async (
 
     const matchedStockSnapshot =
       stockPointer >= 0 ? stockSnapshotsWithTotals[stockPointer] : null;
-    const cashTotal = cashSnapshot.entries.reduce(
+    const cashTotal = cashSnapshot.balanceRecords.reduce(
       (sum, entry) => sum + entry.balance.toNumber(),
       0,
     );
@@ -127,7 +127,7 @@ export const getNetWorthTrend = async (
 
   const latestCashSnapshot = cashSnapshots[cashSnapshots.length - 1] ?? null;
   const latestCashTotal = latestCashSnapshot
-    ? latestCashSnapshot.entries.reduce(
+    ? latestCashSnapshot.balanceRecords.reduce(
         (sum, entry) => sum + entry.balance.toNumber(),
         0,
       )
