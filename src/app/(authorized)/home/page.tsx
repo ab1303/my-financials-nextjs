@@ -103,7 +103,7 @@ export default async function HomePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Link href='/cashflow/bank'>
+            <Link href='/assets/bank'>
               <Button variant='outline' size='sm' className='w-full'>
                 View Assets
               </Button>
@@ -192,7 +192,7 @@ export default async function HomePage() {
                   Income Summary Report
                 </Button>
               </Link>
-              <Link href='/cashflow/bank'>
+              <Link href='/assets/bank'>
                 <Button
                   variant='ghost'
                   className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'
@@ -201,7 +201,7 @@ export default async function HomePage() {
                   Bank Assets
                 </Button>
               </Link>
-              <Link href='/cashflow/stocks'>
+              <Link href='/assets/stocks'>
                 <Button
                   variant='ghost'
                   className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'

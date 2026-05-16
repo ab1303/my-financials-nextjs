@@ -3,10 +3,10 @@
 import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
-import UploadStep from '../../transactions/_components/ai/UploadStep';
+import UploadStep from '../../../cashflow/transactions/_components/ai/UploadStep';
 import BankProcessingStep from './BankAIProcessingStep';
-import ResultsStep from '../../transactions/_components/ai/ResultsStep';
-import type { UploadedFile, AIImportSessionResult } from '../../transactions/_components/ai/_types';
+import ResultsStep from '../../../cashflow/transactions/_components/ai/ResultsStep';
+import type { UploadedFile, AIImportSessionResult } from '../../../cashflow/transactions/_components/ai/_types';
 
 type WizardStep = 'upload' | 'processing' | 'results';
 

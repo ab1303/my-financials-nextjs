@@ -66,8 +66,8 @@ const cashflowItems: NavItem[] = [
 ];
 
 const assetItems: NavItem[] = [
-  { name: 'Bank(s)', href: '/cashflow/bank', icon: Landmark },
-  { name: 'Stock(s)', href: '/cashflow/stocks', icon: CandlestickChart },
+  { name: 'Bank(s)', href: '/assets/bank', icon: Landmark },
+  { name: 'Stock(s)', href: '/assets/stocks', icon: CandlestickChart },
 ];
 
 const relationItems: NavItem[] = [
@@ -215,8 +215,8 @@ export default function SideNav({
       icon: Building2,
       items: assetItems,
       defaultOpen:
-        pathname.startsWith('/cashflow/bank') ||
-        pathname.startsWith('/cashflow/stocks'),
+        pathname.startsWith('/assets/bank') ||
+        pathname.startsWith('/assets/stocks'),
     },
     {
       name: 'Relation(s)',

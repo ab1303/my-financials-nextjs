@@ -49,7 +49,7 @@ export default async function CalendarYearPage() {
         // Revalidate calendar settings page
         revalidatePath('/settings/calendar');
         // Revalidate Bank Assets page to refresh calendar year dropdown
-        revalidatePath('/cashflow/bank');
+        revalidatePath('/assets/bank');
         return { success: true };
       } else {
         // Handle error case - result has error properties
@@ -82,7 +82,7 @@ export default async function CalendarYearPage() {
         // Revalidate calendar settings page
         revalidatePath('/settings/calendar');
         // Revalidate Bank Assets page to refresh calendar year dropdown
-        revalidatePath('/cashflow/bank');
+        revalidatePath('/assets/bank');
         return { success: true };
       } else {
         const errorMessage =

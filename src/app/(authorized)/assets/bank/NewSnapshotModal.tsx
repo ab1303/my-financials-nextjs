@@ -4,14 +4,12 @@ import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
-import CreatableSelect from 'react-select/creatable';
-
-import { getSelectStyles } from '@/lib/select-styles';
 
 import { trpc } from '@/server/trpc/client';
 import { Modal } from '@/components/ui/Modal';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components';
+import { AppCreatableSelect } from '@/components/ui/AppCreatableSelect';
 
 type BankAssetEntry = {
   id: string;
@@ -264,10 +262,10 @@ export default function NewSnapshotModal({
                           </select>
                         </div>
 
-                        {/* Account Selector (CreatableSelect) */}
+                        {/* Account Selector (AppCreatableSelect) */}
                         <div>
                           <Label htmlFor={`account-${index}`}>Account</Label>
-                          <CreatableSelect
+                          <AppCreatableSelect
                             inputId={`account-${index}`}
                             options={accountOptions}
                             value={
@@ -319,7 +317,6 @@ export default function NewSnapshotModal({
                             isClearable
                             placeholder='Select or type to create account...'
                             className='mt-1'
-                            styles={getSelectStyles<{ value: string; label: string }>()}
                             isLoading={createAccountMutation.isPending}
                           />
                           {!entry.bankId && (

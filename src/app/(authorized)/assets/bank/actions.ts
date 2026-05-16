@@ -28,7 +28,7 @@ export async function updateAccountName(input: UpdateBankAccountInput) {
     });
 
     // Revalidate relevant paths to refresh the page data
-    revalidatePath('/cashflow/bank');
+    revalidatePath('/assets/bank');
 
     return {
       success: true,

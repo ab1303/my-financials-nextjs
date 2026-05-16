@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 const ROUTE_LABELS: Record<string, string> = {
   home: 'Dashboard',
   cashflow: 'Cashflow',
+  assets: 'Assets',
   income: 'Income',
   donations: 'Donations',
   expense: 'Expenses',
