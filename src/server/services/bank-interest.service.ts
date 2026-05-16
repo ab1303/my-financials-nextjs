@@ -124,6 +124,18 @@ export const removeBankInterestPaymentDetail = async (
   });
 };
 
+export const initializeBankInterestYear = async (
+  bankId: string,
+  calendarYearId: string,
+): Promise<void> => {
+  const existing = await prisma.bankInterestLiability.findFirst({
+    where: { bankId, calendarId: calendarYearId },
+  });
+  if (!existing) {
+    await createYearlyBankInterestDetails(bankId, calendarYearId);
+  }
+};
+
 const createYearlyBankInterestDetails = async (
   bankId: string,
   calendarYearId: string,

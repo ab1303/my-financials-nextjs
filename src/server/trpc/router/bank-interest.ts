@@ -11,6 +11,7 @@ import {
 
 import {
   bankInterestDetailsHandler,
+  initializeBankInterestYearHandler,
   updateBankInterestDetailsHandler,
   createBankInterestPaymentHandler,
   updateBankInterestPaymentHandler,
@@ -22,6 +23,11 @@ import {
 } from '@/server/services/bank-interest/interest-cleansing.service';
 
 export const bankInterestRouter = router({
+  initializeBankInterestYear: protectedProcedure
+    .input(z.object({ bankId: z.string(), calendarYearId: z.string() }))
+    .mutation(({ input }) =>
+      initializeBankInterestYearHandler(input.bankId, input.calendarYearId)
+    ),
   getYearlyBankInterestDetails: protectedProcedure
     .input(getYearlyBankInterestSchema)
     .query(({ input: { bankId, calendarYearId } }) =>

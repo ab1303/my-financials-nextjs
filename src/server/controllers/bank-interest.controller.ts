@@ -2,10 +2,22 @@ import { handleCaughtError } from '@/server/utils/prisma';
 import {
   addBankInterestPaymentDetail,
   getBankInterestDetails,
+  initializeBankInterestYear,
   removeBankInterestPaymentDetail,
   updateBankInterestDetail,
   updateBankInterestPaymentDetail,
 } from '@/server/services/bank-interest.service';
+
+export const initializeBankInterestYearHandler = async (
+  bankId: string,
+  calendarYearId: string,
+) => {
+  try {
+    await initializeBankInterestYear(bankId, calendarYearId);
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
 
 export const bankInterestDetailsHandler = async (
   bankId: string,

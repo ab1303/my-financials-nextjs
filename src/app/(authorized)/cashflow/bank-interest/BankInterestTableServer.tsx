@@ -25,6 +25,7 @@ export default async function BankInterestTableServer({
 
   const data: BankInterestType[] = cleansingData.map((d) => ({
     id: d.bankInterestLiabilityId,
+    bankInterestLiabilityId: d.bankInterestLiabilityId,
     month: d.month,
     year: d.year,
     receivedFromLedger: d.receivedFromLedger,

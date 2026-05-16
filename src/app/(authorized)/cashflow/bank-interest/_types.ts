@@ -2,6 +2,7 @@ export type CleansingStatus = 'CLEANSED' | 'PARTIAL' | 'PENDING' | 'MANUAL' | 'N
 
 export type BankInterestType = {
   id: string;
+  bankInterestLiabilityId: string;
   month: number;
   year: number;
   receivedFromLedger: number;
