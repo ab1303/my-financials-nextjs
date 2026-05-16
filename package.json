@@ -70,6 +70,7 @@
     "react-phone-input-2": "^2.15.1",
     "react-select": "^5.8.2",
     "react-toastify": "^10.0.6",
+    "recharts": "^3.8.1",
     "superjson": "2.2.1",
     "typescript": "^5.8.3",
     "use-debounce": "^10.0.4",

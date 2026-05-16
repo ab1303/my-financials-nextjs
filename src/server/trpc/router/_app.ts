@@ -6,6 +6,7 @@ import { bankInterestRouter } from './bank-interest';
 import { individualRouter } from './individual';
 import { bankAssetRouter } from './bank-asset';
 import { stockAssetRouter } from './stock-asset';
+import { assetDashboardRouter } from './asset-dashboard';
 
 import { exampleRouter } from './example';
 
@@ -18,6 +19,7 @@ export const appRouter = router({
   business: businessRouter,
   bankAsset: bankAssetRouter,
   stockAsset: stockAssetRouter,
+  assetDashboard: assetDashboardRouter,
 });
 
 // export type definition of API

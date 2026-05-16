@@ -140,15 +140,22 @@ export default function SideNav({
               className={navigationStyles.disclosure.panel}
             >
               <SideNavLink
+                name='Overview'
+                href='/assets'
+                className='border-b-0'
+              >
+                <IconChartBar />
+              </SideNavLink>
+              <SideNavLink
                 name='Bank(s)'
-                href='/cashflow/bank'
+                href='/assets/bank'
                 className='border-b-0'
               >
                 <IconBank />
               </SideNavLink>
               <SideNavLink
                 name='Stock(s)'
-                href='/cashflow/stocks'
+                href='/assets/stocks'
                 className='border-b-0'
               >
                 <IconStock />
