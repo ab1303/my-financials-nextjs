@@ -6,14 +6,15 @@ import { trpc } from '@/server/trpc/client';
 import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
 import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
+import VoidTransactionButton from './VoidTransactionButton';
 
-type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized';
+type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized' | 'voided';
 
 type GetAllInput = {
   page: number;
   limit: number;
   type?: 'DEBIT' | 'CREDIT';
-  status?: 'PENDING' | 'CONFIRMED' | 'EXCLUDED';
+  status?: 'PENDING' | 'CONFIRMED' | 'EXCLUDED' | 'VOIDED';
   bankAccountId?: string;
   category?: string;
   dateFrom?: string;
@@ -39,6 +40,7 @@ const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'statu
   excluded: { status: 'EXCLUDED' },
   reimbursements: { type: 'CREDIT', status: 'CONFIRMED', reimbursementOnly: true },
   uncategorized: {},
+  voided: { status: 'VOIDED' },
 };
 
 function parseAmount(value: string) {
@@ -171,7 +173,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap gap-4 border-b border-gray-200 dark:border-gray-700">
-        {(['all', 'expenses', 'income', 'reimbursements', 'excluded', 'uncategorized'] as const).map((tab) => (
+        {(['all', 'expenses', 'income', 'reimbursements', 'excluded', 'uncategorized', 'voided'] as const).map((tab) => (
           <button
             key={tab}
             type="button"
@@ -248,10 +250,10 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
                 <th className="w-8 px-1 py-3" />
-                {['Date', 'Description', 'Amount', 'Type', 'Category', 'Source', 'Status', 'Bank Account'].map((h) => (
+                {['Date', 'Description', 'Amount', 'Type', 'Category', 'Source', 'Status', 'Bank Account', 'Actions'].map((h) => (
                   <th
                     key={h}
-                    className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300 ${
+                    className={`select-none cursor-default px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300 ${
                       h === 'Source' ? 'w-20 text-center' : 'text-left'
                     }`}
                   >
@@ -269,7 +271,8 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
                   incomeSourceLabels={incomeSourceLabels}
                   onCategoryChange={handleCategoryChange}
                   isSaving={savingId === transaction.id}
-                  colCount={9}
+                  colCount={10}
+                  onVoided={() => void refetch()}
                 />
               ))}
             </tbody>

@@ -257,6 +257,8 @@ model IncomeRecord {
   source         IncomeSourceEnumType
   incomeLedger   IncomeLedger         @relation(fields: [incomeLedgerId], references: [id], onDelete: Cascade)
   incomeLedgerId String
+  transaction    Transaction?         @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  transactionId  String?              @unique
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
 
@@ -438,6 +440,7 @@ enum ImportStatusEnum {
   COMPLETED
   PARTIAL
   FAILED
+  VOIDED
 }
 
 enum StorageProviderEnum {
@@ -541,6 +544,7 @@ enum TransactionStatusEnum {
   PENDING
   CONFIRMED
   EXCLUDED
+  VOIDED
 }
 
 // Transaction — staging record for every line in a CSV or AI-extracted receipt
@@ -567,6 +571,7 @@ model Transaction {
   offsetTransaction Transaction?  @relation("ReimbursementLink", fields: [offsetTransactionId], references: [id])
   reimbursements    Transaction[] @relation("ReimbursementLink")
   donationPayment   DonationPayment?
+  incomeRecord      IncomeRecord?
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
