@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { auth } from '@/server/auth';
 import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { getInterestCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
+import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
 
 import type { CalendarEnumType } from '@prisma/client';
 
@@ -68,18 +68,18 @@ export default async function BanksPage({
   const initialData = { bankOptions, yearlyData };
 
   const session = await auth();
-  const cleansingData =
+  const yearlyCleansingData =
     selectedBankId && selectedCalendarYearId && session?.user?.id
-      ? await getInterestCleansingData(
+      ? await getYearlyCleansingData(
           selectedBankId,
           selectedCalendarYearId,
           session.user.id,
         )
-      : [];
+      : null;
 
-  const totalReceived = cleansingData.reduce((sum, d) => sum + d.receivedTotal, 0);
-  const totalCleansed = cleansingData.reduce((sum, d) => sum + d.amountCleansed, 0);
-  const remaining = cleansingData.reduce((sum, d) => sum + d.balance, 0);
+  const totalReceived = yearlyCleansingData?.yearlySummary.totalReceived ?? 0;
+  const totalCleansed = yearlyCleansingData?.yearlySummary.totalCleansed ?? 0;
+  const remaining = yearlyCleansingData?.yearlySummary.balance ?? 0;
 
   return (
     <main className='container mx-auto max-w-6xl px-4 py-6'>
@@ -147,10 +147,12 @@ export default async function BanksPage({
                 <div className='mb-3 font-mono text-gray-500'>
                   {selectedBank?.label} Interest
                 </div>
-                <BankInterestTableServer
-                  bankId={selectedBankId}
-                  calendarYearId={selectedCalendarYearId}
-                />
+                {yearlyCleansingData ? (
+                  <BankInterestTableServer
+                    bankId={selectedBankId}
+                    calendarYearId={selectedCalendarYearId}
+                  />
+                ) : null}
               </>
             ) : (
               <p className='text-sm text-gray-500'>

@@ -18,7 +18,7 @@ import {
   removeBankInterestPaymentHandler,
 } from '@/server/controllers/bank-interest.controller';
 import {
-  getInterestCleansingData,
+  getYearlyCleansingData,
   getUnlinkedInterestTransactions,
 } from '@/server/services/bank-interest/interest-cleansing.service';
 
@@ -67,7 +67,7 @@ export const bankInterestRouter = router({
   getInterestCleansingData: protectedProcedure
     .input(z.object({ bankId: z.string(), calendarYearId: z.string() }))
     .query(({ ctx, input }) =>
-      getInterestCleansingData(
+      getYearlyCleansingData(
         input.bankId,
         input.calendarYearId,
         ctx.session.user.id,

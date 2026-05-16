@@ -36,13 +36,7 @@ export type CleanseDonationDrawerProps = {
   calendarYearId: string;
   dateFrom: string;
   dateTo: string;
-  liabilityId: string;
-  receivedTotal: number;
-  onDonationSaved: (
-    bankInterestLiabilityId: string,
-    amountAdded: number,
-    hasTransactionLink: boolean,
-  ) => void;
+  onDonationSaved: () => void;
 };
 
 // ---------- Schemas ----------
@@ -55,7 +49,6 @@ const linkedModeSchema = z.object({
 
 const manualModeSchema = z.object({
   datePaid: z.string().min(1, 'Date is required'),
-  interestReceived: z.number().optional(),
   amount: z.number({ required_error: 'Amount is required' }).positive('Must be greater than 0'),
   taxCategory: z.string().min(1, 'Tax category is required'),
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
@@ -82,7 +75,6 @@ function getDefaultLinkedValues(): LinkedFormValues {
 function getDefaultManualValues(): ManualFormValues {
   return {
     datePaid: '',
-    interestReceived: undefined,
     amount: 0,
     taxCategory: '',
     beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
@@ -99,18 +91,15 @@ export default function CleanseDonationDrawer({
   calendarYearId,
   dateFrom,
   dateTo,
-  liabilityId,
-  receivedTotal,
   onDonationSaved,
 }: CleanseDonationDrawerProps) {
-  const [mode, setMode] = useState<DrawerMode>(receivedTotal === 0 ? 'manual' : 'linked');
+  const [mode, setMode] = useState<DrawerMode>('linked');
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [selectedTransactionId, setSelectedTransactionId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [pendingBeneficiaryName, setPendingBeneficiaryName] = useState('');
 
-  const updateLiabilityMutation = trpc.bankInterest.updateBankInterestDetail.useMutation();
 
   const linkedForm = useForm<LinkedFormValues>({
     resolver: zodResolver(linkedModeSchema),
@@ -249,7 +238,7 @@ export default function CleanseDonationDrawer({
       }
 
       toast.success('Cleansing donation linked!');
-      onDonationSaved('', selectedTransaction.amount, true);
+      onDonationSaved();
 
       setTransactions((current) => {
         const remaining = current.filter((item) => item.id !== selectedTransaction.id);
@@ -268,21 +257,9 @@ export default function CleanseDonationDrawer({
   });
 
   const handleManualSave = manualForm.handleSubmit(async (values) => {
-    if (receivedTotal === 0 && (!values.interestReceived || values.interestReceived <= 0)) {
-      toast.error('Please enter the interest amount received from the bank.');
-      return;
-    }
 
     setIsSaving(true);
     try {
-      if (receivedTotal === 0 && values.interestReceived) {
-        await updateLiabilityMutation.mutateAsync({
-          bankInterestId: liabilityId,
-          bankId,
-          calendarYearId,
-          amount: values.interestReceived,
-        });
-      }
 
       const result = await addRow({
         datePaid: new Date(values.datePaid),
@@ -300,7 +277,7 @@ export default function CleanseDonationDrawer({
       }
 
       toast.success('Manual cleansing donation saved!');
-      onDonationSaved('', values.amount, false);
+      onDonationSaved();
       manualForm.reset(getDefaultManualValues());
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save');
@@ -382,7 +359,7 @@ export default function CleanseDonationDrawer({
         ) : (
           <ManualModeBody
             form={manualForm}
-            showInterestField={receivedTotal === 0}
+            
             beneficiaryOptions={getBeneficiaryOptions(manualBeneficiaryType)}
             beneficiaryType={manualBeneficiaryType}
             isSaving={isSaving}
@@ -557,7 +534,6 @@ function LinkedModeBody({
 
 type ManualModeBodyProps = {
   form: UseFormReturn<ManualFormValues>;
-  showInterestField: boolean;
   beneficiaryOptions: BeneficiaryOption[];
   beneficiaryType: BeneficiaryEnumType;
   isSaving: boolean;
@@ -572,7 +548,6 @@ type ManualModeBodyProps = {
 
 function ManualModeBody({
   form,
-  showInterestField,
   beneficiaryOptions,
   beneficiaryType,
   isSaving,
@@ -594,33 +569,6 @@ function ManualModeBody({
     <>
       <div className="flex flex-1 flex-col overflow-y-auto p-6">
         <div className="grid gap-4">
-          {showInterestField && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
-              <label htmlFor="manual-interestReceived" className="mb-1 block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200">
-                Interest received (AUD)
-              </label>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                No ledger transactions found for this month. Enter the bank interest amount credited to your account.
-              </p>
-              <Controller
-                control={control}
-                name="interestReceived"
-                render={({ field }) => (
-                  <input
-                    id="manual-interestReceived"
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    value={field.value ?? ''}
-                    onChange={(event) => field.onChange(parseFloat(event.target.value) || undefined)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-                    placeholder="0.00"
-                  />
-                )}
-              />
-              {errors.interestReceived && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.interestReceived.message}</p>}
-            </div>
-          )}
 
           <div>
             <label htmlFor="manual-datePaid" className="mb-1 block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -808,5 +756,6 @@ function BeneficiaryFormFields({
     </div>
   );
 }
+
 
 

@@ -1,4 +1,4 @@
-export type CleansingStatus = 'CLEANSED' | 'PARTIAL' | 'PENDING' | 'MANUAL' | 'NONE';
+export type { MonthlyCredit, CleansingDonation, YearlySummary, YearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
 
 export type BankInterestType = {
   id: string;
@@ -10,12 +10,6 @@ export type BankInterestType = {
   receivedTotal: number;
   amountCleansed: number;
   balance: number;
-  status: CleansingStatus;
+  status: 'CLEANSED' | 'PARTIAL' | 'PENDING' | 'MANUAL' | 'NONE';
   uncleansedTxCount: number;
-};
-
-export type YearlySummary = {
-  totalReceived: number;
-  totalCleansed: number;
-  remaining: number;
 };
