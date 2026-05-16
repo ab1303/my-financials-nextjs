@@ -30,6 +30,11 @@ next-env.d.ts
 # misc
 .DS_Store
 *.pem
+build-output.log
+
+# MCP / AI tooling
+.mcp.json
+.playwright-mcp/
 
 # debug
 npm-debug.log*
