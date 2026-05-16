@@ -50,6 +50,15 @@ model User {
   image         String?
   password      String
   role          RoleEnumType? @default(user)
+  // Extended profile fields
+  phone                 String?
+  bio                   String?               @db.Text
+  timezone              String?               @default("Australia/Sydney")
+  linkedInUrl           String?
+  preferredCurrency     CurrencyEnumType?     @default(AUD)
+  fiscalYearType        CalendarEnumType?     @default(FISCAL)
+  avatarStorageUrl      String?
+  avatarStorageProvider StorageProviderEnum?
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt

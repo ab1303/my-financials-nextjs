@@ -20,6 +20,7 @@ export interface IImageStorageAdapter {
     mimeType: string,
     userId: string,
     originalFileName: string,
+    pathPrefix?: string,
   ): Promise<StorageResult>;
 
   deleteImage(storageUrl: string): Promise<void>;
@@ -39,26 +40,22 @@ export interface StorageResult {
  * Stores files in /uploads/ai-imports/ directory (gitignored)
  */
 export class LocalStorageAdapter implements IImageStorageAdapter {
-  private uploadDir: string;
-
-  constructor() {
-    // Store in project root /uploads/ai-imports/
-    this.uploadDir = path.join(process.cwd(), 'uploads', 'ai-imports');
-  }
-
   async uploadImage(
     file: Buffer,
     mimeType: string,
     userId: string,
     originalFileName: string,
+    pathPrefix = 'ai-imports',
   ): Promise<StorageResult> {
+    const uploadDir = path.join(process.cwd(), 'uploads', pathPrefix);
+
     // Ensure directory exists
-    await mkdir(this.uploadDir, { recursive: true });
+    await mkdir(uploadDir, { recursive: true });
 
     // Generate secure filename: [userId]/[uuid].[ext]
     const ext = this.getExtensionFromMimeType(mimeType);
     const fileName = `${randomUUID()}.${ext}`;
-    const userDir = path.join(this.uploadDir, userId);
+    const userDir = path.join(uploadDir, userId);
     await mkdir(userDir, { recursive: true });
     const filePath = path.join(userDir, fileName);
 
@@ -135,9 +132,10 @@ export class S3StorageAdapter implements IImageStorageAdapter {
     mimeType: string,
     userId: string,
     originalFileName: string,
+    pathPrefix = 'ai-imports',
   ): Promise<StorageResult> {
     const ext = this.getExtensionFromMimeType(mimeType);
-    const key = `ai-imports/${userId}/${randomUUID()}.${ext}`;
+    const key = `${pathPrefix}/${userId}/${randomUUID()}.${ext}`;
 
     await this.client.send(
       new PutObjectCommand({
