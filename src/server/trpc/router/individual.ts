@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure } from '@/server/trpc/trpc';
 import {
   allIndividualDetailsHandler,
@@ -15,6 +17,21 @@ import {
 import { getRelationships } from '@/server/services/relationship.service';
 
 export const individualRouter = router({
+  // Quick-create: name only — used by CreateBeneficiaryModal in the donation linking drawer
+  create: protectedProcedure
+    .input(z.object({ name: z.string().min(1, 'Name is required') }))
+    .mutation(async ({ input, ctx }) => {
+      const result = await addIndividualDetailsHandler({
+        input: { name: input.name, addressFormat: 'AU' },
+        userId: ctx.session.user.id,
+      });
+      const individual = result?.data?.individual;
+      if (!individual) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create individual' });
+      }
+      return { id: individual.id, name: individual.name };
+    }),
+
   // Individual CRUD operations
   saveIndividualDetails: protectedProcedure
     .input(createIndividualSchema)

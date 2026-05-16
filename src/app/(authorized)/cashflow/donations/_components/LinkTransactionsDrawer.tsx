@@ -7,10 +7,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { BeneficiaryEnumType } from '@prisma/client';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
+import CreatableSelect from 'react-select/creatable';
+import { getSelectStyles } from '@/lib/select-styles';
 import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
 import { addRow } from '../actions';
+import CreateBeneficiaryModal from './CreateBeneficiaryModal';
 
 
 
@@ -59,6 +62,8 @@ export default function LinkTransactionsDrawer({
   const [transactions, setTransactions] = useState<Array<TransactionRow>>([]);
   const [selectedTransactionId, setSelectedTransactionId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [pendingBeneficiaryName, setPendingBeneficiaryName] = useState('');
 
   const unlinkedTransactionsQuery = trpc.transactionLedger.getUnlinkedDonationTransactions.useQuery(
     { dateFrom, dateTo },
@@ -190,28 +195,30 @@ export default function LinkTransactionsDrawer({
     return null;
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
-      <div className="flex h-full w-full max-w-2xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Link Transactions
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enrich unlinked donation transactions with recipient details.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-md px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"
-          >
-            Close
-          </button>
-        </div>
+  return (
+    <>
+      {createPortal(
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
+          <div className="flex h-full w-full max-w-2xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900">
+            <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Link Transactions
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Enrich unlinked donation transactions with recipient details.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="rounded-md px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"
+              >
+                Close
+              </button>
+            </div>
 
-        <div className="grid flex-1 grid-cols-5 gap-0 overflow-hidden">
+            <div className="grid flex-1 grid-cols-5 gap-0 overflow-hidden">
           <aside className="col-span-2 border-r border-gray-200 p-4 dark:border-gray-800">
             <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
               Unlinked transactions
@@ -348,13 +355,24 @@ export default function LinkTransactionsDrawer({
                       ).map((o) => ({ value: o.id, label: o.name }));
                       const selected = options.find((o) => o.value === field.value) ?? null;
                       return (
-                        <Select
+                        <CreatableSelect
                           inputId="beneficiaryId"
                           isDisabled={!selectedTransaction}
                           options={options}
                           value={selected}
                           onChange={(option) => field.onChange(option?.value ?? '')}
-                          placeholder="Select a beneficiary"
+                          onCreateOption={(inputValue) => {
+                            setPendingBeneficiaryName(inputValue);
+                            setCreateModalOpen(true);
+                          }}
+                          placeholder="Select or create a beneficiary…"
+                          formatCreateLabel={(inputValue) => `+ Create "${inputValue}"`}
+                          styles={{
+                            ...getSelectStyles<{ value: string; label: string }>(),
+                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          }}
+                          menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                          menuPosition="fixed"
                         />
                       );
                     }}
@@ -388,5 +406,21 @@ export default function LinkTransactionsDrawer({
       </div>
     </div>,
     document.body,
+      )}
+      <CreateBeneficiaryModal
+        isOpen={createModalOpen}
+        beneficiaryType={beneficiaryType}
+        initialName={pendingBeneficiaryName}
+        onClose={() => {
+          setCreateModalOpen(false);
+          setPendingBeneficiaryName('');
+        }}
+        onCreated={(id, _name) => {
+          setValue('beneficiaryId', id, { shouldValidate: true });
+          setCreateModalOpen(false);
+          setPendingBeneficiaryName('');
+        }}
+      />
+    </>
   );
 }

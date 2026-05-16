@@ -387,7 +387,159 @@ interface LinkFormValues {
 7. "Save & Next" button disabled when no transaction is selected or form is invalid
 8. On drawer close: reset form and selected transaction
 
-### 4.5 TDD Test Cases
+### 4.5 Create Beneficiary Modal (Portal)
+
+**Rationale:** The drawer is a `<form>`. Nesting a second `<form>` inside it is invalid HTML and violates the project's AGENTS.md rule: *"Never nest `<form>` inside `<form>`. Use `createPortal` for overlays/drawers."* Navigating away to the Relationships page would unmount the drawer and destroy all form state. A React portal renders `CreateBeneficiaryModal` at `document.body` while the drawer remains mounted with its state intact.
+
+**File:** `src/app/(authorized)/cashflow/donations/_components/CreateBeneficiaryModal.tsx`
+
+```typescript
+'use client';
+
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { trpc } from '@/server/trpc/client';
+import { BeneficiaryEnumType } from '@prisma/client';
+
+const CreateBeneficiarySchema = z.object({
+  name:            z.string().min(1, 'Name is required'),
+  beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
+});
+
+type CreateBeneficiaryValues = z.infer<typeof CreateBeneficiarySchema>;
+
+interface CreateBeneficiaryModalProps {
+  isOpen:          boolean;
+  beneficiaryType: BeneficiaryEnumType;
+  onClose:         () => void;
+  onCreated:       (id: string, name: string) => void;
+}
+
+export default function CreateBeneficiaryModal({
+  isOpen,
+  beneficiaryType,
+  onClose,
+  onCreated,
+}: CreateBeneficiaryModalProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  const utils = trpc.useUtils();
+  // Use the appropriate tRPC mutation based on beneficiaryType
+  const createIndividual = trpc.individual.create.useMutation({
+    onSuccess: (data) => {
+      void utils.individual.getAll.invalidate();
+      onCreated(data.id, data.name);
+    },
+  });
+  const createBusiness = trpc.business.create.useMutation({
+    onSuccess: (data) => {
+      void utils.business.getAll.invalidate();
+      onCreated(data.id, data.name);
+    },
+  });
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateBeneficiaryValues>({
+    resolver: zodResolver(CreateBeneficiarySchema),
+    defaultValues: { beneficiaryType },
+  });
+
+  const onSubmit = (values: CreateBeneficiaryValues) => {
+    if (values.beneficiaryType === BeneficiaryEnumType.INDIVIDUAL) {
+      createIndividual.mutate({ name: values.name });
+    } else {
+      createBusiness.mutate({ name: values.name });
+    }
+    reset();
+  };
+
+  if (!mounted || !isOpen) return null;
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Create beneficiary"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
+    >
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          Add Beneficiary
+        </h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label htmlFor="beneficiary-name" className="cursor-pointer block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Name
+            </label>
+            <input
+              id="beneficiary-name"
+              {...register('name')}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            />
+            {errors.name && (
+              <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
+            )}
+          </div>
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={onClose}
+              className="rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
+              Cancel
+            </button>
+            <button type="submit"
+              disabled={createIndividual.isPending || createBusiness.isPending}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50">
+              {createIndividual.isPending || createBusiness.isPending ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+```
+
+**Integration with `LinkTransactionsDrawer`:**
+
+In `LinkTransactionsDrawer.tsx`, update the Beneficiary `CreatableSelect` `onCreateOption` handler:
+
+```typescript
+const [createModalOpen, setCreateModalOpen] = useState(false);
+const [pendingBeneficiaryName, setPendingBeneficiaryName] = useState('');
+
+// In the react-select Creatable:
+<CreatableSelect
+  // ...existing props...
+  onCreateOption={(inputValue) => {
+    setPendingBeneficiaryName(inputValue);
+    setCreateModalOpen(true);
+  }}
+/>
+
+<CreateBeneficiaryModal
+  isOpen={createModalOpen}
+  beneficiaryType={watchedBeneficiaryType}
+  onClose={() => setCreateModalOpen(false)}
+  onCreated={(id, name) => {
+    setValue('beneficiaryId', id);
+    setCreateModalOpen(false);
+  }}
+/>
+```
+
+**DOM structure at runtime:**
+
+```
+document.body
+├── #__next                      ← Next.js app root
+│   └── LinkTransactionsDrawer   ← <form>, state lives here — never unmounts
+└── (portal target)              ← CreateBeneficiaryModal via createPortal
+```
+
+### 4.6 TDD Test Cases
 
 | Test description | Test type | What it verifies |
 |---|---|---|
@@ -397,6 +549,11 @@ interface LinkFormValues {
 | On success, `onLinked` callback is fired | Unit (RTL + mock) | Refresh triggered |
 | Drawer shows empty state when no unlinked transactions | Unit (RTL) | Empty state message |
 | Form validation: submitting without beneficiary shows error | Unit (RTL) | Zod validation enforced |
+| `CreateBeneficiaryModal` renders via portal at `document.body` | Unit (RTL) | Portal target is outside drawer DOM |
+| Saving a new individual invalidates `individual.getAll` and calls `onCreated` | Unit (RTL + mock) | Query invalidation + callback |
+| Saving a new business invalidates `business.getAll` and calls `onCreated` | Unit (RTL + mock) | Business path works |
+| Drawer `beneficiaryId` is set to new ID after `onCreated` fires | Unit (RTL) | Select auto-populates |
+| Modal is closed after successful creation | Unit (RTL) | `isOpen` flips false |
 
 ---
 

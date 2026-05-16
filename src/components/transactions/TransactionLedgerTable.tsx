@@ -150,18 +150,23 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   const transactions = data?.transactions ?? [];
   const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
   const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
-  const categoryOptions = useMemo(
-    () =>
-      [
-        ...expenseCategories.map((item) => item.name),
-        ...incomeSourceLabels,
-        REIMBURSEMENT_CATEGORY,
-      ]
-        .filter((value, index, array) => array.indexOf(value) === index)
-        .sort((a, b) => a.localeCompare(b))
-        .map((value) => ({ label: value, value })),
-    [expenseCategories, incomeSourceLabels],
-  );
+  const categoryOptions = useMemo(() => {
+    const expenseOptions = expenseCategories.map((item) => ({
+      label: item.name,
+      value: item.name,
+    }));
+
+    const incomeOptions = incomeSourceLabels.map((raw) => ({
+      label: `${raw.charAt(0) + raw.slice(1).toLowerCase()} (Income)`,
+      value: raw,
+    }));
+
+    const reimbursementOption = { label: REIMBURSEMENT_CATEGORY, value: REIMBURSEMENT_CATEGORY };
+
+    return [...expenseOptions, ...incomeOptions, reimbursementOption].sort((a, b) =>
+      a.label.localeCompare(b.label),
+    );
+  }, [expenseCategories, incomeSourceLabels]);
 
   return (
     <section className="space-y-4">

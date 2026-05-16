@@ -90,7 +90,7 @@ model Transaction {
 |---|---|
 | Auto-matching descriptions to existing Beneficiaries (fuzzy/ML) | Phase 2 |
 | Bulk-link multiple transactions to one beneficiary | Phase 2 |
-| Create Beneficiary inline from within the drawer | Phase 2 |
+| Create Beneficiary inline from within the drawer (portal pattern) | Phase 1 — promoted, see LLD Phase 4.5 |
 | Unlink a DonationPayment from a Transaction | Phase 2 |
 | Australian DGR tax category pre-populated dropdown | Phase 2 |
 | Modifying the CSV import wizard to prompt for donation details | Out of scope |
