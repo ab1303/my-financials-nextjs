@@ -15,7 +15,7 @@ import {
   applyReimbursementOffset,
   reverseReimbursementOffset,
 } from '@/server/services/transactions/ledger.service';
-import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
+import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import { getUnlinkedDonationTransactions } from '@/server/services/transactions/donation-link.service';
 
 type PrismaReimbursement = {
@@ -53,6 +53,8 @@ type PrismaTransaction = {
   updatedAt: Date;
   reimbursements: PrismaReimbursement[];
   donationPayment: { id: string } | null;
+  transferLinkedTransactionId: string | null;
+  transferCounterpart: { id: string } | null;
 };
 
 export interface TransactionRow {
@@ -72,6 +74,9 @@ export interface TransactionRow {
   offsetTransactionId: string | null;
   reimbursements: TransactionRow[];
   isDonationLinked?: boolean;
+  transferLinkedTransactionId: string | null;
+  transferCounterpartId: string | null;
+  isTransferClassified: boolean;
 }
 
 export interface GetAllOutput {
@@ -100,6 +105,8 @@ const getAllInputSchema = z.object({
   reimbursementOnly: z.boolean().optional(),
   amountMin: z.number().nonnegative().optional(),
   amountMax: z.number().nonnegative().optional(),
+  transferOnly: z.boolean().optional(),
+  unmatchedTransferOnly: z.boolean().optional(),
 });
 
 const updateCategorySchema = z
@@ -144,6 +151,18 @@ export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, 
 
   if (input.reimbursementOnly === true) {
     where.category = REIMBURSEMENT_CATEGORY;
+  }
+
+  if (input.transferOnly === true) {
+    where.category = TRANSFER_CATEGORY;
+  }
+
+  if (input.unmatchedTransferOnly === true) {
+    where.category = TRANSFER_CATEGORY;
+    // @ts-ignore — Prisma filters are correct; TS may not have the new field yet until migration
+    where.transferLinkedTransactionId = null;
+    // @ts-ignore — Prisma filters are correct; TS may not have the new field yet until migration
+    where.transferCounterpart = { is: null };
   }
 
   if (input.dateFrom || input.dateTo) {
@@ -218,6 +237,7 @@ export const transactionLedgerRouter = router({
             },
           },
           donationPayment: { select: { id: true } },
+          transferCounterpart: { select: { id: true } },
         },
       }),
       ctx.prisma.transaction.count({ where }),
@@ -254,11 +274,17 @@ export const transactionLedgerRouter = router({
         bankName: r.bankAccount?.bank?.name ?? null,
         offsetTransactionId: null,
         reimbursements: [],
+        transferLinkedTransactionId: null,
+        transferCounterpartId: null,
+        isTransferClassified: false,
       })),
       isDonationLinked:
         tx.category.toLowerCase() === 'gifts & donations' && tx.type === TransactionTypeEnum.DEBIT
           ? tx.donationPayment !== null
           : undefined,
+      transferLinkedTransactionId: tx.transferLinkedTransactionId ?? null,
+      transferCounterpartId: tx.transferCounterpart?.id ?? null,
+      isTransferClassified: tx.category === TRANSFER_CATEGORY,
     }));
 
     return {

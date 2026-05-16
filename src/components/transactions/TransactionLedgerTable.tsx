@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { trpc } from '@/server/trpc/client';
-import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
+import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
 import VoidTransactionButton from './VoidTransactionButton';
+import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer';
+import UnmatchedTransfersBadge from '@/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge';
 
-type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized' | 'voided';
+type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized' | 'voided' | 'transfers';
 
 type GetAllInput = {
   page: number;
@@ -24,6 +26,8 @@ type GetAllInput = {
   reimbursementOnly?: boolean;
   amountMin?: number;
   amountMax?: number;
+  transferOnly?: boolean;
+  unmatchedTransferOnly?: boolean;
 };
 
 interface TransactionLedgerTableProps {
@@ -33,7 +37,7 @@ interface TransactionLedgerTableProps {
 
 const PAGE_SIZE = 50;
 
-const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'status' | 'reimbursementOnly'>>> = {
+const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'status' | 'reimbursementOnly' | 'transferOnly'>>> = {
   all: {},
   expenses: { type: 'DEBIT', status: 'CONFIRMED' },
   income: { type: 'CREDIT', status: 'CONFIRMED' },
@@ -41,6 +45,7 @@ const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'statu
   reimbursements: { type: 'CREDIT', status: 'CONFIRMED', reimbursementOnly: true },
   uncategorized: {},
   voided: { status: 'VOIDED' },
+  transfers: { transferOnly: true },
 };
 
 function parseAmount(value: string) {
@@ -66,6 +71,14 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
+  const [transferDrawerTx, setTransferDrawerTx] = useState<{
+    id: string;
+    description: string;
+    amount: number;
+    type: 'DEBIT' | 'CREDIT';
+    date: string;
+    bankAccountName: string | null;
+  } | null>(null);
   const previousRefreshKey = useRef(refreshKey);
 
   const queryInput: GetAllInput = useMemo(() => {
@@ -78,6 +91,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
       ...TAB_TO_PARAMS[activeTab],
       ...(activeTab === 'uncategorized' ? { uncategorized: true } : {}),
       ...(TAB_TO_PARAMS[activeTab].reimbursementOnly ? { reimbursementOnly: true } : {}),
+      ...(TAB_TO_PARAMS[activeTab].transferOnly ? { transferOnly: true } : {}),
       ...(bankAccountId ? { bankAccountId } : {}),
       ...(category ? { category } : {}),
       ...(dateFrom ? { dateFrom } : {}),
@@ -90,6 +104,9 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
 
   const { data, isLoading, isFetching, refetch } = trpc.transactionLedger.getAll.useQuery(queryInput);
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
+  const unmatchedCountQuery = trpc.transfer.getUnmatchedCount.useQuery(undefined, {
+    enabled: activeTab === 'transfers',
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -171,6 +188,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   }, [expenseCategories, incomeSourceLabels]);
 
   return (
+    <>
     <section className="space-y-4">
       <div className="flex flex-wrap gap-4 border-b border-gray-200 dark:border-gray-700">
         {(['all', 'expenses', 'income', 'reimbursements', 'excluded', 'uncategorized', 'voided'] as const).map((tab) => (
@@ -187,6 +205,18 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
             {tab}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => handleTabChange('transfers')}
+          className={`flex items-center border-b-2 px-3 py-2 text-sm font-medium capitalize transition-colors ${
+            activeTab === 'transfers'
+              ? 'border-teal-500 text-teal-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white'
+          }`}
+        >
+          <span>Transfers</span>
+          <UnmatchedTransfersBadge count={unmatchedCountQuery.data ?? 0} />
+        </button>
       </div>
 
       <TransactionFilters
@@ -273,6 +303,21 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
                   isSaving={savingId === transaction.id}
                   colCount={10}
                   onVoided={() => void refetch()}
+                  onLinkTransfer={
+                    transaction.isTransferClassified &&
+                    !transaction.transferLinkedTransactionId &&
+                    !transaction.transferCounterpartId
+                      ? () =>
+                          setTransferDrawerTx({
+                            id: transaction.id,
+                            description: transaction.description,
+                            amount: transaction.amount,
+                            type: transaction.type as 'DEBIT' | 'CREDIT',
+                            date: transaction.date,
+                            bankAccountName: transaction.bankAccountName,
+                          })
+                      : undefined
+                  }
                 />
               ))}
             </tbody>
@@ -304,5 +349,15 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
         </div>
       </div>
     </section>
+
+    {transferDrawerTx && (
+      <TransferLinkDrawer
+        open={transferDrawerTx !== null}
+        onClose={() => setTransferDrawerTx(null)}
+        sourceTransaction={transferDrawerTx}
+        onLinked={() => { void refetch(); }}
+      />
+    )}
+  </>
   );
 }

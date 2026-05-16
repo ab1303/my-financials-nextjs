@@ -59,10 +59,13 @@ export async function classifyTransactions(
 Classify each bank transaction description into exactly one of the following expense categories.
 Available categories:
 ${categoryNames.map((cat) => `- ${cat}`).join('\n')}
+- Transfer
 
 Rules:
 - Respond ONLY with a JSON array. No other text, no markdown.
 - Use ONLY the exact category names listed above.
+- Use "Transfer" for transactions that move money between your own bank accounts (e.g. "Transfer to Savings", "Transfer to Current", "INTER ACCOUNT TRANSFER", "BPAY to own account", "OSKO Payment to ANZ", "INT XFER").
+- Never use "Transfer" for payments to third parties, merchants, or services.
 - If uncertain, use closest match — never return null or "Other".
 - One object per transaction, preserving input order.
 

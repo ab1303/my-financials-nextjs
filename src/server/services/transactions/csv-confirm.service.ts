@@ -10,7 +10,7 @@ import type { ClassifiedCreditTransaction, ClassifiedTransactionV2 } from '@/ser
 
 import { buildDedupSet, getDateRangeFromMonthKeys, isDuplicate, makeDedupKey } from './dedup.service';
 import type { CreditMonth, DebitMonth, TransactionSaveResult } from './_types';
-import { EXCLUDED_CREDIT_LABELS } from './constants';
+import { EXCLUDED_CREDIT_LABELS, EXCLUDED_DEBIT_LABELS } from './constants';
 
 function createEmptyResult(): TransactionSaveResult {
   return {
@@ -164,6 +164,27 @@ export async function confirmDebitTransactions(
         });
         if (isDuplicate(dedupKey, dedupSet)) {
           result.duplicatesSkipped += 1;
+          continue;
+        }
+
+        // Guard: Transfer debits are saved as EXCLUDED — no expense rollup
+        const isTransferDebit = (EXCLUDED_DEBIT_LABELS as readonly string[]).includes(tx.confirmedCategory);
+
+        if (isTransferDebit) {
+          await createTransactionRecord({
+            date: tx.date,
+            description: tx.description,
+            amount: tx.amount,
+            type: TransactionTypeEnum.DEBIT,
+            category: tx.confirmedCategory,
+            source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
+            status: TransactionStatusEnum.EXCLUDED,
+            userId,
+            bankAccountId,
+            importSessionId,
+          });
+          result.totalEntries += 1;
+          dedupSet.add(dedupKey);
           continue;
         }
 

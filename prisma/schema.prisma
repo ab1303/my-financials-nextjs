@@ -580,6 +580,13 @@ model Transaction {
   donationPayment   DonationPayment?
   incomeRecord      IncomeRecord?
 
+  // Transfer reconciliation
+  transferLinkedTransactionId  String?                @unique
+  transferLinkedTransaction    Transaction?           @relation("TransferLink", fields: [transferLinkedTransactionId], references: [id])
+  transferCounterpart          Transaction?           @relation("TransferLink")
+  preLinkCategory              String?
+  preLinkStatus                TransactionStatusEnum?
+
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 

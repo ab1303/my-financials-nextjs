@@ -26,6 +26,7 @@ interface TransactionRowProps {
   isSaving?: boolean;
   colCount?: number;
   onVoided?: () => void;
+  onLinkTransfer?: () => void;
 }
 
 function formatCurrency(value: number): string {
@@ -51,6 +52,7 @@ export default function TransactionRow({
   isSaving = false,
   colCount = 10,
   onVoided,
+  onLinkTransfer,
 }: TransactionRowProps) {
   const statusClasses: Record<string, string> = {
     CONFIRMED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
@@ -356,9 +358,21 @@ export default function TransactionRow({
             : transaction.bankName ?? '-'}
         </td>
         <td className="px-4 py-3">
-          {transaction.status !== 'VOIDED' && onVoided && (
-            <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} />
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {transaction.status !== 'VOIDED' && onVoided && (
+              <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} />
+            )}
+            {onLinkTransfer && (
+              <button
+                type="button"
+                onClick={onLinkTransfer}
+                className="rounded px-2 py-1 text-xs font-medium text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20"
+                title="Link as Transfer"
+              >
+                Link
+              </button>
+            )}
+          </div>
         </td>
       </tr>
 

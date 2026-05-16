@@ -11,6 +11,7 @@ import { exampleRouter } from './example';
 import { transactionLedgerRouter } from './transaction-ledger';
 import { userProfileRouter } from './user-profile';
 import { transactionClearingRouter } from './transaction-clearing';
+import { transferRouter } from './transfer';
 
 export const appRouter = router({
   example: exampleRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
   transactionLedger: transactionLedgerRouter,
   userProfile: userProfileRouter,
   transactionClearing: transactionClearingRouter,
+  transfer: transferRouter,
 });
 
 // export type definition of API
