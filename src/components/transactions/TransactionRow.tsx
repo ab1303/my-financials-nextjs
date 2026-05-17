@@ -5,13 +5,14 @@ import clsx from 'clsx';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import type { SingleValue } from 'react-select';
-import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
+import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 import { getCompactSelectStyles } from '@/lib/select-styles';
 import TransactionSourceIndicator from './TransactionSourceIndicator';
 import ReimbursementSubRow from './ReimbursementSubRow';
 import VoidTransactionButton from './VoidTransactionButton';
+import RestoreTransactionButton from './RestoreTransactionButton';
 import { UnlinkTransferButton } from './UnlinkTransferButton';
 
 interface TransactionRowProps {
@@ -27,6 +28,7 @@ interface TransactionRowProps {
   isSaving?: boolean;
   colCount?: number;
   onVoided?: () => void;
+  onRestored?: () => void;
   onLinkTransfer?: () => void;
   onUnlinked?: () => void;
 }
@@ -54,6 +56,7 @@ export default function TransactionRow({
   isSaving = false,
   colCount = 10,
   onVoided,
+  onRestored,
   onLinkTransfer,
   onUnlinked,
 }: TransactionRowProps) {
@@ -113,6 +116,13 @@ export default function TransactionRow({
       transaction.category === REIMBURSEMENT_CATEGORY ||
       localCategory === REIMBURSEMENT_CATEGORY);
 
+  // Transfer is a special system category valid for any transaction;
+  // show it when the row is currently Transfer, or when it's EXCLUDED (so the user can restore it).
+  const showTransferOption =
+    transaction.category === TRANSFER_CATEGORY ||
+    localCategory === TRANSFER_CATEGORY ||
+    transaction.status === 'EXCLUDED';
+
   const categoryOptions = useMemo<CategoryOption[]>(
     () => [
       ...options.map((option) =>
@@ -123,8 +133,11 @@ export default function TransactionRow({
       ...(showReimbursementOption
         ? [{ label: REIMBURSEMENT_CATEGORY, value: REIMBURSEMENT_CATEGORY }]
         : []),
+      ...(showTransferOption
+        ? [{ label: TRANSFER_CATEGORY, value: TRANSFER_CATEGORY }]
+        : []),
     ],
-    [options, showReimbursementOption],
+    [options, showReimbursementOption, showTransferOption],
   );
 
   const offsetCategoryOptions = useMemo<CategoryOption[]>(
@@ -364,6 +377,9 @@ export default function TransactionRow({
           <div className="flex flex-wrap items-center gap-2">
             {transaction.status !== 'VOIDED' && onVoided && (
               <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} status={transaction.status} />
+            )}
+            {transaction.status === 'VOIDED' && onRestored && (
+              <RestoreTransactionButton transactionId={transaction.id} onRestored={onRestored} />
             )}
             {(transaction.transferLinkedTransactionId != null ||
               transaction.transferCounterpartId != null) && (

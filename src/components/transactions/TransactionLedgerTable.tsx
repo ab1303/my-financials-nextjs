@@ -7,7 +7,6 @@ import { trpc } from '@/server/trpc/client';
 import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
-import VoidTransactionButton from './VoidTransactionButton';
 import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer';
 import UnmatchedTransfersBadge from '@/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge';
 
@@ -29,6 +28,7 @@ type GetAllInput = {
   amountMax?: number;
   transferOnly?: boolean;
   unmatchedTransferOnly?: boolean;
+  excludeTransferCategory?: boolean;
 };
 
 interface TransactionLedgerTableProps {
@@ -38,11 +38,11 @@ interface TransactionLedgerTableProps {
 
 const PAGE_SIZE = 50;
 
-const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'status' | 'reimbursementOnly' | 'transferOnly'>>> = {
+const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'status' | 'reimbursementOnly' | 'transferOnly' | 'excludeTransferCategory'>>> = {
   all: {},
   expenses: { type: 'DEBIT', status: 'CONFIRMED' },
   income: { type: 'CREDIT', status: 'CONFIRMED' },
-  excluded: { status: 'EXCLUDED' },
+  excluded: { status: 'EXCLUDED', excludeTransferCategory: true },
   reimbursements: { type: 'CREDIT', status: 'CONFIRMED', reimbursementOnly: true },
   uncategorized: {},
   voided: { status: 'VOIDED' },
@@ -322,6 +322,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
                   isSaving={savingId === transaction.id}
                   colCount={10}
                   onVoided={() => void refetch()}
+                  onRestored={() => void refetch()}
                   onLinkTransfer={
                     transaction.isTransferClassified &&
                     !transaction.transferLinkedTransactionId &&

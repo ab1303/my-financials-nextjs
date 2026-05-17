@@ -106,6 +106,7 @@ const getAllInputSchema = z.object({
   amountMax: z.number().nonnegative().optional(),
   transferOnly: z.boolean().optional(),
   unmatchedTransferOnly: z.boolean().optional(),
+  excludeTransferCategory: z.boolean().optional(),
 });
 
 const updateCategorySchema = z
@@ -162,6 +163,10 @@ export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, 
     where.transferLinkedTransactionId = null;
     // @ts-ignore — Prisma filters are correct; TS may not have the new field yet until migration
     where.transferCounterpart = { is: null };
+  }
+
+  if (input.excludeTransferCategory === true) {
+    where.category = { not: TRANSFER_CATEGORY };
   }
 
   if (input.dateFrom || input.dateTo) {

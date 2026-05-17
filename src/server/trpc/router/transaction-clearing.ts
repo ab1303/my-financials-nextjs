@@ -4,6 +4,7 @@ import type { PrismaClient } from '@prisma/client';
 import { router, protectedProcedure } from '@/server/trpc/trpc';
 import {
   voidSingleTransaction,
+  restoreTransaction,
   undoImportSession,
 } from '@/server/services/transactions/void.service';
 
@@ -94,6 +95,23 @@ export const transactionClearingRouter = router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: err instanceof Error ? err.message : 'Void failed',
+        });
+      }
+    }),
+
+  restoreTransaction: protectedProcedure
+    .input(z.object({ transactionId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await restoreTransaction(
+          { prisma: ctx.prisma, userId: ctx.session.user.id },
+          input.transactionId,
+        );
+        return { success: true };
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: err instanceof Error ? err.message : 'Restore failed',
         });
       }
     }),

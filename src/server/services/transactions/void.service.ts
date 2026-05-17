@@ -46,12 +46,68 @@ export async function voidSingleTransaction(
   await ctx.prisma.$transaction(async (db) => {
     await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, new Set([tx.id]));
     await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
-    await db.transaction.update({
+    await (db.transaction as any).update({
       where: { id: transactionId },
-      data: { status: 'VOIDED', confirmedAt: null },
+      data: {
+        status: 'VOIDED',
+        confirmedAt: null,
+        preVoidStatus: tx.status, // persist so restore can return to the exact prior state
+      },
     });
   });
 }
+
+export async function restoreTransaction(
+  ctx: VoidContext,
+  transactionId: string,
+): Promise<void> {
+  const tx = await (ctx.prisma.transaction as any).findUnique({
+    where: { id: transactionId },
+  }) as
+    | {
+        id: string;
+        userId: string;
+        type: string;
+        status: string;
+        amount: Decimal;
+        date: Date;
+        category: string;
+        preVoidStatus: string | null;
+      }
+    | null;
+
+  if (!tx || tx.userId !== ctx.userId) {
+    throw new Error('Transaction not found');
+  }
+  if (tx.status !== 'VOIDED') {
+    return; // nothing to restore
+  }
+
+  // Fall back to EXCLUDED if we somehow have no preVoidStatus (shouldn't happen for new voids,
+  // but defensively handles any rows voided before this field existed).
+  const restoreStatus = tx.preVoidStatus ?? 'EXCLUDED';
+
+  await ctx.prisma.$transaction(async (db) => {
+    await (db.transaction as any).update({
+      where: { id: transactionId },
+      data: {
+        status: restoreStatus,
+        preVoidStatus: null,
+        ...(restoreStatus === 'CONFIRMED' ? { confirmedAt: new Date() } : {}),
+      },
+    });
+
+    // Re-apply downstream records for CONFIRMED transactions
+    if (restoreStatus === 'CONFIRMED') {
+      if (tx.type === 'DEBIT') {
+        await reapplyExpenseSummary(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category);
+      } else if (tx.type === 'CREDIT') {
+        await reapplyIncomeRecord(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category, transactionId);
+      }
+    }
+  });
+}
+
 
 export async function undoImportSession(
   ctx: VoidContext,
@@ -241,4 +297,100 @@ async function reverseIncomeRecord(
   if (record) {
     await db.incomeRecord.delete({ where: { id: record.id } });
   }
+}
+
+// ─── Restore helpers ─────────────────────────────────────────────────────────
+
+async function reapplyExpenseSummary(
+  db: PrismaClient,
+  userId: string,
+  amount: Decimal,
+  date: Date,
+  category: string,
+): Promise<void> {
+  const monthNum = date.getMonth() + 1;
+
+  const calendar = await db.calendarYear.findFirst({
+    where: {
+      type: 'FISCAL',
+      OR: [
+        { fromYear: date.getFullYear(), fromMonth: { lte: monthNum } },
+        { toYear: date.getFullYear(), toMonth: { gte: monthNum } },
+      ],
+    },
+  });
+  if (!calendar) return;
+
+  const ledger = await db.expenseLedger.findUnique({
+    where: { calendarId_userId: { calendarId: calendar.id, userId } },
+  });
+  if (!ledger) return;
+
+  const expenseCat = await db.expenseCategory.findFirst({
+    where: { name: category, isActive: true },
+  });
+  if (!expenseCat) return;
+
+  const existing = await db.monthlyExpenseSummary.findFirst({
+    where: { expenseLedgerId: ledger.id, categoryId: expenseCat.id, month: monthNum },
+  });
+
+  if (existing) {
+    await db.monthlyExpenseSummary.update({
+      where: { id: existing.id },
+      data: { amount: { increment: amount } },
+    });
+  } else {
+    await db.monthlyExpenseSummary.create({
+      data: { month: monthNum, amount, categoryId: expenseCat.id, expenseLedgerId: ledger.id },
+    });
+  }
+}
+
+async function reapplyIncomeRecord(
+  db: PrismaClient,
+  userId: string,
+  amount: Decimal,
+  date: Date,
+  category: string,
+  transactionId: string,
+): Promise<void> {
+  const calendar = await db.calendarYear.findFirst({
+    where: {
+      type: 'FISCAL',
+      OR: [
+        { fromYear: date.getFullYear(), fromMonth: { lte: date.getMonth() + 1 } },
+        { toYear: date.getFullYear(), toMonth: { gte: date.getMonth() + 1 } },
+      ],
+    },
+  });
+  if (!calendar) return;
+
+  let ledger = await db.incomeLedger.findUnique({
+    where: { calendarId_userId: { calendarId: calendar.id, userId } },
+  });
+  if (!ledger) {
+    ledger = await db.incomeLedger.create({ data: { calendarId: calendar.id, userId } });
+  }
+
+  // Avoid duplicate if a record already exists for this transaction
+  const existing = await db.incomeRecord.findFirst({
+    where: { incomeLedgerId: ledger.id, transactionId },
+  });
+  if (existing) return;
+
+  const incomeSource = await db.incomeSource.findFirst({
+    where: { name: { equals: category, mode: 'insensitive' } },
+  });
+  if (!incomeSource) return; // category is no longer a valid income source — skip silently
+
+  await db.incomeRecord.create({
+    data: {
+      dateEarned: date,
+      amount: String(amount),
+      incomeSourceId: incomeSource.id,
+      incomeLedgerId: ledger.id,
+      transactionId,
+    },
+  });
 }
