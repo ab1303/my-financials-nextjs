@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import InfoTooltip from '@/components/ui/InfoTooltip';
 import { trpc } from '@/server/trpc/client';
 import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
@@ -46,6 +47,15 @@ const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'statu
   uncategorized: {},
   voided: { status: 'VOIDED' },
   transfers: { transferOnly: true },
+};
+
+const TAB_INFO: Partial<Record<TabFilter, string>> = {
+  excluded:
+    'Transactions intentionally excluded from financial records — e.g. transfers between your own accounts that would otherwise be double-counted.',
+  uncategorized:
+    'Imported transactions that have not been assigned a category yet. Review and categorise these to keep your reports accurate.',
+  voided:
+    'Transactions whose financial impact has been fully reversed and removed from reports. Voided transactions cannot be edited.',
 };
 
 function parseAmount(value: string) {
@@ -204,13 +214,14 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
             key={tab}
             type="button"
             onClick={() => handleTabChange(tab)}
-            className={`border-b-2 px-3 py-2 text-sm font-medium capitalize transition-colors ${
+            className={`flex items-center gap-1 border-b-2 px-3 py-2 text-sm font-medium capitalize transition-colors ${
               activeTab === tab
                 ? 'border-teal-500 text-teal-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white'
             }`}
           >
             {tab}
+            {TAB_INFO[tab] && <InfoTooltip text={TAB_INFO[tab]} />}
           </button>
         ))}
         <button

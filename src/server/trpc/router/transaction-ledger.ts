@@ -374,6 +374,23 @@ export const transactionLedgerRouter = router({
       transaction.status === TransactionStatusEnum.CONFIRMED
     ) {
       newStatus = TransactionStatusEnum.EXCLUDED;
+    } else if (
+      transaction.category === TRANSFER_CATEGORY &&
+      input.newCategory !== TRANSFER_CATEGORY &&
+      transaction.type === TransactionTypeEnum.DEBIT &&
+      transaction.status === TransactionStatusEnum.EXCLUDED
+    ) {
+      // User is reclassifying a Transfer DEBIT as a real expense → promote to CONFIRMED
+      newStatus = TransactionStatusEnum.CONFIRMED;
+      newConfirmedAt = new Date();
+    } else if (
+      transaction.category !== TRANSFER_CATEGORY &&
+      input.newCategory === TRANSFER_CATEGORY &&
+      transaction.type === TransactionTypeEnum.DEBIT &&
+      transaction.status === TransactionStatusEnum.CONFIRMED
+    ) {
+      // User is re-classifying a confirmed DEBIT back to Transfer → exclude it
+      newStatus = TransactionStatusEnum.EXCLUDED;
     }
 
     await ctx.prisma.transaction.update({
@@ -435,6 +452,36 @@ export const transactionLedgerRouter = router({
           date: transaction.date,
         });
       }
+    } else if (
+      transaction.category === TRANSFER_CATEGORY &&
+      input.newCategory !== TRANSFER_CATEGORY &&
+      transaction.type === TransactionTypeEnum.DEBIT &&
+      newStatus === TransactionStatusEnum.CONFIRMED
+    ) {
+      // Transfer DEBIT promoted to a real expense → create its expense summary entry
+      await rerollupExpenseSummary({
+        prismaClient: ctx.prisma,
+        userId,
+        oldCategory: TRANSFER_CATEGORY, // no expense entry exists for Transfer; nothing to decrement
+        newCategory: input.newCategory,
+        amount: transaction.amount as Decimal,
+        date: transaction.date,
+      });
+    } else if (
+      transaction.category !== TRANSFER_CATEGORY &&
+      input.newCategory === TRANSFER_CATEGORY &&
+      transaction.type === TransactionTypeEnum.DEBIT &&
+      newStatus === TransactionStatusEnum.EXCLUDED
+    ) {
+      // Confirmed DEBIT re-classified as Transfer → remove its expense summary entry
+      await rerollupExpenseSummary({
+        prismaClient: ctx.prisma,
+        userId,
+        oldCategory: transaction.category,
+        newCategory: TRANSFER_CATEGORY, // not an expense category; effectively just decrements old
+        amount: transaction.amount as Decimal,
+        date: transaction.date,
+      });
     } else if (
       transaction.type === TransactionTypeEnum.DEBIT &&
       transaction.status === TransactionStatusEnum.CONFIRMED &&

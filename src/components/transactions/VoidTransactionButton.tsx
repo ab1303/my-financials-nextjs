@@ -8,10 +8,18 @@ import { MdOutlineCancel } from 'react-icons/md';
 interface Props {
   transactionId: string;
   onVoided: () => void;
+  status?: string;
 }
 
-export default function VoidTransactionButton({ transactionId, onVoided }: Props) {
+export default function VoidTransactionButton({ transactionId, onVoided, status }: Props) {
   const [open, setOpen] = useState(false);
+
+  const voidMessage =
+    status === 'EXCLUDED'
+      ? 'This transaction has no financial records. It will be permanently marked as voided and hidden from all views.'
+      : status === 'PENDING'
+        ? 'This transaction has not been confirmed yet. It will be marked as voided.'
+        : 'This will reverse this transaction\'s financial impact (expense/income records) and mark it as voided.';
 
   const mutation = trpc.transactionClearing.voidTransaction.useMutation({
     onSuccess: () => {
@@ -36,7 +44,7 @@ export default function VoidTransactionButton({ transactionId, onVoided }: Props
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-80 rounded-lg bg-white p-5 shadow-xl dark:bg-gray-800">
             <p className="mb-4 text-sm text-gray-700 dark:text-gray-300">
-              Void this transaction? Its financial records will be reversed.
+              {voidMessage}
             </p>
             <div className="flex justify-end gap-2">
               <button

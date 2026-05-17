@@ -363,7 +363,7 @@ export default function TransactionRow({
         <td className="px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             {transaction.status !== 'VOIDED' && onVoided && (
-              <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} />
+              <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} status={transaction.status} />
             )}
             {(transaction.transferLinkedTransactionId != null ||
               transaction.transferCounterpartId != null) && (
