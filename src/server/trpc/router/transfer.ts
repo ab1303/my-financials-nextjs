@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '@/server/trpc/trpc';
 import { TRPCError } from '@trpc/server';
 import {
   getCandidates,
+  searchTransferCandidates,
   linkTransferPair,
   unlinkTransferPair,
   getUnmatchedTransferCount,
@@ -56,6 +57,17 @@ export const transferRouter = router({
         prisma: ctx.prisma,
         transactionId: input.transactionId,
         userId: ctx.session.user.id,
+      });
+    }),
+
+  searchCandidates: protectedProcedure
+    .input(z.object({ transactionId: z.string().min(1), search: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      return searchTransferCandidates({
+        prisma: ctx.prisma,
+        transactionId: input.transactionId,
+        userId: ctx.session.user.id,
+        search: input.search,
       });
     }),
 

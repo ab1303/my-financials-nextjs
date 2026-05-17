@@ -91,7 +91,7 @@ export async function getCandidates(params: {
       category: TRANSFER_CATEGORY,
       transferLinkedTransactionId: null,
       transferCounterpart: { is: null },
-      bankAccountId: { not: source.bankAccountId },
+      id: { not: source.id }, // only prevent self-linking; same-account transfers are valid
       date: { gte: dateFrom, lte: dateTo },
     },
     include: { bankAccount: { include: { bank: true } } },
@@ -144,6 +144,90 @@ export async function getCandidates(params: {
 }
 
 /**
+ * Manual search: find unlinked Transfer transactions of the opposite type,
+ * no date restriction, filtered by optional description search term.
+ * Used in the drawer when auto-candidates return nothing.
+ */
+export async function searchTransferCandidates(params: {
+  prisma: PrismaClient;
+  transactionId: string;
+  userId: string;
+  search?: string;
+}): Promise<TransferCandidateScore[]> {
+  const source = await params.prisma.transaction.findUnique({
+    where: { id: params.transactionId, userId: params.userId },
+    // @ts-ignore
+    include: { bankAccount: { include: { bank: true } } },
+  });
+
+  if (!source) return [];
+
+  const counterType =
+    source.type === TransactionTypeEnum.DEBIT
+      ? TransactionTypeEnum.CREDIT
+      : TransactionTypeEnum.DEBIT;
+
+  const candidates = await (params.prisma.transaction as any).findMany({
+    where: {
+      userId: params.userId,
+      type: counterType,
+      category: TRANSFER_CATEGORY,
+      transferLinkedTransactionId: null,
+      transferCounterpart: { is: null },
+      id: { not: source.id },
+      ...(params.search?.trim()
+        ? { description: { contains: params.search.trim(), mode: 'insensitive' } }
+        : {}),
+    },
+    include: { bankAccount: { include: { bank: true } } },
+    orderBy: { date: 'desc' },
+    take: 20,
+  }) as Array<{
+    id: string;
+    amount: import('@prisma/client/runtime/library').Decimal;
+    date: Date;
+    description: string;
+    type: TransactionTypeEnum;
+    status: TransactionStatusEnum;
+    bankAccountId: string | null;
+    bankAccount: { name: string; bankId: string; bank: { name: string | null } | null } | null;
+  }>;
+
+  // @ts-ignore
+  const sourceBankId: string | null = (source as any).bankAccount?.bankId ?? null;
+
+  return candidates.map((candidate) => {
+    const { score, breakdown, amountDiffWarning } = scoreCandidate({
+      sourceAmount: source.amount,
+      sourceDate: source.date,
+      sourceBankId,
+      candidate: {
+        amount: candidate.amount,
+        date: candidate.date,
+        description: candidate.description,
+        bankAccountId: candidate.bankAccountId ?? '',
+        bankId: candidate.bankAccount?.bankId ?? null,
+      },
+      sourceDescription: source.description,
+    });
+    return {
+      transactionId: candidate.id,
+      bankAccountId: candidate.bankAccountId!,
+      bankAccountName: candidate.bankAccount?.name ?? 'Unknown',
+      bankName: candidate.bankAccount?.bank?.name ?? null,
+      date: candidate.date.toISOString(),
+      description: candidate.description,
+      amount: Number(candidate.amount),
+      type: candidate.type,
+      status: candidate.status,
+      confidenceScore: score,
+      scoreBreakdown: breakdown,
+      amountDiffWarning,
+    } satisfies TransferCandidateScore;
+  });
+}
+
+/**
  * Link two transactions as a transfer pair.
  * - Both must belong to the same user
  * - One must be DEBIT, the other CREDIT
@@ -169,8 +253,7 @@ export async function linkTransferPair(params: {
   if (debit.type !== TransactionTypeEnum.DEBIT) throw new Error('First transaction must be DEBIT');
   if (credit.type !== TransactionTypeEnum.CREDIT)
     throw new Error('Second transaction must be CREDIT');
-  if (debit.bankAccountId === credit.bankAccountId)
-    throw new Error('Transfer pairs must be from different accounts');
+  // Same-account transfers are valid (e.g. loan sent out and returned via the same bank account)
 
   // @ts-ignore — new fields not in generated client yet
   if ((debit as any).transferLinkedTransactionId ?? (credit as any).transferLinkedTransactionId) {

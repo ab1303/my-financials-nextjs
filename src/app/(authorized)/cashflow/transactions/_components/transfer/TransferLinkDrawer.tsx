@@ -1,7 +1,7 @@
 'use client';
 
 import { createPortal } from 'react-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { trpc } from '@/server/trpc/client';
 import type { TransferLinkDrawerProps } from './_types';
@@ -19,10 +19,24 @@ export default function TransferLinkDrawer({
     debitTransactionId: string;
     creditTransactionId: string;
   } | null>(null);
+  const [manualSearch, setManualSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(manualSearch), 300);
+    return () => clearTimeout(t);
+  }, [manualSearch]);
 
   const candidatesQuery = trpc.transfer.getCandidates.useQuery(
     { transactionId: sourceTransaction.id },
     { enabled: open },
+  );
+
+  const isAutoEmpty = candidatesQuery.data?.length === 0;
+
+  const searchQuery = trpc.transfer.searchCandidates.useQuery(
+    { transactionId: sourceTransaction.id, search: debouncedSearch || undefined },
+    { enabled: open && (isAutoEmpty || debouncedSearch.trim().length > 0) },
   );
 
   const linkMutation = trpc.transfer.link.useMutation({
@@ -44,9 +58,9 @@ export default function TransferLinkDrawer({
     },
   });
 
-  const selectedCandidate = candidatesQuery.data?.find(
-    (c) => c.transactionId === selectedCandidateId,
-  );
+  const selectedCandidate: TransferCandidateScore | undefined =
+    candidatesQuery.data?.find((c) => c.transactionId === selectedCandidateId) ??
+    searchQuery.data?.find((c) => c.transactionId === selectedCandidateId);
 
   function handleConfirm() {
     if (!selectedCandidateId) return;
@@ -106,18 +120,8 @@ export default function TransferLinkDrawer({
             </p>
           )}
 
-          {candidatesQuery.data?.length === 0 && (
-            <div className="py-8 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                No candidates found within 5 days and matching amount.
-              </p>
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                Use the search to find the counterpart transaction manually.
-              </p>
-            </div>
-          )}
-
-          {candidatesQuery.data && candidatesQuery.data.length > 0 && (
+          {/* Auto-candidates */}
+          {candidatesQuery.data && candidatesQuery.data.length > 0 && !debouncedSearch && (
             <ul className="space-y-2">
               {candidatesQuery.data.map((candidate) => (
                 <CandidateRow
@@ -132,6 +136,49 @@ export default function TransferLinkDrawer({
                 />
               ))}
             </ul>
+          )}
+
+          {/* Manual search — shown when auto returns nothing, or user types */}
+          {(isAutoEmpty || debouncedSearch.trim().length > 0) && (
+            <div className="mt-2 space-y-3">
+              {isAutoEmpty && !debouncedSearch && (
+                <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                  No candidates found within 5 days. Search below to find the counterpart manually.
+                </p>
+              )}
+              <input
+                type="text"
+                value={manualSearch}
+                onChange={(e) => {
+                  setManualSearch(e.target.value);
+                  setSelectedCandidateId(null);
+                }}
+                placeholder="Search by description…"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+              />
+              {searchQuery.isLoading && (
+                <p className="text-center text-sm text-gray-400">Searching…</p>
+              )}
+              {searchQuery.data && searchQuery.data.length === 0 && (
+                <p className="text-center text-sm text-gray-400">No matching transactions found.</p>
+              )}
+              {searchQuery.data && searchQuery.data.length > 0 && (
+                <ul className="space-y-2">
+                  {searchQuery.data.map((candidate) => (
+                    <CandidateRow
+                      key={candidate.transactionId}
+                      candidate={candidate}
+                      isSelected={selectedCandidateId === candidate.transactionId}
+                      onSelect={() =>
+                        setSelectedCandidateId(
+                          selectedCandidateId === candidate.transactionId ? null : candidate.transactionId,
+                        )
+                      }
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
         </div>
 
