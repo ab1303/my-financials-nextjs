@@ -9,6 +9,8 @@ import {
 } from '@/server/controllers/calendar-year.controller';
 import { revalidatePath } from 'next/cache';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CalendarYearPage() {
   async function upsertCalendarYear(formData: FormInput) {
     'use server';

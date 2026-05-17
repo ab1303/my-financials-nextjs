@@ -1,11 +1,12 @@
 'use client';
 
-import type { CalendarEnumType, CalendarYear } from '@prisma/client';
+import type { CalendarEnumType } from '@prisma/client';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { trpc } from '@/server/trpc/client';
+import type { CalendarYearType } from '@/app/(authorized)/settings/calendar/_types';
 
 import AssetSummaryCards from './_components/AssetSummaryCards';
 import NetWorthChart from './_components/NetWorthChart';
@@ -14,7 +15,7 @@ type LensType = 'ALL' | CalendarEnumType;
 type LineType = 'total' | 'cash' | 'stocks';
 
 type NetWorthDashboardClientProps = {
-  calendarYears: CalendarYear[];
+  calendarYears: CalendarYearType[];
 };
 
 export default function NetWorthDashboardClient({
