@@ -2,7 +2,6 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
   Prisma,
-  IncomeSourceEnumType,
   TransactionStatusEnum,
   TransactionSourceEnum,
   TransactionTypeEnum,
@@ -296,15 +295,22 @@ export const transactionLedgerRouter = router({
   }),
 
   getFilterOptions: protectedProcedure.query(async ({ ctx }) => {
-    const expenseCategories = await ctx.prisma.expenseCategory.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true },
-    });
+    const [expenseCategories, incomeSources] = await Promise.all([
+      ctx.prisma.expenseCategory.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true },
+      }),
+      ctx.prisma.incomeSource.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true },
+      }),
+    ]);
 
     return {
       expenseCategories,
-      incomeSourceLabels: Object.values(IncomeSourceEnumType) as string[],
+      incomeSourceLabels: incomeSources.map((s) => s.name),
     } satisfies GetFilterOptionsOutput;
   }),
 
@@ -452,7 +458,7 @@ export const transactionLedgerRouter = router({
       await updateIncomeRecordSource({
         prismaClient: ctx.prisma,
         userId,
-        newSource: input.newCategory as IncomeSourceEnumType,
+        newSourceName: input.newCategory,
         amount: transaction.amount as Decimal,
         transactionDate: transaction.date,
       });

@@ -104,15 +104,13 @@ enum DonationPurposeEnum {
   INTEREST_CLEANSING
 }
 
-enum IncomeSourceEnumType {
-  EMPLOYMENT
-  STOCKS
-  BONDS
-  RENTAL
-  BUSINESS
-  FREELANCE
-  DIVIDEND
-  OTHER
+// IncomeSource — user-managed income source lookup (replaces IncomeSourceEnumType enum)
+model IncomeSource {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  incomeRecords IncomeRecord[]
 }
 
 // RelationshipType — lookup table of relationship labels (e.g. "Mother", "Spouse")
@@ -259,16 +257,17 @@ model IncomeLedger {
 
 // IncomeRecord — an individual income event (dated, with source)
 model IncomeRecord {
-  id             String               @id @default(cuid())
-  dateEarned     DateTime
-  amount         Decimal              @db.Money
-  source         IncomeSourceEnumType
-  incomeLedger   IncomeLedger         @relation(fields: [incomeLedgerId], references: [id], onDelete: Cascade)
-  incomeLedgerId String
-  transaction    Transaction?         @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  transactionId  String?              @unique
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  id              String       @id @default(cuid())
+  dateEarned      DateTime
+  amount          Decimal      @db.Money
+  incomeSource    IncomeSource @relation(fields: [incomeSourceId], references: [id])
+  incomeSourceId  String
+  incomeLedger    IncomeLedger @relation(fields: [incomeLedgerId], references: [id], onDelete: Cascade)
+  incomeLedgerId  String
+  transaction     Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  transactionId   String?      @unique
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@index([incomeLedgerId, dateEarned])
 }

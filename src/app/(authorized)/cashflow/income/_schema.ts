@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { IncomeSourceEnumType } from '@prisma/client';
 
 export const FormDataSchema = z.object({
   calendarYearId: z.string().nonempty('Calendar year is required.'),
@@ -25,9 +24,7 @@ export const CreateIncomeEntrySchema = z.object({
       (val) => Number(val.toFixed(2)) === val,
       'Amount can have at most 2 decimal places',
     ),
-  source: z.nativeEnum(IncomeSourceEnumType, {
-    required_error: 'Income source is required',
-  }),
+  incomeSourceId: z.string().min(1, 'Income source is required'),
   calendarYearId: z.string().nonempty('Calendar year is required'),
 });
 
@@ -43,7 +40,7 @@ export const UpdateIncomeEntrySchema = z.object({
       (val) => Number(val.toFixed(2)) === val,
       'Amount can have at most 2 decimal places',
     ),
-  source: z.nativeEnum(IncomeSourceEnumType),
+  incomeSourceId: z.string().min(1, 'Income source is required'),
 });
 
 export const DeleteIncomeEntrySchema = z.object({

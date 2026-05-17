@@ -32,6 +32,7 @@ import {
   PanelLeftOpen,
   Sparkles,
   LayoutDashboard,
+  Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useOutsideAlerter from '@/hooks/useOutsideAlerter';
@@ -86,6 +87,7 @@ const settingsItems: NavItem[] = [
   { name: 'Bank(s)', href: '/settings/banks', icon: Landmark },
   { name: 'Calendar Year(s)', href: '/settings/calendar', icon: Calendar },
   { name: 'AI Spend', href: '/settings/ai-usage', icon: Sparkles },
+  { name: 'Categories', href: '/settings/categories', icon: Tag },
 ];
 
 function NavGroupItem({
@@ -433,3 +435,6 @@ export default function SideNav({
     </>
   );
 }
+
+
+

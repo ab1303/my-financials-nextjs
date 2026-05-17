@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { appRouter } from '@/server/trpc/router/_app';
+import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import { buildTransactionWhere } from '@/server/trpc/router/transaction-ledger';
+
 
 describe('buildTransactionWhere', () => {
   it('filters uncategorized transactions by empty category', () => {
@@ -29,5 +32,32 @@ describe('buildTransactionWhere', () => {
     const where = buildTransactionWhere({ category: 'Groceries' } as never, 'user-1');
 
     expect(where.category).toBe('Groceries');
+  });
+});
+
+
+describe('transactionLedgerRouter.getFilterOptions', () => {
+  const caller = appRouter.createCaller({
+    prisma: prismaMock,
+    session: { user: { id: 'user-1' } },
+  } as any);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns income source labels from the database', async () => {
+    prismaMock.expenseCategory.findMany.mockResolvedValue([
+      { id: 'cat-1', name: 'Groceries' },
+    ] as never);
+    prismaMock.incomeSource.findMany.mockResolvedValue([
+      { id: 'src-1', name: 'Employment' },
+      { id: 'src-2', name: 'Other' },
+    ] as never);
+
+    await expect(caller.transactionLedger.getFilterOptions()).resolves.toEqual({
+      expenseCategories: [{ id: 'cat-1', name: 'Groceries' }],
+      incomeSourceLabels: ['Employment', 'Other'],
+    });
   });
 });

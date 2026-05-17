@@ -45,7 +45,8 @@ export const incomeEntryReducer = produce<IncomeEntriesState, [Actions]>(
         if (!editedEntry) return;
 
         editedEntry.amount = entry.amount;
-        editedEntry.source = entry.source;
+        editedEntry.incomeSourceId = entry.incomeSourceId;
+        editedEntry.incomeSourceName = entry.incomeSourceName;
         editedEntry.dateEarned = entry.dateEarned;
         break;
       }

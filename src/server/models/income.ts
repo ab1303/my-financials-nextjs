@@ -1,5 +1,3 @@
-import type { IncomeSourceEnumType } from '@prisma/client';
-
 export type IncomeModel = {
   id: string;
   calendarId: string;
@@ -10,20 +8,19 @@ export type IncomeEntryModel = {
   id: string;
   dateEarned: Date;
   amount: number;
-  source: IncomeSourceEnumType;
+  incomeSourceId: string;
+  incomeSourceName: string;
   incomeLedgerId: string;
 };
 
-// More flexible type for service layer operations
 export type IncomeEntryInput = {
   id?: string;
   dateEarned: Date;
   amount: number;
-  source: IncomeSourceEnumType;
+  incomeSourceId: string;
   incomeLedgerId?: string;
 };
 
-// Type for monthly aggregation results
 export type MonthlyIncomeSummary = {
   month: number; // 1-12
   year: number;
@@ -31,9 +28,8 @@ export type MonthlyIncomeSummary = {
   entryCount: number;
 };
 
-// Type for source drill-down results
 export type SourceBreakdown = {
-  source: IncomeSourceEnumType;
+  source: string;
   amount: number;
   percentage: number;
   entryCount: number;

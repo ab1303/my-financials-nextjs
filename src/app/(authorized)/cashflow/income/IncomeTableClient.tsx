@@ -65,7 +65,8 @@ export default function IncomeTableClient({
       id: tempId,
       dateEarned: new Date(),
       amount: 0,
-      source: 'EMPLOYMENT',
+      incomeSourceId: '',
+      incomeSourceName: '',
       incomeLedgerId: '',
     };
 
@@ -120,6 +121,11 @@ export default function IncomeTableClient({
           return;
         }
 
+        if (!updatedRecord.incomeSourceId) {
+          toast.error('Please select an income source');
+          return;
+        }
+
         // Check if this is a temporary row (new entry)
         if (updatedRecord.id.startsWith('temp-')) {
           // Create new entry
@@ -127,7 +133,7 @@ export default function IncomeTableClient({
             const createResult = await addRow({
               dateEarned: updatedRecord.dateEarned,
               amount: updatedRecord.amount,
-              source: updatedRecord.source,
+              incomeSourceId: updatedRecord.incomeSourceId,
               calendarYearId: calendarYearId,
             });
 
@@ -170,7 +176,7 @@ export default function IncomeTableClient({
               id: updatedRecord.id,
               dateEarned: updatedRecord.dateEarned,
               amount: updatedRecord.amount,
-              source: updatedRecord.source,
+              incomeSourceId: updatedRecord.incomeSourceId,
             });
 
             if (updateResult.success) {
@@ -258,6 +264,7 @@ export default function IncomeTableClient({
           Add Entry
         </Button>
       </div>
+
       <Table>
         <Table.THead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -276,44 +283,15 @@ export default function IncomeTableClient({
           ))}
         </Table.THead>
         <Table.TBody>
-          {table.getRowModel().rows.length === 0 ? (
-            <Table.TBody.TR>
-              <td
-                colSpan={4}
-                className='text-center py-12 text-muted-foreground px-6 bg-muted/30'
-              >
-                <div className='flex flex-col items-center'>
-                  <div className='text-muted-foreground/50 mb-2'>
-                    <Plus className='w-6 h-6' />
-                  </div>
-                  <p className='text-base font-medium text-foreground mb-1'>
-                    {!calendarYearId
-                      ? 'Select a fiscal year'
-                      : 'No income entries recorded'}
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    {!calendarYearId
-                      ? 'Please select a fiscal year to view income entries'
-                      : 'Click the + button above to add your first income entry'}
-                  </p>
-                </div>
-              </td>
+          {table.getRowModel().rows.map((row) => (
+            <Table.TBody.TR key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <Table.TBody.TD key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </Table.TBody.TD>
+              ))}
             </Table.TBody.TR>
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <Table.TBody.TR key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <Table.TBody.TD
-                    key={cell.id}
-                    style={{ width: cell.column.getSize() }}
-                    className='min-w-0'
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Table.TBody.TD>
-                ))}
-              </Table.TBody.TR>
-            ))
-          )}
+          ))}
         </Table.TBody>
       </Table>
     </div>

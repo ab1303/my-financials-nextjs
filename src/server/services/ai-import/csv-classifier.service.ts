@@ -2,17 +2,22 @@ import { generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { randomUUID } from 'crypto';
 import type { CsvTransaction, ClassifiedTransaction, ClassifiedCreditTransaction } from './_types';
-import { IncomeSourceEnumType, type ExpenseCategory } from '@prisma/client';
+import type { ExpenseCategory } from '@prisma/client';
 
 /**
  * AI Classifier Service for CSV transactions
  * Converts raw bank descriptions to expense categories via LLM
  */
 
-const CREDIT_LABELS = [
-  ...Object.values(IncomeSourceEnumType),
-  'Transfer',
-  'Excluded',
+const DEFAULT_INCOME_SOURCE_NAMES = [
+  'EMPLOYMENT',
+  'STOCKS',
+  'BONDS',
+  'RENTAL',
+  'BUSINESS',
+  'FREELANCE',
+  'DIVIDEND',
+  'OTHER',
 ];
 
 function getAIProvider() {
@@ -151,6 +156,7 @@ ${transactionsList}`;
 
 export async function classifyCreditTransactions(
   transactions: CsvTransaction[],
+  incomeSourceNames: string[] = DEFAULT_INCOME_SOURCE_NAMES,
 ): Promise<{
   classified: ClassifiedCreditTransaction[];
   usage: { promptTokens: number; completionTokens: number; totalTokens: number };
@@ -163,6 +169,8 @@ export async function classifyCreditTransactions(
   }
 
   try {
+    const CREDIT_LABELS = [...incomeSourceNames, 'Transfer', 'Excluded'];
+
     const systemPrompt = `You are a financial transaction classifier for an Australian personal finance app.
 Classify each CREDIT (incoming) bank transaction description into exactly one of the following income categories.
 Available categories:

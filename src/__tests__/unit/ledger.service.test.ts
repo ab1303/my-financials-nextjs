@@ -5,7 +5,6 @@ import {
   rerollupExpenseSummary,
   updateIncomeRecordSource,
 } from '@/server/services/transactions/ledger.service';
-import { IncomeSourceEnumType } from '@prisma/client';
 
 describe('ledger.service', () => {
   beforeEach(() => {
@@ -143,7 +142,7 @@ describe('ledger.service', () => {
       await updateIncomeRecordSource({
         prismaClient: prismaMock,
         userId: 'user-1',
-        newSource: IncomeSourceEnumType.EMPLOYMENT,
+        newSourceName: 'Employment',
         amount: new Decimal('1200.00'),
         transactionDate: new Date('2024-02-01'),
       });
@@ -161,7 +160,7 @@ describe('ledger.service', () => {
       await updateIncomeRecordSource({
         prismaClient: prismaMock,
         userId: 'user-1',
-        newSource: IncomeSourceEnumType.EMPLOYMENT,
+        newSourceName: 'Employment',
         amount: new Decimal('1200.00'),
         transactionDate: new Date('2024-02-01'),
       });
@@ -182,6 +181,7 @@ describe('ledger.service', () => {
       prismaMock.incomeRecord.findFirst.mockResolvedValue({
         id: 'income-record-1',
       } as never);
+      prismaMock.incomeSource.findFirst.mockResolvedValue({ id: 'source-business' } as never);
       prismaMock.incomeRecord.update.mockResolvedValue({
         id: 'income-record-1',
       } as never);
@@ -189,14 +189,14 @@ describe('ledger.service', () => {
       await updateIncomeRecordSource({
         prismaClient: prismaMock,
         userId: 'user-1',
-        newSource: IncomeSourceEnumType.BUSINESS,
+        newSourceName: 'Business',
         amount: new Decimal('1200.00'),
         transactionDate: new Date('2024-02-01'),
       });
 
       expect(prismaMock.incomeRecord.update).toHaveBeenCalledWith({
         where: { id: 'income-record-1' },
-        data: { source: IncomeSourceEnumType.BUSINESS },
+        data: { incomeSourceId: 'source-business' },
       });
     });
 
@@ -215,7 +215,7 @@ describe('ledger.service', () => {
       await updateIncomeRecordSource({
         prismaClient: prismaMock,
         userId: 'user-1',
-        newSource: IncomeSourceEnumType.BUSINESS,
+        newSourceName: 'Business',
         amount: new Decimal('1200.00'),
         transactionDate: new Date('2024-02-01'),
       });

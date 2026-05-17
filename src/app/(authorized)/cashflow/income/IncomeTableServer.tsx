@@ -29,7 +29,8 @@ export default async function IncomeTableServer({
       incomeEntries?.map<IncomeEntryType>((entry) => ({
         id: entry.id,
         amount: entry.amount,
-        source: entry.source,
+        incomeSourceId: entry.incomeSourceId,
+        incomeSourceName: entry.incomeSourceName,
         dateEarned: entry.dateEarned,
         incomeLedgerId: entry.incomeLedgerId,
       })) || [];

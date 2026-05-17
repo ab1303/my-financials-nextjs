@@ -1,4 +1,3 @@
-import { IncomeSourceEnumType } from '@prisma/client';
 import { NextRequest } from 'next/server';
 
 import { auth } from '@/server/auth';
@@ -72,9 +71,16 @@ export async function POST(req: NextRequest) {
     const creditMonths = groupTransactionsByMonth(credits);
     const totalMonths = debitMonths.length + creditMonths.length;
 
-    const categories = await prisma.expenseCategory.findMany({
-      where: { isActive: true },
-    });
+    const [categories, incomeSources] = await Promise.all([
+      prisma.expenseCategory.findMany({
+        where: { isActive: true },
+      }),
+      prisma.incomeSource.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: { name: true },
+      }),
+    ]);
 
     if (!categories.length) {
       return new Response(JSON.stringify({ error: 'No expense categories configured' }), { status: 400 });
@@ -138,7 +144,7 @@ export async function POST(req: NextRequest) {
                 }),
               );
 
-              const result = await classifyCreditTransactions(monthTransactions);
+              const result = await classifyCreditTransactions(monthTransactions, incomeSources.map((s) => s.name));
               totalLlmTokens += result.usage.totalTokens;
               totalPromptTokens += result.usage.promptTokens;
               totalCompletionTokens += result.usage.completionTokens;
@@ -186,7 +192,7 @@ export async function POST(req: NextRequest) {
               totalLlmTokens,
               model: process.env.AI_CLASSIFIER_MODEL ?? 'gpt-4o-mini',
               categories: categories.map((category) => ({ id: category.id, name: category.name })),
-              incomeSourceLabels: [...Object.values(IncomeSourceEnumType), 'Transfer', 'Excluded'],
+              incomeSourceLabels: [...incomeSources.map((s) => s.name), 'Transfer', 'Excluded'],
             }),
           );
 

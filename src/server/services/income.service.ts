@@ -6,7 +6,7 @@ import type {
   MonthlyIncomeSummary,
   SourceBreakdown,
 } from '../models/income';
-import type { Prisma, IncomeSourceEnumType } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 /**
  * Create Income record for a calendar year and user
@@ -86,6 +86,12 @@ export const getIncomeEntries = async (
     where,
     include: {
       incomeLedger: true,
+      incomeSource: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
     orderBy: {
       dateEarned: 'desc',
@@ -96,7 +102,8 @@ export const getIncomeEntries = async (
     id: entry.id,
     dateEarned: entry.dateEarned,
     amount: entry.amount.toNumber(),
-    source: entry.source,
+    incomeSourceId: entry.incomeSourceId,
+    incomeSourceName: entry.incomeSource.name,
     incomeLedgerId: entry.incomeLedgerId,
   }));
 };
@@ -113,14 +120,27 @@ export const addIncomeEntry = async (
   entry: Omit<IncomeEntryInput, 'id' | 'incomeLedgerId'>,
   prismaClient = prisma,
 ) => {
-  return await prismaClient.incomeRecord.create({
+  const createdEntry = await prismaClient.incomeRecord.create({
     data: {
       incomeLedgerId: incomeId,
       dateEarned: entry.dateEarned,
       amount: entry.amount,
-      source: entry.source,
+      incomeSourceId: entry.incomeSourceId,
+    },
+    include: {
+      incomeSource: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
+
+  return {
+    ...createdEntry,
+    incomeSourceName: createdEntry.incomeSource.name,
+  };
 };
 
 /**
@@ -143,7 +163,7 @@ export const updateIncomeEntry = async (
     data: {
       dateEarned: entry.dateEarned,
       amount: entry.amount,
-      source: entry.source,
+      incomeSourceId: entry.incomeSourceId,
     },
   });
 };
@@ -289,7 +309,11 @@ export const getSourceBreakdown = async (
       },
     },
     select: {
-      source: true,
+      incomeSource: {
+        select: {
+          name: true,
+        },
+      },
       amount: true,
     },
   });
@@ -299,7 +323,7 @@ export const getSourceBreakdown = async (
   let totalAmount = 0;
 
   entries.forEach((entry) => {
-    const source = entry.source;
+    const source = entry.incomeSource.name;
     const amount = entry.amount.toNumber();
     totalAmount += amount;
 
@@ -314,7 +338,7 @@ export const getSourceBreakdown = async (
   const breakdowns: SourceBreakdown[] = [];
   sourceMap.forEach((value, sourceKey) => {
     breakdowns.push({
-      source: sourceKey as IncomeSourceEnumType,
+      source: sourceKey,
       amount: value.amount,
       percentage: totalAmount > 0 ? (value.amount / totalAmount) * 100 : 0,
       entryCount: value.count,

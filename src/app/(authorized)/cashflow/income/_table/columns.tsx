@@ -2,16 +2,6 @@ import { createColumnHelper } from '@tanstack/react-table';
 
 import { TableCell, EditCell } from '@/components/react-table';
 import type { IncomeEntryType } from '../_types';
-import type { OptionType } from '@/types';
-import { IncomeSourceEnumType } from '@prisma/client';
-import { INCOME_SOURCE_LABELS } from '../_types';
-
-const incomeSourceOptions: OptionType[] = Object.entries(
-  IncomeSourceEnumType,
-).map(([, value]) => ({
-  id: value,
-  label: INCOME_SOURCE_LABELS[value as IncomeSourceEnumType],
-}));
 
 const columnHelper = createColumnHelper<IncomeEntryType>();
 
@@ -34,14 +24,12 @@ export function getTableColumns() {
       meta: { type: 'AMOUNT', propName: 'amount' },
       footer: (props) => props.column.id,
     }),
-    columnHelper.accessor('source', {
+    columnHelper.accessor('incomeSourceName', {
       size: 180,
       header: () => <span>Income Source</span>,
       cell: TableCell,
       meta: {
-        type: 'SELECT',
-        propName: 'source',
-        selectOptions: incomeSourceOptions,
+        propName: 'incomeSourceName',
       },
       footer: (props) => props.column.id,
     }),

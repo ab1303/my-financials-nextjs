@@ -76,7 +76,7 @@ export async function addRow(input: CreateIncomeEntryInput) {
     const newEntry = await addIncomeEntry(incomeResult.incomeCalendarId, {
       dateEarned: validatedInput.dateEarned,
       amount: validatedInput.amount,
-      source: validatedInput.source,
+      incomeSourceId: validatedInput.incomeSourceId,
     });
 
     return {
@@ -86,7 +86,8 @@ export async function addRow(input: CreateIncomeEntryInput) {
         id: newEntry.id,
         dateEarned: newEntry.dateEarned,
         amount: newEntry.amount.toNumber(),
-        source: newEntry.source,
+        incomeSourceId: newEntry.incomeSourceId,
+        incomeSourceName: newEntry.incomeSource.name,
         incomeLedgerId: newEntry.incomeLedgerId,
       },
     };
@@ -140,7 +141,7 @@ export async function editRow(input: UpdateIncomeEntryInput) {
     await updateIncomeEntry(validatedInput.id, {
       dateEarned: validatedInput.dateEarned,
       amount: validatedInput.amount,
-      source: validatedInput.source,
+      incomeSourceId: validatedInput.incomeSourceId,
     });
 
     return { success: true, error: null };

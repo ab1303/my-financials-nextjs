@@ -1,5 +1,4 @@
 import {
-  IncomeSourceEnumType,
   TransactionSourceEnum,
   TransactionStatusEnum,
   TransactionTypeEnum,
@@ -61,6 +60,17 @@ async function getOrCreateIncomeLedger(calendarYearId: string, userId: string) {
   }
 
   return ledger;
+}
+
+
+function resolveIncomeSourceId(
+  categoryName: string,
+  allSources: Array<{ id: string; name: string }>,
+): string {
+  const match = allSources.find((s) => s.name.toLowerCase() === categoryName.toLowerCase());
+  if (match) return match.id;
+  const other = allSources.find((s) => s.name === 'Other');
+  return other?.id ?? allSources[0]!.id;
 }
 
 async function upsertMonthlyExpenseSummary(params: {
@@ -264,6 +274,11 @@ export async function confirmCreditTransactions(
   const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
   const dedupSet = await buildDedupSet({ userId, bankAccountId, startDate, endDate });
 
+  const allIncomeSources = await prisma.incomeSource.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true },
+  });
+
   for (const { month: monthKey, transactions } of creditMonths) {
     try {
       const { year, monthNum } = parseMonthKey(monthKey);
@@ -308,7 +323,7 @@ export async function confirmCreditTransactions(
             data: {
               dateEarned: new Date(tx.date),
               amount: String(tx.amount),
-              source: tx.confirmedCategory as IncomeSourceEnumType,
+              incomeSourceId: resolveIncomeSourceId(tx.confirmedCategory, allIncomeSources),
               incomeLedgerId: incomeLedger.id,
             },
           });

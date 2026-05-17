@@ -1,5 +1,9 @@
-import type { IncomeSourceEnumType } from '@prisma/client';
-
+export const INCOME_SOURCE_LABELS: Record<string, string> = new Proxy(
+  {},
+  {
+    get: (_, property) => (typeof property === 'string' ? property : ''),
+  },
+) as Record<string, string>;
 export type ServerActionType<T = unknown> = {
   success: boolean;
   error: unknown;
@@ -18,17 +22,8 @@ export type IncomeEntryType = {
   id: string;
   dateEarned: Date;
   amount: number;
-  source: IncomeSourceEnumType;
+  incomeSourceId: string;
+  incomeSourceName: string;
   incomeLedgerId: string;
 };
 
-export const INCOME_SOURCE_LABELS: Record<IncomeSourceEnumType, string> = {
-  EMPLOYMENT: 'Employment',
-  STOCKS: 'Stocks',
-  BONDS: 'Bonds',
-  DIVIDEND: 'Dividend',
-  RENTAL: 'Rental',
-  BUSINESS: 'Business',
-  FREELANCE: 'Freelance',
-  OTHER: 'Other',
-};

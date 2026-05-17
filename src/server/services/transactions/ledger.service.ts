@@ -1,5 +1,4 @@
 import type { PrismaClient } from '@prisma/client';
-import { IncomeSourceEnumType } from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
 
 export async function rerollupExpenseSummary(params: {
@@ -99,7 +98,7 @@ export async function rerollupExpenseSummary(params: {
 export async function updateIncomeRecordSource(params: {
   prismaClient: PrismaClient;
   userId: string;
-  newSource: IncomeSourceEnumType;
+  newSourceName: string;
   amount: Decimal;
   transactionDate: Date;
 }): Promise<void> {
@@ -139,10 +138,19 @@ export async function updateIncomeRecordSource(params: {
     return;
   }
 
+  const incomeSource = await params.prismaClient.incomeSource.findFirst({
+    where: { name: { equals: params.newSourceName, mode: 'insensitive' } },
+    select: { id: true },
+  });
+
+  if (!incomeSource) {
+    return;
+  }
+
   await params.prismaClient.incomeRecord.update({
     where: { id: incomeRecord.id },
     data: {
-      source: params.newSource,
+      incomeSourceId: incomeSource.id,
     },
   });
 }
