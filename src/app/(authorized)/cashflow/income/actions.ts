@@ -8,6 +8,7 @@ import {
   deleteIncomeEntry,
 } from '@/server/services/income.service';
 import { createIncomeYearHandler } from '@/server/controllers/income.controller';
+import { prisma } from '@/server/utils/prisma';
 import {
   CreateIncomeEntrySchema,
   UpdateIncomeEntrySchema,
@@ -29,6 +30,35 @@ export async function addRow(input: CreateIncomeEntryInput) {
 
     // Validate input
     const validatedInput = CreateIncomeEntrySchema.parse(input);
+
+    // Validate that dateEarned falls within the fiscal year's date range
+    const calendarYear = await prisma.calendarYear.findUnique({
+      where: { id: validatedInput.calendarYearId },
+    });
+
+    if (calendarYear) {
+      const startDate = new Date(
+        calendarYear.fromYear,
+        calendarYear.fromMonth - 1,
+        1,
+      );
+      const endDate = new Date(
+        calendarYear.toYear,
+        calendarYear.toMonth,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
+      const dateEarned = new Date(validatedInput.dateEarned);
+      if (dateEarned < startDate || dateEarned > endDate) {
+        return {
+          success: false,
+          error: `Date must fall within ${calendarYear.description} (${startDate.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })} – ${endDate.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}).`,
+        };
+      }
+    }
 
     // Get or create Income record for the calendar year
     const incomeResult = await createIncomeYearHandler(

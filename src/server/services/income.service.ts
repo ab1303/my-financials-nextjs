@@ -71,12 +71,35 @@ export const getIncomeEntries = async (
   userId: string,
   prismaClient = prisma,
 ): Promise<Array<IncomeEntryModel>> => {
-  const where: Partial<Prisma.IncomeRecordWhereInput> = {
+  const calendarYear = await prismaClient.calendarYear.findUnique({
+    where: { id: calendarYearId },
+  });
+
+  const where: Prisma.IncomeRecordWhereInput = {
     incomeLedger: {
       calendarId: calendarYearId,
       userId,
     },
   };
+
+  if (calendarYear) {
+    // Filter entries to only those whose dateEarned falls within the fiscal year bounds
+    const startDate = new Date(
+      calendarYear.fromYear,
+      calendarYear.fromMonth - 1,
+      1,
+    );
+    const endDate = new Date(
+      calendarYear.toYear,
+      calendarYear.toMonth,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+    where.dateEarned = { gte: startDate, lte: endDate };
+  }
 
   const incomeEntries = await prismaClient.incomeRecord.findMany({
     where,
@@ -172,13 +195,37 @@ export const getTotalIncome = async (
   userId: string,
   prismaClient = prisma,
 ): Promise<number> => {
-  const result = await prismaClient.incomeRecord.aggregate({
-    where: {
-      incomeLedger: {
-        calendarId: calendarYearId,
-        userId,
-      },
+  const calendarYear = await prismaClient.calendarYear.findUnique({
+    where: { id: calendarYearId },
+  });
+
+  const where: Prisma.IncomeRecordWhereInput = {
+    incomeLedger: {
+      calendarId: calendarYearId,
+      userId,
     },
+  };
+
+  if (calendarYear) {
+    const startDate = new Date(
+      calendarYear.fromYear,
+      calendarYear.fromMonth - 1,
+      1,
+    );
+    const endDate = new Date(
+      calendarYear.toYear,
+      calendarYear.toMonth,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+    where.dateEarned = { gte: startDate, lte: endDate };
+  }
+
+  const result = await prismaClient.incomeRecord.aggregate({
+    where,
     _sum: {
       amount: true,
     },
