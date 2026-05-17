@@ -2,14 +2,17 @@
 
 import { useEffect, useId, useMemo, useState } from 'react';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
-import type { SingleValue } from 'react-select';
+import type { GroupBase, SingleValue } from 'react-select';
 import { Label } from '@/components/ui/Label';
+
+type CategoryOption = { label: string; value: string };
+type CategoryGroup = { label: string; options: CategoryOption[] };
 
 export type DatePreset = 'this-month' | 'last-month' | 'this-quarter' | 'this-fy' | 'last-fy' | 'custom';
 
 interface TransactionFiltersProps {
   bankAccounts: Array<{ id: string; name: string; bankName: string }>;
-  categoryOptions: Array<{ label: string; value: string }>;
+  categoryOptions: CategoryGroup[];
   bankAccountId: string | undefined;
   category: string | undefined;
   dateFrom: string | undefined;
@@ -189,8 +192,10 @@ export default function TransactionFilters({
   );
 
   const selectedBank = bankOptions.find((option) => option.value === bankAccountId) ?? null;
-  const selectedCategory =
-    categoryOptions.find((option) => option.value === category) ?? null;
+  const selectedCategory = useMemo(
+    () => categoryOptions.flatMap((g) => g.options).find((o) => o.value === category) ?? null,
+    [categoryOptions, category],
+  );
 
   useEffect(() => {
     setDatePreset('this-fy');
@@ -290,7 +295,7 @@ export default function TransactionFilters({
           <Label htmlFor={categorySelectId} className="text-xs font-medium text-gray-500 dark:text-gray-400">
             Category
           </Label>
-          <Select
+          <Select<CategoryOption, false, GroupBase<CategoryOption>>
             instanceId={categorySelectId}
             inputId={categorySelectId}
             name="category"
@@ -298,7 +303,7 @@ export default function TransactionFilters({
             placeholder="All Categories"
             value={selectedCategory}
             options={categoryOptions}
-            onChange={(option: SingleValue<(typeof categoryOptions)[number]>) =>
+            onChange={(option: SingleValue<CategoryOption>) =>
               onCategoryChange(option?.value)
             }
             className="w-full"

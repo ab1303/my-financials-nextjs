@@ -170,21 +170,29 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
   const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
   const categoryOptions = useMemo(() => {
-    const expenseOptions = expenseCategories.map((item) => ({
-      label: item.name,
-      value: item.name,
-    }));
+    const incomeGroup = {
+      label: '💰 Income Sources',
+      options: incomeSourceLabels
+        .map((name) => ({ label: name, value: name }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    };
 
-    const incomeOptions = incomeSourceLabels.map((raw) => ({
-      label: `${raw.charAt(0) + raw.slice(1).toLowerCase()} (Income)`,
-      value: raw,
-    }));
+    const expenseGroup = {
+      label: '🏷️ Expense Categories',
+      options: expenseCategories
+        .map((item) => ({ label: item.name, value: item.name }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    };
 
-    const reimbursementOption = { label: REIMBURSEMENT_CATEGORY, value: REIMBURSEMENT_CATEGORY };
+    const specialGroup = {
+      label: '⚡ Special',
+      options: [
+        { label: REIMBURSEMENT_CATEGORY, value: REIMBURSEMENT_CATEGORY },
+        { label: TRANSFER_CATEGORY, value: TRANSFER_CATEGORY },
+      ],
+    };
 
-    return [...expenseOptions, ...incomeOptions, reimbursementOption].sort((a, b) =>
-      a.label.localeCompare(b.label),
-    );
+    return [incomeGroup, expenseGroup, specialGroup].filter((g) => g.options.length > 0);
   }, [expenseCategories, incomeSourceLabels]);
 
   return (
