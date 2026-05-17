@@ -17,6 +17,7 @@ import { Card, AddressComponent, Button } from '@/components';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 import type { BankType } from '@/types';
+import BankAccountsSection from './_components/BankAccountsSection';
 
 type BankOptionType = {
   value: BankType;
@@ -190,78 +191,84 @@ export default function BanksForm() {
   }
 
   return (
-    <Card>
-      <Card.Header>
-        <div className='flex justify-between text-left'>
-          <Card.Header.Title>Bank Details</Card.Header.Title>
-        </div>
-      </Card.Header>
+    <>
+      <Card>
+        <Card.Header>
+          <div className='flex justify-between text-left'>
+            <Card.Header.Title>Bank Details</Card.Header.Title>
+          </div>
+        </Card.Header>
 
-      <Card.Body>
-        <FormProvider {...formMethods}>
-          <form
-            className='mb-0 space-y-6'
-            onSubmit={handleSubmit(submitHandler)}
-          >
-            <div>
-              <Label htmlFor='bank'>Bank</Label>
-              <div className='mt-1'>
-                <Select<BankOptionType>
-                  isClearable
-                  className='w-full max-w-md'
-                  components={{ Option }}
-                  value={selectedBank}
-                  options={bankOptions}
-                  instanceId={uniqSelectBankId}
-                  getOptionValue={(option) => option.id}
-                  onChange={(option) => handleOptionChange(option)}
-                />
+        <Card.Body>
+          <FormProvider {...formMethods}>
+            <form
+              className='mb-0 space-y-6'
+              onSubmit={handleSubmit(submitHandler)}
+            >
+              <div>
+                <Label htmlFor='bank'>Bank</Label>
+                <div className='mt-1'>
+                  <Select<BankOptionType>
+                    isClearable
+                    className='w-full max-w-md'
+                    components={{ Option }}
+                    value={selectedBank}
+                    options={bankOptions}
+                    instanceId={uniqSelectBankId}
+                    getOptionValue={(option) => option.id}
+                    onChange={(option) => handleOptionChange(option)}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <Label htmlFor='bankName' error={!!errors.bankName}>
-                Bank Name
-              </Label>
-              <div className='mt-1'>
-                <TextInput
-                  id='bankName'
-                  type='text'
-                  error={!!errors.bankName}
-                  {...register('bankName', { required: true })}
-                />
+              <div>
+                <Label htmlFor='bankName' error={!!errors.bankName}>
+                  Bank Name
+                </Label>
+                <div className='mt-1'>
+                  <TextInput
+                    id='bankName'
+                    type='text'
+                    error={!!errors.bankName}
+                    {...register('bankName', { required: true })}
+                  />
+                </div>
               </div>
-            </div>
 
-            <AddressComponent<BankType>
-              basePropertyName='address'
-              address={selectedBank?.value.address}
-              addressFields={{
-                addressLineName: 'address.addressLine',
-                postcodeName: 'address.postcode',
-                stateName: 'address.state',
-                street_addressName: 'address.street_address',
-                suburbName: 'address.suburb',
-                addressLineError: errors.address?.addressLine,
-                suburbError: errors.address?.suburb,
-                postcodeError: errors.address?.postcode,
-                stateError: errors.address?.state,
-                street_addressError: errors.address?.street_address,
-              }}
-            />
+              <AddressComponent<BankType>
+                basePropertyName='address'
+                address={selectedBank?.value.address}
+                addressFields={{
+                  addressLineName: 'address.addressLine',
+                  postcodeName: 'address.postcode',
+                  stateName: 'address.state',
+                  street_addressName: 'address.street_address',
+                  suburbName: 'address.suburb',
+                  addressLineError: errors.address?.addressLine,
+                  suburbError: errors.address?.suburb,
+                  postcodeError: errors.address?.postcode,
+                  stateError: errors.address?.state,
+                  street_addressError: errors.address?.street_address,
+                }}
+              />
 
-            <div>
-              <Button
-                isLoading={saveBankDetailsMutation.isPending}
-                variant='primary'
-                type='submit'
-              >
-                Create
-              </Button>
-            </div>
-          </form>
-        </FormProvider>
-      </Card.Body>
-    </Card>
+              <div>
+                <Button
+                  isLoading={saveBankDetailsMutation.isPending}
+                  variant='primary'
+                  type='submit'
+                >
+                  Create
+                </Button>
+              </div>
+            </form>
+          </FormProvider>
+        </Card.Body>
+      </Card>
+
+      <div className='mt-6'>
+        <BankAccountsSection />
+      </div>
+    </>
   );
 }
