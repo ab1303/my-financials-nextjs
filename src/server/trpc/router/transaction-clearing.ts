@@ -168,6 +168,8 @@ export const transactionClearingRouter = router({
             recordsCreated: s.recordsCreated,
             transactionCount: s._count.transactions,
             createdAt: s.createdAt.toISOString(),
+            startDate: s.startDate?.toISOString() ?? null,
+            endDate:   s.endDate?.toISOString()   ?? null,
             yearWarning: yearFlags.yearWarning,
             isLocked: yearFlags.isLocked,
           };

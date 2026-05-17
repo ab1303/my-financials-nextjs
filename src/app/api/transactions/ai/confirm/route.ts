@@ -174,9 +174,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const dateRange = await prisma.transaction.aggregate({
+      where: { importSessionId: sessionId },
+      _min: { date: true },
+      _max: { date: true },
+    });
+
     await prisma.importSession.update({
       where: { id: sessionId },
-      data: { status: ImportStatusEnum.COMPLETED, recordsCreated },
+      data: {
+        status: ImportStatusEnum.COMPLETED,
+        recordsCreated,
+        startDate: dateRange._min.date ?? null,
+        endDate:   dateRange._max.date ?? null,
+      },
     });
   } catch (err) {
     status = 'PARTIAL';

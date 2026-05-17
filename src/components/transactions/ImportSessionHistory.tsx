@@ -14,8 +14,18 @@ interface SessionRow {
   recordsCreated: number;
   transactionCount: number;
   createdAt: string;
+  startDate: string | null;
+  endDate:   string | null;
   yearWarning: boolean;
   isLocked: boolean;
+}
+
+function formatCoverage(startDate: string | null, endDate: string | null): string {
+  if (!startDate || !endDate) return '—';
+  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+  const start = new Date(startDate).toLocaleDateString('en-AU', opts);
+  const end   = new Date(endDate).toLocaleDateString('en-AU', opts);
+  return start === end ? start : `${start} – ${end}`;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -101,7 +111,7 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
               <table className="w-full text-left text-sm">
                 <thead className="bg-muted">
                   <tr>
-                    {['Date', 'Type', 'Records', 'Status', ''].map((h) => (
+                    {['Date', 'Type', 'Records', 'Coverage', 'Status', ''].map((h) => (
                       <th
                         key={h}
                         className="cursor-default select-none px-4 py-3 font-medium text-foreground"
@@ -122,6 +132,9 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {session.transactionCount}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {formatCoverage(session.startDate, session.endDate)}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={session.status} />

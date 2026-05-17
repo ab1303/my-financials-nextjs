@@ -97,7 +97,7 @@
     "@babel/preset-env": "^7.26.0",
     "@next/codemod": "^16.1.6",
     "@playwright/test": "^1.58.2",
-    "@prisma/client": "^6.13.0",
+    "@prisma/client": "^6.19.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
@@ -121,7 +121,7 @@
     "postcss": "^8.5.1",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
-    "prisma": "^6.13.0",
+    "prisma": "^6.19.3",
     "tailwindcss": "^3.3.3",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.0.16",
@@ -140,4 +140,3 @@
     "initVersion": "6.8.0"
   }
 }
-
