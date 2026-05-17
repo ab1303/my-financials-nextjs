@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import TransactionsClient from '@/app/(authorized)/cashflow/transactions/_components/TransactionsClient';
 
+vi.mock('@/components/transactions/ImportSessionHistory', () => ({
+  default: () => null,
+}));
+
 vi.mock('@/app/(authorized)/cashflow/transactions/_components/csv/CSVImportWizard', () => ({
   default: ({ isOpen }: { isOpen: boolean }) =>
     isOpen ? <div data-testid="csv-wizard">CSV Wizard</div> : null,

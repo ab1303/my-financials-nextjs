@@ -73,6 +73,16 @@ vi.mock('@/server/trpc/client', () => ({
         useMutation: (...args: unknown[]) => mockUseMutation(...args),
       },
     },
+    transfer: {
+      getUnmatchedCount: {
+        useQuery: () => ({ data: 0, isLoading: false }),
+      },
+    },
+    transactionClearing: {
+      voidTransaction: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+    },
   },
 }));
 

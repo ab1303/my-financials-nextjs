@@ -2,19 +2,60 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import TransactionFilters from '@/components/transactions/TransactionFilters';
 
+vi.mock('react-select', () => ({
+  default: ({
+    inputId,
+    name,
+    options = [],
+    value,
+    onChange,
+    placeholder,
+    isClearable,
+  }: {
+    inputId?: string;
+    name?: string;
+    options?: Array<{ label: string; value: string }>;
+    value?: { label: string; value: string } | null;
+    onChange?: (option: { label: string; value: string } | null) => void;
+    placeholder?: string;
+    isClearable?: boolean;
+  }) => (
+    <select
+      id={inputId}
+      name={name}
+      aria-label={placeholder ?? name}
+      value={value?.value ?? ''}
+      onChange={(event) => {
+        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        onChange?.(selected);
+      }}
+    >
+      {isClearable ? <option value="">All</option> : null}
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+
 describe('TransactionFilters', () => {
   const props = {
     bankAccounts: [
-      { id: 'acc-1', name: 'Everyday Account' },
-      { id: 'acc-2', name: 'Savings' },
+      { id: 'acc-1', name: 'Everyday Account', bankName: 'CommBank' },
+      { id: 'acc-2', name: 'Savings', bankName: 'ANZ' },
     ],
+    categoryOptions: [],
     bankAccountId: undefined,
+    category: undefined,
     dateFrom: undefined,
     dateTo: undefined,
     search: '',
     amountMin: '',
     amountMax: '',
     onBankChange: vi.fn(),
+    onCategoryChange: vi.fn(),
     onDateFromChange: vi.fn(),
     onDateToChange: vi.fn(),
     onSearchChange: vi.fn(),

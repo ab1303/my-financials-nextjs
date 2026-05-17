@@ -10,6 +10,10 @@ const toastErrorMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/server/trpc/client', () => ({
   trpc: {
+    useUtils: () => ({
+      individual: { getAllIndividuals: { invalidate: vi.fn() } },
+      business: { getBusinessesByType: { invalidate: vi.fn() } },
+    }),
     transactionLedger: {
       getUnlinkedDonationTransactions: {
         useQuery: (...args: unknown[]) => transactionQueryMock(...args),
@@ -19,10 +23,16 @@ vi.mock('@/server/trpc/client', () => ({
       getAllIndividuals: {
         useQuery: (...args: unknown[]) => individualQueryMock(...args),
       },
+      create: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
     },
     business: {
       getBusinessesByType: {
         useQuery: (...args: unknown[]) => businessQueryMock(...args),
+      },
+      create: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
     },
   },
@@ -37,6 +47,64 @@ vi.mock('sonner', () => ({
     success: (...args: unknown[]) => toastSuccessMock(...args),
     error: (...args: unknown[]) => toastErrorMock(...args),
   },
+}));
+
+vi.mock('react-select', () => ({
+  default: ({
+    inputId,
+    options = [],
+    value,
+    onChange,
+  }: {
+    inputId?: string;
+    options?: Array<{ label: string; value: string }>;
+    value?: { label: string; value: string } | null;
+    onChange?: (option: { label: string; value: string } | null) => void;
+  }) => (
+    <select
+      id={inputId}
+      value={value?.value ?? ''}
+      onChange={(event) => {
+        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        onChange?.(selected);
+      }}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+
+vi.mock('react-select/creatable', () => ({
+  default: ({
+    inputId,
+    options = [],
+    value,
+    onChange,
+  }: {
+    inputId?: string;
+    options?: Array<{ label: string; value: string }>;
+    value?: { label: string; value: string } | null;
+    onChange?: (option: { label: string; value: string } | null) => void;
+  }) => (
+    <select
+      id={inputId}
+      value={value?.value ?? ''}
+      onChange={(event) => {
+        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        onChange?.(selected);
+      }}
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  ),
 }));
 
 import LinkTransactionsDrawer from '@/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer';

@@ -2,39 +2,40 @@ import type { Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 /**
- * Create mock Income with IncomeEntry records
+ * Create mock IncomeLedger (per-calendar-year income container)
  */
-export const createMockIncome = (
+export const createMockIncomeLedger = (
   overrides?: Partial<
-    Prisma.IncomeGetPayload<{
-      include: { entries: true };
+    Prisma.IncomeLedgerGetPayload<{
+      include: { records: true };
     }>
   >,
-): Prisma.IncomeGetPayload<{
-  include: { entries: true };
+): Prisma.IncomeLedgerGetPayload<{
+  include: { records: true };
 }> => ({
   id: 'test-income-id',
   userId: 'test-user-id',
-  source: 'EMPLOYMENT',
-  description: 'Test Employment Income',
+  calendarId: 'test-calendar-id',
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
-  entries: [
+  records: [
     {
       id: 'test-entry-id-1',
-      incomeId: 'test-income-id',
+      incomeLedgerId: 'test-income-id',
       amount: new Decimal('5000.00'),
-      date: new Date('2024-01-15'),
-      notes: 'January salary',
+      dateEarned: new Date('2024-01-15'),
+      source: 'EMPLOYMENT' as const,
+      transactionId: null,
       createdAt: new Date('2024-01-15'),
       updatedAt: new Date('2024-01-15'),
     },
     {
       id: 'test-entry-id-2',
-      incomeId: 'test-income-id',
+      incomeLedgerId: 'test-income-id',
       amount: new Decimal('5000.00'),
-      date: new Date('2024-02-15'),
-      notes: 'February salary',
+      dateEarned: new Date('2024-02-15'),
+      source: 'EMPLOYMENT' as const,
+      transactionId: null,
       createdAt: new Date('2024-02-15'),
       updatedAt: new Date('2024-02-15'),
     },
@@ -43,16 +44,17 @@ export const createMockIncome = (
 });
 
 /**
- * Create mock IncomeEntry
+ * Create mock IncomeRecord (individual income event)
  */
 export const createMockIncomeEntry = (
-  overrides?: Partial<Prisma.IncomeEntryGetPayload<Record<string, never>>>,
-): Prisma.IncomeEntryGetPayload<Record<string, never>> => ({
+  overrides?: Partial<Prisma.IncomeRecordGetPayload<Record<string, never>>>,
+): Prisma.IncomeRecordGetPayload<Record<string, never>> => ({
   id: 'test-entry-id',
-  incomeId: 'test-income-id',
+  incomeLedgerId: 'test-income-id',
   amount: new Decimal('1000.00'),
-  date: new Date('2024-01-01'),
-  notes: 'Test income entry',
+  dateEarned: new Date('2024-01-01'),
+  source: 'EMPLOYMENT' as const,
+  transactionId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
   ...overrides,

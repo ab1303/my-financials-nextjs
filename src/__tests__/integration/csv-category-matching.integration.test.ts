@@ -73,10 +73,10 @@ describe('CSV Category Matching — CommBank July 2025', () => {
     expect(result.transactions!.length).toBeGreaterThan(0);
   });
 
-  it('extracts only debit (spending) transactions', async () => {
+  it('extracts both debit and credit transactions with positive amounts', async () => {
     const result = await parseCommBankCsv(csvContent);
     expect(result.success).toBe(true);
-    // All amounts should be positive (debits normalised)
+    // All amounts should be positive (normalised to absolute values)
     for (const tx of result.transactions!) {
       expect(tx.amount).toBeGreaterThan(0);
     }
@@ -85,9 +85,11 @@ describe('CSV Category Matching — CommBank July 2025', () => {
   it('total debit amount matches all parsed debits (107 transactions)', async () => {
     const result = await parseCommBankCsv(csvContent);
     expect(result.success).toBe(true);
-    expect(result.transactions).toHaveLength(107);
+    // Filter to debit (spending) transactions only
+    const debits = result.transactions!.filter(tx => tx.type === 'DEBIT');
+    expect(debits).toHaveLength(107);
     const total = Math.round(
-      result.transactions!.reduce((sum, tx) => sum + tx.amount, 0) * 100) / 100;
+      debits.reduce((sum, tx) => sum + tx.amount, 0) * 100) / 100;
     expect(total).toBeCloseTo(TOTAL_PARSED_DEBITS, 0);
   });
 

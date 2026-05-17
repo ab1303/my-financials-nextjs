@@ -101,6 +101,19 @@ export default function TransactionReviewTable({
   const [sortColumn, setSortColumn] = useState<'date' | 'description' | 'amount' | null>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
+  const handleAcceptAll = useCallback(() => {
+    const resetMonths = months.map((m) => ({
+      ...m,
+      transactions: m.transactions.map((t) => ({
+        ...t,
+        confirmedCategory: t.llmCategory,
+        overridden: false,
+      })),
+    }));
+    setMonths(resetMonths);
+    onUpdateMonths?.(resetMonths);
+  }, [months, onUpdateMonths]);
+
   const handleSort = useCallback((col: 'date' | 'description' | 'amount') => {
     if (sortColumn === col) {
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -167,12 +180,23 @@ export default function TransactionReviewTable({
             {totalOverrides} changes applied
           </p>
         </div>
-        <div className='space-y-0.5 text-right text-xs text-gray-500 dark:text-gray-400'>
+        <div className='flex flex-col items-end gap-2'>
+          {totalOverrides > 0 && (
+            <button
+              type='button'
+              onClick={handleAcceptAll}
+              className='rounded-md bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-700 hover:bg-teal-100 dark:bg-teal-900/20 dark:text-teal-400 dark:hover:bg-teal-900/40'
+            >
+              Accept All
+            </button>
+          )}
+          <div className='space-y-0.5 text-right text-xs text-gray-500 dark:text-gray-400'>
           <p className='font-medium text-gray-700 dark:text-gray-300'>{llmModel}</p>
           <p>{totalUsage.totalTokens.toLocaleString()} tokens used</p>
           <p className='text-teal-600 dark:text-teal-400'>
             Est. cost: {estimateCostUSD(totalUsage.totalTokens, llmModel)}
           </p>
+          </div>
         </div>
       </div>
 

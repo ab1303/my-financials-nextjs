@@ -317,7 +317,7 @@ export default function LinkTransactionsDrawer({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <label htmlFor="beneficiaryType" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
                     Beneficiary type
                   </label>
                   <Controller
@@ -342,7 +342,7 @@ export default function LinkTransactionsDrawer({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <label htmlFor="beneficiaryId" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
                     Beneficiary
                   </label>
                   <Controller

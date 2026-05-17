@@ -27,17 +27,17 @@ describe('Income Controller', () => {
         updatedAt: new Date(),
       };
 
-      prismaMock.income.findUnique.mockResolvedValue(mockIncome);
+      prismaMock.incomeLedger.findUnique.mockResolvedValue(mockIncome);
 
       const result = await createIncomeYearHandler(calendarYearId, userId);
 
       expect(result.incomeCalendarId).toBe(incomeId);
-      expect(prismaMock.income.create).not.toHaveBeenCalled();
+      expect(prismaMock.incomeLedger.create).not.toHaveBeenCalled();
     });
 
     it('should create new income record if it does not exist', async () => {
       // First call returns null (not found)
-      prismaMock.income.findUnique.mockResolvedValue(null);
+      prismaMock.incomeLedger.findUnique.mockResolvedValue(null);
 
       // Second call creates new record
       const mockNewIncome = {
@@ -47,12 +47,12 @@ describe('Income Controller', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prismaMock.income.create.mockResolvedValue(mockNewIncome);
+      prismaMock.incomeLedger.create.mockResolvedValue(mockNewIncome);
 
       const result = await createIncomeYearHandler(calendarYearId, userId);
 
       expect(result.incomeCalendarId).toBe('new-income-id');
-      expect(prismaMock.income.create).toHaveBeenCalledWith({
+      expect(prismaMock.incomeLedger.create).toHaveBeenCalledWith({
         data: {
           calendarId: calendarYearId,
           userId,
@@ -61,7 +61,7 @@ describe('Income Controller', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      prismaMock.income.findUnique.mockRejectedValue(new Error('Database error'));
+      prismaMock.incomeLedger.findUnique.mockRejectedValue(new Error('Database error'));
 
       const result = await createIncomeYearHandler(calendarYearId, userId);
 
@@ -79,7 +79,7 @@ describe('Income Controller', () => {
         updatedAt: new Date(),
       };
 
-      prismaMock.income.findUnique.mockResolvedValue(mockIncome);
+      prismaMock.incomeLedger.findUnique.mockResolvedValue(mockIncome);
 
       const result = await incomeHandler(calendarYearId, userId);
 
@@ -88,7 +88,7 @@ describe('Income Controller', () => {
     });
 
     it('should return empty object when income not found', async () => {
-      prismaMock.income.findUnique.mockResolvedValue(null);
+      prismaMock.incomeLedger.findUnique.mockResolvedValue(null);
 
       const result = await incomeHandler(calendarYearId, userId);
 
@@ -97,7 +97,7 @@ describe('Income Controller', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      prismaMock.income.findUnique.mockRejectedValue(new Error('Database error'));
+      prismaMock.incomeLedger.findUnique.mockRejectedValue(new Error('Database error'));
 
       const result = await incomeHandler(calendarYearId, userId);
 
@@ -110,13 +110,13 @@ describe('Income Controller', () => {
       const mockEntries = [
         {
           id: 'entry-1',
-          incomeId,
+          incomeLedgerId: incomeId,
           dateEarned: new Date('2024-01-15'),
           amount: new Decimal('5000.00'),
           source: 'EMPLOYMENT' as const,
           createdAt: new Date(),
           updatedAt: new Date(),
-          income: {
+          incomeLedger: {
             id: incomeId,
             calendarId: calendarYearId,
             userId,
@@ -126,7 +126,7 @@ describe('Income Controller', () => {
         },
       ];
 
-      prismaMock.incomeEntry.findMany.mockResolvedValue(mockEntries);
+      prismaMock.incomeRecord.findMany.mockResolvedValue(mockEntries);
 
       const result = await incomeEntriesHandler(calendarYearId, userId);
 
@@ -136,7 +136,7 @@ describe('Income Controller', () => {
     });
 
     it('should return empty array when no entries exist', async () => {
-      prismaMock.incomeEntry.findMany.mockResolvedValue([]);
+      prismaMock.incomeRecord.findMany.mockResolvedValue([]);
 
       const result = await incomeEntriesHandler(calendarYearId, userId);
 
@@ -144,7 +144,7 @@ describe('Income Controller', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      prismaMock.incomeEntry.findMany.mockRejectedValue(new Error('Database error'));
+      prismaMock.incomeRecord.findMany.mockRejectedValue(new Error('Database error'));
 
       const result = await incomeEntriesHandler(calendarYearId, userId);
 
@@ -164,7 +164,7 @@ describe('Income Controller', () => {
         _min: { amount: null },
       };
 
-      prismaMock.incomeEntry.aggregate.mockResolvedValue(mockAggregate);
+      prismaMock.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
 
       const result = await totalIncomeHandler(calendarYearId, userId);
 
@@ -182,7 +182,7 @@ describe('Income Controller', () => {
         _min: { amount: null },
       };
 
-      prismaMock.incomeEntry.aggregate.mockResolvedValue(mockAggregate);
+      prismaMock.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
 
       const result = await totalIncomeHandler(calendarYearId, userId);
 
@@ -190,7 +190,7 @@ describe('Income Controller', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      prismaMock.incomeEntry.aggregate.mockRejectedValue(new Error('Database error'));
+      prismaMock.incomeRecord.aggregate.mockRejectedValue(new Error('Database error'));
 
       const result = await totalIncomeHandler(calendarYearId, userId);
 

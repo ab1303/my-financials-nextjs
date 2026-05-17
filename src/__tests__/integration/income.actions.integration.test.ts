@@ -43,7 +43,7 @@ describe('Income Server Actions', () => {
       };
 
       // Mock Income lookup/creation
-      prismaMock.income.findUnique.mockResolvedValue({
+      prismaMock.incomeLedger.findUnique.mockResolvedValue({
         id: incomeId,
         calendarId: calendarYearId,
         userId,
@@ -51,17 +51,17 @@ describe('Income Server Actions', () => {
         updatedAt: new Date(),
       });
 
-      // Mock IncomeEntry creation
+      // Mock IncomeRecord creation
       const mockEntry = {
         id: 'new-entry-id',
-        incomeId,
+        incomeLedgerId: incomeId,
         dateEarned: input.dateEarned,
         amount: new Decimal('5000.00'),
         source: input.source,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prismaMock.incomeEntry.create.mockResolvedValue(mockEntry);
+      prismaMock.incomeRecord.create.mockResolvedValue(mockEntry);
 
       const result = await addRow(input);
 
@@ -120,7 +120,7 @@ describe('Income Server Actions', () => {
         'OTHER',
       ];
 
-      prismaMock.income.findUnique.mockResolvedValue({
+      prismaMock.incomeLedger.findUnique.mockResolvedValue({
         id: incomeId,
         calendarId: calendarYearId,
         userId,
@@ -140,7 +140,7 @@ describe('Income Server Actions', () => {
           source,
           amount: new Decimal('1000.00'),
         });
-        prismaMock.incomeEntry.create.mockResolvedValue(mockEntry);
+        prismaMock.incomeRecord.create.mockResolvedValue(mockEntry);
 
         const result = await addRow(input);
 
@@ -169,7 +169,7 @@ describe('Income Server Actions', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prismaMock.incomeEntry.update.mockResolvedValue(mockUpdatedEntry);
+      prismaMock.incomeRecord.update.mockResolvedValue(mockUpdatedEntry);
 
       const result = await editRow(input);
 
@@ -201,7 +201,7 @@ describe('Income Server Actions', () => {
         source: 'EMPLOYMENT' as const,
       };
 
-      prismaMock.incomeEntry.update.mockRejectedValue(
+      prismaMock.incomeRecord.update.mockRejectedValue(
         new Error('Record to update not found'),
       );
 
@@ -218,12 +218,12 @@ describe('Income Server Actions', () => {
       const input = { id: entryId };
 
       const mockDeletedEntry = createMockIncomeEntry({ id: entryId });
-      prismaMock.incomeEntry.delete.mockResolvedValue(mockDeletedEntry);
+      prismaMock.incomeRecord.delete.mockResolvedValue(mockDeletedEntry);
 
       const result = await deleteRow(input);
 
       expect(result.success).toBe(true);
-      expect(prismaMock.incomeEntry.delete).toHaveBeenCalledWith({
+      expect(prismaMock.incomeRecord.delete).toHaveBeenCalledWith({
         where: { id: entryId },
       });
       expect(revalidatePath).toHaveBeenCalledWith('/cashflow/income');
@@ -243,7 +243,7 @@ describe('Income Server Actions', () => {
     it('should handle entry not found', async () => {
       const input = { id: 'non-existent-id' };
 
-      prismaMock.incomeEntry.delete.mockRejectedValue(
+      prismaMock.incomeRecord.delete.mockRejectedValue(
         new Error('Record to delete not found'),
       );
 

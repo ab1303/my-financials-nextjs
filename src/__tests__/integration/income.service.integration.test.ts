@@ -24,13 +24,13 @@ describe('Income Service - CRUD Operations', () => {
       const mockEntries = [
         {
           id: 'entry-1',
-          incomeId,
+          incomeLedgerId: incomeId,
           dateEarned: new Date('2024-01-15'),
           amount: new Decimal('5000.00'),
           source: 'EMPLOYMENT' as const,
           createdAt: new Date(),
           updatedAt: new Date(),
-          income: {
+          incomeLedger: {
             id: incomeId,
             calendarId: calendarYearId,
             userId,
@@ -40,13 +40,13 @@ describe('Income Service - CRUD Operations', () => {
         },
         {
           id: 'entry-2',
-          incomeId,
+          incomeLedgerId: incomeId,
           dateEarned: new Date('2024-02-15'),
           amount: new Decimal('5000.00'),
           source: 'EMPLOYMENT' as const,
           createdAt: new Date(),
           updatedAt: new Date(),
-          income: {
+          incomeLedger: {
             id: incomeId,
             calendarId: calendarYearId,
             userId,
@@ -56,22 +56,22 @@ describe('Income Service - CRUD Operations', () => {
         },
       ];
 
-      prismaMock.incomeEntry.findMany.mockResolvedValue(mockEntries);
+      prismaMock.incomeRecord.findMany.mockResolvedValue(mockEntries);
 
       const result = await getIncomeEntries(calendarYearId, userId);
 
       expect(result).toHaveLength(2);
       expect(result[0]?.amount).toBe(5000);
       expect(result[0]?.source).toBe('EMPLOYMENT');
-      expect(prismaMock.incomeEntry.findMany).toHaveBeenCalledWith({
+      expect(prismaMock.incomeRecord.findMany).toHaveBeenCalledWith({
         where: {
-          income: {
+          incomeLedger: {
             calendarId: calendarYearId,
             userId,
           },
         },
         include: {
-          income: true,
+          incomeLedger: true,
         },
         orderBy: {
           dateEarned: 'desc',
@@ -80,7 +80,7 @@ describe('Income Service - CRUD Operations', () => {
     });
 
     it('should return empty array when no entries exist', async () => {
-      prismaMock.incomeEntry.findMany.mockResolvedValue([]);
+      prismaMock.incomeRecord.findMany.mockResolvedValue([]);
 
       const result = await getIncomeEntries(calendarYearId, userId);
 
@@ -98,7 +98,7 @@ describe('Income Service - CRUD Operations', () => {
 
       const mockCreatedEntry = {
         id: 'new-entry-id',
-        incomeId,
+        incomeLedgerId: incomeId,
         dateEarned: entryData.dateEarned,
         amount: new Decimal('5000.00'),
         source: entryData.source,
@@ -106,15 +106,15 @@ describe('Income Service - CRUD Operations', () => {
         updatedAt: new Date(),
       };
 
-      prismaMock.incomeEntry.create.mockResolvedValue(mockCreatedEntry);
+      prismaMock.incomeRecord.create.mockResolvedValue(mockCreatedEntry);
 
       const result = await addIncomeEntry(incomeId, entryData);
 
       expect(result.id).toBe('new-entry-id');
       expect(result.amount.toNumber()).toBe(5000);
-      expect(prismaMock.incomeEntry.create).toHaveBeenCalledWith({
+      expect(prismaMock.incomeRecord.create).toHaveBeenCalledWith({
         data: {
-          incomeId,
+          incomeLedgerId: incomeId,
           dateEarned: entryData.dateEarned,
           amount: entryData.amount,
           source: entryData.source,
@@ -139,7 +139,7 @@ describe('Income Service - CRUD Operations', () => {
           amount: new Decimal('1000.00'),
         });
 
-        prismaMock.incomeEntry.create.mockResolvedValue(mockEntry);
+        prismaMock.incomeRecord.create.mockResolvedValue(mockEntry);
 
         const result = await addIncomeEntry(incomeId, entryData);
 
@@ -159,7 +159,7 @@ describe('Income Service - CRUD Operations', () => {
 
       const mockUpdatedEntry = {
         id: entryId,
-        incomeId,
+        incomeLedgerId: incomeId,
         dateEarned: updatedData.dateEarned,
         amount: new Decimal('6000.00'),
         source: updatedData.source,
@@ -167,11 +167,11 @@ describe('Income Service - CRUD Operations', () => {
         updatedAt: new Date(),
       };
 
-      prismaMock.incomeEntry.update.mockResolvedValue(mockUpdatedEntry);
+      prismaMock.incomeRecord.update.mockResolvedValue(mockUpdatedEntry);
 
       await updateIncomeEntry(entryId, updatedData);
 
-      expect(prismaMock.incomeEntry.update).toHaveBeenCalledWith({
+      expect(prismaMock.incomeRecord.update).toHaveBeenCalledWith({
         where: { id: entryId },
         data: {
           dateEarned: updatedData.dateEarned,
@@ -186,13 +186,13 @@ describe('Income Service - CRUD Operations', () => {
     it('should delete an income entry', async () => {
       const entryId = 'entry-to-delete';
 
-      prismaMock.incomeEntry.delete.mockResolvedValue(
+      prismaMock.incomeRecord.delete.mockResolvedValue(
         createMockIncomeEntry({ id: entryId })
       );
 
       await deleteIncomeEntry(entryId);
 
-      expect(prismaMock.incomeEntry.delete).toHaveBeenCalledWith({
+      expect(prismaMock.incomeRecord.delete).toHaveBeenCalledWith({
         where: { id: entryId },
       });
     });
@@ -210,14 +210,14 @@ describe('Income Service - CRUD Operations', () => {
         _min: { amount: null },
       };
 
-      prismaMock.incomeEntry.aggregate.mockResolvedValue(mockAggregate);
+      prismaMock.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
 
       const total = await getTotalIncome(calendarYearId, userId);
 
       expect(total).toBe(15000);
-      expect(prismaMock.incomeEntry.aggregate).toHaveBeenCalledWith({
+      expect(prismaMock.incomeRecord.aggregate).toHaveBeenCalledWith({
         where: {
-          income: {
+          incomeLedger: {
             calendarId: calendarYearId,
             userId,
           },
@@ -239,7 +239,7 @@ describe('Income Service - CRUD Operations', () => {
         _min: { amount: null },
       };
 
-      prismaMock.incomeEntry.aggregate.mockResolvedValue(mockAggregate);
+      prismaMock.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
 
       const total = await getTotalIncome(calendarYearId, userId);
 
