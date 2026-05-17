@@ -71,35 +71,16 @@ export const getIncomeEntries = async (
   userId: string,
   prismaClient = prisma,
 ): Promise<Array<IncomeEntryModel>> => {
-  const calendarYear = await prismaClient.calendarYear.findUnique({
-    where: { id: calendarYearId },
-  });
-
+  // The incomeLedger.calendarId association is the source of truth for FY membership.
+  // A secondary dateEarned filter is intentionally omitted here to prevent "orphaned" entries
+  // (entries that were saved to a ledger before a toMonth correction would become invisible).
+  // The addRow server action enforces the date boundary on write.
   const where: Prisma.IncomeRecordWhereInput = {
     incomeLedger: {
       calendarId: calendarYearId,
       userId,
     },
   };
-
-  if (calendarYear) {
-    // Filter entries to only those whose dateEarned falls within the fiscal year bounds
-    const startDate = new Date(
-      calendarYear.fromYear,
-      calendarYear.fromMonth - 1,
-      1,
-    );
-    const endDate = new Date(
-      calendarYear.toYear,
-      calendarYear.toMonth,
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
-    where.dateEarned = { gte: startDate, lte: endDate };
-  }
 
   const incomeEntries = await prismaClient.incomeRecord.findMany({
     where,
@@ -195,34 +176,13 @@ export const getTotalIncome = async (
   userId: string,
   prismaClient = prisma,
 ): Promise<number> => {
-  const calendarYear = await prismaClient.calendarYear.findUnique({
-    where: { id: calendarYearId },
-  });
-
+  // Same rationale as getIncomeEntries: ledger membership is the source of truth.
   const where: Prisma.IncomeRecordWhereInput = {
     incomeLedger: {
       calendarId: calendarYearId,
       userId,
     },
   };
-
-  if (calendarYear) {
-    const startDate = new Date(
-      calendarYear.fromYear,
-      calendarYear.fromMonth - 1,
-      1,
-    );
-    const endDate = new Date(
-      calendarYear.toYear,
-      calendarYear.toMonth,
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
-    where.dateEarned = { gte: startDate, lte: endDate };
-  }
 
   const result = await prismaClient.incomeRecord.aggregate({
     where,
