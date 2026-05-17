@@ -7,6 +7,7 @@ import {
   confirmCreditTransactions,
   confirmDebitTransactions,
 } from '@/server/services/transactions/csv-confirm.service';
+import { runTransferMatchRules } from '@/server/services/transactions/transfer-rule-job.service';
 
 const ConfirmRequestSchema = z.object({
   fileId: z.string().min(1),
@@ -90,6 +91,26 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    let matchJobSummary: {
+      rulesRan: number;
+      autoLinkedCount: number;
+      flaggedCount: number;
+    } | null = null;
+    try {
+      const jobSummary = await runTransferMatchRules({
+        prisma,
+        userId: session.user.id,
+        importSessionId: fileId,
+      });
+      matchJobSummary = {
+        rulesRan: jobSummary.rulesRan,
+        autoLinkedCount: jobSummary.autoLinkedCount,
+        flaggedCount: jobSummary.flaggedCount,
+      };
+    } catch (jobErr) {
+      console.error('Transfer match job error:', jobErr);
+    }
+
     return NextResponse.json(
       {
         success: status !== 'FAILED',
@@ -100,6 +121,7 @@ export async function POST(req: NextRequest) {
         duplicatesSkipped,
         totalEntries,
         errors,
+        matchJobSummary,
       },
       { status: errors.length > 0 && totalEntries === 0 ? 500 : 200 },
     );

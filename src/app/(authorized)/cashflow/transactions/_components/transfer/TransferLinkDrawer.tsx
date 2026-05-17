@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { trpc } from '@/server/trpc/client';
 import type { TransferLinkDrawerProps } from './_types';
 import type { TransferCandidateScore } from '@/server/services/transactions/_types';
+import SmartMatchDialog from './SmartMatchDialog';
 
 export default function TransferLinkDrawer({
   open,
@@ -14,6 +15,10 @@ export default function TransferLinkDrawer({
   onLinked,
 }: TransferLinkDrawerProps) {
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [smartMatchPair, setSmartMatchPair] = useState<{
+    debitTransactionId: string;
+    creditTransactionId: string;
+  } | null>(null);
 
   const candidatesQuery = trpc.transfer.getCandidates.useQuery(
     { transactionId: sourceTransaction.id },
@@ -22,11 +27,16 @@ export default function TransferLinkDrawer({
 
   const linkMutation = trpc.transfer.link.useMutation({
     onSuccess: (result) => {
+      const debitId =
+        sourceTransaction.type === 'DEBIT' ? sourceTransaction.id : selectedCandidateId!;
+      const creditId =
+        sourceTransaction.type === 'CREDIT' ? sourceTransaction.id : selectedCandidateId!;
       const action = result.rollupReversed
         ? ` — expense rollup reversed`
         : '';
       toast.success(`Transfer linked successfully${action}`);
       onLinked();
+      setSmartMatchPair({ debitTransactionId: debitId, creditTransactionId: creditId });
       onClose();
     },
     onError: (err) => {
@@ -155,7 +165,19 @@ export default function TransferLinkDrawer({
     </div>
   );
 
-  return createPortal(drawerContent, document.body);
+  return (
+    <>
+      {open && createPortal(drawerContent, document.body)}
+      {smartMatchPair && (
+        <SmartMatchDialog
+          open={true}
+          onClose={() => setSmartMatchPair(null)}
+          sourcePair={smartMatchPair}
+          onBatchLinked={onLinked}
+        />
+      )}
+    </>
+  );
 }
 
 function CandidateRow({

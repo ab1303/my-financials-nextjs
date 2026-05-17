@@ -355,3 +355,248 @@ export async function getUnmatchedTransferCount(params: {
     },
   }) as Promise<number>;
 }
+
+const STOP_WORDS = new Set([
+  'to',
+  'from',
+  'the',
+  'a',
+  'an',
+  'and',
+  'or',
+  'of',
+  'in',
+  'at',
+  'on',
+  'for',
+  'app',
+  'my',
+  'your',
+  'this',
+  'that',
+  'with',
+  'by',
+]);
+
+export interface SimilarPairSuggestion {
+  debit: {
+    transactionId: string;
+    date: string;
+    description: string;
+    amount: number;
+    bankAccountName: string;
+    bankName: string | null;
+  };
+  credit: {
+    transactionId: string;
+    date: string;
+    description: string;
+    amount: number;
+    bankAccountName: string;
+    bankName: string | null;
+  };
+  confidenceScore: number;
+  scoreBreakdown: TransferCandidateScore['scoreBreakdown'];
+  dayGap: number;
+  amountDiffWarning: string | null;
+}
+
+export interface BatchLinkResult {
+  linkedCount: number;
+  errors: Array<{ debitId: string; creditId: string; message: string }>;
+}
+
+export function extractPatternFromPair(params: {
+  debit: { description: string; amount: Decimal; date: Date; bankAccountId: string | null; bankId: string | null };
+  credit: { description: string; amount: Decimal; date: Date; bankAccountId: string | null; bankId: string | null };
+}): {
+  amountExact: Decimal;
+  debitKeywords: string[];
+  creditKeywords: string[];
+  maxDayGap: number;
+  debitBankAccountId: string | null;
+  creditBankAccountId: string | null;
+} {
+  const extractKeywords = (description: string): string[] =>
+    description
+      .toLowerCase()
+      .split(/\W+/)
+      .filter(Boolean)
+      .filter((w) => !STOP_WORDS.has(w) && w.length > 1);
+
+  const dayGap = Math.abs(
+    Math.round((params.debit.date.getTime() - params.credit.date.getTime()) / 86_400_000),
+  );
+
+  return {
+    amountExact: params.debit.amount,
+    debitKeywords: extractKeywords(params.debit.description),
+    creditKeywords: extractKeywords(params.credit.description),
+    maxDayGap: Math.max(dayGap + 2, TRANSFER_DATE_TOLERANCE_DAYS),
+    debitBankAccountId: params.debit.bankAccountId,
+    creditBankAccountId: params.credit.bankAccountId,
+  };
+}
+
+export async function findSimilarUnmatchedPairs(params: {
+  prisma: PrismaClient;
+  userId: string;
+  debitTransactionId: string;
+  creditTransactionId: string;
+}): Promise<SimilarPairSuggestion[]> {
+  const [sourceDebit, sourceCredit] = await Promise.all([
+    (params.prisma.transaction as any).findUnique({
+      where: { id: params.debitTransactionId, userId: params.userId },
+      include: { bankAccount: { include: { bank: true } } },
+    }),
+    (params.prisma.transaction as any).findUnique({
+      where: { id: params.creditTransactionId, userId: params.userId },
+      include: { bankAccount: { include: { bank: true } } },
+    }),
+  ]);
+
+  if (!sourceDebit || !sourceCredit) return [];
+
+  const pattern = extractPatternFromPair({
+    debit: {
+      description: sourceDebit.description,
+      amount: sourceDebit.amount,
+      date: sourceDebit.date,
+      bankAccountId: sourceDebit.bankAccountId,
+      bankId: sourceDebit.bankAccount?.bankId ?? null,
+    },
+    credit: {
+      description: sourceCredit.description,
+      amount: sourceCredit.amount,
+      date: sourceCredit.date,
+      bankAccountId: sourceCredit.bankAccountId,
+      bankId: sourceCredit.bankAccount?.bankId ?? null,
+    },
+  });
+
+  const unmatchedDebits = await (params.prisma.transaction as any).findMany({
+    where: {
+      userId: params.userId,
+      type: TransactionTypeEnum.DEBIT,
+      category: TRANSFER_CATEGORY,
+      transferLinkedTransactionId: null,
+      transferCounterpart: { is: null },
+      amount: sourceDebit.amount,
+      id: { not: sourceDebit.id },
+    },
+    include: { bankAccount: { include: { bank: true } } },
+  });
+
+  const results: SimilarPairSuggestion[] = [];
+
+  for (const debit of unmatchedDebits) {
+    const dateFrom = new Date(debit.date);
+    dateFrom.setDate(dateFrom.getDate() - pattern.maxDayGap);
+    const dateTo = new Date(debit.date);
+    dateTo.setDate(dateTo.getDate() + pattern.maxDayGap);
+
+    const creditCandidates = await (params.prisma.transaction as any).findMany({
+      where: {
+        userId: params.userId,
+        type: TransactionTypeEnum.CREDIT,
+        category: TRANSFER_CATEGORY,
+        transferLinkedTransactionId: null,
+        transferCounterpart: { is: null },
+        amount: sourceCredit.amount,
+        id: { not: sourceCredit.id },
+        bankAccountId: { not: debit.bankAccountId },
+        date: { gte: dateFrom, lte: dateTo },
+      },
+      include: { bankAccount: { include: { bank: true } } },
+    });
+
+    if (creditCandidates.length === 0) continue;
+
+    let bestCredit: any = null;
+    let bestScore = 0;
+    let bestBreakdown: TransferCandidateScore['scoreBreakdown'] | null = null;
+    let bestAmountDiffWarning: string | null = null;
+
+    for (const credit of creditCandidates) {
+      const { score, breakdown, amountDiffWarning } = scoreCandidate({
+        sourceAmount: debit.amount,
+        sourceDate: debit.date,
+        sourceBankId: debit.bankAccount?.bankId ?? null,
+        sourceDescription: debit.description,
+        candidate: {
+          amount: credit.amount,
+          date: credit.date,
+          description: credit.description,
+          bankAccountId: credit.bankAccountId!,
+          bankId: credit.bankAccount?.bankId ?? null,
+        },
+      });
+      if (score > bestScore) {
+        bestScore = score;
+        bestCredit = credit;
+        bestBreakdown = breakdown;
+        bestAmountDiffWarning = amountDiffWarning;
+      }
+    }
+
+    if (!bestCredit || bestScore < 20) continue;
+
+    const dayGap = Math.abs(
+      Math.round((debit.date.getTime() - bestCredit.date.getTime()) / 86_400_000),
+    );
+
+    results.push({
+      debit: {
+        transactionId: debit.id,
+        date: debit.date.toISOString(),
+        description: debit.description,
+        amount: Number(debit.amount),
+        bankAccountName: debit.bankAccount?.name ?? 'Unknown',
+        bankName: debit.bankAccount?.bank?.name ?? null,
+      },
+      credit: {
+        transactionId: bestCredit.id,
+        date: bestCredit.date.toISOString(),
+        description: bestCredit.description,
+        amount: Number(bestCredit.amount),
+        bankAccountName: bestCredit.bankAccount?.name ?? 'Unknown',
+        bankName: bestCredit.bankAccount?.bank?.name ?? null,
+      },
+      confidenceScore: bestScore,
+      scoreBreakdown: bestBreakdown!,
+      dayGap,
+      amountDiffWarning: bestAmountDiffWarning,
+    });
+  }
+
+  return results.sort((a, b) => b.confidenceScore - a.confidenceScore);
+}
+
+export async function batchLinkTransferPairs(params: {
+  prisma: PrismaClient;
+  userId: string;
+  pairs: Array<{ debitTransactionId: string; creditTransactionId: string }>;
+}): Promise<BatchLinkResult> {
+  let linkedCount = 0;
+  const errors: BatchLinkResult['errors'] = [];
+
+  for (const pair of params.pairs) {
+    try {
+      await linkTransferPair({
+        prisma: params.prisma,
+        debitTransactionId: pair.debitTransactionId,
+        creditTransactionId: pair.creditTransactionId,
+        userId: params.userId,
+      });
+      linkedCount++;
+    } catch (err) {
+      errors.push({
+        debitId: pair.debitTransactionId,
+        creditId: pair.creditTransactionId,
+        message: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
+  }
+
+  return { linkedCount, errors };
+}

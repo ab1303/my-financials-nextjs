@@ -13,6 +13,7 @@ import { transactionLedgerRouter } from './transaction-ledger';
 import { userProfileRouter } from './user-profile';
 import { transactionClearingRouter } from './transaction-clearing';
 import { transferRouter } from './transfer';
+import { transferRuleRouter } from './transfer-rule';
 import { calendarYearRouter } from './calendar-year';
 
 export const appRouter = router({
@@ -29,6 +30,7 @@ export const appRouter = router({
   userProfile: userProfileRouter,
   transactionClearing: transactionClearingRouter,
   transfer: transferRouter,
+  transferRule: transferRuleRouter,
   assetDashboard: assetDashboardRouter,
   calendarYear: calendarYearRouter,
 });

@@ -77,6 +77,7 @@ model User {
   aiUsageLogs         AIUsageLog[]
   merchantCategoryMaps MerchantCategoryMap[]
   transactions        Transaction[]
+  transferMatchRules  TransferMatchRule[]
 }
 
 model VerificationToken {
@@ -363,6 +364,8 @@ model BankAccount {
   @@unique([name, bankId, userId])
   @@index([userId, bankId])
   transactions Transaction[]
+  debitTransferRules  TransferMatchRule[] @relation("debitRules")
+  creditTransferRules TransferMatchRule[] @relation("creditRules")
 }
 
 // BankBalanceSnapshot — point-in-time snapshot header (one per date)
@@ -469,6 +472,7 @@ model ImportSession {
   images            ImportImage[]
   usageLogs         AIUsageLog[]
   transactions      Transaction[]
+  matchJobResults   TransferMatchJobResult[]
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
@@ -594,4 +598,48 @@ model Transaction {
   @@index([userId, bankAccountId, date])
   @@index([userId, type, status])
   @@index([importSessionId])
+}
+
+model TransferMatchRule {
+  id                  String    @id @default(cuid())
+  userId              String
+  name                String
+  isActive            Boolean   @default(true)
+  amountExact         Decimal?  @db.Money
+  amountMin           Decimal?  @db.Money
+  amountMax           Decimal?  @db.Money
+  debitKeywords       String[]
+  creditKeywords      String[]
+  maxDayGap           Int       @default(5)
+  debitBankAccountId  String?
+  creditBankAccountId String?
+  confidenceThreshold Int       @default(85)
+  matchCount          Int       @default(0)
+  lastMatchedAt       DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  debitBankAccount  BankAccount?             @relation("debitRules", fields: [debitBankAccountId], references: [id])
+  creditBankAccount BankAccount?             @relation("creditRules", fields: [creditBankAccountId], references: [id])
+  jobResults        TransferMatchJobResult[]
+
+  @@index([userId, isActive])
+}
+
+model TransferMatchJobResult {
+  id              String    @id @default(cuid())
+  userId          String
+  importSessionId String
+  ruleId          String?
+  autoLinkedCount Int       @default(0)
+  flaggedCount    Int       @default(0)
+  skippedCount    Int       @default(0)
+  reviewedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  importSession ImportSession      @relation(fields: [importSessionId], references: [id], onDelete: Cascade)
+  rule          TransferMatchRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+
+  @@index([userId, importSessionId])
 }

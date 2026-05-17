@@ -12,6 +12,7 @@ import { getCompactSelectStyles } from '@/lib/select-styles';
 import TransactionSourceIndicator from './TransactionSourceIndicator';
 import ReimbursementSubRow from './ReimbursementSubRow';
 import VoidTransactionButton from './VoidTransactionButton';
+import { UnlinkTransferButton } from './UnlinkTransferButton';
 
 interface TransactionRowProps {
   transaction: LedgerTransactionRow;
@@ -27,6 +28,7 @@ interface TransactionRowProps {
   colCount?: number;
   onVoided?: () => void;
   onLinkTransfer?: () => void;
+  onUnlinked?: () => void;
 }
 
 function formatCurrency(value: number): string {
@@ -53,6 +55,7 @@ export default function TransactionRow({
   colCount = 10,
   onVoided,
   onLinkTransfer,
+  onUnlinked,
 }: TransactionRowProps) {
   const statusClasses: Record<string, string> = {
     CONFIRMED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
@@ -362,7 +365,16 @@ export default function TransactionRow({
             {transaction.status !== 'VOIDED' && onVoided && (
               <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} />
             )}
-            {onLinkTransfer && (
+            {(transaction.transferLinkedTransactionId != null ||
+              transaction.transferCounterpartId != null) && (
+              <UnlinkTransferButton
+                transactionId={transaction.id}
+                onUnlinked={onUnlinked ?? (() => {})}
+              />
+            )}
+            {onLinkTransfer &&
+              transaction.transferLinkedTransactionId == null &&
+              transaction.transferCounterpartId == null && (
               <button
                 type="button"
                 onClick={onLinkTransfer}
@@ -371,7 +383,7 @@ export default function TransactionRow({
               >
                 Link
               </button>
-            )}
+              )}
           </div>
         </td>
       </tr>

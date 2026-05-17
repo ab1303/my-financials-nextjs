@@ -1,7 +1,9 @@
 'use client';
 
 import { Check, AlertCircle, X } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import PostImportMatchBanner from '../transfer/PostImportMatchBanner';
 import type { CSVResultsStepProps } from './_types';
 
 export default function CSVResultsStep({
@@ -9,7 +11,9 @@ export default function CSVResultsStep({
   file,
   onDone,
   onImportMore,
+  matchJobSummary,
 }: CSVResultsStepProps) {
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const statusConfig = {
     COMPLETED: {
       icon: Check,
@@ -42,6 +46,15 @@ export default function CSVResultsStep({
 
   return (
     <div className='space-y-6'>
+      {!bannerDismissed &&
+        (matchJobSummary?.autoLinkedCount ?? 0) + (matchJobSummary?.flaggedCount ?? 0) > 0 && (
+          <PostImportMatchBanner
+            importSessionId={result.sessionId}
+            autoLinkedCount={matchJobSummary?.autoLinkedCount ?? 0}
+            flaggedCount={matchJobSummary?.flaggedCount ?? 0}
+            onDismiss={() => setBannerDismissed(true)}
+          />
+        )}
       <div className={`${config.bgColor} border ${config.borderColor} flex items-start space-x-3 rounded-lg p-4`}>
         <Icon className='mt-0.5 h-5 w-5 flex-shrink-0 text-current' />
         <div>
