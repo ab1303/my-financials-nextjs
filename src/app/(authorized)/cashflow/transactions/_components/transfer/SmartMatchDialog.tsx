@@ -49,8 +49,8 @@ export default function SmartMatchDialog({
     if (initializedRef.current || !suggestQuery.data) return;
     initializedRef.current = true;
     if (suggestQuery.data.length === 0) {
-      toast.info('No similar unmatched pairs found');
-      onClose();
+      // No similar pairs — go straight to Save Rule prompt instead of auto-closing
+      setShowSaveRulePrompt(true);
       return;
     }
     const preChecked = new Set(

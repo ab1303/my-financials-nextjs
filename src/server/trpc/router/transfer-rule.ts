@@ -3,6 +3,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { z } from 'zod';
 import {
   createRule,
+  createRuleFromPair,
   deleteRule,
   listRules,
   toggleRule,
@@ -11,6 +12,33 @@ import {
 import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const transferRuleRouter = router({
+  createRuleFromPair: protectedProcedure
+    .input(
+      z.object({
+        debitTransactionId: z.string().min(1),
+        creditTransactionId: z.string().min(1),
+        name: z.string().min(1),
+        confidenceThreshold: z.number().int().min(0).max(100).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await createRuleFromPair({
+          prisma: ctx.prisma,
+          userId: ctx.session.user.id,
+          debitTransactionId: input.debitTransactionId,
+          creditTransactionId: input.creditTransactionId,
+          name: input.name,
+          confidenceThreshold: input.confidenceThreshold,
+        });
+      } catch (err) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: err instanceof Error ? err.message : 'Failed to create rule',
+        });
+      }
+    }),
+
   createRule: protectedProcedure
     .input(
       z.object({

@@ -119,6 +119,54 @@ export async function deleteRule(params: {
   await (params.prisma.transferMatchRule as any).delete({ where: { id: params.ruleId } });
 }
 
+const STOP_WORDS = new Set(['to', 'from', 'the', 'a', 'an', 'and', 'or', 'of', 'in', 'at', 'on', 'for', 'by']);
+
+function extractKeywords(description: string): string[] {
+  return description
+    .toLowerCase()
+    .split(/\W+/)
+    .filter(Boolean)
+    .filter((w) => w.length > 1 && !STOP_WORDS.has(w));
+}
+
+/**
+ * Derive rule parameters from a confirmed linked pair and create the rule.
+ * The caller only needs to provide the transaction IDs and a name.
+ */
+export async function createRuleFromPair(params: {
+  prisma: PrismaClient;
+  userId: string;
+  debitTransactionId: string;
+  creditTransactionId: string;
+  name: string;
+  confidenceThreshold?: number;
+}): Promise<RuleListItem> {
+  const [debit, credit] = await Promise.all([
+    params.prisma.transaction.findUnique({ where: { id: params.debitTransactionId } }),
+    params.prisma.transaction.findUnique({ where: { id: params.creditTransactionId } }),
+  ]);
+
+  if (!debit || debit.userId !== params.userId) throw new Error('Debit transaction not found');
+  if (!credit || credit.userId !== params.userId) throw new Error('Credit transaction not found');
+
+  const dayGap = Math.abs(
+    Math.round((debit.date.getTime() - credit.date.getTime()) / (1000 * 60 * 60 * 24)),
+  );
+
+  return createRule({
+    prisma: params.prisma,
+    userId: params.userId,
+    name: params.name,
+    amountExact: debit.amount,
+    debitKeywords: extractKeywords(debit.description),
+    creditKeywords: extractKeywords(credit.description),
+    maxDayGap: Math.max(dayGap + 3, 7), // pad by 3 days, minimum 7
+    debitBankAccountId: debit.bankAccountId,
+    creditBankAccountId: credit.bankAccountId,
+    confidenceThreshold: params.confidenceThreshold,
+  });
+}
+
 export async function updateRule(params: {
   prisma: PrismaClient;
   userId: string;

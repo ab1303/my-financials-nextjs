@@ -39,8 +39,12 @@ export default function TransferLinkDrawer({
     { enabled: open && (isAutoEmpty || debouncedSearch.trim().length > 0) },
   );
 
-  const linkMutation = trpc.transfer.link.useMutation({
-    onSuccess: (result) => {
+  const createRuleMutation = trpc.transferRule.createRuleFromPair.useMutation({
+    onSuccess: (rule) => toast.success(`Rule "${rule.name}" saved`),
+    onError: (err) => toast.error(err.message ?? 'Failed to save rule'),
+  });
+
+  const linkMutation = trpc.transfer.link.useMutation({    onSuccess: (result) => {
       const debitId =
         sourceTransaction.type === 'DEBIT' ? sourceTransaction.id : selectedCandidateId!;
       const creditId =
@@ -221,6 +225,14 @@ export default function TransferLinkDrawer({
           onClose={() => setSmartMatchPair(null)}
           sourcePair={smartMatchPair}
           onBatchLinked={onLinked}
+          onSaveRule={({ debitTransactionId, creditTransactionId, suggestedName }) => {
+            createRuleMutation.mutate({
+              debitTransactionId,
+              creditTransactionId,
+              name: suggestedName,
+            });
+            setSmartMatchPair(null);
+          }}
         />
       )}
     </>
