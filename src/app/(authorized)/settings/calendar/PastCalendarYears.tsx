@@ -11,12 +11,16 @@ type PastCalendarYearsProps = {
   groups: YearRangeGroup[];
   onEdit: (record: CalendarYearType) => void;
   onDelete: (record: CalendarYearType) => void;
+  onLock: (record: CalendarYearType) => void;
+  onUnlock: (record: CalendarYearType) => void;
 };
 
 export default function PastCalendarYears({
   groups,
   onEdit,
   onDelete,
+  onLock,
+  onUnlock,
 }: PastCalendarYearsProps) {
   if (groups.length === 0) {
     return null;
@@ -53,6 +57,8 @@ export default function PastCalendarYears({
                     tableData={group.entries}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onLock={onLock}
+                    onUnlock={onUnlock}
                   />
                 </Disclosure.Panel>
               </div>

@@ -14,6 +14,7 @@ export type CalendarYearType = {
   fromMonth: number;
   toYear: number;
   toMonth: number;
+  lockedAt: string | null;
 };
 
 const CALENDAR_KEYS = Object.entries(CalendarEnumType).map(

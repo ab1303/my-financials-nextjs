@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
+import { clearTransferLink } from './void-transfer.service';
 
 interface VoidContext {
   prisma: PrismaClient;
@@ -10,10 +11,30 @@ export async function voidSingleTransaction(
   ctx: VoidContext,
   transactionId: string,
 ): Promise<void> {
-  const tx = await ctx.prisma.transaction.findUnique({
+  const tx = await (ctx.prisma.transaction as any).findUnique({
     where: { id: transactionId },
-    include: { incomeRecord: true, donationPayment: { select: { id: true } } },
-  });
+    include: {
+      incomeRecord: true,
+      donationPayment: { select: { id: true } },
+      transferLinkedTransaction: { select: { id: true } },
+      transferCounterpart: { select: { id: true } },
+    },
+  }) as
+    | {
+        id: string;
+        userId: string;
+        type: string;
+        status: string;
+        amount: Decimal;
+        date: Date;
+        category: string;
+        incomeRecord: { id: string } | null;
+        donationPayment: { id: string } | null;
+        transferLinkedTransactionId: string | null;
+        preLinkCategory: string | null;
+        preLinkStatus: string | null;
+      }
+    | null;
 
   if (!tx || tx.userId !== ctx.userId) {
     throw new Error('Transaction not found');
@@ -23,6 +44,7 @@ export async function voidSingleTransaction(
   }
 
   await ctx.prisma.$transaction(async (db) => {
+    await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, new Set([tx.id]));
     await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
     await db.transaction.update({
       where: { id: transactionId },
@@ -34,28 +56,54 @@ export async function voidSingleTransaction(
 export async function undoImportSession(
   ctx: VoidContext,
   importSessionId: string,
-): Promise<{ voided: number }> {
-  const session = await ctx.prisma.importSession.findUnique({
+): Promise<{ voided: number; yearWarning: boolean }> {
+  const session = await (ctx.prisma.importSession as any).findUnique({
     where: { id: importSessionId },
     include: {
       transactions: {
         where: { userId: ctx.userId, status: { not: 'VOIDED' } },
-        include: { incomeRecord: true, donationPayment: { select: { id: true } } },
+        include: {
+          incomeRecord: true,
+          donationPayment: { select: { id: true } },
+          transferLinkedTransaction: { select: { id: true } },
+          transferCounterpart: { select: { id: true } },
+        },
       },
     },
-  });
+  }) as
+    | {
+        id: string;
+        userId: string;
+        status: string;
+        transactions: Array<{
+          id: string;
+          type: string;
+          status: string;
+          amount: Decimal;
+          date: Date;
+          category: string;
+          incomeRecord: { id: string } | null;
+          donationPayment: { id: string } | null;
+          transferLinkedTransactionId: string | null;
+          preLinkCategory: string | null;
+          preLinkStatus: string | null;
+        }>;
+      }
+    | null;
 
   if (!session || session.userId !== ctx.userId) {
     throw new Error('Import session not found');
   }
   if (session.status === 'VOIDED') {
-    return { voided: 0 };
+    return { voided: 0, yearWarning: false };
   }
 
   const txs = session.transactions;
+  const sessionTxIds = new Set(txs.map((t) => t.id));
 
   await ctx.prisma.$transaction(async (db) => {
     for (const tx of txs) {
+      await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, sessionTxIds);
       await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
     }
 
@@ -70,7 +118,7 @@ export async function undoImportSession(
     });
   });
 
-  return { voided: txs.length };
+  return { voided: txs.length, yearWarning: false };
 }
 
 async function reverseDownstream(
