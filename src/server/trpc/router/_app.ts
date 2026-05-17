@@ -17,6 +17,7 @@ import { transferRuleRouter } from './transfer-rule';
 import { calendarYearRouter } from './calendar-year';
 import { incomeSourceRouter } from './income-source';
 import { expenseCategoryRouter } from './expense-category';
+import { bankAccountRouter } from './bank-account';
 
 export const appRouter = router({
   example: exampleRouter,
@@ -37,6 +38,7 @@ export const appRouter = router({
   calendarYear: calendarYearRouter,
   incomeSource: incomeSourceRouter,
   expenseCategory: expenseCategoryRouter,
+  bankAccount: bankAccountRouter,
 });
 
 // export type definition of API
