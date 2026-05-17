@@ -156,7 +156,7 @@ export default function CSVUploadStep({
               banking
             </p>
             <p className='text-xs text-gray-500 dark:text-gray-400'>
-              Maximum file size: 5MB | Maximum 1000 rows
+              Maximum file size: 5MB | Maximum 5000 rows
             </p>
           </div>
 

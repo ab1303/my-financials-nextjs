@@ -138,3 +138,132 @@ exists (`VOIDED` enum value, `confirmedAt: null`).
 | Re-import after undo | User manually re-imports corrected file; no automation in scope |
 | Reimbursement link cleanup during void | Reimbursement links (`offsetTransactionId`) are read-only once set; voiding the linked tx already marks it VOIDED; no FK restoration needed |
 | Hard irrevocability (no unlock ever) | Compliance mode feature; personal finance doesn't need it yet |
+
+---
+
+## Gap A — Bulk Restore from Import History
+
+**Status:** Identified gap. Priority: Medium.
+
+### Problem
+
+`undoImportSession` voids all transactions in a batch but there is no inverse operation.
+Individual restore exists (`RestoreTransactionButton`) but restoring 585 transactions
+one-by-one after an accidental Undo is unusable.
+
+### Proposed Solution
+
+Add a **"Re-activate"** button to the Import History modal for sessions in `VOIDED` status.
+This calls a new `reactivateImportSession` mutation that restores all voided transactions
+in the session to their `preVoidStatus` (the status they had before being voided).
+
+### Architecture Decisions
+
+| # | Decision | Choice | Rationale |
+|---|---|---|---|
+| A1 | **Use `preVoidStatus` for restore** | Read `tx.preVoidStatus ?? 'CONFIRMED'` per transaction | Same pattern as individual `restoreTransaction`. If `preVoidStatus` is null (voided before the field was added), default to CONFIRMED. |
+| A2 | **Re-apply downstream on restore** | Call `reapplyExpenseSummary` / `reapplyIncomeRecord` per transaction | Restoring a CONFIRMED debit must rebuild its `MonthlyExpenseSummary` contribution. Same logic as `restoreTransaction`. |
+| A3 | **Blocked by downstream links** | Skip restore for transactions with live donation/reimbursement links that have since been replaced | Prevents double-counting if the user manually re-imported some transactions in the interim. |
+| A4 | **Session status after restore** | Set `ImportSession.status → 'COMPLETED'` | Makes the session Undo-able again if needed. |
+
+### New tRPC mutation
+
+```typescript
+// transaction-clearing.ts router
+reactivateImportSession: protectedProcedure
+  .input(z.object({ importSessionId: z.string().min(1) }))
+  .mutation(async ({ ctx, input }) => {
+    return reactivateImportSession(ctx.prisma, ctx.session.user.id, input.importSessionId);
+  })
+```
+
+### UI Change
+
+`ImportSessionHistory.tsx`: add **"Re-activate"** button for `VOIDED` sessions alongside existing `Undo` button logic. Show confirmation dialog: "This will restore all N transactions from this import to their previous state."
+
+### TDD Test Cases
+
+| Test | What it verifies |
+|---|---|
+| `reactivateImportSession` restores all VOIDED txs to `preVoidStatus` | Round-trip: void → reactivate |
+| Expense summaries are rebuilt for re-activated CONFIRMED debits | No missing rollup after restore |
+| Income records are re-created for re-activated CONFIRMED credits | No missing income after restore |
+| `ImportSession.status` transitions to COMPLETED after reactivation | Session is undo-able again |
+| Calling reactivate on a non-VOIDED session is a no-op | Guard clause |
+
+---
+
+## Gap B — Selective Hard Delete (Purge) on Voided Tab
+
+**Status:** Identified gap. Priority: Low-Medium.
+
+### Problem
+
+The Voided tab accumulates all historically voided transactions with no way to permanently
+remove them. Users who undo imports and re-import want a clean slate — they do not want
+hundreds of VOIDED zombie rows visible in their Voided tab forever.
+
+### Proposed Solution — Selective Purge
+
+Add **checkboxes** to the Voided tab rows plus a **"Delete Selected (N)"** button. This
+performs a **hard delete** on the selected transactions.
+
+### Hard Delete vs Soft Delete
+
+| Option | Assessment |
+|---|---|
+| **Another soft-delete flag** (`PURGED` status) | VOIDED is already the soft delete. A second layer adds complexity with no benefit — purged rows should not be visible anywhere. |
+| **Hard delete** ✅ | Correct semantics: the user is saying "I want this gone permanently." Consistent with how other personal finance apps handle trash emptying. |
+
+### Architecture Decisions
+
+| # | Decision | Choice | Rationale |
+|---|---|---|---|
+| B1 | **Selective, not "Delete All"** | Checkbox per row + "Delete Selected (N)" | "Delete All Voided" is too dangerous — a single mis-click destroys years of data. Selective gives control. |
+| B2 | **Blocking rule: live downstream links** | Reject delete if transaction has a live `DonationPayment`, `ReimbursementRecord`, or `IncomeRecord` that was not itself voided | Prevents orphaned foreign keys. Show which link is blocking. |
+| B3 | **Blocking rule: transfer counterpart still active** | Reject delete if transfer counterpart exists and is not VOIDED | The linked counterpart would have a dangling `transferLinkedTransactionId`. |
+| B4 | **No restore after hard delete** | Confirm dialog must say "Permanently deleted. Cannot be undone." | Unlike Undo (which produces VOIDED = restorable), purge is irreversible. |
+| B5 | **ImportSession reconciliation** | Do not change `ImportSession.status` on purge | The session is already VOIDED; removing its transactions is a separate housekeeping action. |
+
+### New tRPC mutation
+
+```typescript
+// transaction-clearing.ts router
+purgeVoidedTransactions: protectedProcedure
+  .input(z.object({ transactionIds: z.array(z.string().min(1)).min(1) }))
+  .mutation(async ({ ctx, input }) => {
+    return purgeVoidedTransactions(ctx.prisma, ctx.session.user.id, input.transactionIds);
+  })
+```
+
+### Service function
+
+```typescript
+export async function purgeVoidedTransactions(
+  prisma: PrismaClient,
+  userId: string,
+  transactionIds: string[],
+): Promise<{ deleted: number; blocked: Array<{ id: string; reason: string }> }> {
+  // 1. Fetch all target txs — verify they belong to user and are VOIDED
+  // 2. For each: check blocking conditions (B2, B3 above)
+  // 3. Hard-delete unblocked ones via prisma.transaction.deleteMany
+  // 4. Return { deleted, blocked } for UI feedback
+}
+```
+
+### UI Changes
+
+- `TransactionLedgerTable.tsx`: add `showSelectColumn` prop; render checkbox column when on Voided tab
+- New `PurgeVoidedButton.tsx` component: enabled when ≥1 selected; shows count; confirm dialog with "Permanently deleted" copy
+- If any blocked, show a secondary toast: "N items could not be deleted (linked records exist)"
+
+### TDD Test Cases
+
+| Test | What it verifies |
+|---|---|
+| `purgeVoidedTransactions` hard-deletes unblocked VOIDED transactions | DB rows removed |
+| Non-VOIDED transactions in the input are rejected with error | Only VOIDED rows deletable |
+| Transactions with active `DonationPayment` are returned in `blocked` | Link check B2 |
+| Transactions with non-VOIDED transfer counterpart are returned in `blocked` | Link check B3 |
+| `deleted` count is accurate | Count correctness |
+| Calling with another user's transaction IDs is rejected | Auth scoping |

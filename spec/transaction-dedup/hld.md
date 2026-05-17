@@ -142,3 +142,72 @@ This would enforce dedup at the database level, catching any code path that bypa
 | AI-assisted fuzzy matching (similar but not identical descriptions) | Future |
 | Dedup for AI image imports (different flow, different matching strategy) | Future |
 | Count-based matching for same-day same-amount edge cases | Phase 2 |
+
+---
+
+## 9. Gap — VOIDED Transactions Must Be Excluded from Dedup Set
+
+**Status:** Identified gap — not in Phase 1 implementation. Priority: High.
+
+### Problem
+
+`buildDedupSet` fetches existing transactions with no `status` filter. This means VOIDED transactions
+are included in the dedup set, so re-importing the same transactions after an Undo is silently blocked.
+
+**Scenario that breaks:**
+1. User imports 585 transactions (25 Feb–30 Jun 2025) → CONFIRMED/EXCLUDED
+2. User undoes the import → all 585 become VOIDED
+3. User imports the full year (1 Jul 2024–30 Jun 2025, 1500 rows)
+4. The 585 VOIDED rows match the dedup key → skipped as "duplicates"
+5. Result: 915 new transactions imported, 585 VOIDED rows orphaned and unrecoverable
+6. **Expected:** VOIDED rows are ignored by dedup; all 585 re-import as fresh transactions
+
+### Fix
+
+**File:** `src/server/services/transactions/dedup.service.ts`
+
+```typescript
+// BEFORE (broken — includes VOIDED in dedup check)
+const existing = await prisma.transaction.findMany({
+  where: {
+    userId: params.userId,
+    bankAccountId: params.bankAccountId,
+    date: { gte: params.startDate, lte: params.endDate },
+  },
+  select: { date: true, description: true, amount: true, type: true },
+});
+
+// AFTER (correct — only non-VOIDED transactions block re-import)
+const existing = await prisma.transaction.findMany({
+  where: {
+    userId: params.userId,
+    bankAccountId: params.bankAccountId,
+    date: { gte: params.startDate, lte: params.endDate },
+    status: { not: 'VOIDED' },   // ← ADD THIS LINE
+  },
+  select: { date: true, description: true, amount: true, type: true },
+});
+```
+
+### Architecture Decision
+
+**AD-13: VOIDED = not present for dedup purposes**
+
+A VOIDED transaction is one whose financial effect has been reversed. From the import
+perspective it is equivalent to "never imported" — it should not block a subsequent import
+of the same real-world transaction. This is consistent with `undoImportSession` semantics:
+the point of Undo is to let the user start fresh, not to permanently prohibit re-import.
+
+**Side-effect considered:** Could a CONFIRMED transaction be voided individually, then
+re-imported accidentally? Yes — but this is the intended behaviour. If the user voided a
+transaction and then imports a CSV that includes it again, they are explicitly choosing to
+re-import it. The alternative (blocking it forever) is worse.
+
+### TDD Test Cases
+
+| Test | What it verifies |
+|---|---|
+| `buildDedupSet` excludes VOIDED transactions from the returned set | VOIDED rows are transparent to dedup |
+| Importing a CSV whose transactions were previously imported and then voided creates fresh rows | Full round-trip: import → void → re-import |
+| CONFIRMED transactions in the same date range still block duplicates | Existing behaviour preserved |
+| EXCLUDED transactions in the same date range still block duplicates | Transfer/Excluded rows not accidentally re-imported |

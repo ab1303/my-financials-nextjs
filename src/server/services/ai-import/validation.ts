@@ -268,6 +268,7 @@ export const ALLOWED_CSV_MIME_TYPES = [
 export const MAX_CSV_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 /**
- * Maximum CSV rows
+ * Maximum CSV rows — set high enough to cover a full financial year across multiple accounts.
+ * A 12-month CBA export typically reaches ~1500 rows; 5000 gives comfortable headroom.
  */
-export const MAX_CSV_ROWS = 1000;
+export const MAX_CSV_ROWS = 5000;
