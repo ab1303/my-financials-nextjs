@@ -399,10 +399,12 @@ const initialCalendarYearId =
 | User has no `CalendarYear` records at all | `getDefaultCalendarYear` returns `undefined`; pages show existing "no fiscal year found" empty state |
 | `fiscalYearType = null` in DB | Utility defaults to `'FISCAL'`; no null-pointer risk |
 | `CalendarYear.type = null` | `filterCalendarYearsByType` excludes null-type records |
-| User with `ANNUAL` preference visits a page that only allows FISCAL (donations) | `getDefaultCalendarYear` receives only FISCAL years; falls back to most recent FISCAL |
+| User with `ANNUAL` preference visits a **context-locked** page (donations) | `getCalendarYearsHandler(['FISCAL'])` is called unconditionally — user preference is ignored for the type filter; `getDefaultCalendarYear` receives only FISCAL years and returns the most recent FISCAL year |
+| User with `ANNUAL` preference visits a **preference-driven** page (income) | `getCalendarYearsHandler(['FISCAL', 'ANNUAL'])` is called; `getDefaultCalendarYear` returns the ANNUAL year matching today |
 | Multiple fiscal years active for same period | `isDateInCalendarYear` returns the first match; list is ordered `fromYear DESC` so most recent is tried first |
 | `params.fromYear` / `params.toYear` present in URL | URL-based `find()` runs before calling `getDefaultCalendarYear`; result takes precedence |
 | `pnpm run build` type errors | All new function params are typed; `CalendarEnumType` imported from `@prisma/client` |
+| Zakat years appear in a non-zakat dropdown | Prevented at DB layer — context-locked and preference-driven pages never pass `'ZAKAT'` to `getCalendarYearsHandler` |
 
 ---
 

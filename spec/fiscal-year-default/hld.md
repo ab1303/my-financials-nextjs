@@ -26,18 +26,25 @@ The proposed solution adds a thin utility layer (`getDefaultCalendarYear` + `fil
 
 **Rationale**: Pure functions are trivially testable. Injecting `today: Date` (defaulting to `new Date()`) allows deterministic unit tests without time mocking. The function generalises the ad-hoc logic that currently lives in `expense/page.tsx`, eliminating duplication across all pages.
 
-### 5. Filtering rules per context
+### 5. Two categories of calendar type binding
 
-| Context | Allowed types | Rationale |
-|---|---|---|
-| Income (`cashflow/income`) | `FISCAL`, `ANNUAL` | Income is tracked per financial year; user may prefer either |
-| Expense (`cashflow/expense`) | `FISCAL`, `ANNUAL` | Same as income |
-| Donations (`cashflow/donations`) | `FISCAL` only | Charitable donations are always reported per Australian fiscal year |
-| Bank Interest (`cashflow/bank-interest`) | `FISCAL`, `ANNUAL` | Interest can be tracked per calendar or fiscal year |
-| Bank Assets (`assets/bank`) | `FISCAL`, `ANNUAL` | Cash snapshots are date-bound, not ZAKAT-specific |
-| Income Summary report | `FISCAL`, `ANNUAL` | Report covers both year types |
+Each page falls into one of two categories:
 
-ZAKAT years are excluded from all non-zakat flows. The existing `/settings/calendar` and `/zakat` pages are out of scope and should not be changed.
+**A) Context-locked** — the page's domain semantics dictate the valid calendar type(s). User preference is irrelevant to which *types* are shown; it only affects which specific year is pre-selected within the allowed set.
+
+**B) Preference-driven** — the page has no inherent calendar type requirement. The user's `fiscalYearType` drives both the type filter and the default year selection.
+
+| Context | Category | Allowed types | Rationale |
+|---|---|---|---|
+| Donations (`cashflow/donations`) | Context-locked | `FISCAL` only | DGR deductions in Australia are always per fiscal year (Jul–Jun). An ANNUAL user is still subject to this legal constraint. |
+| Zakat (`/zakat`) | Context-locked | `ZAKAT` only | Islamic lunar calendar is definitionally required. Already implemented; **out of scope** for this feature. |
+| Income (`cashflow/income`) | Preference-driven | `FISCAL`, `ANNUAL` | Taxable income can be reported per either year type |
+| Expense (`cashflow/expense`) | Preference-driven | `FISCAL`, `ANNUAL` | Same as income |
+| Bank Interest (`cashflow/bank-interest`) | Preference-driven | `FISCAL`, `ANNUAL` | Interest can be tracked per calendar or fiscal year |
+| Bank Assets (`assets/bank`) | Preference-driven | `FISCAL`, `ANNUAL` | Cash snapshots are date-bound, not ZAKAT-specific |
+| Income Summary report | Preference-driven | `FISCAL`, `ANNUAL` | Report covers both year types |
+
+> **Key rule**: ZAKAT calendar years must **never** appear in any context-locked or preference-driven non-zakat page. The `/settings/calendar` management page and `/zakat` pages are out of scope and should not be changed.
 
 ### 6. Smart default algorithm
 
