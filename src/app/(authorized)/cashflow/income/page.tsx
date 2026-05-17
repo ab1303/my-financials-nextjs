@@ -3,7 +3,10 @@ import type { Metadata } from 'next';
 
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalIncomeHandler } from '@/server/controllers/income.controller';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { auth } from '@/server/auth';
+import { prisma } from '@/server/utils/prisma';
+import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
 import IncomeForm from './form';
 import IncomeTableServer from './IncomeTableServer';
@@ -45,16 +48,20 @@ export default async function IncomePage({
 
   const fromYearParam = +getSelectedParam(params?.fromYear);
   const toYearParam = +getSelectedParam(params?.toYear);
-  const calendarYears = await getCalendarYearsHandler();
+  const [calendarYears, fiscalYearType] = await Promise.all([
+    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
+    getUserFiscalYearType(prisma, session.user.id),
+  ]);
 
-  const incomeYearData = calendarYears.filter((yd) => yd.type === 'FISCAL');
-  const selectedCalendarYear = incomeYearData.find(
+  const incomeYearData = calendarYears;
+  const urlSelectedYear = incomeYearData.find(
     (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
   );
+  const defaultYear = getDefaultCalendarYear(incomeYearData, fiscalYearType);
+  const selectedCalendarYear = urlSelectedYear ?? defaultYear;
 
-  const selectedCalendarYearId = selectedCalendarYear
-    ? selectedCalendarYear.id
-    : '';
+  const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
+  const defaultCalendarYearId = defaultYear?.id ?? '';
 
   const totalIncome = await totalIncomeHandler(
     selectedCalendarYearId,
@@ -64,6 +71,7 @@ export default async function IncomePage({
   const initialData = {
     incomeYearData,
     totalIncome,
+    defaultCalendarYearId,
   };
 
   return (

@@ -14,6 +14,7 @@ import type { OptionType, CalendarYearType } from '@/types';
 type InitialDataType = {
   incomeYearData: Array<CalendarYearType>;
   totalIncome: number;
+  defaultCalendarYearId?: string;
 };
 
 type Props = {
@@ -62,26 +63,25 @@ export default function IncomeForm({
         : null;
       setSelectedIncomeYear(yearOption);
     } else if (incomeYearOptions.length > 0 && !fromYear && !toYear) {
-      // Auto-select the first year and update URL if no params exist
-      const firstYear = incomeYearOptions[0];
-      if (firstYear) {
-        setSelectedIncomeYear(firstYear);
+      const defaultId = initialData.defaultCalendarYearId;
+      const targetYear = defaultId
+        ? initialData.incomeYearData.find((yd) => yd.id === defaultId)
+        : initialData.incomeYearData[0];
 
-        // Find the year data to get fromYear and toYear
-        const selectedYearData = initialData.incomeYearData.find(
-          (yd) => yd.id === firstYear.id,
-        );
+      if (targetYear) {
+        setSelectedIncomeYear({
+          id: targetYear.id,
+          label: targetYear.description,
+        });
 
-        if (selectedYearData) {
-          const current = new URLSearchParams();
-          current.set('fromYear', selectedYearData.fromYear.toString());
-          current.set('toYear', selectedYearData.toYear.toString());
+        const current = new URLSearchParams();
+        current.set('fromYear', targetYear.fromYear.toString());
+        current.set('toYear', targetYear.toYear.toString());
 
-          const search = current.toString();
-          const query = search ? `?${search}` : '';
+        const search = current.toString();
+        const query = search ? `?${search}` : '';
 
-          router.replace(`${pathname}${query}`);
-        }
+        router.replace(`${pathname}${query}`);
       }
     }
   }, [

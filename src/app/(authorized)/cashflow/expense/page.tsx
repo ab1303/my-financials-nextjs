@@ -3,7 +3,10 @@ import type { Metadata } from 'next';
 
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalExpensesHandler } from '@/server/controllers/expense.controller';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { auth } from '@/server/auth';
+import { prisma } from '@/server/utils/prisma';
+import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
 import ExpenseForm from './form';
 import ExpenseTableServer from './ExpenseTableServer';
@@ -45,29 +48,18 @@ export default async function ExpensePage({
 
   const fromYearParam = +getSelectedParam(params?.fromYear);
   const toYearParam = +getSelectedParam(params?.toYear);
-  const calendarYears = await getCalendarYearsHandler();
+  const [calendarYears, fiscalYearType] = await Promise.all([
+    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
+    getUserFiscalYearType(prisma, session.user.id),
+  ]);
 
-  const expenseYearData = calendarYears.filter((yd) => yd.type === 'FISCAL');
-
-  // Default to current fiscal year if none selected
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1; // 1-12
-
-  const defaultCalendarYear = expenseYearData.find((yd) => {
-    // Check if current date falls within this fiscal year
-    if (currentMonth >= yd.fromMonth) {
-      return yd.fromYear === currentYear && yd.toYear === currentYear + 1;
-    } else {
-      return yd.fromYear === currentYear - 1 && yd.toYear === currentYear;
-    }
-  });
+  const expenseYearData = calendarYears;
 
   const selectedCalendarYear =
     expenseYearData.find(
       (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
     ) ||
-    defaultCalendarYear ||
+    getDefaultCalendarYear(expenseYearData, fiscalYearType) ||
     expenseYearData[0];
 
   const selectedCalendarYearId = selectedCalendarYear

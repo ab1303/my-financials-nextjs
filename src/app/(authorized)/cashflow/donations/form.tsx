@@ -14,6 +14,7 @@ import type { OptionType, CalendarYearType } from '@/types';
 type InitialDataType = {
   donationYearData: Array<CalendarYearType>;
   totalDonations: number;
+  defaultCalendarYearId?: string;
 };
 
 type Props = {
@@ -64,26 +65,25 @@ export default function DonationForm({
         : null;
       setSelectedDonationYear(yearOption);
     } else if (donationYearOptions.length > 0 && !fromYear && !toYear) {
-      // Auto-select the first year and update URL if no params exist
-      const firstYear = donationYearOptions[0];
-      if (firstYear) {
-        setSelectedDonationYear(firstYear);
+      const defaultId = initialData.defaultCalendarYearId;
+      const targetYear = defaultId
+        ? initialData.donationYearData.find((yd) => yd.id === defaultId)
+        : initialData.donationYearData[0];
 
-        // Find the year data to get fromYear and toYear
-        const selectedYearData = initialData.donationYearData.find(
-          (yd) => yd.id === firstYear.id,
-        );
+      if (targetYear) {
+        setSelectedDonationYear({
+          id: targetYear.id,
+          label: targetYear.description,
+        });
 
-        if (selectedYearData) {
-          const current = new URLSearchParams();
-          current.set('fromYear', selectedYearData.fromYear.toString());
-          current.set('toYear', selectedYearData.toYear.toString());
+        const current = new URLSearchParams();
+        current.set('fromYear', targetYear.fromYear.toString());
+        current.set('toYear', targetYear.toYear.toString());
 
-          const search = current.toString();
-          const query = search ? `?${search}` : '';
+        const search = current.toString();
+        const query = search ? `?${search}` : '';
 
-          router.replace(`${pathname}${query}`);
-        }
+        router.replace(`${pathname}${query}`);
       }
     }
   }, [

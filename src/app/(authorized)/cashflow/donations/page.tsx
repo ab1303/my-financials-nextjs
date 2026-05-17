@@ -1,8 +1,12 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
+import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalDonationsHandler } from '@/server/controllers/donation.controller';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
+import { prisma } from '@/server/utils/prisma';
+import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
 import DonationForm from './form';
 import DonationPaymentsTableServer from './DonationTableServer';
@@ -28,25 +32,31 @@ export default async function DonationPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
+  const session = await auth();
 
   const fromYearParam = +getSelectedParam(params?.fromYear);
   const toYearParam = +getSelectedParam(params?.toYear);
-  const calenderYears = await getCalendarYearsHandler();
+  const [donationYearData, fiscalYearType] = await Promise.all([
+    getCalendarYearsHandler(['FISCAL']),
+    session?.user?.id
+      ? getUserFiscalYearType(prisma, session.user.id)
+      : Promise.resolve(null),
+  ]);
 
-  const donationYearData = calenderYears.filter((yd) => yd.type === 'FISCAL');
-  const selectedCalendarYear = donationYearData.find(
-    (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
-  );
+  const selectedCalendarYear =
+    donationYearData.find(
+      (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
+    ) ?? getDefaultCalendarYear(donationYearData, fiscalYearType ?? 'FISCAL');
 
-  const selectedCalendarYearId = selectedCalendarYear
-    ? selectedCalendarYear.id
-    : '';
+  const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
+  const defaultCalendarYearId = selectedCalendarYear?.id ?? '';
 
   const totalDonations = await totalDonationsHandler(selectedCalendarYearId);
 
   const initialData = {
     donationYearData,
     totalDonations,
+    defaultCalendarYearId,
   };
 
   return (

@@ -190,3 +190,14 @@ export async function changePassword(
     data: { password: hashed },
   });
 }
+
+export async function getUserFiscalYearType(
+  prisma: PrismaClient,
+  userId: string,
+): Promise<CalendarEnumType | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { fiscalYearType: true },
+  });
+  return user?.fiscalYearType ?? null;
+}

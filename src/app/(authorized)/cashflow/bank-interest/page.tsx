@@ -7,8 +7,8 @@ import { auth } from '@/server/auth';
 import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
-
-import type { CalendarEnumType } from '@prisma/client';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
+import { prisma } from '@/server/utils/prisma';
 
 import type { OptionType } from '@/types';
 
@@ -40,13 +40,16 @@ export default async function BanksPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
+  const session = await auth();
 
-  const allYearlyData = await getCalendarYearsHandler();
-  const yearlyData = allYearlyData.filter(
-    (yd: { type: CalendarEnumType | null }) => yd.type === 'ANNUAL',
-  );
-
-  const banks = await allBankDetailsHandler();
+  const [allYearlyData, banks, fiscalYearType] = await Promise.all([
+    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
+    allBankDetailsHandler(),
+    session?.user?.id
+      ? getUserFiscalYearType(prisma, session.user.id)
+      : Promise.resolve(null),
+  ]);
+  const yearlyData = allYearlyData;
   const bankOptions: OptionType[] = banks
     ? banks.map((b) => ({ id: b.id, label: b.name }))
     : [];
@@ -65,9 +68,12 @@ export default async function BanksPage({
     ? selectedCalendarYear.id
     : '';
 
-  const initialData = { bankOptions, yearlyData };
+  const initialData = {
+    bankOptions,
+    yearlyData,
+    initialYearType: (fiscalYearType ?? 'FISCAL') as 'FISCAL' | 'ANNUAL',
+  };
 
-  const session = await auth();
   const yearlyCleansingData =
     selectedBankId && selectedCalendarYearId && session?.user?.id
       ? await getYearlyCleansingData(
