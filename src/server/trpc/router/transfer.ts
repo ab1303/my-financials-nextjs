@@ -6,6 +6,8 @@ import {
   linkTransferPair,
   unlinkTransferPair,
   getUnmatchedTransferCount,
+  findSimilarUnmatchedPairs,
+  batchLinkTransferPairs,
 } from '@/server/services/transactions/transfer.service';
 import { TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 
@@ -20,6 +22,20 @@ const linkSchema = z.object({
 
 const unlinkSchema = z.object({
   transactionId: z.string().min(1),
+});
+const suggestSimilarPairsSchema = z.object({
+  debitTransactionId: z.string().min(1),
+  creditTransactionId: z.string().min(1),
+});
+const batchLinkSchema = z.object({
+  pairs: z
+    .array(
+      z.object({
+        debitTransactionId: z.string().min(1),
+        creditTransactionId: z.string().min(1),
+      }),
+    )
+    .min(1),
 });
 
 const getPairsSchema = z.object({
@@ -74,6 +90,34 @@ export const transferRouter = router({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: err instanceof Error ? err.message : 'Failed to unlink transfer pair',
+        });
+      }
+    }),
+
+  suggestSimilarPairs: protectedProcedure
+    .input(suggestSimilarPairsSchema)
+    .query(async ({ ctx, input }) => {
+      return findSimilarUnmatchedPairs({
+        prisma: ctx.prisma,
+        userId: ctx.session.user.id,
+        debitTransactionId: input.debitTransactionId,
+        creditTransactionId: input.creditTransactionId,
+      });
+    }),
+
+  batchLink: protectedProcedure
+    .input(batchLinkSchema)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await batchLinkTransferPairs({
+          prisma: ctx.prisma,
+          userId: ctx.session.user.id,
+          pairs: input.pairs,
+        });
+      } catch (err) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: err instanceof Error ? err.message : 'Failed to batch link pairs',
         });
       }
     }),

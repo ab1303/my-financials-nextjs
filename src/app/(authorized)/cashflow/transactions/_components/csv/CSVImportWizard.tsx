@@ -148,6 +148,7 @@ export default function CSVImportWizard({
         duplicatesSkipped,
         totalEntries: data.totalEntries ?? debitsSaved + creditsSaved + creditsExcluded,
         errors: data.errors ?? [],
+        matchJobSummary: data.matchJobSummary ?? null,
       };
 
       setImportResult(result);
@@ -323,6 +324,7 @@ export default function CSVImportWizard({
                           file={file}
                           onDone={handleDone}
                           onImportMore={handleImportMore}
+                          matchJobSummary={importResult.matchJobSummary}
                         />
                       )}
                     </div>

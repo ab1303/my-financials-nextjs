@@ -60,6 +60,14 @@ vi.mock('@/server/trpc/client', () => ({
   },
 }));
 
+vi.mock('@/components/transactions/UnlinkTransferButton', () => ({
+  UnlinkTransferButton: ({ transactionId }: { transactionId: string }) => (
+    <button type="button" aria-label="Unlink transfer">
+      unlink-{transactionId}
+    </button>
+  ),
+}));
+
 describe('TransactionRow', () => {
   const expenseCategories = [
     { id: 'cat-1', name: 'Groceries' },
@@ -80,6 +88,9 @@ describe('TransactionRow', () => {
     bankAccountName: 'Everyday Account',
     bankName: 'Commonwealth Bank',
     reimbursements: [],
+    transferLinkedTransactionId: null,
+    transferCounterpartId: null,
+    isTransferClassified: false,
   };
 
   const creditTransaction: LedgerTransactionRow = {
@@ -256,5 +267,57 @@ describe('TransactionRow', () => {
     );
 
     expect(screen.getByText('CONFIRMED')).toHaveClass('bg-green-100');
+  });
+
+  it('renders UnlinkTransferButton when transferLinkedTransactionId is non-null', () => {
+    render(
+      <table>
+        <tbody>
+          <TransactionRow
+            transaction={{ ...debitTransaction, transferLinkedTransactionId: 'tx-linked' }}
+            expenseCategories={expenseCategories}
+            incomeSourceLabels={incomeSourceLabels}
+            onCategoryChange={vi.fn()}
+          />
+        </tbody>
+      </table>,
+    );
+
+    expect(screen.getByRole('button', { name: /unlink transfer/i })).toBeDefined();
+  });
+
+  it('does not render unlink button when transferLinkedTransactionId is null', () => {
+    render(
+      <table>
+        <tbody>
+          <TransactionRow
+            transaction={debitTransaction}
+            expenseCategories={expenseCategories}
+            incomeSourceLabels={incomeSourceLabels}
+            onCategoryChange={vi.fn()}
+          />
+        </tbody>
+      </table>,
+    );
+
+    expect(screen.queryByRole('button', { name: /unlink transfer/i })).toBeNull();
+  });
+
+  it('does not render Link button when transaction is already linked', () => {
+    render(
+      <table>
+        <tbody>
+          <TransactionRow
+            transaction={{ ...debitTransaction, transferCounterpartId: 'tx-counterpart' }}
+            expenseCategories={expenseCategories}
+            incomeSourceLabels={incomeSourceLabels}
+            onCategoryChange={vi.fn()}
+            onLinkTransfer={vi.fn()}
+          />
+        </tbody>
+      </table>,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Link' })).toBeNull();
   });
 });

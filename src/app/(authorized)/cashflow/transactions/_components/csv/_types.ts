@@ -40,6 +40,11 @@ export interface CSVImportResult {
   duplicatesSkipped: number;
   totalEntries: number;
   errors: Array<{ month: string; message: string }>;
+  matchJobSummary?: {
+    rulesRan: number;
+    autoLinkedCount: number;
+    flaggedCount: number;
+  } | null;
 }
 
 export interface CSVImportWizardProps {
@@ -80,6 +85,11 @@ export interface CSVResultsStepProps {
   file: UploadedCSVFile;
   onDone: () => void;
   onImportMore: () => void;
+  matchJobSummary?: {
+    rulesRan: number;
+    autoLinkedCount: number;
+    flaggedCount: number;
+  } | null;
 }
 
 export {
