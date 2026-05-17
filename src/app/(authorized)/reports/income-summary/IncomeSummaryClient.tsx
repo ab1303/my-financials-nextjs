@@ -40,7 +40,7 @@ export default function IncomeSummaryClient({
   const searchParams = useSearchParams();
 
   const [selectedYearId, setSelectedYearId] = useState<string | null>(
-    initialCalendarYearId || null,
+    initialCalendarYearId ?? fiscalYears[0]?.id ?? null,
   );
   const [monthlySummary, setMonthlySummary] = useState<MonthlyIncomeSummary[]>(
     [],
@@ -54,15 +54,6 @@ export default function IncomeSummaryClient({
       value: year.id,
     }));
   }, [fiscalYears]);
-
-  // Auto-select first year if none selected
-  useEffect(() => {
-    if (!selectedYearId && yearOptions.length > 0) {
-      const firstYearId = yearOptions[0]!.value;
-      setSelectedYearId(firstYearId);
-      router.push(`/reports/income-summary?calendarYearId=${firstYearId}`);
-    }
-  }, [selectedYearId, yearOptions, router]);
 
   // Fetch monthly summary when year changes
   useEffect(() => {

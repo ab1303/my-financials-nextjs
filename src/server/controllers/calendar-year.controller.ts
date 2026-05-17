@@ -35,8 +35,8 @@ export const createCalendarYearHandler = async (
   }
 };
 
-export const getCalendarYearsHandler = async () => {
-  const calendarYears = await getCalendarYears();
+export const getCalendarYearsHandler = async (types?: CalendarEnumType[]) => {
+  const calendarYears = await getCalendarYears(types);
   return calendarYears.map((year) => ({
     id: year.id,
     description: year.description,

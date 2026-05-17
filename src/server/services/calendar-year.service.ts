@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma';
+import type { CalendarEnumType } from '@prisma/client';
 import type { CalendarYearModel } from '../models/calendarYear';
 
 export const addCalendarYearDetails = async ({
@@ -21,8 +22,11 @@ export const addCalendarYearDetails = async ({
   });
 };
 
-export const getCalendarYears = async () =>
-  await prisma.calendarYear.findMany();
+export const getCalendarYears = async (types?: CalendarEnumType[]) =>
+  await prisma.calendarYear.findMany({
+    where: types?.length ? { type: { in: types } } : undefined,
+    orderBy: [{ fromYear: 'desc' }, { fromMonth: 'desc' }],
+  });
 
 export const checkCalendarYearDeletability = async (id: string) => {
   // Optional: Keep this for UI hints, but make it lightweight

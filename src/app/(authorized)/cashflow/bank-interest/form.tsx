@@ -14,6 +14,7 @@ type BankInterestFormProps = {
   initialData: {
     bankOptions: OptionType[];
     yearlyData: Array<CalendarYearType>;
+    initialYearType: 'FISCAL' | 'ANNUAL';
   };
   bankIdParam: string;
   yearIdParam: string;
@@ -21,7 +22,7 @@ type BankInterestFormProps = {
 };
 
 export default function BankInterestForm({
-  initialData: { bankOptions, yearlyData },
+  initialData: { bankOptions, yearlyData, initialYearType },
   bankIdParam,
   yearIdParam,
   children,
@@ -35,7 +36,7 @@ export default function BankInterestForm({
 
   // State for switching between calendar types
   const [currentYearType, setCurrentYearType] =
-    useState<CalendarYearType['type']>('ANNUAL');
+    useState<CalendarYearType['type']>(initialYearType);
 
   // Get available year types from the data
   const availableYearTypes = useMemo(

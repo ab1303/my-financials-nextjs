@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
+import { prisma } from '@/server/utils/prisma';
 
 import BankAssetsClient from './BankAssetsClient';
 
@@ -40,11 +42,14 @@ export default async function BankAssetsPage({
     );
   }
 
-  const calendarTypeParam = getSelectedParam(params?.type) || 'FISCAL';
+  const fiscalYearType = await getUserFiscalYearType(prisma, session.user.id);
+
+  const calendarTypeParam =
+    getSelectedParam(params?.type) || fiscalYearType || 'FISCAL';
   const calendarYearIdParam = getSelectedParam(params?.yearId);
 
   // Get calendar years for the selector
-  const calendarYears = await getCalendarYearsHandler();
+  const calendarYears = await getCalendarYearsHandler(['FISCAL', 'ANNUAL']);
 
   // Filter by selected type
   const filteredYears = calendarYears.filter(
