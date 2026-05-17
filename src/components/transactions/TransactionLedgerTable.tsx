@@ -8,6 +8,7 @@ import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/tra
 import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
 import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer';
+import SmartMatchDialog from '@/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog';
 import UnmatchedTransfersBadge from '@/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge';
 
 type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized' | 'voided' | 'transfers';
@@ -89,6 +90,10 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
     date: string;
     bankAccountName: string | null;
   } | null>(null);
+  const [smartMatchPair, setSmartMatchPair] = useState<{
+    debitTransactionId: string;
+    creditTransactionId: string;
+  } | null>(null);
   const previousRefreshKey = useRef(refreshKey);
 
   const queryInput: GetAllInput = useMemo(() => {
@@ -116,6 +121,10 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
   const unmatchedCountQuery = trpc.transfer.getUnmatchedCount.useQuery(undefined, {
     enabled: activeTab === 'transfers',
+  });
+  const createRuleMutation = trpc.transferRule.createRuleFromPair.useMutation({
+    onSuccess: (rule) => toast.success(`Rule "${rule.name}" saved`),
+    onError: (err) => toast.error(err.message ?? 'Failed to save rule'),
   });
 
   useEffect(() => {
@@ -376,7 +385,22 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
         open={transferDrawerTx !== null}
         onClose={() => setTransferDrawerTx(null)}
         sourceTransaction={transferDrawerTx}
-        onLinked={() => { void refetch(); }}
+        onLinked={(pair) => {
+          void refetch();
+          if (pair) setSmartMatchPair(pair);
+        }}
+      />
+    )}
+    {smartMatchPair && (
+      <SmartMatchDialog
+        open={true}
+        onClose={() => setSmartMatchPair(null)}
+        sourcePair={smartMatchPair}
+        onBatchLinked={() => void refetch()}
+        onSaveRule={({ debitTransactionId, creditTransactionId, suggestedName }) => {
+          createRuleMutation.mutate({ debitTransactionId, creditTransactionId, name: suggestedName });
+          setSmartMatchPair(null);
+        }}
       />
     )}
   </>

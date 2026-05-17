@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { trpc } from '@/server/trpc/client';
 import type { TransferLinkDrawerProps } from './_types';
 import type { TransferCandidateScore } from '@/server/services/transactions/_types';
-import SmartMatchDialog from './SmartMatchDialog';
 
 export default function TransferLinkDrawer({
   open,
@@ -15,10 +14,6 @@ export default function TransferLinkDrawer({
   onLinked,
 }: TransferLinkDrawerProps) {
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
-  const [smartMatchPair, setSmartMatchPair] = useState<{
-    debitTransactionId: string;
-    creditTransactionId: string;
-  } | null>(null);
   const [manualSearch, setManualSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -39,22 +34,15 @@ export default function TransferLinkDrawer({
     { enabled: open && (isAutoEmpty || debouncedSearch.trim().length > 0) },
   );
 
-  const createRuleMutation = trpc.transferRule.createRuleFromPair.useMutation({
-    onSuccess: (rule) => toast.success(`Rule "${rule.name}" saved`),
-    onError: (err) => toast.error(err.message ?? 'Failed to save rule'),
-  });
-
-  const linkMutation = trpc.transfer.link.useMutation({    onSuccess: (result) => {
+  const linkMutation = trpc.transfer.link.useMutation({
+    onSuccess: (result) => {
       const debitId =
         sourceTransaction.type === 'DEBIT' ? sourceTransaction.id : selectedCandidateId!;
       const creditId =
         sourceTransaction.type === 'CREDIT' ? sourceTransaction.id : selectedCandidateId!;
-      const action = result.rollupReversed
-        ? ` — expense rollup reversed`
-        : '';
+      const action = result.rollupReversed ? ` — expense rollup reversed` : '';
       toast.success(`Transfer linked successfully${action}`);
-      onLinked();
-      setSmartMatchPair({ debitTransactionId: debitId, creditTransactionId: creditId });
+      onLinked({ debitTransactionId: debitId, creditTransactionId: creditId });
       onClose();
     },
     onError: (err) => {
@@ -216,27 +204,7 @@ export default function TransferLinkDrawer({
     </div>
   );
 
-  return (
-    <>
-      {open && createPortal(drawerContent, document.body)}
-      {smartMatchPair && (
-        <SmartMatchDialog
-          open={true}
-          onClose={() => setSmartMatchPair(null)}
-          sourcePair={smartMatchPair}
-          onBatchLinked={onLinked}
-          onSaveRule={({ debitTransactionId, creditTransactionId, suggestedName }) => {
-            createRuleMutation.mutate({
-              debitTransactionId,
-              creditTransactionId,
-              name: suggestedName,
-            });
-            setSmartMatchPair(null);
-          }}
-        />
-      )}
-    </>
-  );
+  return createPortal(drawerContent, document.body);
 }
 
 function CandidateRow({

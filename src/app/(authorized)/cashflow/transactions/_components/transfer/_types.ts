@@ -13,7 +13,7 @@ export interface TransferLinkDrawerProps {
     date: string;
     bankAccountName: string | null;
   };
-  onLinked: () => void;
+  onLinked: (pair?: { debitTransactionId: string; creditTransactionId: string }) => void;
 }
 
 export interface UnmatchedTransfersBadgeProps {
