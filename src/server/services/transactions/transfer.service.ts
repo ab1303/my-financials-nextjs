@@ -366,12 +366,17 @@ export async function unlinkTransferPair(params: {
 
   if (!txRecord) throw new Error('Transaction not found');
 
+  // If neither side is linked, the transaction is already unlinked
+  if (!txRecord.transferLinkedTransactionId && !txRecord.transferCounterpart) {
+    throw new Error('This transaction is not linked to a transfer pair');
+  }
+
   const debit =
     txRecord.type === TransactionTypeEnum.DEBIT ? txRecord : txRecord.transferCounterpart;
   const credit =
     txRecord.type === TransactionTypeEnum.CREDIT ? txRecord : txRecord.transferLinkedTransaction;
 
-  if (!debit || !credit) throw new Error('Transfer pair is incomplete');
+  if (!debit || !credit) throw new Error('Transfer pair is incomplete — one side may have been deleted');
 
   let rollupRestored = false;
 

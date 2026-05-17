@@ -48,10 +48,8 @@ export default async function ExpensePage({
 
   const fromYearParam = +getSelectedParam(params?.fromYear);
   const toYearParam = +getSelectedParam(params?.toYear);
-  const [calendarYears, fiscalYearType] = await Promise.all([
-    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
-    getUserFiscalYearType(prisma, session.user.id),
-  ]);
+  const fiscalYearType = await getUserFiscalYearType(prisma, session.user.id);
+  const calendarYears = await getCalendarYearsHandler([fiscalYearType ?? 'FISCAL']);
 
   const expenseYearData = calendarYears;
 

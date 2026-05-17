@@ -323,6 +323,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
                   colCount={10}
                   onVoided={() => void refetch()}
                   onRestored={() => void refetch()}
+                  onUnlinked={() => void refetch()}
                   onLinkTransfer={
                     transaction.isTransferClassified &&
                     !transaction.transferLinkedTransactionId &&

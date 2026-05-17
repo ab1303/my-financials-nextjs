@@ -31,10 +31,8 @@ export default async function IncomeSummaryPage({
   const params = await searchParams;
   const userId = session.user.id;
 
-  const [allCalendarYears, fiscalYearType] = await Promise.all([
-    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
-    getUserFiscalYearType(prisma, userId),
-  ]);
+  const fiscalYearType = await getUserFiscalYearType(prisma, userId);
+  const allCalendarYears = await getCalendarYearsHandler([fiscalYearType ?? 'FISCAL']);
   const defaultYear = getDefaultCalendarYear(allCalendarYears, fiscalYearType);
   const initialCalendarYearId = params.calendarYearId ?? defaultYear?.id;
 

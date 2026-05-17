@@ -33,6 +33,7 @@ import {
   Sparkles,
   LayoutDashboard,
   Tag,
+  GitMerge,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useOutsideAlerter from '@/hooks/useOutsideAlerter';
@@ -88,6 +89,7 @@ const settingsItems: NavItem[] = [
   { name: 'Calendar Year(s)', href: '/settings/calendar', icon: Calendar },
   { name: 'AI Spend', href: '/settings/ai-usage', icon: Sparkles },
   { name: 'Categories', href: '/settings/categories', icon: Tag },
+  { name: 'Transfer Rules', href: '/settings/transfer-rules', icon: GitMerge },
 ];
 
 function NavGroupItem({
