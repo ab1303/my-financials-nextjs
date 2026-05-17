@@ -82,6 +82,7 @@ All coding standards live in `.ai/instructions/`. Read the relevant file before 
 | Deployment | `.ai/instructions/deployment.md` |
 | Product / UX principles | `.ai/instructions/product-owner-ux.md` |
 | Testing & subagent orchestration | `.ai/instructions/testing-and-subagents.md` |
+| Git worktree workflow | `.ai/instructions/git-worktree.md` |
 
 `.github/instructions/` contains GitHub Copilot **scoped** rules (file-pattern bound, `applyTo` frontmatter). Do not duplicate general rules there — add them to `.ai/instructions/` instead.
 
