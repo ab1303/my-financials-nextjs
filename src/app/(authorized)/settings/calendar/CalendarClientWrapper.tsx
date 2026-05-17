@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import CalendarForm from './form';
 import CalendarTableClient from './CalendarTableClient';
 import PastCalendarYears from './PastCalendarYears';
@@ -9,6 +10,7 @@ import type { CalendarYearType } from './_types';
 import { isCurrentCalendarYear, groupByYearRange } from './_types';
 import type { FormInput } from './_schema';
 import type { ServerActionType } from './_types';
+import { trpc } from '@/server/trpc/client';
 
 type CalendarClientWrapperProps = {
   tableData: CalendarYearType[];
@@ -21,9 +23,12 @@ export default function CalendarClientWrapper({
   upsertCalendarYear,
   deleteCalendarYear,
 }: CalendarClientWrapperProps) {
+  const router = useRouter();
   const [editingRecord, setEditingRecord] = useState<CalendarYearType | null>(
     null,
   );
+  const lockMutation = trpc.calendarYear.lockYear.useMutation();
+  const unlockMutation = trpc.calendarYear.unlockYear.useMutation();
 
   const { currentEntries, pastGroups } = useMemo(() => {
     const current: CalendarYearType[] = [];
@@ -65,6 +70,26 @@ export default function CalendarClientWrapper({
     }
   };
 
+  const handleLock = async (record: CalendarYearType) => {
+    try {
+      await lockMutation.mutateAsync({ calendarYearId: record.id });
+      toast.success('Fiscal year locked');
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to lock fiscal year');
+    }
+  };
+
+  const handleUnlock = async (record: CalendarYearType) => {
+    try {
+      await unlockMutation.mutateAsync({ calendarYearId: record.id });
+      toast.success('Fiscal year unlocked');
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to unlock fiscal year');
+    }
+  };
+
   return (
     <>
       <CalendarForm
@@ -81,6 +106,8 @@ export default function CalendarClientWrapper({
           tableData={currentEntries}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onLock={handleLock}
+          onUnlock={handleUnlock}
         />
       ) : (
         <p className='text-sm text-gray-400 italic'>
@@ -92,6 +119,8 @@ export default function CalendarClientWrapper({
         groups={pastGroups}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onLock={handleLock}
+        onUnlock={handleUnlock}
       />
     </>
   );

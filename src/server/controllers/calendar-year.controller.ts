@@ -37,7 +37,16 @@ export const createCalendarYearHandler = async (
 
 export const getCalendarYearsHandler = async () => {
   const calendarYears = await getCalendarYears();
-  return calendarYears;
+  return calendarYears.map((year) => ({
+    id: year.id,
+    description: year.description,
+    fromYear: year.fromYear,
+    fromMonth: year.fromMonth,
+    toYear: year.toYear,
+    toMonth: year.toMonth,
+    type: year.type,
+    lockedAt: year.lockedAt ? year.lockedAt.toISOString() : null,
+  }));
 };
 
 export const updateCalendarYearHandler = async (

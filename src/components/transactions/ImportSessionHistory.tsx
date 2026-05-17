@@ -5,6 +5,7 @@ import { trpc } from '@/server/trpc/client';
 import { toast } from 'sonner';
 import { Modal } from '@/components/ui/Modal';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import { AlertTriangle } from 'lucide-react';
 
 interface SessionRow {
   id: string;
@@ -13,6 +14,8 @@ interface SessionRow {
   recordsCreated: number;
   transactionCount: number;
   createdAt: string;
+  yearWarning: boolean;
+  isLocked: boolean;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -46,7 +49,13 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
 
   const undoMutation = trpc.transactionClearing.undoImportSession.useMutation({
     onSuccess: (result) => {
-      toast.success(`Undone — ${result.voided} transactions reversed`);
+      if (result.yearWarning) {
+        toast.warning(
+          `Undone — ${result.voided} transactions reversed. Note: this import was from a previous fiscal year.`,
+        );
+      } else {
+        toast.success(`Undone — ${result.voided} transactions reversed`);
+      }
       void refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -63,7 +72,9 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
   const [undoConfirmId, setUndoConfirmId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const undoSession = (data as SessionRow[] | undefined)?.find((s) => s.id === undoConfirmId);
+  const undoSession = (data as Array<SessionRow & { yearWarning: boolean }> | undefined)?.find(
+    (s) => s.id === undoConfirmId,
+  );
 
   return (
     <>
@@ -114,15 +125,31 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={session.status} />
+                        {session.yearWarning && (
+                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                            <AlertTriangle className="h-3 w-3" /> Prev. year
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right">
                         {(session.status === 'COMPLETED' || session.status === 'PARTIAL') && (
-                          <button
-                            onClick={() => setUndoConfirmId(session.id)}
-                            className="rounded px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-                          >
-                            Undo
-                          </button>
+                          <>
+                            {session.isLocked ? (
+                              <span
+                                className="rounded px-3 py-1 text-xs font-medium text-muted-foreground cursor-not-allowed"
+                                title="This fiscal year is locked"
+                              >
+                                Locked
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => setUndoConfirmId(session.id)}
+                                className="rounded px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                              >
+                                Undo
+                              </button>
+                            )}
+                          </>
                         )}
                         {session.status === 'PENDING' && (
                           <button
@@ -152,7 +179,11 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
           }
         }}
         title="Undo Import?"
-        message={`This will void all ${undoSession?.transactionCount ?? 0} transactions from this import and reverse their expense summaries and income records. This cannot be re-done.`}
+        message={
+          undoSession?.yearWarning
+            ? `This import is from a previous fiscal year. Undoing it will reverse ${undoSession.transactionCount ?? 0} transactions and remove associated financial records that may have been used for tax reporting. This cannot be re-done.`
+            : `This will void all ${undoSession?.transactionCount ?? 0} transactions from this import and reverse their expense summaries and income records. This cannot be re-done.`
+        }
         confirmButtonText="Yes, Undo Import"
         variant="danger"
         isLoading={undoMutation.isPending}

@@ -11,7 +11,7 @@ import {
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
 import type { CalendarYearType } from './_types';
-import { Pencil, Trash2, Check, X } from 'lucide-react';
+import { Pencil, Trash2, Check, X, Lock, Unlock } from 'lucide-react';
 
 const columnHelper = createColumnHelper<CalendarYearType>();
 
@@ -19,9 +19,11 @@ type CalendarTableClientProps = {
   tableData: Array<CalendarYearType>;
   onEdit: (row: CalendarYearType) => void;
   onDelete: (row: CalendarYearType) => void;
+  onLock: (row: CalendarYearType) => void;
+  onUnlock: (row: CalendarYearType) => void;
 };
 export default function CalendarTableClient(props: CalendarTableClientProps) {
-  const { tableData, onEdit, onDelete } = props;
+  const { tableData, onEdit, onDelete, onLock, onUnlock } = props;
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const columns = [
     columnHelper.accessor('fromYear', {
@@ -106,6 +108,36 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
                 <Trash2 className='w-4 h-4 text-red-500' />
               </button>
             )}
+
+            {row.lockedAt ? (
+              <>
+                <span className='inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'>
+                  <Lock className='h-3.5 w-3.5' />
+                  Locked
+                </span>
+                <button
+                  type='button'
+                  aria-label='Unlock year'
+                  title='Unlock fiscal year'
+                  className='inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/30 transition-colors'
+                  onClick={() => onUnlock(row)}
+                >
+                  <Unlock className='h-3.5 w-3.5' />
+                  Unlock
+                </button>
+              </>
+            ) : row.type === 'FISCAL' ? (
+              <button
+                type='button'
+                aria-label='Lock year'
+                title='Lock fiscal year'
+                className='inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/30 transition-colors'
+                onClick={() => onLock(row)}
+              >
+                <Lock className='h-3.5 w-3.5' />
+                Lock
+              </button>
+            ) : null}
           </div>
         );
       },
