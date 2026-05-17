@@ -468,6 +468,8 @@ model ImportSession {
   overallConfidence Float?
   recordsCreated    Int              @default(0)
   metadata          Json?
+  startDate         DateTime?        // earliest transaction date in this import
+  endDate           DateTime?        // latest transaction date in this import
   images            ImportImage[]
   usageLogs         AIUsageLog[]
   transactions      Transaction[]

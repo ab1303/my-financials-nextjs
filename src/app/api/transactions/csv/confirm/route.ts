@@ -83,11 +83,20 @@ export async function POST(req: NextRequest) {
     const errors = [...debitResult.errors, ...creditResult.errors];
     const status = errors.length > 0 ? (totalEntries > 0 ? 'PARTIAL' : 'FAILED') : 'COMPLETED';
 
+    // Aggregate min/max transaction date for this import
+    const dateRange = await prisma.transaction.aggregate({
+      where: { importSessionId: fileId },
+      _min: { date: true },
+      _max: { date: true },
+    });
+
     await prisma.importSession.update({
       where: { id: fileId },
       data: {
         status,
         recordsCreated: totalEntries,
+        startDate: dateRange._min.date ?? null,
+        endDate:   dateRange._max.date ?? null,
       },
     });
 
