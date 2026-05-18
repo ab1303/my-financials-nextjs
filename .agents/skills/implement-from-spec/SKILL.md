@@ -9,7 +9,7 @@ description: >
   coding", "implement phases", "delegate implementation".
 metadata:
   author: local
-  version: "1.1.0"
+  version: "1.2.0"
   argument-hint: <feature-name> [--phase N]
 ---
 
@@ -157,6 +157,7 @@ For each phase in Wave 1, call `task` tool simultaneously:
 ```
 agent_type: "Next.js Expert"   (or detected agent)
 mode: "background"
+model: "claude-haiku-4.5"      ← always use haiku for speed; phases are self-contained
 name: "{feature}-phase-{N}"
 description: "Implementing Phase N — {name}"
 prompt: {assembled context bundle from Step 4}
