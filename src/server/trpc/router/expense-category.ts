@@ -6,7 +6,13 @@ const createSchema = z.object({ name: z.string().min(1).max(100) });
 const updateSchema = z.object({ id: z.string(), name: z.string().min(1).max(100) });
 const removeSchema = z.object({ id: z.string() });
 
-export type ExpenseCategoryRecord = { id: string; name: string; isActive: boolean; usageCount: number };
+export type ExpenseCategoryRecord = {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  usageCount: number;
+};
 
 export const expenseCategoryRouter = router({
   getAll: protectedProcedure.query(async ({ ctx }): Promise<ExpenseCategoryRecord[]> => {
@@ -18,6 +24,7 @@ export const expenseCategoryRouter = router({
     return categories.map((c) => ({
       id: c.id,
       name: c.name,
+      description: c.description || undefined,
       isActive: c.isActive,
       usageCount: c._count.monthlyExpenseSummaries,
     }));
@@ -27,7 +34,7 @@ export const expenseCategoryRouter = router({
     return ctx.prisma.expenseCategory.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
-      select: { id: true, name: true },
+      select: { id: true, name: true, description: true },
     });
   }),
 

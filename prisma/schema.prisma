@@ -108,6 +108,7 @@ enum DonationPurposeEnum {
 model IncomeSource {
   id            String         @id @default(cuid())
   name          String         @unique
+  description   String?        @db.Text
   isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
   incomeRecords IncomeRecord[]
@@ -272,10 +273,22 @@ model IncomeRecord {
   @@index([incomeLedgerId, dateEarned])
 }
 
+// SpecialCategory — system-managed categories (Transfer, Excluded, etc) with descriptions
+model SpecialCategory {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  description   String   @db.Text
+  isActive      Boolean  @default(true)
+  isEditable    Boolean  @default(false)
+  color         String?  // For UI badges (e.g., "red", "blue", "gray")
+  createdAt     DateTime @default(now())
+}
+
 // Expenses
 model ExpenseCategory {
   id                    String                  @id @default(cuid())
   name                  String                  @unique
+  description           String?                 @db.Text
   iconName              String?
   isActive              Boolean                 @default(true)
   createdAt             DateTime                @default(now())

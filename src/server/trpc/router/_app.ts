@@ -17,6 +17,7 @@ import { transferRuleRouter } from './transfer-rule';
 import { calendarYearRouter } from './calendar-year';
 import { incomeSourceRouter } from './income-source';
 import { expenseCategoryRouter } from './expense-category';
+import { specialCategoryRouter } from './special-category';
 import { bankAccountRouter } from './bank-account';
 
 export const appRouter = router({
@@ -38,6 +39,7 @@ export const appRouter = router({
   calendarYear: calendarYearRouter,
   incomeSource: incomeSourceRouter,
   expenseCategory: expenseCategoryRouter,
+  specialCategory: specialCategoryRouter,
   bankAccount: bankAccountRouter,
 });
 

@@ -159,33 +159,31 @@ export default function TransferLinkDrawer({
                 Can't find it above? Search or filter for any transaction:
               </p>
             )}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={manualSearch}
-                onChange={(e) => {
-                  setManualSearch(e.target.value);
-                  setSelectedCandidateId(null);
-                }}
-                placeholder="Search by description…"
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
-              />
-              <select
-                value={filterBankAccountId}
-                onChange={(e) => {
-                  setFilterBankAccountId(e.target.value);
-                  setSelectedCandidateId(null);
-                }}
-                className="rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
-              >
-                <option value="">All accounts</option>
-                {bankAccountsQuery.data?.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <input
+              type="text"
+              value={manualSearch}
+              onChange={(e) => {
+                setManualSearch(e.target.value);
+                setSelectedCandidateId(null);
+              }}
+              placeholder="Search by description…"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+            />
+            <select
+              value={filterBankAccountId}
+              onChange={(e) => {
+                setFilterBankAccountId(e.target.value);
+                setSelectedCandidateId(null);
+              }}
+              className="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            >
+              <option value="">All accounts</option>
+              {bankAccountsQuery.data?.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </select>
             {searchQuery.isLoading && (
               <p className="text-center text-sm text-gray-400">Searching…</p>
             )}

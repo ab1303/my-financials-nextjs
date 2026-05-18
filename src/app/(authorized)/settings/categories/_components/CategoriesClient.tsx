@@ -2,38 +2,58 @@
 
 import IncomeSources from './IncomeSources';
 import ExpenseCategories from './ExpenseCategories';
+import SpecialCategories from './SpecialCategories';
 
 export default function CategoriesClient() {
   return (
-    <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
-      <section aria-labelledby='income-sources-heading'>
-        <div className='mb-4'>
-          <h2
-            id='income-sources-heading'
-            className='text-base font-semibold text-foreground'
-          >
-            Income Sources
-          </h2>
-          <p className='mt-0.5 text-xs text-muted-foreground'>
-            Sources used when recording income entries
-          </p>
-        </div>
-        <IncomeSources />
-      </section>
+    <div className='space-y-8'>
+      {/* Income Sources and Expense Categories Grid */}
+      <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
+        <section aria-labelledby='income-sources-heading'>
+          <div className='mb-4'>
+            <h2
+              id='income-sources-heading'
+              className='text-base font-semibold text-foreground'
+            >
+              Income Sources
+            </h2>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Sources used when recording income entries
+            </p>
+          </div>
+          <IncomeSources />
+        </section>
 
-      <section aria-labelledby='expense-categories-heading'>
+        <section aria-labelledby='expense-categories-heading'>
+          <div className='mb-4'>
+            <h2
+              id='expense-categories-heading'
+              className='text-base font-semibold text-foreground'
+            >
+              Expense Categories
+            </h2>
+            <p className='mt-0.5 text-xs text-muted-foreground'>
+              Categories used when classifying expense transactions
+            </p>
+          </div>
+          <ExpenseCategories />
+        </section>
+      </div>
+
+      {/* Special Categories - Full Width Below */}
+      <section aria-labelledby='special-categories-heading' className='border-t border-border pt-8'>
         <div className='mb-4'>
           <h2
-            id='expense-categories-heading'
+            id='special-categories-heading'
             className='text-base font-semibold text-foreground'
           >
-            Expense Categories
+            Special Categories
           </h2>
           <p className='mt-0.5 text-xs text-muted-foreground'>
-            Categories used when classifying expense transactions
+            System-managed categories used for transfers, exclusions, and special transaction handling
           </p>
         </div>
-        <ExpenseCategories />
+        <SpecialCategories />
       </section>
     </div>
   );

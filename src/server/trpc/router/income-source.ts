@@ -6,7 +6,13 @@ const createSchema = z.object({ name: z.string().min(1).max(100) });
 const updateSchema = z.object({ id: z.string(), name: z.string().min(1).max(100) });
 const removeSchema = z.object({ id: z.string() });
 
-export type IncomeSourceRecord = { id: string; name: string; isActive: boolean; usageCount: number };
+export type IncomeSourceRecord = {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  usageCount: number;
+};
 
 export const incomeSourceRouter = router({
   getAll: protectedProcedure.query(async ({ ctx }): Promise<IncomeSourceRecord[]> => {
@@ -19,6 +25,7 @@ export const incomeSourceRouter = router({
     return sources.map((s) => ({
       id: s.id,
       name: s.name,
+      description: s.description || undefined,
       isActive: s.isActive,
       usageCount: s._count.incomeRecords,
     }));
@@ -29,7 +36,7 @@ export const incomeSourceRouter = router({
     return ctx.prisma.incomeSource.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
-      select: { id: true, name: true },
+      select: { id: true, name: true, description: true },
     });
   }),
 
