@@ -13,6 +13,7 @@
 | 5 | `IncomeTableClient.tsx` | Monthly grouping with subtotal rows |
 | 6 | `_components/SourceBadge.tsx`, `_table/columns.tsx`, `src/components/react-table/TableCell.tsx` | Fix Other badge contrast + amount right-alignment |
 | 7 | `IncomeTableClient.tsx` | Fix month header row layout (raw tr/td, bypass TBodyTD span wrapper) |
+| 8 | `IncomeTableClient.tsx`, `_components/MonthAccordionPanel.tsx` | Replace flat grouped table with collapsible monthly accordion panels |
 
 ---
 
@@ -502,4 +503,338 @@ Keep all data entry rows using `Table.TBody.TR` / `Table.TBody.TD` as-is.
 | Month header renders a native `<tr>` with `bg-muted/50` class | Unit (RTL) | Raw tr used, not TBodyTR |
 | Month header contains a flex div with label and subtotal | Unit (RTL) | Layout not broken by span wrapper |
 | Month header `<td>` has correct `colSpan` equal to column count | Unit (RTL) | Full-width span |
+
+---
+
+## Phase 8 — Collapsible Monthly Accordion
+
+### Files
+
+| Action | File |
+|--------|------|
+| CREATE | `src/app/(authorized)/cashflow/income/_components/MonthAccordionPanel.tsx` |
+| MODIFY | `src/app/(authorized)/cashflow/income/IncomeTableClient.tsx` |
+
+---
+
+### Interface — `MonthAccordionPanel`
+
+```typescript
+type MonthAccordionPanelProps = {
+  monthKey: string;            // e.g. "2025-05"
+  label: string;               // e.g. "May 2025"
+  subtotal: number;
+  entryCount: number;
+  entries: IncomeEntryType[];  // pre-sliced entries for this month
+  calendarYearId: string;
+  addRow: (input: CreateIncomeEntryInput) => Promise<ServerActionType<IncomeEntryType>>;
+  editRow: (input: UpdateIncomeEntryInput) => Promise<ServerActionType>;
+  deleteRow: (input: DeleteIncomeEntryInput) => Promise<ServerActionType>;
+  defaultOpen?: boolean;       // true for current calendar month on initial render
+};
+```
+
+---
+
+### `MonthAccordionPanel.tsx` — structure
+
+The panel has two states: **collapsed** (summary row only) and **expanded** (summary row + inline-edit table + scoped Add Entry button).
+
+Each `MonthAccordionPanel` owns its own local `editedRows` state scoped to its `entries` slice. Row indices within a panel are `0..n-1` local. The panel's `updateRow`/`removeRow` handlers use `entries[localIndex]` to find the record and call `editRow`/`deleteRow` server actions directly — no global index offset arithmetic needed.
+
+```tsx
+'use client';
+
+import { useState, useMemo, useTransition } from 'react';
+import { ChevronRight, ChevronDown, Plus } from 'lucide-react';
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
+import { NumericFormat } from 'react-number-format';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+
+import Table from '@/components/table';
+import { Button } from '@/components/ui/button';
+import { getTableColumns } from '../_table/columns';
+import { useIncomeEntryState } from '../StateProvider';
+import type { IncomeEntryType, ServerActionType } from '../_types';
+import type {
+  CreateIncomeEntryInput,
+  UpdateIncomeEntryInput,
+  DeleteIncomeEntryInput,
+} from '../_schema';
+
+export default function MonthAccordionPanel({
+  monthKey,
+  label,
+  subtotal,
+  entryCount,
+  entries,
+  calendarYearId,
+  addRow,
+  editRow,
+  deleteRow,
+  defaultOpen = false,
+}: MonthAccordionPanelProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [editedRows, setEditedRows] = useState<Map<number, IncomeEntryType>>(new Map());
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const { dispatch } = useIncomeEntryState();
+  const columns = useMemo(() => getTableColumns(), []);
+
+  const table = useReactTable<IncomeEntryType>({
+    data: entries,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: {
+      editedRows,
+      validRows: {},
+      setEditedRows,
+      revertData: (localIndex: number) => {
+        const row = entries[localIndex];
+        if (row?.id.startsWith('temp-')) {
+          dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
+        }
+      },
+      updateRow: async (localIndex: number) => {
+        const updated = editedRows.get(localIndex);
+        if (!updated) return;
+        if (updated.amount <= 0) { toast.error('Please enter a valid amount'); return; }
+        if (!updated.incomeSourceId) { toast.error('Please select an income source'); return; }
+        startTransition(async () => {
+          if (updated.id.startsWith('temp-')) {
+            const result = await addRow({
+              dateEarned: updated.dateEarned,
+              amount: updated.amount,
+              incomeSourceId: updated.incomeSourceId,
+              calendarYearId,
+            });
+            if (result.success && result.data) {
+              dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: updated.id } });
+              dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: result.data.id, entry: result.data as IncomeEntryType } });
+              setEditedRows((prev) => { const m = new Map(prev); m.delete(localIndex); return m; });
+              toast.success('Income entry created successfully');
+              router.refresh();
+            } else {
+              toast.error('Failed to create income entry');
+            }
+          } else {
+            const result = await editRow({ id: updated.id, dateEarned: updated.dateEarned, amount: updated.amount, incomeSourceId: updated.incomeSourceId });
+            if (result.success) {
+              dispatch({ type: 'INCOME/Entries/EDIT_ENTRY', payload: { incomeEntryId: updated.id, entry: updated } });
+              setEditedRows((prev) => { const m = new Map(prev); m.delete(localIndex); return m; });
+              toast.success('Income entry updated successfully');
+              router.refresh();
+            } else {
+              toast.error('Failed to update income entry');
+            }
+          }
+        });
+      },
+      removeRow: async (localIndex: number) => {
+        const row = entries[localIndex];
+        if (!row) return;
+        if (row.id.startsWith('temp-')) {
+          dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
+          return;
+        }
+        if (!confirm('Are you sure you want to delete this income entry?')) return;
+        startTransition(async () => {
+          const result = await deleteRow({ id: row.id });
+          if (result.success) {
+            dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
+            toast.success('Income entry deleted successfully');
+            router.refresh();
+          } else {
+            toast.error('Failed to delete income entry');
+          }
+        });
+      },
+    },
+  });
+
+  const handleAddEntry = () => {
+    if (!isOpen) setIsOpen(true);
+    const [year, month] = monthKey.split('-').map(Number);
+    const defaultDate = new Date(year!, month! - 1, 1);
+    const tempId = `temp-${Date.now()}`;
+    dispatch({
+      type: 'INCOME/Entries/ADD_ENTRY',
+      payload: {
+        incomeEntryId: tempId,
+        entry: { id: tempId, dateEarned: defaultDate, amount: 0, incomeSourceId: '', incomeSourceName: '', incomeLedgerId: '' },
+      },
+    });
+    toast.info('New income row added. Fill in the details and save.');
+  };
+
+  return (
+    <div className='border border-border rounded-lg mb-2 overflow-hidden'>
+      <button
+        type='button'
+        onClick={() => setIsOpen((o) => !o)}
+        className='w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-muted/40 transition-colors select-none cursor-pointer'
+        aria-expanded={isOpen}
+        aria-controls={`panel-${monthKey}`}
+      >
+        <div className='flex items-center gap-2'>
+          {isOpen
+            ? <ChevronDown className='w-4 h-4 text-muted-foreground' />
+            : <ChevronRight className='w-4 h-4 text-muted-foreground' />}
+          <span className='text-sm font-semibold text-foreground'>{label}</span>
+          <span className='text-xs text-muted-foreground'>
+            ({entryCount} {entryCount === 1 ? 'entry' : 'entries'})
+          </span>
+        </div>
+        <NumericFormat
+          value={subtotal}
+          displayType='text'
+          thousandSeparator
+          prefix='$'
+          decimalScale={2}
+          fixedDecimalScale
+          className='text-base font-bold text-primary tabular-nums'
+        />
+      </button>
+
+      {isOpen && (
+        <div id={`panel-${monthKey}`} className='px-4 pb-4 pt-2 bg-card/50'>
+          <Table>
+            <Table.THead>
+              {table.getHeaderGroups().map((hg) => (
+                <Table.THead.TR key={hg.id}>
+                  {hg.headers.map((h) => (
+                    <Table.THead.TH key={h.id}>
+                      {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
+                    </Table.THead.TH>
+                  ))}
+                </Table.THead.TR>
+              ))}
+            </Table.THead>
+            <Table.TBody>
+              {table.getRowModel().rows.map((row) => (
+                <Table.TBody.TR key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <Table.TBody.TD key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </Table.TBody.TD>
+                  ))}
+                </Table.TBody.TR>
+              ))}
+            </Table.TBody>
+          </Table>
+          <div className='mt-2 flex justify-end'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleAddEntry}
+              disabled={isPending}
+              aria-label={`Add entry to ${label}`}
+            >
+              <Plus className='w-3 h-3 mr-1' />
+              Add Entry to {label}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+### `IncomeTableClient.tsx` — Phase 8 render changes
+
+Replace the existing `<Table>` block (and the Phase 5–7 month group `<tr>` separators) with an accordion list. The global `+ Add Entry` button targets the current calendar month.
+
+```tsx
+// Derive current month key
+const nowKey = useMemo(() => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}, []);
+
+const monthGroups = useMemo(() => groupByMonth(data), [data]);
+
+const handleGlobalAddEntry = () => {
+  if (!calendarYearId) { toast.error('Please select a fiscal year first'); return; }
+  const tempId = `temp-${Date.now()}`;
+  dispatch({
+    type: 'INCOME/Entries/ADD_ENTRY',
+    payload: {
+      incomeEntryId: tempId,
+      entry: { id: tempId, dateEarned: new Date(), amount: 0, incomeSourceId: '', incomeSourceName: '', incomeLedgerId: '' },
+    },
+  });
+  toast.info('New income row added. Fill in the details and save.');
+};
+
+return (
+  <div className='relative overflow-auto'>
+    <div className='flex justify-end mb-3'>
+      <Button variant='default' onClick={handleGlobalAddEntry} disabled={isPending} aria-label='Add new income entry'>
+        <Plus className='w-4 h-4' />
+        Add Entry
+      </Button>
+    </div>
+
+    {data.length > 0 && <SourceBreakdownWidget entries={data} />}
+
+    {monthGroups.length === 0 && (
+      <p className='text-sm text-muted-foreground text-center py-8'>
+        No income entries yet. Click <strong>Add Entry</strong> to get started.
+      </p>
+    )}
+
+    <div className='space-y-1 mt-3'>
+      {monthGroups.map((group) => (
+        <MonthAccordionPanel
+          key={group.key}
+          monthKey={group.key}
+          label={group.label}
+          subtotal={group.subtotal}
+          entryCount={group.entries.length}
+          entries={group.entries.map((e) => e.entry)}
+          calendarYearId={calendarYearId}
+          addRow={addRow}
+          editRow={editRow}
+          deleteRow={deleteRow}
+          defaultOpen={group.key === nowKey}
+        />
+      ))}
+    </div>
+  </div>
+);
+```
+
+---
+
+### Edge Cases
+
+| Case | Handling |
+|------|----------|
+| No entries for the fiscal year | `monthGroups` is empty; render empty-state message below the Add Entry button |
+| New temp row added via global button | `dateEarned = new Date()` → current month group; that panel has `defaultOpen=true` so it is already open |
+| Fiscal year with entries spanning many months | Each month gets its own panel; all collapsed by default except current month |
+| Adding entry to a month not yet in `data[]` | Temp row created with `new Date()` default; after dispatch the `groupByMonth` memo recalculates and creates the new panel |
+| `defaultOpen` on initial render | Only the current calendar month panel is open; all others collapsed |
+
+---
+
+### TDD Test Cases
+
+| Test description | Test type | What it verifies |
+|-----------------|-----------|-----------------|
+| `MonthAccordionPanel` renders only the summary row when collapsed | Unit (RTL) | Entries table is not in DOM when `isOpen=false` |
+| Clicking the summary header toggles `isOpen` and reveals the entries table | Unit (RTL) | `aria-expanded` changes; table appears |
+| Summary row displays formatted subtotal `$x,xxx.xx` and entry count | Unit (RTL) | `NumericFormat` + entry count text |
+| "Add Entry to [Month]" inside panel dispatches temp row with `dateEarned` defaulting to first day of panel month | Unit (RTL) | Month-scoped default date |
+| Multiple panels can be independently open simultaneously | Unit (RTL) | Two panels each toggled; both show their tables |
+| `IncomeTableClient` renders one `MonthAccordionPanel` per distinct month in `data` | Integration (RTL) | Panel count matches `groupByMonth` output |
+| Current calendar month panel has `defaultOpen=true`; others have `defaultOpen=false` | Unit (RTL) | Only current month expanded on mount |
+| Inline save inside panel calls `editRow` and dispatches `EDIT_ENTRY` | Integration (RTL) | Server action called with correct payload |
+| Inline delete inside panel calls `deleteRow` and dispatches `REMOVE_ENTRY` | Integration (RTL) | Row removed from panel after deletion |
+| Empty `data[]` renders empty-state message, no accordion panels | Unit (RTL) | Graceful empty state, no panel list |
+| Global "+ Add Entry" creates temp row in current-month panel | Integration (RTL) | New temp row appears in open current-month panel |
 

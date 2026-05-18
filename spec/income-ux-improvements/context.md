@@ -18,7 +18,7 @@ navigating to a separate report page (`/reports/income-summary`), breaking the
 | File | Change |
 |------|--------|
 | `src/app/(authorized)/cashflow/income/_table/columns.tsx` | Replace plain text `incomeSourceName` cell with `SourceBadge` component |
-| `src/app/(authorized)/cashflow/income/IncomeTableClient.tsx` | Add monthly group headers + subtotals; add source breakdown widget above table |
+| `src/app/(authorized)/cashflow/income/IncomeTableClient.tsx` | Add monthly group headers + subtotals; add source breakdown widget above table; Phase 8: replace grouped-table rendering with `MonthAccordionPanel` list |
 | `src/app/(authorized)/cashflow/income/form.tsx` | Fix section heading (monospace → `<h2>`); fix `NumericFormat` to always render 2dp |
 | `src/app/(authorized)/cashflow/income/page.tsx` | Minor: ensure section label is removed from `IncomeTableServer` wrapper |
 
@@ -28,6 +28,7 @@ navigating to a separate report page (`/reports/income-summary`), breaking the
 |------|---------|
 | `src/app/(authorized)/cashflow/income/_components/SourceBadge.tsx` | Color-coded pill for income source name |
 | `src/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget.tsx` | Compact widget showing % per source above the table |
+| `src/app/(authorized)/cashflow/income/_components/MonthAccordionPanel.tsx` | Collapsible month row: summary header + expandable entries + scoped Add Entry |
 
 ---
 
@@ -119,7 +120,7 @@ page.tsx (Server)
                 → flat TanStack Table rows (no grouping, plain text source)
 ```
 
-### Proposed
+### Proposed (Phases 1–7)
 
 ```
 page.tsx (Server)          [unchanged]
@@ -134,6 +135,26 @@ page.tsx (Server)          [unchanged]
                      │    └─ IncomeRecord rows with SourceBadge
                      └─ Month header row  (e.g. "Apr 2025  —  $9,860.25")
                           └─ ...
+```
+
+### Proposed (Phase 8 — Collapsible Monthly Summary)
+
+```
+page.tsx (Server)          [unchanged]
+  → IncomeForm (Client)
+      ├─ Fiscal Year select + Annual Total KPI
+      └─ IncomeTableServer (Server)
+           → IncomeTableClient (Client)
+                ├─ SourceBreakdownWidget  (collapsed by default, toggleable)
+                └─ Accordion list  ← replaces grouped flat table
+                     ├─ MonthAccordionPanel  "May 2025  $20,369  3 entries  ▶"
+                     │    └─ [expanded] TanStack inline-edit table (May entries)
+                     │         └─ [+ Add Entry to May 2025]
+                     ├─ MonthAccordionPanel  "Apr 2025  $18,500  2 entries  ▼"
+                     │    └─ [expanded] TanStack inline-edit table (Apr entries)
+                     │         └─ [+ Add Entry to Apr 2025]
+                     └─ ...
+                [+ Add Entry]  ← global fallback opens current-month panel
 ```
 
 ---

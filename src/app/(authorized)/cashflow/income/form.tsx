@@ -126,7 +126,7 @@ export default function IncomeForm({
   };
 
   return (
-    <form className='mb-0 space-y-6'>
+    <div className='mb-0 space-y-6'>
       <div className='mx-10'>
         <Label>Fiscal Year</Label>
         <div className='mt-3'>
@@ -161,7 +161,7 @@ export default function IncomeForm({
       <div className='mt-8'>
         <Card.Body>{children}</Card.Body>
       </div>
-    </form>
+    </div>
   );
 }
 

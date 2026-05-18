@@ -1,24 +1,17 @@
 'use client';
 
-import React from 'react';
-
 import { enableMapSet } from 'immer';
 
 enableMapSet();
 
-import { useMemo, useState, useTransition } from 'react';
-import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
+import { useMemo, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { NumericFormat } from 'react-number-format';
 
-import Table from '@/components/table';
 import { Button } from '@/components/ui/button';
 import { useIncomeEntryState } from './StateProvider';
 import SourceBreakdownWidget from './_components/SourceBreakdownWidget';
-
-import { getTableColumns } from './_table/columns';
+import MonthAccordionPanel from './_components/MonthAccordionPanel';
 
 import type { ServerActionType, IncomeEntryType } from './_types';
 import type {
@@ -63,19 +56,24 @@ export default function IncomeTableClient({
   deleteRow,
   calendarYearId,
 }: IncomeTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<number, IncomeEntryType>>(
-    new Map(),
-  );
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-  const validRows = {};
 
   const {
     state: { data },
     dispatch,
   } = useIncomeEntryState();
 
-  const handleAddEntry = async () => {
+  // Compute current month key for auto-expanding the current month
+  const nowKey = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+
+  // Group entries by month
+  const monthGroups = useMemo(() => groupByMonth(data), [data]);
+
+  // Handle adding entry to the current month
+  const handleGlobalAddEntry = async () => {
     if (!calendarYearId) {
       toast.error('Please select a fiscal year first');
       return;
@@ -90,158 +88,54 @@ export default function IncomeTableClient({
       incomeLedgerId: '',
     };
     dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: tempId, entry: newRow } });
-    setEditedRows(new Map([[data.length, newRow]]));
     toast.info('New income row added. Fill in the details and save.');
   };
 
-  const columns = useMemo(() => getTableColumns(), []);
-
-  const table = useReactTable<IncomeEntryType>({
-    data: data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    meta: {
-      editedRows,
-      validRows,
-      setEditedRows,
-      revertData: (rowIndex: number) => {
-        const row = data[rowIndex];
-        if (row && row.id.startsWith('temp-')) {
-          dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
-          toast.info('New income entry cancelled');
-        }
-      },
-      updateRow: async (rowIndex: number) => {
-        const row = data[rowIndex];
-        if (!row) return;
-        const updatedRecord = editedRows.get(rowIndex);
-        if (!updatedRecord) return;
-        if (updatedRecord.amount <= 0) { toast.error('Please enter a valid amount'); return; }
-        if (!updatedRecord.incomeSourceId) { toast.error('Please select an income source'); return; }
-        if (updatedRecord.id.startsWith('temp-')) {
-          startTransition(async () => {
-            const createResult = await addRow({
-              dateEarned: updatedRecord.dateEarned,
-              amount: updatedRecord.amount,
-              incomeSourceId: updatedRecord.incomeSourceId,
-              calendarYearId: calendarYearId,
-            });
-            if (createResult.success && createResult.data) {
-              dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: updatedRecord.id } });
-              dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: createResult.data.id, entry: createResult.data as IncomeEntryType } });
-              setEditedRows((prev) => { const m = new Map(prev); m.delete(rowIndex); return m; });
-              toast.success('Income entry created successfully');
-              router.refresh();
-            } else {
-              toast.error(createResult.error instanceof Error ? createResult.error.message : 'Failed to create income entry');
-            }
-          });
-        } else {
-          startTransition(async () => {
-            const updateResult = await editRow({
-              id: updatedRecord.id,
-              dateEarned: updatedRecord.dateEarned,
-              amount: updatedRecord.amount,
-              incomeSourceId: updatedRecord.incomeSourceId,
-            });
-            if (updateResult.success) {
-              dispatch({ type: 'INCOME/Entries/EDIT_ENTRY', payload: { incomeEntryId: updatedRecord.id, entry: updatedRecord } });
-              setEditedRows((prev) => { const m = new Map(prev); m.delete(rowIndex); return m; });
-              toast.success('Income entry updated successfully');
-              router.refresh();
-            } else {
-              toast.error(updateResult.error instanceof Error ? updateResult.error.message : 'Failed to update income entry');
-            }
-          });
-        }
-      },
-      removeRow: async (rowIndex: number) => {
-        const row = data[rowIndex];
-        if (!row) return;
-        if (row.id.startsWith('temp-')) {
-          dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
-          toast.info('Temporary entry removed');
-          return;
-        }
-        const confirmed = confirm('Are you sure you want to delete this income entry?');
-        if (!confirmed) return;
-        startTransition(async () => {
-          const deleteResult = await deleteRow({ id: row.id });
-          if (deleteResult.success) {
-            dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
-            toast.success('Income entry deleted successfully');
-            router.refresh();
-          } else {
-            toast.error(deleteResult.error instanceof Error ? deleteResult.error.message : 'Failed to delete income entry');
-          }
-        });
-      },
-    },
-  });
-
   return (
     <div className='relative overflow-auto'>
+      {/* Global Add Entry Button */}
       <div className='flex justify-end mb-3'>
-        <Button variant='default' onClick={handleAddEntry} disabled={isPending} aria-label='Add new income entry'>
+        <Button
+          variant='default'
+          onClick={handleGlobalAddEntry}
+          disabled={isPending}
+          aria-label='Add new income entry'
+        >
           <Plus className='w-4 h-4' />
           Add Entry
         </Button>
       </div>
 
+      {/* Source Breakdown Widget */}
       {data.length > 0 && <SourceBreakdownWidget entries={data} />}
 
-      <Table>
-        <Table.THead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <Table.THead.TR key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <Table.THead.TH key={header.id}>
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                </Table.THead.TH>
-              ))}
-            </Table.THead.TR>
+      {/* Empty State */}
+      {monthGroups.length === 0 && (
+        <div className='text-center py-8'>
+          <p className='text-muted-foreground'>No income entries yet. Add one to get started.</p>
+        </div>
+      )}
+
+      {/* Monthly Accordion Panels */}
+      {monthGroups.length > 0 && (
+        <div className='space-y-1 mt-3'>
+          {monthGroups.map((group) => (
+            <MonthAccordionPanel
+              key={group.key}
+              monthKey={group.key}
+              label={group.label}
+              subtotal={group.subtotal}
+              entryCount={group.entries.length}
+              entries={group.entries.map((e) => e.entry)}
+              calendarYearId={calendarYearId}
+              addRow={addRow}
+              editRow={editRow}
+              deleteRow={deleteRow}
+              defaultOpen={group.key === nowKey}
+            />
           ))}
-        </Table.THead>
-        <Table.TBody>
-          {groupByMonth(data).map((group) => (
-            <React.Fragment key={group.key}>
-              {/* Month group header row — raw tr/td to bypass TBodyTD <span> wrapper */}
-              <tr className='bg-muted/50 border-t border-b border-border'>
-                <td colSpan={columns.length} className='px-6 py-2'>
-                  <div className='flex items-center justify-between'>
-                    <span className='text-sm font-bold text-foreground tracking-wide uppercase'>
-                      {group.label}
-                    </span>
-                    <NumericFormat
-                      value={group.subtotal}
-                      displayType='text'
-                      thousandSeparator
-                      prefix='$'
-                      decimalScale={2}
-                      fixedDecimalScale
-                      className='text-base font-bold text-primary tabular-nums'
-                    />
-                  </div>
-                </td>
-              </tr>
-              {/* Entry rows — use originalIndex to keep editedRows Map stable */}
-              {group.entries.map(({ originalIndex }) => {
-                const row = table.getRowModel().rows[originalIndex];
-                if (!row) return null;
-                return (
-                  <Table.TBody.TR key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <Table.TBody.TD key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </Table.TBody.TD>
-                    ))}
-                  </Table.TBody.TR>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </Table.TBody>
-      </Table>
+        </div>
+      )}
     </div>
   );
 }
