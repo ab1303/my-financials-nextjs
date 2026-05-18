@@ -8,10 +8,10 @@ export const SOURCE_COLOR_MAP: Record<string, string> = {
   rental: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
   business: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
   interest: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300',
-  other: 'bg-gray-100 text-gray-700 dark:bg-gray-700/40 dark:text-gray-300',
+  other: 'bg-gray-100 text-gray-700 dark:bg-gray-600/60 dark:text-gray-100',
 };
 
-const FALLBACK = 'bg-gray-100 text-gray-700 dark:bg-gray-700/40 dark:text-gray-300';
+const FALLBACK = 'bg-gray-100 text-gray-700 dark:bg-gray-600/60 dark:text-gray-100';
 
 type Props = { sourceName: string };
 

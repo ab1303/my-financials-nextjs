@@ -20,9 +20,9 @@ export function getTableColumns() {
     columnHelper.accessor('amount', {
       size: 180,
       maxSize: 200,
-      header: () => <span>Amount Earned</span>,
+      header: () => <span className='block text-right'>Amount Earned</span>,
       cell: TableCell,
-      meta: { type: 'AMOUNT', propName: 'amount' },
+      meta: { type: 'AMOUNT', propName: 'amount', align: 'right' },
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('incomeSourceName', {
