@@ -151,6 +151,8 @@ export default function IncomeForm({
             prefix='$'
             displayType='text'
             thousandSeparator
+            decimalScale={2}
+            fixedDecimalScale
             value={totalIncome}
             readOnly
           />
@@ -162,3 +164,4 @@ export default function IncomeForm({
     </form>
   );
 }
+
