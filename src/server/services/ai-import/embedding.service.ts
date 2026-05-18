@@ -65,10 +65,12 @@ let initializationPromise: Promise<AITokenUsage> | null = null;
 
 // --- 4. Ensure Category Embeddings ---
 
+type CategoryLike = { name: string };
+
 export async function ensureCategoryEmbeddings(
-  categories: ExpenseCategory[]
+  categories: CategoryLike[]
 ): Promise<AITokenUsage> {
-  const fingerprint = getCategoryFingerprint(categories);
+  const fingerprint = getCategoryFingerprint(categories as ExpenseCategory[]);
 
   // Cache hit — categories haven't changed
   if (cachedEmbeddings?.fingerprint === fingerprint) {
@@ -139,10 +141,10 @@ function getSimilarityThreshold(): number {
 
 // --- 5. Find Best Category Match ---
 
-export async function findBestCategoryMatch(
+export async function findBestCategoryMatch<T extends { name: string }>(
   text: string,
-  categories: ExpenseCategory[]
-): Promise<{ category: ExpenseCategory; similarity: number } | null> {
+  categories: T[]
+): Promise<{ category: T; similarity: number } | null> {
   if (!categories || categories.length === 0) return null;
 
   await ensureCategoryEmbeddings(categories);
@@ -154,7 +156,7 @@ export async function findBestCategoryMatch(
   });
 
   const threshold = getSimilarityThreshold();
-  let bestMatch: ExpenseCategory | null = null;
+  let bestMatch: T | null = null;
   let bestScore = 0;
 
   if (cachedEmbeddings) {
@@ -183,11 +185,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function findBestCategoryMatchWithRetry(
+export async function findBestCategoryMatchWithRetry<T extends { name: string }>(
   text: string,
-  categories: ExpenseCategory[],
+  categories: T[],
   maxRetries: number = 3
-): Promise<{ category: ExpenseCategory; similarity: number } | null> {
+): Promise<{ category: T; similarity: number } | null> {
   const backoffs = [1000, 2000, 4000];
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {

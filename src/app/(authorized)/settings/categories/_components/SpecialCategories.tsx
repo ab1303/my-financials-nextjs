@@ -15,7 +15,7 @@ export default function SpecialCategories() {
       {categories.map((category) => (
         <div
           key={category.id}
-          className='flex items-start justify-between rounded-lg border border-border bg-card p-4 transition-colors'
+          className='flex items-start justify-between rounded-lg border border-border bg-card p-4 select-none cursor-default'
         >
           <div className='flex-1'>
             <div className='flex items-center gap-2'>
@@ -35,6 +35,7 @@ export default function SpecialCategories() {
                   className='h-3 w-3 rounded-full border border-border'
                   style={{ backgroundColor: category.color }}
                   title={`Color: ${category.color}`}
+                  aria-hidden="true"
                 />
               )}
             </div>
