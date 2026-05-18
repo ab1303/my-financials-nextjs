@@ -31,7 +31,9 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
   }));
 
   const resolvedSearchParams = await searchParams;
-  const initialCategory = resolvedSearchParams.category as string | undefined;
+  const initialCategory = resolvedSearchParams.category
+    ? decodeURIComponent(resolvedSearchParams.category as string)
+    : undefined;
   const initialMonth = resolvedSearchParams.month ? Number.parseInt(resolvedSearchParams.month as string, 10) : undefined;
   const initialYear = resolvedSearchParams.year ? Number.parseInt(resolvedSearchParams.year as string, 10) : undefined;
 

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import {
   useReactTable,
@@ -19,7 +18,27 @@ import AIUsageCard from '@/components/AIUsageCard';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
 
-const columnHelper = createColumnHelper<MonthlyExpenseSummary>();
+/**
+ * Returns month numbers in fiscal-year order starting from `fromMonth`.
+ * e.g. fromMonth=7  → [7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6]
+ *      fromMonth=1  → [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+ */
+function getFiscalMonthsOrdered(fromMonth: number): number[] {
+  return Array.from({ length: 12 }, (_, i) => ((fromMonth - 1 + i) % 12) + 1);
+}
+
+/** Returns the calendar year a month belongs to within the fiscal year. */
+function getMonthCalendarYear(
+  month: number,
+  fromMonth: number,
+  fromYear: number,
+): number {
+  return month >= fromMonth ? fromYear : fromYear + 1;
+}
+
+type DisplayRow = MonthlyExpenseSummary & { calendarYear: number };
+
+const columnHelper = createColumnHelper<DisplayRow>();
 
 type ExpenseTableClientProps = {
   calendarYearId: string;
@@ -27,6 +46,8 @@ type ExpenseTableClientProps = {
   dateFrom: Date;
   dateTo: Date;
   calendarLabel: string;
+  fromMonth: number;
+  fromYear: number;
 };
 
 export default function ExpenseTableClient({
@@ -35,16 +56,36 @@ export default function ExpenseTableClient({
   dateFrom,
   dateTo,
   calendarLabel,
+  fromMonth,
+  fromYear,
 }: ExpenseTableClientProps) {
-  const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [selectedMonthYear, setSelectedMonthYear] = useState<number | null>(
+    null,
+  );
+
+  // Build display rows in fiscal-year order, each annotated with its calendar year
+  const orderedRows = useMemo<DisplayRow[]>(() => {
+    const summaryMap = new Map(monthlySummaries.map((s) => [s.month, s]));
+    return getFiscalMonthsOrdered(fromMonth).map((month) => {
+      const summary = summaryMap.get(month) ?? {
+        month,
+        totalAmount: 0,
+        entryCount: 0,
+      };
+      return { ...summary, calendarYear: getMonthCalendarYear(month, fromMonth, fromYear) };
+    });
+  }, [monthlySummaries, fromMonth, fromYear]);
 
   const columns = [
     columnHelper.accessor('month', {
       size: 200,
       header: () => <span>Month</span>,
-      cell: (info) =>
-        MONTHS_MAP.get(info.getValue()) || `Month ${info.getValue()}`,
+      cell: (info) => {
+        const month = info.getValue();
+        const year = info.row.original.calendarYear;
+        return `${MONTHS_MAP.get(month) ?? `Month ${month}`} ${year}`;
+      },
     }),
     columnHelper.accessor('totalAmount', {
       size: 200,
@@ -66,12 +107,18 @@ export default function ExpenseTableClient({
       size: 150,
       header: () => <span>Category Breakdown</span>,
       cell: ({ row }) => {
+        const month = row.original.month;
+        const year = row.original.calendarYear;
+        const label = `${MONTHS_MAP.get(month) ?? `Month ${month}`} ${year}`;
         return (
           <div className='flex justify-center'>
             <button
-              onClick={() => setSelectedMonth(row.original.month)}
+              onClick={() => {
+                setSelectedMonth(month);
+                setSelectedMonthYear(year);
+              }}
               className='text-primary hover:text-primary/80 transition-colors'
-              aria-label={`View category breakdown for ${MONTHS_MAP.get(row.original.month)}`}
+              aria-label={`View category breakdown for ${label}`}
             >
               <List className='h-5 w-5' />
             </button>
@@ -81,18 +128,22 @@ export default function ExpenseTableClient({
     }),
   ];
 
-  const table = useReactTable<MonthlyExpenseSummary>({
-    data: monthlySummaries,
+  const table = useReactTable<DisplayRow>({
+    data: orderedRows,
     columns,
     getCoreRowModel: getCoreRowModel(),
     columnResizeMode: 'onChange',
   });
 
-  // Calculate total for footer
-  const totalExpenses = monthlySummaries.reduce(
-    (sum, month) => sum + month.totalAmount,
+  const totalExpenses = orderedRows.reduce(
+    (sum, row) => sum + row.totalAmount,
     0,
   );
+
+  const selectedMonthLabel =
+    selectedMonth !== null && selectedMonthYear !== null
+      ? `${MONTHS_MAP.get(selectedMonth) ?? `Month ${selectedMonth}`} ${selectedMonthYear}`
+      : '';
 
   return (
     <>
@@ -187,16 +238,19 @@ export default function ExpenseTableClient({
       </div>
 
       {/* Category Breakdown Modal */}
-      {selectedMonth !== null && (
+      {selectedMonth !== null && selectedMonthYear !== null && (
         <CategoryBreakdownModal
           calendarYearId={calendarYearId}
           month={selectedMonth}
-          monthName={MONTHS_MAP.get(selectedMonth) || `Month ${selectedMonth}`}
+          monthName={selectedMonthLabel}
+          monthYear={selectedMonthYear}
           isOpen={true}
-          onClose={() => setSelectedMonth(null)}
+          onClose={() => {
+            setSelectedMonth(null);
+            setSelectedMonthYear(null);
+          }}
         />
       )}
-
     </>
   );
 }

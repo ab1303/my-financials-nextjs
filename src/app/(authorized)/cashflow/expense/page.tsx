@@ -125,6 +125,8 @@ export default async function ExpensePage({
                 )
               }
               calendarLabel={selectedCalendarYear.description}
+              fromMonth={selectedCalendarYear.fromMonth}
+              fromYear={selectedCalendarYear.fromYear}
             />
           </Suspense>
         ) : (

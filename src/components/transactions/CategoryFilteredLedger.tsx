@@ -19,7 +19,19 @@ function formatMonthLabel(month: number) {
 }
 
 function formatCategoryLabel(category: string) {
-  return category
+  // Decode if it's still URL-encoded
+  let decodedCategory = category;
+  try {
+    // Check if the string looks encoded (contains % followed by hex)
+    if (/%[0-9A-F]{2}/i.test(category)) {
+      decodedCategory = decodeURIComponent(category);
+    }
+  } catch {
+    // If decode fails, use original
+    decodedCategory = category;
+  }
+
+  return decodedCategory
     .split(/[-_\s]+/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())

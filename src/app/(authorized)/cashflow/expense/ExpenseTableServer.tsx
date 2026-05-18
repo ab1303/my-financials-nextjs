@@ -7,6 +7,8 @@ export type ExpenseTableServerProps = {
   dateFrom: Date;
   dateTo: Date;
   calendarLabel: string;
+  fromMonth: number;
+  fromYear: number;
 };
 
 export default async function ExpenseTableServer({
@@ -15,6 +17,8 @@ export default async function ExpenseTableServer({
   dateFrom,
   dateTo,
   calendarLabel,
+  fromMonth,
+  fromYear,
 }: ExpenseTableServerProps) {
   const expenseData = await getExpenseDataHandler(calendarYearId, userId);
 
@@ -39,6 +43,8 @@ export default async function ExpenseTableServer({
       dateFrom={dateFrom}
       dateTo={dateTo}
       calendarLabel={calendarLabel}
+      fromMonth={fromMonth}
+      fromYear={fromYear}
     />
   );
 }

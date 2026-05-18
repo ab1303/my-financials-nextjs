@@ -154,6 +154,10 @@ type CategoryBreakdownModalProps = {
 
 
 
+  monthYear: number;
+
+
+
   isOpen: boolean;
 
 
@@ -531,6 +535,10 @@ function CategoryBreakdownContent({
 
 
   monthName,
+
+
+
+  monthYear,
 
 
 
@@ -1350,7 +1358,7 @@ function CategoryBreakdownContent({
 
 
 
-                          href={buildCategoryTransactionHref(entry.categoryName, month)}
+                          href={buildCategoryTransactionHref(entry.categoryName, month, monthYear)}
 
 
 

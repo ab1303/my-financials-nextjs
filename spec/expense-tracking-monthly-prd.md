@@ -87,7 +87,9 @@ The feature consists of:
 ### 4.1 Monthly expense summary table (Priority: High)
 
 - **Display monthly expense table** (Priority: High)
-  - Table displays 12 rows (January through December) for the selected fiscal year
+  - Table displays 12 rows ordered by the calendar year's start month (e.g., July–June for FISCAL, January–December for ANNUAL)
+  - Month labels include the calendar year to eliminate ambiguity (e.g., "JULY 2024", "AUGUST 2024", … "JUNE 2025")
+  - Row ordering follows the selected calendar year's `fromMonth`: rows start at `fromMonth` and wrap around (e.g., FISCAL fromMonth=7 → July, August, …, December, January, …, June)
   - Columns: Month, Total Expense, Category Breakdown (icon button)
   - Footer row displays annual total (sum of all 12 months)
   - Total Expense column shows auto-calculated sum of all category entries for that month
