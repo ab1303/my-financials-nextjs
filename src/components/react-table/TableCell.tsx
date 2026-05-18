@@ -165,6 +165,8 @@ export const TableCell = <TData, TValue>({
           prefix='$'
           displayType='text'
           thousandSeparator
+          decimalScale={2}
+          fixedDecimalScale
           value={value as number}
         />
       ),
@@ -189,3 +191,4 @@ export const TableCell = <TData, TValue>({
   //   tableMeta?.updateData(row.index, column.id, e.target.value, e.target.validity.valid);
   // };
 };
+

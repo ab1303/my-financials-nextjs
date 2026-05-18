@@ -95,9 +95,9 @@ export default async function IncomePage({
             }
           >
             {selectedCalendarYear && (
-              <div className='font-mono text-muted-foreground mb-3 text-sm'>
+              <h2 className='text-base font-semibold text-foreground mb-3'>
                 {selectedCalendarYear.description} Income
-              </div>
+              </h2>
             )}
 
             <IncomeTableServer calendarYearId={selectedCalendarYearId} />

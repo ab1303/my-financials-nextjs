@@ -2,6 +2,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 
 import { TableCell, EditCell } from '@/components/react-table';
 import type { IncomeEntryType } from '../_types';
+import SourceBadge from '../_components/SourceBadge';
 
 const columnHelper = createColumnHelper<IncomeEntryType>();
 
@@ -27,10 +28,7 @@ export function getTableColumns() {
     columnHelper.accessor('incomeSourceName', {
       size: 180,
       header: () => <span>Income Source</span>,
-      cell: TableCell,
-      meta: {
-        propName: 'incomeSourceName',
-      },
+      cell: ({ getValue }) => <SourceBadge sourceName={getValue()} />,
       footer: (props) => props.column.id,
     }),
     columnHelper.display({
