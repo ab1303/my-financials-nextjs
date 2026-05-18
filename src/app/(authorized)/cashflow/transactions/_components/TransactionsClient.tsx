@@ -3,10 +3,13 @@
 import { useState, useCallback, type ReactNode } from 'react';
 import { History, GitMerge } from 'lucide-react';
 import Link from 'next/link';
+
+import { trpc } from '@/server/trpc/client';
 import CSVImportWizard from './csv/CSVImportWizard';
 import AIImportWizard from './ai/AIImportWizard';
 import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
 import ImportSessionHistory from '@/components/transactions/ImportSessionHistory';
+import { CategoryTransactionFilters } from './CategoryTransactionFilters';
 
 interface BankAccount {
   id: string;
@@ -47,9 +50,17 @@ function ImportCard({ title, description, onClick, icon }: ImportCardProps) {
 
 interface Props {
   bankAccounts: BankAccount[];
+  initialCategory?: string;
+  initialMonth?: number;
+  initialYear?: number;
 }
 
-export default function TransactionsClient({ bankAccounts }: Props) {
+export default function TransactionsClient({
+  bankAccounts,
+  initialCategory,
+  initialMonth,
+  initialYear,
+}: Props) {
   const [csvOpen, setCsvOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -58,6 +69,8 @@ export default function TransactionsClient({ bankAccounts }: Props) {
   const handleImportComplete = useCallback(() => {
     setRefreshKey((key) => key + 1);
   }, []);
+
+  const { data: allCategories } = trpc.expenseCategory.getAll.useQuery();
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
@@ -132,8 +145,26 @@ export default function TransactionsClient({ bankAccounts }: Props) {
         />
       </div>
 
+      {(initialCategory || initialMonth !== undefined || initialYear !== undefined) && (
+        <div className="mt-10 border-b border-border pb-4 dark:border-border">
+          <h2 className="mb-4 text-lg font-semibold text-foreground dark:text-foreground">Filtered View</h2>
+          <CategoryTransactionFilters
+            allCategories={allCategories ?? []}
+            initialCategory={initialCategory}
+            initialMonth={initialMonth}
+            initialYear={initialYear}
+          />
+        </div>
+      )}
+
       <div className="mt-10">
-        <TransactionLedgerTable bankAccounts={bankAccounts} refreshKey={refreshKey} />
+        <TransactionLedgerTable
+          bankAccounts={bankAccounts}
+          refreshKey={refreshKey}
+          initialCategory={initialCategory}
+          initialMonth={initialMonth}
+          initialYear={initialYear}
+        />
       </div>
 
       <CSVImportWizard
@@ -152,4 +183,3 @@ export default function TransactionsClient({ bankAccounts }: Props) {
     </main>
   );
 }
-

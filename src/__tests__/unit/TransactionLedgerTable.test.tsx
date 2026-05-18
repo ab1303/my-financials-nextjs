@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
 
 const mockRefetch = vi.fn();
 const mockMutate = vi.fn();
@@ -8,6 +7,16 @@ const mockUseAllQuery = vi.fn();
 const mockUseFilterOptionsQuery = vi.fn();
 const mockUseMutation = vi.fn();
 const mockSearchDebitTransactionsFetch = vi.fn();
+const mockCategoryFilteredLedger = vi.fn();
+
+vi.mock('@/components/transactions/CategoryFilteredLedger', () => ({
+  CategoryFilteredLedger: (props: { category: string; month: number; year: number }) => {
+    mockCategoryFilteredLedger(props);
+    return <div data-testid='category-filtered-ledger'>Filtered Ledger</div>;
+  },
+}));
+
+import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
 
 vi.mock('react-select/async', () => ({
   default: (props: Record<string, unknown>) => (
@@ -73,9 +82,19 @@ vi.mock('@/server/trpc/client', () => ({
         useMutation: (...args: unknown[]) => mockUseMutation(...args),
       },
     },
+    categoryTransactions: {
+      getByCategory: {
+        useQuery: (...args: unknown[]) => mockCategoryFilteredLedger(...args),
+      },
+    },
     transfer: {
       getUnmatchedCount: {
         useQuery: () => ({ data: 0, isLoading: false }),
+      },
+    },
+    transferRule: {
+      createRuleFromPair: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
     },
     transactionClearing: {
@@ -122,12 +141,13 @@ describe('TransactionLedgerTable', () => {
       isPending: false,
     });
     mockSearchDebitTransactionsFetch.mockResolvedValue([]);
+    mockCategoryFilteredLedger.mockImplementation(() => null);
   });
 
   it('renders tab bar with 5 tabs', () => {
     render(<TransactionLedgerTable bankAccounts={bankAccounts} />);
 
-    expect(screen.getByRole('button', { name: /all/i })).toBeDefined();
+    expect(screen.getAllByRole('button', { name: /^all$/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /expenses/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /income/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /excluded/i })).toBeDefined();
@@ -202,6 +222,21 @@ describe('TransactionLedgerTable', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /expenses/i })).toHaveClass('border-teal-500');
     });
+  });
+
+  it('renders filtered ledger when category props are provided', () => {
+    render(
+      <TransactionLedgerTable
+        bankAccounts={bankAccounts}
+        initialCategory='groceries'
+        initialMonth={2}
+        initialYear={2025}
+      />,
+    );
+
+    expect(screen.getByTestId('category-filtered-ledger')).toBeDefined();
+    expect(mockUseAllQuery).not.toHaveBeenCalled();
+    expect(mockUseFilterOptionsQuery).not.toHaveBeenCalled();
   });
 
   it('calls refetch when refreshKey prop changes', async () => {

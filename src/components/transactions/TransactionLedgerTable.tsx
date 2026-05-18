@@ -7,6 +7,7 @@ import { trpc } from '@/server/trpc/client';
 import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
+import { CategoryFilteredLedger } from './CategoryFilteredLedger';
 import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer';
 import SmartMatchDialog from '@/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog';
 import UnmatchedTransfersBadge from '@/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge';
@@ -35,6 +36,9 @@ type GetAllInput = {
 interface TransactionLedgerTableProps {
   bankAccounts: Array<{ id: string; name: string; bankName: string }>;
   refreshKey?: number;
+  initialCategory?: string;
+  initialMonth?: number;
+  initialYear?: number;
 }
 
 const PAGE_SIZE = 50;
@@ -68,7 +72,29 @@ function parseAmount(value: string) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-export default function TransactionLedgerTable({ bankAccounts, refreshKey }: TransactionLedgerTableProps) {
+export default function TransactionLedgerTable({
+  bankAccounts,
+  refreshKey,
+  initialCategory,
+  initialMonth,
+  initialYear,
+}: TransactionLedgerTableProps) {
+  const isCategoryFilteredView = !!(initialCategory && initialMonth !== undefined);
+
+  if (isCategoryFilteredView) {
+    return (
+      <CategoryFilteredLedger
+        category={initialCategory}
+        month={initialMonth!}
+        year={initialYear ?? new Date().getFullYear()}
+      />
+    );
+  }
+
+  return <TransactionLedgerBody bankAccounts={bankAccounts} refreshKey={refreshKey} />;
+}
+
+function TransactionLedgerBody({ bankAccounts, refreshKey }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey'>) {
   const defaultFY = getPresetDateRange('this-fy')!;
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [page, setPage] = useState(1);

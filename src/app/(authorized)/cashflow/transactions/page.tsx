@@ -10,7 +10,11 @@ export const metadata: Metadata = {
   title: 'Transactions',
 };
 
-export default async function TransactionsPage() {
+interface PageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function TransactionsPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect('/auth/signin');
 
@@ -26,5 +30,17 @@ export default async function TransactionsPage() {
     bankName: a.bank?.name ?? 'Unknown Bank',
   }));
 
-  return <TransactionsClient bankAccounts={bankAccounts} />;
+  const resolvedSearchParams = await searchParams;
+  const initialCategory = resolvedSearchParams.category as string | undefined;
+  const initialMonth = resolvedSearchParams.month ? Number.parseInt(resolvedSearchParams.month as string, 10) : undefined;
+  const initialYear = resolvedSearchParams.year ? Number.parseInt(resolvedSearchParams.year as string, 10) : undefined;
+
+  return (
+    <TransactionsClient
+      bankAccounts={bankAccounts}
+      initialCategory={initialCategory}
+      initialMonth={initialMonth}
+      initialYear={initialYear}
+    />
+  );
 }

@@ -19,6 +19,7 @@ import { incomeSourceRouter } from './income-source';
 import { expenseCategoryRouter } from './expense-category';
 import { specialCategoryRouter } from './special-category';
 import { bankAccountRouter } from './bank-account';
+import { categoryTransactionsRouter } from './category-transactions';
 
 export const appRouter = router({
   example: exampleRouter,
@@ -41,7 +42,9 @@ export const appRouter = router({
   expenseCategory: expenseCategoryRouter,
   specialCategory: specialCategoryRouter,
   bankAccount: bankAccountRouter,
+  categoryTransactions: categoryTransactionsRouter,
 });
 
 // export type definition of API
 export type AppRouter = typeof appRouter;
+
