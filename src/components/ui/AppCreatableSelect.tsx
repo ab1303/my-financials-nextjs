@@ -24,7 +24,14 @@ export function AppCreatableSelect<
 
   return (
     <CreatableSelect
-      styles={styleOverrides ? { ...baseStyles, ...styleOverrides } : baseStyles}
+      // menuPosition:'fixed' escapes overflow-y:auto clipping without needing
+      // a React portal. Works because dialog.tsx uses transform-free centering
+      // (inset-0 + margin:auto), so position:fixed is relative to the viewport.
+      menuPosition='fixed'
+      styles={{
+        ...(styleOverrides ? { ...baseStyles, ...styleOverrides } : baseStyles),
+        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+      }}
       {...props}
     />
   );

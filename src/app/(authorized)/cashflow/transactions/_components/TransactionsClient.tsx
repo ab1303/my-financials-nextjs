@@ -4,12 +4,11 @@ import { useState, useCallback, type ReactNode } from 'react';
 import { History, GitMerge } from 'lucide-react';
 import Link from 'next/link';
 
-import { trpc } from '@/server/trpc/client';
 import CSVImportWizard from './csv/CSVImportWizard';
 import AIImportWizard from './ai/AIImportWizard';
 import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
 import ImportSessionHistory from '@/components/transactions/ImportSessionHistory';
-import { CategoryTransactionFilters } from './CategoryTransactionFilters';
+import { CategoryFilteredLedger } from '@/components/transactions/CategoryFilteredLedger';
 
 interface BankAccount {
   id: string;
@@ -70,8 +69,20 @@ export default function TransactionsClient({
     setRefreshKey((key) => key + 1);
   }, []);
 
-  const { data: allCategories } = trpc.expenseCategory.getAll.useQuery();
+  // Drill-down mode: category + month present → show focused view only
+  if (initialCategory && initialMonth !== undefined) {
+    return (
+      <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <CategoryFilteredLedger
+          category={initialCategory}
+          month={initialMonth}
+          year={initialYear ?? new Date().getFullYear()}
+        />
+      </main>
+    );
+  }
 
+  // Normal mode: full transaction management
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex items-start justify-between">
@@ -145,25 +156,10 @@ export default function TransactionsClient({
         />
       </div>
 
-      {(initialCategory || initialMonth !== undefined || initialYear !== undefined) && (
-        <div className="mt-10 border-b border-border pb-4 dark:border-border">
-          <h2 className="mb-4 text-lg font-semibold text-foreground dark:text-foreground">Filtered View</h2>
-          <CategoryTransactionFilters
-            allCategories={allCategories ?? []}
-            initialCategory={initialCategory}
-            initialMonth={initialMonth}
-            initialYear={initialYear}
-          />
-        </div>
-      )}
-
       <div className="mt-10">
         <TransactionLedgerTable
           bankAccounts={bankAccounts}
           refreshKey={refreshKey}
-          initialCategory={initialCategory}
-          initialMonth={initialMonth}
-          initialYear={initialYear}
         />
       </div>
 

@@ -5,8 +5,6 @@ import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
-  DialogHeader as ShadcnDialogHeader,
-  DialogFooter as ShadcnDialogFooter,
   DialogTitle,
 } from '@/components/ui/dialog';
 
@@ -30,7 +28,7 @@ const ModalRoot = ({
         if (!open) onClose();
       }}
     >
-      <DialogContent className={cn('max-w-2xl', panelClassName)}>
+      <DialogContent className={cn('max-w-2xl flex flex-col max-h-[90vh]', panelClassName)}>
         {children}
       </DialogContent>
     </Dialog>
@@ -70,7 +68,9 @@ const Body = ({
     flowbite: 'py-4',
   };
   return (
-    <div className={cn(variantClasses[variant], className)}>{children}</div>
+    <div className={cn('flex-1 min-h-0 overflow-y-auto', variantClasses[variant], className)}>
+      {children}
+    </div>
   );
 };
 
