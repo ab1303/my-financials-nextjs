@@ -17,6 +17,7 @@ import type {
   AccountBalance,
   SnapshotTotals,
 } from '@/types/bank-asset.types';
+import { AppCreatableSelect } from '@/components/ui/AppCreatableSelect';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/Modal';
@@ -108,6 +109,12 @@ export default function BankAssetsClient({ initialData }: Props) {
   } | null>(null);
   const [newAccountName, setNewAccountName] = useState('');
   const [accountNameError, setAccountNameError] = useState('');
+  const [addingEntryForBankId, setAddingEntryForBankId] = useState<string | null>(
+    null,
+  );
+  const [newEntryAccountId, setNewEntryAccountId] = useState<string>('');
+  const [newEntryBalance, setNewEntryBalance] = useState<number>(0);
+  const [newEntryError, setNewEntryError] = useState<string>('');
 
   // Update selectedYear when initialData changes (e.g., type switch)
   useEffect(() => {
@@ -168,6 +175,10 @@ export default function BankAssetsClient({ initialData }: Props) {
   const { data: banks = [] } = trpc.business.getBusinessesByType.useQuery({
     type: 'BANK',
   });
+  const { data: allBankAccounts = [] } = trpc.bankAsset.getBankAccounts.useQuery(
+    {},
+    { enabled: !!snapshot },
+  );
 
   // Loading state - true only if query is actively fetching
   const isLoading = isLoadingSnapshots && !!selectedYear?.id;
@@ -199,6 +210,16 @@ export default function BankAssetsClient({ initialData }: Props) {
       label: selectedCalendarYearFull.description,
     };
   }, [selectedCalendarYearFull]);
+
+  const accountsAlreadyInSnapshot = useMemo(
+    () => new Set(snapshot?.balanceRecords.map((r) => r.accountId) ?? []),
+    [snapshot],
+  );
+
+  const getAddableAccountsForBank = (bankId: string) =>
+    allBankAccounts
+      .filter((acc) => acc.bankId === bankId && !accountsAlreadyInSnapshot.has(acc.id))
+      .map((acc) => ({ value: acc.id, label: acc.name }));
 
   // Update entry mutation
   const updateEntryMutation = trpc.bankAsset.updateEntry.useMutation({
@@ -242,6 +263,36 @@ export default function BankAssetsClient({ initialData }: Props) {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to delete snapshot');
+    },
+  });
+
+  const createAccountForEntryMutation = trpc.bankAsset.createBankAccount.useMutation({
+    onSuccess: () => {
+      utils.bankAsset.getBankAccounts.invalidate();
+    },
+    onError: (error) => {
+      toast.error((error as any)?.message || 'Failed to create account');
+    },
+  });
+
+  const addEntryToSnapshotMutation = trpc.bankAsset.addEntryToSnapshot.useMutation({
+    onSuccess: () => {
+      toast.success('Account added to snapshot!');
+      setAddingEntryForBankId(null);
+      setNewEntryAccountId('');
+      setNewEntryBalance(0);
+      setNewEntryError('');
+      utils.bankAsset.getSnapshots.invalidate();
+      utils.bankAsset.getMostRecentSnapshot.invalidate();
+      utils.bankAsset.getSnapshotTotals.invalidate();
+    },
+    onError: (error: any) => {
+      const msg: string = error?.message || 'Failed to add account to snapshot';
+      if (msg.toLowerCase().includes('unique') || msg.toLowerCase().includes('already')) {
+        setNewEntryError('This account is already in the snapshot.');
+      } else {
+        toast.error(msg);
+      }
     },
   });
 
@@ -375,6 +426,46 @@ export default function BankAssetsClient({ initialData }: Props) {
     setEditingAccountName(null);
     setNewAccountName('');
     setAccountNameError('');
+  };
+
+  const handleOpenAddEntry = (bankId: string) => {
+    setAddingEntryForBankId(bankId);
+    setNewEntryAccountId('');
+    setNewEntryBalance(0);
+    setNewEntryError('');
+  };
+
+  const handleCancelAddEntry = () => {
+    setAddingEntryForBankId(null);
+    setNewEntryAccountId('');
+    setNewEntryBalance(0);
+    setNewEntryError('');
+  };
+
+  const handleSaveAddEntry = () => {
+    if (!snapshot || !addingEntryForBankId) return;
+    if (!newEntryAccountId) {
+      setNewEntryError('Please select or create an account.');
+      return;
+    }
+    setNewEntryError('');
+    addEntryToSnapshotMutation.mutate({
+      snapshotId: snapshot.id,
+      accountId: newEntryAccountId,
+      balance: newEntryBalance,
+    });
+  };
+
+  const handleCreateAccountForEntry = async (
+    bankId: string,
+    accountName: string,
+  ): Promise<string> => {
+    const result = await createAccountForEntryMutation.mutateAsync({
+      name: accountName,
+      bankId,
+    });
+    if (!result?.data?.account?.id) throw new Error('Failed to create account');
+    return result.data.account.id;
   };
 
   const handleAccountNameKeyDown = (
@@ -730,6 +821,99 @@ export default function BankAssetsClient({ initialData }: Props) {
                         </tbody>
                       </table>
                     </div>
+                    {addingEntryForBankId === bank.bankId ? (
+                      <div className='mt-3 p-3 border border-dashed border-border rounded-lg bg-muted/30'>
+                        <div className='flex flex-col gap-3 sm:flex-row sm:items-end'>
+                          <div className='flex-1'>
+                            <label className='block text-xs font-medium text-muted-foreground mb-1'>
+                              Account
+                            </label>
+                            <AppCreatableSelect
+                              inputId={`add-entry-account-${bank.bankId}`}
+                              options={getAddableAccountsForBank(bank.bankId)}
+                              value={
+                                newEntryAccountId
+                                  ? {
+                                      value: newEntryAccountId,
+                                      label:
+                                        allBankAccounts.find(
+                                          (a) => a.id === newEntryAccountId,
+                                        )?.name ?? newEntryAccountId,
+                                    }
+                                  : null
+                              }
+                              onChange={(option) => {
+                                setNewEntryAccountId(option?.value ?? '');
+                                setNewEntryError('');
+                              }}
+                              onCreateOption={(inputValue) => {
+                                handleCreateAccountForEntry(bank.bankId, inputValue)
+                                  .then((newAccountId) => {
+                                    setNewEntryAccountId(newAccountId);
+                                    toast.success(`Account "${inputValue}" created!`);
+                                  })
+                                  .catch(() => {});
+                              }}
+                              isClearable
+                              placeholder='Select or type to create...'
+                              isLoading={createAccountForEntryMutation.isPending}
+                            />
+                          </div>
+                          <div className='w-40'>
+                            <label className='block text-xs font-medium text-muted-foreground mb-1'>
+                              Balance
+                            </label>
+                            <NumericFormat
+                              value={newEntryBalance}
+                              onValueChange={(values) =>
+                                setNewEntryBalance(values.floatValue ?? 0)
+                              }
+                              thousandSeparator=','
+                              prefix='$'
+                              decimalScale={2}
+                              fixedDecimalScale
+                              className='w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
+                            />
+                          </div>
+                          <div className='flex gap-2'>
+                            <Button
+                              type='button'
+                              variant='default'
+                              onClick={handleSaveAddEntry}
+                              disabled={addEntryToSnapshotMutation.isPending}
+                            >
+                              <Check className='w-4 h-4 mr-1' />
+                              {addEntryToSnapshotMutation.isPending
+                                ? 'Adding...'
+                                : 'Add'}
+                            </Button>
+                            <Button
+                              type='button'
+                              variant='secondary'
+                              onClick={handleCancelAddEntry}
+                              disabled={addEntryToSnapshotMutation.isPending}
+                            >
+                              <X className='w-4 h-4 mr-1' />
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                        {newEntryError && (
+                          <p className='mt-2 text-xs text-red-600'>{newEntryError}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className='mt-3 flex justify-end'>
+                        <Button
+                          type='button'
+                          variant='secondary'
+                          onClick={() => handleOpenAddEntry(bank.bankId)}
+                        >
+                          <Plus className='w-4 h-4 mr-1' />
+                          Add Account
+                        </Button>
+                      </div>
+                    )}
                   </Disclosure.Panel>
                 </div>
               )}

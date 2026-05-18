@@ -296,6 +296,28 @@ export const deleteBankAssetEntry = async (entryId: string, userId: string) => {
   });
 };
 
+export const addEntryToSnapshot = async (
+  snapshotId: string,
+  accountId: string,
+  balance: number,
+  userId: string,
+) => {
+  const snapshot = await prisma.bankBalanceSnapshot.findFirst({
+    where: { id: snapshotId, userId },
+  });
+  if (!snapshot) throw new Error('Snapshot not found or does not belong to user');
+
+  const account = await prisma.bankAccount.findFirst({
+    where: { id: accountId, userId },
+  });
+  if (!account) throw new Error('Account not found or does not belong to user');
+
+  return await prisma.bankBalanceRecord.create({
+    data: { snapshotId, accountId, balance },
+    include: { account: { include: { bank: true } } },
+  });
+};
+
 export const deleteBankAssetSnapshot = async (
   snapshotId: string,
   userId: string,

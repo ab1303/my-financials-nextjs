@@ -10,6 +10,7 @@ import {
   updateEntryHandler,
   deleteEntryHandler,
   deleteSnapshotHandler,
+  addEntryToSnapshotHandler,
 } from '@/server/controllers/bank-asset.controller';
 import {
   createBankAccountSchema,
@@ -17,6 +18,7 @@ import {
   updateBankAssetEntrySchema,
   deleteSnapshotSchema,
   deleteEntrySchema,
+  addEntryToSnapshotSchema,
   getSnapshotsSchema,
   getSnapshotByIdSchema,
   getBankAccountsSchema,
@@ -85,5 +87,11 @@ export const bankAssetRouter = router({
     .input(deleteSnapshotSchema)
     .mutation(({ input, ctx: { session } }) =>
       deleteSnapshotHandler({ input, userId: session.user.id }),
+    ),
+
+  addEntryToSnapshot: protectedProcedure
+    .input(addEntryToSnapshotSchema)
+    .mutation(({ input, ctx: { session } }) =>
+      addEntryToSnapshotHandler({ input, userId: session.user.id }),
     ),
 });
