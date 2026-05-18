@@ -84,12 +84,16 @@ const reportItems: NavItem[] = [
 ];
 
 const settingsItems: NavItem[] = [
-  { name: 'Profile', href: '/settings/profile', icon: User },
-  { name: 'Bank(s)', href: '/settings/banks', icon: Landmark },
   { name: 'Calendar Year(s)', href: '/settings/calendar', icon: Calendar },
   { name: 'AI Spend', href: '/settings/ai-usage', icon: Sparkles },
   { name: 'Categories', href: '/settings/categories', icon: Tag },
-  { name: 'Transfer Rules', href: '/settings/transfer-rules', icon: GitMerge },
+  { name: 'Bank Institutions', href: '/settings/banks', icon: Landmark },
+];
+
+const accountItems: NavItem[] = [
+  { name: 'Profile', href: '/account/profile', icon: User },
+  { name: 'Bank Accounts', href: '/account/bank-accounts', icon: Landmark },
+  { name: 'Transfer Rules', href: '/account/transfer-rules', icon: GitMerge },
 ];
 
 function NavGroupItem({
@@ -235,6 +239,12 @@ export default function SideNav({
       icon: BarChart3,
       items: reportItems,
       defaultOpen: pathname.startsWith('/reports'),
+    },
+    {
+      name: 'Account',
+      icon: User,
+      items: accountItems,
+      defaultOpen: pathname.startsWith('/account'),
     },
   ];
 

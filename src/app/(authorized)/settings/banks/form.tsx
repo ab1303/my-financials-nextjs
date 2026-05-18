@@ -17,7 +17,6 @@ import { Card, AddressComponent, Button } from '@/components';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 import type { BankType } from '@/types';
-import BankAccountsSection from './_components/BankAccountsSection';
 
 type BankOptionType = {
   value: BankType;
@@ -266,9 +265,6 @@ export default function BanksForm() {
         </Card.Body>
       </Card>
 
-      <div className='mt-6'>
-        <BankAccountsSection />
-      </div>
     </>
   );
 }
