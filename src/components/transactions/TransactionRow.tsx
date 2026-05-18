@@ -159,9 +159,16 @@ export default function TransactionRow({
 
   const loadLinkOptions = useCallback(
     async (inputValue: string): Promise<LinkOption[]> => {
+      // Default to last 120 days to show recent expenses; user can search further back if needed
+      const dateTo = new Date();
+      const dateFrom = new Date(dateTo);
+      dateFrom.setDate(dateFrom.getDate() - 120);
+
       const matches = await utils.transactionLedger.searchDebitTransactions.fetch({
         search: inputValue.trim() || undefined,
-        limit: 10,
+        limit: 50,
+        dateFrom: dateFrom.toISOString().slice(0, 10),
+        dateTo: dateTo.toISOString().slice(0, 10),
       });
 
       return matches.map((match) => ({

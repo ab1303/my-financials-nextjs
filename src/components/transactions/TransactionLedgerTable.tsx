@@ -88,6 +88,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
     amount: number;
     type: 'DEBIT' | 'CREDIT';
     date: string;
+    bankAccountId: string | null;
     bankAccountName: string | null;
   } | null>(null);
   const [smartMatchPair, setSmartMatchPair] = useState<{
@@ -184,7 +185,8 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
     setPage(1);
   }, []);
 
-  const loading = isLoading || isFetching;
+  const loading = isLoading; // Only blank the table on initial load; background refetches use isFetching
+  const syncing = !isLoading && isFetching; // Background sync — show subtle indicator without blanking table
   const transactions = data?.transactions ?? [];
   const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
   const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
@@ -303,7 +305,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
           <p className="text-sm text-gray-500 dark:text-gray-400">No transactions found</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+        <div className={`overflow-x-auto rounded-xl border bg-white dark:bg-gray-900 transition-colors ${syncing ? 'border-teal-400 dark:border-teal-600' : 'border-gray-200 dark:border-gray-700'}`}>
           <table className="min-w-full">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
@@ -344,6 +346,7 @@ export default function TransactionLedgerTable({ bankAccounts, refreshKey }: Tra
                             amount: transaction.amount,
                             type: transaction.type as 'DEBIT' | 'CREDIT',
                             date: transaction.date,
+                            bankAccountId: transaction.bankAccountId,
                             bankAccountName: transaction.bankAccountName,
                           })
                       : undefined

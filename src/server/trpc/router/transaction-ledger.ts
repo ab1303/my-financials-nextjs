@@ -523,7 +523,9 @@ export const transactionLedgerRouter = router({
     .input(
       z.object({
         search: z.string().optional(),
-        limit: z.number().int().min(1).max(20).default(10),
+        limit: z.number().int().min(1).max(50).default(50),
+        dateFrom: z.string().optional(), // ISO date string YYYY-MM-DD
+        dateTo: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -539,6 +541,14 @@ export const transactionLedgerRouter = router({
                   { description: { contains: input.search.trim(), mode: 'insensitive' } },
                   { category: { contains: input.search.trim(), mode: 'insensitive' } },
                 ],
+              }
+            : {}),
+          ...(input.dateFrom || input.dateTo
+            ? {
+                date: {
+                  ...(input.dateFrom ? { gte: new Date(`${input.dateFrom}T00:00:00`) } : {}),
+                  ...(input.dateTo ? { lte: new Date(`${input.dateTo}T23:59:59`) } : {}),
+                },
               }
             : {}),
         },

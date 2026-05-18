@@ -61,13 +61,18 @@ export const transferRouter = router({
     }),
 
   searchCandidates: protectedProcedure
-    .input(z.object({ transactionId: z.string().min(1), search: z.string().optional() }))
+    .input(z.object({
+      transactionId: z.string().min(1),
+      search: z.string().optional(),
+      bankAccountId: z.string().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       return searchTransferCandidates({
         prisma: ctx.prisma,
         transactionId: input.transactionId,
         userId: ctx.session.user.id,
         search: input.search,
+        bankAccountId: input.bankAccountId,
       });
     }),
 

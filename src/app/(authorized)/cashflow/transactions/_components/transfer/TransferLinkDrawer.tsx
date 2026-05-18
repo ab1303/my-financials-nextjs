@@ -16,11 +16,24 @@ export default function TransferLinkDrawer({
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [manualSearch, setManualSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [filterBankAccountId, setFilterBankAccountId] = useState<string>('');
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(manualSearch), 300);
     return () => clearTimeout(t);
   }, [manualSearch]);
+
+  // Reset state when drawer opens
+  useEffect(() => {
+    if (open) {
+      setSelectedCandidateId(null);
+      setManualSearch('');
+      setDebouncedSearch('');
+      setFilterBankAccountId('');
+    }
+  }, [open]);
+
+  const bankAccountsQuery = trpc.bankAccount.list.useQuery(undefined, { enabled: open });
 
   const candidatesQuery = trpc.transfer.getCandidates.useQuery(
     { transactionId: sourceTransaction.id },
@@ -30,8 +43,12 @@ export default function TransferLinkDrawer({
   const isAutoEmpty = candidatesQuery.data?.length === 0;
 
   const searchQuery = trpc.transfer.searchCandidates.useQuery(
-    { transactionId: sourceTransaction.id, search: debouncedSearch || undefined },
-    { enabled: open && (isAutoEmpty || debouncedSearch.trim().length > 0) },
+    {
+      transactionId: sourceTransaction.id,
+      search: debouncedSearch || undefined,
+      bankAccountId: filterBankAccountId || undefined,
+    },
+    { enabled: open }, // always load when drawer opens; search/filter narrow results
   );
 
   const linkMutation = trpc.transfer.link.useMutation({
@@ -130,14 +147,19 @@ export default function TransferLinkDrawer({
             </ul>
           )}
 
-          {/* Manual search — shown when auto returns nothing, or user types */}
-          {(isAutoEmpty || debouncedSearch.trim().length > 0) && (
-            <div className="mt-2 space-y-3">
-              {isAutoEmpty && !debouncedSearch && (
-                <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-                  No candidates found within 5 days. Search below to find the counterpart manually.
-                </p>
-              )}
+          {/* Manual search — always available so user can override auto-candidates */}
+          <div className="mt-3 space-y-3">
+            {isAutoEmpty && !debouncedSearch && !filterBankAccountId && (
+              <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                No candidates found within 5 days. Search or filter below to find the counterpart manually.
+              </p>
+            )}
+            {!isAutoEmpty && (
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                Can't find it above? Search or filter for any transaction:
+              </p>
+            )}
+            <div className="flex gap-2">
               <input
                 type="text"
                 value={manualSearch}
@@ -146,32 +168,47 @@ export default function TransferLinkDrawer({
                   setSelectedCandidateId(null);
                 }}
                 placeholder="Search by description…"
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
               />
-              {searchQuery.isLoading && (
-                <p className="text-center text-sm text-gray-400">Searching…</p>
-              )}
-              {searchQuery.data && searchQuery.data.length === 0 && (
-                <p className="text-center text-sm text-gray-400">No matching transactions found.</p>
-              )}
-              {searchQuery.data && searchQuery.data.length > 0 && (
-                <ul className="space-y-2">
-                  {searchQuery.data.map((candidate) => (
-                    <CandidateRow
-                      key={candidate.transactionId}
-                      candidate={candidate}
-                      isSelected={selectedCandidateId === candidate.transactionId}
-                      onSelect={() =>
-                        setSelectedCandidateId(
-                          selectedCandidateId === candidate.transactionId ? null : candidate.transactionId,
-                        )
-                      }
-                    />
-                  ))}
-                </ul>
-              )}
+              <select
+                value={filterBankAccountId}
+                onChange={(e) => {
+                  setFilterBankAccountId(e.target.value);
+                  setSelectedCandidateId(null);
+                }}
+                className="rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              >
+                <option value="">All accounts</option>
+                {bankAccountsQuery.data?.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
+            {searchQuery.isLoading && (
+              <p className="text-center text-sm text-gray-400">Searching…</p>
+            )}
+            {searchQuery.data && searchQuery.data.length === 0 && (
+              <p className="text-center text-sm text-gray-400">No matching transactions found.</p>
+            )}
+            {searchQuery.data && searchQuery.data.length > 0 && (
+              <ul className="space-y-2">
+                {searchQuery.data.map((candidate) => (
+                  <CandidateRow
+                    key={candidate.transactionId}
+                    candidate={candidate}
+                    isSelected={selectedCandidateId === candidate.transactionId}
+                    onSelect={() =>
+                      setSelectedCandidateId(
+                        selectedCandidateId === candidate.transactionId ? null : candidate.transactionId,
+                      )
+                    }
+                  />
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* Amount diff warning */}

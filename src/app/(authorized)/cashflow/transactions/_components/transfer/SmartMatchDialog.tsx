@@ -31,6 +31,7 @@ export default function SmartMatchDialog({
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [showSaveRulePrompt, setShowSaveRulePrompt] = useState(false);
   const [ruleName, setRuleName] = useState('');
+  const ruleNameInitialisedRef = useRef(false);
   const initializedRef = useRef(false);
 
   const suggestQuery = trpc.transfer.suggestSimilarPairs.useQuery(
@@ -44,12 +45,17 @@ export default function SmartMatchDialog({
   useEffect(() => {
     if (!open) {
       initializedRef.current = false;
+      ruleNameInitialisedRef.current = false;
       return;
     }
     if (initializedRef.current || !suggestQuery.data) return;
     initializedRef.current = true;
     if (suggestQuery.data.length === 0) {
       // No similar pairs — go straight to Save Rule prompt instead of auto-closing
+      if (!ruleNameInitialisedRef.current) {
+        ruleNameInitialisedRef.current = true;
+        setRuleName(getSuggestedRuleName(suggestQuery.data));
+      }
       setShowSaveRulePrompt(true);
       return;
     }
@@ -73,6 +79,10 @@ export default function SmartMatchDialog({
         toast.error(
           `${result.errors.length} pair${result.errors.length > 1 ? 's' : ''} failed to link`,
         );
+      }
+      if (!ruleNameInitialisedRef.current) {
+        ruleNameInitialisedRef.current = true;
+        setRuleName(getSuggestedRuleName(suggestQuery.data ?? []));
       }
       setShowSaveRulePrompt(true);
     },
@@ -115,9 +125,9 @@ export default function SmartMatchDialog({
     onClose();
   }
 
-  const getSuggestedRuleName = () => {
-    if (pairs.length > 0) {
-      const words = pairs[0]!.debit.description
+  const getSuggestedRuleName = (data: typeof pairs) => {
+    if (data.length > 0) {
+      const words = data[0]!.debit.description
         .toLowerCase()
         .split(/\W+/)
         .filter(Boolean)
@@ -181,7 +191,7 @@ export default function SmartMatchDialog({
               </p>
               <input
                 type="text"
-                value={ruleName || getSuggestedRuleName()}
+                value={ruleName}
                 onChange={(e) => setRuleName(e.target.value)}
                 placeholder="Rule name…"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"

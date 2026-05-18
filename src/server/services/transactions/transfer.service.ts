@@ -144,15 +144,19 @@ export async function getCandidates(params: {
 }
 
 /**
- * Manual search: find unlinked Transfer transactions of the opposite type,
- * no date restriction, filtered by optional description search term.
- * Used in the drawer when auto-candidates return nothing.
+ * Manual search: find unlinked transactions of the opposite type.
+ * Does NOT restrict by category — allows linking any debit/credit pair.
+ * When no search term: returns candidates centered around the source date (±60 days),
+ *   sorted by date proximity so nearby transactions appear first.
+ * When search term provided: searches by description across all time.
+ * Used in the drawer when auto-candidates return nothing or user types a search.
  */
 export async function searchTransferCandidates(params: {
   prisma: PrismaClient;
   transactionId: string;
   userId: string;
   search?: string;
+  bankAccountId?: string; // optional: filter by specific bank account
 }): Promise<TransferCandidateScore[]> {
   const source = await params.prisma.transaction.findUnique({
     where: { id: params.transactionId, userId: params.userId },
@@ -167,21 +171,35 @@ export async function searchTransferCandidates(params: {
       ? TransactionTypeEnum.CREDIT
       : TransactionTypeEnum.DEBIT;
 
+  // When no search term: center a ±60-day window around source date for relevance
+  const dateFilter =
+    !params.search?.trim()
+      ? (() => {
+          const from = new Date(source.date);
+          from.setDate(from.getDate() - 60);
+          const to = new Date(source.date);
+          to.setDate(to.getDate() + 60);
+          return { gte: from, lte: to };
+        })()
+      : undefined;
+
   const candidates = await (params.prisma.transaction as any).findMany({
     where: {
       userId: params.userId,
       type: counterType,
-      category: TRANSFER_CATEGORY,
+      // No category filter — manual search can link any unlinked debit/credit
       transferLinkedTransactionId: null,
       transferCounterpart: { is: null },
       id: { not: source.id },
+      ...(dateFilter ? { date: dateFilter } : {}),
       ...(params.search?.trim()
         ? { description: { contains: params.search.trim(), mode: 'insensitive' } }
         : {}),
+      ...(params.bankAccountId ? { bankAccountId: params.bankAccountId } : {}),
     },
     include: { bankAccount: { include: { bank: true } } },
     orderBy: { date: 'desc' },
-    take: 20,
+    take: 50,
   }) as Array<{
     id: string;
     amount: import('@prisma/client/runtime/library').Decimal;
@@ -196,35 +214,40 @@ export async function searchTransferCandidates(params: {
   // @ts-ignore
   const sourceBankId: string | null = (source as any).bankAccount?.bankId ?? null;
 
-  return candidates.map((candidate) => {
-    const { score, breakdown, amountDiffWarning } = scoreCandidate({
-      sourceAmount: source.amount,
-      sourceDate: source.date,
-      sourceBankId,
-      candidate: {
-        amount: candidate.amount,
-        date: candidate.date,
+  return candidates
+    .map((candidate) => {
+      const { score, breakdown, amountDiffWarning } = scoreCandidate({
+        sourceAmount: source.amount,
+        sourceDate: source.date,
+        sourceBankId,
+        candidate: {
+          amount: candidate.amount,
+          date: candidate.date,
+          description: candidate.description,
+          bankAccountId: candidate.bankAccountId ?? '',
+          bankId: candidate.bankAccount?.bankId ?? null,
+        },
+        sourceDescription: source.description,
+      });
+      return {
+        transactionId: candidate.id,
+        bankAccountId: candidate.bankAccountId!,
+        bankAccountName: candidate.bankAccount?.name ?? 'Unknown',
+        bankName: candidate.bankAccount?.bank?.name ?? null,
+        date: candidate.date.toISOString(),
         description: candidate.description,
-        bankAccountId: candidate.bankAccountId ?? '',
-        bankId: candidate.bankAccount?.bankId ?? null,
-      },
-      sourceDescription: source.description,
-    });
-    return {
-      transactionId: candidate.id,
-      bankAccountId: candidate.bankAccountId!,
-      bankAccountName: candidate.bankAccount?.name ?? 'Unknown',
-      bankName: candidate.bankAccount?.bank?.name ?? null,
-      date: candidate.date.toISOString(),
-      description: candidate.description,
-      amount: Number(candidate.amount),
-      type: candidate.type,
-      status: candidate.status,
-      confidenceScore: score,
-      scoreBreakdown: breakdown,
-      amountDiffWarning,
-    } satisfies TransferCandidateScore;
-  });
+        amount: Number(candidate.amount),
+        type: candidate.type,
+        status: candidate.status,
+        confidenceScore: score,
+        scoreBreakdown: breakdown,
+        amountDiffWarning,
+        // JS sort by proximity: closer to source date ranks first
+        _daysDiff: Math.abs((candidate.date.getTime() - source.date.getTime()) / 86_400_000),
+      };
+    })
+    .sort((a, b) => a._daysDiff - b._daysDiff) // nearest date first
+    .map(({ _daysDiff: _, ...rest }) => rest); // strip internal sort key
 }
 
 /**

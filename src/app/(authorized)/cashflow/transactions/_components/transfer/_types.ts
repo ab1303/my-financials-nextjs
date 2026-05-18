@@ -11,6 +11,7 @@ export interface TransferLinkDrawerProps {
     amount: number;
     type: 'DEBIT' | 'CREDIT';
     date: string;
+    bankAccountId: string | null;
     bankAccountName: string | null;
   };
   onLinked: (pair?: { debitTransactionId: string; creditTransactionId: string }) => void;
