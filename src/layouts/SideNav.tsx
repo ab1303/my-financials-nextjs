@@ -66,6 +66,7 @@ const cashflowItems: NavItem[] = [
   { name: 'Expenses', href: '/cashflow/expense', icon: Receipt },
   { name: 'Transactions', href: '/cashflow/transactions', icon: ArrowLeftRight },
   { name: 'Bank Interest', href: '/cashflow/bank-interest', icon: Percent },
+  { name: 'Transfer Rules', href: '/cashflow/transfer-rules', icon: GitMerge },
 ];
 
 const assetItems: NavItem[] = [
@@ -93,7 +94,6 @@ const settingsItems: NavItem[] = [
 const accountItems: NavItem[] = [
   { name: 'Profile', href: '/account/profile', icon: User },
   { name: 'Bank Accounts', href: '/account/bank-accounts', icon: Landmark },
-  { name: 'Transfer Rules', href: '/account/transfer-rules', icon: GitMerge },
 ];
 
 function NavGroupItem({
@@ -218,7 +218,8 @@ export default function SideNav({
         pathname.startsWith('/cashflow/donations') ||
         pathname.startsWith('/cashflow/expense') ||
         pathname.startsWith('/cashflow/transactions') ||
-        pathname.startsWith('/cashflow/bank-interest'),
+        pathname.startsWith('/cashflow/bank-interest') ||
+        pathname.startsWith('/cashflow/transfer-rules'),
     },
     {
       name: 'Asset(s)',

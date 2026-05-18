@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, type ReactNode } from 'react';
-import { History } from 'lucide-react';
+import { History, GitMerge } from 'lucide-react';
+import Link from 'next/link';
 import CSVImportWizard from './csv/CSVImportWizard';
 import AIImportWizard from './ai/AIImportWizard';
 import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
@@ -67,13 +68,23 @@ export default function TransactionsClient({ bankAccounts }: Props) {
             Import and manage your bank transactions
           </p>
         </div>
-        <button
-          onClick={() => setHistoryOpen(true)}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-        >
-          <History className="h-4 w-4" />
-          Import History
-        </button>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/cashflow/transfer-rules"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            title="Manage transfer match rules"
+          >
+            <GitMerge className="h-4 w-4" />
+            Transfer Rules
+          </Link>
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+          >
+            <History className="h-4 w-4" />
+            Import History
+          </button>
+        </div>
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
