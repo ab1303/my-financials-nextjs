@@ -132,6 +132,14 @@ export default function CSVUploadStep({
             </option>
           ))}
         </select>
+        {bankAccounts.length === 0 && (
+          <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+            No bank accounts set up yet.{' '}
+            <a href="/account/bank-accounts" className="underline hover:no-underline">
+              Add a bank account →
+            </a>
+          </p>
+        )}
       </div>
 
       {!file ? (
