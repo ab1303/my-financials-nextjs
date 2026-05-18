@@ -205,11 +205,11 @@ export default function IncomeTableClient({
         <Table.TBody>
           {groupByMonth(data).map((group) => (
             <React.Fragment key={group.key}>
-              {/* Month group header row */}
-              <Table.TBody.TR>
-                <Table.TBody.TD colSpan={columns.length} className='bg-muted/30 py-1.5 px-3'>
+              {/* Month group header row — raw tr/td to bypass TBodyTD <span> wrapper */}
+              <tr className='bg-muted/50 border-t border-b border-border'>
+                <td colSpan={columns.length} className='px-6 py-2'>
                   <div className='flex items-center justify-between'>
-                    <span className='text-sm font-semibold text-foreground'>
+                    <span className='text-sm font-bold text-foreground tracking-wide uppercase'>
                       {group.label}
                     </span>
                     <NumericFormat
@@ -219,11 +219,11 @@ export default function IncomeTableClient({
                       prefix='$'
                       decimalScale={2}
                       fixedDecimalScale
-                      className='text-sm font-semibold text-foreground tabular-nums'
+                      className='text-base font-bold text-primary tabular-nums'
                     />
                   </div>
-                </Table.TBody.TD>
-              </Table.TBody.TR>
+                </td>
+              </tr>
               {/* Entry rows — use originalIndex to keep editedRows Map stable */}
               {group.entries.map(({ originalIndex }) => {
                 const row = table.getRowModel().rows[originalIndex];

@@ -30,8 +30,8 @@ describe('SourceBadge', () => {
     expect(screen.getByText('Crypto')).toHaveClass(
       'bg-gray-100',
       'text-gray-700',
-      'dark:bg-gray-700/40',
-      'dark:text-gray-300',
+      'dark:bg-gray-600/60',
+      'dark:text-gray-100',
     );
   });
 

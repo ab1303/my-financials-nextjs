@@ -161,7 +161,7 @@ export const TableCell = <TData, TValue>({
       AMOUNT: () => (
         <NumericFormat
           itemRef=''
-          className='tabular-nums'
+          className='tabular-nums text-right block'
           prefix='$'
           displayType='text'
           thousandSeparator
