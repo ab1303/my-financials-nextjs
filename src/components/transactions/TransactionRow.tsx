@@ -373,6 +373,23 @@ export default function TransactionRow({
                 {transaction.isDonationLinked ? '🔗 Linked' : '⚠️ Needs recipient'}
               </span>
             )}
+            {transaction.transferCounterpart && (
+              <div className="mt-1 flex items-center gap-1.5 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-xs dark:border-blue-800 dark:bg-blue-950/30">
+                <span className="shrink-0 text-blue-500">⇄</span>
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate font-medium text-blue-800 dark:text-blue-300">
+                    {transaction.transferCounterpart.description}
+                  </span>
+                  <span className="block text-blue-600 dark:text-blue-400">
+                    {transaction.transferCounterpart.date.slice(0, 10)}
+                    {' · '}
+                    {transaction.transferCounterpart.bankAccountName ?? 'Unknown account'}
+                    {' · '}
+                    ${transaction.transferCounterpart.amount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </td>
         <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">

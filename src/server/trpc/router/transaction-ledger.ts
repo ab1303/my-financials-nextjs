@@ -53,7 +53,22 @@ type PrismaTransaction = {
   reimbursements: PrismaReimbursement[];
   donationPayment: { id: string } | null;
   transferLinkedTransactionId: string | null;
-  transferCounterpart: { id: string } | null;
+  transferLinkedTransaction: {
+    id: string;
+    date: Date;
+    description: string;
+    amount: Decimal;
+    type: TransactionTypeEnum;
+    bankAccount?: { name: string; bank?: { name: string | null } | null } | null;
+  } | null;
+  transferCounterpart: {
+    id: string;
+    date: Date;
+    description: string;
+    amount: Decimal;
+    type: TransactionTypeEnum;
+    bankAccount?: { name: string; bank?: { name: string | null } | null } | null;
+  } | null;
 };
 
 export interface TransactionRow {
@@ -75,6 +90,15 @@ export interface TransactionRow {
   isDonationLinked?: boolean;
   transferLinkedTransactionId: string | null;
   transferCounterpartId: string | null;
+  transferCounterpart: {
+    id: string;
+    date: string;
+    description: string;
+    amount: number;
+    type: string;
+    bankAccountName: string | null;
+    bankName: string | null;
+  } | null;
   isTransferClassified: boolean;
 }
 
@@ -241,7 +265,26 @@ export const transactionLedgerRouter = router({
             },
           },
           donationPayment: { select: { id: true } },
-          transferCounterpart: { select: { id: true } },
+          transferLinkedTransaction: {
+            select: {
+              id: true,
+              date: true,
+              description: true,
+              amount: true,
+              type: true,
+              bankAccount: { select: { name: true, bank: { select: { name: true } } } },
+            },
+          },
+          transferCounterpart: {
+            select: {
+              id: true,
+              date: true,
+              description: true,
+              amount: true,
+              type: true,
+              bankAccount: { select: { name: true, bank: { select: { name: true } } } },
+            },
+          },
         },
       }),
       ctx.prisma.transaction.count({ where }),
@@ -280,6 +323,7 @@ export const transactionLedgerRouter = router({
         reimbursements: [],
         transferLinkedTransactionId: null,
         transferCounterpartId: null,
+        transferCounterpart: null,
         isTransferClassified: false,
       })),
       isDonationLinked:
@@ -288,6 +332,19 @@ export const transactionLedgerRouter = router({
           : undefined,
       transferLinkedTransactionId: tx.transferLinkedTransactionId ?? null,
       transferCounterpartId: tx.transferCounterpart?.id ?? null,
+      transferCounterpart: (() => {
+        const raw = (tx as any).transferLinkedTransaction ?? tx.transferCounterpart ?? null;
+        if (!raw) return null;
+        return {
+          id: raw.id,
+          date: (raw.date as Date).toISOString(),
+          description: raw.description as string,
+          amount: Number(raw.amount),
+          type: raw.type as string,
+          bankAccountName: raw.bankAccount?.name ?? null,
+          bankName: raw.bankAccount?.bank?.name ?? null,
+        };
+      })(),
       isTransferClassified: tx.category === TRANSFER_CATEGORY,
     }));
 
