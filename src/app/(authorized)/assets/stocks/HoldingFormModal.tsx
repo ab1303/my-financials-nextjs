@@ -36,6 +36,7 @@ interface Props {
   }>;
   snapshotId?: string;
   editingHolding?: StockHoldingWithAccount | null;
+  defaultAccountId?: string;
 }
 
 type CreateFormData = CreateStockHoldingInput;
@@ -60,6 +61,7 @@ export default function HoldingFormModal({
   brokerageAccounts,
   snapshotId,
   editingHolding,
+  defaultAccountId,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaleExpanded, setIsSaleExpanded] = useState(false);
@@ -111,7 +113,7 @@ export default function HoldingFormModal({
             currentPrice: 0,
             currency: 'AUD',
             plannedTerm: 'MID_TERM',
-            accountId: brokerageAccounts?.[0]?.id || '',
+            accountId: defaultAccountId || brokerageAccounts?.[0]?.id || '',
             salePrice: null,
             saleDate: null,
             soldQuantity: null,
