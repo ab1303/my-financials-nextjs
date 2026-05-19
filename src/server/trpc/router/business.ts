@@ -20,11 +20,24 @@ export const businessRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id;
-      const existing = await getBusinessDetails({ userId, name: { equals: input.name, mode: 'insensitive' } });
+      const resolvedType = input.type ?? 'PHILANTHROPY';
+      const isGlobalType = resolvedType === 'BROKERAGE';
+
+      // Global types (BROKERAGE) are shared — check for name collision across all users.
+      // User-specific types (PHILANTHROPY) are scoped per user.
+      const existing = await getBusinessDetails(
+        isGlobalType
+          ? { userId: null, name: { equals: input.name, mode: 'insensitive' }, type: resolvedType }
+          : { userId, name: { equals: input.name, mode: 'insensitive' } }
+      );
       if (existing && existing.length > 0) {
         throw new TRPCError({ code: 'CONFLICT', message: 'A business with this name already exists.' });
       }
-      const business = await addBusinessDetails({ name: input.name, userId, type: input.type ?? 'PHILANTHROPY' });
+      const business = await addBusinessDetails({
+        name: input.name,
+        type: resolvedType,
+        ...(isGlobalType ? { userId: null } : { userId }),
+      });
       return { id: business.id, name: business.name };
     }),
 
@@ -48,11 +61,12 @@ export const businessRouter = router({
   getBrokeragesWithAccounts: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
     return await prisma.business.findMany({
-      where: { userId, type: 'BROKERAGE' },
+      where: { userId: null, type: 'BROKERAGE' },
       select: {
         id: true,
         name: true,
         financialAccounts: {
+          where: { userId },
           select: { id: true, name: true },
           orderBy: { name: 'asc' },
         },

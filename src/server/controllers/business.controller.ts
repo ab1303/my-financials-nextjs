@@ -20,15 +20,30 @@ export const addBusinessDetailsHandler = async ({
   userId: string;
 }) => {
   try {
-    // Uniqueness check: business name must be unique per user (case-insensitive)
-    const existing = await getBusinessDetails({
-      userId,
-      name: { equals: input.name, mode: 'insensitive' },
-    });
-    if (existing && existing.length > 0) {
-      throw new Error(
-        'A business with this name already exists. Business names must be unique.',
-      );
+    const isGlobalType = input.type === 'BANK' || input.type === 'BROKERAGE';
+    // Global institution types (BANK, BROKERAGE) are admin-managed with no user owner.
+    // User-specific types (PHILANTHROPY, untyped) are scoped to the creating user.
+    if (!isGlobalType) {
+      const existing = await getBusinessDetails({
+        userId,
+        name: { equals: input.name, mode: 'insensitive' },
+      });
+      if (existing && existing.length > 0) {
+        throw new Error(
+          'A business with this name already exists. Business names must be unique.',
+        );
+      }
+    } else {
+      const existing = await getBusinessDetails({
+        userId: null,
+        name: { equals: input.name, mode: 'insensitive' },
+        type: input.type as BusinessEnumType,
+      });
+      if (existing && existing.length > 0) {
+        throw new Error(
+          'An institution with this name already exists.',
+        );
+      }
     }
     const businessResult = await addBusinessDetails({
       name: input.name,
@@ -38,7 +53,7 @@ export const addBusinessDetailsHandler = async ({
       postcode: input.postcode,
       state: input.state,
       suburb: input.suburb,
-      userId,
+      ...(isGlobalType ? { userId: null } : { userId }),
     });
     return {
       status: 'success',

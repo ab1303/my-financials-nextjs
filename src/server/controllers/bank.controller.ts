@@ -9,10 +9,9 @@ import type { CreateBankInput, ParamsInput } from '@/server/schema/bank.schema';
 
 export const addBankDetailsHandler = async ({
   input,
-  userId,
 }: {
   input: CreateBankInput;
-  userId: string;
+  userId?: string; // kept for API compatibility but ignored — banks are global
 }) => {
   try {
     const bankResult = await addBankDetails({
@@ -23,7 +22,6 @@ export const addBankDetailsHandler = async ({
       state: input.state,
       suburb: input.suburb,
       type: 'BANK',
-      userId,
     });
     return {
       status: 'success',

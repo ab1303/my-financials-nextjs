@@ -2,9 +2,9 @@ import type { Prisma, Business } from '@prisma/client';
 import { prisma } from '../utils/prisma';
 
 export const addBankDetails = async (
-  input: Prisma.BusinessUncheckedCreateInput
+  input: Omit<Prisma.BusinessUncheckedCreateInput, 'userId'>
 ) => {
-  const result = await prisma.business.create({ data: { ...input } });
+  const result = await prisma.business.create({ data: { ...input, userId: null } });
   return result as Business;
 };
 

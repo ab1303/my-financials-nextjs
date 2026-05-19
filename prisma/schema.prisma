@@ -165,8 +165,10 @@ model Business {
   zakatPayments    ZakatPayment[]
   donationPayments DonationPayment[]
   financialAccounts FinancialAccount[]
-  userId           String
-  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // userId is null for global/admin-managed institutions (BANK, BROKERAGE).
+  // userId is set for user-specific institutions (e.g. PHILANTHROPY).
+  userId           String?
+  user             User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 // BankInterestPayment — DEPRECATED. Existing rows migrated to DonationPayment(INTEREST_CLEANSING).

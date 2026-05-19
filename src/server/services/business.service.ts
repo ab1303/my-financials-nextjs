@@ -22,10 +22,12 @@ export const getBusinessDetailsByType = async (
   userId: string,
   type?: string,
 ) => {
-  const whereCondition: Prisma.BusinessWhereInput = {
-    userId,
-    ...(type && { type: type as any }),
-  };
+  // BANK and BROKERAGE are global institutions (userId = null).
+  // All other types (PHILANTHROPY, untyped) are user-specific.
+  const isGlobalType = type === 'BANK' || type === 'BROKERAGE';
+  const whereCondition: Prisma.BusinessWhereInput = isGlobalType
+    ? { userId: null, ...(type && { type: type as any }) }
+    : { userId, ...(type && { type: type as any }) };
 
   return (await prisma.business.findMany({
     where: whereCondition,
