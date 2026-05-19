@@ -430,7 +430,7 @@ model StockHolding {
   companyName  String
   quantity     Decimal
   buyPrice     Decimal                @db.Money
-  buyDate      DateTime
+  buyDate      DateTime?
   currentPrice Decimal                @db.Money
   currency     CurrencyEnumType
   plannedTerm  InvestmentTermEnumType

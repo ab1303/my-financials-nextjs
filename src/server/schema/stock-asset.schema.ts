@@ -18,7 +18,7 @@ export const stockHoldingEntrySchema = object({
   buyPrice: z.coerce
     .number({ invalid_type_error: 'Buy price must be a number' })
     .positive('Buy price must be greater than 0'),
-  buyDate: z.coerce.date({ required_error: 'Buy date is required' }),
+  buyDate: z.coerce.date().optional().nullable(),
   currentPrice: z.coerce
     .number({ invalid_type_error: 'Current price must be a number' })
     .positive('Current price must be greater than 0'),
@@ -29,7 +29,10 @@ export const stockHoldingEntrySchema = object({
     .positive('Sale price must be greater than 0')
     .optional()
     .nullable(),
-  saleDate: z.coerce.date().optional().nullable(),
+  saleDate: z.preprocess(
+    (val) => (val === '' || val == null ? undefined : val),
+    z.coerce.date().optional().nullable()
+  ),
   soldQuantity: z.coerce
     .number({ invalid_type_error: 'Sold quantity must be a number' })
     .positive('Sold quantity must be greater than 0')
@@ -63,7 +66,10 @@ export const updateStockHoldingSchema = object({
   currency: currencyEnum.optional(),
   plannedTerm: investmentTermEnum.optional(),
   salePrice: z.coerce.number().positive().optional().nullable(),
-  saleDate: z.coerce.date().optional().nullable(),
+  saleDate: z.preprocess(
+    (val) => (val === '' || val == null ? undefined : val),
+    z.coerce.date().optional().nullable()
+  ),
   soldQuantity: z.coerce.number().positive().optional().nullable(),
 });
 

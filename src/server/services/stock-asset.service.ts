@@ -32,6 +32,7 @@ export const createStockSnapshot = async (
     }
 
     // Create the snapshot
+    // Phase 3: buyDate is optional/nullable - holdings can have null buyDate
     const snapshot = await tx.portfolioSnapshot.create({
       data: {
         snapshotDate: input.snapshotDate,
@@ -187,6 +188,7 @@ export const createStockHolding = async (
     );
   }
 
+  // Phase 3: buyDate is optional/nullable - holdings can be created without a buy date
   return await prisma.stockHolding.create({
     data: {
       ticker: input.ticker,
@@ -239,6 +241,7 @@ export const updateStockHolding = async (
     updateData.companyName = input.companyName;
   if (input.quantity !== undefined) updateData.quantity = input.quantity;
   if (input.buyPrice !== undefined) updateData.buyPrice = input.buyPrice;
+  // Phase 3: Supports setting buyDate to null (optional/nullable)
   if (input.buyDate !== undefined) updateData.buyDate = input.buyDate;
   if (input.currentPrice !== undefined)
     updateData.currentPrice = input.currentPrice;
@@ -312,7 +315,22 @@ export const deleteStockSnapshot = async (
   });
 };
 
-// Get aggregated totals for a snapshot
+/**
+ * Get aggregated totals for a snapshot (Phase 3: Null buyDate Handling)
+ *
+ * Note: This function properly handles holdings with null buyDate.
+ * When a holding has a null buyDate, the holding is still included in aggregations.
+ * Individual P/L calculations are performed correctly - buyDate is only used for:
+ * - Calculating holding period (defaults to 0 months if null)
+ * - Determining CGT eligibility (false if null)
+ *
+ * The aggregation logic sums up market values, costs, and P/L across all holdings
+ * regardless of whether buyDate is null or not.
+ *
+ * @param snapshotId - The portfolio snapshot ID to calculate totals for
+ * @param userId - The user ID (for authorization)
+ * @returns Aggregated totals by account and currency, or null if snapshot not found
+ */
 export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
   const snapshot = await getSnapshotById(snapshotId, userId);
 
@@ -321,6 +339,7 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
   }
 
   // Calculate totals by account and currency
+  // Note: Holdings with null buyDate are included in totals (Phase 3)
   const accountTotals = snapshot.holdings.reduce(
     (acc, holding) => {
       const accountId = holding.accountId;

@@ -35,8 +35,11 @@ export function calculateHoldingMetrics(
   const realizedPL = soldQty > 0 ? (salePrice - buyPrice) * soldQty : 0;
 
   // Holding period (months from buy to sale or snapshot date)
+  // If buyDate is null, default to 0 holding period
   const endDate = holding.saleDate ?? snapshotDate;
-  const holdingPeriodMonths = differenceInMonths(endDate, holding.buyDate);
+  const holdingPeriodMonths = holding.buyDate
+    ? differenceInMonths(endDate, holding.buyDate)
+    : 0;
 
   // CGT eligibility (Australian tax - 12 month threshold)
   // Only relevant for sold holdings to determine if capital gains discount applies
@@ -115,8 +118,10 @@ function calculateTermStatus(
 /**
  * Get the projected date when a holding becomes CGT eligible (12 months from purchase).
  * Only used for unsold holdings to show user when they'll be eligible for capital gains discount.
+ * If buyDate is null, returns null since we can't project a date.
  */
-export function getProjectedCGTDate(buyDate: Date): Date {
+export function getProjectedCGTDate(buyDate: Date | null): Date | null {
+  if (!buyDate) return null;
   return addMonths(buyDate, 12);
 }
 
@@ -125,10 +130,16 @@ export function getProjectedCGTDate(buyDate: Date): Date {
  * Used for tooltips/help text on unsold holdings.
  */
 export function getCGTProjectionText(
-  buyDate: Date,
+  buyDate: Date | null,
   snapshotDate: Date,
 ): string {
+  if (!buyDate) {
+    return 'Buy date not specified';
+  }
   const eligibleDate = getProjectedCGTDate(buyDate);
+  if (!eligibleDate) {
+    return 'Buy date not specified';
+  }
   if (snapshotDate >= eligibleDate) {
     return 'Eligible now';
   }

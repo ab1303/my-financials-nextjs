@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { CreatableAppSelect } from '@/components/ui/CreatableAppSelect';
+import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
 
 type SelectOption = { value: string; label: string };
 import { NumericFormat } from 'react-number-format';
@@ -50,6 +51,8 @@ export default function NewSnapshotModal({
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdAccounts, setCreatedAccounts] = useState<Array<{ id: string; name: string }>>([]);
+  // Track buy date mode per holding index: 'month' (quick-pick) or 'exact' (full date)
+  const [buyDateModes, setBuyDateModes] = useState<Record<number, 'exact' | 'month'>>({});
   const utils = trpc.useUtils();
 
   const {
@@ -58,6 +61,7 @@ export default function NewSnapshotModal({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<FormData>({
     resolver: zodResolver(createStockSnapshotSchema),
     defaultValues: {
@@ -122,7 +126,34 @@ export default function NewSnapshotModal({
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      await createSnapshot.mutateAsync(data);
+      // Process holdings to convert month input to dates when in month mode
+      const processedData = {
+        ...data,
+        holdings: data.holdings.map((holding, index) => {
+          const mode = buyDateModes[index] ?? 'month'; // default to month
+          
+          // If in month mode and buyDate has a value, parse it to first day of month
+          if (mode === 'month' && holding.buyDate) {
+            const dateStr = holding.buyDate.toString();
+            if (dateStr.includes('-') && !dateStr.includes(':')) {
+              // Format is likely "YYYY-MM" from month input
+              const parts = dateStr.split('-');
+              const year = parts[0];
+              const month = parts[1];
+              if (year && month) {
+                return {
+                  ...holding,
+                  buyDate: new Date(parseInt(year), parseInt(month) - 1, 1),
+                };
+              }
+            }
+          }
+          
+          return holding;
+        }),
+      };
+      
+      await createSnapshot.mutateAsync(processedData);
     } finally {
       setIsSubmitting(false);
     }
@@ -131,6 +162,7 @@ export default function NewSnapshotModal({
   const handleClose = () => {
     reset();
     setCreatedAccounts([]);
+    setBuyDateModes({}); // Reset buy date modes
     onClose();
   };
 
@@ -385,16 +417,58 @@ export default function NewSnapshotModal({
                     )}
                   </div>
 
-                  {/* Buy Date */}
+                  {/* Buy Date — Toggle between exact/month */}
                   <div>
                     <Label htmlFor={`holdings.${index}.buyDate`}>
-                      Buy Date *
+                      Buy Date (Optional)
                     </Label>
-                    <input
-                      {...register(`holdings.${index}.buyDate`)}
-                      type='date'
-                      className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                    
+                    {/* Toggle between month and exact date */}
+                    <div className='flex gap-3 mb-2'>
+                      <label className='flex items-center gap-2 cursor-pointer text-sm'>
+                        <input
+                          type='radio'
+                          value='month'
+                          checked={(buyDateModes[index] ?? 'month') === 'month'}
+                          onChange={() => setBuyDateModes(prev => ({ ...prev, [index]: 'month' }))}
+                          className='w-4 h-4'
+                        />
+                        <span>Estimate (month/year)</span>
+                      </label>
+                      <label className='flex items-center gap-2 cursor-pointer text-sm'>
+                        <input
+                          type='radio'
+                          value='exact'
+                          checked={(buyDateModes[index] ?? 'month') === 'exact'}
+                          onChange={() => setBuyDateModes(prev => ({ ...prev, [index]: 'exact' }))}
+                          className='w-4 h-4'
+                        />
+                        <span>Exact date</span>
+                      </label>
+                    </div>
+
+                    {/* Conditional input based on mode */}
+                    {(buyDateModes[index] ?? 'month') === 'month' ? (
+                      <input
+                        {...register(`holdings.${index}.buyDate`)}
+                        type='month'
+                        placeholder='MM/YYYY'
+                        className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                      />
+                    ) : (
+                      <input
+                        {...register(`holdings.${index}.buyDate`)}
+                        type='date'
+                        className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                      />
+                    )}
+
+                    {/* CGT Eligibility Warning */}
+                    <CGTEligibilityWarning 
+                      buyDate={watch(`holdings.${index}.buyDate`)}
+                      snapshotDate={watch('snapshotDate')}
                     />
+
                     {errors.holdings?.[index]?.buyDate && (
                       <p className='mt-1 text-sm text-red-600'>
                         {errors.holdings[index]?.buyDate?.message}
@@ -402,7 +476,7 @@ export default function NewSnapshotModal({
                     )}
                   </div>
 
-                  {/* Current Price */}
+                  {/* Current Price */}{/* Current Price */}
                   <div>
                     <Label htmlFor={`holdings.${index}.currentPrice`}>
                       Current Price *

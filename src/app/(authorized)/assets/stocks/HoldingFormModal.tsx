@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { CreatableAppSelect } from '@/components/ui/CreatableAppSelect';
+import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
 
 type SelectOption = { value: string; label: string };
 import { NumericFormat } from 'react-number-format';
@@ -66,6 +67,8 @@ export default function HoldingFormModal({
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaleExpanded, setIsSaleExpanded] = useState(false);
+  // Track buy date mode: 'month' (quick-pick) or 'exact' (full date)
+  const [buyDateMode, setBuyDateMode] = useState<'exact' | 'month'>('month');
   const utils = trpc.useUtils();
 
   const isEditMode = !!editingHolding;
@@ -190,10 +193,25 @@ export default function HoldingFormModal({
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
+      // Convert month/year to first day of month if in month mode
+      let processedData = { ...data };
+      if (buyDateMode === 'month' && data.buyDate) {
+        const dateStr = data.buyDate.toString();
+        if (dateStr.includes('-') && !dateStr.includes(':')) {
+          // Format is likely "YYYY-MM" from month input
+          const parts = dateStr.split('-');
+          const year = parts[0];
+          const month = parts[1];
+          if (year && month) {
+            processedData.buyDate = new Date(parseInt(year), parseInt(month) - 1, 1) as any;
+          }
+        }
+      }
+
       if (isEditMode) {
-        await updateHolding.mutateAsync(data as UpdateFormData);
+        await updateHolding.mutateAsync(processedData as UpdateFormData);
       } else {
-        await createHolding.mutateAsync(data as CreateFormData);
+        await createHolding.mutateAsync(processedData as CreateFormData);
       }
     } finally {
       setIsSubmitting(false);
@@ -203,6 +221,7 @@ export default function HoldingFormModal({
   const handleClose = () => {
     reset();
     setIsSaleExpanded(false);
+    setBuyDateMode('month'); // Reset to default
     setCreatedAccounts([]);
     onClose();
   };
@@ -394,12 +413,54 @@ export default function HoldingFormModal({
           {/* Buy Date & Current Price */}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div>
-              <Label htmlFor='buyDate'>Buy Date *</Label>
-              <input
-                {...register('buyDate')}
-                type='date'
-                className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+              <Label htmlFor='buyDate'>Buy Date (Optional)</Label>
+              
+              {/* Toggle between month and exact date */}
+              <div className='flex gap-3 mb-2'>
+                <label className='flex items-center gap-2 cursor-pointer text-sm'>
+                  <input
+                    type='radio'
+                    value='month'
+                    checked={buyDateMode === 'month'}
+                    onChange={() => setBuyDateMode('month')}
+                    className='w-4 h-4'
+                  />
+                  <span>Estimate (month/year)</span>
+                </label>
+                <label className='flex items-center gap-2 cursor-pointer text-sm'>
+                  <input
+                    type='radio'
+                    value='exact'
+                    checked={buyDateMode === 'exact'}
+                    onChange={() => setBuyDateMode('exact')}
+                    className='w-4 h-4'
+                  />
+                  <span>Exact date</span>
+                </label>
+              </div>
+
+              {/* Conditional input based on mode */}
+              {buyDateMode === 'month' ? (
+                <input
+                  {...register('buyDate')}
+                  type='month'
+                  placeholder='MM/YYYY'
+                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                />
+              ) : (
+                <input
+                  {...register('buyDate')}
+                  type='date'
+                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                />
+              )}
+
+              {/* CGT Eligibility Warning */}
+              <CGTEligibilityWarning 
+                buyDate={watch('buyDate')}
+                snapshotDate={new Date()}
               />
+
               {errors.buyDate && (
                 <p className='mt-1 text-sm text-red-600'>
                   {errors.buyDate.message}
@@ -433,7 +494,7 @@ export default function HoldingFormModal({
             </div>
           </div>
 
-          {/* Sale Information (Collapsible) */}
+{/* Sale Information */}{/* Sale Information (Collapsible) */}
           <Disclosure
             as='div'
             className='border-t pt-4'
