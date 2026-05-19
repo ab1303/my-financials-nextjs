@@ -154,7 +154,7 @@ export default function NewSnapshotModal({
         </p>
       </Modal.Header>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
         <Modal.Body variant='spacious'>
           {/* Snapshot Date */}
           <div>

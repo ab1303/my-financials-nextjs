@@ -216,6 +216,15 @@ export default function BankAssetsClient({ initialData }: Props) {
     [snapshot],
   );
 
+  // Map bankId → BankTotalSummary for O(1) lookup during render
+  const totalsMap = useMemo(
+    () =>
+      new Map(
+        (totals as SnapshotTotals | undefined)?.banks.map((b) => [b.bankId, b]) ?? [],
+      ),
+    [totals],
+  );
+
   const getAddableAccountsForBank = (bankId: string) =>
     allBankAccounts
       .filter((acc) => acc.bankId === bankId && !accountsAlreadyInSnapshot.has(acc.id))
@@ -255,6 +264,7 @@ export default function BankAssetsClient({ initialData }: Props) {
   const deleteSnapshotMutation = trpc.bankAsset.deleteSnapshot.useMutation({
     onSuccess: () => {
       toast.success('Snapshot deleted!');
+      setDeleteConfirm(null);
       setSelectedSnapshotId(null);
       // Reset and refetch data
       utils.bankAsset.getSnapshots.invalidate();
@@ -263,6 +273,10 @@ export default function BankAssetsClient({ initialData }: Props) {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to delete snapshot');
+      setDeleteConfirm(null);
+      setSelectedSnapshotId(null);
+      // Refetch in case of sync issues
+      utils.bankAsset.getSnapshots.invalidate();
     },
   });
 
@@ -642,7 +656,7 @@ export default function BankAssetsClient({ initialData }: Props) {
             Go to Settings → Banks
           </a>
         </div>
-      ) : !totals || (totals && totals.banks.length === 0) ? (
+      ) : !snapshot ? (
         <div className='text-center py-12 bg-muted/50 rounded-lg border-2 border-dashed border-border'>
           <p className='text-foreground mb-4 font-medium'>
             No snapshots recorded.
@@ -655,283 +669,397 @@ export default function BankAssetsClient({ initialData }: Props) {
             New Snapshot
           </Button>
         </div>
-      ) : totals ? (
+      ) : snapshot ? (
         <div className='space-y-4'>
-          {(totals as SnapshotTotals).banks.map((bank: BankTotalSummary) => (
-            <Disclosure key={bank.bankId}>
-              {({ open }) => (
-                <div className='border border-border rounded-lg overflow-hidden'>
-                  <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted/50 hover:bg-muted transition-colors'>
-                    <div className='flex items-center gap-4'>
-                      <ChevronDown
-                        className={clsx(
-                          'w-5 h-5 text-muted-foreground transition-transform',
-                          open ? 'transform rotate-180' : '',
+          {banks.map((bank) => {
+            const bankTotals = totalsMap.get(bank.id);
+            const hasBankAccounts = allBankAccounts.some((a) => a.bankId === bank.id);
+            return (
+              <Disclosure key={bank.id}>
+                {({ open }) => (
+                  <div className='border border-border rounded-lg overflow-hidden'>
+                    <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted/50 hover:bg-muted transition-colors'>
+                      <div className='flex items-center gap-4'>
+                        <ChevronDown
+                          className={clsx(
+                            'w-5 h-5 text-muted-foreground transition-transform',
+                            open ? 'transform rotate-180' : '',
+                          )}
+                        />
+                        <span className='text-lg font-semibold text-foreground'>
+                          {bank.name}
+                        </span>
+                      </div>
+                      <div className='text-lg font-bold text-foreground'>
+                        {bankTotals ? (
+                          <NumericFormat
+                            value={Number(bankTotals.total)}
+                            displayType='text'
+                            thousandSeparator=','
+                            prefix='$'
+                            decimalScale={2}
+                            fixedDecimalScale
+                          />
+                        ) : (
+                          <span className='text-sm font-normal text-muted-foreground'>
+                            Not tracked
+                          </span>
                         )}
-                      />
-                      <span className='text-lg font-semibold text-foreground'>
-                        {bank.bankName}
-                      </span>
-                    </div>
-                    <div className='text-lg font-bold text-foreground'>
-                      <NumericFormat
-                        value={Number(bank.total)}
-                        displayType='text'
-                        thousandSeparator=','
-                        prefix='$'
-                        decimalScale={2}
-                        fixedDecimalScale
-                      />
-                    </div>
-                  </Disclosure.Button>
+                      </div>
+                    </Disclosure.Button>
 
-                  <Disclosure.Panel className='px-6 py-4 bg-card'>
-                    <div className='overflow-x-auto'>
-                      <table className='min-w-full divide-y divide-border'>
-                        <thead className='bg-muted/50'>
-                          <tr>
-                            <th className='px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                              Account Name
-                            </th>
-                            <th className='px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                              Balance
-                            </th>
-                            <th className='px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className='bg-card divide-y divide-border'>
-                          {bank.accounts.map((account: AccountBalance) => {
-                            // Find the entry ID from the snapshot entries
-                            const snapshotEntry = snapshot?.balanceRecords.find(
-                              (e) => e.accountId === account.accountId,
-                            );
-                            return (
-                              <tr key={account.accountId}>
-                                <td className='px-4 py-3 text-sm text-foreground'>
-                                  {editingAccountName?.accountId ===
-                                  account.accountId ? (
-                                    <div className='flex items-center gap-2'>
-                                      <input
-                                        type='text'
-                                        value={newAccountName}
-                                        onChange={(e) => {
-                                          setNewAccountName(e.target.value);
-                                          setAccountNameError('');
-                                        }}
-                                        onKeyDown={handleAccountNameKeyDown}
-                                        autoFocus
-                                        className='flex-1 px-2 py-1 border border-ring rounded text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
-                                        placeholder='Account name'
-                                      />
-                                      <button
-                                        onClick={handleSaveAccountName}
-                                        disabled={isUpdatingAccountName}
-                                        className='px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors'
-                                        title='Save'
-                                      >
-                                        <Check className='w-3 h-3' />
-                                      </button>
-                                      <button
-                                        onClick={handleCancelEditAccountName}
-                                        disabled={isUpdatingAccountName}
-                                        className='px-2 py-1 text-xs bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 transition-colors'
-                                        title='Cancel'
-                                      >
-                                        <X className='w-3 h-3' />
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <div className='flex items-center justify-between group'>
-                                      <span>{account.accountName}</span>
-                                      <button
-                                        onClick={() =>
-                                          handleStartEditAccountName(
-                                            account.accountId,
-                                            bank.bankId,
-                                            account.accountName,
-                                          )
-                                        }
-                                        className='ml-2 p-1 text-muted-foreground opacity-40 group-hover:opacity-100 hover:text-foreground hover:bg-muted rounded transition-all'
-                                        aria-label={`Edit ${account.accountName}`}
-                                        title='Edit account name'
-                                      >
-                                        <Pencil className='w-4 h-4' />
-                                      </button>
-                                    </div>
-                                  )}
-                                  {accountNameError &&
-                                    editingAccountName?.accountId ===
-                                      account.accountId && (
-                                      <p className='text-xs text-red-600 mt-1'>
-                                        {accountNameError}
-                                      </p>
-                                    )}
-                                </td>
-                                <td className='px-4 py-3 text-sm text-right font-mono text-foreground'>
+                    <Disclosure.Panel className='px-6 py-4 bg-card'>
+                      {bankTotals ? (
+                        <>
+                          <div className='overflow-x-auto'>
+                            <table className='min-w-full divide-y divide-border'>
+                              <thead className='bg-muted/50'>
+                                <tr>
+                                  <th className='px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>
+                                    Account Name
+                                  </th>
+                                  <th className='px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
+                                    Balance
+                                  </th>
+                                  <th className='px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
+                                    Actions
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className='bg-card divide-y divide-border'>
+                                {bankTotals.accounts.map((account: AccountBalance) => {
+                                  const snapshotEntry = snapshot?.balanceRecords.find(
+                                    (e) => e.accountId === account.accountId,
+                                  );
+                                  return (
+                                    <tr key={account.accountId}>
+                                      <td className='px-4 py-3 text-sm text-foreground'>
+                                        {editingAccountName?.accountId ===
+                                        account.accountId ? (
+                                          <div className='flex items-center gap-2'>
+                                            <input
+                                              type='text'
+                                              value={newAccountName}
+                                              onChange={(e) => {
+                                                setNewAccountName(e.target.value);
+                                                setAccountNameError('');
+                                              }}
+                                              onKeyDown={handleAccountNameKeyDown}
+                                              autoFocus
+                                              className='flex-1 px-2 py-1 border border-ring rounded text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
+                                              placeholder='Account name'
+                                            />
+                                            <button
+                                              onClick={handleSaveAccountName}
+                                              disabled={isUpdatingAccountName}
+                                              className='px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors'
+                                              title='Save'
+                                            >
+                                              <Check className='w-3 h-3' />
+                                            </button>
+                                            <button
+                                              onClick={handleCancelEditAccountName}
+                                              disabled={isUpdatingAccountName}
+                                              className='px-2 py-1 text-xs bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 transition-colors'
+                                              title='Cancel'
+                                            >
+                                              <X className='w-3 h-3' />
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <div className='flex items-center justify-between group'>
+                                            <span>{account.accountName}</span>
+                                            <button
+                                              onClick={() =>
+                                                handleStartEditAccountName(
+                                                  account.accountId,
+                                                  bankTotals.bankId,
+                                                  account.accountName,
+                                                )
+                                              }
+                                              className='ml-2 p-1 text-muted-foreground opacity-40 group-hover:opacity-100 hover:text-foreground hover:bg-muted rounded transition-all'
+                                              aria-label={`Edit ${account.accountName}`}
+                                              title='Edit account name'
+                                            >
+                                              <Pencil className='w-4 h-4' />
+                                            </button>
+                                          </div>
+                                        )}
+                                        {accountNameError &&
+                                          editingAccountName?.accountId ===
+                                            account.accountId && (
+                                            <p className='text-xs text-red-600 mt-1'>
+                                              {accountNameError}
+                                            </p>
+                                          )}
+                                      </td>
+                                      <td className='px-4 py-3 text-sm text-right font-mono text-foreground'>
+                                        <NumericFormat
+                                          value={Number(account.balance)}
+                                          displayType='text'
+                                          thousandSeparator=','
+                                          prefix='$'
+                                          decimalScale={2}
+                                          fixedDecimalScale
+                                        />
+                                      </td>
+                                      <td className='px-4 py-3 text-sm text-right'>
+                                        <div className='flex justify-end gap-2'>
+                                          <button
+                                            onClick={() =>
+                                              handleEditEntry(
+                                                snapshotEntry?.id || '',
+                                                account.accountId,
+                                                bankTotals.bankId,
+                                                account.accountName,
+                                                Number(account.balance),
+                                              )
+                                            }
+                                            className='p-1 text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors'
+                                            aria-label={`Edit ${account.accountName}`}
+                                            title='Edit balance'
+                                          >
+                                            <Pencil className='w-4 h-4' />
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              handleDeleteEntry(
+                                                snapshotEntry?.id || '',
+                                                account.accountName,
+                                                snapshot?.id || '',
+                                              )
+                                            }
+                                            className='p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors'
+                                            aria-label={`Delete ${account.accountName}`}
+                                            title='Delete account'
+                                          >
+                                            <Trash2 className='w-4 h-4' />
+                                          </button>
+                                          {snapshotEntry?.importImageId && (
+                                            <ImportAuditIcon
+                                              importImageId={snapshotEntry.importImageId}
+                                              fileName={snapshotEntry.importImage?.fileName}
+                                            />
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                          {addingEntryForBankId === bank.id ? (
+                            <div className='mt-3 p-3 border border-dashed border-border rounded-lg bg-muted/30'>
+                              <div className='flex flex-col gap-3 sm:flex-row sm:items-end'>
+                                <div className='flex-1'>
+                                  <label className='block text-xs font-medium text-muted-foreground mb-1'>
+                                    Account
+                                  </label>
+                                  <AppCreatableSelect
+                                    inputId={`add-entry-account-${bank.id}`}
+                                    options={getAddableAccountsForBank(bank.id)}
+                                    value={
+                                      newEntryAccountId
+                                        ? {
+                                            value: newEntryAccountId,
+                                            label:
+                                              allBankAccounts.find(
+                                                (a) => a.id === newEntryAccountId,
+                                              )?.name ?? newEntryAccountId,
+                                          }
+                                        : null
+                                    }
+                                    onChange={(option) => {
+                                      setNewEntryAccountId(option?.value ?? '');
+                                      setNewEntryError('');
+                                    }}
+                                    onCreateOption={(inputValue) => {
+                                      handleCreateAccountForEntry(bank.id, inputValue)
+                                        .then((newAccountId) => {
+                                          setNewEntryAccountId(newAccountId);
+                                          toast.success(`Account "${inputValue}" created!`);
+                                        })
+                                        .catch(() => {});
+                                    }}
+                                    isClearable
+                                    placeholder='Select or type to create...'
+                                    isLoading={createAccountForEntryMutation.isPending}
+                                  />
+                                </div>
+                                <div className='w-40'>
+                                  <label className='block text-xs font-medium text-muted-foreground mb-1'>
+                                    Balance
+                                  </label>
                                   <NumericFormat
-                                    value={Number(account.balance)}
-                                    displayType='text'
+                                    value={newEntryBalance}
+                                    onValueChange={(values) =>
+                                      setNewEntryBalance(values.floatValue ?? 0)
+                                    }
                                     thousandSeparator=','
                                     prefix='$'
                                     decimalScale={2}
                                     fixedDecimalScale
+                                    className='w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
                                   />
-                                </td>
-                                <td className='px-4 py-3 text-sm text-right'>
-                                  <div className='flex justify-end gap-2'>
-                                    <button
-                                      onClick={() =>
-                                        handleEditEntry(
-                                          snapshotEntry?.id || '',
-                                          account.accountId,
-                                          bank.bankId,
-                                          account.accountName,
-                                          Number(account.balance),
-                                        )
+                                </div>
+                                <div className='flex gap-2'>
+                                  <Button
+                                    type='button'
+                                    variant='default'
+                                    onClick={handleSaveAddEntry}
+                                    disabled={addEntryToSnapshotMutation.isPending}
+                                  >
+                                    <Check className='w-4 h-4 mr-1' />
+                                    {addEntryToSnapshotMutation.isPending ? 'Adding...' : 'Add'}
+                                  </Button>
+                                  <Button
+                                    type='button'
+                                    variant='secondary'
+                                    onClick={handleCancelAddEntry}
+                                    disabled={addEntryToSnapshotMutation.isPending}
+                                  >
+                                    <X className='w-4 h-4 mr-1' />
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                              {newEntryError && (
+                                <p className='mt-2 text-xs text-red-600'>{newEntryError}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className='mt-3 flex justify-end'>
+                              <Button
+                                type='button'
+                                variant='secondary'
+                                onClick={() => handleOpenAddEntry(bank.id)}
+                              >
+                                <Plus className='w-4 h-4 mr-1' />
+                                Add Account
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      ) : addingEntryForBankId === bank.id ? (
+                        <div className='p-3 border border-dashed border-border rounded-lg bg-muted/30'>
+                          <div className='flex flex-col gap-3 sm:flex-row sm:items-end'>
+                            <div className='flex-1'>
+                              <label className='block text-xs font-medium text-muted-foreground mb-1'>
+                                Account
+                              </label>
+                              <AppCreatableSelect
+                                inputId={`add-entry-account-${bank.id}`}
+                                options={getAddableAccountsForBank(bank.id)}
+                                value={
+                                  newEntryAccountId
+                                    ? {
+                                        value: newEntryAccountId,
+                                        label:
+                                          allBankAccounts.find(
+                                            (a) => a.id === newEntryAccountId,
+                                          )?.name ?? newEntryAccountId,
                                       }
-                                      className='p-1 text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors'
-                                      aria-label={`Edit ${account.accountName}`}
-                                      title='Edit balance'
-                                    >
-                                      <Pencil className='w-4 h-4' />
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        handleDeleteEntry(
-                                          snapshotEntry?.id || '',
-                                          account.accountName,
-                                          snapshot?.id || '',
-                                        )
-                                      }
-                                      className='p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors'
-                                      aria-label={`Delete ${account.accountName}`}
-                                      title='Delete account'
-                                    >
-                                      <Trash2 className='w-4 h-4' />
-                                    </button>
-                                    {snapshotEntry?.importImageId && (
-                                      <ImportAuditIcon
-                                        importImageId={
-                                          snapshotEntry.importImageId
-                                        }
-                                        fileName={
-                                          snapshotEntry.importImage?.fileName
-                                        }
-                                      />
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                    {addingEntryForBankId === bank.bankId ? (
-                      <div className='mt-3 p-3 border border-dashed border-border rounded-lg bg-muted/30'>
-                        <div className='flex flex-col gap-3 sm:flex-row sm:items-end'>
-                          <div className='flex-1'>
-                            <label className='block text-xs font-medium text-muted-foreground mb-1'>
-                              Account
-                            </label>
-                            <AppCreatableSelect
-                              inputId={`add-entry-account-${bank.bankId}`}
-                              options={getAddableAccountsForBank(bank.bankId)}
-                              value={
-                                newEntryAccountId
-                                  ? {
-                                      value: newEntryAccountId,
-                                      label:
-                                        allBankAccounts.find(
-                                          (a) => a.id === newEntryAccountId,
-                                        )?.name ?? newEntryAccountId,
-                                    }
-                                  : null
-                              }
-                              onChange={(option) => {
-                                setNewEntryAccountId(option?.value ?? '');
-                                setNewEntryError('');
-                              }}
-                              onCreateOption={(inputValue) => {
-                                handleCreateAccountForEntry(bank.bankId, inputValue)
-                                  .then((newAccountId) => {
-                                    setNewEntryAccountId(newAccountId);
-                                    toast.success(`Account "${inputValue}" created!`);
-                                  })
-                                  .catch(() => {});
-                              }}
-                              isClearable
-                              placeholder='Select or type to create...'
-                              isLoading={createAccountForEntryMutation.isPending}
-                            />
+                                    : null
+                                }
+                                onChange={(option) => {
+                                  setNewEntryAccountId(option?.value ?? '');
+                                  setNewEntryError('');
+                                }}
+                                onCreateOption={(inputValue) => {
+                                  handleCreateAccountForEntry(bank.id, inputValue)
+                                    .then((newAccountId) => {
+                                      setNewEntryAccountId(newAccountId);
+                                      toast.success(`Account "${inputValue}" created!`);
+                                    })
+                                    .catch(() => {});
+                                }}
+                                isClearable
+                                placeholder='Select or type to create...'
+                                isLoading={createAccountForEntryMutation.isPending}
+                              />
+                            </div>
+                            <div className='w-40'>
+                              <label className='block text-xs font-medium text-muted-foreground mb-1'>
+                                Balance
+                              </label>
+                              <NumericFormat
+                                value={newEntryBalance}
+                                onValueChange={(values) =>
+                                  setNewEntryBalance(values.floatValue ?? 0)
+                                }
+                                thousandSeparator=','
+                                prefix='$'
+                                decimalScale={2}
+                                fixedDecimalScale
+                                className='w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
+                              />
+                            </div>
+                            <div className='flex gap-2'>
+                              <Button
+                                type='button'
+                                variant='default'
+                                onClick={handleSaveAddEntry}
+                                disabled={addEntryToSnapshotMutation.isPending}
+                              >
+                                <Check className='w-4 h-4 mr-1' />
+                                {addEntryToSnapshotMutation.isPending ? 'Adding...' : 'Add'}
+                              </Button>
+                              <Button
+                                type='button'
+                                variant='secondary'
+                                onClick={handleCancelAddEntry}
+                                disabled={addEntryToSnapshotMutation.isPending}
+                              >
+                                <X className='w-4 h-4 mr-1' />
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
-                          <div className='w-40'>
-                            <label className='block text-xs font-medium text-muted-foreground mb-1'>
-                              Balance
-                            </label>
-                            <NumericFormat
-                              value={newEntryBalance}
-                              onValueChange={(values) =>
-                                setNewEntryBalance(values.floatValue ?? 0)
-                              }
-                              thousandSeparator=','
-                              prefix='$'
-                              decimalScale={2}
-                              fixedDecimalScale
-                              className='w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
-                            />
-                          </div>
-                          <div className='flex gap-2'>
-                            <Button
-                              type='button'
-                              variant='default'
-                              onClick={handleSaveAddEntry}
-                              disabled={addEntryToSnapshotMutation.isPending}
-                            >
-                              <Check className='w-4 h-4 mr-1' />
-                              {addEntryToSnapshotMutation.isPending
-                                ? 'Adding...'
-                                : 'Add'}
-                            </Button>
-                            <Button
-                              type='button'
-                              variant='secondary'
-                              onClick={handleCancelAddEntry}
-                              disabled={addEntryToSnapshotMutation.isPending}
-                            >
-                              <X className='w-4 h-4 mr-1' />
-                              Cancel
-                            </Button>
-                          </div>
+                          {newEntryError && (
+                            <p className='mt-2 text-xs text-red-600'>{newEntryError}</p>
+                          )}
                         </div>
-                        {newEntryError && (
-                          <p className='mt-2 text-xs text-red-600'>{newEntryError}</p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className='mt-3 flex justify-end'>
-                        <Button
-                          type='button'
-                          variant='secondary'
-                          onClick={() => handleOpenAddEntry(bank.bankId)}
-                        >
-                          <Plus className='w-4 h-4 mr-1' />
-                          Add Account
-                        </Button>
-                      </div>
-                    )}
-                  </Disclosure.Panel>
-                </div>
-              )}
-            </Disclosure>
-          ))}
+                      ) : (
+                        <div className='py-6 flex flex-col items-center gap-3 text-center'>
+                          {hasBankAccounts ? (
+                            <>
+                              <p className='text-sm text-muted-foreground'>
+                                No accounts tracked in this snapshot.
+                              </p>
+                              <Button
+                                type='button'
+                                variant='secondary'
+                                onClick={() => handleOpenAddEntry(bank.id)}
+                              >
+                                <Plus className='w-4 h-4 mr-1' />
+                                Add Account
+                              </Button>
+                            </>
+                          ) : (
+                            <p className='text-sm text-muted-foreground'>
+                              No accounts configured for this bank.{' '}
+                              <a
+                                href='/settings/banks'
+                                className='underline text-primary hover:text-primary/80'
+                              >
+                                Add in Settings
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </Disclosure.Panel>
+                  </div>
+                )}
+              </Disclosure>
+            );
+          })}
         </div>
       ) : null}
 
       {/* New Snapshot / AI Import Buttons (bottom) */}
-      {totals && (totals as SnapshotTotals).banks.length > 0 && (
+      {snapshot && (
         <div className='flex justify-center gap-3 pt-4'>
           <Button variant='default' onClick={() => setIsModalOpen(true)}>
             <Plus className='mr-2 w-4 h-4' />

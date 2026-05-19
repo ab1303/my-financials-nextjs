@@ -299,10 +299,11 @@ User (1)
    - **Future Phase**: Will reduce data entry for frequent snapshot creators
    - **Spec**: `spec/asset-stocks-tracking/add-holding-improvements/`
 
-2. **Snapshot Date Editing** (PRD §4.4 - Priority: Low)
-   - **Intent**: Allow changing snapshot date after creation
-   - **Why Not**: Requires transaction (copy to new date, delete old)
-   - **Future Phase**: Lower priority; can be worked around by deleting + recreating
+2. ~~**Snapshot Date Editing**~~ — **Won't Do (By Design)**
+   - A snapshot is an immutable historical record; its date is its identity
+   - Editing the date would corrupt financial history and risk fiscal year boundary issues
+   - Correct UX: delete the snapshot and recreate with the right date — now low-friction via the Prefill feature
+   - Removed from future roadmap
 
 ### Implemented (Previously Listed as Gaps)
 
@@ -343,9 +344,9 @@ User (1)
 - ✅ Fiscal year filtering
 
 ### Outstanding / Partial
-- ⚠️ Prefill from previous: Backend ready (`getMostRecentSnapshot`), UI integration needed in `NewSnapshotModal`
-- ⚠️ Snapshot date editing: Not implemented
-- ⚠️ Account pre-selection UX: "Add Holding" opens `HoldingFormModal` without pre-selecting the clicked account
+- ~~⚠️ Prefill from previous~~ ✅ Implemented — `getMostRecentSnapshot` + "↩ Prefill from previous" button in `NewSnapshotModal`
+- ~~⚠️ Snapshot date editing~~ — Won't Do (By Design)
+- ~~⚠️ Account pre-selection UX~~ ✅ Implemented — `defaultAccountId` prop on `HoldingFormModal`; pre-selects account from accordion context
 
 ### Closed Since Original Spec
 - ✅ Add-to-existing snapshot: `createHolding` endpoint wired via `HoldingFormModal` + "Add Holding" button per account accordion
@@ -380,7 +381,7 @@ User (1)
 ## Future Enhancements
 
 1. **Prefill Feature** — Pre-populate new snapshot from previous
-2. **Snapshot Date Editing** — Modify snapshot date after creation
+2. ~~**Snapshot Date Editing**~~ — Won't Do (By Design; snapshot date is an immutable historical marker)
 3. **Add-to-Existing** — Append holding to non-latest snapshot
 4. **Real-Time Prices** — API integration with market data (IEX, Twelve Data, etc.)
 5. **Price History** — Track price changes over time for charting
