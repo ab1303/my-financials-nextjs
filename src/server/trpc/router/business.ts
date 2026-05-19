@@ -61,10 +61,17 @@ export const businessRouter = router({
   getBrokeragesWithAccounts: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
     return await prisma.business.findMany({
-      where: { userId: null, type: 'BROKERAGE' },
+      where: {
+        type: 'BROKERAGE',
+        OR: [
+          { userId: null },
+          { userId: userId },
+        ],
+      },
       select: {
         id: true,
         name: true,
+        userId: true,
         financialAccounts: {
           where: { userId },
           select: { id: true, name: true },

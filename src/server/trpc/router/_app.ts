@@ -1,6 +1,7 @@
 import { router } from '@/server/trpc/trpc';
 import { authRouter } from './auth';
 import { bankRouter } from './bank';
+import { brokerageRouter } from './brokerage';
 import { businessRouter } from './business';
 import { bankInterestRouter } from './bank-interest';
 import { individualRouter } from './individual';
@@ -25,6 +26,7 @@ export const appRouter = router({
   example: exampleRouter,
   auth: authRouter,
   bank: bankRouter,
+  brokerage: brokerageRouter,
   bankInterest: bankInterestRouter,
   individual: individualRouter,
   business: businessRouter,

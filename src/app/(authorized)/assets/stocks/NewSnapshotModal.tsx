@@ -33,6 +33,7 @@ interface Props {
   brokerageInstitutions: Array<{
     id: string;
     name: string;
+    userId: string | null;
     financialAccounts: Array<{ id: string; name: string }>;
   }>;
 }
@@ -257,9 +258,10 @@ export default function NewSnapshotModal({
   };
 
   // Institution options for select
+  // Group institutions: global first (🌍), then user's custom (👤)
   const institutionOptions: SelectOption[] = brokerageInstitutions.map(inst => ({
     value: inst.id,
-    label: inst.name,
+    label: inst.userId === null ? `🌍 ${inst.name}` : `👤 ${inst.name}`,
   }));
 
   return (
