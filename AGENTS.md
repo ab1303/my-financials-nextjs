@@ -45,6 +45,28 @@ Never pass all three docs at once — `context.md` is redundant once HLD + LLD e
 - Stop the dev server before any Prisma CLI operation (prevents EPERM on Windows).
 - Never run `prisma migrate reset` without explicit user consent and a confirmed backup.
 
+## Dev Server Safety (CRITICAL)
+
+**NEVER auto-kill Node processes after running `pnpm run build`.** This terminates the CLI session and abandons the user.
+
+- ⛔ **FORBIDDEN**: `Stop-Process` on Node, killing Node processes, or any command that terminates Node
+- ✅ **REQUIRED**: After `pnpm run build`, ask the user to manually stop the dev server (Ctrl+C) and restart with `pnpm run dev`
+- ✅ **REQUIRED**: Tell the user the dev server is locked and needs manual restart (do not attempt auto-restart)
+- ✅ **REQUIRED**: When port conflicts occur, inform the user and request manual intervention
+
+**Pattern to avoid:**
+```
+# ❌ WRONG - This kills the CLI:
+Stop-Process -Name node
+pnpm run dev
+```
+
+**Correct pattern:**
+```
+# ✅ RIGHT - User restarts manually:
+"Please stop the dev server with Ctrl+C, then run: pnpm run dev"
+```
+
 ## Shared Components
 
 - Components used by more than one feature belong in `src/components/`, not inside any feature's `_components/` folder.

@@ -146,13 +146,13 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
   return (
     <div>
       {/* Collapsible header */}
-      <button
-        type="button"
-        onClick={() => setCollapsed((c) => !c)}
-        className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
-        aria-expanded={!collapsed}
-      >
-        <div className="flex items-center gap-3">
+      <div className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
+        <button
+          type="button"
+          onClick={() => setCollapsed((c) => !c)}
+          className="flex flex-1 items-center gap-3 text-left hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-opacity"
+          aria-expanded={!collapsed}
+        >
           {collapsed
             ? <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             : <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -163,13 +163,12 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
               {totalReceived > 0 ? formatCurrency(totalReceived) + ' received' : 'Reference — monthly amounts from the bank'}
             </span>
           </div>
-        </div>
+        </button>
         {credits.length === 0 && !collapsed && (
           <button
             type="button"
             className="inline-flex items-center justify-center w-8 h-8 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary/10 text-primary hover:bg-primary/20 focus:ring-primary transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               initMutation.mutate({ bankId, calendarYearId });
             }}
             disabled={initMutation.isPending}
@@ -181,7 +180,7 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
             }
           </button>
         )}
-      </button>
+      </div>
 
       {!collapsed && (
         <div className="mt-2">
