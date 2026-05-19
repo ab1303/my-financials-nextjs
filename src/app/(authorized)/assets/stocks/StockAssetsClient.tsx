@@ -198,12 +198,15 @@ export default function StockAssetsClient({ initialData }: Props) {
     }
   }, [snapshots, selectedSnapshotId]);
 
-  // Update URL when year changes
+  // Update URL when year changes — only when yearId actually differs to prevent infinite re-render loop
   useEffect(() => {
     if (selectedYear) {
-      const newParams = new URLSearchParams(searchParams?.toString() || '');
-      newParams.set('yearId', selectedYear.id);
-      router.push(`${pathname}?${newParams.toString()}`);
+      const currentYearId = searchParams?.get('yearId');
+      if (currentYearId !== selectedYear.id) {
+        const newParams = new URLSearchParams(searchParams?.toString() || '');
+        newParams.set('yearId', selectedYear.id);
+        router.replace(`${pathname}?${newParams.toString()}`);
+      }
     }
   }, [selectedYear, pathname, router, searchParams]);
 
