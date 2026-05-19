@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { CreatableAppSelect } from '@/components/ui/CreatableAppSelect';
 
 type SelectOption = { value: string; label: string };
 import { NumericFormat } from 'react-number-format';
@@ -48,6 +49,7 @@ export default function NewSnapshotModal({
   brokerageAccounts,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdAccounts, setCreatedAccounts] = useState<Array<{ id: string; name: string }>>([]);
   const utils = trpc.useUtils();
 
   const {
@@ -87,11 +89,28 @@ export default function NewSnapshotModal({
       { enabled: isOpen },
     );
 
+  const createBrokerageAccount = trpc.business.create.useMutation({
+    onSuccess: (data, variables) => {
+      const newAccount = { id: data.id, name: data.name };
+      setCreatedAccounts((prev) => [...prev, newAccount]);
+      void utils.business.getBusinessesByType.invalidate({ type: 'BROKERAGE' });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create brokerage account');
+    },
+  });
+
+  const handleCreateBrokerageAccount = async (inputValue: string, onChange: (value: string) => void) => {
+    const result = await createBrokerageAccount.mutateAsync({ name: inputValue, type: 'BROKERAGE' });
+    onChange(result.id);
+  };
+
   const createSnapshot = trpc.stockAsset.createSnapshot.useMutation({
     onSuccess: () => {
       toast.success('Snapshot created successfully!');
       utils.stockAsset.getSnapshots.invalidate();
       reset();
+      setCreatedAccounts([]);
       onClose();
       onSuccess?.();
     },
@@ -111,6 +130,7 @@ export default function NewSnapshotModal({
 
   const handleClose = () => {
     reset();
+    setCreatedAccounts([]);
     onClose();
   };
 
@@ -138,7 +158,8 @@ export default function NewSnapshotModal({
     });
   };
 
-  const accountOptions = brokerageAccounts.map((account) => ({
+  const allBrokerageAccounts = [...brokerageAccounts, ...createdAccounts];
+  const accountOptions = allBrokerageAccounts.map((account) => ({
     value: account.id,
     label: account.name,
   }));
@@ -220,15 +241,14 @@ export default function NewSnapshotModal({
                       name={`holdings.${index}.accountId`}
                       control={control}
                       render={({ field }) => (
-                        <Select<SelectOption>
+                        <CreatableAppSelect<SelectOption>
                           {...field}
                           options={accountOptions}
-                          value={accountOptions.find(
-                            (opt) => opt.value === field.value,
-                          )}
-                          onChange={(selected) =>
-                            field.onChange(selected?.value)
-                          }
+                          value={accountOptions.find((opt) => opt.value === field.value) ?? null}
+                          onChange={(selected) => field.onChange(selected?.value ?? '')}
+                          onCreateOption={(inputValue) => handleCreateBrokerageAccount(inputValue, field.onChange)}
+                          isLoading={createBrokerageAccount.isPending}
+                          formatCreateLabel={(inputValue) => `+ Create \"${inputValue}\"`}
                           className='mt-1'
                         />
                       )}

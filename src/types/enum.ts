@@ -1,6 +1,7 @@
 export const BusinessEnumType = {
   BANK: 'BANK',
   PHILANTHROPY: 'PHILANTHROPY',
+  BROKERAGE: 'BROKERAGE',
 } as const;
 export type BusinessEnumType =
   (typeof BusinessEnumType)[keyof typeof BusinessEnumType];

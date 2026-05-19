@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { CreatableAppSelect } from '@/components/ui/CreatableAppSelect';
 
 type SelectOption = { value: string; label: string };
 import { NumericFormat } from 'react-number-format';
@@ -68,6 +69,21 @@ export default function HoldingFormModal({
   const utils = trpc.useUtils();
 
   const isEditMode = !!editingHolding;
+  const [createdAccounts, setCreatedAccounts] = useState<Array<{ id: string; name: string }>>([]);
+  const createBrokerageAccount = trpc.business.create.useMutation({
+    onSuccess: (data, variables) => {
+      const newAccount = { id: data.id, name: data.name };
+      setCreatedAccounts((prev) => [...prev, newAccount]);
+      void utils.business.getBusinessesByType.invalidate({ type: 'BROKERAGE' });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create brokerage account');
+    },
+  });
+  const handleCreateBrokerageAccount = async (inputValue: string, onChange: (value: string) => void) => {
+    const result = await createBrokerageAccount.mutateAsync({ name: inputValue, type: 'BROKERAGE' });
+    onChange(result.id);
+  };
   const schema = isEditMode
     ? updateStockHoldingSchema
     : createStockHoldingSchema;
@@ -146,6 +162,7 @@ export default function HoldingFormModal({
         snapshotId: snapshotId!,
       });
       reset();
+      setCreatedAccounts([]);
       onClose();
       onSuccess?.();
     },
@@ -186,10 +203,12 @@ export default function HoldingFormModal({
   const handleClose = () => {
     reset();
     setIsSaleExpanded(false);
+    setCreatedAccounts([]);
     onClose();
   };
 
-  const accountOptions = brokerageAccounts.map((account) => ({
+  const allBrokerageAccounts = [...brokerageAccounts, ...createdAccounts];
+  const accountOptions = allBrokerageAccounts.map((account) => ({
     value: account.id,
     label: account.name,
   }));
@@ -216,13 +235,14 @@ export default function HoldingFormModal({
               name='accountId'
               control={control}
               render={({ field }) => (
-                <Select<SelectOption>
+                <CreatableAppSelect<SelectOption>
                   {...field}
                   options={accountOptions}
-                  value={accountOptions.find(
-                    (opt) => opt.value === field.value,
-                  )}
-                  onChange={(selected) => field.onChange(selected?.value)}
+                  value={accountOptions.find((opt) => opt.value === field.value) ?? null}
+                  onChange={(selected) => field.onChange(selected?.value ?? '')}
+                  onCreateOption={(inputValue) => handleCreateBrokerageAccount(inputValue, field.onChange)}
+                  isLoading={createBrokerageAccount.isPending}
+                  formatCreateLabel={(inputValue) => `+ Create \"${inputValue}\"`}
                   className='mt-1'
                   isDisabled={isEditMode}
                 />

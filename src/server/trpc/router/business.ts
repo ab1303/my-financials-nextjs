@@ -13,14 +13,17 @@ import { addBusinessDetails, getBusinessDetails } from '@/server/services/busine
 export const businessRouter = router({
   // Quick-create: name only — used by CreateBeneficiaryModal in the donation linking drawer
   create: protectedProcedure
-    .input(z.object({ name: z.string().min(1, 'Name is required') }))
+    .input(z.object({
+      name: z.string().min(1, 'Name is required'),
+      type: z.enum(['PHILANTHROPY', 'BROKERAGE']).optional(),
+    }))
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id;
       const existing = await getBusinessDetails({ userId, name: { equals: input.name, mode: 'insensitive' } });
       if (existing && existing.length > 0) {
         throw new TRPCError({ code: 'CONFLICT', message: 'A business with this name already exists.' });
       }
-      const business = await addBusinessDetails({ name: input.name, userId, type: 'PHILANTHROPY' });
+      const business = await addBusinessDetails({ name: input.name, userId, type: input.type ?? 'PHILANTHROPY' });
       return { id: business.id, name: business.name };
     }),
 
