@@ -1,5 +1,24 @@
 # Testing & Subagent Orchestration
 
+## Model Selection — Use Cheap Models for Mechanical Work
+
+**Default rule: only use the orchestrating model (Sonnet) for reasoning and context gathering.
+Delegate all mechanical output — spec writing, doc generation, boilerplate — to `gpt-4.1`.**
+
+| Task | Model | Reason |
+|---|---|---|
+| Spec writing (`context.md`, `hld.md`, `lld.md`) | `gpt-4.1` | Mechanical document structure; cheap and fast |
+| Implementing a well-defined phase | `gpt-4.1` | Code follows a clear contract |
+| Fixing test failures (per category) | `gpt-4.1` | Narrow scope, clear root cause |
+| Complex cross-cutting refactors | `claude-sonnet-4.6` (default) | Needs reasoning across many files |
+| Architecture / PO analysis | orchestrator only | No subagent; in-conversation reasoning |
+| Debugging unknown root cause | orchestrator or Sonnet subagent | Needs exploration |
+
+**Always pass the full context inline** in the subagent prompt — do not tell it to "read the codebase".
+The orchestrator does all file reading; the subagent only writes.
+
+---
+
 ## Subagent-first rule for test failures
 
 When asked to fix failing tests, **never fix them all yourself serially**. Categorise failures first, then delegate each independent category to a subagent. You act as orchestrator only.

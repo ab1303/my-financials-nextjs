@@ -292,7 +292,14 @@ User (1)
 
 ### Not Yet Implemented
 
-1. **Prefill from Previous Snapshot** (PRD §4.4 - Priority: High)
+1. **Brokerage Sub-Account Model** (Priority: High — implement before prod data)
+   - **Intent**: `StockHolding.accountId` should reference `BankAccount` (sub-account) instead of `Business` (institution). Users with multiple accounts at the same brokerage (IRA + Individual) cannot distinguish them.
+   - **Why Not**: Gap identified after initial implementation; requires schema migration
+   - **Effort**: ~2–3 days — schema migration + service layer + UI two-level dependent select
+   - **Risk**: Low if implemented before any prod stock data is entered; high afterwards (data migration required)
+   - **Spec**: `spec/asset-stocks-tracking/brokerage-account-model/`
+
+2. **Prefill from Previous Snapshot** (PRD §4.4 - Priority: High)
    - **Intent**: When creating new snapshot, pre-populate form with most recent holdings
    - **Why Not**: UI integration incomplete; backend ready via `getMostRecentSnapshot()`
    - **Effort**: Fetch latest snapshot in NewSnapshotModal, populate form fields

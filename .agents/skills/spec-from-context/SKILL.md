@@ -88,49 +88,99 @@ If `spec/{feature}/` already has files, read them and include as "Prior art".
 
 ---
 
-## Step 3 — Write the Three Spec Files Directly
+## Step 3 — Delegate Spec Writing to a Cheap Model
 
-Using **only** the context bundle compiled in Step 2, write all three files
-yourself with the `create` tool. **Do not launch a subagent. Do not read any
-additional files from the codebase.** All required information was gathered in
-Step 2.
+The expensive work (reading files, analysing schema, forming decisions) is done.
+The writing is mechanical. **Always delegate to `gpt-4.1`** — it produces the
+same quality spec at a fraction of the cost.
 
-Create the spec directory first if it does not exist:
+Create the spec directory first:
 ```powershell
 New-Item -ItemType Directory -Path "spec\{feature}" -Force | Out-Null
 ```
 
-Then call `create` three times **in parallel** (one per file):
+Then launch a **single background `general-purpose` subagent** with `model: "gpt-4.1"`,
+passing the full context bundle inline. The agent must write all three files
+using the `create` tool. **Do not read any additional files from the codebase** —
+all required information must be in the prompt.
+
+### Subagent prompt template
+
+```
+You are writing a three-file spec bundle for the feature: {feature}.
+Create all three files under spec/{feature}/ using the `create` tool.
+
+⚠️ CRITICAL: **DO NOT READ ANY FILES FROM THE CODEBASE.** Do not use grep, glob, or view.
+All required context is provided below. Use ONLY the context provided; invent nothing.
+
+## Context Bundle (Complete — Do Not Research)
+
+### Problem Statement
+{problem_statement}
+
+### Architecture & Stack
+- Next.js 16 App Router, tRPC at src/server/trpc/router/, Prisma, NextAuth v5
+- Package manager: pnpm only
+- tRPC client: import { trpc } from '@/server/trpc/client'
+- Toast: import { toast } from 'sonner'
+
+### Relevant Schema (verbatim — use exactly as provided)
+{prisma_model_blocks}
+
+### Files to Modify/Create
+{file_inventory}
+
+### Design Decisions Already Made
+{decisions_list}
+
+### Prior Spec (if any)
+{existing_spec_content}
+
+## File Requirements
 
 ### context.md must contain:
 - Problem summary (2–3 sentences)
-- File inventory table: files to CREATE vs files to MODIFY, with change description
-- Schema details: verbatim Prisma model blocks, enum definitions, key relationships
-- Existing patterns to reuse (tRPC router pattern, service pattern, component pattern)
-- Data flow diagrams: current flow vs proposed flow (ASCII/text)
-- Any known constraints or gotchas
+- File inventory table: files to CREATE vs MODIFY with change description
+- Schema details: verbatim Prisma model blocks (from context above), enum definitions, relationships
+- Existing patterns to reuse (tRPC router, service, component patterns)
+- Data flow diagrams: current vs proposed (ASCII)
+- Known constraints or gotchas
 
 ### hld.md must contain:
 - Problem + proposed solution (1–2 paragraphs)
 - Numbered architecture decisions with rationale (minimum 5)
 - Data model changes (schema diff)
-- Component/service changes (high-level, not implementation detail)
+- Component/service changes (high-level)
 - Success criteria (testable outcomes)
 - Out of scope / future phases table
 
 ### lld.md must contain:
 - Phase map table (Phase → files changed → description)
-- Per-phase detail: exact TypeScript interfaces, Zod schemas, function signatures
-- TDD test cases per phase (minimum 3 per phase) in tabular format:
-  | Test description | Test type | What it verifies |
-- Migration notes if schema changes are involved
+- Per-phase: exact TypeScript interfaces, Zod schemas, function signatures
+- TDD test cases per phase (minimum 3) as table: | Test | Type | Verifies |
+- Migration notes if schema changes involved
 - Integration points and edge cases
 
-### Style rules (all three files):
-- Use tables for file inventories and interface definitions
-- Use fenced code blocks: `typescript`, `prisma`, `bash`
-- Be thorough but not padded
-- Match style of existing specs in `spec/transaction-ledger/`
+## Style Rules
+- Tables for file inventories and interface definitions
+- Fenced code blocks: `typescript`, `prisma`, `bash`
+- Thorough but not padded
+- Match style of existing specs in spec/transaction-ledger/
+```
+
+### Critical Guard Rails
+
+✅ **DO**:
+- Write from the context bundle provided
+- Create all three files with the `create` tool
+- Use the exact schema blocks provided
+- Reference file paths from the inventory provided
+
+❌ **DO NOT**:
+- Call `grep`, `glob`, or `view` to read files
+- Search the codebase for additional context
+- Invent schema or file paths not mentioned in the context bundle
+- Ask for more context or clarification — assume the bundle is complete
 
 ---
 
