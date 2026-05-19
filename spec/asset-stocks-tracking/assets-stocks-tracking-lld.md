@@ -35,7 +35,7 @@
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                                FRONTEND                                       │
 │  ┌─────────────────────────────────────────────────────────────────────────┐ │
-│  │  Page: app/(authorized)/cashflow/stocks/page.tsx  [Server Component]    │ │
+│  │  Page: app/(authorized)/assets/stocks/page.tsx  [Server Component]      │ │
 │  │  ┌────────────────┐  ┌───────────────┐  ┌───────────────────────────┐  │ │
 │  │  │ Fiscal Year    │  │ Summary Cards │  │ Account Accordions        │  │ │
 │  │  │ Selector       │  │ (AUD / USD)   │  │ (Collapse/Expand)         │  │ │
@@ -139,8 +139,8 @@
 │  │         │            │   └──────────────────────────┘                   │ │
 │  │         │            │              ▲                                    │ │
 │  │  ┌──────┴──────────────┐            │                                    │ │
-│  │  │  StockSnapshot      │            │                                    │ │
-│  │  │  ─────────────────  │            │                                    │ │
+│  │  │  PortfolioSnapshot  │            │                                    │ │
+│  │  │  ────────────────── │            │                                    │ │
 │  │  │  - id               │            │                                    │ │
 │  │  │  - snapshotDate     │            │ accountId                          │ │
 │  │  │  - userId ──────────┼────┘       │                                    │ │
@@ -167,7 +167,7 @@
 │  │  └─────────────────────────────────┘                                    │ │
 │  │                                                                         │ │
 │  │  Indexes:                                                               │ │
-│  │  - StockSnapshot: [userId, snapshotDate]                                │ │
+│  │  - PortfolioSnapshot: [userId, snapshotDate]                              │ │
 │  │  - StockHolding: [snapshotId], [accountId], [ticker]                    │ │
 │  │                                                                         │ │
 │  └─────────────────────────────────────────────────────────────────────────┘ │
@@ -183,7 +183,7 @@
 | Partial sale tracking | `soldQuantity` field       | Preserves original purchase quantity for audit              |
 | Price storage         | `@db.Money`                | Consistent with bank-assets, PostgreSQL money type          |
 | API structure         | Single `stockAsset` router | Consistent with `bankAsset` router pattern                  |
-| UI route              | `/cashflow/stocks`         | Consistent with `/cashflow/bank` under Asset(s) nav group   |
+| UI route              | `/assets/stocks`           | Consistent with `/cashflow/bank` under Asset(s) nav group   |
 | State management      | tRPC + React Query         | Consistent with all other features; no Redux/Context needed |
 | Accordion component   | Headless UI `Disclosure`   | Matches existing bank-assets and sidebar patterns           |
 
@@ -229,7 +229,7 @@ enum CurrencyEnumType {
 ### 2.2 New Models
 
 ```prisma
-model StockSnapshot {
+model PortfolioSnapshot {
   id           String         @id @default(cuid())
   snapshotDate DateTime
   userId       String
@@ -261,7 +261,7 @@ model StockHolding {
   accountId      String
   account        Business              @relation(fields: [accountId], references: [id])
   snapshotId     String
-  snapshot       StockSnapshot         @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  snapshot       PortfolioSnapshot     @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
 
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
@@ -276,7 +276,7 @@ model StockHolding {
 
 ```prisma
 // User model - add:
-StockSnapshot   StockSnapshot[]
+portfolioSnapshots  PortfolioSnapshot[]
 
 // Business model - add:
 StockHolding    StockHolding[]
@@ -1011,7 +1011,7 @@ export async function deleteHoldingHandler({
 
 ```typescript
 import type {
-  StockSnapshot,
+  PortfolioSnapshot,
   StockHolding,
   Business,
   CurrencyEnumType,
@@ -1024,7 +1024,7 @@ export type StockHoldingWithAccount = StockHolding & {
   account: Pick<Business, 'id' | 'name'>;
 };
 
-export type StockSnapshotWithHoldings = StockSnapshot & {
+export type PortfolioSnapshotWithHoldings = PortfolioSnapshot & {
   holdings: StockHoldingWithAccount[];
 };
 
@@ -1125,7 +1125,7 @@ export type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 ### 8.1 File Structure
 
 ```
-src/app/(authorized)/cashflow/stocks/
+src/app/(authorized)/assets/stocks/
 ├── page.tsx                    # Server Component
 ├── StockAssetsClient.tsx       # Client Component - main interactive shell
 ├── NewSnapshotModal.tsx        # Modal: create snapshot with prefill
@@ -1138,10 +1138,9 @@ src/app/(authorized)/cashflow/stocks/
 
 ```tsx
 // Server Component - fetches initial data, renders client component
-// Pattern: identical to cashflow/bank/page.tsx
+// Pattern: identical to assets/bank/page.tsx
 
-import { getServerAuthSession } from '@/server/auth';
-import { redirect } from 'next/navigation';
+import { auth } from '@/server/auth';
 import StockAssetsClient from './StockAssetsClient';
 
 export const metadata = { title: 'Stock Assets - My Financials' };
@@ -1577,6 +1576,34 @@ export function formatQuantity(qty: number): string {
 
 ---
 
+## 11. Known Gaps & TODOs
+
+⚠️ **The following features from the PRD are NOT yet implemented**:
+
+### TODO: Prefill from Previous Snapshot (Priority: High)
+- **Feature**: When creating a new snapshot, the form should pre-fill with holdings from the most recent snapshot
+- **Status**: Backend ready (`getMostRecentSnapshot()` exists)
+- **What's Missing**: UI integration in `NewSnapshotModal.tsx`
+- **Estimated Effort**: 1-2 hours
+- **Future Phase**: Phase 3B (Enhancement)
+
+### TODO: Snapshot Date Editing (Priority: Low)
+- **Feature**: Allow changing snapshot date after creation
+- **Status**: Not implemented
+- **Why Not**: Requires transaction logic (copy to new date, delete old)
+- **Future Phase**: Phase 3B (Enhancement)
+
+### TODO: Add Holding to Existing Snapshot (Priority: Medium)
+- **Feature**: Button to append a new holding to a non-latest snapshot
+- **Status**: Backend endpoint exists, UI not integrated
+- **What's Missing**: UI integration in `StockAssetsClient.tsx`
+- **Estimated Effort**: 2-3 hours
+- **Future Phase**: Phase 3B (Enhancement)
+
+**NOTE**: The core feature (snapshot CRUD, holdings CRUD, fiscal year filtering, P/L calculations, CGT display) is fully implemented and production-ready.
+
+---
+
 ## 11. Implementation Phases
 
 ### Phase 1: Database & API Foundation (3-4 days)
@@ -1627,10 +1654,10 @@ export function formatQuantity(qty: number): string {
 
 | File                                                         | Description                | Est. Lines |
 | ------------------------------------------------------------ | -------------------------- | ---------- |
-| `src/app/(authorized)/cashflow/stocks/page.tsx`              | Server component           | ~30        |
-| `src/app/(authorized)/cashflow/stocks/StockAssetsClient.tsx` | Client component (main UI) | ~400       |
-| `src/app/(authorized)/cashflow/stocks/SummaryCards.tsx`      | Currency total cards       | ~80        |
-| `src/app/(authorized)/cashflow/stocks/_types.ts`             | Feature-local types        | ~20        |
+| `src/app/(authorized)/assets/stocks/page.tsx`              | Server component           | ~30        |
+| `src/app/(authorized)/assets/stocks/StockAssetsClient.tsx` | Client component (main UI) | ~400       |
+| `src/app/(authorized)/assets/stocks/SummaryCards.tsx`      | Currency total cards       | ~80        |
+| `src/app/(authorized)/assets/stocks/_types.ts`             | Feature-local types        | ~20        |
 
 **Files to Modify**:
 
@@ -1665,8 +1692,8 @@ export function formatQuantity(qty: number): string {
 
 | File                                                        | Description             | Est. Lines |
 | ----------------------------------------------------------- | ----------------------- | ---------- |
-| `src/app/(authorized)/cashflow/stocks/NewSnapshotModal.tsx` | Snapshot creation modal | ~400       |
-| `src/app/(authorized)/cashflow/stocks/HoldingFormModal.tsx` | Add/edit holding modal  | ~300       |
+| `src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx` | Snapshot creation modal | ~400       |
+| `src/app/(authorized)/assets/stocks/HoldingFormModal.tsx` | Add/edit holding modal  | ~300       |
 
 **Tasks**:
 
@@ -1740,14 +1767,14 @@ ALTER TYPE "BusinessEnumType" ADD VALUE 'BROKERAGE';
 CREATE TYPE "InvestmentTermEnumType" AS ENUM ('SHORT_TERM', 'MID_TERM', 'LONG_TERM');
 CREATE TYPE "CurrencyEnumType" AS ENUM ('AUD', 'USD');
 
--- Create StockSnapshot table
-CREATE TABLE "StockSnapshot" (
+-- Create PortfolioSnapshot table
+CREATE TABLE "PortfolioSnapshot" (
     "id" TEXT NOT NULL,
     "snapshotDate" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    CONSTRAINT "StockSnapshot_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "PortfolioSnapshot_pkey" PRIMARY KEY ("id")
 );
 
 -- Create StockHolding table
@@ -1772,18 +1799,18 @@ CREATE TABLE "StockHolding" (
 );
 
 -- Indexes
-CREATE INDEX "StockSnapshot_userId_snapshotDate_idx" ON "StockSnapshot"("userId", "snapshotDate");
+CREATE INDEX "PortfolioSnapshot_userId_snapshotDate_idx" ON "PortfolioSnapshot"("userId", "snapshotDate");
 CREATE INDEX "StockHolding_snapshotId_idx" ON "StockHolding"("snapshotId");
 CREATE INDEX "StockHolding_accountId_idx" ON "StockHolding"("accountId");
 CREATE INDEX "StockHolding_ticker_idx" ON "StockHolding"("ticker");
 
 -- Foreign keys
-ALTER TABLE "StockSnapshot" ADD CONSTRAINT "StockSnapshot_userId_fkey"
+ALTER TABLE "PortfolioSnapshot" ADD CONSTRAINT "PortfolioSnapshot_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE;
 ALTER TABLE "StockHolding" ADD CONSTRAINT "StockHolding_accountId_fkey"
     FOREIGN KEY ("accountId") REFERENCES "Business"("id") ON DELETE RESTRICT;
 ALTER TABLE "StockHolding" ADD CONSTRAINT "StockHolding_snapshotId_fkey"
-    FOREIGN KEY ("snapshotId") REFERENCES "StockSnapshot"("id") ON DELETE CASCADE;
+    FOREIGN KEY ("snapshotId") REFERENCES "PortfolioSnapshot"("id") ON DELETE CASCADE;
 ```
 
 ### 12.3 Safety Considerations
@@ -1791,7 +1818,7 @@ ALTER TABLE "StockHolding" ADD CONSTRAINT "StockHolding_snapshotId_fkey"
 - **No destructive changes**: This migration only adds new tables and enums. No existing data is modified.
 - **Adding enum value**: PostgreSQL supports `ALTER TYPE ... ADD VALUE` without affecting existing data.
 - **Business FK**: `StockHolding.accountId` → `Business.id` uses `ON DELETE RESTRICT` to prevent accidental deletion of brokerage accounts with holdings.
-- **User FK**: `StockSnapshot.userId` → `User.id` uses `ON DELETE CASCADE` to clean up when user is deleted.
+- **User FK**: `PortfolioSnapshot.userId` → `User.id` uses `ON DELETE CASCADE` to clean up when user is deleted.
 
 ---
 
