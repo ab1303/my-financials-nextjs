@@ -65,6 +65,7 @@ export default function StockAssetsClient({ initialData }: Props) {
     ticker: string;
     snapshotId: string;
   } | null>(null);
+  const [addingToAccountId, setAddingToAccountId] = useState<string | null>(null);
 
   // Memoize year options to prevent unnecessary re-renders
   const yearOptions: OptionType[] = useMemo(
@@ -641,6 +642,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                           variant='secondary'
                           onClick={() => {
                             setEditingHolding(null);
+                            setAddingToAccountId(account.accountId);
                             setIsHoldingFormModalOpen(true);
                           }}
                         >
@@ -672,16 +674,19 @@ export default function StockAssetsClient({ initialData }: Props) {
       <HoldingFormModal
         isOpen={isHoldingFormModalOpen}
         onClose={() => {
+          setAddingToAccountId(null);
           setIsHoldingFormModalOpen(false);
           setEditingHolding(null);
         }}
         onSuccess={() => {
+          setAddingToAccountId(null);
           setIsHoldingFormModalOpen(false);
           setEditingHolding(null);
         }}
         brokerageAccounts={brokerageAccounts || []}
         snapshotId={selectedSnapshotId || undefined}
         editingHolding={editingHolding}
+        defaultAccountId={addingToAccountId || undefined}
       />
 
       {/* Delete Confirmation Modal */}

@@ -81,6 +81,12 @@ export default function NewSnapshotModal({
     name: 'holdings',
   });
 
+  const { data: latestSnapshot, isLoading: isLoadingPrefill } =
+    trpc.stockAsset.getMostRecentSnapshot.useQuery(
+      {},
+      { enabled: isOpen },
+    );
+
   const createSnapshot = trpc.stockAsset.createSnapshot.useMutation({
     onSuccess: () => {
       toast.success('Snapshot created successfully!');
@@ -106,6 +112,30 @@ export default function NewSnapshotModal({
   const handleClose = () => {
     reset();
     onClose();
+  };
+
+  const handlePrefill = () => {
+    if (!latestSnapshot?.holdings?.length) return;
+
+    const prefillHoldings = latestSnapshot.holdings.map((h) => ({
+      ticker: h.ticker,
+      companyName: h.companyName,
+      quantity: Number(h.quantity),
+      buyPrice: Number(h.buyPrice),
+      buyDate: h.buyDate,
+      currentPrice: 0,        // user must enter today's price
+      currency: h.currency,
+      plannedTerm: h.plannedTerm,
+      accountId: h.accountId,
+      salePrice: null,        // sales are historical, do not carry over
+      saleDate: null,
+      soldQuantity: null,
+    }));
+
+    reset({
+      snapshotDate: new Date(),
+      holdings: prefillHoldings,
+    });
   };
 
   const accountOptions = brokerageAccounts.map((account) => ({
@@ -143,9 +173,21 @@ export default function NewSnapshotModal({
 
           {/* Holdings */}
           <div>
-            <h3 className='text-lg font-semibold text-foreground mb-4'>
-              Stock Holdings
-            </h3>
+            <div className='flex justify-between items-center mb-4'>
+              <h3 className='text-lg font-semibold text-foreground'>
+                Stock Holdings
+              </h3>
+              {latestSnapshot && (
+                <Button
+                  type='button'
+                  variant='secondary'
+                  onClick={handlePrefill}
+                  disabled={isLoadingPrefill}
+                >
+                  {isLoadingPrefill ? 'Loading...' : '↩ Prefill from previous'}
+                </Button>
+              )}
+            </div>
 
             {fields.map((field, index) => (
               <div
