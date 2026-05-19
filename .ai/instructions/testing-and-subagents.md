@@ -19,6 +19,27 @@ The orchestrator does all file reading; the subagent only writes.
 
 ---
 
+## Critical: Subagent Scope Constraints (Prevents Codebase Pollution)
+
+**IMPORTANT LESSON LEARNED**: Subagents will globally format, lint, and rewrite files unless explicitly constrained. Always include these hard bounds in every subagent prompt:
+
+```
+⚠️ CRITICAL CONSTRAINTS (ENFORCE STRICTLY):
+- You may ONLY modify these exact files: [list paths]
+- DO NOT run: pnpm lint --fix, pnpm format, prettier --write, or any global formatting
+- DO NOT run: pnpm run build (unless explicitly required in success criteria)
+- DO NOT commit code automatically (orchestrator will commit when all phases done)
+- DO NOT modify test files other than those explicitly listed
+- DO NOT run vitest --update or any snapshot auto-update commands
+- DO NOT modify any files outside the scope above, even if linting warnings appear
+```
+
+**Why**: Without explicit constraints, subagents interpret "write implementation" as "optimize entire codebase", leading to 300+ unrelated file modifications from ESLint auto-fix, Prettier auto-format, and vitest snapshot generation. This pollutes the git history and wastes review time.
+
+**Result**: Always lead with hard scope boundaries. If an agent reports warnings in unscoped files, instruct it to ignore them.
+
+---
+
 ## Subagent-first rule for test failures
 
 When asked to fix failing tests, **never fix them all yourself serially**. Categorise failures first, then delegate each independent category to a subagent. You act as orchestrator only.

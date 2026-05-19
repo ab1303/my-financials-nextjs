@@ -1,270 +1,154 @@
 'use client';
 
-import clsx from 'clsx';
-import { z } from 'zod';
-import { useId, useState } from 'react';
-import type { MouseEventHandler } from 'react';
-import { Loader2 } from 'lucide-react';
-import { FormProvider, useForm } from 'react-hook-form';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
-import { components } from 'react-select';
+import { useState } from 'react';
+import { Loader2, Trash2, Building2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import type { OptionProps, SingleValue, GroupBase } from 'react-select';
-import { TRPCError } from '@trpc/server';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { Card, AddressComponent, Button } from '@/components';
+import { Card, Button } from '@/components';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
-import type { BankType } from '@/types';
-
-type BankOptionType = {
-  value: BankType;
-  label: string;
-  id: string;
-};
-
-const postCodeSchema = z.coerce.number({
-  required_error: 'Postcode is required',
-  invalid_type_error: 'Postcode must be a number',
-});
-
-type DeleteIconProps = {
-  onClick: MouseEventHandler<HTMLDivElement>;
-};
-
-function DeleteIcon(props: DeleteIconProps) {
-  return (
-    <div
-      className='flex items-center hover:cursor-pointer hover:text-orange-700'
-      onClick={props.onClick}
-    >
-      <svg
-        className='mx-2 h-4 w-4 border-b-2 border-b-orange-700'
-        fill='currentColor'
-        viewBox='0 0 20 20'
-        xmlns='http://www.w3.org/2000/svg'
-      >
-        <path
-          fillRule='evenodd'
-          d='M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z'
-          clipRule='evenodd'
-        ></path>
-      </svg>
-    </div>
-  );
-}
-
-// React 19 type compatibility wrapper for react-select Option
-const BaseOption = components.Option as React.ComponentType<
-  OptionProps<BankOptionType, false, GroupBase<BankOptionType>>
->;
-
-const Option = (
-  props: OptionProps<BankOptionType, false>,
-): React.JSX.Element => {
-  const queryClient = useQueryClient();
-  const { isPending, mutate: deleteBank } =
-    trpc.bank.removeBankDetails.useMutation({
-      onSuccess() {
-        queryClient.refetchQueries({ queryKey: [['getAllBanks']] });
-        toast.success('Bank details deleted successfully');
-      },
-      onError(error) {
-        toast.error(error.message);
-      },
-    });
-
-  return (
-    <div className='flex justify-between'>
-      <BaseOption {...props} />
-      {isPending ? (
-        <Loader2 className='animate-spin' />
-      ) : (
-        <DeleteIcon onClick={() => deleteBank({ bankId: props.data.id })} />
-      )}
-    </div>
-  );
-};
 
 export default function BanksForm() {
   const queryClient = useQueryClient();
+  const [bankName, setBankName] = useState('');
+
   const getBanksQuery = trpc.bank.getAllBanks.useQuery();
-  const saveBankDetailsMutation = trpc.bank.saveBankDetails.useMutation({
-    onError(error: unknown) {
-      if (error instanceof TRPCError) {
-        toast.error(error.message);
-      }
-    },
 
+  const saveMutation = trpc.bank.saveBankDetails.useMutation({
     onSuccess() {
-      queryClient.refetchQueries({ queryKey: [['getAllBanks']] });
-      toast.success('Bank details saved!');
+      void queryClient.refetchQueries({ queryKey: [['bank', 'getAllBanks']] });
+      toast.success('Bank institution added');
+      setBankName('');
+    },
+    onError(error) {
+      toast.error(error.message);
     },
   });
 
-  const uniqSelectBankId = useId();
-  const [selectedBank, setSelectedBank] = useState<
-    SingleValue<BankOptionType> | undefined
-  >();
-
-  const formMethods = useForm<BankType>({
-    mode: 'onBlur',
-    defaultValues: {
-      bankName: '',
-      address: {
-        addressLine: '',
-        street_address: '',
-        suburb: '',
-        postcode: '',
-        state: '',
-      },
+  const deleteMutation = trpc.bank.removeBankDetails.useMutation({
+    onSuccess() {
+      void queryClient.refetchQueries({ queryKey: [['bank', 'getAllBanks']] });
+      toast.success('Bank institution removed');
+    },
+    onError(error) {
+      toast.error(error.message);
     },
   });
 
-  const {
-    register,
-    formState: { errors },
-    handleSubmit,
-    setValue: formFieldSetValue,
-  } = formMethods;
-
-  const resetForm = () => {
-    formFieldSetValue('bankName', '');
-    setSelectedBank(null);
+  const handleAdd = () => {
+    const trimmed = bankName.trim();
+    if (!trimmed) return;
+    saveMutation.mutate({ name: trimmed });
   };
 
-  const submitHandler = (formData: BankType) => {
-    console.log('Bank Details', formData);
-
-    const {
-      bankName,
-      address: { addressLine, postcode, state, street_address, suburb },
-    } = formData;
-
-    saveBankDetailsMutation.mutate({
-      name: bankName,
-      addressLine,
-      postcode: postCodeSchema.parse(postcode),
-      state,
-      streetAddress: street_address,
-      suburb,
-    });
-    resetForm();
-  };
-
-  const handleOptionChange = (option: SingleValue<BankOptionType>) => {
-    if (!option) {
-      resetForm();
-      return;
-    }
-
-    if (option.value) {
-      formFieldSetValue('bankName', option.value.bankName);
-      setSelectedBank(option);
-    }
-
-    return;
-  };
-
-  if (getBanksQuery.error) {
-    toast.error(getBanksQuery.error.message);
-  }
-
-  let bankOptions: Array<BankOptionType> = [];
-  if (getBanksQuery.isSuccess && getBanksQuery.data) {
-    bankOptions = getBanksQuery.data.map((o) => ({
-      id: o.id,
-      label: o.name,
-      value: {
-        bankName: o.name,
-        address: {
-          addressLine: o.addressLine || '',
-          postcode: String(o.postcode),
-          state: o.state || '',
-          street_address: o.streetAddress || '',
-          suburb: o.suburb || '',
-        },
-      },
-    }));
-  }
+  const banks = getBanksQuery.data ?? [];
 
   return (
-    <>
-      <Card>
-        <Card.Header>
-          <div className='flex justify-between text-left'>
-            <Card.Header.Title>Bank Details</Card.Header.Title>
+    <Card>
+      <Card.Header>
+        <div className='flex justify-between text-left'>
+          <Card.Header.Title>Bank Institutions</Card.Header.Title>
+        </div>
+        <p className='mt-1 text-sm text-muted-foreground'>
+          Global institutions shared across all users. Used when setting up bank accounts for CSV import.
+        </p>
+      </Card.Header>
+
+      <Card.Body>
+        {/* Inline add */}
+        <div className='mb-6 flex items-end gap-3 max-w-md'>
+          <div className='flex-1'>
+            <Label htmlFor='bankName'>Bank Name</Label>
+            <TextInput
+              id='bankName'
+              placeholder='e.g. Commonwealth Bank'
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAdd();
+                }
+              }}
+            />
           </div>
-        </Card.Header>
+          <Button
+            variant='primary'
+            type='button'
+            isLoading={saveMutation.isPending}
+            disabled={!bankName.trim() || saveMutation.isPending}
+            onClick={handleAdd}
+          >
+            <Plus className='mr-1 h-4 w-4' aria-hidden='true' />
+            Add
+          </Button>
+        </div>
 
-        <Card.Body>
-          <FormProvider {...formMethods}>
-            <form
-              className='mb-0 space-y-6'
-              onSubmit={handleSubmit(submitHandler)}
-            >
-              <div>
-                <Label htmlFor='bank'>Bank</Label>
-                <div className='mt-1'>
-                  <Select<BankOptionType>
-                    isClearable
-                    className='w-full max-w-md'
-                    components={{ Option }}
-                    value={selectedBank}
-                    options={bankOptions}
-                    instanceId={uniqSelectBankId}
-                    getOptionValue={(option) => option.id}
-                    onChange={(option) => handleOptionChange(option)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor='bankName' error={!!errors.bankName}>
-                  Bank Name
-                </Label>
-                <div className='mt-1'>
-                  <TextInput
-                    id='bankName'
-                    type='text'
-                    error={!!errors.bankName}
-                    {...register('bankName', { required: true })}
-                  />
-                </div>
-              </div>
-
-              <AddressComponent<BankType>
-                basePropertyName='address'
-                address={selectedBank?.value.address}
-                addressFields={{
-                  addressLineName: 'address.addressLine',
-                  postcodeName: 'address.postcode',
-                  stateName: 'address.state',
-                  street_addressName: 'address.street_address',
-                  suburbName: 'address.suburb',
-                  addressLineError: errors.address?.addressLine,
-                  suburbError: errors.address?.suburb,
-                  postcodeError: errors.address?.postcode,
-                  stateError: errors.address?.state,
-                  street_addressError: errors.address?.street_address,
-                }}
-              />
-
-              <div>
-                <Button
-                  isLoading={saveBankDetailsMutation.isPending}
-                  variant='primary'
-                  type='submit'
-                >
-                  Create
-                </Button>
-              </div>
-            </form>
-          </FormProvider>
-        </Card.Body>
-      </Card>
-
-    </>
+        {/* Institution list */}
+        {getBanksQuery.isLoading ? (
+          <div className='flex items-center gap-2 py-6 text-sm text-muted-foreground'>
+            <Loader2 className='h-4 w-4 animate-spin' />
+            Loading institutions…
+          </div>
+        ) : banks.length > 0 ? (
+          <div className='overflow-hidden rounded-lg border border-border'>
+            <table className='w-full text-sm'>
+              <thead className='bg-muted'>
+                <tr>
+                  <th className='cursor-default select-none px-4 py-3 text-left font-medium text-foreground'>
+                    Institution
+                  </th>
+                  <th className='w-12 px-4 py-3' />
+                </tr>
+              </thead>
+              <tbody className='divide-y divide-border'>
+                {banks.map((bank) => (
+                  <tr key={bank.id} className='hover:bg-muted/50'>
+                    <td className='flex items-center gap-2 px-4 py-3 text-foreground'>
+                      <Building2
+                        className='h-4 w-4 flex-shrink-0 text-muted-foreground'
+                        aria-hidden='true'
+                      />
+                      {bank.name}
+                    </td>
+                    <td className='px-4 py-3 text-right'>
+                      {deleteMutation.isPending &&
+                      deleteMutation.variables?.bankId === bank.id ? (
+                        <Loader2 className='ml-auto h-4 w-4 animate-spin text-muted-foreground' />
+                      ) : (
+                        <button
+                          type='button'
+                          onClick={() =>
+                            deleteMutation.mutate({ bankId: bank.id })
+                          }
+                          aria-label={`Remove ${bank.name}`}
+                          className='rounded p-1 text-destructive hover:bg-destructive/10'
+                        >
+                          <Trash2 className='h-4 w-4' aria-hidden='true' />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className='flex flex-col items-center rounded-lg border border-dashed border-border py-10 text-center'>
+            <Building2
+              className='mb-2 h-6 w-6 text-muted-foreground/50'
+              aria-hidden='true'
+            />
+            <p className='text-sm font-medium text-foreground'>
+              No bank institutions yet
+            </p>
+            <p className='mt-1 text-xs text-muted-foreground'>
+              Add your first bank above to get started
+            </p>
+          </div>
+        )}
+      </Card.Body>
+    </Card>
   );
 }

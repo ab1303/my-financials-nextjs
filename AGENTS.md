@@ -45,6 +45,27 @@ Never pass all three docs at once — `context.md` is redundant once HLD + LLD e
 - Stop the dev server before any Prisma CLI operation (prevents EPERM on Windows).
 - Never run `prisma migrate reset` without explicit user consent and a confirmed backup.
 
+## Subagent Scope Control (Critical Lesson)
+
+**Problem**: Subagents will globally format, lint, and rewrite unrelated files unless explicitly constrained. This causes 300+ file modifications that pollute git history.
+
+**Solution**: Every subagent prompt must include hard scope boundaries:
+
+```
+⚠️ CRITICAL CONSTRAINTS (NON-NEGOTIABLE):
+- You may ONLY modify these exact files: [explicit list]
+- DO NOT run: pnpm lint --fix, pnpm format, prettier --write, or global formatting
+- DO NOT run: pnpm run build (orchestrator handles verification)
+- DO NOT commit code (orchestrator commits when complete)
+- DO NOT modify test files except those explicitly listed
+- DO NOT run vitest --update or snapshot auto-update
+- DO NOT touch any files outside the scope above
+```
+
+**Why**: Without these constraints, agents interpret "implement Phase 1" as "optimize entire codebase". ESLint auto-fix, Prettier rewrites, and vitest snapshots reformat hundreds of unrelated files.
+
+**Result**: Always lead subagent prompts with hard file scope. If an agent reports warnings in unscoped files, instruct it to ignore them.
+
 ## Dev Server Safety (CRITICAL)
 
 **NEVER auto-kill Node processes after running `pnpm run build`.** This terminates the CLI session and abandons the user.

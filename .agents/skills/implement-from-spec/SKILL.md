@@ -135,6 +135,15 @@ STACK CONSTRAINTS — must follow exactly:
 - TDD: write tests first, then implementation
 - All context needed is provided in this prompt. Do NOT explore the codebase
   for additional files unless a compile error forces it.
+
+⚠️ CRITICAL SCOPE CONSTRAINTS (ENFORCE STRICTLY):
+- You may ONLY modify these exact files: [list from Files to modify/create table]
+- DO NOT run: pnpm lint --fix, pnpm format, prettier --write, or any global formatting
+- DO NOT run: pnpm run build (verification happens in orchestrator, not agent)
+- DO NOT commit code automatically (orchestrator commits when feature complete)
+- DO NOT modify test files other than those explicitly listed in this phase
+- DO NOT run vitest --update or any snapshot auto-update commands
+- DO NOT modify any files outside the scope above, even if ESLint/Prettier warnings appear
 ```
 
 ### e) TDD test cases from the LLD
@@ -144,8 +153,8 @@ the instruction: "Write these tests first; all must pass before the phase is com
 ### f) Success criteria
 "Phase is complete when:
 1. All listed test cases pass
-2. `pnpm run build` succeeds with no errors
-3. The following files have been modified/created: {list}"
+2. The following files have been modified/created: {list}
+3. No files outside the scope above have been touched"
 
 ---
 
