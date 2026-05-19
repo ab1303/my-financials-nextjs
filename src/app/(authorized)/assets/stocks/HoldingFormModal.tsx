@@ -10,6 +10,7 @@ import { CreatableAppSelect } from '@/components/ui/CreatableAppSelect';
 import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
 
 type SelectOption = { value: string; label: string };
+
 import { NumericFormat } from 'react-number-format';
 import { Disclosure } from '@headlessui/react';
 
@@ -35,6 +36,12 @@ interface Props {
   brokerageAccounts: Array<{
     id: string;
     name: string;
+    institution: { id: string; name: string };
+  }>;
+  brokerageInstitutions: Array<{
+    id: string;
+    name: string;
+    financialAccounts: Array<{ id: string; name: string }>;
   }>;
   snapshotId?: string;
   editingHolding?: StockHoldingWithAccount | null;
@@ -46,8 +53,8 @@ type UpdateFormData = UpdateStockHoldingInput;
 type FormData = CreateFormData | UpdateFormData;
 
 const CURRENCY_OPTIONS = [
-  { value: 'AUD', label: 'AUD 🇦🇺' },
-  { value: 'USD', label: 'USD 🇺🇸' },
+  { value: 'AUD', label: 'AUD' },
+  { value: 'USD', label: 'USD' },
 ];
 
 const TERM_OPTIONS = [
@@ -61,36 +68,84 @@ export default function HoldingFormModal({
   onClose,
   onSuccess,
   brokerageAccounts,
+  brokerageInstitutions,
   snapshotId,
   editingHolding,
   defaultAccountId,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaleExpanded, setIsSaleExpanded] = useState(false);
-  // Track buy date mode: 'month' (quick-pick) or 'exact' (full date)
   const [buyDateMode, setBuyDateMode] = useState<'exact' | 'month'>('month');
   const utils = trpc.useUtils();
 
   const isEditMode = !!editingHolding;
-  const [createdAccounts, setCreatedAccounts] = useState<Array<{ id: string; name: string }>>([]);
-  const createBrokerageAccount = trpc.business.create.useMutation({
-    onSuccess: (data, variables) => {
-      const newAccount = { id: data.id, name: data.name };
-      setCreatedAccounts((prev) => [...prev, newAccount]);
-      void utils.business.getBusinessesByType.invalidate({ type: 'BROKERAGE' });
+
+  // Two-level select state
+  const [selectedInstitution, setSelectedInstitution] = useState<{ id: string; name: string } | null>(null);
+
+  // Helper: get account name from id
+  const accountNameForId = (id: string) => {
+    return brokerageAccounts.find(a => a.id === id)?.name ?? id;
+  };
+
+  // Create new institution (Business/BROKERAGE)
+  const createInstitution = trpc.business.create.useMutation({
+    onSuccess: async () => {
+      await utils.business.getBrokeragesWithAccounts.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create brokerage institution');
+    },
+  });
+
+  // Create new sub-account under institution
+  const createBrokerageSubAccount = trpc.stockAsset.createBrokerageSubAccount.useMutation({
+    onSuccess: async () => {
+      await utils.stockAsset.getBrokerageAccounts.invalidate();
+      await utils.business.getBrokeragesWithAccounts.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to create brokerage account');
     },
   });
-  const handleCreateBrokerageAccount = async (inputValue: string, onChange: (value: string) => void) => {
-    const result = await createBrokerageAccount.mutateAsync({ name: inputValue, type: 'BROKERAGE' });
-    onChange(result.id);
-  };
-  const schema = isEditMode
-    ? updateStockHoldingSchema
-    : createStockHoldingSchema;
 
+  // Pre-select institution in edit mode
+  useEffect(() => {
+    if (isEditMode && editingHolding?.account?.institution) {
+      setSelectedInstitution({
+        id: editingHolding.account.institution.id,
+        name: editingHolding.account.institution.name,
+      });
+    }
+  }, [isEditMode, editingHolding]);
+
+  // Pre-select institution in create mode if defaultAccountId is provided
+  useEffect(() => {
+    if (!isEditMode && defaultAccountId) {
+      const account = brokerageAccounts.find(a => a.id === defaultAccountId);
+      if (account) setSelectedInstitution(account.institution);
+    }
+  }, [defaultAccountId, brokerageAccounts, isEditMode]);
+
+  // Institution options for select
+  const institutionOptions: SelectOption[] = brokerageInstitutions.map(inst => ({
+    value: inst.id,
+    label: inst.name,
+  }));
+
+  // Accounts for selected institution
+  const institution = selectedInstitution
+    ? brokerageInstitutions.find(inst => inst.id === selectedInstitution.id)
+    : undefined;
+  const accountOptions: SelectOption[] = institution
+    ? institution.financialAccounts.map(acc => ({
+        value: acc.id,
+        label: acc.name,
+      }))
+    : [];
+
+  // Form setup
+  const schema = isEditMode ? updateStockHoldingSchema : createStockHoldingSchema;
   const {
     control,
     register,
@@ -101,71 +156,78 @@ export default function HoldingFormModal({
     setValue,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues:
-      isEditMode && editingHolding
-        ? {
-            holdingId: editingHolding.id,
-            ticker: editingHolding.ticker,
-            companyName: editingHolding.companyName,
-            quantity: Number(editingHolding.quantity),
-            buyPrice: Number(editingHolding.buyPrice),
-            buyDate: editingHolding.buyDate,
-            currentPrice: Number(editingHolding.currentPrice),
-            currency: editingHolding.currency,
-            plannedTerm: editingHolding.plannedTerm,
-            accountId: editingHolding.accountId,
-            salePrice: editingHolding.salePrice
-              ? Number(editingHolding.salePrice)
-              : null,
-            saleDate: editingHolding.saleDate ?? null,
-            soldQuantity: editingHolding.soldQuantity
-              ? Number(editingHolding.soldQuantity)
-              : null,
-          }
-        : {
-            snapshotId: snapshotId || '',
-            ticker: '',
-            companyName: '',
-            quantity: 0,
-            buyPrice: 0,
-            buyDate: new Date(),
-            currentPrice: 0,
-            currency: 'AUD',
-            plannedTerm: 'MID_TERM',
-            accountId: defaultAccountId || brokerageAccounts?.[0]?.id || '',
-            salePrice: null,
-            saleDate: null,
-            soldQuantity: null,
-          },
+    defaultValues: isEditMode && editingHolding
+      ? {
+          ...editingHolding,
+          accountId: editingHolding.accountId,
+          quantity: Number(editingHolding.quantity),
+          buyPrice: Number(editingHolding.buyPrice),
+          currentPrice: Number(editingHolding.currentPrice),
+          salePrice: editingHolding.salePrice != null ? Number(editingHolding.salePrice) : null,
+          soldQuantity: editingHolding.soldQuantity != null ? Number(editingHolding.soldQuantity) : null,
+        }
+      : {
+          ticker: '',
+          companyName: '',
+          quantity: 0,
+          buyPrice: 0,
+          buyDate: new Date(),
+          currentPrice: 0,
+          currency: 'AUD',
+          plannedTerm: 'MID_TERM',
+          accountId: defaultAccountId ?? '',
+          salePrice: null,
+          saleDate: null,
+          soldQuantity: null,
+        },
   });
 
-  // Watch for sale section visibility
-  const salePrice = watch('salePrice');
-  const saleDate = watch('saleDate');
-  const soldQuantity = watch('soldQuantity');
+  // Reset institution/account on close
+  const handleClose = () => {
+    reset();
+    setSelectedInstitution(null);
+    setBuyDateMode('month');
+    onClose();
+  };
 
-  // Auto-expand sale section if holding was sold
-  useEffect(() => {
-    if (isEditMode && editingHolding) {
-      if (
-        editingHolding.salePrice ||
-        editingHolding.saleDate ||
-        editingHolding.soldQuantity
-      ) {
-        setIsSaleExpanded(true);
-      }
+  // Create institution handler
+  const handleCreateInstitution = async (
+    inputValue: string,
+    onInstitutionChange: (option: { value: string; label: string }) => void
+  ) => {
+    const result = await createInstitution.mutateAsync({ name: inputValue, type: 'BROKERAGE' });
+    const newInstitution = { id: result.id, name: result.name };
+    setSelectedInstitution(newInstitution);
+    onInstitutionChange({ value: result.id, label: result.name });
+    setValue('accountId', '');
+  };
+
+  // Create sub-account handler
+  const handleCreateSubAccount = async (
+    inputValue: string,
+    onAccountChange: (option: { value: string; label: string }) => void
+  ) => {
+    if (!selectedInstitution) {
+      toast.error('Select an institution first');
+      return;
     }
-  }, [editingHolding, isEditMode]);
+    const result = await createBrokerageSubAccount.mutateAsync({
+      businessId: selectedInstitution.id,
+      name: inputValue,
+    });
+    if (!result) return;
+    onAccountChange({ value: result.id, label: result.name });
+    setValue('accountId', result.id);
+  };
 
+  // Mutations for create/update
   const createHolding = trpc.stockAsset.createHolding.useMutation({
     onSuccess: () => {
-      toast.success('Holding added successfully!');
-      utils.stockAsset.getSnapshotById.invalidate({ snapshotId: snapshotId! });
-      utils.stockAsset.getSnapshotTotals.invalidate({
-        snapshotId: snapshotId!,
-      });
+      toast.success('Holding created successfully!');
+      utils.stockAsset.getSnapshots.invalidate();
       reset();
-      setCreatedAccounts([]);
+      setSelectedInstitution(null);
+      setBuyDateMode('month');
       onClose();
       onSuccess?.();
     },
@@ -177,11 +239,10 @@ export default function HoldingFormModal({
   const updateHolding = trpc.stockAsset.updateHolding.useMutation({
     onSuccess: () => {
       toast.success('Holding updated successfully!');
-      if (snapshotId) {
-        utils.stockAsset.getSnapshotById.invalidate({ snapshotId });
-        utils.stockAsset.getSnapshotTotals.invalidate({ snapshotId });
-      }
+      utils.stockAsset.getSnapshots.invalidate();
       reset();
+      setSelectedInstitution(null);
+      setBuyDateMode('month');
       onClose();
       onSuccess?.();
     },
@@ -193,60 +254,75 @@ export default function HoldingFormModal({
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      // Convert month/year to first day of month if in month mode
+      // Convert buyDate if in month mode
       let processedData = { ...data };
       if (buyDateMode === 'month' && data.buyDate) {
         const dateStr = data.buyDate.toString();
         if (dateStr.includes('-') && !dateStr.includes(':')) {
-          // Format is likely "YYYY-MM" from month input
           const parts = dateStr.split('-');
           const year = parts[0];
           const month = parts[1];
           if (year && month) {
-            processedData.buyDate = new Date(parseInt(year), parseInt(month) - 1, 1) as any;
+            processedData = {
+              ...data,
+              buyDate: new Date(parseInt(year), parseInt(month) - 1, 1),
+            };
           }
         }
       }
-
       if (isEditMode) {
         await updateHolding.mutateAsync(processedData as UpdateFormData);
       } else {
-        await createHolding.mutateAsync(processedData as CreateFormData);
+        await createHolding.mutateAsync({
+          ...(processedData as CreateFormData),
+          snapshotId: snapshotId!,
+        });
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
-    reset();
-    setIsSaleExpanded(false);
-    setBuyDateMode('month'); // Reset to default
-    setCreatedAccounts([]);
-    onClose();
-  };
-
-  const allBrokerageAccounts = [...brokerageAccounts, ...createdAccounts];
-  const accountOptions = allBrokerageAccounts.map((account) => ({
-    value: account.id,
-    label: account.name,
-  }));
-
   return (
     <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-2xl'>
       <Modal.Header>
         <span className='text-xl font-semibold text-foreground'>
-          {isEditMode ? 'Edit Stock Holding' : 'Add Stock Holding'}
+          {isEditMode ? 'Edit Holding' : 'Add Holding'}
         </span>
-        <p className='text-sm text-muted-foreground mt-1'>
-          {isEditMode
-            ? 'Update holding details and sale information'
-            : 'Add a new stock to your snapshot'}
-        </p>
       </Modal.Header>
-
       <form onSubmit={handleSubmit(onSubmit)}>
         <Modal.Body variant='spacious'>
+          {/* Institution Selection */}
+          <div>
+            <Label htmlFor='institutionId'>Brokerage Institution *</Label>
+            <CreatableAppSelect<SelectOption>
+              options={institutionOptions}
+              value={
+                selectedInstitution
+                  ? { value: selectedInstitution.id, label: selectedInstitution.name }
+                  : null
+              }
+              onChange={option => {
+                setSelectedInstitution(option ? { id: option.value, name: option.label } : null);
+                setValue('accountId', '');
+              }}
+              onCreateOption={inputValue =>
+                handleCreateInstitution(
+                  inputValue,
+                  (option) => {
+                    setSelectedInstitution({ id: option.value, name: option.label });
+                    setValue('accountId', '');
+                  }
+                )
+              }
+              isLoading={createInstitution.isPending}
+              formatCreateLabel={inputValue => `+ Create "${inputValue}"`}
+              className='mt-1'
+              placeholder='Select or create institution…'
+              inputId='institutionId'
+              isDisabled={isEditMode}
+            />
+          </div>
           {/* Account Selection */}
           <div>
             <Label htmlFor='accountId'>Brokerage Account *</Label>
@@ -257,13 +333,28 @@ export default function HoldingFormModal({
                 <CreatableAppSelect<SelectOption>
                   {...field}
                   options={accountOptions}
-                  value={accountOptions.find((opt) => opt.value === field.value) ?? null}
-                  onChange={(selected) => field.onChange(selected?.value ?? '')}
-                  onCreateOption={(inputValue) => handleCreateBrokerageAccount(inputValue, field.onChange)}
-                  isLoading={createBrokerageAccount.isPending}
-                  formatCreateLabel={(inputValue) => `+ Create \"${inputValue}\"`}
+                  value={
+                    field.value
+                      ? accountOptions.find(opt => opt.value === field.value) ?? null
+                      : null
+                  }
+                  onChange={selected => field.onChange(selected?.value ?? '')}
+                  onCreateOption={inputValue =>
+                    handleCreateSubAccount(
+                      inputValue,
+                      (option) => field.onChange(option.value)
+                    )
+                  }
+                  isLoading={createBrokerageSubAccount.isPending}
+                  formatCreateLabel={inputValue => `+ Create "${inputValue}"`}
                   className='mt-1'
-                  isDisabled={isEditMode}
+                  isDisabled={!selectedInstitution || isEditMode}
+                  placeholder={
+                    selectedInstitution
+                      ? 'Select or create account…'
+                      : 'Select institution first'
+                  }
+                  inputId='accountId'
                 />
               )}
             />
@@ -273,313 +364,305 @@ export default function HoldingFormModal({
               </p>
             )}
           </div>
-
-          {/* Ticker & Company */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div>
-              <Label htmlFor='ticker'>Ticker Symbol *</Label>
-              <input
-                {...register('ticker')}
-                type='text'
-                placeholder='e.g., CBA'
-                className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-              />
-              {errors.ticker && (
-                <p className='mt-1 text-sm text-red-600'>
-                  {errors.ticker.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor='companyName'>Company Name *</Label>
-              <input
-                {...register('companyName')}
-                type='text'
-                placeholder='e.g., Commonwealth Bank'
-                className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-              />
-              {errors.companyName && (
-                <p className='mt-1 text-sm text-red-600'>
-                  {errors.companyName.message}
-                </p>
-              )}
-            </div>
+          {/* Ticker */}
+          <div>
+            <Label htmlFor='ticker'>Ticker *</Label>
+            <input
+              {...register('ticker')}
+              type='text'
+              className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+              autoCapitalize='characters'
+              autoCorrect='off'
+              spellCheck={false}
+              inputMode='text'
+              autoComplete='off'
+              placeholder='e.g. CBA'
+              disabled={isEditMode}
+            />
+            {errors.ticker && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.ticker.message}
+              </p>
+            )}
           </div>
-
-          {/* Currency & Term */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div>
-              <Label htmlFor='currency'>Currency *</Label>
-              <Controller
-                name='currency'
-                control={control}
-                render={({ field }) => (
-                  <Select<SelectOption>
-                    {...field}
-                    options={CURRENCY_OPTIONS}
-                    value={CURRENCY_OPTIONS.find(
-                      (opt) => opt.value === field.value,
-                    )}
-                    onChange={(selected) => field.onChange(selected?.value)}
-                    className='mt-1'
-                  />
-                )}
-              />
-              {errors.currency && (
-                <p className='mt-1 text-sm text-red-600'>
-                  {errors.currency.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor='plannedTerm'>Planned Term *</Label>
-              <Controller
-                name='plannedTerm'
-                control={control}
-                render={({ field }) => (
-                  <Select<SelectOption>
-                    {...field}
-                    options={TERM_OPTIONS}
-                    value={TERM_OPTIONS.find(
-                      (opt) => opt.value === field.value,
-                    )}
-                    onChange={(selected) => field.onChange(selected?.value)}
-                    className='mt-1'
-                  />
-                )}
-              />
-              {errors.plannedTerm && (
-                <p className='mt-1 text-sm text-red-600'>
-                  {errors.plannedTerm.message}
-                </p>
-              )}
-            </div>
+          {/* Company Name */}
+          <div>
+            <Label htmlFor='companyName'>Company Name *</Label>
+            <input
+              {...register('companyName')}
+              type='text'
+              className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+              autoCorrect='off'
+              spellCheck={false}
+              inputMode='text'
+              autoComplete='off'
+              placeholder='e.g. Commonwealth Bank'
+              disabled={isEditMode}
+            />
+            {errors.companyName && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.companyName.message}
+              </p>
+            )}
           </div>
-
-          {/* Quantity & Prices */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div>
-              <Label htmlFor='quantity'>Quantity *</Label>
-              <Controller
-                name='quantity'
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <NumericFormat
-                    value={value}
-                    onValueChange={(values) => onChange(values.floatValue || 0)}
-                    thousandSeparator=','
-                    decimalScale={6}
-                    fixedDecimalScale
-                    placeholder='0.000000'
-                    className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-                  />
-                )}
-              />
-              {errors.quantity && (
-                <p className='mt-1 text-sm text-red-600'>
-                  {errors.quantity.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor='buyPrice'>Buy Price *</Label>
-              <Controller
-                name='buyPrice'
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <NumericFormat
-                    value={value}
-                    onValueChange={(values) => onChange(values.floatValue || 0)}
-                    thousandSeparator=','
-                    decimalScale={2}
-                    fixedDecimalScale
-                    prefix='$'
-                    placeholder='$0.00'
-                    className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-                  />
-                )}
-              />
-              {errors.buyPrice && (
-                <p className='mt-1 text-sm text-red-600'>
-                  {errors.buyPrice.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Buy Date & Current Price */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <div>
-              <Label htmlFor='buyDate'>Buy Date (Optional)</Label>
-              
-              {/* Toggle between month and exact date */}
-              <div className='flex gap-3 mb-2'>
-                <label className='flex items-center gap-2 cursor-pointer text-sm'>
-                  <input
-                    type='radio'
-                    value='month'
-                    checked={buyDateMode === 'month'}
-                    onChange={() => setBuyDateMode('month')}
-                    className='w-4 h-4'
-                  />
-                  <span>Estimate (month/year)</span>
-                </label>
-                <label className='flex items-center gap-2 cursor-pointer text-sm'>
-                  <input
-                    type='radio'
-                    value='exact'
-                    checked={buyDateMode === 'exact'}
-                    onChange={() => setBuyDateMode('exact')}
-                    className='w-4 h-4'
-                  />
-                  <span>Exact date</span>
-                </label>
-              </div>
-
-              {/* Conditional input based on mode */}
-              {buyDateMode === 'month' ? (
-                <input
-                  {...register('buyDate')}
-                  type='month'
-                  placeholder='MM/YYYY'
-                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-                />
-              ) : (
-                <input
-                  {...register('buyDate')}
-                  type='date'
-                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+          {/* Currency */}
+          <div>
+            <Label htmlFor='currency'>Currency *</Label>
+            <Controller
+              name='currency'
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={CURRENCY_OPTIONS}
+                  value={CURRENCY_OPTIONS.find(opt => opt.value === field.value) ?? null}
+                  onChange={selected => field.onChange(selected?.value ?? '')}
+                  className='mt-1'
+                  isDisabled={isEditMode}
                 />
               )}
-
-              {/* CGT Eligibility Warning */}
-              <CGTEligibilityWarning 
-                buyDate={watch('buyDate')}
-                snapshotDate={new Date()}
-              />
-
-              {errors.buyDate && (
-                <p className='mt-1 text-sm text-red-600'>
-                  {errors.buyDate.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor='currentPrice'>Current Price *</Label>
-              <Controller
-                name='currentPrice'
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <NumericFormat
-                    value={value}
-                    onValueChange={(values) => onChange(values.floatValue || 0)}
-                    thousandSeparator=','
-                    decimalScale={2}
-                    fixedDecimalScale
-                    prefix='$'
-                    placeholder='$0.00'
-                    className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-                  />
-                )}
-              />
-              {errors.currentPrice && (
-                <p className='mt-1 text-sm text-red-600'>
-                  {errors.currentPrice.message}
-                </p>
-              )}
-            </div>
+            />
+            {errors.currency && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.currency.message}
+              </p>
+            )}
           </div>
-
-{/* Sale Information */}{/* Sale Information (Collapsible) */}
-          <Disclosure
-            as='div'
-            className='border-t pt-4'
-            defaultOpen={isSaleExpanded}
-          >
+          {/* Planned Term */}
+          <div>
+            <Label htmlFor='plannedTerm'>Planned Term *</Label>
+            <Controller
+              name='plannedTerm'
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  options={TERM_OPTIONS}
+                  value={TERM_OPTIONS.find(opt => opt.value === field.value) ?? null}
+                  onChange={selected => field.onChange(selected?.value ?? '')}
+                  className='mt-1'
+                  isDisabled={isEditMode}
+                />
+              )}
+            />
+            {errors.plannedTerm && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.plannedTerm.message}
+              </p>
+            )}
+          </div>
+          {/* Quantity */}
+          <div>
+            <Label htmlFor='quantity'>Quantity *</Label>
+            <Controller
+              name='quantity'
+              control={control}
+              render={({ field }) => (
+                <NumericFormat
+                  {...field}
+                  value={field.value}
+                  allowNegative={false}
+                  decimalScale={4}
+                  allowLeadingZeros={false}
+                  thousandSeparator
+                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                  onValueChange={values => field.onChange(values.floatValue ?? 0)}
+                  disabled={isEditMode}
+                />
+              )}
+            />
+            {errors.quantity && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.quantity.message}
+              </p>
+            )}
+          </div>
+          {/* Buy Price */}
+          <div>
+            <Label htmlFor='buyPrice'>Buy Price (per share) *</Label>
+            <Controller
+              name='buyPrice'
+              control={control}
+              render={({ field }) => (
+                <NumericFormat
+                  {...field}
+                  value={field.value}
+                  allowNegative={false}
+                  decimalScale={4}
+                  allowLeadingZeros={false}
+                  thousandSeparator
+                  prefix='$'
+                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                  onValueChange={values => field.onChange(values.floatValue ?? 0)}
+                  disabled={isEditMode}
+                />
+              )}
+            />
+            {errors.buyPrice && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.buyPrice.message}
+              </p>
+            )}
+          </div>
+          {/* Buy Date */}
+          <div>
+            <Label htmlFor='buyDate'>Buy Date *</Label>
+            <div className='flex gap-2 items-center'>
+              <select
+                value={buyDateMode}
+                onChange={e => setBuyDateMode(e.target.value as 'month' | 'exact')}
+                className='border border-input rounded-md px-2 py-1 text-sm'
+                disabled={isEditMode}
+              >
+                <option value='month'>Month</option>
+                <option value='exact'>Exact</option>
+              </select>
+              <Controller
+                name='buyDate'
+                control={control}
+                render={({ field: { value, onChange, ...rest } }) =>
+                  buyDateMode === 'exact' ? (
+                    <input
+                      {...rest}
+                      type='date'
+                      value={value ? new Date(value).toISOString().split('T')[0] : ''}
+                      onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
+                      className='block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                      disabled={isEditMode}
+                    />
+                  ) : (
+                    <input
+                      {...rest}
+                      type='month'
+                      value={value ? new Date(value).toISOString().slice(0, 7) : ''}
+                      onChange={(e) => onChange(e.target.value ? new Date(e.target.value + '-01') : null)}
+                      className='block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                      disabled={isEditMode}
+                    />
+                  )
+                }
+              />
+            </div>
+            {errors.buyDate && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.buyDate.message}
+              </p>
+            )}
+          </div>
+          {/* Current Price */}
+          <div>
+            <Label htmlFor='currentPrice'>Current Price (per share) *</Label>
+            <Controller
+              name='currentPrice'
+              control={control}
+              render={({ field }) => (
+                <NumericFormat
+                  {...field}
+                  value={field.value}
+                  allowNegative={false}
+                  decimalScale={4}
+                  allowLeadingZeros={false}
+                  thousandSeparator
+                  prefix='$'
+                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                  onValueChange={values => field.onChange(values.floatValue ?? 0)}
+                  disabled={isEditMode}
+                />
+              )}
+            />
+            {errors.currentPrice && (
+              <p className='mt-1 text-sm text-red-600'>
+                {errors.currentPrice.message}
+              </p>
+            )}
+          </div>
+          {/* Sale Section */}
+          <Disclosure>
             {({ open }) => (
               <>
                 <Disclosure.Button
-                  onClick={() => setIsSaleExpanded(!open)}
-                  className='flex items-center gap-2 text-primary hover:text-primary/80 font-medium'
+                  className='flex items-center gap-2 mt-4 text-indigo-700 hover:underline'
+                  onClick={() => setIsSaleExpanded(!isSaleExpanded)}
+                  type='button'
                 >
-                  {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  Sale Information
+                  {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  {open ? 'Hide Sale Fields' : 'Show Sale Fields'}
                 </Disclosure.Button>
-
-                <Disclosure.Panel className='mt-4 space-y-4'>
-                  <div className='p-3 bg-muted/50 rounded-md text-sm text-muted-foreground'>
-                    Enter all three fields to record a sale, or leave all empty
-                    for unsold holdings.
-                  </div>
-
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <Disclosure.Panel>
+                  <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    {/* Sale Price */}
                     <div>
-                      <Label htmlFor='salePrice'>Sale Price</Label>
+                      <Label htmlFor='salePrice'>Sale Price (per share)</Label>
                       <Controller
                         name='salePrice'
                         control={control}
-                        render={({ field: { value, onChange } }) => (
+                        render={({ field }) => (
                           <NumericFormat
-                            value={value ?? ''}
-                            onValueChange={(values) =>
-                              onChange(values.floatValue ?? null)
-                            }
-                            thousandSeparator=','
-                            decimalScale={2}
-                            fixedDecimalScale
+                            {...field}
+                            value={field.value ?? ''}
+                            allowNegative={false}
+                            decimalScale={4}
+                            allowLeadingZeros={false}
+                            thousandSeparator
                             prefix='$'
-                            placeholder='$0.00'
                             className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                            onValueChange={values => field.onChange(values.floatValue ?? null)}
+                            disabled={isEditMode}
                           />
                         )}
                       />
-                      {(errors as any).salePrice && (
+                      {errors.salePrice && (
                         <p className='mt-1 text-sm text-red-600'>
-                          {(errors as any).salePrice?.message}
+                          {errors.salePrice.message}
                         </p>
                       )}
                     </div>
-
+                    {/* Sale Date */}
                     <div>
                       <Label htmlFor='saleDate'>Sale Date</Label>
-                      <input
-                        {...register('saleDate')}
-                        type='date'
-                        className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                      <Controller
+                        name='saleDate'
+                        control={control}
+                        render={({ field: { value, onChange, ...rest } }) => (
+                          <input
+                            {...rest}
+                            type='date'
+                            value={value ? new Date(value).toISOString().split('T')[0] : ''}
+                            onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
+                            className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                            disabled={isEditMode}
+                          />
+                        )}
                       />
-                      {(errors as any).saleDate && (
+                      {errors.saleDate && (
                         <p className='mt-1 text-sm text-red-600'>
-                          {(errors as any).saleDate?.message}
+                          {errors.saleDate.message}
                         </p>
                       )}
                     </div>
-
+                    {/* Sold Quantity */}
                     <div>
                       <Label htmlFor='soldQuantity'>Sold Quantity</Label>
                       <Controller
                         name='soldQuantity'
                         control={control}
-                        render={({ field: { value, onChange } }) => (
+                        render={({ field }) => (
                           <NumericFormat
-                            value={value ?? ''}
-                            onValueChange={(values) =>
-                              onChange(values.floatValue ?? null)
-                            }
-                            thousandSeparator=','
-                            decimalScale={6}
-                            fixedDecimalScale
-                            placeholder='0.000000'
+                            {...field}
+                            value={field.value ?? ''}
+                            allowNegative={false}
+                            decimalScale={4}
+                            allowLeadingZeros={false}
+                            thousandSeparator
                             className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                            onValueChange={values => field.onChange(values.floatValue ?? null)}
+                            disabled={isEditMode}
                           />
                         )}
                       />
-                      {(errors as any).soldQuantity && (
+                      {errors.soldQuantity && (
                         <p className='mt-1 text-sm text-red-600'>
-                          {(errors as any).soldQuantity?.message}
+                          {errors.soldQuantity.message}
                         </p>
                       )}
                     </div>
@@ -588,31 +671,25 @@ export default function HoldingFormModal({
               </>
             )}
           </Disclosure>
-
-          {/* General Validation Error */}
-          {Object.keys(errors).length > 0 &&
-            !Object.values(errors).some((e) => e?.message) && (
-              <div className='p-3 bg-red-50 rounded-md text-sm text-red-700'>
-                Please check all required fields and fix the errors above.
-              </div>
-            )}
+          <CGTEligibilityWarning
+            buyDate={watch('buyDate')}
+          />
         </Modal.Body>
-
         <Modal.Footer>
-          <Button variant='secondary' onClick={handleClose}>
+          <Button variant='secondary' onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
             variant='primary'
             type='submit'
-            disabled={
-              isSubmitting || createHolding.isPending || updateHolding.isPending
-            }
+            disabled={isSubmitting || createHolding.isPending || updateHolding.isPending}
           >
-            {isSubmitting
-              ? 'Saving...'
+            {isSubmitting || createHolding.isPending || updateHolding.isPending
+              ? isEditMode
+                ? 'Saving...'
+                : 'Creating...'
               : isEditMode
-                ? 'Update Holding'
+                ? 'Save Changes'
                 : 'Add Holding'}
           </Button>
         </Modal.Footer>
@@ -620,3 +697,4 @@ export default function HoldingFormModal({
     </Modal>
   );
 }
+

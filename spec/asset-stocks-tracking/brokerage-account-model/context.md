@@ -2,7 +2,7 @@
 
 ## Feature Summary
 
-Upgrade `StockHolding.accountId` from pointing to `Business` (institution) to `BankAccount` (sub-account under institution). Enables users to distinguish between multiple accounts at the same brokerage (e.g., Fidelity IRA vs Fidelity Individual). Aligns with industry-standard 3-tier Institution → Account → Holdings model.
+Two coordinated changes: (1) rename `BankAccount` → `FinancialAccount` across the full schema (`bankId` → `institutionId`, `bank` relation → `institution`, `bankAccounts` → `financialAccounts`); (2) move `StockHolding.accountId` from pointing to `Business` (institution) to `FinancialAccount` (sub-account). Enables users to distinguish multiple accounts at the same brokerage (e.g., Fidelity IRA vs Fidelity Individual). Aligns with industry-standard 3-tier Institution → Account → Holdings model. `Business.type` (BANK | BROKERAGE) remains the reporting discriminator; `FinancialAccount` is type-agnostic.
 
 ---
 
@@ -12,17 +12,19 @@ Upgrade `StockHolding.accountId` from pointing to `Business` (institution) to `B
 
 | File | Change |
 |------|--------|
-| `prisma/schema.prisma` | Change `StockHolding.account` relation from `Business` to `BankAccount`; rename field `account Business` → `account BankAccount`; update `accountId` FK |
+| `prisma/schema.prisma` | Rename model `BankAccount` → `FinancialAccount`; rename field `bankId` → `institutionId`; rename relation `bank` → `institution`; rename back-relation `bankAccounts` → `financialAccounts` on `Business` and `User`; update `@@unique` constraint column; change `StockHolding.account` relation target from `Business` to `FinancialAccount`; remove `stockHoldings` from `Business` |
 
 ### Backend
 
 | File | Change |
 |------|--------|
 | `src/server/schema/stock-asset.schema.ts` | `accountId` remains `z.string()` — no schema change needed |
-| `src/server/services/stock-asset.service.ts` | Update account verification: query `BankAccount` (not `Business`); update `include` clauses to include `bank` (parent Business) |
+| `src/server/services/stock-asset.service.ts` | Update account verification: query `financialAccount` (not `business`); update `include` clauses to use `institution` (parent Business) |
+| `src/server/services/bank-account.service.ts` | Rename all `prisma.bankAccount` → `prisma.financialAccount`; rename `bankId` → `institutionId`; rename `bank` relation → `institution` |
 | `src/server/controllers/stock-asset.controller.ts` | Likely no changes; passes through service layer |
-| `src/server/trpc/router/stock-asset.ts` | Add `getBrokerageAccounts` query (replaces `business.getBusinessesByType`); add `createBrokerageSubAccount` mutation |
-| `src/server/trpc/router/business.ts` | Add `getBrokerageAccountsWithSubs` query returning `Business[]` with nested `BankAccount[]` |
+| `src/server/trpc/router/stock-asset.ts` | Add `getBrokerageAccounts` query; add `createBrokerageSubAccount` mutation |
+| `src/server/trpc/router/business.ts` | Add `getBrokeragesWithAccounts` query returning `Business[]` with nested `FinancialAccount[]`; update any `bankAccounts` → `financialAccounts` references |
+| `src/server/trpc/router/bank-account.ts` *(if exists)* | Update all `bankAccount` Prisma client calls → `financialAccount`; `bankId` → `institutionId` |
 
 ### Types
 
@@ -54,27 +56,27 @@ Upgrade `StockHolding.accountId` from pointing to `Business` (institution) to `B
 
 ```prisma
 model Business {
-  id           String            @id @default(cuid())
-  name         String
-  type         BusinessEnumType?
-  bankAccounts BankAccount[]     // ← already supports sub-accounts
-  stockHoldings StockHolding[]   // ← will be REMOVED after migration
-  userId       String
+  id            String            @id @default(cuid())
+  name          String
+  type          BusinessEnumType?
+  bankAccounts  BankAccount[]     // ← will be renamed financialAccounts
+  stockHoldings StockHolding[]    // ← will be REMOVED after migration
+  userId        String
 }
 
-model BankAccount {
-  id        String    @id @default(cuid())
-  name      String                         // e.g., "Roth IRA", "Individual"
-  bankId    String
-  bank      Business  @relation(fields: [bankId], references: [id])
-  userId    String
+model BankAccount {                              // ← will be renamed FinancialAccount
+  id     String   @id @default(cuid())
+  name   String                                 // e.g., "NetSaver", "Roth IRA"
+  bankId String                                 // ← will be renamed institutionId
+  bank   Business @relation(fields: [bankId], references: [id])  // ← will be renamed institution
+  userId String
   @@unique([name, bankId, userId])
 }
 
 model StockHolding {
-  id        String   @id @default(cuid())
-  accountId String
-  account   Business @relation(fields: [accountId], references: [id])  // ← CHANGE THIS
+  id         String   @id @default(cuid())
+  accountId  String
+  account    Business @relation(fields: [accountId], references: [id])  // ← CHANGE TO FinancialAccount
   snapshotId String
   // ... other fields
 }
@@ -83,16 +85,35 @@ model StockHolding {
 ### Target Schema
 
 ```prisma
+model Business {
+  id                String             @id @default(cuid())
+  name              String
+  type              BusinessEnumType?
+  financialAccounts FinancialAccount[] // ← renamed from bankAccounts
+  userId            String
+  // stockHoldings removed
+}
+
+model FinancialAccount {                         // ← renamed from BankAccount
+  id            String         @id @default(cuid())
+  name          String                           // e.g., "NetSaver", "Roth IRA", "Individual Brokerage"
+  institutionId String                           // ← renamed from bankId
+  institution   Business       @relation(fields: [institutionId], references: [id])  // ← renamed from bank
+  userId        String
+  stockHoldings StockHolding[]                   // ← NEW back-relation
+  @@unique([name, institutionId, userId])
+}
+
 model StockHolding {
-  id        String      @id @default(cuid())
-  accountId String
-  account   BankAccount @relation(fields: [accountId], references: [id])  // ← CHANGED
+  id         String           @id @default(cuid())
+  accountId  String
+  account    FinancialAccount @relation(fields: [accountId], references: [id])  // ← CHANGED
   snapshotId String
   // ... other fields
 }
 ```
 
-Note: Remove `stockHoldings StockHolding[]` from `Business` model.
+Note: The `@@unique` constraint column rename (`bankId` → `institutionId`) is handled automatically by Prisma's migration generator.
 
 ---
 
@@ -128,14 +149,16 @@ export type BrokerageAccountOption = {
 
 // AFTER
 export type StockHoldingWithAccount = StockHolding & {
-  account: Pick<BankAccount, 'id' | 'name'> & {
-    bank: Pick<Business, 'id' | 'name'>;
+  account: Pick<FinancialAccount, 'id' | 'name'> & {
+    institution: Pick<Business, 'id' | 'name'>;
   };
 };
 
 export type BrokerageAccountOption = {
-  value: string; // BankAccount.id
-  label: string; // "InstitutionName — AccountName"
+  value: string;           // FinancialAccount.id
+  label: string;           // "InstitutionName — AccountName"
+  institutionId: string;   // Business.id (for grouping/filtering)
+  institutionName: string; // Business.name (for display)
 };
 
 export type BrokerageInstitutionOption = {

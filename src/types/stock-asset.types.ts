@@ -2,6 +2,7 @@ import type {
   PortfolioSnapshot,
   StockHolding,
   Business,
+  FinancialAccount,
   CurrencyEnumType,
   InvestmentTermEnumType,
 } from '@prisma/client';
@@ -9,7 +10,9 @@ import type {
 // ── Extended Prisma Types (with relations) ───────────────────────
 
 export type StockHoldingWithAccount = StockHolding & {
-  account: Pick<Business, 'id' | 'name'>;
+  account: Pick<FinancialAccount, 'id' | 'name'> & {
+    institution: Pick<Business, 'id' | 'name'>;
+  };
 };
 
 export type StockSnapshotWithHoldings = PortfolioSnapshot & {
@@ -40,7 +43,9 @@ export type HoldingDisplay = StockHoldingWithAccount & HoldingCalculations;
 
 export type AccountTotalSummary = {
   accountId: string;
-  accountName: string;
+  accountName: string;       // "InstitutionName — AccountName"
+  institutionName: string;   // Business.name
+  subAccountName: string;    // FinancialAccount.name
   currency: CurrencyEnumType;
   holdings: HoldingDisplay[];
   totalMarketValue: number;
@@ -87,6 +92,13 @@ export type SnapshotFormData = {
 // ── Select Options ───────────────────────────────────────────────
 
 export type BrokerageAccountOption = {
+  value: string;           // FinancialAccount.id
+  label: string;           // "InstitutionName — AccountName"
+  institutionId: string;   // Business.id
+  institutionName: string; // Business.name
+};
+
+export type BrokerageInstitutionOption = {
   value: string; // Business.id
   label: string; // Business.name
 };

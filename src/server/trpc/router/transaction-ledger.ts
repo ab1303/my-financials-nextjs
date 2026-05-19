@@ -30,6 +30,7 @@ type PrismaReimbursement = {
   confirmedAt: Date | null;
   bankAccountId: string | null;
   bankAccount?: { name: string; bank?: { name: string | null } | null } | null;
+  financialAccount?: { name: string; institution?: { name: string | null } | null } | null;
 };
 
 type PrismaTransaction = {
@@ -46,8 +47,8 @@ type PrismaTransaction = {
   confirmedAt: Date | null;
   bankAccountId: string | null;
   bankAccount?: { name: string; bank?: { name: string | null } | null } | null;
+  financialAccount?: { name: string; institution?: { name: string | null } | null } | null;
   userId: string;
-  importSessionId: string | null;
   createdAt: Date;
   updatedAt: Date;
   reimbursements: PrismaReimbursement[];
@@ -246,7 +247,7 @@ export const transactionLedgerRouter = router({
         skip: (input.page - 1) * input.limit,
         take: input.limit,
         include: {
-          bankAccount: { select: { name: true, bank: { select: { name: true } } } },
+          financialAccount: { select: { name: true, institution: { select: { name: true } } } },
           reimbursements: {
             where: { category: REIMBURSEMENT_CATEGORY },
             select: {
@@ -261,7 +262,7 @@ export const transactionLedgerRouter = router({
               status: true,
               confirmedAt: true,
               bankAccountId: true,
-              bankAccount: { select: { name: true, bank: { select: { name: true } } } },
+              financialAccount: { select: { name: true, institution: { select: { name: true } } } },
             },
           },
           donationPayment: { select: { id: true } },
@@ -272,7 +273,7 @@ export const transactionLedgerRouter = router({
               description: true,
               amount: true,
               type: true,
-              bankAccount: { select: { name: true, bank: { select: { name: true } } } },
+              financialAccount: { select: { name: true, institution: { select: { name: true } } } },
             },
           },
           transferCounterpart: {
@@ -282,7 +283,7 @@ export const transactionLedgerRouter = router({
               description: true,
               amount: true,
               type: true,
-              bankAccount: { select: { name: true, bank: { select: { name: true } } } },
+              financialAccount: { select: { name: true, institution: { select: { name: true } } } },
             },
           },
         },
@@ -301,8 +302,8 @@ export const transactionLedgerRouter = router({
       status: tx.status,
       confirmedAt: tx.confirmedAt ? tx.confirmedAt.toISOString() : null,
       bankAccountId: tx.bankAccountId,
-      bankAccountName: tx.bankAccount?.name ?? null,
-      bankName: tx.bankAccount?.bank?.name ?? null,
+      bankAccountName: tx.financialAccount?.name ?? null,
+      bankName: tx.financialAccount?.institution?.name ?? null,
       offsetCategory: tx.offsetCategory ?? null,
       offsetTransactionId: tx.offsetTransactionId ?? null,
       reimbursements: (tx.reimbursements ?? []).map((r) => ({
@@ -317,8 +318,8 @@ export const transactionLedgerRouter = router({
         status: r.status,
         confirmedAt: r.confirmedAt ? r.confirmedAt.toISOString() : null,
         bankAccountId: r.bankAccountId,
-        bankAccountName: r.bankAccount?.name ?? null,
-        bankName: r.bankAccount?.bank?.name ?? null,
+        bankAccountName: r.financialAccount?.name ?? null,
+        bankName: r.financialAccount?.institution?.name ?? null,
         offsetTransactionId: null,
         reimbursements: [],
         transferLinkedTransactionId: null,
@@ -341,8 +342,8 @@ export const transactionLedgerRouter = router({
           description: raw.description as string,
           amount: Number(raw.amount),
           type: raw.type as string,
-          bankAccountName: raw.bankAccount?.name ?? null,
-          bankName: raw.bankAccount?.bank?.name ?? null,
+          bankAccountName: raw.financialAccount?.name ?? null,
+          bankName: raw.financialAccount?.institution?.name ?? null,
         };
       })(),
       isTransferClassified: tx.category === TRANSFER_CATEGORY,
@@ -636,3 +637,4 @@ export const transactionLedgerRouter = router({
       return getUnlinkedDonationTransactions(userId, dateFrom, dateTo);
     }),
 });
+

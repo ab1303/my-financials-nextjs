@@ -177,7 +177,7 @@ export default function NewSnapshotModal({
 
   // Get accounts for selected bank
   const getAccountsForBank = (bankId: string) => {
-    return userAccounts.filter((acc) => acc.bankId === bankId);
+    return userAccounts.filter((acc) => acc.institutionId === bankId);
   };
 
   return (

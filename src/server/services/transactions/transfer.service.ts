@@ -69,7 +69,7 @@ export async function getCandidates(params: {
   const source = await params.prisma.transaction.findUnique({
     where: { id: params.transactionId, userId: params.userId },
     // @ts-ignore — new relation fields not yet in generated client
-    include: { bankAccount: { include: { bank: true } } },
+    include: { financialAccount: { include: { institution: true } } },
   });
 
   if (!source || !source.bankAccountId) return [];
@@ -94,7 +94,7 @@ export async function getCandidates(params: {
       id: { not: source.id }, // only prevent self-linking; same-account transfers are valid
       date: { gte: dateFrom, lte: dateTo },
     },
-    include: { bankAccount: { include: { bank: true } } },
+    include: { financialAccount: { include: { institution: true } } },
   }) as Array<{
     id: string;
     amount: Decimal;
@@ -103,11 +103,11 @@ export async function getCandidates(params: {
     type: TransactionTypeEnum;
     status: TransactionStatusEnum;
     bankAccountId: string | null;
-    bankAccount: { name: string; bankId: string; bank: { name: string | null } | null } | null;
+    financialAccount: { name: string; institutionId: string; institution: { name: string | null } | null } | null;
   }>;
 
   // @ts-ignore — bankId on bankAccount available after migration
-  const sourceBankId: string | null = (source as any).bankAccount?.bankId ?? null;
+  const sourceBankId: string | null = (source as any).financialAccount?.institutionId ?? null;
 
   return candidates
     .map((candidate) => {
@@ -121,14 +121,14 @@ export async function getCandidates(params: {
           date: candidate.date,
           description: candidate.description,
           bankAccountId: candidate.bankAccountId!,
-          bankId: candidate.bankAccount?.bankId ?? null,
+          bankId: candidate.financialAccount?.institutionId ?? null,
         },
       });
       return {
         transactionId: candidate.id,
         bankAccountId: candidate.bankAccountId!,
-        bankAccountName: candidate.bankAccount?.name ?? 'Unknown',
-        bankName: candidate.bankAccount?.bank?.name ?? null,
+        bankAccountName: candidate.financialAccount?.name ?? 'Unknown',
+        bankName: candidate.financialAccount?.institution?.name ?? null,
         date: candidate.date.toISOString(),
         description: candidate.description,
         amount: Number(candidate.amount),
@@ -161,7 +161,7 @@ export async function searchTransferCandidates(params: {
   const source = await params.prisma.transaction.findUnique({
     where: { id: params.transactionId, userId: params.userId },
     // @ts-ignore
-    include: { bankAccount: { include: { bank: true } } },
+    include: { financialAccount: { include: { institution: true } } },
   });
 
   if (!source) return [];
@@ -197,7 +197,7 @@ export async function searchTransferCandidates(params: {
         : {}),
       ...(params.bankAccountId ? { bankAccountId: params.bankAccountId } : {}),
     },
-    include: { bankAccount: { include: { bank: true } } },
+    include: { financialAccount: { include: { institution: true } } },
     orderBy: { date: 'desc' },
     take: 50,
   }) as Array<{
@@ -208,11 +208,11 @@ export async function searchTransferCandidates(params: {
     type: TransactionTypeEnum;
     status: TransactionStatusEnum;
     bankAccountId: string | null;
-    bankAccount: { name: string; bankId: string; bank: { name: string | null } | null } | null;
+    financialAccount: { name: string; institutionId: string; institution: { name: string | null } | null } | null;
   }>;
 
   // @ts-ignore
-  const sourceBankId: string | null = (source as any).bankAccount?.bankId ?? null;
+  const sourceBankId: string | null = (source as any).financialAccount?.institutionId ?? null;
 
   return candidates
     .map((candidate) => {
@@ -225,15 +225,15 @@ export async function searchTransferCandidates(params: {
           date: candidate.date,
           description: candidate.description,
           bankAccountId: candidate.bankAccountId ?? '',
-          bankId: candidate.bankAccount?.bankId ?? null,
+          bankId: candidate.financialAccount?.institutionId ?? null,
         },
         sourceDescription: source.description,
       });
       return {
         transactionId: candidate.id,
         bankAccountId: candidate.bankAccountId!,
-        bankAccountName: candidate.bankAccount?.name ?? 'Unknown',
-        bankName: candidate.bankAccount?.bank?.name ?? null,
+        bankAccountName: candidate.financialAccount?.name ?? 'Unknown',
+        bankName: candidate.financialAccount?.institution?.name ?? null,
         date: candidate.date.toISOString(),
         description: candidate.description,
         amount: Number(candidate.amount),
@@ -558,11 +558,11 @@ export async function findSimilarUnmatchedPairs(params: {
   const [sourceDebit, sourceCredit] = await Promise.all([
     (params.prisma.transaction as any).findUnique({
       where: { id: params.debitTransactionId, userId: params.userId },
-      include: { bankAccount: { include: { bank: true } } },
+      include: { financialAccount: { include: { institution: true } } },
     }),
     (params.prisma.transaction as any).findUnique({
       where: { id: params.creditTransactionId, userId: params.userId },
-      include: { bankAccount: { include: { bank: true } } },
+      include: { financialAccount: { include: { institution: true } } },
     }),
   ]);
 
@@ -574,14 +574,14 @@ export async function findSimilarUnmatchedPairs(params: {
       amount: sourceDebit.amount,
       date: sourceDebit.date,
       bankAccountId: sourceDebit.bankAccountId,
-      bankId: sourceDebit.bankAccount?.bankId ?? null,
+      bankId: sourceDebit.financialAccount?.institutionId ?? null,
     },
     credit: {
       description: sourceCredit.description,
       amount: sourceCredit.amount,
       date: sourceCredit.date,
       bankAccountId: sourceCredit.bankAccountId,
-      bankId: sourceCredit.bankAccount?.bankId ?? null,
+      bankId: sourceCredit.financialAccount?.institutionId ?? null,
     },
   });
 
@@ -595,7 +595,7 @@ export async function findSimilarUnmatchedPairs(params: {
       amount: sourceDebit.amount,
       id: { not: sourceDebit.id },
     },
-    include: { bankAccount: { include: { bank: true } } },
+    include: { financialAccount: { include: { institution: true } } },
   });
 
   const results: SimilarPairSuggestion[] = [];
@@ -618,7 +618,7 @@ export async function findSimilarUnmatchedPairs(params: {
         bankAccountId: { not: debit.bankAccountId },
         date: { gte: dateFrom, lte: dateTo },
       },
-      include: { bankAccount: { include: { bank: true } } },
+      include: { financialAccount: { include: { institution: true } } },
     });
 
     if (creditCandidates.length === 0) continue;
@@ -632,14 +632,14 @@ export async function findSimilarUnmatchedPairs(params: {
       const { score, breakdown, amountDiffWarning } = scoreCandidate({
         sourceAmount: debit.amount,
         sourceDate: debit.date,
-        sourceBankId: debit.bankAccount?.bankId ?? null,
+        sourceBankId: debit.financialAccount?.institutionId ?? null,
         sourceDescription: debit.description,
         candidate: {
           amount: credit.amount,
           date: credit.date,
           description: credit.description,
           bankAccountId: credit.bankAccountId!,
-          bankId: credit.bankAccount?.bankId ?? null,
+          bankId: credit.financialAccount?.institutionId ?? null,
         },
       });
       if (score > bestScore) {
@@ -662,16 +662,16 @@ export async function findSimilarUnmatchedPairs(params: {
         date: debit.date.toISOString(),
         description: debit.description,
         amount: Number(debit.amount),
-        bankAccountName: debit.bankAccount?.name ?? 'Unknown',
-        bankName: debit.bankAccount?.bank?.name ?? null,
+        bankAccountName: debit.financialAccount?.name ?? 'Unknown',
+        bankName: debit.financialAccount?.institution?.name ?? null,
       },
       credit: {
         transactionId: bestCredit.id,
         date: bestCredit.date.toISOString(),
         description: bestCredit.description,
         amount: Number(bestCredit.amount),
-        bankAccountName: bestCredit.bankAccount?.name ?? 'Unknown',
-        bankName: bestCredit.bankAccount?.bank?.name ?? null,
+        bankAccountName: bestCredit.financialAccount?.name ?? 'Unknown',
+        bankName: bestCredit.financialAccount?.institution?.name ?? null,
       },
       confidenceScore: bestScore,
       scoreBreakdown: bestBreakdown!,
@@ -711,3 +711,4 @@ export async function batchLinkTransferPairs(params: {
 
   return { linkedCount, errors };
 }
+

@@ -9,6 +9,7 @@ import {
 } from '@/server/controllers/business.controller';
 import { createBusinessSchema, params } from '@/server/schema/business.schema';
 import { addBusinessDetails, getBusinessDetails } from '@/server/services/business.service';
+import { prisma } from '@/server/db/client';
 
 export const businessRouter = router({
   // Quick-create: name only — used by CreateBeneficiaryModal in the donation linking drawer
@@ -43,4 +44,20 @@ export const businessRouter = router({
   removeBusinessDetails: protectedProcedure
     .input(params)
     .mutation(({ input }) => removeBusinessDetailsHandler({ params: input })),
+
+  getBrokeragesWithAccounts: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    return await prisma.business.findMany({
+      where: { userId, type: 'BROKERAGE' },
+      select: {
+        id: true,
+        name: true,
+        financialAccounts: {
+          select: { id: true, name: true },
+          orderBy: { name: 'asc' },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }),
 });

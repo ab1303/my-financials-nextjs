@@ -8,22 +8,26 @@ export const createBankAccount = async (input: {
   bankId: string;
   userId: string;
 }) => {
-  return await prisma.bankAccount.create({
-    data: input,
+  return await prisma.financialAccount.create({
+    data: {
+      name: input.name,
+      institutionId: input.bankId,
+      userId: input.userId,
+    },
     include: {
-      bank: true,
+      institution: true,
     },
   });
 };
 
 export const getBankAccounts = async (userId: string, bankId?: string) => {
-  return await prisma.bankAccount.findMany({
+  return await prisma.financialAccount.findMany({
     where: {
       userId,
-      ...(bankId && { bankId }),
+      ...(bankId && { institutionId: bankId }),
     },
     include: {
-      bank: {
+      institution: {
         select: {
           id: true,
           name: true,
@@ -37,13 +41,13 @@ export const getBankAccounts = async (userId: string, bankId?: string) => {
 };
 
 export const getBankAccountById = async (accountId: string, userId: string) => {
-  return await prisma.bankAccount.findFirst({
+  return await prisma.financialAccount.findFirst({
     where: {
       id: accountId,
       userId,
     },
     include: {
-      bank: true,
+      institution: true,
     },
   });
 };
@@ -53,8 +57,7 @@ export const updateBankAccount = async (input: {
   name: string;
   userId: string;
 }) => {
-  // Verify the account belongs to the user
-  const account = await prisma.bankAccount.findFirst({
+  const account = await prisma.financialAccount.findFirst({
     where: {
       id: input.accountId,
       userId: input.userId,
@@ -65,15 +68,13 @@ export const updateBankAccount = async (input: {
     throw new Error('Account not found or does not belong to user');
   }
 
-  // Check if new name is unique within the same bank for this user
-  // (allow if it's the same account being updated)
-  const existingAccount = await prisma.bankAccount.findFirst({
+  const existingAccount = await prisma.financialAccount.findFirst({
     where: {
       name: input.name,
-      bankId: account.bankId,
+      institutionId: account.institutionId,
       userId: input.userId,
       id: {
-        not: input.accountId, // Don't check against itself
+        not: input.accountId,
       },
     },
   });
@@ -84,7 +85,7 @@ export const updateBankAccount = async (input: {
     );
   }
 
-  return await prisma.bankAccount.update({
+  return await prisma.financialAccount.update({
     where: {
       id: input.accountId,
     },
@@ -92,7 +93,7 @@ export const updateBankAccount = async (input: {
       name: input.name,
     },
     include: {
-      bank: true,
+      institution: true,
     },
   });
 };
@@ -107,7 +108,7 @@ export const createBankAssetSnapshot = async (
   // Create snapshot with entries in a transaction
   return await prisma.$transaction(async (tx) => {
     // Verify all accounts belong to the user
-    const accounts = await tx.bankAccount.findMany({
+    const accounts = await tx.financialAccount.findMany({
       where: {
         id: { in: entries.map((e) => e.accountId) },
         userId,
@@ -137,7 +138,7 @@ export const createBankAssetSnapshot = async (
           include: {
             account: {
               include: {
-                bank: true,
+                institution: true,
               },
             },
           },
@@ -178,7 +179,7 @@ export const getBankAssetSnapshots = async (
         include: {
           account: {
             include: {
-              bank: true,
+              institution: true,
             },
           },
           importImage: {
@@ -224,7 +225,7 @@ export const getSnapshotById = async (snapshotId: string, userId: string) => {
         include: {
           account: {
             include: {
-              bank: true,
+              institution: true,
             },
           },
         },
@@ -267,14 +268,14 @@ export const updateBankAssetEntry = async (
     include: {
       account: {
         include: {
-          bank: true,
+          institution: true,
         },
       },
     },
   });
 };
 
-export const deleteBankAssetEntry = async (entryId: string, userId: string) => {
+export const deleteBankAssetEntry= async (entryId: string, userId: string) => {
   // Verify the entry belongs to the user's snapshot
   const entry = await prisma.bankBalanceRecord.findFirst({
     where: {
@@ -307,14 +308,14 @@ export const addEntryToSnapshot = async (
   });
   if (!snapshot) throw new Error('Snapshot not found or does not belong to user');
 
-  const account = await prisma.bankAccount.findFirst({
+  const account = await prisma.financialAccount.findFirst({
     where: { id: accountId, userId },
   });
   if (!account) throw new Error('Account not found or does not belong to user');
 
   return await prisma.bankBalanceRecord.create({
     data: { snapshotId, accountId, balance },
-    include: { account: { include: { bank: true } } },
+    include: { account: { include: { institution: true } } },
   });
 };
 
@@ -353,8 +354,8 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
   // Calculate totals by bank
   const bankTotals = snapshot.balanceRecords.reduce(
     (acc, entry) => {
-      const bankId = entry.account.bankId;
-      const bankName = entry.account.bank.name;
+      const bankId = entry.account.institutionId;
+      const bankName = entry.account.institution.name;
 
       if (!acc[bankId]) {
         acc[bankId] = {

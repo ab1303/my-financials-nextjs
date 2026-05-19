@@ -42,8 +42,8 @@ export const getYearlyCleansingData = async (
     orderBy: { month: 'asc' },
   });
 
-  const bankAccounts = await prisma.bankAccount.findMany({
-    where: { bankId, userId },
+  const bankAccounts = await prisma.financialAccount.findMany({
+    where: { institutionId: bankId, userId },
     select: { id: true },
   });
   const bankAccountIds = bankAccounts.map((a) => a.id);
@@ -129,8 +129,8 @@ export const getUnlinkedInterestTransactions = async (
   dateTo: Date,
   userId: string,
 ): Promise<Array<{ id: string; date: string; description: string; amount: number }>> => {
-  const bankAccounts = await prisma.bankAccount.findMany({
-    where: { bankId, userId },
+  const bankAccounts = await prisma.financialAccount.findMany({
+    where: { institutionId: bankId, userId },
     select: { id: true },
   });
   const bankAccountIds = bankAccounts.map((a) => a.id);
@@ -158,3 +158,4 @@ export const getUnlinkedInterestTransactions = async (
     amount: tx.amount.toNumber(),
   }));
 };
+

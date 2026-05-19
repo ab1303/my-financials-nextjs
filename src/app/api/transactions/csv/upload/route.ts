@@ -44,12 +44,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    const account = await prisma.bankAccount.findFirst({
+    const account = await prisma.financialAccount.findFirst({
       where: { id: bankAccountId, userId: session.user.id },
-      include: { bank: true },
+      include: { institution: true },
     });
 
-    if (!account || !account.bank) {
+    if (!account || !account.institution) {
       return NextResponse.json(
         { error: 'Bank account not found' },
         { status: 404 },
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     let detectedFormat: BankCsvFormat | undefined;
     let detectionMethod: 'registry' | 'auto-detect' | null = null;
 
-    const registryFormat = getBankFormatByName(account.bank.name);
+    const registryFormat = getBankFormatByName(account.institution.name);
     if (registryFormat) {
       detectedFormat = registryFormat;
       detectionMethod = 'registry';
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     if (!detectedFormat) {
       return NextResponse.json(
         {
-          error: `Your bank's CSV format is not yet supported: "${account.bank.name}". Supported banks: ${getSupportedBankNamesText()}. More coming soon.`,
+          error: `Your bank's CSV format is not yet supported: "${account.institution.name}". Supported banks: ${getSupportedBankNamesText()}. More coming soon.`,
         },
         { status: 400 },
       );
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
           fileName,
           fileSize,
           bankAccountId,
-          bankName: account.bank.name,
+          bankName: account.institution.name,
           detectionMethod,
           transactions,
         } as any,
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
         rowCount: transactions.length,
         bankAccountId,
         bankAccountName: account.name,
-        bankName: account.bank.name,
+        bankName: account.institution.name,
         detectionMethod,
         transactions: transactions as CsvTransaction[],
       },

@@ -17,11 +17,11 @@ export const createStockSnapshot = async (
   return await prisma.$transaction(async (tx) => {
     // Verify all accounts belong to the user and are BROKERAGE type
     const accountIds = [...new Set(input.holdings.map((h) => h.accountId))];
-    const accounts = await tx.business.findMany({
+    const accounts = await tx.financialAccount.findMany({
       where: {
         id: { in: accountIds },
         userId,
-        type: 'BROKERAGE',
+        institution: { type: 'BROKERAGE' },
       },
     });
 
@@ -61,6 +61,7 @@ export const createStockSnapshot = async (
               select: {
                 id: true,
                 name: true,
+                institution: { select: { id: true, name: true } },
               },
             },
           },
@@ -103,12 +104,13 @@ export const getStockSnapshots = async (
             select: {
               id: true,
               name: true,
+              institution: { select: { id: true, name: true } },
             },
           },
         },
         orderBy: {
           account: {
-            name: 'asc',
+            institution: { name: 'asc' },
           },
         },
       },
@@ -144,12 +146,13 @@ export const getSnapshotById = async (snapshotId: string, userId: string) => {
             select: {
               id: true,
               name: true,
+              institution: { select: { id: true, name: true } },
             },
           },
         },
         orderBy: {
           account: {
-            name: 'asc',
+            institution: { name: 'asc' },
           },
         },
       },
@@ -157,7 +160,7 @@ export const getSnapshotById = async (snapshotId: string, userId: string) => {
   });
 };
 
-export const createStockHolding = async (
+export const createStockHolding= async (
   userId: string,
   input: CreateStockHoldingInput,
 ) => {
@@ -173,18 +176,18 @@ export const createStockHolding = async (
     throw new Error('Snapshot not found or does not belong to user');
   }
 
-  // Verify the account is a BROKERAGE account owned by the user
-  const account = await prisma.business.findFirst({
+  // Verify the account is a brokerage sub-account owned by the user
+  const account = await prisma.financialAccount.findFirst({
     where: {
       id: input.accountId,
       userId,
-      type: 'BROKERAGE',
+      institution: { type: 'BROKERAGE' },
     },
   });
 
   if (!account) {
     throw new Error(
-      'Account not found, does not belong to user, or is not a brokerage account',
+      'Brokerage sub-account not found or not owned by user',
     );
   }
 
@@ -210,6 +213,7 @@ export const createStockHolding = async (
         select: {
           id: true,
           name: true,
+          institution: { select: { id: true, name: true } },
         },
       },
     },
@@ -263,13 +267,14 @@ export const updateStockHolding = async (
         select: {
           id: true,
           name: true,
+          institution: { select: { id: true, name: true } },
         },
       },
     },
   });
 };
 
-export const deleteStockHolding = async (holdingId: string, userId: string) => {
+export const deleteStockHolding= async (holdingId: string, userId: string) => {
   // Verify the holding belongs to the user's snapshot
   const holding = await prisma.stockHolding.findFirst({
     where: {
@@ -343,7 +348,7 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
   const accountTotals = snapshot.holdings.reduce(
     (acc, holding) => {
       const accountId = holding.accountId;
-      const accountName = holding.account.name;
+      const accountName = `${holding.account.institution.name} — ${holding.account.name}`;
       const currency = holding.currency;
       const key = `${accountId}-${currency}`;
 
@@ -486,4 +491,52 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
     snapshotDate: snapshot.snapshotDate,
     currencies: Object.values(currencyTotals),
   };
+};
+
+/**
+ * Get all brokerage sub-accounts (FinancialAccounts) for a user.
+ */
+export const getBrokerageAccounts = async (userId: string) => {
+  return await prisma.financialAccount.findMany({
+    where: {
+      userId,
+      institution: { type: 'BROKERAGE' },
+    },
+    select: {
+      id: true,
+      name: true,
+      institution: { select: { id: true, name: true } },
+    },
+    orderBy: [
+      { institution: { name: 'asc' } },
+      { name: 'asc' },
+    ],
+  });
+};
+
+/**
+ * Create a new brokerage sub-account under an existing Business/BROKERAGE.
+ */
+export const createBrokerageSubAccount = async (
+  userId: string,
+  input: { businessId: string; name: string },
+) => {
+  const business = await prisma.business.findFirst({
+    where: { id: input.businessId, userId, type: 'BROKERAGE' },
+  });
+  if (!business) {
+    throw new Error('Brokerage institution not found or not owned by user');
+  }
+  return await prisma.financialAccount.create({
+    data: {
+      name: input.name,
+      institutionId: input.businessId,
+      userId,
+    },
+    select: {
+      id: true,
+      name: true,
+      institution: { select: { id: true, name: true } },
+    },
+  });
 };

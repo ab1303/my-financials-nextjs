@@ -24,7 +24,7 @@ export default function BankAccountsSection() {
   const { register, handleSubmit, reset, formState } =
     useForm<CreateBankAccountInput>({
       resolver: zodResolver(createBankAccountSchema),
-      defaultValues: { name: '', bankId: '' },
+      defaultValues: { name: '', institutionId: '' },
     });
 
   const createMutation = trpc.bankAccount.create.useMutation({
@@ -83,7 +83,7 @@ export default function BankAccountsSection() {
                   {accounts.map((acc) => (
                     <tr key={acc.id} className='hover:bg-muted/50'>
                       <td className='px-4 py-3 text-muted-foreground'>
-                        {acc.bank.name}
+                        {acc.institution.name}
                       </td>
                       <td className='px-4 py-3 text-foreground font-medium'>
                         {acc.name}
@@ -115,10 +115,10 @@ export default function BankAccountsSection() {
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-4 max-w-md'>
               <div>
-                <Label htmlFor='bankId'>Bank</Label>
+                <Label htmlFor='institutionId'>Bank</Label>
                 <select
-                  id='bankId'
-                  {...register('bankId')}
+                  id='institutionId'
+                  {...register('institutionId')}
                   className='mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
                 >
                   <option value=''>Select a bank</option>
@@ -128,9 +128,9 @@ export default function BankAccountsSection() {
                     </option>
                   ))}
                 </select>
-                {formState.errors.bankId && (
+                {formState.errors.institutionId && (
                   <p className='mt-1 text-xs text-destructive'>
-                    {formState.errors.bankId.message}
+                    {formState.errors.institutionId.message}
                   </p>
                 )}
               </div>
@@ -174,7 +174,7 @@ export default function BankAccountsSection() {
         message={
           deleteTarget && deleteTarget._count.transactions > 0
             ? `This account has ${deleteTarget._count.transactions} transaction(s) linked to it. Removing it will not delete those transactions, but they will no longer be associated with a bank account.`
-            : `Remove "${deleteTarget?.name ?? ''}" from ${deleteTarget?.bank.name ?? ''}?`
+            : `Remove "${deleteTarget?.name ?? ''}" from ${deleteTarget?.institution.name ?? ''}?`
         }
         confirmButtonText='Remove'
         variant='warning'

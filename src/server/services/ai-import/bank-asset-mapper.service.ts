@@ -51,10 +51,10 @@ function bestMatchAccount(
   accounts: Array<{
     id: string;
     name: string;
-    bankId: string;
+    institutionId: string;
     bankName: string;
   }>,
-): { id: string; name: string; bankId: string } | null {
+): { id: string; name: string; institutionId: string } | null {
   const normalized = extractedName.toLowerCase().trim();
 
   // Strategy 1: exact match
@@ -95,18 +95,18 @@ export async function mapBankAssetData(
   const errors: string[] = [];
 
   // Load all user bank accounts with their bank name
-  const userAccounts = await prisma.bankAccount.findMany({
+  const userAccounts = await prisma.financialAccount.findMany({
     where: { userId },
     include: {
-      bank: { select: { id: true, name: true } },
+      institution: { select: { id: true, name: true } },
     },
   });
 
   const flatAccounts = userAccounts.map((a) => ({
     id: a.id,
     name: a.name,
-    bankId: a.bankId,
-    bankName: a.bank.name,
+    institutionId: a.institutionId,
+    bankName: a.institution.name,
   }));
 
   // If AI detected a bankName, try to scope within that bank first

@@ -9,6 +9,8 @@ import {
   updateStockHolding,
   deleteStockHolding,
   deleteStockSnapshot,
+  getBrokerageAccounts,
+  createBrokerageSubAccount,
 } from '@/server/services/stock-asset.service';
 
 import type {
@@ -204,6 +206,32 @@ export const deleteHoldingHandler = async ({
       status: 'success',
       message: 'Holding deleted successfully',
     };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const getBrokerageAccountsHandler = async ({
+  userId,
+}: {
+  userId: string;
+}) => {
+  try {
+    return await getBrokerageAccounts(userId);
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const createBrokerageSubAccountHandler = async ({
+  input,
+  userId,
+}: {
+  input: { businessId: string; name: string };
+  userId: string;
+}) => {
+  try {
+    return await createBrokerageSubAccount(userId, input);
   } catch (e) {
     handleCaughtError(e);
   }

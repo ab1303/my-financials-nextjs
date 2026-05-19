@@ -2,7 +2,7 @@
 // These types extend Prisma generated types with computed fields for frontend use
 
 import type {
-  BankAccount,
+  FinancialAccount,
   BankBalanceSnapshot,
   BankBalanceRecord,
   Business,
@@ -10,8 +10,8 @@ import type {
 
 // Extended types with relations
 
-export type BankAccountWithBank = BankAccount & {
-  bank: Pick<Business, 'id' | 'name'>;
+export type BankAccountWithBank = FinancialAccount & {
+  institution: Pick<Business, 'id' | 'name'>;
 };
 
 export type BankAssetEntryWithAccount = BankBalanceRecord & {

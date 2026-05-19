@@ -23,7 +23,7 @@ export const createBankAccountHandler = async (
     if ((e as { code?: string }).code === 'P2002') {
       throw new TRPCError({
         code: 'CONFLICT',
-        message: 'An account with this name already exists at this bank.',
+        message: 'An account with this name already exists at this institution.',
       });
     }
     throw e;

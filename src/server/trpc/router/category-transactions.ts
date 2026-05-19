@@ -58,7 +58,7 @@ export const categoryTransactionsRouter = router({
         ctx.prisma.transaction.findMany({
           where,
           include: {
-            bankAccount: { select: { name: true } },
+            financialAccount: { select: { name: true } },
           },
           orderBy: { date: 'desc' },
           skip: offset,
@@ -79,7 +79,7 @@ export const categoryTransactionsRouter = router({
           category: tx.category,
           source: tx.source,
           status: tx.status,
-          bankAccountName: tx.bankAccount?.name ?? null,
+          bankAccountName: tx.financialAccount?.name ?? null,
         })),
         category,
         month,
@@ -90,3 +90,4 @@ export const categoryTransactionsRouter = router({
       };
     }),
 });
+

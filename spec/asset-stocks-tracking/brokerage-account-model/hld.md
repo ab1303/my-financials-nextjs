@@ -34,27 +34,38 @@ Institution (Fidelity)
 
 ## Proposed Solution
 
-Move `StockHolding.accountId` to reference `BankAccount` instead of `Business`.
+Two coordinated changes:
 
-`BankAccount` already exists in the schema as a child of `Business`, used for bank sub-accounts. The same structure works for brokerage sub-accounts — `BankAccount.bankId` is the foreign key to the `Business` institution.
+1. **Rename `BankAccount` → `FinancialAccount`** across the entire schema — making it a true generic sub-account model for any financial institution, not just banks.
+2. **Move `StockHolding.accountId`** to reference `FinancialAccount` instead of `Business`.
+
+`FinancialAccount` (renamed from `BankAccount`) is already a child of `Business`. Renaming establishes the correct domain language: it is a sub-account under *any* financial institution. `FinancialAccount.institutionId` is the FK to the `Business` institution. `Business.type` (BANK | BROKERAGE) remains the reporting discriminator — you can filter "banks only", "brokerages only", or "all" at query time without any model changes.
 
 ### Target Model (3-tier)
 
 ```
-Business (type=BROKERAGE)     ←  institution (e.g., "Fidelity")
-  └─ BankAccount               ←  sub-account (e.g., "Roth IRA")
+Business (type=BROKERAGE)        ←  institution (e.g., "Fidelity")
+  └─ FinancialAccount             ←  sub-account (e.g., "Roth IRA")
        └─ StockHolding.accountId
+
+Business (type=BANK)             ←  institution (e.g., "CommBank")
+  └─ FinancialAccount             ←  sub-account (e.g., "NetSaver")
+       └─ BankBalanceSnapshot (unchanged)
 ```
 
 ### What Changes
 
 | Layer | Before | After |
 |---|---|---|
-| DB schema | `StockHolding.accountId → Business` | `StockHolding.accountId → BankAccount` |
-| Service verification | Verify `Business.type=BROKERAGE` | Verify `BankAccount.bank.type=BROKERAGE` |
-| tRPC queries | `getBusinessesByType(BROKERAGE)` | `getBrokerageAccounts()` (returns `BankAccount[]` with parent `Business`) |
+| Model name | `BankAccount` | **`FinancialAccount`** |
+| FK field | `bankId` | `institutionId` |
+| Relation on model | `bank` | `institution` |
+| Relation on Business/User | `bankAccounts` | `financialAccounts` |
+| DB schema | `StockHolding.accountId → Business` | `StockHolding.accountId → FinancialAccount` |
+| Service verification | Verify `Business.type=BROKERAGE` | Verify `FinancialAccount.institution.type=BROKERAGE` |
+| tRPC queries | `getBusinessesByType(BROKERAGE)` | `getBrokerageAccounts()` (returns `FinancialAccount[]` with parent `Business`) |
 | New tRPC mutation | — | `createBrokerageSubAccount(businessId, name)` |
-| Types | `account: Pick<Business, 'id'\|'name'>` | `account: Pick<BankAccount, 'id'\|'name'> & { bank: Pick<Business, 'id'\|'name'> }` |
+| Types | `account: Pick<Business, 'id'\|'name'>` | `account: Pick<FinancialAccount, 'id'\|'name'> & { institution: Pick<Business, 'id'\|'name'> }` |
 | UI | Single `CreatableAppSelect` (institution) | Two dependent selects: institution → sub-account |
 | Display labels | "Fidelity" | "Fidelity — Roth IRA" |
 
@@ -66,20 +77,42 @@ Business (type=BROKERAGE)     ←  institution (e.g., "Fidelity")
 
 ```
 User (1)
-  ├─ Business (type=BROKERAGE) (*)   ← institution
-  │   └─ BankAccount (*)             ← sub-account (NEW FK target)
+  ├─ Business (type=BANK) (*)           ← bank institution
+  │   └─ FinancialAccount (*)           ← bank sub-account (renamed from BankAccount)
+  │        └─ BankBalanceSnapshot (*)   ← unchanged
+  │
+  ├─ Business (type=BROKERAGE) (*)      ← brokerage institution
+  │   └─ FinancialAccount (*)           ← brokerage sub-account (NEW FK target for stocks)
   │        └─ StockHolding (*)
   │
   └─ PortfolioSnapshot (*)
        └─ StockHolding (*)
-            └─ accountId → BankAccount.id  (WAS: Business.id)
+            └─ accountId → FinancialAccount.id  (WAS: Business.id)
 ```
+
+`Business.type` is the reporting discriminator — filter `institution.type = BANK` or `BROKERAGE` at query time. The `FinancialAccount` model itself is type-agnostic, enabling cross-institution reporting (e.g., net worth across all institutions).
+
+### Schema Rename Scope
+
+This feature includes a **schema-wide rename** of `BankAccount` → `FinancialAccount`. All files that currently reference `BankAccount`, `bankId`, `bankAccounts`, or the `bank` relation (on `FinancialAccount`) must be updated.
+
+| Before | After |
+|---|---|
+| `model BankAccount` | `model FinancialAccount` |
+| `BankAccount.bankId` | `FinancialAccount.institutionId` |
+| `BankAccount.bank` (relation to Business) | `FinancialAccount.institution` |
+| `Business.bankAccounts` | `Business.financialAccounts` |
+| `User.bankAccounts` | `User.financialAccounts` |
+| Prisma table `"BankAccount"` | Prisma table `"FinancialAccount"` |
+
+Affected feature areas beyond stocks: **bank accounts, bank balance snapshots, transfer match rules, transactions**.
 
 ### Migration Safety
 
-- `StockHolding` has a FK on `accountId`. Changing the target from `Business` to `BankAccount` requires a Prisma migration.
-- **If no prod data**: Drop + recreate FK constraint directly.
-- **If prod data exists**: Create a `BankAccount` per existing `Business/BROKERAGE` (named "Default Account"), then update all `StockHolding.accountId` to the new `BankAccount.id`.
+- Renaming `BankAccount` → `FinancialAccount` renames the underlying PostgreSQL table. Prisma generates `ALTER TABLE "BankAccount" RENAME TO "FinancialAccount"` automatically — review the generated SQL before applying.
+- `StockHolding.accountId` FK target changes from `Business` to `FinancialAccount` in a separate migration (Phase 1, after Phase 0 rename).
+- **If no prod stock data**: Apply both migrations sequentially.
+- **If prod stock data exists**: Create a `FinancialAccount` per existing `Business/BROKERAGE` (named "Default Account"), backfill `StockHolding.accountId`, then apply the FK constraint change.
 
 > **Recommendation**: Implement before any prod stock data is entered. Verify with a count query first.
 

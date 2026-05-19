@@ -227,7 +227,7 @@ export default function BankAssetsClient({ initialData }: Props) {
 
   const getAddableAccountsForBank = (bankId: string) =>
     allBankAccounts
-      .filter((acc) => acc.bankId === bankId && !accountsAlreadyInSnapshot.has(acc.id))
+      .filter((acc) => acc.institutionId === bankId && !accountsAlreadyInSnapshot.has(acc.id))
       .map((acc) => ({ value: acc.id, label: acc.name }));
 
   // Update entry mutation
@@ -673,7 +673,7 @@ export default function BankAssetsClient({ initialData }: Props) {
         <div className='space-y-4'>
           {banks.map((bank) => {
             const bankTotals = totalsMap.get(bank.id);
-            const hasBankAccounts = allBankAccounts.some((a) => a.bankId === bank.id);
+            const hasBankAccounts = allBankAccounts.some((a) => a.institutionId === bank.id);
             return (
               <Disclosure key={bank.id}>
                 {({ open }) => (

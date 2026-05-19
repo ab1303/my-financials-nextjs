@@ -18,16 +18,16 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect('/auth/signin');
 
-  const bankAccountRecords = await prisma.bankAccount.findMany({
+  const bankAccountRecords = await prisma.financialAccount.findMany({
     where: { userId: session.user.id },
-    include: { bank: { select: { name: true } } },
+    include: { institution: { select: { name: true } } },
     orderBy: { createdAt: 'asc' },
   });
 
   const bankAccounts = bankAccountRecords.map((a) => ({
     id: a.id,
     name: a.name,
-    bankName: a.bank?.name ?? 'Unknown Bank',
+    bankName: a.institution?.name ?? 'Unknown Bank',
   }));
 
   const resolvedSearchParams = await searchParams;

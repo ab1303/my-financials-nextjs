@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (bankAccountId) {
-    const account = await prisma.bankAccount.findFirst({
+    const account = await prisma.financialAccount.findFirst({
       where: { id: bankAccountId, userId },
     });
 

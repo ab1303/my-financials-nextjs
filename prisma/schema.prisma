@@ -69,7 +69,7 @@ model User {
   relationshipTypes   RelationshipType[]
   incomeLedgers       IncomeLedger[]
   expenseLedgers      ExpenseLedger[]
-  bankAccounts        BankAccount[]
+  financialAccounts   FinancialAccount[]
   bankBalanceSnapshots BankBalanceSnapshot[]
   portfolioSnapshots  PortfolioSnapshot[]
   importSessions      ImportSession[]
@@ -164,8 +164,7 @@ model Business {
   bankInterestLiabilities BankInterestLiability[]
   zakatPayments    ZakatPayment[]
   donationPayments DonationPayment[]
-  bankAccounts     BankAccount[]
-  stockHoldings    StockHolding[]
+  financialAccounts FinancialAccount[]
   userId           String
   user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -361,20 +360,21 @@ model CalendarYear {
   donationLedgers         DonationLedger[]
 }
 
-// BankAccount — user's individual account at a bank
-model BankAccount {
+// FinancialAccount — user's individual account at a bank or brokerage
+model FinancialAccount {
   id           String               @id @default(cuid())
   name         String
-  bankId       String
-  bank         Business             @relation(fields: [bankId], references: [id])
+  institutionId String
+  institution  Business             @relation(fields: [institutionId], references: [id])
   userId       String
   user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   balanceRecords BankBalanceRecord[]
+  stockHoldings  StockHolding[]
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
 
-  @@unique([name, bankId, userId])
-  @@index([userId, bankId])
+  @@unique([name, institutionId, userId])
+  @@index([userId, institutionId])
   transactions Transaction[]
   debitTransferRules  TransferMatchRule[] @relation("debitRules")
   creditTransferRules TransferMatchRule[] @relation("creditRules")
@@ -398,7 +398,7 @@ model BankBalanceRecord {
   id           String              @id @default(cuid())
   balance      Decimal             @db.Money
   accountId    String
-  account      BankAccount         @relation(fields: [accountId], references: [id])
+  account      FinancialAccount    @relation(fields: [accountId], references: [id])
   snapshotId   String
   snapshot     BankBalanceSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
   importImage  ImportImage?        @relation(fields: [importImageId], references: [id])
@@ -438,7 +438,7 @@ model StockHolding {
   saleDate     DateTime?
   soldQuantity Decimal?
   accountId    String
-  account      Business               @relation(fields: [accountId], references: [id])
+  account      FinancialAccount       @relation(fields: [accountId], references: [id])
   snapshotId   String
   snapshot     PortfolioSnapshot      @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
   createdAt    DateTime               @default(now())
@@ -587,7 +587,7 @@ model Transaction {
   status              TransactionStatusEnum @default(PENDING)
   confirmedAt         DateTime?
 
-  bankAccount         BankAccount?          @relation(fields: [bankAccountId], references: [id])
+  financialAccount    FinancialAccount?     @relation(fields: [bankAccountId], references: [id])
   bankAccountId       String?
   user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId              String
@@ -637,8 +637,8 @@ model TransferMatchRule {
   updatedAt           DateTime  @updatedAt
 
   user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  debitBankAccount  BankAccount?             @relation("debitRules", fields: [debitBankAccountId], references: [id])
-  creditBankAccount BankAccount?             @relation("creditRules", fields: [creditBankAccountId], references: [id])
+  debitBankAccount  FinancialAccount?        @relation("debitRules", fields: [debitBankAccountId], references: [id])
+  creditBankAccount FinancialAccount?        @relation("creditRules", fields: [creditBankAccountId], references: [id])
   jobResults        TransferMatchJobResult[]
 
   @@index([userId, isActive])

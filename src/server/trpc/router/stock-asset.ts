@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { router, protectedProcedure } from '@/server/trpc/trpc';
 import {
   createSnapshotHandler,
@@ -9,6 +10,8 @@ import {
   updateHoldingHandler,
   deleteHoldingHandler,
   deleteSnapshotHandler,
+  getBrokerageAccountsHandler,
+  createBrokerageSubAccountHandler,
 } from '@/server/controllers/stock-asset.controller';
 import {
   createStockSnapshotSchema,
@@ -75,5 +78,15 @@ export const stockAssetRouter = router({
     .input(deleteHoldingSchema)
     .mutation(({ input, ctx: { session } }) =>
       deleteHoldingHandler({ input, userId: session.user.id }),
+    ),
+
+  getBrokerageAccounts: protectedProcedure.query(({ ctx: { session } }) =>
+    getBrokerageAccountsHandler({ userId: session.user.id }),
+  ),
+
+  createBrokerageSubAccount: protectedProcedure
+    .input(z.object({ businessId: z.string(), name: z.string().min(1).max(100) }))
+    .mutation(({ input, ctx: { session } }) =>
+      createBrokerageSubAccountHandler({ input, userId: session.user.id }),
     ),
 });

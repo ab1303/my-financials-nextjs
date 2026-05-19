@@ -40,7 +40,7 @@ export async function runTransferMatchRules(params: {
       transferLinkedTransactionId: null,
       transferCounterpart: { is: null },
     },
-    include: { bankAccount: { include: { bank: true } } },
+    include: { financialAccount: { include: { bank: true } } },
   });
 
   let totalAutoLinked = 0;
@@ -87,7 +87,7 @@ export async function runTransferMatchRules(params: {
           bankAccountId: { not: debit.bankAccountId },
           date: { gte: dateFrom, lte: dateTo },
         },
-        include: { bankAccount: { include: { bank: true } } },
+        include: { financialAccount: { include: { bank: true } } },
       });
 
       let bestCredit: any = null;
@@ -97,14 +97,14 @@ export async function runTransferMatchRules(params: {
         const { score } = scoreCandidate({
           sourceAmount: debit.amount,
           sourceDate: debit.date,
-          sourceBankId: debit.bankAccount?.bankId ?? null,
+          sourceBankId: debit.financialAccount?.bankId ?? null,
           sourceDescription: debit.description,
           candidate: {
             amount: credit.amount,
             date: credit.date,
             description: credit.description,
             bankAccountId: credit.bankAccountId!,
-            bankId: credit.bankAccount?.bankId ?? null,
+            bankId: credit.financialAccount?.bankId ?? null,
           },
         });
 

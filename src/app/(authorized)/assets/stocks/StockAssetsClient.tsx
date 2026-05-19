@@ -99,11 +99,11 @@ export default function StockAssetsClient({ initialData }: Props) {
   const [selectedSnapshot, setSelectedSnapshot] =
     useState<SingleValue<OptionType>>(null);
 
-  // Fetch brokerage accounts
-  const { data: brokerageAccounts } =
-    trpc.business.getBusinessesByType.useQuery({
-      type: 'BROKERAGE',
-    });
+  // Fetch brokerage accounts and institutions
+  const { data: brokerageAccounts = [] } =
+    trpc.stockAsset.getBrokerageAccounts.useQuery();
+  const { data: brokerageInstitutions = [] } =
+    trpc.business.getBrokeragesWithAccounts.useQuery();
 
   // Fetch snapshots for selected year
   const {
@@ -267,7 +267,7 @@ export default function StockAssetsClient({ initialData }: Props) {
       if (!accountMap.has(holding.accountId)) {
         accountMap.set(holding.accountId, {
           accountId: holding.accountId,
-          accountName: holding.account.name,
+          accountName: `${holding.account.institution.name} — ${holding.account.name}`,
           holdings: [],
         });
       }
@@ -667,7 +667,8 @@ export default function StockAssetsClient({ initialData }: Props) {
           setIsNewSnapshotModalOpen(false);
           refetchSnapshots();
         }}
-        brokerageAccounts={brokerageAccounts || []}
+        brokerageAccounts={brokerageAccounts}
+        brokerageInstitutions={brokerageInstitutions}
       />
 
       {/* Holding Form Modal (Add/Edit) */}
@@ -683,7 +684,8 @@ export default function StockAssetsClient({ initialData }: Props) {
           setIsHoldingFormModalOpen(false);
           setEditingHolding(null);
         }}
-        brokerageAccounts={brokerageAccounts || []}
+        brokerageAccounts={brokerageAccounts}
+        brokerageInstitutions={brokerageInstitutions}
         snapshotId={selectedSnapshotId || undefined}
         editingHolding={editingHolding}
         defaultAccountId={addingToAccountId || undefined}

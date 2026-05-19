@@ -4,7 +4,8 @@
 
 | Phase | Scope | Depends On |
 |---|---|---|
-| 1 | Prisma schema + migration | — |
+| 0 | Prisma schema rename: `BankAccount` → `FinancialAccount` (schema-wide) | — |
+| 1 | Prisma schema: `StockHolding` FK change + migration | Phase 0 |
 | 2 | Service layer + tRPC endpoints | Phase 1 |
 | 3 | TypeScript types | Phase 2 |
 | 4 | UI — StockAssetsClient | Phase 3 |
@@ -12,11 +13,94 @@
 
 ---
 
-## Phase 1: Prisma Schema + Migration
+## Phase 0: Prisma Schema Rename — `BankAccount` → `FinancialAccount`
 
 ### Goal
 
-Change `StockHolding.accountId` FK target from `Business` to `BankAccount`.
+Rename the `BankAccount` model to `FinancialAccount` across the entire schema to establish correct domain language. This is a prerequisite for all subsequent phases and affects **all feature areas** that use bank sub-accounts (banking, transactions, transfer rules).
+
+### Schema Changes (`prisma/schema.prisma`)
+
+**Rename the model and its fields:**
+```prisma
+// BEFORE:
+model BankAccount {
+  id     String   @id @default(cuid())
+  name   String
+  bankId String
+  bank   Business @relation(fields: [bankId], references: [id])
+  userId String
+  @@unique([name, bankId, userId])
+}
+
+// AFTER:
+model FinancialAccount {
+  id            String   @id @default(cuid())
+  name          String
+  institutionId String
+  institution   Business @relation(fields: [institutionId], references: [id])
+  userId        String
+  @@unique([name, institutionId, userId])
+}
+```
+
+**Update back-relation on `Business` model:**
+```prisma
+// BEFORE:
+model Business {
+  bankAccounts BankAccount[]
+}
+
+// AFTER:
+model Business {
+  financialAccounts FinancialAccount[]
+}
+```
+
+**Update back-relation on `User` model:**
+```prisma
+// BEFORE:
+model User {
+  bankAccounts BankAccount[]
+}
+
+// AFTER:
+model User {
+  financialAccounts FinancialAccount[]
+}
+```
+
+**Update every other model that holds a FK to `BankAccount`** (e.g., `BankBalanceSnapshot`, `Transaction`, `TransferMatchRule`). For each:
+```prisma
+// Replace:
+account   BankAccount @relation(...)
+accountId String
+
+// With:
+account   FinancialAccount @relation(...)
+accountId String
+```
+
+### Migration Command
+
+```bash
+# Stop dev server first (Windows EPERM prevention)
+pnpm prisma migrate dev --name rename-bank-account-to-financial-account
+```
+
+> Prisma detects the model rename and generates `ALTER TABLE "BankAccount" RENAME TO "FinancialAccount"` plus the column renames automatically. **Always review the generated SQL** in `prisma/migrations/` before applying to confirm renames — not drops and recreates.
+
+### Non-Source Files to Update After `prisma generate`
+
+All backend service, controller, and router files that call `prisma.bankAccount.*` must be updated to `prisma.financialAccount.*`, and all references to `.bankId` / `.bank` / `.bankAccounts` on query results must change to `.institutionId` / `.institution` / `.financialAccounts`.
+
+---
+
+## Phase 1: Prisma Schema — `StockHolding` FK Change
+
+### Goal
+
+Change `StockHolding.accountId` FK target from `Business` to `FinancialAccount`.
 
 ### Schema Changes (`prisma/schema.prisma`)
 
@@ -31,22 +115,22 @@ stockHoldings    StockHolding[]
 // BEFORE:
 model StockHolding {
   accountId String
-  account   Business    @relation(fields: [accountId], references: [id])
+  account   Business         @relation(fields: [accountId], references: [id])
   ...
 }
 
 // AFTER:
 model StockHolding {
   accountId String
-  account   BankAccount @relation(fields: [accountId], references: [id])
+  account   FinancialAccount @relation(fields: [accountId], references: [id])
   ...
 }
 ```
 
-**Add back-relation to `BankAccount` model:**
+**Add back-relation to `FinancialAccount` model:**
 ```prisma
-model BankAccount {
-  // ... existing fields ...
+model FinancialAccount {
+  // ... existing fields (from Phase 0) ...
   stockHoldings StockHolding[]   // ADD this line
 }
 ```
@@ -55,16 +139,16 @@ model BankAccount {
 
 ```bash
 # Stop dev server first (Windows EPERM prevention)
-pnpm prisma migrate dev --name brokerage-account-sub-accounts
+pnpm prisma migrate dev --name stock-holding-fk-to-financial-account
 ```
 
-### Data Migration (if prod data exists)
+### Data Migration (if prod stock data exists)
 
-Before running the schema migration, run this SQL to create default sub-accounts and migrate FKs:
+Run Phase 0 migration first, then before applying the Phase 1 FK constraint change, backfill with:
 
 ```sql
--- Step 1: For each Business/BROKERAGE that has holdings, create a "Default Account" BankAccount
-INSERT INTO "BankAccount" (id, name, "bankId", "userId", "createdAt", "updatedAt")
+-- Step 1: For each Business/BROKERAGE with holdings, create a "Default Account" FinancialAccount
+INSERT INTO "FinancialAccount" (id, name, "institutionId", "userId", "createdAt", "updatedAt")
 SELECT
   gen_random_uuid()::text,
   'Default Account',
@@ -77,13 +161,13 @@ WHERE b.type = 'BROKERAGE'
   AND EXISTS (SELECT 1 FROM "StockHolding" sh WHERE sh."accountId" = b.id)
 ON CONFLICT DO NOTHING;
 
--- Step 2: Update StockHolding.accountId to the new BankAccount.id
+-- Step 2: Update StockHolding.accountId to the new FinancialAccount.id
 UPDATE "StockHolding" sh
-SET "accountId" = ba.id
-FROM "BankAccount" ba
-JOIN "Business" b ON ba."bankId" = b.id
+SET "accountId" = fa.id
+FROM "FinancialAccount" fa
+JOIN "Business" b ON fa."institutionId" = b.id
 WHERE sh."accountId" = b.id
-  AND ba.name = 'Default Account';
+  AND fa.name = 'Default Account';
 ```
 
 ---
@@ -100,12 +184,12 @@ const accounts = await tx.business.findMany({
   where: { id: { in: accountIds }, userId, type: 'BROKERAGE' },
 });
 
-// AFTER: verifies BankAccount (with bank type check)
-const accounts = await tx.bankAccount.findMany({
+// AFTER: verifies FinancialAccount (with institution type check)
+const accounts = await tx.financialAccount.findMany({
   where: {
     id: { in: accountIds },
     userId,
-    bank: { type: 'BROKERAGE' },
+    institution: { type: 'BROKERAGE' },
   },
 });
 if (accounts.length !== accountIds.length) {
@@ -115,7 +199,7 @@ if (accounts.length !== accountIds.length) {
 
 #### `createStockHolding` — Same verification update
 
-Apply the same `bankAccount.findMany` check instead of `business.findMany`.
+Apply the same `financialAccount.findMany` check instead of `business.findMany`.
 
 #### `getSnapshotWithHoldings` — Update include clause
 
@@ -131,7 +215,7 @@ include: {
     select: {
       id: true,
       name: true,
-      bank: { select: { id: true, name: true } }
+      institution: { select: { id: true, name: true } }
     }
   }
 }
@@ -143,11 +227,11 @@ Apply this to ALL service methods that include holdings: `getStockSnapshots`, `g
 
 ```typescript
 // BEFORE: group by holding.accountId (Business.id)
-// AFTER: group by holding.accountId (BankAccount.id), display as:
-const accountLabel = `${holding.account.bank.name} — ${holding.account.name}`;
+// AFTER: group by holding.accountId (FinancialAccount.id), display as:
+const accountLabel = `${holding.account.institution.name} — ${holding.account.name}`;
 ```
 
-Update `AccountTotalSummary` construction to use `account.bank.name + " — " + account.name` for display.
+Update `AccountTotalSummary` construction to use `account.institution.name + " — " + account.name` for display.
 
 ### 2b. New Service Methods (add to `stock-asset.service.ts`)
 
@@ -156,18 +240,18 @@ Update `AccountTotalSummary` construction to use `account.bank.name + " — " + 
  * Get all brokerage sub-accounts for a user, with parent institution.
  */
 export const getBrokerageAccounts = async (userId: string) => {
-  return await prisma.bankAccount.findMany({
+  return await prisma.financialAccount.findMany({
     where: {
       userId,
-      bank: { type: 'BROKERAGE' },
+      institution: { type: 'BROKERAGE' },
     },
     select: {
       id: true,
       name: true,
-      bank: { select: { id: true, name: true } },
+      institution: { select: { id: true, name: true } },
     },
     orderBy: [
-      { bank: { name: 'asc' } },
+      { institution: { name: 'asc' } },
       { name: 'asc' },
     ],
   });
@@ -181,22 +265,22 @@ export const createBrokerageSubAccount = async (
   input: { businessId: string; name: string }
 ) => {
   // Verify the institution belongs to user and is BROKERAGE
-  const institution = await prisma.business.findFirst({
+  const business = await prisma.business.findFirst({
     where: { id: input.businessId, userId, type: 'BROKERAGE' },
   });
-  if (!institution) {
+  if (!business) {
     throw new Error('Brokerage institution not found or not owned by user');
   }
-  return await prisma.bankAccount.create({
+  return await prisma.financialAccount.create({
     data: {
       name: input.name,
-      bankId: input.businessId,
+      institutionId: input.businessId,
       userId,
     },
     select: {
       id: true,
       name: true,
-      bank: { select: { id: true, name: true } },
+      institution: { select: { id: true, name: true } },
     },
   });
 };
@@ -229,7 +313,7 @@ getBrokeragesWithAccounts: protectedProcedure.query(async ({ ctx }) => {
     select: {
       id: true,
       name: true,
-      bankAccounts: {
+      financialAccounts: {
         select: { id: true, name: true },
         orderBy: { name: 'asc' },
       },
@@ -260,7 +344,7 @@ createBrokerageSubAccount: async (ctx: TRPCContext, input: { businessId: string;
 ### Updates to `src/types/stock-asset.types.ts`
 
 ```typescript
-import type { PortfolioSnapshot, StockHolding, Business, BankAccount, CurrencyEnumType, InvestmentTermEnumType } from '@prisma/client';
+import type { PortfolioSnapshot, StockHolding, Business, FinancialAccount, CurrencyEnumType, InvestmentTermEnumType } from '@prisma/client';
 
 // BEFORE:
 export type StockHoldingWithAccount = StockHolding & {
@@ -269,8 +353,8 @@ export type StockHoldingWithAccount = StockHolding & {
 
 // AFTER:
 export type StockHoldingWithAccount = StockHolding & {
-  account: Pick<BankAccount, 'id' | 'name'> & {
-    bank: Pick<Business, 'id' | 'name'>;
+  account: Pick<FinancialAccount, 'id' | 'name'> & {
+    institution: Pick<Business, 'id' | 'name'>;
   };
 };
 
@@ -282,7 +366,7 @@ export type BrokerageAccountOption = {
 
 // AFTER:
 export type BrokerageAccountOption = {
-  value: string;           // BankAccount.id
+  value: string;           // FinancialAccount.id
   label: string;           // "InstitutionName — AccountName"
   institutionId: string;   // Business.id (for grouping)
   institutionName: string; // Business.name (for display)
@@ -296,10 +380,10 @@ export type BrokerageInstitutionOption = {
 
 // Also update AccountTotalSummary:
 export type AccountTotalSummary = {
-  accountId: string;            // BankAccount.id
+  accountId: string;            // FinancialAccount.id
   accountName: string;          // "InstitutionName — AccountName"
-  institutionName: string;      // Business.name (NEW)
-  subAccountName: string;       // BankAccount.name (NEW)
+  institutionName: string;      // Business.name
+  subAccountName: string;       // FinancialAccount.name
   currency: CurrencyEnumType;
   holdings: HoldingDisplay[];
   totalMarketValue: number;
@@ -339,7 +423,7 @@ brokerageInstitutions={brokerageInstitutions}
 
 ```typescript
 // BEFORE: accountName from Business.name
-// AFTER: accountName from `${account.bank.name} — ${account.name}`
+// AFTER: accountName from `${account.institution.name} — ${account.name}`
 // Update wherever AccountTotalSummary.accountName is displayed
 ```
 
@@ -382,7 +466,7 @@ const [selectedInstitution, setSelectedInstitution] = useState<{ id: string; nam
   options={
     brokerageInstitutions
       .find(b => b.id === selectedInstitution?.id)
-      ?.bankAccounts.map(a => ({ value: a.id, label: a.name })) ?? []
+      ?.financialAccounts.map(a => ({ value: a.id, label: a.name })) ?? []
   }
   value={field.value ? { value: field.value, label: accountNameForId(field.value) } : null}
   onChange={(opt) => field.onChange(opt?.value ?? '')}
@@ -420,8 +504,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  brokerageAccounts: Array<{ id: string; name: string; bank: { id: string; name: string } }>;
-  brokerageInstitutions: Array<{ id: string; name: string; bankAccounts: Array<{ id: string; name: string }> }>;
+  brokerageAccounts: Array<{ id: string; name: string; institution: { id: string; name: string } }>;
+  brokerageInstitutions: Array<{ id: string; name: string; financialAccounts: Array<{ id: string; name: string }> }>;
 }
 
 // HoldingFormModal props:
@@ -431,8 +515,8 @@ interface Props {
   onSuccess?: () => void;
   editingHolding?: StockHoldingWithAccount | null;
   defaultAccountId?: string;
-  brokerageAccounts: Array<{ id: string; name: string; bank: { id: string; name: string } }>;
-  brokerageInstitutions: Array<{ id: string; name: string; bankAccounts: Array<{ id: string; name: string }> }>;
+  brokerageAccounts: Array<{ id: string; name: string; institution: { id: string; name: string } }>;
+  brokerageInstitutions: Array<{ id: string; name: string; financialAccounts: Array<{ id: string; name: string }> }>;
 }
 ```
 
@@ -448,21 +532,27 @@ await utils.stockAsset.getBrokerageAccounts.invalidate();
 
 ## Acceptance Criteria
 
+### Phase 0
+- [ ] `prisma migrate dev` succeeds — PostgreSQL table renamed `BankAccount` → `FinancialAccount`, column renamed `bankId` → `institutionId`
+- [ ] All existing bank sub-account functionality (balances, transactions, transfer rules) works unchanged
+- [ ] `prisma generate` produces `prisma.financialAccount` client — `prisma.bankAccount` no longer exists
+- [ ] All backend files updated: no remaining references to `bankAccount`, `bankId`, or `.bank` relation
+
 ### Phase 1
 - [ ] `prisma migrate dev` succeeds with no errors
-- [ ] `StockHolding.accountId` FK resolves to `BankAccount`, not `Business`
-- [ ] Existing bank accounts unaffected
+- [ ] `StockHolding.accountId` FK resolves to `FinancialAccount`, not `Business`
+- [ ] `Business` model no longer has `stockHoldings` back-relation
 
 ### Phase 2
-- [ ] `getBrokerageAccounts` returns `BankAccount[]` with `bank` nested
-- [ ] `createBrokerageSubAccount` creates `BankAccount` and verifies institution ownership + BROKERAGE type
-- [ ] `createStockSnapshot` rejects `accountId`s not matching `BankAccount` with `bank.type=BROKERAGE`
-- [ ] `getSnapshotTotals` groups by `BankAccount.id`, display label = `"Institution — Account"`
+- [ ] `getBrokerageAccounts` returns `FinancialAccount[]` with `institution` nested
+- [ ] `createBrokerageSubAccount` creates `FinancialAccount` with `institutionId` and verifies BROKERAGE type
+- [ ] `createStockSnapshot` rejects `accountId`s not matching `FinancialAccount` with `institution.type=BROKERAGE`
+- [ ] `getSnapshotTotals` groups by `FinancialAccount.id`, display label = `"Institution — Account"`
 
 ### Phase 3
-- [ ] `StockHoldingWithAccount.account.bank.name` compiles without type errors
+- [ ] `StockHoldingWithAccount.account.institution.name` compiles without type errors
 - [ ] `BrokerageAccountOption` carries `institutionId` and `institutionName`
-- [ ] No `Business` import in stock-asset types (removed)
+- [ ] Import uses `FinancialAccount` from `@prisma/client` (not `BankAccount`)
 
 ### Phase 4
 - [ ] `StockAssetsClient` accordion headers show `"Fidelity — Roth IRA"` format
@@ -471,9 +561,9 @@ await utils.stockAsset.getBrokerageAccounts.invalidate();
 ### Phase 5
 - [ ] Institution select shows all BROKERAGE businesses
 - [ ] Account select is disabled until institution is selected
-- [ ] Selecting an institution filters account options to that institution's sub-accounts
+- [ ] Selecting an institution filters account options to that institution's `financialAccounts`
 - [ ] Creating a new institution creates a `Business/BROKERAGE` and enables account select
-- [ ] Creating a new account creates a `BankAccount` under selected institution
-- [ ] Form validates that `accountId` (BankAccount) is set before submission
+- [ ] Creating a new account creates a `FinancialAccount` under selected institution with correct `institutionId`
+- [ ] Form validates that `accountId` (`FinancialAccount.id`) is set before submission
 - [ ] Editing a holding pre-selects both institution and account correctly
 - [ ] `pnpm run build` passes with no TypeScript errors

@@ -153,7 +153,7 @@ export const transferRouter = router({
             transferLinkedTransactionId: null,
             transferCounterpart: { is: null },
           },
-          include: { bankAccount: { include: { bank: true } } },
+          include: { financialAccount: { include: { bank: true } } },
           orderBy: { date: 'desc' },
           skip,
           take: input.limit,
@@ -195,7 +195,7 @@ export const transferRouter = router({
           include: {
             bankAccount: { include: { bank: true } },
             transferLinkedTransaction: {
-              include: { bankAccount: { include: { bank: true } } },
+              include: { financialAccount: { include: { bank: true } } },
             },
           } as any,
           orderBy: { date: 'desc' },
@@ -215,3 +215,4 @@ export const transferRouter = router({
       return { pairs, total, page: input.page, totalPages: Math.ceil(total / input.limit) };
     }),
 });
+
