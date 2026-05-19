@@ -372,9 +372,17 @@ export default function BankAssetsClient({ initialData }: Props) {
   const handleConfirmDelete = () => {
     if (!deleteConfirm) return;
 
-    deleteEntryMutation.mutate({
-      entryId: deleteConfirm.entryId,
-    });
+    if (deleteConfirm.snapshotId && !deleteConfirm.entryId) {
+      // Delete entire snapshot
+      deleteSnapshotMutation.mutate({
+        snapshotId: deleteConfirm.snapshotId,
+      });
+    } else {
+      // Delete entry
+      deleteEntryMutation.mutate({
+        entryId: deleteConfirm.entryId,
+      });
+    }
   };
 
   const handleStartEditAccountName = (

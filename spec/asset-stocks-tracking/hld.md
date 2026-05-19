@@ -297,16 +297,18 @@ User (1)
    - **Why Not**: UI integration incomplete; backend ready via `getMostRecentSnapshot()`
    - **Effort**: Fetch latest snapshot in NewSnapshotModal, populate form fields
    - **Future Phase**: Will reduce data entry for frequent snapshot creators
+   - **Spec**: `spec/asset-stocks-tracking/add-holding-improvements/`
 
 2. **Snapshot Date Editing** (PRD §4.4 - Priority: Low)
    - **Intent**: Allow changing snapshot date after creation
    - **Why Not**: Requires transaction (copy to new date, delete old)
    - **Future Phase**: Lower priority; can be worked around by deleting + recreating
 
-3. **Add Holding to Existing Snapshot** (PRD §4.5 - Priority: Medium)
-   - **Intent**: Button to append new holding to non-latest snapshot
-   - **Why Not**: Not integrated into UI; endpoint exists
-   - **Future Phase**: Useful for retroactive data corrections
+### Implemented (Previously Listed as Gaps)
+
+3. ~~**Add Holding to Existing Snapshot**~~ ✅ **CLOSED**
+   - **Was**: Not integrated into UI; endpoint exists
+   - **Now**: `HoldingFormModal` with `createHolding` mutation wired via "Add Holding" button in each account accordion's `Disclosure.Panel`. Account pre-selection UX improvement tracked in `spec/asset-stocks-tracking/add-holding-improvements/`
 
 ### Design Scope Boundaries
 
@@ -341,9 +343,12 @@ User (1)
 - ✅ Fiscal year filtering
 
 ### Outstanding / Partial
-- ⚠️ Prefill from previous: Backend ready, UI integration needed
+- ⚠️ Prefill from previous: Backend ready (`getMostRecentSnapshot`), UI integration needed in `NewSnapshotModal`
 - ⚠️ Snapshot date editing: Not implemented
-- ⚠️ Add-to-existing: Backend ready, UI not integrated
+- ⚠️ Account pre-selection UX: "Add Holding" opens `HoldingFormModal` without pre-selecting the clicked account
+
+### Closed Since Original Spec
+- ✅ Add-to-existing snapshot: `createHolding` endpoint wired via `HoldingFormModal` + "Add Holding" button per account accordion
 
 ---
 

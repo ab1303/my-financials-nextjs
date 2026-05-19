@@ -152,17 +152,19 @@ holdingPeriod = differenceInMonths(saleDate || snapshotDate, buyDate)
 1. **Prefill from previous snapshot** (PRD 4.4)
    - Feature: When creating new snapshot, form should pre-populate with most recent holdings
    - Status: Business logic ready (`getMostRecentSnapshot()`)
-   - UI: Modal needs to fetch and populate
+   - UI: `NewSnapshotModal` needs to call query and populate `useFieldArray`
+   - Spec: `spec/asset-stocks-tracking/add-holding-improvements/`
    
 2. **Snapshot date editing** (PRD 4.4 - Priority: Low)
    - Feature: Edit modal to allow changing snapshot date after creation
    - Status: No current implementation
    - Notes: Would require copying snapshot to new date and deleting old
 
-3. **Add holding to existing snapshot** (PRD 4.5 - Priority: Medium)
-   - Feature: Button to add new holding to existing (non-latest) snapshot
-   - Status: API endpoint exists, UI not integrated
-   - Notes: Currently only supports adding via new snapshot modal
+### Implemented (Closed)
+3. ~~**Add holding to existing snapshot**~~ ✅ **CLOSED** (PRD 4.5)
+   - Was: API endpoint exists, UI not integrated
+   - Now: `HoldingFormModal` + `createHolding` wired via "Add Holding" button per account accordion in `StockAssetsClient`
+   - Remaining UX polish: Account pre-selection — tracked in `spec/asset-stocks-tracking/add-holding-improvements/`
 
 ### Display-Only, Not Full Workflow
 1. **CGT Discount Calculation** (PRD 4.6)
