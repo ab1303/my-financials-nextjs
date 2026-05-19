@@ -16,11 +16,6 @@ export const addBankDetailsHandler = async ({
   try {
     const bankResult = await addBankDetails({
       name: input.name,
-      addressLine: input.addressLine,
-      streetAddress: input.streetAddress,
-      postcode: input.postcode,
-      state: input.state,
-      suburb: input.suburb,
       type: 'BANK',
     });
     return {
