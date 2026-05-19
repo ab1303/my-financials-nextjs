@@ -8,6 +8,7 @@ import {
   getSnapshotById,
   updateBankAssetEntry,
   deleteBankAssetEntry,
+  addEntryToSnapshot,
   deleteBankAssetSnapshot,
   getSnapshotTotals,
 } from '@/server/services/bank-asset.service';
@@ -18,6 +19,7 @@ import type {
   UpdateBankAssetEntryInput,
   DeleteSnapshotInput,
   DeleteEntryInput,
+  AddEntryToSnapshotInput,
   GetSnapshotsInput,
   GetSnapshotByIdInput,
   GetBankAccountsInput,
@@ -256,6 +258,26 @@ export const deleteSnapshotHandler = async ({
       status: 'success',
       message: 'Snapshot deleted successfully',
     };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const addEntryToSnapshotHandler = async ({
+  input,
+  userId,
+}: {
+  input: AddEntryToSnapshotInput;
+  userId: string;
+}) => {
+  try {
+    const record = await addEntryToSnapshot(
+      input.snapshotId,
+      input.accountId,
+      input.balance,
+      userId,
+    );
+    return { status: 'success', data: { record } };
   } catch (e) {
     handleCaughtError(e);
   }

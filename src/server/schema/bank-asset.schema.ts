@@ -45,6 +45,12 @@ export const deleteEntrySchema = object({
   entryId: string({ required_error: 'Entry ID is required' }),
 });
 
+export const addEntryToSnapshotSchema = object({
+  snapshotId: string({ required_error: 'Snapshot ID is required' }),
+  accountId: string({ required_error: 'Account is required' }),
+  balance: z.number({ required_error: 'Balance is required' }).min(0, 'Balance must be >= 0'),
+});
+
 // Schema for getting snapshots with filters
 export const getSnapshotsSchema = object({
   calendarYearId: string().optional(),
@@ -80,6 +86,7 @@ export type UpdateBankAssetEntryInput = TypeOf<
 export type UpdateBankAccountInput = TypeOf<typeof updateBankAccountSchema>;
 export type DeleteSnapshotInput = TypeOf<typeof deleteSnapshotSchema>;
 export type DeleteEntryInput = TypeOf<typeof deleteEntrySchema>;
+export type AddEntryToSnapshotInput = TypeOf<typeof addEntryToSnapshotSchema>;
 export type GetSnapshotsInput = TypeOf<typeof getSnapshotsSchema>;
 export type GetSnapshotByIdInput = TypeOf<typeof getSnapshotByIdSchema>;
 export type GetBankAccountsInput = TypeOf<typeof getBankAccountsSchema>;
