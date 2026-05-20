@@ -1,9 +1,9 @@
 # Spec Folder Migration Map
 
-**Status:** In Progress (88% complete)  
+**Status:** In Progress (90% complete)  
 **Total features:** 48 across 11 domains  
-**Consolidated:** 42 features across 6 domains (cashflow as unified 3-level domain with 14 features)  
-**Remaining:** 6 features across 3 domains  
+**Consolidated:** 43 features across 7 domains (cashflow as unified 3-level domain with 14 features)  
+**Remaining:** 5 features across 2 domains  
 **Target structure:** `spec/{domain}/{feature}/` (2-level) or `spec/{domain}/{sub-group}/{feature}/` (3-level for complex domains)  
 **Migration approach:** Vertical slicing for LLM context; 3-level only when 3+ independent sub-domains exist
 
@@ -129,12 +129,14 @@ Standalone reimbursement feature.
 |---|---|---|
 | `reimbursements` | `reimbursements/reimbursements/` | **Domain HLD goes here** |
 
-### 9. `user-profile` (1 feature) ⏳ PENDING
+### 9. `user-profile` (1 feature) ✅ COMPLETE
 User profile and preferences.
 
 | Current Folder | Target Location | Status |
 |---|---|---|
-| `user-profile` | `user-profile/user-profile/` | ⏳ Pending |
+| `user-profile` | `user-profile/user-profile/` | ✅ Migrated |
+
+**Rationale:** User profile is foundational; manages user identity, authentication context, and cross-app preferences (currency display, fiscal year settings, theme). 2-level structure (domain HLD + 1 feature).
 
 ### 8. `architecture` (9 features) ⏳ PENDING
 App-wide architectural guidelines, standards, infrastructure, and research.
@@ -164,20 +166,19 @@ App-wide architectural guidelines, standards, infrastructure, and research.
 - ✅ Migration guide created (spec-consolidation.md)
 - ✅ Migration template created (migration-agent-template.md)
 
-### Phase 2: Execute Consolidations ✅ COMPLETE (88%)
+### Phase 2: Execute Consolidations ✅ COMPLETE (90%)
 - ✅ Transactions domain (10 features, 2-level)
 - ✅ CSV-import domain (8 features, 2-level)
 - ✅ Assets domain (4 features, 2-level)
 - ✅ Banking domain (4 features, 2-level)
 - ✅ **Cashflow domain (14 features, 3-level with 6 sub-groups)** ← Unified: income, expense, donations, categories, interest, audit
+- ✅ User-profile domain (1 feature, 2-level)
 - ⏳ AI-features domain (3 features remaining)
 - ⏳ **Architecture domain (9 features remaining)** ← App-wide guidelines, standards, infrastructure
-- ⏳ User-profile domain (1 feature remaining)
 
-### Phase 3: Remaining Work (12% — 6 features)
+### Phase 3: Remaining Work (10% — 5 features)
 - 3 features in ai-features (ai-image-import, ai-usage-logging, finance-chat)
 - 9 features in **architecture** (app-wide guidelines, standards, infrastructure)
-- 1 feature in user-profile (user-profile)
 
 ### Phase 3: Selective Migration (Ongoing)
 - On each feature touch, migrate its spec folder
