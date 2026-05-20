@@ -521,12 +521,24 @@ export const createBrokerageSubAccount = async (
   userId: string,
   input: { businessId: string; name: string },
 ) => {
+  // Verify the Business/BROKERAGE institution exists and either:
+  // - is global (userId null), or
+  // - is owned by the user
   const business = await prisma.business.findFirst({
-    where: { id: input.businessId, userId, type: 'BROKERAGE' },
+    where: {
+      id: input.businessId,
+      type: 'BROKERAGE',
+      OR: [
+        { userId: null },        // Global institution
+        { userId },              // User-owned institution
+      ],
+    },
   });
+
   if (!business) {
     throw new Error('Brokerage institution not found or not owned by user');
   }
+
   return await prisma.financialAccount.create({
     data: {
       name: input.name,

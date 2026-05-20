@@ -77,16 +77,36 @@ describe('stock-asset.service — brokerage functions', () => {
       prismaMock.business.findFirst.mockResolvedValueOnce(null as never);
       await expect(createBrokerageSubAccount(userId, input)).rejects.toThrow('Brokerage institution not found or not owned by user');
       expect(prismaMock.business.findFirst).toHaveBeenCalledWith({
-        where: { id: input.businessId, userId, type: 'BROKERAGE' },
+        where: {
+          id: input.businessId,
+          type: 'BROKERAGE',
+          OR: [
+            { userId: null },        // Global institution
+            { userId },              // User-owned institution
+          ],
+        },
       });
     });
 
-    it('creates and returns sub-account when business exists', async () => {
+    it('creates and returns sub-account when global brokerage exists', async () => {
       const business = { id: input.businessId };
       const created = {
         id: 'acc-1',
         name: input.name,
         institution: { id: input.businessId, name: 'Fidelity' },
+      };
+      prismaMock.business.findFirst.mockResolvedValueOnce(business as never);
+      prismaMock.financialAccount.create.mockResolvedValueOnce(created as never);
+      const result = await createBrokerageSubAccount(userId, input);
+      expect(result).toEqual(created);
+    });
+
+    it('creates and returns sub-account when user-owned brokerage exists', async () => {
+      const business = { id: input.businessId, userId };
+      const created = {
+        id: 'acc-2',
+        name: input.name,
+        institution: { id: input.businessId, name: 'Vanguard' },
       };
       prismaMock.business.findFirst.mockResolvedValueOnce(business as never);
       prismaMock.financialAccount.create.mockResolvedValueOnce(created as never);
