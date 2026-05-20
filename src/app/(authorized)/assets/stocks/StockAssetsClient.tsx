@@ -162,6 +162,7 @@ export default function StockAssetsClient({ initialData }: Props) {
     onSuccess: () => {
       toast.success('Holding deleted successfully');
       setDeleteHoldingConfirm(null);
+      refetchSnapshots();
       refetchTotals();
     },
     onError: (error) => {

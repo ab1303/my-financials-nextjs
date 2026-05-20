@@ -12,14 +12,22 @@ export function getSelectStyles<
   return {
     control: (base, state) => ({
       ...base,
-      backgroundColor: 'hsl(var(--background))',
-      borderColor: state.isFocused ? 'hsl(var(--ring))' : 'hsl(var(--input))',
+      backgroundColor: state.isDisabled
+        ? 'hsl(var(--background) / 0.5)'
+        : 'hsl(var(--background))',
+      borderColor: state.isFocused
+        ? 'hsl(var(--ring))'
+        : state.isDisabled
+          ? 'hsl(var(--border) / 0.5)'
+          : 'hsl(var(--input))',
       borderRadius: 'calc(var(--radius) - 2px)',
       boxShadow: state.isFocused
         ? '0 0 0 1px hsl(var(--ring))'
         : base.boxShadow,
-      '&:hover': { borderColor: 'hsl(var(--ring))' },
+      '&:hover': { borderColor: state.isDisabled ? undefined : 'hsl(var(--ring))' },
       minHeight: '36px',
+      opacity: state.isDisabled ? 0.6 : 1,
+      cursor: state.isDisabled ? 'default' : 'default',
     }),
     menu: (base) => ({
       ...base,
@@ -48,9 +56,10 @@ export function getSelectStyles<
       cursor: 'pointer',
       '&:active': { backgroundColor: 'hsl(var(--primary) / 0.2)' },
     }),
-    singleValue: (base) => ({
+    singleValue: (base, state) => ({
       ...base,
       color: 'hsl(var(--foreground))',
+      opacity: state.isDisabled ? 0.6 : 1,
     }),
     input: (base) => ({
       ...base,

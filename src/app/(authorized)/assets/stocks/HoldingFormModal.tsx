@@ -324,7 +324,7 @@ export default function HoldingFormModal({
   };
 
   return (
-    <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-2xl'>
+    <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-2xl sm:max-w-lg'>
       <Modal.Header>
         <span className='text-xl font-semibold text-foreground'>
           {isEditMode ? 'Edit Holding' : 'Add Holding'}
@@ -332,8 +332,9 @@ export default function HoldingFormModal({
       </Modal.Header>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Modal.Body variant='spacious'>
-          {/* Institution Selection */}
-          <div>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
+            {/* Institution Selection */}
+            <div className='sm:col-span-2'>
             <Label htmlFor='institutionId'>Brokerage Institution *</Label>
             <CreatableAppSelect<SelectOption>
               options={institutionOptions}
@@ -360,7 +361,7 @@ export default function HoldingFormModal({
               className='mt-1'
               placeholder='Select or create institution…'
               inputId='institutionId'
-              isdisabled={false}
+              isDisabled={isEditMode}
             />
           </div>
           {/* Account Selection */}
@@ -410,14 +411,15 @@ export default function HoldingFormModal({
             <input
               {...register('ticker')}
               type='text'
-              className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+              className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring read-only:opacity-75 read-only:cursor-default focus-visible:ring-2 focus-visible:ring-ring'
               autoCapitalize='characters'
               autoCorrect='off'
               spellCheck={false}
               inputMode='text'
               autoComplete='off'
-              placeholder='e.g. CBA'
-              disabled={false}
+              placeholder='e.g. CBA…'
+              readOnly={isEditMode}
+              aria-readonly={isEditMode}
             />
             {errors.ticker && (
               <p className='mt-1 text-sm text-red-600'>
@@ -431,13 +433,14 @@ export default function HoldingFormModal({
             <input
               {...register('companyName')}
               type='text'
-              className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+              className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring read-only:opacity-75 read-only:cursor-default focus-visible:ring-2 focus-visible:ring-ring'
               autoCorrect='off'
               spellCheck={false}
               inputMode='text'
               autoComplete='off'
-              placeholder='e.g. Commonwealth Bank'
-              disabled={false}
+              placeholder='e.g. Commonwealth Bank…'
+              readOnly={isEditMode}
+              aria-readonly={isEditMode}
             />
             {errors.companyName && (
               <p className='mt-1 text-sm text-red-600'>
@@ -553,7 +556,7 @@ export default function HoldingFormModal({
               <select
                 value={buyDateMode}
                 onChange={e => setBuyDateMode(e.target.value as 'month' | 'exact')}
-                className='border border-input rounded-md px-2 py-1 text-sm'
+                className='border border-input bg-background text-foreground rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                 disabled={false}
               >
                 <option value='month'>Month</option>
@@ -620,6 +623,7 @@ export default function HoldingFormModal({
             )}
           </div>
           {/* Sale Section */}
+          <div className='sm:col-span-2'>
           <Disclosure>
             {({ open }) => (
               <>
@@ -632,7 +636,7 @@ export default function HoldingFormModal({
                   {open ? 'Hide Sale Fields' : 'Show Sale Fields'}
                 </Disclosure.Button>
                 <Disclosure.Panel>
-                  <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4'>
                     {/* Sale Price */}
                     <div>
                       <Label htmlFor='salePrice'>Sale Price (per share)</Label>
@@ -719,20 +723,23 @@ export default function HoldingFormModal({
           <CGTEligibilityWarning
             buyDate={watch('buyDate')}
           />
+          </div>
+          </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant='secondary' onClick={handleClose} disabled={isSubmitting}>
+        <Modal.Footer className='flex-col-reverse sm:flex-row sm:gap-3'>
+          <Button variant='secondary' onClick={handleClose} disabled={isSubmitting} aria-disabled={isSubmitting} className='w-full sm:w-auto'>
             Cancel
           </Button>
           <Button
             variant='primary'
             type='submit'
             disabled={isSubmitting || createHolding.isPending || updateHolding.isPending}
+            className='w-full sm:w-auto'
           >
             {isSubmitting || createHolding.isPending || updateHolding.isPending
               ? isEditMode
-                ? 'Saving...'
-                : 'Creating...'
+                ? 'Saving…'
+                : 'Creating…'
               : isEditMode
                 ? 'Save Changes'
                 : 'Add Holding'}
@@ -742,5 +749,6 @@ export default function HoldingFormModal({
     </Modal>
   );
 }
+
 
 
