@@ -93,35 +93,64 @@ export const getNetWorthTrend = async (
     ),
   }));
 
-  let stockPointer = -1;
+  // Create a map of cash snapshots by date for quick lookup
+  const cashSnapshotsByDate = new Map(
+    cashSnapshots.map((snapshot) => [
+      toIsoDate(snapshot.snapshotDate),
+      snapshot,
+    ]),
+  );
 
-  const dataPoints: NetWorthDataPoint[] = cashSnapshots.map((cashSnapshot) => {
-    while (
-      stockPointer + 1 < stockSnapshotsWithTotals.length &&
-      stockSnapshotsWithTotals[stockPointer + 1]!.snapshotDate <=
-        cashSnapshot.snapshotDate
-    ) {
-      stockPointer++;
+  // Create a map of stock snapshots by date for quick lookup
+  const stockSnapshotsByDate = new Map(
+    stockSnapshotsWithTotals.map((snapshot) => [
+      toIsoDate(snapshot.snapshotDate),
+      snapshot,
+    ]),
+  );
+
+  // Merge all unique dates from both cash and stock snapshots
+  const allDates = Array.from(
+    new Set([
+      ...cashSnapshotsByDate.keys(),
+      ...stockSnapshotsByDate.keys(),
+    ]),
+  ).sort();
+
+  // Track the last known values for forward-filling
+  let lastCashSnapshot: (typeof cashSnapshots)[0] | null = null;
+  let lastStockSnapshot: (typeof stockSnapshotsWithTotals)[0] | null = null;
+
+  const dataPoints: NetWorthDataPoint[] = allDates.map((dateStr) => {
+    const cashSnapshot = cashSnapshotsByDate.get(dateStr);
+    const stockSnapshot = stockSnapshotsByDate.get(dateStr);
+
+    if (cashSnapshot) {
+      lastCashSnapshot = cashSnapshot;
+    }
+    if (stockSnapshot) {
+      lastStockSnapshot = stockSnapshot;
     }
 
-    const matchedStockSnapshot =
-      stockPointer >= 0 ? stockSnapshotsWithTotals[stockPointer] : null;
-    const cashTotal = cashSnapshot.balanceRecords.reduce(
-      (sum, entry) => sum + entry.balance.toNumber(),
-      0,
-    );
-    const stockTotal = matchedStockSnapshot?.stockTotal ?? 0;
+    const cashTotal = lastCashSnapshot
+      ? lastCashSnapshot.balanceRecords.reduce(
+          (sum, entry) => sum + entry.balance.toNumber(),
+          0,
+        )
+      : 0;
+    const stockTotal = lastStockSnapshot?.stockTotal ?? 0;
 
     return {
-      date: toIsoDate(cashSnapshot.snapshotDate),
+      date: dateStr,
       cashTotal,
       stockTotal,
       netWorthTotal: cashTotal + stockTotal,
-      cashSnapshotId: cashSnapshot.id,
-      stockSnapshotId: matchedStockSnapshot?.id ?? null,
-      isStockStale: matchedStockSnapshot
-        ? !isSameDay(matchedStockSnapshot.snapshotDate, cashSnapshot.snapshotDate)
-        : false,
+      cashSnapshotId: lastCashSnapshot?.id ?? '',
+      stockSnapshotId: lastStockSnapshot?.id ?? null,
+      isStockStale:
+        lastStockSnapshot && cashSnapshot
+          ? !isSameDay(lastStockSnapshot.snapshotDate, cashSnapshot.snapshotDate)
+          : false,
     };
   });
 

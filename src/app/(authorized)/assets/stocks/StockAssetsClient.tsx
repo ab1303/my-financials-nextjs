@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
 import { Disclosure, Dialog, Transition } from '@headlessui/react';
-import { ChevronDown, Plus, Trash2, Pencil } from 'lucide-react';
+import { ChevronDown, Plus, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
@@ -19,17 +19,12 @@ import { YearSnapshotSelectors } from './YearSnapshotSelectors';
 import {
   calculateHoldingMetrics,
   formatCurrency,
-  formatQuantity,
-  formatPrice,
-  formatPercentage,
-  formatHoldingPeriod,
   getPLColorClass,
-  getPLBgColorClass,
-  getTermStatusColorClass,
-  getTermStatusLabel,
 } from '@/utils/stock-asset-calculations';
 import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
+import type { CurrencyEnumType } from '@prisma/client';
 import AIUsageCard from '@/components/AIUsageCard';
+import HoldingsTable from './HoldingsTable';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 
@@ -64,6 +59,25 @@ export default function StockAssetsClient({ initialData }: Props) {
     snapshotId: string;
   } | null>(null);
   const [addingToAccountId, setAddingToAccountId] = useState<string | null>(null);
+
+  // Grouping toggle state — persisted to localStorage
+  const [groupBy, setGroupBy] = useState<'currency' | 'brokerage'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('stockGroupBy') as 'currency' | 'brokerage') ?? 'currency';
+    }
+    return 'currency';
+  });
+
+  const handleGroupByChange = (mode: 'currency' | 'brokerage') => {
+    setGroupBy(mode);
+    localStorage.setItem('stockGroupBy', mode);
+  };
+
+  const handleAddHolding = (accountId: string) => {
+    setEditingHolding(null);
+    setAddingToAccountId(accountId);
+    setIsHoldingFormModalOpen(true);
+  };
 
   // Memoize year options to prevent unnecessary re-renders
   const yearOptions: OptionType[] = useMemo(
@@ -253,28 +267,107 @@ export default function StockAssetsClient({ initialData }: Props) {
     };
   }, [selectedCalendarYearFull]);
 
-  // Get accounts from snapshot
-  const accounts = useMemo(() => {
-    if (!snapshots || snapshots.length === 0) return [];
+  // The currently selected snapshot (raw, with full StockHoldingWithAccount[])
+  const selectedSnap = useMemo(
+    () => snapshots?.find((s) => s.id === selectedSnapshotId) ?? null,
+    [snapshots, selectedSnapshotId],
+  );
 
-    const selectedSnap = snapshots.find((s) => s.id === selectedSnapshotId);
+  // Pre-computed snapshot date for calculateHoldingMetrics
+  const snapshotDate = useMemo(
+    () => (selectedSnap ? new Date(selectedSnap.snapshotDate) : new Date()),
+    [selectedSnap],
+  );
+
+  // Currency view: [{ currency, totalMarketValue, totalUnrealizedPL, accounts: [...] }]
+  const currencyGroups = useMemo(() => {
     if (!selectedSnap) return [];
 
-    // Group holdings by account
-    const accountMap = new Map();
-    selectedSnap.holdings.forEach((holding) => {
-      if (!accountMap.has(holding.accountId)) {
-        accountMap.set(holding.accountId, {
-          accountId: holding.accountId,
-          accountName: `${holding.account.institution.name} — ${holding.account.name}`,
-          holdings: [],
-        });
-      }
-      accountMap.get(holding.accountId).holdings.push(holding);
-    });
+    const map = new Map<
+      CurrencyEnumType,
+      Map<string, { accountId: string; accountName: string; holdings: StockHoldingWithAccount[] }>
+    >();
 
-    return Array.from(accountMap.values());
-  }, [snapshots, selectedSnapshotId]);
+    for (const holding of selectedSnap.holdings) {
+      const currency = holding.currency;
+      const accountId = holding.accountId;
+      const accountName = `${holding.account.institution.name} — ${holding.account.name}`;
+
+      if (!map.has(currency)) map.set(currency, new Map());
+      const acctMap = map.get(currency)!;
+      if (!acctMap.has(accountId)) acctMap.set(accountId, { accountId, accountName, holdings: [] });
+      acctMap.get(accountId)!.holdings.push(holding);
+    }
+
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, acctMap]) => {
+        const accounts = Array.from(acctMap.values()).map((acct) => {
+          const acctTotals = acct.holdings.reduce(
+            (acc, h) => {
+              const m = calculateHoldingMetrics(h, snapshotDate);
+              return {
+                totalMarketValue: acc.totalMarketValue + m.marketValue,
+                totalUnrealizedPL: acc.totalUnrealizedPL + m.unrealizedPL,
+              };
+            },
+            { totalMarketValue: 0, totalUnrealizedPL: 0 },
+          );
+          return { ...acct, ...acctTotals };
+        });
+
+        const currencyTotals = accounts.reduce(
+          (acc, a) => ({
+            totalMarketValue: acc.totalMarketValue + a.totalMarketValue,
+            totalUnrealizedPL: acc.totalUnrealizedPL + a.totalUnrealizedPL,
+          }),
+          { totalMarketValue: 0, totalUnrealizedPL: 0 },
+        );
+
+        return { currency, accounts, ...currencyTotals };
+      });
+  }, [selectedSnap, snapshotDate]);
+
+  // Brokerage view: [{ accountId, accountName, currencies: [{ currency, holdings, totals }] }]
+  const brokerageGroups = useMemo(() => {
+    if (!selectedSnap) return [];
+
+    const map = new Map<
+      string,
+      { accountId: string; accountName: string; currencies: Map<CurrencyEnumType, StockHoldingWithAccount[]> }
+    >();
+
+    for (const holding of selectedSnap.holdings) {
+      const accountId = holding.accountId;
+      const accountName = `${holding.account.institution.name} — ${holding.account.name}`;
+      const currency = holding.currency;
+
+      if (!map.has(accountId)) map.set(accountId, { accountId, accountName, currencies: new Map() });
+      const entry = map.get(accountId)!;
+      if (!entry.currencies.has(currency)) entry.currencies.set(currency, []);
+      entry.currencies.get(currency)!.push(holding);
+    }
+
+    return Array.from(map.values()).map((b) => ({
+      accountId: b.accountId,
+      accountName: b.accountName,
+      currencies: Array.from(b.currencies.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([currency, holdings]) => {
+          const totals = holdings.reduce(
+            (acc, h) => {
+              const m = calculateHoldingMetrics(h, snapshotDate);
+              return {
+                totalMarketValue: acc.totalMarketValue + m.marketValue,
+                totalUnrealizedPL: acc.totalUnrealizedPL + m.unrealizedPL,
+              };
+            },
+            { totalMarketValue: 0, totalUnrealizedPL: 0 },
+          );
+          return { currency, holdings, ...totals };
+        }),
+    }));
+  }, [selectedSnap, snapshotDate]);
 
   return (
     <div className='space-y-6'>
@@ -309,7 +402,33 @@ export default function StockAssetsClient({ initialData }: Props) {
           <h2 className='text-lg font-semibold text-foreground'>
             Stock Holdings
           </h2>
-          <div className='flex gap-2'>
+          <div className='flex gap-2 items-center'>
+            {currencyGroups.length > 0 && (
+              <div className='flex rounded-md border border-border overflow-hidden text-sm'>
+                <button
+                  onClick={() => handleGroupByChange('currency')}
+                  className={clsx(
+                    'px-3 py-1.5 font-medium transition-colors',
+                    groupBy === 'currency'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card text-muted-foreground hover:bg-muted',
+                  )}
+                >
+                  By Currency
+                </button>
+                <button
+                  onClick={() => handleGroupByChange('brokerage')}
+                  className={clsx(
+                    'px-3 py-1.5 font-medium transition-colors border-l border-border',
+                    groupBy === 'brokerage'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card text-muted-foreground hover:bg-muted',
+                  )}
+                >
+                  By Brokerage
+                </button>
+              </div>
+            )}
             <Button
               variant='primary'
               onClick={() => setIsNewSnapshotModalOpen(true)}
@@ -365,7 +484,7 @@ export default function StockAssetsClient({ initialData }: Props) {
               New Snapshot
             </Button>
           </div>
-        ) : accounts.length === 0 ? (
+        ) : currencyGroups.length === 0 ? (
           <div className='text-center py-12 bg-muted rounded-lg border-2 border-dashed border-input'>
             <p className='text-foreground mb-4 font-medium'>
               You need to add brokerage accounts first.
@@ -382,258 +501,136 @@ export default function StockAssetsClient({ initialData }: Props) {
             </a>
           </div>
         ) : (
-          <div className='space-y-4'>
-            {accounts.map((account) => (
-              <Disclosure key={account.accountId}>
-                {({ open }) => (
-                  <div className='border border-border rounded-lg overflow-hidden'>
-                    <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/50 transition-colors'>
-                      <div className='flex items-center gap-4'>
-                        <ChevronDown
-                          className={clsx(
-                            'w-5 h-5 text-muted-foreground transition-transform',
-                            open ? 'transform rotate-180' : '',
-                          )}
-                        />
-                        <span className='text-lg font-semibold text-foreground'>
-                          {account.accountName}
+          <div className='space-y-6'>
+            {groupBy === 'currency' ? (
+              /* ── Currency View: currency sections → brokerage accordions ── */
+              currencyGroups.map((currencyGroup) => {
+                const flag = currencyGroup.currency === 'AUD' ? '🇦🇺' : '🇺🇸';
+                return (
+                  <div key={currencyGroup.currency} className='space-y-3'>
+                    {/* Currency section header */}
+                    <div className='flex items-center justify-between px-2 py-2 border-b-2 border-border'>
+                      <h3 className='text-base font-semibold text-foreground'>
+                        {flag} {currencyGroup.currency} Holdings
+                      </h3>
+                      <div className='flex items-center gap-4 text-sm'>
+                        <span className='text-muted-foreground'>
+                          {formatCurrency(currencyGroup.totalMarketValue, currencyGroup.currency)}
+                        </span>
+                        <span className={clsx('font-semibold', getPLColorClass(currencyGroup.totalUnrealizedPL))}>
+                          {currencyGroup.totalUnrealizedPL >= 0 ? '+' : ''}
+                          {formatCurrency(currencyGroup.totalUnrealizedPL, currencyGroup.currency)}
                         </span>
                       </div>
-                    </Disclosure.Button>
+                    </div>
 
-                    <Disclosure.Panel className='px-6 py-4 bg-card'>
-                      <div className='overflow-x-auto'>
-                        <table className='min-w-full divide-y divide-border'>
-                          <thead className='bg-muted'>
-                            <tr>
-                              <th className='px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Stock
-                              </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Qty
-                              </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Buy Price
-                              </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Buy Date
-                              </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Curr Price
-                              </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Value
-                              </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                P/L
-                              </th>
-                              <th className='px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                P/L %
-                              </th>
-                              <th className='px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Holding
-                              </th>
-                              <th className='px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Term
-                              </th>
-                              <th className='px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                CGT
-                              </th>
-                              <th className='px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider'>
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className='bg-card divide-y divide-border'>
-                            {account.holdings.map((holding: any) => {
-                              const metrics = calculateHoldingMetrics(
-                                holding,
-                                new Date(
-                                  snapshots?.find(
-                                    (s) => s.id === selectedSnapshotId,
-                                  )?.snapshotDate || new Date(),
-                                ),
-                              );
-
-                              return (
-                                <tr
-                                  key={holding.id}
+                    {/* Brokerage account accordions within this currency */}
+                    {currencyGroup.accounts.map((account) => (
+                      <Disclosure key={`${currencyGroup.currency}-${account.accountId}`} defaultOpen>
+                        {({ open }) => (
+                          <div className='border border-border rounded-lg overflow-hidden'>
+                            <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/50 transition-colors'>
+                              <div className='flex items-center gap-4'>
+                                <ChevronDown
                                   className={clsx(
-                                    'hover:bg-muted/50',
-                                    metrics.isSold && 'opacity-75',
+                                    'w-5 h-5 text-muted-foreground transition-transform',
+                                    open && 'rotate-180',
                                   )}
-                                >
-                                  {/* Stock: ticker + company */}
-                                  <td className='px-6 py-4 text-sm'>
-                                    <div className='font-semibold text-foreground'>
-                                      {holding.ticker}
-                                      {metrics.isSold && (
-                                        <span className='ml-2 inline-block px-2 py-1 text-xs font-semibold bg-muted text-foreground rounded'>
-                                          SOLD
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className='text-xs text-muted-foreground'>
-                                      {holding.companyName}
-                                    </div>
-                                  </td>
-
-                                  {/* Quantity */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-foreground'>
-                                    {formatQuantity(metrics.remainingQuantity)}
-                                  </td>
-
-                                  {/* Buy Price */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-muted-foreground'>
-                                    {formatPrice(
-                                      Number(holding.buyPrice),
-                                      holding.currency,
-                                    )}
-                                  </td>
-
-                                  {/* Buy Date */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-muted-foreground'>
-                                    {new Date(
-                                      holding.buyDate,
-                                    ).toLocaleDateString('en-AU', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                    })}
-                                  </td>
-
-                                  {/* Current Price */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right text-muted-foreground'>
-                                    {formatPrice(
-                                      Number(holding.currentPrice),
-                                      holding.currency,
-                                    )}
-                                  </td>
-
-                                  {/* Market Value */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-foreground'>
-                                    {formatCurrency(
-                                      metrics.marketValue,
-                                      holding.currency,
-                                    )}
-                                  </td>
-
-                                  {/* Unrealized P/L */}
-                                  <td
-                                    className={clsx(
-                                      'px-6 py-4 whitespace-nowrap text-sm text-right font-semibold',
-                                      getPLColorClass(metrics.unrealizedPL),
-                                    )}
-                                  >
-                                    {formatCurrency(
-                                      metrics.unrealizedPL,
-                                      holding.currency,
-                                    )}
-                                  </td>
-
-                                  {/* P/L % */}
-                                  <td
-                                    className={clsx(
-                                      'px-6 py-4 whitespace-nowrap text-sm text-right font-semibold',
-                                      getPLColorClass(
-                                        metrics.unrealizedPLPercent,
-                                      ),
-                                    )}
-                                  >
-                                    {formatPercentage(
-                                      metrics.unrealizedPLPercent,
-                                    )}
-                                  </td>
-
-                                  {/* Holding Period */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center text-muted-foreground'>
-                                    {formatHoldingPeriod(
-                                      metrics.holdingPeriodMonths,
-                                    )}
-                                  </td>
-
-                                  {/* Term Status */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center'>
-                                    <span
-                                      className={clsx(
-                                        'inline-block px-2 py-1 text-xs font-semibold rounded',
-                                        getTermStatusColorClass(
-                                          metrics.termStatus,
-                                        ),
-                                      )}
-                                    >
-                                      {getTermStatusLabel(metrics.termStatus)}
-                                    </span>
-                                  </td>
-
-                                  {/* CGT Eligibility */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center'>
-                                    {metrics.isSold ? (
-                                      metrics.isCGTEligible ? (
-                                        <span className='text-green-600 font-semibold'>
-                                          âœ“
-                                        </span>
-                                      ) : (
-                                        <span className='text-red-600'>
-                                          âœ—
-                                        </span>
-                                      )
-                                    ) : (
-                                      <span className='text-muted-foreground text-xs'>
-                                        N/A
-                                      </span>
-                                    )}
-                                  </td>
-
-                                  {/* Actions */}
-                                  <td className='px-6 py-4 whitespace-nowrap text-sm text-center space-x-2'>
-                                    <button
-                                      onClick={() => {
-                                        setEditingHolding(holding);
-                                        setIsHoldingFormModalOpen(true);
-                                      }}
-                                      className='text-indigo-600 hover:text-indigo-700 inline-block'
-                                      title='Edit holding'
-                                    >
-                                      <Pencil size={16} />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setDeleteHoldingConfirm({
-                                          holdingId: holding.id,
-                                          ticker: holding.ticker,
-                                          snapshotId: selectedSnapshotId || '',
-                                        });
-                                      }}
-                                      className='text-red-600 hover:text-red-700 inline-block'
-                                      title='Delete holding'
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className='mt-4 flex justify-end'>
-                        <Button
-                          variant='secondary'
-                          onClick={() => {
-                            setEditingHolding(null);
-                            setAddingToAccountId(account.accountId);
-                            setIsHoldingFormModalOpen(true);
-                          }}
-                        >
-                          <Plus className='mr-2 w-4 h-4' />
-                          Add Holding
-                        </Button>
-                      </div>
-                    </Disclosure.Panel>
+                                />
+                                <span className='text-base font-semibold text-foreground'>
+                                  {account.accountName}
+                                </span>
+                              </div>
+                              <span className='text-sm text-muted-foreground'>
+                                {formatCurrency(account.totalMarketValue, currencyGroup.currency)}
+                              </span>
+                            </Disclosure.Button>
+                            <Disclosure.Panel className='px-6 py-4 bg-card'>
+                              <HoldingsTable
+                                holdings={account.holdings}
+                                snapshotDate={snapshotDate}
+                                snapshotId={selectedSnapshotId ?? ''}
+                                accountId={account.accountId}
+                                onEdit={(holding) => {
+                                  setEditingHolding(holding);
+                                  setIsHoldingFormModalOpen(true);
+                                }}
+                                onDeleteConfirm={(holdingId, ticker, sid) =>
+                                  setDeleteHoldingConfirm({ holdingId, ticker, snapshotId: sid })
+                                }
+                                onAddHolding={handleAddHolding}
+                              />
+                            </Disclosure.Panel>
+                          </div>
+                        )}
+                      </Disclosure>
+                    ))}
                   </div>
-                )}
-              </Disclosure>
-            ))}
+                );
+              })
+            ) : (
+              /* ── Brokerage View: brokerage accordions → currency sub-sections ── */
+              brokerageGroups.map((brokerageGroup) => (
+                <Disclosure key={brokerageGroup.accountId} defaultOpen>
+                  {({ open }) => (
+                    <div className='border border-border rounded-lg overflow-hidden'>
+                      <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/50 transition-colors'>
+                        <div className='flex items-center gap-4'>
+                          <ChevronDown
+                            className={clsx(
+                              'w-5 h-5 text-muted-foreground transition-transform',
+                              open && 'rotate-180',
+                            )}
+                          />
+                          <span className='text-base font-semibold text-foreground'>
+                            {brokerageGroup.accountName}
+                          </span>
+                        </div>
+                      </Disclosure.Button>
+
+                      <Disclosure.Panel className='px-6 py-4 bg-card space-y-6'>
+                        {brokerageGroup.currencies.map((currencySection) => {
+                          const flag = currencySection.currency === 'AUD' ? '🇦🇺' : '🇺🇸';
+                          return (
+                            <div key={currencySection.currency}>
+                              {/* Currency sub-header */}
+                              <div className='flex items-center justify-between mb-3 pb-1 border-b border-border'>
+                                <span className='text-sm font-semibold text-foreground'>
+                                  {flag} {currencySection.currency}
+                                </span>
+                                <div className='flex items-center gap-3 text-sm'>
+                                  <span className='text-muted-foreground'>
+                                    {formatCurrency(currencySection.totalMarketValue, currencySection.currency)}
+                                  </span>
+                                  <span className={clsx('font-semibold', getPLColorClass(currencySection.totalUnrealizedPL))}>
+                                    {currencySection.totalUnrealizedPL >= 0 ? '+' : ''}
+                                    {formatCurrency(currencySection.totalUnrealizedPL, currencySection.currency)}
+                                  </span>
+                                </div>
+                              </div>
+                              <HoldingsTable
+                                holdings={currencySection.holdings}
+                                snapshotDate={snapshotDate}
+                                snapshotId={selectedSnapshotId ?? ''}
+                                accountId={brokerageGroup.accountId}
+                                onEdit={(holding) => {
+                                  setEditingHolding(holding);
+                                  setIsHoldingFormModalOpen(true);
+                                }}
+                                onDeleteConfirm={(holdingId, ticker, sid) =>
+                                  setDeleteHoldingConfirm({ holdingId, ticker, snapshotId: sid })
+                                }
+                                onAddHolding={handleAddHolding}
+                              />
+                            </div>
+                          );
+                        })}
+                      </Disclosure.Panel>
+                    </div>
+                  )}
+                </Disclosure>
+              ))
+            )}
           </div>
         )}
       </div>
