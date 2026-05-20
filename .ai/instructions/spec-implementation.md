@@ -65,7 +65,7 @@ spec/
   - § Spec Migration When Touching a Feature (the workflow)
   - § Context Bundle by Task (what to send to LLMs)
 
-### 2. **.github/instructions/spec-structure.md** — The Why
+### 2. **.ai/instructions/spec-structure.md** — The Why
 - **What:** Decision record explaining the paradigm shift
 - **Read if:** You want to understand the reasoning or explain it to someone else
 - **Key sections:**
@@ -74,7 +74,7 @@ spec/
   - Decisions Locked (can't be changed without re-spec'ing)
   - Risk Mitigations
 
-### 3. **.github/instructions/spec-migration-map.md** — The Inventory
+### 3. **.ai/instructions/spec-migration-map.md** — The Inventory
 - **What:** All 48 features mapped to 11 domains
 - **Read if:** You need to know where a feature belongs
 - **Example:**
@@ -86,7 +86,7 @@ spec/
   - ... etc
   ```
 
-### 4. **.github/instructions/spec-consolidation.md** — The How-To (New!)
+### 4. **.ai/instructions/spec-consolidation.md** — The How-To (New!)
 - **What:** Decision tree + workflow for consolidating a feature's spec
 - **Read if:** You're about to work on a feature in the old location
 - **Workflow:**
@@ -96,7 +96,7 @@ spec/
   4. Commit as separate "refactor" commit
   5. Proceed with implementation
 
-### 5. **.github/instructions/migration-agent-template.md** — The Agent Template
+### 5. **.ai/instructions/migration-agent-template.md** — The Agent Template
 - **What:** Template for gpt-4.1 agents to execute spec migrations
 - **Read if:** You're delegating a migration to an agent
 - **Includes:** Complete prompt template with constraints
@@ -220,10 +220,10 @@ git commit -m "refactor: migrate {feature} spec to new structure"
 | Document | Purpose | When to Read |
 |---|---|---|
 | [AGENTS.md](../../../AGENTS.md) | Spec standard definition | Designing or migrating specs |
-| [.github/instructions/spec-structure.md](./spec-structure.md) | Why + rationale | Understanding the change |
-| [.github/instructions/spec-migration-map.md](./spec-migration-map.md) | Feature → domain map | Finding a feature's domain |
-| [.github/instructions/spec-consolidation.md](./spec-consolidation.md) | How to migrate | Before starting work on old spec |
-| [.github/instructions/migration-agent-template.md](./migration-agent-template.md) | Agent template | Delegating migrations |
+| [.ai/instructions/spec-structure.md](./spec-structure.md) | Why + rationale | Understanding the change |
+| [.ai/instructions/spec-migration-map.md](./spec-migration-map.md) | Feature → domain map | Finding a feature's domain |
+| [.ai/instructions/spec-consolidation.md](./spec-consolidation.md) | How to migrate | Before starting work on old spec |
+| [.ai/instructions/migration-agent-template.md](./migration-agent-template.md) | Agent template | Delegating migrations |
 | [MIGRATION_RESULTS.md](../../../MIGRATION_RESULTS.md) | Pilot results | Learning from pilot |
 
 ---
