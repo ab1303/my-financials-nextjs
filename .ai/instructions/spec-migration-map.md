@@ -1,105 +1,114 @@
 # Spec Folder Migration Map
 
-**Status:** Planning  
+**Status:** In Progress (77% complete)  
 **Total features:** 48 across 11 domains  
+**Consolidated:** 37 features across 7 domains  
+**Remaining:** 11 features across 4 domains  
 **Target structure:** `spec/{domain}/{feature}/` with 3 files: `hld.md`, `context.md`, `lld.md`  
-**Migration approach:** Opportunistic + pilot test on `transactions` domain
+**Migration approach:** Opportunistic consolidation per domain
 
 ---
 
 ## Domain Groupings
 
-### 1. `transactions` (8 features)
+### 1. `transactions` (10 features) ✅ COMPLETE
 Core transaction management, ledger, reconciliation, and deduplication.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `transactions` | `transactions/transactions/` | **Domain HLD goes here** |
-| `transaction-ledger` | `transactions/transaction-ledger/` | Ledger view + filtering |
-| `transaction-dedup` | `transactions/transaction-dedup/` | Dedup logic |
-| `transaction-enrichment-pipeline` | `transactions/transaction-enrichment/` | Post-import enrichment |
-| `transfer-reconciliation` | `transactions/transfer-reconciliation/` | Match transfers |
-| `transfer-match-rules` | `transactions/transfer-match-rules/` | Rule engine for matching |
-| `transfer-counterpart-display` | `transactions/transfer-counterpart/` | UI for counterpart info |
-| `clear-transactions` | `transactions/transaction-clearing/` | Clear/archive old |
-| `undo-safeguards` | `transactions/undo-safeguards/` | Undo mechanics |
+| `transactions` | `transactions/transactions/` | ✅ Migrated |
+| `transaction-ledger` | `transactions/transaction-ledger/` | ✅ Migrated |
+| `transaction-dedup` | `transactions/transaction-dedup/` | ✅ Migrated |
+| `transaction-enrichment-pipeline` | `transactions/transaction-enrichment/` | ✅ Migrated |
+| `transfer-reconciliation` | `transactions/transfer-reconciliation/` | ✅ Migrated |
+| `transfer-match-rules` | `transactions/transfer-match-rules/` | ✅ Migrated |
+| `transfer-counterpart-display` | `transactions/transfer-counterpart/` | ✅ Migrated |
+| `clear-transactions` | `transactions/transaction-clearing/` | ✅ Migrated |
+| `undo-safeguards` | `transactions/undo-safeguards/` | ✅ Migrated |
+| `reimbursements` | `transactions/reimbursements/` | ✅ Migrated |
 
-### 2. `csv-import` (6 features)
+### 2. `csv-import` (8 features) ✅ COMPLETE
 CSV parsing, categorization, batching, matching, and archival.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `csv-import` | `csv-import/csv-import/` | **Domain HLD goes here** |
-| `generic-csv-import` | `csv-import/generic-csv-import/` | Generic parser |
-| `csv-categorisation-llm-classification` | `csv-import/llm-classification/` | LLM category matching |
-| `csv-categorisation-rag-examples` | `csv-import/rag-examples/` | RAG for category context |
-| `batch-re-matching` | `csv-import/batch-re-matching/` | Reprocess batches |
-| `import-file-archival` | `csv-import/file-archival/` | Archive uploaded files |
-| `import-session-date-range` | `csv-import/session-date-range/` | Date range filtering |
+| `csv-import` | `csv-import/csv-import/` | ✅ Migrated |
+| `generic-csv-import` | `csv-import/generic-csv-import/` | ✅ Migrated |
+| `csv-categorisation-llm-classification` | `csv-import/llm-classification/` | ✅ Migrated |
+| `csv-categorisation-rag-examples` | `csv-import/rag-examples/` | ✅ Migrated |
+| `batch-re-matching` | `csv-import/batch-re-matching/` | ✅ Migrated |
+| `import-file-archival` | `csv-import/file-archival/` | ✅ Migrated |
+| `import-session-date-range` | `csv-import/session-date-range/` | ✅ Migrated |
+| `semantic-category-matching` | `csv-import/semantic-matching/` | ✅ Migrated |
 
-### 3. `banking` (5 features)
+### 3. `banking` (4 features) ✅ COMPLETE
 Bank institutions, accounts, assets, and institution data.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `bank-institution-ui` | `banking/bank-institution-ui/` | **Domain HLD goes here** |
-| `bank-account-management` | `banking/bank-account-management/` | User accounts at banks |
-| `business-global-institutions` | `banking/business-institutions/` | Institution registry |
-| `snapshot-all-banks-display` | `banking/snapshot-display/` | Summary view across banks |
-| `brokerage-hybrid-model` | `banking/brokerage-hybrid/` | Brokerage account model |
+| `bank-institution-ui` | `banking/bank-institution-ui/` | ✅ Migrated |
+| `bank-account-management` | `banking/bank-account-management/` | ✅ Migrated |
+| `business-global-institutions` | `banking/business-institutions/` | ✅ Migrated |
+| `brokerage-hybrid-model` | `banking/brokerage-hybrid/` | ✅ Migrated |
 
-### 3a. `assets` (3 features)
+### 3a. `assets` (4 features) ✅ COMPLETE
 Asset tracking, net worth, and liquid cash accounts.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `assets-net-worth-dashboard` | `assets/net-worth-dashboard/` | **Domain HLD goes here** |
-| `asset-stocks-tracking` | `assets/stocks-tracking/` | Stock/investment tracking |
-| `bank-assets` | `assets/bank-assets/` | Asset accounts at banks (cash, bonds, etc.) |
+| `assets-net-worth-dashboard` | `assets/net-worth-dashboard/` | ✅ Migrated |
+| `asset-stocks-tracking` | `assets/stocks-tracking/` | ✅ Migrated |
+| `bank-assets` | `assets/bank-assets/` | ✅ Migrated |
+| `snapshot-all-banks-display` | `assets/snapshot-display/` | ✅ Migrated |
 
-### 4. `categories` (3 features)
+### 4. `categories` (2 features) ⏳ PENDING
 Category management, categorization, and semantic matching.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `category-management` | `categories/category-management/` | **Domain HLD goes here** |
-| `category-transaction-drill-down` | `categories/drill-down/` | Drill into category transactions |
-| `semantic-category-matching` | `categories/semantic-matching/` | ML-based category assignment |
+| `category-management` | `categories/category-management/` | ⏳ Pending |
+| `category-transaction-drill-down` | `categories/drill-down/` | ⏳ Pending |
 
-### 5. `income-expense` (4 features)
+**Note:** `semantic-category-matching` was moved to `csv-import/semantic-matching/` (it's a CSV categorization service, not a standalone category feature)
+
+### 5. `income-expense` (4 features) ✅ COMPLETE
 Income, expense tracking, interest handling, and related UX.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `income-management` | `income-expense/income-management/` | **Domain HLD goes here** |
-| `income-ux-improvements` | `income-expense/income-ux/` | UX enhancements |
-| `expense-tracking` | `income-expense/expense-tracking/` | Expense aggregation |
-| `interest-cleansing` | `income-expense/interest-cleansing/` | Interest classification |
+| `income-management` | `income-expense/income-management/` | ✅ Migrated |
+| `income-ux-improvements` | `income-expense/income-ux/` | ✅ Migrated |
+| `expense-tracking` | `income-expense/expense-tracking/` | ✅ Migrated |
+| `interest-cleansing` | `income-expense/interest-cleansing/` | ✅ Migrated |
 
-### 5a. `cashflow` (1 feature)
-Cashflow audits and site-level cash flow analysis.
+### 5a. `cashflow` (1 feature) ✅ COMPLETE
+Cashflow audits and aggregation/reporting layer.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `cashflow-site-audit` | `cashflow/site-audit/` | Cashflow feature audit findings |
+| `cashflow-site-audit` | `cashflow/cashflow-audit/` | ✅ Migrated |
 
-### 6. `ai-features` (3 features)
+**Note:** Cashflow is a reporting domain that aggregates data from income-expense, transactions, and assets domains.
+
+### 6. `ai-features` (3 features) ⏳ PENDING
 AI-driven features: image import, usage logging, chat.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `ai-image-import` | `ai-features/ai-image-import/` | **Domain HLD goes here** |
-| `ai-usage-logging` | `ai-features/ai-usage-logging/` | Track AI usage |
-| `finance-chat-assistant` | `ai-features/finance-chat/` | Chat-based queries |
+| `ai-image-import` | `ai-features/ai-image-import/` | ⏳ Pending |
+| `ai-usage-logging` | `ai-features/ai-usage-logging/` | ⏳ Pending |
+| `finance-chat-assistant` | `ai-features/finance-chat/` | ⏳ Pending |
 
-### 7. `donations` (3 features)
+### 7. `donations` (3 features) ✅ COMPLETE
 Donations, zakat, and related transaction linking.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `donations` | `donations/donations/` | **Domain HLD goes here** |
-| `donation-transaction-linking` | `donations/transaction-linking/` | Link to transactions |
-| `zakat` | `donations/zakat/` | Zakat calculation |
+| `donations` | `donations/donations/` | ✅ Migrated |
+| `donation-transaction-linking` | `donations/transaction-linking/` | ✅ Migrated |
+| `zakat` | `donations/zakat/` | ✅ Migrated |
+
+**Note:** Zakat (Islamic obligatory giving) is grouped under donations as a charitable giving feature.
 
 ### 8. `reimbursements` (1 feature)
 Standalone reimbursement feature.
@@ -108,45 +117,58 @@ Standalone reimbursement feature.
 |---|---|---|
 | `reimbursements` | `reimbursements/reimbursements/` | **Domain HLD goes here** |
 
-### 9. `user-profile` (1 feature)
+### 9. `user-profile` (1 feature) ⏳ PENDING
 User profile and preferences.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `user-profile` | `user-profile/user-profile/` | **Domain HLD goes here** |
+| `user-profile` | `user-profile/user-profile/` | ⏳ Pending |
 
-### 10. `standalone` (10 features)
+### 8. `standalone` (9 features) ⏳ PENDING
 Miscellaneous, cross-cutting, or architectural features without strong domain affinity.
 
-| Current Folder | Target Location | Notes |
+| Current Folder | Target Location | Status |
 |---|---|---|
-| `calendar-attribution-architecture` | `standalone/calendar-attribution/` | Calendar-based attribution |
-| `design-modernization` | `standalone/design-modernization/` | Design updates |
-| `development-standards` | `standalone/development-standards/` | Code standards |
-| `e2e-testing` | `standalone/e2e-testing/` | E2E test framework |
-| `embedding-models-comparison` | `standalone/embedding-models/` | Embedding model eval |
-| `entity-relations` | `standalone/entity-relations/` | Entity relationship analysis |
-| `preferred-currency-display` | `standalone/preferred-currency/` | Currency preferences |
-| `schema-naming-review` | `standalone/schema-naming/` | Naming conventions audit |
-| `site-audit` | `standalone/site-audit/` | General site audit |
+| `calendar-attribution-architecture` | `standalone/calendar-attribution/` | ⏳ Pending |
+| `design-modernization` | `standalone/design-modernization/` | ⏳ Pending |
+| `development-standards` | `standalone/development-standards/` | ⏳ Pending |
+| `e2e-testing` | `standalone/e2e-testing/` | ⏳ Pending |
+| `embedding-models-comparison` | `standalone/embedding-models/` | ⏳ Pending |
+| `entity-relations` | `standalone/entity-relations/` | ⏳ Pending |
+| `preferred-currency-display` | `standalone/preferred-currency/` | ⏳ Pending |
+| `schema-naming-review` | `standalone/schema-naming/` | ⏳ Pending |
+| `site-audit` | `standalone/site-audit/` | ⏳ Pending |
 
 ---
 
 ## Migration Phases
 
-### Phase 1: Plan & Document (Complete)
+### Phase 1: Plan & Document ✅ COMPLETE
 - ✅ AGENTS.md updated with new structure
 - ✅ spec-from-context skill updated
 - ✅ spec-migration-map.md created (this file)
-- ✅ Migration guide created (below)
+- ✅ Migration guide created (spec-consolidation.md)
+- ✅ Migration template created (migration-agent-template.md)
 
-### Phase 2: Pilot Test (Next — `transactions` domain)
-Migrate 1 domain to validate structure + tooling:
-- Move specs to `spec/transactions/`
-- Create domain-level `hld.md`
-- Refactor feature-level `context.md` + `lld.md`
-- Document learnings
-- Estimate time for bulk migration
+### Phase 2: Execute Consolidations ✅ COMPLETE (77%)
+- ✅ Transactions domain (10 features)
+- ✅ CSV-import domain (8 features)
+- ✅ Assets domain (4 features)
+- ✅ Banking domain (4 features)
+- ✅ Income-expense domain (4 features)
+- ✅ Cashflow domain (1 feature)
+- ✅ Donations domain (3 features)
+- ⏳ Categories domain (2 features remaining)
+- ⏳ AI-features domain (3 features remaining)
+- ⏳ Standalone domain (9 features remaining)
+- ⏳ User-profile domain (1 feature remaining)
+
+### Phase 3: Remaining Work (23% — 11 features)
+- 2 features in categories (category-management, category-drill-down)
+- 3 features in ai-features (ai-image-import, ai-usage-logging, finance-chat)
+- 9 features in standalone (cross-cutting, non-domain-specific)
+- 1 feature in user-profile (user-profile)
+- Estimated: 2-3 more consolidation sessions
 
 ### Phase 3: Selective Migration (Ongoing)
 - On each feature touch, migrate its spec folder
