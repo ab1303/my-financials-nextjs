@@ -69,7 +69,7 @@ model ZakatPayment {
 | `src/app/(authorized)/zakat/_table/BeneficiarySelectionCell.tsx` | Beneficiary selection cell |
 
 ## Migration Note
-This feature consolidates the deleted flat Zakat product brief and implementation notes into the donations domain structure; this file is now the canonical implementation inventory.
+This feature now lives under `spec/cashflow/donations/zakat/`; this file is the canonical implementation inventory for the cashflow donations subgroup.
 
 ## Acceptance-Oriented Checks
 - Users can manage payment rows only for the selected Zakat year.

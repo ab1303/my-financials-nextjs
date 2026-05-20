@@ -1,7 +1,7 @@
 # Donations — Low Level Design
 
 ## Concrete Data Model
-The canonical `Donation` concept is implemented as a fiscal-year header plus row records.
+The canonical `DonationRecord` concept is implemented as a fiscal-year header plus row records.
 
 ### `DonationLedger`
 ```prisma
@@ -83,7 +83,7 @@ model DonationPayment {
 | `src/app/(authorized)/cashflow/donations/_components/CreateBeneficiaryModal.tsx` | Inline beneficiary creation flow |
 
 ## Migration Note
-This feature consolidates the former flat donations spec and implementation notes into the donations domain structure; this file is now the canonical implementation inventory.
+This feature now lives under `spec/cashflow/donations/donations/`; this file is the canonical implementation inventory for the cashflow donations subgroup.
 
 ## Notes for Future Changes
 - `DonationLedger` is the concrete schema name, but the feature should still be discussed as the donations workflow at the product level.

@@ -1,12 +1,12 @@
 # Transaction Linking — Context
 
 ## Problem
-Imported `DEBIT` transactions categorized as `Gifts & donations` land in the transactions/expense pipeline without the beneficiary and tax metadata required by the donations workflow. Users are forced to double-enter the same charitable payment unless the imported transaction can be enriched and linked to a `DonationPayment`.
+Imported `DEBIT` transactions categorized as `Gifts & donations` land in the transactions pipeline without the beneficiary and tax metadata required by the donations workflow. Users are forced to double-enter the same charitable payment unless the imported transaction can be enriched and linked to a `DonationPayment` inside the cashflow donations subgroup.
 
 ## Domain Dependencies
 
-- Uses the `Donation` and `PaymentRecord` concepts from the [donations domain HLD](../hld.md).
-- Depends on immutable imported `Transaction` records and ledger visibility patterns from the [transactions domain HLD](../../transactions/hld.md).
+- Uses `DonationRecord`, `CharitablePaymentRecord`, and the transaction-linking rules from [`../../hld.md`](../../hld.md).
+- Depends on immutable imported `Transaction` records and ledger visibility patterns from the [transactions domain HLD](../../../transactions/hld.md).
 - Reuses fiscal-year selection from the donations feature so enrichment happens in the same user context as donation reporting.
 
 ## Scope

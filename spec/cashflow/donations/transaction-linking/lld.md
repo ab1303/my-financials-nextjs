@@ -56,7 +56,7 @@ model DonationPayment {
 | `src/components/transactions/TransactionRow.tsx` | Displays linked/unlinked donation badge in ledger UI |
 
 ## Migration Note
-This feature consolidates the deleted flat transaction-linking spec into the donations domain structure; this file now holds the canonical implementation contract.
+This feature now lives under `spec/cashflow/donations/transaction-linking/`; this file holds the canonical implementation contract for donation reconciliation inside the cashflow domain.
 
 ## Acceptance-Oriented Checks
 - Unlinked imported donations are counted only within the active fiscal year.

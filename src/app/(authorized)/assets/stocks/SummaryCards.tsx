@@ -40,9 +40,7 @@ export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
         const currencyFlag = total.currency === 'AUD' ? '🇦🇺' : '🇺🇸';
 
         // Color scheme: AUD = teal, USD = blue
-        const bgColor = isCurrency
-          ? 'bg-teal-50 border-teal-200'
-          : 'bg-blue-50 border-blue-200';
+        const bgColor = 'bg-card border-border';
         const headerColor = isCurrency ? 'text-teal-900' : 'text-blue-900';
         const badgeColor = isCurrency
           ? 'bg-teal-100 text-teal-800'

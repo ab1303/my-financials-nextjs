@@ -1,13 +1,13 @@
 # Zakat — Context
 
 ## Problem
-Users need to record an annual Zakat obligation and the individual payments made against that obligation for a selected Zakat year. The legacy docs mixed a product brief and implementation tracking; this feature spec re-centers the work around the obligation/payment workflow and its domain dependencies.
+Users need to record an annual Zakat obligation and the individual payments made against that obligation for a selected Zakat year. This feature now sits under the cashflow donations subgroup because Zakat is a beneficiary-aware cash outflow that belongs beside other charitable giving workflows.
 
 ## Domain Dependencies
 
-- Uses the `ZakatObligation` and `PaymentRecord` concepts from the [donations domain HLD](../hld.md).
+- Uses `ZakatObligation`, `CharitablePaymentRecord`, and the donations-outflow rules from [`../../hld.md`](../../hld.md).
 - Depends on `CalendarYear` records of type `ZAKAT`.
-- May reference the [income-expense](../../income-expense/hld.md) and [assets](../../assets/hld.md) domains when extending how `amountDue` is calculated or explained.
+- May reference the [assets domain HLD](../../../assets/hld.md) when extending how `amountDue` is calculated or explained.
 - Reuses shared beneficiary entities and authenticated user context in the same way as the donations feature.
 
 ## Scope
