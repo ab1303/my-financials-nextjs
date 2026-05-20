@@ -93,8 +93,15 @@ export const getSnapshotByIdSchema = object({
   snapshotId: string({ required_error: 'Snapshot ID is required' }),
 });
 
+// Update snapshot FX rate (backfill for existing snapshots)
+export const updateSnapshotFxRateSchema = object({
+  snapshotId: string({ required_error: 'Snapshot ID is required' }),
+  usdToAudRate: z.coerce.number().positive().nullable(),
+});
+
 // Export inferred types
 export type StockHoldingEntryInput = z.infer<typeof stockHoldingEntrySchema>;
+export type UpdateSnapshotFxRateInput = z.infer<typeof updateSnapshotFxRateSchema>;
 export type CreateStockSnapshotInput = z.infer<
   typeof createStockSnapshotSchema
 >;

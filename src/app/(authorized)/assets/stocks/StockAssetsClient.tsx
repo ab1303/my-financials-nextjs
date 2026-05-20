@@ -400,6 +400,7 @@ export default function StockAssetsClient({ initialData }: Props) {
           currencyTotals={totals.currencies}
           usdToAudRate={totals.usdToAudRate ?? null}
           snapshotDate={snapshotDate}
+          snapshotId={selectedSnapshotId}
         />
       )}
 

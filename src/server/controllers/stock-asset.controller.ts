@@ -11,6 +11,7 @@ import {
   deleteStockSnapshot,
   getBrokerageAccounts,
   createBrokerageSubAccount,
+  updateSnapshotFxRate,
 } from '@/server/services/stock-asset.service';
 
 import type {
@@ -21,6 +22,7 @@ import type {
   DeleteHoldingInput,
   GetSnapshotsInput,
   GetSnapshotByIdInput,
+  UpdateSnapshotFxRateInput,
 } from '@/server/schema/stock-asset.schema';
 
 // Helper: Resolve calendarYearId to date range
@@ -237,6 +239,21 @@ export const createBrokerageSubAccountHandler = async ({
       name: account.name,
       institution: account.institution,
     };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+export const updateSnapshotFxRateHandler = async ({
+  input,
+  userId,
+}: {
+  input: UpdateSnapshotFxRateInput;
+  userId: string;
+}) => {
+  try {
+    await updateSnapshotFxRate(input.snapshotId, userId, input.usdToAudRate);
+    return { status: 'success' };
   } catch (e) {
     handleCaughtError(e);
   }

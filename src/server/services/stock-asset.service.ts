@@ -321,6 +321,25 @@ export const deleteStockSnapshot = async (
   });
 };
 
+export const updateSnapshotFxRate = async (
+  snapshotId: string,
+  userId: string,
+  usdToAudRate: number | null,
+) => {
+  const snapshot = await prisma.portfolioSnapshot.findFirst({
+    where: { id: snapshotId, userId },
+  });
+
+  if (!snapshot) {
+    throw new Error('Snapshot not found or does not belong to user');
+  }
+
+  return await prisma.portfolioSnapshot.update({
+    where: { id: snapshotId },
+    data: { usdToAudRate },
+  });
+};
+
 /**
  * Get aggregated totals for a snapshot (Phase 3: Null buyDate Handling)
  *

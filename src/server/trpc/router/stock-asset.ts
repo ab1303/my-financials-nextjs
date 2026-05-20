@@ -13,6 +13,7 @@ import {
   deleteSnapshotHandler,
   getBrokerageAccountsHandler,
   createBrokerageSubAccountHandler,
+  updateSnapshotFxRateHandler,
 } from '@/server/controllers/stock-asset.controller';
 import {
   createStockSnapshotSchema,
@@ -22,6 +23,7 @@ import {
   deleteSnapshotSchema,
   getSnapshotsSchema,
   getSnapshotByIdSchema,
+  updateSnapshotFxRateSchema,
 } from '@/server/schema/stock-asset.schema';
 
 export const stockAssetRouter = router({
@@ -94,5 +96,11 @@ export const stockAssetRouter = router({
     .input(z.object({ businessId: z.string(), name: z.string().min(1).max(100) }))
     .mutation(({ input, ctx: { session } }) =>
       createBrokerageSubAccountHandler({ input, userId: session.user.id }),
+    ),
+
+  updateSnapshotFxRate: protectedProcedure
+    .input(updateSnapshotFxRateSchema)
+    .mutation(({ input, ctx: { session } }) =>
+      updateSnapshotFxRateHandler({ input, userId: session.user.id }),
     ),
 });
