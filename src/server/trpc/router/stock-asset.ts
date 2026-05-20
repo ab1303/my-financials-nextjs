@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '@/server/trpc/trpc';
+import { getUSDtoAUDRate } from '@/server/services/exchange-rate.service';
 import {
   createSnapshotHandler,
   getSnapshotsHandler,
@@ -54,6 +55,11 @@ export const stockAssetRouter = router({
     .query(({ input, ctx: { session } }) =>
       getSnapshotTotalsHandler({ input, userId: session.user.id }),
     ),
+
+  getExchangeRate: protectedProcedure.query(async () => {
+    const rate = await getUSDtoAUDRate();
+    return { rate };
+  }),
 
   deleteSnapshot: protectedProcedure
     .input(deleteSnapshotSchema)

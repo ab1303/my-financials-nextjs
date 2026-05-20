@@ -44,6 +44,7 @@ export const stockHoldingEntrySchema = object({
 // Create snapshot with multiple holdings
 export const createStockSnapshotSchema = object({
   snapshotDate: z.coerce.date({ required_error: 'Snapshot date is required' }),
+  usdToAudRate: z.coerce.number().positive().optional().nullable(),
   holdings: z
     .array(stockHoldingEntrySchema)
     .min(1, 'At least one holding is required'),

@@ -36,6 +36,7 @@ export const createStockSnapshot = async (
     const snapshot = await tx.portfolioSnapshot.create({
       data: {
         snapshotDate: input.snapshotDate,
+        usdToAudRate: input.usdToAudRate ?? null,
         userId,
         holdings: {
           create: input.holdings.map((holding) => ({
@@ -489,6 +490,7 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
   return {
     snapshotId: snapshot.id,
     snapshotDate: snapshot.snapshotDate,
+    usdToAudRate: snapshot.usdToAudRate ? Number(snapshot.usdToAudRate) : null,
     currencies: Object.values(currencyTotals),
   };
 };

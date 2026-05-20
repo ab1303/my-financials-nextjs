@@ -63,6 +63,7 @@ export type CurrencyTotal = {
 export type StockSnapshotTotals = {
   snapshotId: string;
   snapshotDate: Date;
+  usdToAudRate: number | null;
   accounts: AccountTotalSummary[];
   currencyTotals: CurrencyTotal[];
 };

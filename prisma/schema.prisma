@@ -416,6 +416,7 @@ model BankBalanceRecord {
 model PortfolioSnapshot {
   id           String         @id @default(cuid())
   snapshotDate DateTime
+  usdToAudRate Decimal?       // USD→AUD rate at snapshot time; null for pre-existing snapshots
   userId       String
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   holdings     StockHolding[]

@@ -104,6 +104,18 @@ export default function NewSnapshotModal({
       { enabled: isOpen },
     );
 
+  const { data: exchangeRateData } = trpc.stockAsset.getExchangeRate.useQuery(
+    undefined,
+    { enabled: isOpen },
+  );
+
+  // Pre-fill USD→AUD rate when data arrives
+  useEffect(() => {
+    if (exchangeRateData?.rate && !watch('usdToAudRate')) {
+      setValue('usdToAudRate', exchangeRateData.rate);
+    }
+  }, [exchangeRateData, setValue, watch]);
+
   // Create new institution (Business/BROKERAGE)
   const createInstitution = trpc.business.create.useMutation({
     onSuccess: async () => {
@@ -288,6 +300,35 @@ export default function NewSnapshotModal({
             {errors.snapshotDate && (
               <p className='mt-1 text-sm text-red-600'>
                 {errors.snapshotDate.message}
+              </p>
+            )}
+          </div>
+
+          {/* USD → AUD Exchange Rate */}
+          <div>
+            <Label htmlFor='usdToAudRate' className='cursor-pointer'>
+              USD → AUD Rate
+              <span className='ml-2 text-xs text-muted-foreground font-normal'>
+                (auto-fetched · adjust if needed)
+              </span>
+            </Label>
+            <Controller
+              name='usdToAudRate'
+              control={control}
+              render={({ field }) => (
+                <NumericFormat
+                  id='usdToAudRate'
+                  value={field.value ?? ''}
+                  onValueChange={({ floatValue }) => field.onChange(floatValue ?? null)}
+                  decimalScale={4}
+                  placeholder='e.g. 1.5470'
+                  className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                />
+              )}
+            />
+            {exchangeRateData?.rate && (
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Live rate: 1 USD = {exchangeRateData.rate.toFixed(4)} AUD
               </p>
             )}
           </div>

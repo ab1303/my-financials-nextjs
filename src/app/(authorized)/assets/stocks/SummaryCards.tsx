@@ -17,6 +17,8 @@ interface CurrencyTotalFromService {
 
 interface SummaryCardsProps {
   currencyTotals: CurrencyTotalFromService[];
+  usdToAudRate: number | null;
+  snapshotDate: Date | null;
 }
 
 /**
@@ -24,7 +26,7 @@ interface SummaryCardsProps {
  * Shows total market value and P/L (realized + unrealized).
  * Color-coded backgrounds: AUD (teal), USD (blue).
  */
-export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
+export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDate }: SummaryCardsProps) {
   if (!currencyTotals || currencyTotals.length === 0) {
     return (
       <div className='p-6 bg-muted rounded-lg border border-border text-center'>
@@ -107,6 +109,46 @@ export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
                 </p>
               </div>
             </div>
+
+            {/* AUD Equivalent (USD card only) */}
+            {total.currency === 'USD' && (
+              <div className='mt-3 pt-3 border-t border-border'>
+                {usdToAudRate ? (
+                  <>
+                    <p className='text-xs text-muted-foreground mb-2'>
+                      AUD Equivalent · 1 USD = {usdToAudRate.toFixed(4)} AUD
+                      {snapshotDate && (
+                        <span className='ml-1'>
+                          · {new Date(snapshotDate).toLocaleDateString('en-AU', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      )}
+                    </p>
+                    <div className='flex justify-between items-end'>
+                      <div>
+                        <p className='text-xs text-muted-foreground mb-0.5'>Portfolio Value</p>
+                        <p className='text-lg font-semibold text-foreground'>
+                          {formatCurrency(total.totalValue * usdToAudRate, 'AUD')}
+                        </p>
+                      </div>
+                      <div className='text-right'>
+                        <p className='text-xs text-muted-foreground mb-0.5'>Invested Amount</p>
+                        <p className='text-base font-medium text-foreground'>
+                          {formatCurrency(total.totalCostBasis * usdToAudRate, 'AUD')}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className='text-xs text-muted-foreground italic'>
+                    AUD equivalent not available — rate not recorded for this snapshot
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
