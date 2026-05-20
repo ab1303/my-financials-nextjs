@@ -12,31 +12,80 @@ Rules for all AI agents working in this repository.
 
 ## Planning
 
-- Spec and PRD files → `spec/{feature}/` only.
+- Spec and PRD files → `spec/{domain}/{feature}/` only (see Spec Documents below).
 - `plan.md` → session workspace only; never commit planning files to the repo.
 - Track todo status in the SQL session database throughout implementation.
 
 ## Spec Documents
 
-Three document types per feature in `spec/{feature}/`:
+The spec tree uses **2 levels by default**, promoting to **3 levels only when a feature has 3 or more independently-implementable phases**.
 
-| File | Content | Use when |
-|---|---|---|
-| `context.md` | File inventory, schema details, exact patterns | Authoring HLD/LLD |
-| `hld.md` | Architecture, data model, decisions, out-of-scope | Planning, agent orientation |
-| `lld.md` | Phase/task specs: interfaces, schemas, API contracts, DB patterns | Implementing |
+### Tree Shapes
 
-**Context bundle by task:**
+**2-level (default)** — one feature, one implementation scope:
+```
+spec/
+  {domain}/
+    hld.md                  ← domain architecture, shared schema, decisions
+    {feature}/
+      context.md            ← what the feature does and what domain concepts it relies on
+      lld.md                ← implementation detail: interfaces, API contracts, DB patterns
+```
+
+**3-level (promoted)** — feature has 3+ phases that can be delegated to independent agents:
+```
+spec/
+  {domain}/
+    hld.md
+    {feature}/
+      context.md            ← feature scope and domain dependencies (no file inventory)
+      {sub-feature}/
+        lld.md              ← atomic vertical slice for this phase only
+      {sub-feature}/
+        lld.md
+```
+
+**Standalone (no domain grouping)** — truly independent, single-phase feature:
+```
+spec/
+  standalone/
+    {feature}/
+      hld.md                ← feature-level architecture and decisions
+      context.md            ← problem statement, scope boundary
+      lld.md                ← implementation detail: interfaces, API contracts, DB patterns
+```
+
+### Document Responsibilities
+
+| File | Scope | Contains | Never contains |
+|---|---|---|---|
+| `hld.md` | Domain | Shared schema, architecture decisions, patterns common to all features in this domain | File lists, implementation steps |
+| `context.md` | Feature | Problem statement, domain dependencies (links to `hld.md` sections), scope boundary (in/out) | File inventory, schema copy-paste from HLD |
+| `lld.md` | Feature (2-level) or Sub-feature (3-level) | Interfaces, Zod schemas, API contracts, DB patterns, acceptance criteria — scoped to this slice only | Anything outside this slice's scope |
+
+### When to Promote from 2-level to 3-level
+
+> Promote if and only if: **the feature has 3 or more phases that can be assigned to independent agents without blocking each other.**
+
+If in doubt, stay at 2-level. A well-sectioned `lld.md` with clear H2 headings is functionally equivalent to multiple sub-feature LLDs.
+
+### Sub-feature Naming Convention
+
+Sub-feature folder names must use **verb-noun** format: `match-transfers/`, `review-ui/`, `parse-csv/`.  
+Never use layer names: ~~`schema/`~~, ~~`api/`~~, ~~`ui/`~~ — these recreate horizontal layering.
+
+### Context Bundle by Task
 
 | Task | Pass |
 |---|---|
-| Architecture review | `hld.md` |
-| Implement a phase | `hld.md` + that phase's `lld.md` section |
-| Implement a single task | That task's `lld.md` section only |
-| New session | `plan.md` + `hld.md`, then scoped `lld.md` on request |
-| Debug | Relevant `lld.md` section + affected files |
+| Domain architecture review | `{domain}/hld.md` |
+| Feature planning / orientation | `{domain}/hld.md` + `{feature}/context.md` |
+| Implement a 2-level feature | `{feature}/context.md` + `{feature}/lld.md` |
+| Implement one sub-feature (3-level) | `{feature}/context.md` + `{sub-feature}/lld.md` |
+| Debug | Relevant `lld.md` + affected files |
+| New session on active feature | `{domain}/hld.md` + `{feature}/context.md`, then scoped `lld.md` on request |
 
-Never pass all three docs at once — `context.md` is redundant once HLD + LLD exist.
+Never pass all three docs at once for a single implementation task — context.md alone is enough orientation; lld.md is the implementation contract.
 
 ## Code
 

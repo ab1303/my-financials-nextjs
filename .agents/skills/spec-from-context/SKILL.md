@@ -1,24 +1,25 @@
 ---
 name: spec-from-context
 description: >
-  Distil the current session conversation into a three-file spec bundle
-  (context.md, hld.md, lld.md) under spec/{feature}/. Use when the user says
-  "create a spec", "document this feature", "generate context/hld/lld",
-  "hand this to context-engineer", or after a product discussion where a new
-  feature or significant change has been identified. Triggers on: "create spec",
-  "document under spec", "write up context hld lld", "generate spec files",
+  Distil the current session conversation into a spec bundle under spec/{domain}/{feature}/.
+  Generates hld.md (domain-level if grouped features, or feature-level if standalone), 
+  context.md, and lld.md. Uses 2-level structure by default; notes when 3-level (with 
+  sub-features) may be needed. Triggers on: "create spec", "document this feature", 
   "spec this out", "hand over to context engineer".
 metadata:
   author: local
-  version: "2.0.0"
-  argument-hint: <feature-name>
+  version: "3.0.0"
+  argument-hint: <feature-name> [domain-name]
 ---
 
 # Spec From Context
 
-Capture a feature discussed in this session and produce the three canonical spec
-files used by all agents in this repo: `context.md`, `hld.md`, and `lld.md`
-under `spec/{feature}/`.
+Capture a feature discussed in this session and produce the canonical spec bundle
+used by all agents: `hld.md`, `context.md`, and `lld.md` under `spec/{domain}/{feature}/`
+or `spec/standalone/{feature}/` (for truly independent features).
+
+Follows the 2-level default structure (domain + feature). Notes when 3-level (with 
+sub-features) may be beneficial for future promotion.
 
 ---
 
@@ -33,14 +34,17 @@ Invoke this skill any time:
 
 ---
 
-## Step 1 — Determine the Feature Name
+## Step 1 — Determine Feature Name and Domain
 
-If the user provided a feature name as an argument (e.g. `/spec-from-context reimbursements`),
-use it. Otherwise:
-- Infer it from the session context (the dominant topic of the recent discussion)
-- If ambiguous, ask the user with `ask_user` before proceeding
+**Feature name**: If provided as an argument, use it. Otherwise infer from session.
+Normalise to kebab-case (e.g. `transfer-reconciliation`).
 
-Normalise to kebab-case for the folder name (e.g. `reimbursement-tracking`).
+**Domain grouping**: Ask the user:
+- Does this feature logically group with other features? (e.g., "transfers" groups with "transactions")
+- If yes → Domain name (e.g. `transactions`)
+- If no → Use `standalone` as the domain
+
+The resulting path will be `spec/{domain}/{feature}/` or `spec/standalone/{feature}/`.
 
 ---
 
@@ -63,7 +67,13 @@ Pull from `CLAUDE.md`, `AGENTS.md`, and session history:
 - Package manager: `pnpm` only
 - Any router/service patterns discussed in this session
 
-### c) Relevant Schema
+### c) Domain Context (if grouped)
+**Only if feature groups with others** in the same domain:
+- Does the domain already have a `spec/{domain}/hld.md`? (Read it if yes.)
+- What shared models/patterns exist? (e.g., Transaction model, Import pattern)
+- If domain HLD exists, you will reference it; do NOT duplicate it in feature context.md
+
+### d) Relevant Schema
 Read the Prisma schema for models relevant to this feature:
 ```
 prisma/schema.prisma
@@ -84,7 +94,7 @@ List any explicit decisions from the conversation:
 - Phase boundaries (Phase 1 vs Phase 2)
 
 ### f) Existing Spec Files (if any)
-If `spec/{feature}/` already has files, read them and include as "Prior art".
+If `spec/{domain}/{feature}/` or `spec/{domain}/hld.md` already exist, read and include as "Prior art".
 
 ---
 
@@ -96,19 +106,19 @@ same quality spec at a fraction of the cost.
 
 Create the spec directory first:
 ```powershell
-New-Item -ItemType Directory -Path "spec\{feature}" -Force | Out-Null
+New-Item -ItemType Directory -Path "spec\{domain}\{feature}" -Force | Out-Null
 ```
 
 Then launch a **single background `general-purpose` subagent** with `model: "gpt-4.1"`,
-passing the full context bundle inline. The agent must write all three files
-using the `create` tool. **Do not read any additional files from the codebase** —
-all required information must be in the prompt.
+passing the full context bundle inline. The agent writes all three files using the `create` 
+tool. **Do not read any additional files from the codebase** — all required information 
+must be in the prompt.
 
 ### Subagent prompt template
 
 ```
-You are writing a three-file spec bundle for the feature: {feature}.
-Create all three files under spec/{feature}/ using the `create` tool.
+You are writing a spec bundle for the feature: {feature} in domain: {domain}.
+Create all three files under spec/{domain}/{feature}/ using the `create` tool.
 
 ⚠️ CRITICAL: **DO NOT READ ANY FILES FROM THE CODEBASE.** Do not use grep, glob, or view.
 All required context is provided below. Use ONLY the context provided; invent nothing.
@@ -124,6 +134,9 @@ All required context is provided below. Use ONLY the context provided; invent no
 - tRPC client: import { trpc } from '@/server/trpc/client'
 - Toast: import { toast } from 'sonner'
 
+### Domain Context (if domain HLD exists, reference it; do NOT duplicate schema)
+{domain_hld_summary_or_link}
+
 ### Relevant Schema (verbatim — use exactly as provided)
 {prisma_model_blocks}
 
@@ -138,15 +151,7 @@ All required context is provided below. Use ONLY the context provided; invent no
 
 ## File Requirements
 
-### context.md must contain:
-- Problem summary (2–3 sentences)
-- File inventory table: files to CREATE vs MODIFY with change description
-- Schema details: verbatim Prisma model blocks (from context above), enum definitions, relationships
-- Existing patterns to reuse (tRPC router, service, component patterns)
-- Data flow diagrams: current vs proposed (ASCII)
-- Known constraints or gotchas
-
-### hld.md must contain:
+### hld.md must contain (domain-level if new domain, feature-level if standalone):
 - Problem + proposed solution (1–2 paragraphs)
 - Numbered architecture decisions with rationale (minimum 5)
 - Data model changes (schema diff)
@@ -154,18 +159,28 @@ All required context is provided below. Use ONLY the context provided; invent no
 - Success criteria (testable outcomes)
 - Out of scope / future phases table
 
+### context.md must contain:
+- Problem summary (2–3 sentences)
+- Domain dependencies (links to hld.md sections if domain HLD exists)
+- Scope boundary: explicitly list what is IN scope and OUT of scope
+- Schema references (link to domain hld.md or verbatim if standalone)
+- Existing patterns to reuse (tRPC, service, component patterns)
+- Known constraints or gotchas
+⚠️ DO NOT include file inventory — that belongs in lld.md
+
 ### lld.md must contain:
 - Phase map table (Phase → files changed → description)
 - Per-phase: exact TypeScript interfaces, Zod schemas, function signatures
 - TDD test cases per phase (minimum 3) as table: | Test | Type | Verifies |
 - Migration notes if schema changes involved
 - Integration points and edge cases
+- File inventory table: files to CREATE vs MODIFY with change description
 
 ## Style Rules
 - Tables for file inventories and interface definitions
 - Fenced code blocks: `typescript`, `prisma`, `bash`
 - Thorough but not padded
-- Match style of existing specs in spec/transaction-ledger/
+- Match style of existing specs in spec/transactions/transaction-ledger/
 ```
 
 ### Critical Guard Rails
@@ -204,23 +219,26 @@ After writing the files:
 
 | Convention | Rule |
 |---|---|
-| Location | `spec/{kebab-case-feature}/` |
-| File names | Exactly `context.md`, `hld.md`, `lld.md` |
+| Location | `spec/{domain}/{feature}/` or `spec/standalone/{feature}/` |
+| File names | Exactly `hld.md`, `context.md`, `lld.md` |
+| Promotion trigger | Promote to 3-level if feature has 3+ independently-delegatable phases |
+| Sub-feature naming | Verb-noun format: `match-transfers/`, `review-ui/`, `parse-csv/` |
 | Phase naming | `Phase 1`, `Phase 2`, … (not Sprint/Milestone) |
-| Out of scope | Always has its own section in hld.md |
+| Out of scope | Always has its own section in hld.md or context.md |
 | Code blocks | TypeScript uses `typescript`, Prisma uses `prisma`, shell uses `bash` |
 | Tables | File inventories, interface definitions, test case lists |
-| Style reference | `spec/transaction-ledger/` — use as the gold standard |
+| Style reference | `spec/transactions/transaction-ledger/` — use as the gold standard |
 
 ---
 
 ## Example Invocation
 
-User: *"Spec this out under spec/reimbursements"*
+User: *"Spec this out as a transactions feature"*
 
-1. Feature name → `reimbursements`
-2. Gather context from session (problem, schema, files, decisions)
-3. Create directory + write all three files directly with `create` tool (parallel)
-4. Verify sizes + report back
+1. Feature name → `transfer-matching` (or similar)
+2. Domain → `transactions` (asked/inferred)
+3. Gather context from session (problem, schema, files, decisions)
+4. Create `spec/transactions/transfer-matching/` + write all three files
+5. Verify sizes + report back; note if future 3-level promotion would help
 
 Total time: ~30 seconds.
