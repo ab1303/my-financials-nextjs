@@ -1,4 +1,4 @@
-# Cashflow Audit — Low Level Design
+# Cashflow Audit — Low-Level Design
 
 ## Audit Artifact Structure
 The migrated audit remains a report-style feature spec with four layers of detail:
@@ -15,7 +15,7 @@ The migrated audit remains a report-style feature spec with four layers of detai
 | `/cashflow/income` | Fiscal-year selection, inline CRUD, SSR boundary | CRUD mostly works; race-condition + SSR follow-up documented |
 | `/cashflow/donations` | Fiscal-year filter, inline CRUD, validation messages | Fully working during audit |
 | `/cashflow/expense` | Month table, category breakdown modal, SSR, accessibility | CRUD working; SSR fallback documented; accessibility fix verified |
-| `/cashflow/bank-interest` | Bank/year filtering, payment history modal | Working within test-data limits |
+| `/cashflow/bank-interest` | Bank/year filtering, payment history, yearly cleansing flow | Working within test-data limits; follow-up items remain documented |
 
 ## Finding Groups Captured by the Audit
 
@@ -30,7 +30,6 @@ The migrated audit remains a report-style feature spec with four layers of detai
 - **DM-01`…`DM-08** — dark-mode regressions across fiscal-year selects, table cells, modal cards, and donations page styling were resolved.
 
 ## Evidence Rules
-
 - Every finding should name the exact route and the user-visible impact.
 - File-level remediation targets belong in this document, not in `context.md`.
 - Fix status is allowed here because the audit is both a quality record and a maintenance handoff.
@@ -44,12 +43,9 @@ The migrated audit remains a report-style feature spec with four layers of detai
 | `src/app/(authorized)/cashflow/donations/DonationTableClient.tsx` | Donations heading, loading-state, and action-button styling |
 | `src/app/(authorized)/cashflow/expense/form.tsx` | Expense fiscal-year select styling |
 | `src/app/(authorized)/cashflow/expense/_components/CategoryBreakdownModal.tsx` | Accessibility and dark-mode remediation |
-| `src/app/(authorized)/cashflow/bank-interest/_components/PaymentHistoryModal.tsx` | Dark-mode card styling audit |
+| `src/app/(authorized)/cashflow/bank-interest/_components/PaymentHistoryModal.tsx` | Legacy interest-payment flow observed during audit |
 | `src/components/react-table/TableCell.tsx` | Shared inline-select dark-mode fix target |
 | `src/lib/select-styles.ts` | Shared compact select styling utility added during remediation |
 
 ## Historical Summary Preserved
-The original audit established that the cashflow surface had no page-load failures, documented one meaningful product bug, and verified that the remaining visible defects were styling, metadata, or accessibility issues rather than broken CRUD flows. That distinction is preserved here so future audits can separate product correctness from presentation regressions.
-
-## Migration Note
-This feature consolidates the deleted flat cashflow audit report into the cashflow domain structure; the route findings and remediation targets above are the canonical record.
+The audit preserves the core finding that the cashflow surface had no page-load failures, surfaced one meaningful product bug, and otherwise concentrated on styling, metadata, accessibility, and SSR trust issues rather than broken CRUD flows.
