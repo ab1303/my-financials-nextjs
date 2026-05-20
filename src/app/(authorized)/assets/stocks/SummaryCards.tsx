@@ -61,12 +61,20 @@ export default function SummaryCards({ currencyTotals }: SummaryCardsProps) {
               </h3>
             </div>
 
-            {/* Portfolio Value */}
-            <div className='mb-4'>
-              <p className='text-sm text-muted-foreground mb-1'>Portfolio Value</p>
-              <p className='text-2xl font-bold text-foreground'>
-                {formatCurrency(total.totalValue, total.currency as any)}
-              </p>
+            {/* Portfolio Value + Invested Amount */}
+            <div className='mb-4 flex items-end justify-between gap-4'>
+              <div>
+                <p className='text-sm text-muted-foreground mb-1'>Portfolio Value</p>
+                <p className='text-2xl font-bold text-foreground'>
+                  {formatCurrency(total.totalValue, total.currency as any)}
+                </p>
+              </div>
+              <div className='text-right'>
+                <p className='text-sm text-muted-foreground mb-1'>Invested Amount</p>
+                <p className='text-lg font-semibold text-foreground'>
+                  {formatCurrency(total.totalCostBasis, total.currency as any)}
+                </p>
+              </div>
             </div>
 
             {/* P/L Breakdown */}

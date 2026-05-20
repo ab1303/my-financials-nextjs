@@ -309,9 +309,10 @@ export default function StockAssetsClient({ initialData }: Props) {
               return {
                 totalMarketValue: acc.totalMarketValue + m.marketValue,
                 totalUnrealizedPL: acc.totalUnrealizedPL + m.unrealizedPL,
+                totalCostBasis: acc.totalCostBasis + m.costBasis,
               };
             },
-            { totalMarketValue: 0, totalUnrealizedPL: 0 },
+            { totalMarketValue: 0, totalUnrealizedPL: 0, totalCostBasis: 0 },
           );
           return { ...acct, ...acctTotals };
         });
@@ -320,8 +321,9 @@ export default function StockAssetsClient({ initialData }: Props) {
           (acc, a) => ({
             totalMarketValue: acc.totalMarketValue + a.totalMarketValue,
             totalUnrealizedPL: acc.totalUnrealizedPL + a.totalUnrealizedPL,
+            totalCostBasis: acc.totalCostBasis + a.totalCostBasis,
           }),
-          { totalMarketValue: 0, totalUnrealizedPL: 0 },
+          { totalMarketValue: 0, totalUnrealizedPL: 0, totalCostBasis: 0 },
         );
 
         return { currency, accounts, ...currencyTotals };
@@ -360,9 +362,10 @@ export default function StockAssetsClient({ initialData }: Props) {
               return {
                 totalMarketValue: acc.totalMarketValue + m.marketValue,
                 totalUnrealizedPL: acc.totalUnrealizedPL + m.unrealizedPL,
+                totalCostBasis: acc.totalCostBasis + m.costBasis,
               };
             },
-            { totalMarketValue: 0, totalUnrealizedPL: 0 },
+            { totalMarketValue: 0, totalUnrealizedPL: 0, totalCostBasis: 0 },
           );
           return { currency, holdings, ...totals };
         }),
@@ -513,14 +516,26 @@ export default function StockAssetsClient({ initialData }: Props) {
                       <h3 className='text-base font-semibold text-foreground'>
                         {flag} {currencyGroup.currency} Holdings
                       </h3>
-                      <div className='flex items-center gap-4 text-sm'>
-                        <span className='text-muted-foreground'>
-                          {formatCurrency(currencyGroup.totalMarketValue, currencyGroup.currency)}
-                        </span>
-                        <span className={clsx('font-semibold', getPLColorClass(currencyGroup.totalUnrealizedPL))}>
-                          {currencyGroup.totalUnrealizedPL >= 0 ? '+' : ''}
-                          {formatCurrency(currencyGroup.totalUnrealizedPL, currencyGroup.currency)}
-                        </span>
+                      <div className='flex items-center gap-6 text-sm'>
+                        <div className='text-right'>
+                          <p className='text-xs text-muted-foreground'>Invested</p>
+                          <p className='font-medium text-foreground'>
+                            {formatCurrency(currencyGroup.totalCostBasis, currencyGroup.currency)}
+                          </p>
+                        </div>
+                        <div className='text-right'>
+                          <p className='text-xs text-muted-foreground'>Current</p>
+                          <p className='font-medium text-foreground'>
+                            {formatCurrency(currencyGroup.totalMarketValue, currencyGroup.currency)}
+                          </p>
+                        </div>
+                        <div className='text-right'>
+                          <p className='text-xs text-muted-foreground'>P/L</p>
+                          <p className={clsx('font-semibold', getPLColorClass(currencyGroup.totalUnrealizedPL))}>
+                            {currencyGroup.totalUnrealizedPL >= 0 ? '+' : ''}
+                            {formatCurrency(currencyGroup.totalUnrealizedPL, currencyGroup.currency)}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
@@ -598,14 +613,26 @@ export default function StockAssetsClient({ initialData }: Props) {
                                 <span className='text-sm font-semibold text-foreground'>
                                   {flag} {currencySection.currency}
                                 </span>
-                                <div className='flex items-center gap-3 text-sm'>
-                                  <span className='text-muted-foreground'>
-                                    {formatCurrency(currencySection.totalMarketValue, currencySection.currency)}
-                                  </span>
-                                  <span className={clsx('font-semibold', getPLColorClass(currencySection.totalUnrealizedPL))}>
-                                    {currencySection.totalUnrealizedPL >= 0 ? '+' : ''}
-                                    {formatCurrency(currencySection.totalUnrealizedPL, currencySection.currency)}
-                                  </span>
+                                <div className='flex items-center gap-4 text-sm'>
+                                  <div className='text-right'>
+                                    <p className='text-xs text-muted-foreground'>Invested</p>
+                                    <p className='font-medium text-foreground'>
+                                      {formatCurrency(currencySection.totalCostBasis, currencySection.currency)}
+                                    </p>
+                                  </div>
+                                  <div className='text-right'>
+                                    <p className='text-xs text-muted-foreground'>Current</p>
+                                    <p className='font-medium text-foreground'>
+                                      {formatCurrency(currencySection.totalMarketValue, currencySection.currency)}
+                                    </p>
+                                  </div>
+                                  <div className='text-right'>
+                                    <p className='text-xs text-muted-foreground'>P/L</p>
+                                    <p className={clsx('font-semibold', getPLColorClass(currencySection.totalUnrealizedPL))}>
+                                      {currencySection.totalUnrealizedPL >= 0 ? '+' : ''}
+                                      {formatCurrency(currencySection.totalUnrealizedPL, currencySection.currency)}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                               <HoldingsTable
