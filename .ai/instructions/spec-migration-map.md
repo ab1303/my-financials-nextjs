@@ -1,9 +1,9 @@
 # Spec Folder Migration Map
 
-**Status:** In Progress (83% complete)  
+**Status:** In Progress (88% complete)  
 **Total features:** 48 across 11 domains  
-**Consolidated:** 40 features across 6 domains (cashflow as unified 3-level domain with 12 features)  
-**Remaining:** 8 features across 4 domains  
+**Consolidated:** 42 features across 6 domains (cashflow as unified 3-level domain with 14 features)  
+**Remaining:** 6 features across 3 domains  
 **Target structure:** `spec/{domain}/{feature}/` (2-level) or `spec/{domain}/{sub-group}/{feature}/` (3-level for complex domains)  
 **Migration approach:** Vertical slicing for LLM context; 3-level only when 3+ independent sub-domains exist
 
@@ -61,15 +61,10 @@ Asset tracking, net worth, and liquid cash accounts.
 | `bank-assets` | `assets/bank-assets/` | ✅ Migrated |
 | `snapshot-all-banks-display` | `assets/snapshot-display/` | ✅ Migrated |
 
-### 4. `categories` (2 features) ⏳ PENDING
-Category management, categorization, and semantic matching.
+### 4. `categories` ✅ CONSOLIDATED → MOVED TO CASHFLOW
+**Status:** Moved under cashflow domain (see section 5a below)
 
-| Current Folder | Target Location | Status |
-|---|---|---|
-| `category-management` | `categories/category-management/` | ⏳ Pending |
-| `category-transaction-drill-down` | `categories/drill-down/` | ⏳ Pending |
-
-**Note:** `semantic-category-matching` was moved to `csv-import/semantic-matching/` (it's a CSV categorization service, not a standalone category feature)
+**Why:** Categories are foundational taxonomy for all cashflows (income, expense, donations, interest). They enable categorization, aggregation, and drill-down filtering across all financial flows. Now under `spec/cashflow/categories/` as a sub-group.
 
 ### 5. `income-expense` (4 features) ✅ COMPLETE
 Income, expense tracking, interest handling, and related UX.
@@ -81,41 +76,37 @@ Income, expense tracking, interest handling, and related UX.
 | `expense-tracking` | `income-expense/expense-tracking/` | ✅ Migrated |
 | `interest-cleansing` | `income-expense/interest-cleansing/` | ✅ Migrated |
 
-### 5a. `cashflow` (12 features) ✅ COMPLETE — **3-Level Unified Financial Flows Domain**
-Unified architecture for ALL cash movements: income inflows, expense outflows, donations/zakat outflows, interest flows, and audit/reporting.
+### 5a. `cashflow` (14 features) ✅ COMPLETE — **3-Level Unified Financial Flows Domain**
+Unified architecture for ALL cash movements and financial categorization: income inflows, expense outflows, donations/zakat outflows, category taxonomy, interest flows, and audit/reporting.
 
 | Sub-group | Features | Target Location | Status | Count |
 |---|---|---|---|---|
 | **income** | income-management, income-ux | `cashflow/income/{feature}/` | ✅ | 2 |
 | **expense** | expense-tracking | `cashflow/expense/{feature}/` | ✅ | 1 |
 | **donations** | donations, zakat, transaction-linking | `cashflow/donations/{feature}/` | ✅ | 3 |
+| **categories** | category-management, drill-down | `cashflow/categories/{feature}/` | ✅ | 2 |
 | **interest** | interest-cleansing | `cashflow/interest/{feature}/` | ✅ | 1 |
 | **audit** | cashflow-audit | `cashflow/audit/{feature}/` | ✅ | 1 |
 
 **Structure:**
 ```
 spec/cashflow/
-  hld.md (unified financial flows: all cash movements)
-  income/
-    ├─ income-management
-    └─ income-ux-improvements
-  expense/
-    └─ expense-tracking
-  donations/
-    ├─ donations (voluntary transaction-based giving)
-    ├─ zakat (obligatory wealth-based Islamic giving)
-    └─ transaction-linking (reconciliation)
-  interest/
-    └─ interest-cleansing
-  audit/
-    └─ cashflow-audit
+  hld.md (unified financial flows + category taxonomy)
+  income/ (2 features)
+  expense/ (1 feature)
+  donations/ (3 features)
+  categories/ (2 features) ← Shared taxonomy
+    ├─ category-management
+    └─ drill-down
+  interest/ (1 feature)
+  audit/ (1 feature)
 ```
 
 **Architectural Rationale:**
-- **Unified cashflow concept**: All financial flows (income, expense, donations, interest) are movements of money
-- **3-level promotion justified**: 5 independent sub-domains (income flows, expense flows, charitable outflows, interest flows, audit/reporting) organize naturally
-- **Sub-group folders** clarify cash flow categories without adding navigation complexity
-- **LLM-friendly**: HLD explains all cash movement patterns; agents can fetch domain/sub-group contexts independently for focused slices
+- **Unified cashflow concept**: All financial flows (income, expense, donations, interest) are movements of money, organized via categories
+- **3-level with 6 sub-groups**: Categories are foundational taxonomy enabling income/expense organization, donation/interest categorization, and drill-down filtering
+- **Categories as infrastructure**: Shared by all cashflow sub-groups; the HLD explains how category model applies across all flows
+- **LLM-friendly**: HLD provides complete financial taxonomy patterns; agents fetch sub-group contexts for focused slices (e.g., expense categorization, income drill-down)
 
 ### 6. `ai-features` (3 features) ⏳ PENDING
 AI-driven features: image import, usage logging, chat.
@@ -173,23 +164,20 @@ App-wide architectural guidelines, standards, infrastructure, and research.
 - ✅ Migration guide created (spec-consolidation.md)
 - ✅ Migration template created (migration-agent-template.md)
 
-### Phase 2: Execute Consolidations ✅ COMPLETE (83%)
+### Phase 2: Execute Consolidations ✅ COMPLETE (88%)
 - ✅ Transactions domain (10 features, 2-level)
 - ✅ CSV-import domain (8 features, 2-level)
 - ✅ Assets domain (4 features, 2-level)
 - ✅ Banking domain (4 features, 2-level)
-- ✅ **Cashflow domain (12 features, 3-level with 5 sub-groups)** ← Unified: income, expense, donations, interest, audit
-- ⏳ Categories domain (2 features remaining)
+- ✅ **Cashflow domain (14 features, 3-level with 6 sub-groups)** ← Unified: income, expense, donations, categories, interest, audit
 - ⏳ AI-features domain (3 features remaining)
 - ⏳ **Architecture domain (9 features remaining)** ← App-wide guidelines, standards, infrastructure
 - ⏳ User-profile domain (1 feature remaining)
 
-### Phase 3: Remaining Work (17% — 8 features)
-- 2 features in categories (category-management, category-drill-down)
+### Phase 3: Remaining Work (12% — 6 features)
 - 3 features in ai-features (ai-image-import, ai-usage-logging, finance-chat)
-- 9 features in **architecture** (app-wide guidelines, standards, infrastructure, research)
+- 9 features in **architecture** (app-wide guidelines, standards, infrastructure)
 - 1 feature in user-profile (user-profile)
-- **Note:** Reorganized "standalone" to "architecture" to reflect app-wide architectural nature
 
 ### Phase 3: Selective Migration (Ongoing)
 - On each feature touch, migrate its spec folder
