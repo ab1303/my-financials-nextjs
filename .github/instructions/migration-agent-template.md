@@ -21,7 +21,7 @@ Migrate a spec when:
 
 Before delegating to a cheaper model agent, you prepare:
 
-1. **Identify the domain** — consult `spec-migration-map.md` for the target domain
+1. **Identify the domain** — consult `.github/instructions/spec-migration-map.md` for the target domain
 2. **Read the current spec** — gather what exists in old `spec/{feature}/` folder
 3. **Understand the feature** — what does it do, what domain concepts does it rely on?
 4. **List key decisions** — what are the locked architectural decisions?
@@ -101,7 +101,7 @@ For each feature below, reorganize into spec/transactions/{feature}/:
 2. **Extract domain HLD** — consolidate shared schema and decisions
 3. **For each feature, create context.md** using this template:
 
-```markdown
+\`\`\`markdown
 # {Feature} — Context
 
 ## Problem
@@ -121,17 +121,17 @@ For each feature below, reorganize into spec/transactions/{feature}/:
 
 ## Known Constraints
 - ...
-```
+\`\`\`
 
 4. **Reorganize lld.md** — add file inventory table to lld.md if not present:
 
-```markdown
+\`\`\`markdown
 ## Files
 | File | Action | Description |
 |---|---|---|
 | src/server/trpc/router/transactions.ts | MODIFY | Add {feature} procedure |
 | src/app/(authorized)/cashflow/transactions/_components/LedgerTable.tsx | CREATE | Ledger view component |
-```
+\`\`\`
 
 5. **Test the structure** — verify:
    - spec/transactions/hld.md exists (domain-level)
@@ -218,4 +218,3 @@ Once pilot is validated:
 - Group by domain (csv-import, banking, categories, etc.)
 - Delegate each domain migration to gpt-4.1 background agent
 - Total estimated time: ~90 minutes agent work + ~60 minutes validation
-

@@ -188,8 +188,7 @@ Migrate 1 domain to validate structure + tooling:
 
 ## Next Steps
 
-1. **Create migration guide** (`MIGRATION_GUIDE.md`) with agent template
+1. **Create migration guide** (`.github/instructions/migration-agent-template.md`) with agent template
 2. **Run pilot** on `transactions` domain using gpt-4.1 background agent
 3. **Document learnings** and estimate remaining 47 features
 4. **Proceed with selective migration** as features are touched
-

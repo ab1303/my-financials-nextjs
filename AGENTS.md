@@ -41,7 +41,7 @@ When migrating, consolidate all content (hld.md, lld.md, context.md, any impleme
 6. Commit migration as separate "refactor: migrate {feature} spec" commit
 7. Proceed with implementation
 
-**Reference:** `MIGRATION_GUIDE.md` has the migration template; `spec-migration-map.md` lists all 48 features with target domains.
+**Reference:** `.github/instructions/migration-agent-template.md` has the migration template; `.github/instructions/spec-migration-map.md` lists all 48 features with target domains. See `.github/instructions/spec-consolidation.md` for the full workflow.
 
 ## Spec Documents
 
@@ -204,4 +204,17 @@ All coding standards live in `.ai/instructions/`. Read the relevant file before 
 | Git worktree workflow | `.ai/instructions/git-worktree.md` |
 
 `.github/instructions/` contains GitHub Copilot **scoped** rules (file-pattern bound, `applyTo` frontmatter). Do not duplicate general rules there — add them to `.ai/instructions/` instead.
+
+### Spec Workflow Documentation
+
+Spec-related workflow and migration guides live in `.github/instructions/`:
+
+| Document | Purpose | When to Read |
+|---|---|---|
+| `.github/instructions/spec-structure.md` | Why the new 2-level/3-level paradigm | Understanding the decision |
+| `.github/instructions/spec-consolidation.md` | When/how to migrate a feature spec | Before starting work on a feature with old spec |
+| `.github/instructions/spec-implementation.md` | Complete guide with scenarios | Comprehensive reference (read if unsure) |
+| `.github/instructions/spec-migration-map.md` | All 48 features with target domains | Finding what domain a feature belongs to |
+| `.github/instructions/migration-agent-template.md` | Agent template for spec migrations | Delegating a spec migration to gpt-4.1 |
+
 

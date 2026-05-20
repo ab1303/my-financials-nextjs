@@ -65,7 +65,7 @@ spec/
   - § Spec Migration When Touching a Feature (the workflow)
   - § Context Bundle by Task (what to send to LLMs)
 
-### 2. **SPEC_STRUCTURE_DECISION.md** — The Why
+### 2. **.github/instructions/spec-structure.md** — The Why
 - **What:** Decision record explaining the paradigm shift
 - **Read if:** You want to understand the reasoning or explain it to someone else
 - **Key sections:**
@@ -74,7 +74,7 @@ spec/
   - Decisions Locked (can't be changed without re-spec'ing)
   - Risk Mitigations
 
-### 3. **spec-migration-map.md** — The Inventory
+### 3. **.github/instructions/spec-migration-map.md** — The Inventory
 - **What:** All 48 features mapped to 11 domains
 - **Read if:** You need to know where a feature belongs
 - **Example:**
@@ -86,7 +86,7 @@ spec/
   - ... etc
   ```
 
-### 4. **SPEC_CONSOLIDATION_CHECKLIST.md** — The How-To (New!)
+### 4. **.github/instructions/spec-consolidation.md** — The How-To (New!)
 - **What:** Decision tree + workflow for consolidating a feature's spec
 - **Read if:** You're about to work on a feature in the old location
 - **Workflow:**
@@ -96,7 +96,7 @@ spec/
   4. Commit as separate "refactor" commit
   5. Proceed with implementation
 
-### 5. **MIGRATION_GUIDE.md** — The Agent Template
+### 5. **.github/instructions/migration-agent-template.md** — The Agent Template
 - **What:** Template for gpt-4.1 agents to execute spec migrations
 - **Read if:** You're delegating a migration to an agent
 - **Includes:** Complete prompt template with constraints
@@ -134,8 +134,8 @@ Is spec/{domain}/{feature}/ migrated? (new location)
 ```
 
 **Step 2:** Migrate the spec  
-- Use `SPEC_CONSOLIDATION_CHECKLIST.md` decision tree
-- Delegate to gpt-4.1 agent using `MIGRATION_GUIDE.md` template
+- Use `.github/instructions/spec-consolidation.md` decision tree
+- Delegate to gpt-4.1 agent using `.github/instructions/migration-agent-template.md` template
 - Validate structure
 
 **Step 3:** Commit migration separately  
@@ -152,18 +152,18 @@ git commit -m "refactor: migrate {feature} spec to new structure"
 ### Scenario 3: Finding What Domain a Feature Belongs To
 
 **Step 1:** Look it up  
-`spec-migration-map.md` lists all 48 features with target domains
+`.github/instructions/spec-migration-map.md` lists all 48 features with target domains
 
 **Step 2:** Or use the decision tree  
-SPEC_CONSOLIDATION_CHECKLIST.md § Decision Tree
+`.github/instructions/spec-consolidation.md` § Decision Tree
 
-**Reference:** spec-migration-map.md
+**Reference:** `.github/instructions/spec-migration-map.md`
 
 ---
 
 ### Scenario 4: Understanding the Architecture
 
-**Step 1:** Read SPEC_STRUCTURE_DECISION.md  
+**Step 1:** Read `.github/instructions/spec-structure.md`  
 - Problem statement
 - Why 2-level vs 3-level
 - Decisions locked
@@ -194,7 +194,7 @@ SPEC_CONSOLIDATION_CHECKLIST.md § Decision Tree
 ### Immediate (This Week)
 - ✅ **Done:** Paradigm shift documented (AGENTS.md + skills updated)
 - ✅ **Done:** Pilot completed (transactions + assets migrated)
-- ✅ **Done:** Migration workflow documented (SPEC_CONSOLIDATION_CHECKLIST.md)
+- ✅ **Done:** Migration workflow documented (spec-consolidation.md)
 - ✅ **Done:** All 6 supporting docs created
 
 ### Short Term (When Working on Features)
@@ -219,12 +219,12 @@ SPEC_CONSOLIDATION_CHECKLIST.md § Decision Tree
 
 | Document | Purpose | When to Read |
 |---|---|---|
-| [AGENTS.md](./AGENTS.md) | Spec standard definition | Designing or migrating specs |
-| [SPEC_STRUCTURE_DECISION.md](./SPEC_STRUCTURE_DECISION.md) | Why + rationale | Understanding the change |
-| [spec-migration-map.md](./spec-migration-map.md) | Feature → domain map | Finding a feature's domain |
-| [SPEC_CONSOLIDATION_CHECKLIST.md](./SPEC_CONSOLIDATION_CHECKLIST.md) | How to migrate | Before starting work on old spec |
-| [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) | Agent template | Delegating migrations |
-| [MIGRATION_RESULTS.md](./MIGRATION_RESULTS.md) | Pilot results | Learning from pilot |
+| [AGENTS.md](../../../AGENTS.md) | Spec standard definition | Designing or migrating specs |
+| [.github/instructions/spec-structure.md](./spec-structure.md) | Why + rationale | Understanding the change |
+| [.github/instructions/spec-migration-map.md](./spec-migration-map.md) | Feature → domain map | Finding a feature's domain |
+| [.github/instructions/spec-consolidation.md](./spec-consolidation.md) | How to migrate | Before starting work on old spec |
+| [.github/instructions/migration-agent-template.md](./migration-agent-template.md) | Agent template | Delegating migrations |
+| [MIGRATION_RESULTS.md](../../../MIGRATION_RESULTS.md) | Pilot results | Learning from pilot |
 
 ---
 
@@ -237,4 +237,3 @@ SPEC_CONSOLIDATION_CHECKLIST.md § Decision Tree
 ✅ **Ready for use:** Agents can now work with the new structure immediately
 
 **Your move:** Start implementing `assets` features using the new spec structure. Let us know how it goes.
-

@@ -20,7 +20,7 @@ Does spec/{feature}/ exist in old location?
 
 ### Step 2: Check Domain Assignment
 
-Look up the feature in `spec-migration-map.md`:
+Look up the feature in `.github/instructions/spec-migration-map.md`:
 - Find its target domain (e.g., `transfer-reconciliation` → `transactions` domain)
 - Note the target path: `spec/{domain}/{feature}/`
 
@@ -47,7 +47,7 @@ Old location: spec/transfer-reconciliation/
    - Also check for summaries, implementation notes, etc.
 
 2. **Delegate to gpt-4.1 agent**
-   - Use template from `MIGRATION_GUIDE.md` § "Agent Task Template: Migrate One Domain"
+   - Use template from `.github/instructions/migration-agent-template.md` § "Agent Task Template: Migrate One Domain"
    - Pass all old spec content to the agent
    - Agent reads, consolidates, creates new files
 
@@ -139,8 +139,7 @@ You're starting work on feature X.
 
 ## Questions?
 
-- **Where's the domain for feature Y?** → Check `spec-migration-map.md`
-- **How do I migrate?** → Use template in `MIGRATION_GUIDE.md`
+- **Where's the domain for feature Y?** → Check `.github/instructions/spec-migration-map.md`
+- **How do I migrate?** → Use template in `.github/instructions/migration-agent-template.md`
 - **What's the new spec structure?** → See `AGENTS.md` § Spec Documents
 - **When do I migrate?** → When you start work on that feature (see `AGENTS.md` § Spec Migration)
-
