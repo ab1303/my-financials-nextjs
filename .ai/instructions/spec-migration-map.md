@@ -1,11 +1,11 @@
 # Spec Folder Migration Map
 
-**Status:** In Progress (77% complete)  
+**Status:** In Progress (79% complete)  
 **Total features:** 48 across 11 domains  
-**Consolidated:** 37 features across 7 domains  
-**Remaining:** 11 features across 4 domains  
-**Target structure:** `spec/{domain}/{feature}/` with 3 files: `hld.md`, `context.md`, `lld.md`  
-**Migration approach:** Opportunistic consolidation per domain
+**Consolidated:** 39 features across 7 domains (cashflow upgraded to 3-level with 5 features)  
+**Remaining:** 9 features across 4 domains  
+**Target structure:** `spec/{domain}/{feature}/` (2-level) or `spec/{domain}/{group}/{feature}/` (3-level for complex domains)  
+**Migration approach:** Opportunistic consolidation per domain; 3-level promotion when 3+ phases exist
 
 ---
 
@@ -81,14 +81,32 @@ Income, expense tracking, interest handling, and related UX.
 | `expense-tracking` | `income-expense/expense-tracking/` | ✅ Migrated |
 | `interest-cleansing` | `income-expense/interest-cleansing/` | ✅ Migrated |
 
-### 5a. `cashflow` (1 feature) ✅ COMPLETE
-Cashflow audits and aggregation/reporting layer.
+### 5a. `cashflow` (5 features) ✅ COMPLETE — **3-Level Structure**
+Unified financial flows: income, expense, interest, and audit/reporting.
 
-| Current Folder | Target Location | Status |
-|---|---|---|
-| `cashflow-site-audit` | `cashflow/cashflow-audit/` | ✅ Migrated |
+| Sub-group | Features | Target Location | Status |
+|---|---|---|---|
+| **income** | income-management, income-ux | `cashflow/income/{feature}/` | ✅ Migrated |
+| **expense** | expense-tracking | `cashflow/expense/{feature}/` | ✅ Migrated |
+| **interest** | interest-cleansing | `cashflow/interest/{feature}/` | ✅ Migrated |
+| **audit** | cashflow-audit | `cashflow/audit/{feature}/` | ✅ Migrated |
 
-**Note:** Cashflow is a reporting domain that aggregates data from income-expense, transactions, and assets domains.
+**Structure:**
+```
+spec/cashflow/
+  hld.md (unified financial flows architecture)
+  income/
+    income-management/
+    income-ux-improvements/
+  expense/
+    expense-tracking/
+  interest/
+    interest-cleansing/
+  audit/
+    cashflow-audit/
+```
+
+**Rationale:** Cashflow is the unified concept for all financial flows (income sources, expenses, interest, and reporting). Promoted to 3-level structure because it has 4 independent sub-domains (income, expense, interest, audit). Sub-group folders organize related features without increasing complexity.
 
 ### 6. `ai-features` (3 features) ⏳ PENDING
 AI-driven features: image import, usage logging, chat.
@@ -150,25 +168,24 @@ Miscellaneous, cross-cutting, or architectural features without strong domain af
 - ✅ Migration guide created (spec-consolidation.md)
 - ✅ Migration template created (migration-agent-template.md)
 
-### Phase 2: Execute Consolidations ✅ COMPLETE (77%)
-- ✅ Transactions domain (10 features)
-- ✅ CSV-import domain (8 features)
-- ✅ Assets domain (4 features)
-- ✅ Banking domain (4 features)
-- ✅ Income-expense domain (4 features)
-- ✅ Cashflow domain (1 feature)
-- ✅ Donations domain (3 features)
+### Phase 2: Execute Consolidations ✅ COMPLETE (79%)
+- ✅ Transactions domain (10 features, 2-level)
+- ✅ CSV-import domain (8 features, 2-level)
+- ✅ Assets domain (4 features, 2-level)
+- ✅ Banking domain (4 features, 2-level)
+- ✅ **Cashflow domain (5 features, 3-level with sub-groups)** ← Promoted for financial flows organization
+- ✅ Donations domain (3 features, 2-level)
 - ⏳ Categories domain (2 features remaining)
 - ⏳ AI-features domain (3 features remaining)
 - ⏳ Standalone domain (9 features remaining)
 - ⏳ User-profile domain (1 feature remaining)
 
-### Phase 3: Remaining Work (23% — 11 features)
+### Phase 3: Remaining Work (21% — 9 features)
 - 2 features in categories (category-management, category-drill-down)
 - 3 features in ai-features (ai-image-import, ai-usage-logging, finance-chat)
 - 9 features in standalone (cross-cutting, non-domain-specific)
 - 1 feature in user-profile (user-profile)
-- Estimated: 2-3 more consolidation sessions
+- Estimated: 1-2 more consolidation sessions
 
 ### Phase 3: Selective Migration (Ongoing)
 - On each feature touch, migrate its spec folder
