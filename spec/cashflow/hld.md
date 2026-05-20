@@ -26,6 +26,13 @@ A user-owned outflow entry managed directly by the app.
 - Feeds monthly and fiscal-year expense analysis.
 - Combines with income totals to produce net cashflow views.
 
+### `CategoryTaxonomy`
+A managed classification vocabulary shared across cashflow surfaces.
+
+- Includes expense categories, income-source style lookup records, and any category-like labels needed to organize donation or interest-cleansing reporting.
+- Uses stable IDs, human-readable names, and `isActive` soft-delete semantics so historical cashflow records remain interpretable after taxonomy changes.
+- Acts as the glue between entry forms, import resolution, summaries, and drill-down filtering.
+
 ### `DonationRecord`
 A fiscal-year charitable-outflow aggregate.
 
@@ -82,10 +89,26 @@ A structured quality record for cashflow routes.
 - **Transaction linking** reconciles donation rows with imported transaction records without changing the transaction ledger as the source of truth.
 - Donations behave like expenses in retained-cash summaries, but they keep distinct charitable metadata, beneficiary relationships, and yearly reporting rules.
 
+## Categories (Taxonomy)
+
+- Categories are the foundational taxonomy for cashflow. Income, expense, donations, and interest-cleansing features all depend on a stable user-managed vocabulary to organize records, roll up totals, and explain filtered views.
+- Expense categories and managed income sources are the current concrete taxonomy sets; donation and interest-cleansing flows should reuse the same server-owned resolution rules whenever category-style labeling is required.
+- Category assignment is a two-part concern:
+  1. **Lookup management** — create, rename, deactivate, and list category records through authenticated server APIs
+  2. **Operational linking** — resolve imported or user-selected labels to the canonical records or stored fields used by cashflow records and summaries
+
+### Taxonomy Patterns
+- Database-backed records replace hardcoded enums when users need CRUD flexibility.
+- Soft-delete (`isActive`) preserves historical integrity when financial rows already reference a category/source.
+- Name-to-record resolution belongs at server boundaries for imports, AI-assisted classification, and transaction-linking flows; fallback behavior stays out of client code.
+- URL search params are the persistent contract for category drill-down and filtered navigation so deep links survive refresh and support bookmarking.
+- Shared category filters belong in server queries and services so aggregates, ledger rows, and navigation targets remain consistent.
+- Categories are the glue that makes expense aggregation, income organization, donation reporting, and drill-down filtering possible without duplicating taxonomy logic in each feature.
+
 ## Architecture Decisions
 
-1. **Cashflow is one financial-flow domain with five grouped feature areas.**
-   Income, expense, donations, interest, and audit specs share language, time models, and flow relationships even when their implementation details differ.
+1. **Cashflow is one financial-flow domain with six grouped feature areas.**
+   Income, expense, donations, categories, interest, and audit specs share language, time models, taxonomy, and flow relationships even when their implementation details differ.
 
 2. **Each flow keeps its strongest source of truth.**
    Income and expense remain app-managed CRUD records, voluntary donations and Zakat payments remain charitable ledgers, interest received is derived from the transaction ledger, and audits remain evidence records rather than product data.
@@ -96,16 +119,19 @@ A structured quality record for cashflow routes.
 4. **Transaction linking is enrichment, not source mutation.**
    Imported `Transaction` rows remain the immutable cash evidence; charitable pages attach metadata through optional one-to-one links.
 
-5. **Time scoping is first-class and multi-calendar.**
+5. **Categories provide shared taxonomy rather than a separate ledger.**
+   Lookup management, label resolution, and drill-down contracts are centralized at the domain level so income, expense, donation, and interest features do not re-encode category rules.
+
+6. **Time scoping is first-class and multi-calendar.**
    Fiscal-year planning, donation review, Zakat-year obligations, annual bank-interest reporting, monthly tables, and other calendar contexts can coexist without redefining the underlying models in each feature spec.
 
-6. **User scoping is enforced through session context and owned relations.**
+7. **User scoping is enforced through session context and owned relations.**
    Beneficiaries, linked transactions, and charitable pages are filtered through the authenticated user, even when header tables themselves do not carry a direct `userId`.
 
-7. **Audit work is flow-aware but non-owning.**
-   Audits can inspect income, expense, donation, and bank-interest routes together because they belong to the same cashflow surface, but remediation still lands in the downstream feature that owns the behavior.
+8. **Audit work is flow-aware but non-owning.**
+   Audits can inspect income, expense, donation, category-management, drill-down, and bank-interest routes together because they belong to the same cashflow surface, but remediation still lands in the downstream feature that owns the behavior.
 
-8. **Server-first delivery remains the default across the domain.**
+9. **Server-first delivery remains the default across the domain.**
    Data loading, aggregation, and mutations happen server-side; client wrappers are reserved for interactive tables, drawers, filters, and inline editing.
 
 ## Time Contexts
@@ -133,6 +159,7 @@ A structured quality record for cashflow routes.
 ## Cross-Feature Relationships
 
 - Income and expense together define the user's everyday cash position.
+- Categories provide the shared taxonomy that lets income, expense, donations, and interest-cleansing views aggregate, organize, and drill into the same cashflow language.
 - Voluntary donations and Zakat payments are cash outflows like expenses, but they retain beneficiary-aware charitable semantics.
 - Transaction-linked donations preserve reconciliation between cash-outflow summaries and imported bank evidence.
 - Interest received is still a cash inflow, but it must remain distinguishable from ordinary income because it carries a cleansing obligation.
