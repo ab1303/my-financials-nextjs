@@ -145,20 +145,22 @@ User profile and preferences.
 |---|---|---|
 | `user-profile` | `user-profile/user-profile/` | ⏳ Pending |
 
-### 8. `standalone` (9 features) ⏳ PENDING
-Miscellaneous, cross-cutting, or architectural features without strong domain affinity.
+### 8. `architecture` (9 features) ⏳ PENDING
+App-wide architectural guidelines, standards, infrastructure, and research.
 
-| Current Folder | Target Location | Status |
-|---|---|---|
-| `calendar-attribution-architecture` | `standalone/calendar-attribution/` | ⏳ Pending |
-| `design-modernization` | `standalone/design-modernization/` | ⏳ Pending |
-| `development-standards` | `standalone/development-standards/` | ⏳ Pending |
-| `e2e-testing` | `standalone/e2e-testing/` | ⏳ Pending |
-| `embedding-models-comparison` | `standalone/embedding-models/` | ⏳ Pending |
-| `entity-relations` | `standalone/entity-relations/` | ⏳ Pending |
-| `preferred-currency-display` | `standalone/preferred-currency/` | ⏳ Pending |
-| `schema-naming-review` | `standalone/schema-naming/` | ⏳ Pending |
-| `site-audit` | `standalone/site-audit/` | ⏳ Pending |
+| Current Folder | Target Location | Type | Status |
+|---|---|---|---|
+| `calendar-attribution-architecture` | `architecture/calendar-attribution/` | Architecture | ⏳ Pending |
+| `design-modernization` | `architecture/design-modernization/` | Guidelines/Infrastructure | ⏳ Pending |
+| `development-standards` | `architecture/development-standards/` | Guidelines | ⏳ Pending |
+| `e2e-testing` | `architecture/e2e-testing/` | Infrastructure | ⏳ Pending |
+| `embedding-models-comparison` | `architecture/embedding-models/` | Research | ⏳ Pending |
+| `entity-relations` | `architecture/entity-relations/` | Architecture | ⏳ Pending |
+| `preferred-currency-display` | `architecture/preferred-currency/` | Infrastructure | ⏳ Pending |
+| `schema-naming-review` | `architecture/schema-naming/` | Guidelines | ⏳ Pending |
+| `site-audit` | `architecture/site-audit/` | Audit | ⏳ Pending |
+
+**Rationale:** These are app-wide architectural concerns, not domain-specific features. They establish patterns, standards, and infrastructure used across all domains.
 
 ---
 
@@ -179,15 +181,15 @@ Miscellaneous, cross-cutting, or architectural features without strong domain af
 - ✅ **Cashflow domain (12 features, 3-level with 5 sub-groups)** ← Unified: income, expense, donations, interest, audit
 - ⏳ Categories domain (2 features remaining)
 - ⏳ AI-features domain (3 features remaining)
-- ⏳ Standalone domain (9 features remaining)
+- ⏳ **Architecture domain (9 features remaining)** ← App-wide guidelines, standards, infrastructure
 - ⏳ User-profile domain (1 feature remaining)
 
 ### Phase 3: Remaining Work (17% — 8 features)
 - 2 features in categories (category-management, category-drill-down)
 - 3 features in ai-features (ai-image-import, ai-usage-logging, finance-chat)
-- 9 features in standalone (cross-cutting, non-domain-specific)
+- 9 features in **architecture** (app-wide guidelines, standards, infrastructure, research)
 - 1 feature in user-profile (user-profile)
-- **Note:** Standalone has 9 features; consider 1-2 more consolidation sessions
+- **Note:** Reorganized "standalone" to "architecture" to reflect app-wide architectural nature
 
 ### Phase 3: Selective Migration (Ongoing)
 - On each feature touch, migrate its spec folder
