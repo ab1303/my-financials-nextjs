@@ -160,6 +160,7 @@ export default function HoldingFormModal({
     resolver: zodResolver(schema),
     defaultValues: isEditMode && editingHolding
       ? {
+          holdingId: editingHolding.id,
           ...editingHolding,
           accountId: editingHolding.accountId,
           quantity: Number(editingHolding.quantity),
@@ -177,6 +178,7 @@ export default function HoldingFormModal({
           currentPrice: 0,
           currency: 'AUD',
           plannedTerm: 'MID_TERM',
+          snapshotId: snapshotId ?? '',
           accountId: defaultAccountId ?? '',
           salePrice: null,
           saleDate: null,
@@ -275,9 +277,13 @@ export default function HoldingFormModal({
       if (isEditMode) {
         await updateHolding.mutateAsync(processedData as UpdateFormData);
       } else {
+        if (!snapshotId) {
+          toast.error('Snapshot ID is required to add a holding');
+          return;
+        }
         await createHolding.mutateAsync({
           ...(processedData as CreateFormData),
-          snapshotId: snapshotId!,
+          snapshotId,
         });
       }
     } finally {
@@ -459,9 +465,8 @@ export default function HoldingFormModal({
             <Controller
               name='quantity'
               control={control}
-              render={({ field: { value, onChange, onBlur, name, ref } }) => (
+              render={({ field: { value, onChange, onBlur, ref } }) => (
                 <NumericFormat
-                  name={name}
                   value={value ?? ''}
                   getInputRef={ref}
                   onBlur={onBlur}
@@ -487,9 +492,8 @@ export default function HoldingFormModal({
             <Controller
               name='buyPrice'
               control={control}
-              render={({ field: { value, onChange, onBlur, name, ref } }) => (
+              render={({ field: { value, onChange, onBlur, ref } }) => (
                 <NumericFormat
-                  name={name}
                   value={value ?? ''}
                   getInputRef={ref}
                   onBlur={onBlur}
@@ -561,9 +565,8 @@ export default function HoldingFormModal({
             <Controller
               name='currentPrice'
               control={control}
-              render={({ field: { value, onChange, onBlur, name, ref } }) => (
+              render={({ field: { value, onChange, onBlur, ref } }) => (
                 <NumericFormat
-                  name={name}
                   value={value ?? ''}
                   getInputRef={ref}
                   onBlur={onBlur}
@@ -604,9 +607,8 @@ export default function HoldingFormModal({
                       <Controller
                         name='salePrice'
                         control={control}
-                        render={({ field: { value, onChange, onBlur, name, ref } }) => (
+                        render={({ field: { value, onChange, onBlur, ref } }) => (
                           <NumericFormat
-                            name={name}
                             value={value ?? ''}
                             getInputRef={ref}
                             onBlur={onBlur}
@@ -656,9 +658,8 @@ export default function HoldingFormModal({
                       <Controller
                         name='soldQuantity'
                         control={control}
-                        render={({ field: { value, onChange, onBlur, name, ref } }) => (
+                        render={({ field: { value, onChange, onBlur, ref } }) => (
                           <NumericFormat
-                            name={name}
                             value={value ?? ''}
                             getInputRef={ref}
                             onBlur={onBlur}
