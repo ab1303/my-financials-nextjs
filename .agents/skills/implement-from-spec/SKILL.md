@@ -9,7 +9,7 @@ description: >
   coding", "implement phases", "delegate implementation".
 metadata:
   author: local
-  version: "1.2.0"
+  version: '1.2.0'
   argument-hint: <feature-name> [--phase N]
 ---
 
@@ -30,6 +30,7 @@ or ask with `ask_user` if not provided.
 skip the dependency analysis.
 
 Read both files in parallel:
+
 ```
 spec/{feature}/context.md
 spec/{feature}/lld.md
@@ -44,12 +45,12 @@ skill first.
 
 Inspect `package.json` and the project structure to select the right agent:
 
-| Signal | Agent to use |
-|---|---|
-| `next`, `react`, `@trpc/server` in `package.json` | `Next.js Expert` |
-| `*.csproj` or `*.sln` present | `C# Expert` or `.NET Implementation Engineer` |
-| `go.mod` present | `general-purpose` (Go) |
-| `requirements.txt` / `pyproject.toml` | `general-purpose` (Python) |
+| Signal                                            | Agent to use                                  |
+| ------------------------------------------------- | --------------------------------------------- |
+| `next`, `react`, `@trpc/server` in `package.json` | `Next.js Expert`                              |
+| `*.csproj` or `*.sln` present                     | `C# Expert` or `.NET Implementation Engineer` |
+| `go.mod` present                                  | `general-purpose` (Go)                        |
+| `requirements.txt` / `pyproject.toml`             | `general-purpose` (Python)                    |
 
 For this repo the agent is always **`Next.js Expert`**.
 
@@ -60,23 +61,27 @@ State the chosen agent to the user before proceeding.
 ## Step 3 — Parse the Phase Map
 
 From `lld.md`, extract:
+
 1. The **Phase Map** block (usually a fenced code block near the top)
 2. Each **Phase section** (heading + body)
 3. Any **explicit dependency statements** in the LLD
    (e.g. "Phase 2 is a prerequisite for Phase 3", "can be developed in parallel")
 
 Build a dependency graph:
+
 ```
 phase_1 → phase_2 → phase_3
                   ↘ phase_4 (parallel with 3)
 ```
 
 Identify **waves** — groups of phases that can run simultaneously:
+
 - Wave 1: phases with no unmet dependencies
 - Wave 2: phases whose only dependencies are in Wave 1
 - etc.
 
 **Typical Next.js / T3 dependency order** (use as default if not explicit):
+
 ```
 Schema migration  (Phase 1)          ← always first, no deps
 Constants/types   (Phase 2)          ← depends on schema
@@ -87,6 +92,7 @@ Tests             (alongside each)   ← TDD: write tests with the phase they co
 ```
 
 Persist the phase plan to the SQL session database:
+
 ```sql
 INSERT INTO todos (id, title, description, status) VALUES
   ('phase-1', 'Phase 1 — {name}', '{files}, {what it does}', 'pending'),
@@ -111,15 +117,18 @@ For every phase, assemble:
 ### a) Full `context.md` content (verbatim)
 
 ### b) The specific LLD phase section (verbatim)
+
 Extract only the relevant `## Phase N` section, not the entire LLD.
 
 ### c) Current file contents for files the phase will touch
+
 Read each file listed in the phase's "Files to modify/create" table.
 Paste the full content inline in the prompt. If a file exceeds 300 lines,
 include only the relevant section (the function/component to modify) with a
 comment `// ... rest of file unchanged` at the truncation point.
 
 ### d) Project-wide constraints (always include)
+
 ```
 STACK CONSTRAINTS — must follow exactly:
 - Next.js 16 App Router (T3 Stack): tRPC, Prisma, NextAuth v5 beta
@@ -128,7 +137,7 @@ STACK CONSTRAINTS — must follow exactly:
 - tRPC client: import { trpc } from '@/server/trpc/client'
 - Toast: import { toast } from 'sonner' — NOT react-toastify
 - Package manager: pnpm ONLY — never npm or yarn
-- Run pnpm run build before marking phase complete
+- Ask user to Run pnpm run build before marking phase complete
 - Stop dev server before any prisma migrate or prisma generate (Windows EPERM)
 - Tests: Vitest + @testing-library/react in src/__tests__/unit/
 - Prisma mock: vitest-mock-extended at src/__tests__/mocks/prisma.mock.ts
@@ -147,11 +156,14 @@ STACK CONSTRAINTS — must follow exactly:
 ```
 
 ### e) TDD test cases from the LLD
+
 Extract the test case table for this phase from lld.md. Include it with
 the instruction: "Write these tests first; all must pass before the phase is complete."
 
 ### f) Success criteria
+
 "Phase is complete when:
+
 1. All listed test cases pass
 2. The following files have been modified/created: {list}
 3. No files outside the scope above have been touched"
@@ -163,6 +175,7 @@ the instruction: "Write these tests first; all must pass before the phase is com
 ### Wave 1 (independent phases — run in parallel)
 
 For each phase in Wave 1, call `task` tool simultaneously:
+
 ```
 agent_type: "Next.js Expert"   (or detected agent)
 mode: "background"
@@ -177,6 +190,7 @@ Wait for all Wave 1 agents to complete before starting Wave 2.
 ### Wave 2+ (dependent phases — run after Wave 1 complete)
 
 Before starting each Wave 2+ phase:
+
 1. Update todo status: `UPDATE todos SET status = 'in_progress' WHERE id = 'phase-N'`
 2. Re-read any files that were modified by the previous wave's agents
    (the agent may have changed them — your cached copy is stale)
@@ -196,14 +210,17 @@ to complete quickly, else `"background"`).
 For each completed agent:
 
 1. **On success:** Mark todo done, report files changed
+
    ```sql
    UPDATE todos SET status = 'done' WHERE id = 'phase-N';
    ```
 
 2. **On failure:** Mark todo blocked, surface the error to the user
+
    ```sql
    UPDATE todos SET status = 'blocked', description = 'Error: {message}' WHERE id = 'phase-N';
    ```
+
    Do NOT automatically retry — ask the user how to proceed.
 
 3. **Build verification:** After the final wave, run:
@@ -243,17 +260,20 @@ Next steps:
 ## Important Constraints
 
 ### Do NOT run in parallel:
+
 - Any phase that modifies Prisma schema (`prisma/schema.prisma`)
   — only one prisma migration can run at a time
 - Any phase that requires `prisma migrate dev` or `prisma generate`
   — stop dev server first, run migration, restart dev server
 
 ### Do NOT skip:
+
 - Reading updated file contents between waves
   (stale content causes agents to overwrite each other's work)
 - The `pnpm run build` final verification
 
 ### Do NOT mark complete if:
+
 - Build has TypeScript errors
 - Tests are failing
 - An agent reported partial success

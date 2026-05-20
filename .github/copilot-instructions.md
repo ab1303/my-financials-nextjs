@@ -12,7 +12,7 @@
 - **No secrets in client code**: Never expose sensitive environment variables or secrets to the client.
 - **Document all required environment variables in `.env-example`.**
 - **All specs/PRDs in `spec/` at project root.**
-- **ALWAYS run `pnpm run build` before declaring any feature complete**: Ensure the project builds without errors in production mode before marking implementation as finished. Fix any build errors, unused imports, or linting warnings that appear during the build process.
+- **ALWAYS ask user to run `pnpm run build` before declaring any feature complete**: Ensure the project builds without errors in production mode before marking implementation as finished. Fix any build errors, unused imports, or linting warnings that appear during the build process.
 
 ## Project Structure
 
@@ -95,7 +95,7 @@
 ** DO NOT USE `npm` as the tool to build project **
 
 - Always use `pnpm` to build project
-- **After running `pnpm run build` for validation, always restart the dev server**: Running `pnpm run build` corrupts the `.next` directory for the dev server, causing `ENOENT` / `EPERM` errors in the user's running dev server. After any build verification, always run `pnpm run dev` as a **foreground process** (`isBackground: false`) in the terminal so the user can see it running on port 3000. Never restart the dev server as a background process — the user cannot see background terminal output. If the port is already in use, explicitly tell the user to stop the errored server and restart manually with `pnpm run dev`.
+- **After asking user to `pnpm run build` for validation, always tell them to restart the dev server**: Running `pnpm run build` corrupts the `.next` directory for the dev server, causing `ENOENT` / `EPERM` errors in the user's running dev server. After any build verification, always run `pnpm run dev` as a **foreground process** (`isBackground: false`) in the terminal so the user can see it running on port 3000. Never restart the dev server as a background process — the user cannot see background terminal output. If the port is already in use, explicitly tell the user to stop the errored server and restart manually with `pnpm run dev`.
 
 ## Testing and Linting
 

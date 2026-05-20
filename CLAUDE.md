@@ -19,8 +19,6 @@ This file contains foundational mandates for Claude Code agent. These instructio
 - **Cursor/Labels**: Table `<th>` needs `select-none cursor-default`; `<label htmlFor>` needs `cursor-pointer`. See `.ai/instructions/cursor-and-text-selection.md`.
 - **Middleware (Next.js 16+)**: Use `middleware.ts` at project root; keep it lightweight (auth checks only). Do not import heavy server-side modules.
 - **Always use `pnpm`**: Never use `npm` or `yarn` for installs or scripts.
-- **Verify with `pnpm run build`**: Run a production build before declaring any feature complete. Fix all TypeScript, ESLint, and import errors that surface.
-- **Restart dev server after build**: `pnpm run build` corrupts `.next/` for the running dev server. Always restart with `pnpm run dev` as a foreground process after any build verification.
 
 ## MCP Tools Available
 
