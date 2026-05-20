@@ -25,6 +25,20 @@ export const getBrokerageDetails = async (
   })) as Array<Business>;
 };
 
+export const updateBrokerageDetails = async ({
+  brokerageId,
+  name,
+}: {
+  brokerageId: string;
+  name: string;
+}) => {
+  const result = await prisma.business.update({
+    where: { id: brokerageId, type: 'BROKERAGE', userId: null },
+    data: { name },
+  });
+  return result as Business;
+};
+
 export const deleteBrokerageDetails = async (id: string) => {
   // Check for dependent accounts
   const accountCount = await prisma.financialAccount.count({

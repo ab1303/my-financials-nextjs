@@ -89,6 +89,7 @@ const settingsItems: NavItem[] = [
   { name: 'AI Spend', href: '/settings/ai-usage', icon: Sparkles },
   { name: 'Categories', href: '/settings/categories', icon: Tag },
   { name: 'Bank Institutions', href: '/settings/banks', icon: Landmark },
+  { name: 'Brokerage Institutions', href: '/settings/brokerages', icon: CandlestickChart },
 ];
 
 const accountItems: NavItem[] = [

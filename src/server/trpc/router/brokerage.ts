@@ -3,9 +3,11 @@ import {
   allBrokerageDetailsHandler,
   addBrokerageDetailsHandler,
   removeBrokerageDetailsHandler,
+  updateBrokerageDetailsHandler,
 } from '@/server/controllers/brokerage.controller';
 import {
   createBrokerageSchema,
+  updateBrokerageSchema,
   params,
 } from '@/server/schema/brokerage.schema';
 
@@ -16,6 +18,9 @@ export const brokerageRouter = router({
   getAllBrokerages: protectedProcedure.query(() => {
     return allBrokerageDetailsHandler();
   }),
+  updateBrokerageDetails: protectedProcedure
+    .input(updateBrokerageSchema)
+    .mutation(({ input }) => updateBrokerageDetailsHandler({ input })),
   removeBrokerageDetails: protectedProcedure
     .input(params)
     .mutation(({ input }) => removeBrokerageDetailsHandler({ params: input })),
