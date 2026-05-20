@@ -714,16 +714,18 @@ export default function NewSnapshotModal({
                       <Controller
                         name={`holdings.${index}.soldQuantity`}
                         control={control}
-                        render={({ field }) => (
+                        render={({ field: { value, onChange, onBlur, name, ref } }) => (
                           <NumericFormat
-                            {...field}
-                            value={field.value ?? ''}
+                            name={name}
+                            value={value ?? ''}
+                            getInputRef={ref}
+                            onBlur={onBlur}
                             allowNegative={false}
                             decimalScale={4}
                             allowLeadingZeros={false}
                             thousandSeparator
                             className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-                            onValueChange={values => field.onChange(values.floatValue ?? null)}
+                            onValueChange={(values) => onChange(values.floatValue ?? null)}
                           />
                         )}
                       />
