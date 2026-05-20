@@ -128,24 +128,6 @@ export default function HoldingFormModal({
     }
   }, [defaultAccountId, brokerageAccounts, isEditMode]);
 
-  // Institution options for select
-  // Group institutions: global first (🌍), then user's custom (👤)
-  const institutionOptions: SelectOption[] = brokerageInstitutions.map(inst => ({
-    value: inst.id,
-    label: inst.userId === null ? `🌍 ${inst.name}` : `👤 ${inst.name}`,
-  }));
-
-  // Accounts for selected institution
-  const institution = selectedInstitution
-    ? brokerageInstitutions.find(inst => inst.id === selectedInstitution.id)
-    : undefined;
-  const accountOptions: SelectOption[] = institution
-    ? institution.financialAccounts.map(acc => ({
-        value: acc.id,
-        label: acc.name,
-      }))
-    : [];
-
   // Form setup
   const schema = isEditMode ? updateStockHoldingSchema : createStockHoldingSchema;
   const {
@@ -186,7 +168,57 @@ export default function HoldingFormModal({
         },
   });
 
-  // Reset institution/account on close
+  // Institution options for select
+  // Group institutions: global first (🌍), then user's custom (👤)
+  const institutionOptions: SelectOption[] = brokerageInstitutions.map(inst => ({
+    value: inst.id,
+    label: inst.userId === null ? `🌍 ${inst.name}` : `👤 ${inst.name}`,
+  }));
+
+  // Accounts for selected institution
+  const institution = selectedInstitution
+    ? brokerageInstitutions.find(inst => inst.id === selectedInstitution.id)
+    : undefined;
+  const accountOptions: SelectOption[] = institution
+    ? institution.financialAccounts.map(acc => ({
+        value: acc.id,
+        label: acc.name,
+      }))
+    : [];
+
+  // Update form values when editingHolding changes
+  useEffect(() => {
+    if (isOpen && editingHolding) {
+      reset({
+        holdingId: editingHolding.id,
+        ...editingHolding,
+        accountId: editingHolding.accountId,
+        quantity: Number(editingHolding.quantity),
+        buyPrice: Number(editingHolding.buyPrice),
+        currentPrice: Number(editingHolding.currentPrice),
+        salePrice: editingHolding.salePrice != null ? Number(editingHolding.salePrice) : null,
+        soldQuantity: editingHolding.soldQuantity != null ? Number(editingHolding.soldQuantity) : null,
+      });
+    } else if (isOpen && !editingHolding) {
+      reset({
+        ticker: '',
+        companyName: '',
+        quantity: 0,
+        buyPrice: 0,
+        buyDate: new Date(),
+        currentPrice: 0,
+        currency: 'AUD',
+        plannedTerm: 'MID_TERM',
+        snapshotId: snapshotId ?? '',
+        accountId: defaultAccountId ?? '',
+        salePrice: null,
+        saleDate: null,
+        soldQuantity: null,
+      });
+      setBuyDateMode('month');
+      setSelectedInstitution(null);
+    }
+  }, [isOpen, editingHolding, snapshotId, defaultAccountId, reset]);
   const handleClose = () => {
     reset();
     setSelectedInstitution(null);
@@ -328,7 +360,7 @@ export default function HoldingFormModal({
               className='mt-1'
               placeholder='Select or create institution…'
               inputId='institutionId'
-              isDisabled={isEditMode}
+              isdisabled={false}
             />
           </div>
           {/* Account Selection */}
@@ -385,7 +417,7 @@ export default function HoldingFormModal({
               inputMode='text'
               autoComplete='off'
               placeholder='e.g. CBA'
-              disabled={isEditMode}
+              disabled={false}
             />
             {errors.ticker && (
               <p className='mt-1 text-sm text-red-600'>
@@ -405,7 +437,7 @@ export default function HoldingFormModal({
               inputMode='text'
               autoComplete='off'
               placeholder='e.g. Commonwealth Bank'
-              disabled={isEditMode}
+              disabled={false}
             />
             {errors.companyName && (
               <p className='mt-1 text-sm text-red-600'>
@@ -426,7 +458,7 @@ export default function HoldingFormModal({
                   value={CURRENCY_OPTIONS.find(opt => opt.value === field.value) ?? null}
                   onChange={selected => field.onChange(selected?.value ?? '')}
                   className='mt-1'
-                  isDisabled={isEditMode}
+                  isDisabled={false}
                 />
               )}
             />
@@ -449,7 +481,7 @@ export default function HoldingFormModal({
                   value={TERM_OPTIONS.find(opt => opt.value === field.value) ?? null}
                   onChange={selected => field.onChange(selected?.value ?? '')}
                   className='mt-1'
-                  isDisabled={isEditMode}
+                  isDisabled={false}
                 />
               )}
             />
@@ -476,7 +508,7 @@ export default function HoldingFormModal({
                   thousandSeparator
                   className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                   onValueChange={(values) => onChange(values.floatValue ?? 0)}
-                  disabled={isEditMode}
+                  disabled={false}
                 />
               )}
             />
@@ -504,7 +536,7 @@ export default function HoldingFormModal({
                   prefix='$'
                   className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                   onValueChange={(values) => onChange(values.floatValue ?? 0)}
-                  disabled={isEditMode}
+                  disabled={false}
                 />
               )}
             />
@@ -522,7 +554,7 @@ export default function HoldingFormModal({
                 value={buyDateMode}
                 onChange={e => setBuyDateMode(e.target.value as 'month' | 'exact')}
                 className='border border-input rounded-md px-2 py-1 text-sm'
-                disabled={isEditMode}
+                disabled={false}
               >
                 <option value='month'>Month</option>
                 <option value='exact'>Exact</option>
@@ -538,7 +570,7 @@ export default function HoldingFormModal({
                       value={value ? new Date(value).toISOString().split('T')[0] : ''}
                       onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
                       className='block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-                      disabled={isEditMode}
+                      disabled={false}
                     />
                   ) : (
                     <input
@@ -547,7 +579,7 @@ export default function HoldingFormModal({
                       value={value ? new Date(value).toISOString().slice(0, 7) : ''}
                       onChange={(e) => onChange(e.target.value ? new Date(e.target.value + '-01') : null)}
                       className='block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-                      disabled={isEditMode}
+                      disabled={false}
                     />
                   )
                 }
@@ -577,7 +609,7 @@ export default function HoldingFormModal({
                   prefix='$'
                   className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                   onValueChange={(values) => onChange(values.floatValue ?? 0)}
-                  disabled={isEditMode}
+                  disabled={false}
                 />
               )}
             />
@@ -619,7 +651,7 @@ export default function HoldingFormModal({
                             prefix='$'
                             className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                             onValueChange={(values) => onChange(values.floatValue ?? null)}
-                            disabled={isEditMode}
+                            disabled={false}
                           />
                         )}
                       />
@@ -642,7 +674,7 @@ export default function HoldingFormModal({
                             value={value ? new Date(value).toISOString().split('T')[0] : ''}
                             onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
                             className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
-                            disabled={isEditMode}
+                            disabled={false}
                           />
                         )}
                       />
@@ -669,7 +701,7 @@ export default function HoldingFormModal({
                             thousandSeparator
                             className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
                             onValueChange={(values) => onChange(values.floatValue ?? null)}
-                            disabled={isEditMode}
+                            disabled={false}
                           />
                         )}
                       />
@@ -710,4 +742,5 @@ export default function HoldingFormModal({
     </Modal>
   );
 }
+
 

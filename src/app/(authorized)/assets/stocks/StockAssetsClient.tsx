@@ -1,9 +1,8 @@
 'use client';
 
-import { Fragment, useId, useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import type { SingleValue } from 'react-select';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { Disclosure, Dialog, Transition } from '@headlessui/react';
 import { ChevronDown, Plus, Trash2, Pencil } from 'lucide-react';
 import clsx from 'clsx';
@@ -12,11 +11,11 @@ import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
 import type { CalendarYearType, OptionType } from '@/types';
-import { Label } from '@/components/ui/Label';
 import { Button } from '@/components';
 import NewSnapshotModal from './NewSnapshotModal';
 import HoldingFormModal from './HoldingFormModal';
 import SummaryCards from './SummaryCards';
+import { YearSnapshotSelectors } from './YearSnapshotSelectors';
 import {
   calculateHoldingMetrics,
   formatCurrency,
@@ -45,7 +44,6 @@ type Props = {
 };
 
 export default function StockAssetsClient({ initialData }: Props) {
-  const id = useId();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -100,9 +98,9 @@ export default function StockAssetsClient({ initialData }: Props) {
     useState<SingleValue<OptionType>>(null);
 
   // Fetch brokerage accounts and institutions
-  const { data: brokerageAccounts = [] } =
+  const { data: brokerageAccounts = [], refetch: refetchBrokerageAccounts } =
     trpc.stockAsset.getBrokerageAccounts.useQuery();
-  const { data: brokerageInstitutions = [] } =
+  const { data: brokerageInstitutions = [], refetch: refetchBrokerageInstitutions } =
     trpc.business.getBrokeragesWithAccounts.useQuery();
 
   // Fetch snapshots for selected year
@@ -280,34 +278,14 @@ export default function StockAssetsClient({ initialData }: Props) {
   return (
     <div className='space-y-6'>
       {/* Fiscal Year & Snapshot Selectors */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-        <div>
-          <Label htmlFor={`${id}-year`}>Fiscal Year</Label>
-          <Select<OptionType>
-            inputId={`${id}-year`}
-            options={yearOptions}
-            value={selectedYear}
-            onChange={handleYearChange}
-            getOptionValue={(option) => option.id}
-            isDisabled={yearOptions.length === 0}
-            className='mt-1'
-          />
-        </div>
-
-        {snapshotOptions.length > 0 && (
-          <div>
-            <Label htmlFor={`${id}-snapshot`}>Snapshot Date</Label>
-            <Select<OptionType>
-              inputId={`${id}-snapshot`}
-              options={snapshotOptions}
-              value={selectedSnapshot}
-              onChange={handleSnapshotChange}
-              getOptionValue={(option) => option.id}
-              className='mt-1'
-            />
-          </div>
-        )}
-      </div>
+      <YearSnapshotSelectors
+        yearOptions={yearOptions}
+        selectedYear={selectedYear}
+        onYearChange={handleYearChange}
+        snapshotOptions={snapshotOptions}
+        selectedSnapshot={selectedSnapshot}
+        onSnapshotChange={handleSnapshotChange}
+      />
 
       {/* AI Usage Card */}
       {aiUsageDateRange && (
@@ -666,6 +644,8 @@ export default function StockAssetsClient({ initialData }: Props) {
         onSuccess={() => {
           setIsNewSnapshotModalOpen(false);
           refetchSnapshots();
+          refetchBrokerageAccounts();
+          refetchBrokerageInstitutions();
         }}
         brokerageAccounts={brokerageAccounts}
         brokerageInstitutions={brokerageInstitutions}
@@ -683,6 +663,9 @@ export default function StockAssetsClient({ initialData }: Props) {
           setAddingToAccountId(null);
           setIsHoldingFormModalOpen(false);
           setEditingHolding(null);
+          refetchBrokerageAccounts();
+          refetchBrokerageInstitutions();
+          refetchTotals();
         }}
         brokerageAccounts={brokerageAccounts}
         brokerageInstitutions={brokerageInstitutions}
