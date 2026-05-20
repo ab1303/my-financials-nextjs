@@ -330,7 +330,7 @@ export default function HoldingFormModal({
           {isEditMode ? 'Edit Holding' : 'Add Holding'}
         </span>
       </Modal.Header>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col flex-1 min-h-0'>
         <Modal.Body variant='spacious'>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6'>
             {/* Institution Selection */}
