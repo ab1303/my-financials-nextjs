@@ -16,6 +16,33 @@ Rules for all AI agents working in this repository.
 - `plan.md` → session workspace only; never commit planning files to the repo.
 - Track todo status in the SQL session database throughout implementation.
 
+### Spec Migration When Touching a Feature
+
+**When you work on a feature, migrate its spec FIRST:**
+
+If the feature spec is in the old location (`spec/{feature}/`), migrate it to the new structure (`spec/{domain}/{feature}/`) before starting implementation. This is not optional — it ensures:
+- Consistent spec organization across all features
+- No "ghost" specs in old locations
+- Clean git history (migration is a separate commit from implementation)
+
+**Spec consolidation is part of migration:**
+
+When migrating, consolidate all content (hld.md, lld.md, context.md, any implementation summaries) into the new 2-level structure:
+- Extract shared schema/patterns → domain `hld.md` (write once if new domain)
+- Problem + scope → feature `context.md` (no file inventory)
+- Implementation detail + file inventory → feature `lld.md`
+
+**Migration workflow:**
+1. Agent checks: does `spec/{domain}/{feature}/` exist? (new location)
+2. If NO: check `spec/{feature}/` (old location exists)
+3. If old location found: delegate spec migration to gpt-4.1 background agent
+4. Wait for migration to complete
+5. Validate structure (file counts, no duplication)
+6. Commit migration as separate "refactor: migrate {feature} spec" commit
+7. Proceed with implementation
+
+**Reference:** `MIGRATION_GUIDE.md` has the migration template; `spec-migration-map.md` lists all 48 features with target domains.
+
 ## Spec Documents
 
 The spec tree uses **2 levels by default**, promoting to **3 levels only when a feature has 3 or more independently-implementable phases**.

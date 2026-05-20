@@ -231,7 +231,12 @@ export const createBrokerageSubAccountHandler = async ({
   userId: string;
 }) => {
   try {
-    return await createBrokerageSubAccount(userId, input);
+    const account = await createBrokerageSubAccount(userId, input);
+    return {
+      id: account.id,
+      name: account.name,
+      institution: account.institution,
+    };
   } catch (e) {
     handleCaughtError(e);
   }

@@ -162,21 +162,31 @@ After the agent reports completion:
 
 1. **Verify structure** — browse `spec/transactions/` manually
 2. **Quick validation** — ensure no duplication, all 3 files present
-3. **Git workflow:**
+3. **⚠️ CRITICAL: Delete old flat folders** — this is PART of consolidation
+   ```powershell
+   # Remove old locations (consolidation is incomplete without this)
+   Remove-Item -Path "C:\path\spec\transaction-ledger" -Recurse -Force
+   Remove-Item -Path "C:\path\spec\transfer-reconciliation" -Recurse -Force
+   # ... etc for all 9 old folders
+   ```
+   **Why:** Duplicates cause confusion. Old folders should NOT exist after migration.
+
+4. **Git workflow:**
    ```bash
-   git add spec/transactions/
-   git rm -rf spec/transactions/ spec/transaction-ledger/ ... (old folders)
+   git add spec/transactions/ spec/assets/
+   git rm -rf spec/transaction-ledger/ spec/transaction-dedup/ spec/transfer-reconciliation/ ...
    git commit -m "refactor: migrate transactions domain to new spec structure
 
    - Consolidate domain HLD at spec/transactions/hld.md
    - Reorganize 9 features under spec/transactions/{feature}/
+   - Delete old flat folders (consolidation cleanup)
    - context.md: Problem + domain dependencies (no file inventory)
    - lld.md: Implementation + file inventory
 
    Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
    ```
 
-4. **Document learnings:**
+5. **Document learnings:**
    - Time taken (compare to estimate)
    - Any edge cases discovered
    - Update spec-migration-map.md with completion status

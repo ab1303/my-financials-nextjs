@@ -26,11 +26,20 @@ sub-features) may be beneficial for future promotion.
 ## When to Use
 
 Invoke this skill any time:
-- A product or engineering discussion has surfaced a new feature with enough
-  shape to document
+- A product or engineering discussion has surfaced a new feature with enough shape to document
 - The user asks to "spec this out", "create the spec", or "document this"
-- You are about to hand off to an implementation subagent and there is no
-  existing spec to reference
+- You are about to hand off to an implementation subagent and there is no existing spec to reference
+- **An agent is assigned to work on an existing feature and its spec is in the old location** — use this to migrate it to the new structure (also see AGENTS.md § Spec Migration)
+
+### Spec Migration Context
+
+If a feature already exists but its spec is at `spec/{feature}/` (old flat location), this skill can also migrate it:
+1. Consolidate old hld.md + lld.md + any context files into the new structure
+2. Extract domain HLD (write once per domain)
+3. Create feature-level context.md (problem + scope, no file inventory)
+4. Reorganize feature-level lld.md (implementation + file inventory)
+
+Migration is typically done as part of starting work on that feature (see AGENTS.md for workflow).
 
 ---
 
