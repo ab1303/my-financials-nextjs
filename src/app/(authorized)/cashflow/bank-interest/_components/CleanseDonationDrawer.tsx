@@ -64,9 +64,11 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
 }
 
+const TAX_CATEGORY_FOR_CLEANSING = 'Interest Cleansing';
+
 function getDefaultLinkedValues(): LinkedFormValues {
   return {
-    taxCategory: '',
+    taxCategory: TAX_CATEGORY_FOR_CLEANSING,
     beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
     beneficiaryId: '',
   };
@@ -76,7 +78,7 @@ function getDefaultManualValues(): ManualFormValues {
   return {
     datePaid: '',
     amount: 0,
-    taxCategory: '',
+    taxCategory: TAX_CATEGORY_FOR_CLEANSING,
     beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
     beneficiaryId: '',
   };
@@ -212,6 +214,15 @@ export default function CleanseDonationDrawer({
     linkedForm.reset(getDefaultLinkedValues());
     manualForm.reset(getDefaultManualValues());
   };
+
+  // Auto-populate tax category when mode changes or transaction is selected
+  useEffect(() => {
+    linkedForm.setValue('taxCategory', TAX_CATEGORY_FOR_CLEANSING, { shouldValidate: true });
+  }, [mode, linkedForm]);
+
+  useEffect(() => {
+    manualForm.setValue('taxCategory', TAX_CATEGORY_FOR_CLEANSING, { shouldValidate: true });
+  }, [mode, manualForm]);
 
   const handleLinkedSave = linkedForm.handleSubmit(async (values) => {
     if (!selectedTransaction) {
@@ -676,21 +687,17 @@ function BeneficiaryFormFields({
   return (
     <div className="grid gap-4">
       <div>
-        <label htmlFor="taxCategory" className="mb-1 block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200">
-          Tax category
+        <label htmlFor="taxCategory" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+          Tax category (locked)
         </label>
         <Controller
           control={control}
           name="taxCategory"
           render={({ field }) => (
-            <input
-              id="taxCategory"
-              {...field}
-              disabled={disabled}
-              type="text"
-              placeholder="e.g. Interest Cleansing"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-amber-500 disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:disabled:bg-gray-800"
-            />
+            <div className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+              {field.value || TAX_CATEGORY_FOR_CLEANSING}
+              <input {...field} type="hidden" />
+            </div>
           )}
         />
         {errors.taxCategory && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{String(errors.taxCategory.message)}</p>}

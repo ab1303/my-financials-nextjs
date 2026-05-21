@@ -1,4 +1,5 @@
 import { router, protectedProcedure } from '@/server/trpc/trpc';
+import { updateTransactionCategory } from '@/server/services/transaction.service';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 
@@ -54,6 +55,7 @@ export const expenseCategoryRouter = router({
   }),
 
   update: protectedProcedure.input(updateSchema).mutation(async ({ ctx, input }) => {
+    // Check for duplicate names
     const existing = await ctx.prisma.expenseCategory.findFirst({
       where: { name: { equals: input.name, mode: 'insensitive' }, NOT: { id: input.id } },
     });
@@ -63,10 +65,22 @@ export const expenseCategoryRouter = router({
         message: 'An expense category with this name already exists',
       });
     }
-    return ctx.prisma.expenseCategory.update({
+
+    // Get the old category name before updating
+    const oldCategory = await ctx.prisma.expenseCategory.findUniqueOrThrow({
+      where: { id: input.id },
+    });
+
+    // Update the category
+    const updated = await ctx.prisma.expenseCategory.update({
       where: { id: input.id },
       data: { name: input.name },
     });
+
+    // Sync all transactions with the old category name to the new one
+    await updateTransactionCategory(oldCategory.name, input.name);
+
+    return updated;
   }),
 
   restore: protectedProcedure.input(removeSchema).mutation(async ({ ctx, input }) => {

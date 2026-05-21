@@ -1,5 +1,7 @@
 import { prisma } from '@/server/utils/prisma';
 
+const CLEANSING_CATEGORY_NAME = 'Interest Cleansing';
+
 export type MonthlyCredit = {
   bankInterestLiabilityId: string;
   month: number;
@@ -181,7 +183,7 @@ export const getUnlinkedCleansingDebitTransactions = async (
       type: 'DEBIT',
       status: 'CONFIRMED',
       category: {
-        equals: 'Bank Interest',
+        equals: CLEANSING_CATEGORY_NAME,
         mode: 'insensitive',
       },
       donationPayment: null,
