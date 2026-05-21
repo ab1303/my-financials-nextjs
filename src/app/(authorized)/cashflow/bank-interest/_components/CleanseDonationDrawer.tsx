@@ -116,10 +116,10 @@ export default function CleanseDonationDrawer({
   const linkedBeneficiaryType = linkedForm.watch('beneficiaryType');
   const manualBeneficiaryType = manualForm.watch('beneficiaryType');
 
-  const shouldFetchLinkedTransactions = isOpen && mode === 'linked' && Boolean(dateFrom) && Boolean(dateTo);
+  const shouldFetchLinkedTransactions = isOpen && mode === 'linked';
 
-  const unlinkedTxQuery = trpc.bankInterest.getUnlinkedInterestTransactions.useQuery(
-    { bankId, dateFrom, dateTo },
+  const unlinkedTxQuery = trpc.bankInterest.getUnlinkedCleansingDebitTransactions.useQuery(
+    { bankId },
     { enabled: shouldFetchLinkedTransactions },
   );
   const individualsQuery = trpc.individual.getAllIndividuals.useQuery(undefined, { enabled: isOpen });

@@ -159,3 +159,47 @@ export const getUnlinkedInterestTransactions = async (
   }));
 };
 
+export const getUnlinkedCleansingDebitTransactions = async (
+  userId: string,
+  bankId: string,
+): Promise<Array<{ id: string; date: string; description: string; amount: number }>> => {
+  const accounts = await prisma.financialAccount.findMany({
+    where: {
+      userId,
+      institutionId: bankId,
+    },
+    select: { id: true },
+  });
+  const bankAccountIds = accounts.map((a) => a.id);
+
+  if (bankAccountIds.length === 0) return [];
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      bankAccountId: { in: bankAccountIds },
+      type: 'DEBIT',
+      status: 'CONFIRMED',
+      category: {
+        equals: 'Bank Interest',
+        mode: 'insensitive',
+      },
+      donationPayment: null,
+    },
+    orderBy: { date: 'asc' },
+    select: {
+      id: true,
+      date: true,
+      description: true,
+      amount: true,
+    },
+  });
+
+  return transactions.map((t) => ({
+    id: t.id,
+    date: t.date.toISOString().slice(0, 10),
+    description: t.description,
+    amount: Number(t.amount),
+  }));
+};
+

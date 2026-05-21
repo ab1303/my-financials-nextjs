@@ -20,6 +20,7 @@ import {
 import {
   getYearlyCleansingData,
   getUnlinkedInterestTransactions,
+  getUnlinkedCleansingDebitTransactions,
 } from '@/server/services/bank-interest/interest-cleansing.service';
 
 export const bankInterestRouter = router({
@@ -81,6 +82,14 @@ export const bankInterestRouter = router({
         new Date(input.dateFrom),
         new Date(input.dateTo),
         ctx.session.user.id,
+      ),
+    ),
+  getUnlinkedCleansingDebitTransactions: protectedProcedure
+    .input(z.object({ bankId: z.string() }))
+    .query(({ ctx, input }) =>
+      getUnlinkedCleansingDebitTransactions(
+        ctx.session.user.id,
+        input.bankId,
       ),
     ),
 });
