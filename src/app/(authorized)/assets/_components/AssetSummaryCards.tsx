@@ -76,7 +76,7 @@ export default function AssetSummaryCards({
 
       <article className={cardClassName}>
         <p className='text-sm font-medium text-gray-600 dark:text-gray-300'>
-          Stocks (AUD only)
+          Stocks (AUD equiv.)
         </p>
         <p className='mt-3 text-2xl font-semibold text-green-700 dark:text-green-400'>
           {formatAudCurrency(latestStockTotal)}

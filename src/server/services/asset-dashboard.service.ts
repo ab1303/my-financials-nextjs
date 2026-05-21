@@ -1,4 +1,4 @@
-import { CurrencyEnumType, type Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 
 import type {
@@ -69,29 +69,39 @@ export const getNetWorthTrend = async (
     prisma.portfolioSnapshot.findMany({
       where: { userId },
       orderBy: { snapshotDate: 'asc' },
-      include: {
+      select: {
+        id: true,
+        snapshotDate: true,
+        usdToAudRate: true,
         holdings: {
-          where: {
-            currency: CurrencyEnumType.AUD,
-          },
           select: {
             quantity: true,
             currentPrice: true,
+            currency: true,
           },
         },
       },
     }),
   ]);
 
-  const stockSnapshotsWithTotals = stockSnapshots.map((snapshot) => ({
-    id: snapshot.id,
-    snapshotDate: snapshot.snapshotDate,
-    stockTotal: snapshot.holdings.reduce(
-      (sum, holding) =>
-        sum + holding.quantity.toNumber() * holding.currentPrice.toNumber(),
-      0,
-    ),
-  }));
+  const stockSnapshotsWithTotals = stockSnapshots.map((snapshot) => {
+    const usdToAudRate = snapshot.usdToAudRate
+      ? Number(snapshot.usdToAudRate)
+      : null;
+
+    const stockTotal = snapshot.holdings.reduce((sum, holding) => {
+      const value = Number(holding.quantity) * Number(holding.currentPrice);
+      if (holding.currency === 'AUD') return sum + value;
+      if (holding.currency === 'USD' && usdToAudRate) return sum + value * usdToAudRate;
+      return sum; // USD with no rate: skip gracefully
+    }, 0);
+
+    return {
+      id: snapshot.id,
+      snapshotDate: snapshot.snapshotDate,
+      stockTotal,
+    };
+  });
 
   // Create a map of cash snapshots by date for quick lookup
   const cashSnapshotsByDate = new Map(
