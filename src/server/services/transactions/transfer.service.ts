@@ -287,7 +287,7 @@ export async function linkTransferPair(params: {
   let incomeRecordDeleted = false;
 
   await params.prisma.$transaction(async (tx) => {
-    // Store pre-link state and mark debit as Transfer/EXCLUDED
+    // Store pre-link state and mark debit as Transfer/CONFIRMED
     await (tx.transaction as any).update({
       where: { id: debit.id },
       data: {
@@ -295,18 +295,18 @@ export async function linkTransferPair(params: {
         preLinkCategory: debit.category,
         preLinkStatus: debit.status,
         category: TRANSFER_CATEGORY,
-        status: TransactionStatusEnum.EXCLUDED,
+        status: TransactionStatusEnum.CONFIRMED,
       },
     });
 
-    // Store pre-link state and mark credit as Transfer/EXCLUDED
+    // Store pre-link state and mark credit as Transfer/CONFIRMED
     await (tx.transaction as any).update({
       where: { id: credit.id },
       data: {
         preLinkCategory: credit.category,
         preLinkStatus: credit.status,
         category: TRANSFER_CATEGORY,
-        status: TransactionStatusEnum.EXCLUDED,
+        status: TransactionStatusEnum.CONFIRMED,
       },
     });
 

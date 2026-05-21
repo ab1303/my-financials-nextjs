@@ -102,6 +102,7 @@ export async function linkTransferPair(
 // - Validates both belong to user, both are unlinked
 // - Stores preLinkCategory + preLinkStatus on both
 // - Sets transferLinkedTransactionId on DEBIT
+// - Sets both transactions to status=CONFIRMED + category='Transfer' (linked transfers are verified/reconciled)
 // - If DEBIT was CONFIRMED: calls rerollupExpenseSummary(newCategory: 'Transfer') to reverse rollup
 // - If CREDIT was CONFIRMED: deletes IncomeRecord (was mis-classified income)
 // - Runs inside prisma.$transaction
