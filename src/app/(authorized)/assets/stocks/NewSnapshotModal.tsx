@@ -384,12 +384,16 @@ export default function NewSnapshotModal({
   return (
     <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-4xl'>
       <Modal.Header>
-        <span className='text-xl font-semibold text-foreground'>
-          {isEditMode ? 'Edit Stock Snapshot' : 'New Stock Snapshot'}
-        </span>
-        <p className='text-sm text-muted-foreground mt-1'>
-          {isEditMode ? 'Update your stock portfolio position' : 'Record your current stock portfolio position'}
-        </p>
+        <div>
+          <span className='text-xl font-semibold text-foreground'>
+            {isEditMode ? 'Edit Stock Snapshot' : 'New Stock Snapshot'}
+          </span>
+          <p className='text-sm text-muted-foreground mt-1'>
+            {isEditMode 
+              ? 'Update snapshot date, holdings, and cash balances. Use "Add Holding" below the holdings table for quick single-holding additions.'
+              : 'Record your current stock portfolio position. Use "Add Holding" after creating the snapshot for quick single-holding additions.'}
+          </p>
+        </div>
       </Modal.Header>
 
       {isEditMode && isLoadingSnapshot ? (

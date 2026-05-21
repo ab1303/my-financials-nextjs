@@ -80,6 +80,7 @@ export default function HoldingFormModal({
   const utils = trpc.useUtils();
 
   const isEditMode = !!editingHolding;
+  const isQuickAddMode = !!defaultAccountId && !isEditMode;
 
   // Two-level select state
   const [selectedInstitution, setSelectedInstitution] = useState<{ id: string; name: string } | null>(null);
@@ -326,9 +327,16 @@ export default function HoldingFormModal({
   return (
     <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-2xl sm:max-w-lg'>
       <Modal.Header>
-        <span className='text-xl font-semibold text-foreground'>
-          {isEditMode ? 'Edit Holding' : 'Add Holding'}
-        </span>
+        <div>
+          <span className='text-lg font-semibold text-foreground'>
+            {isEditMode ? 'Edit Holding' : 'Add Stock Holding'}
+          </span>
+          <p className='text-sm text-muted-foreground mt-1'>
+            {isEditMode 
+              ? 'Update this stock holding' 
+              : 'Quick-add one stock to this account. To edit snapshot date or multiple holdings, use the Edit button above.'}
+          </p>
+        </div>
       </Modal.Header>
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col flex-1 min-h-0'>
         <Modal.Body variant='spacious'>
@@ -361,7 +369,7 @@ export default function HoldingFormModal({
               className='mt-1'
               placeholder='Select or create institution…'
               inputId='institutionId'
-              isDisabled={isEditMode}
+              isDisabled={isEditMode || isQuickAddMode}
             />
           </div>
           {/* Account Selection */}
@@ -389,7 +397,7 @@ export default function HoldingFormModal({
                   isLoading={createBrokerageSubAccount.isPending}
                   formatCreateLabel={inputValue => `+ Create "${inputValue}"`}
                   className='mt-1'
-                  isDisabled={!selectedInstitution || isEditMode}
+                  isDisabled={!selectedInstitution || isEditMode || isQuickAddMode}
                   placeholder={
                     selectedInstitution
                       ? 'Select or create account…'

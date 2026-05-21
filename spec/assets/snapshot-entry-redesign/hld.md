@@ -130,8 +130,65 @@ Redesign `NewSnapshotModal` with a segmented toggle ("📈 Stocks" / "💰 Cash"
 
 | Item | Rationale |
 |------|-----------|
-| Editing holdings/cash after snapshot | Post-MVP; requires complex update logic |
+| ~~Editing holdings/cash after snapshot~~ | **✅ IMPLEMENTED** via "Edit" modal for comprehensive changes + "Add Holding" for quick-adds |
 | Deleting individual holdings/cash | Out of scope for this redesign |
 | Inline prefill editing | Future: allow user to prefill and edit in one flow |
 | Cash deposits/withdrawals tracking | Future: separate feature for cash flow |
 | Multi-currency cash input | MVP supports AUD/USD; future: more currencies |
+
+---
+
+## Dual-Flow UX Pattern: "Add Holding" + "Edit Snapshot"
+
+### AD-7: Separate UX Flows for Different User Intents
+**Rationale:** Users edit snapshots in two distinct patterns:
+1. **Quick-add (70%)**: "I forgot to record GOOG yesterday" → Add one holding to existing snapshot
+2. **Comprehensive-edit (30%)**: "I need to review Q1 snapshot" → Update snapshot date, multiple holdings, cash
+
+Forcing both through one modal violates **command specificity** principle — they're semantically different operations. Separate flows optimize for each.
+
+**Implementation:**
+- **"Add Holding" button** (inline, under each brokerage):
+  - Quick form for single holding entry (account, ticker, qty, price)
+  - Uses lightweight `createHolding` mutation (existing)
+  - No snapshot date change
+  - Fast, focused, minimal modal
+  
+- **"Edit Snapshot" button** (in snapshot header):
+  - Full modal reusing `NewSnapshotModal`
+  - Can change snapshot date, FX rate
+  - Can update/add/delete multiple holdings + cash
+  - Uses `updateSnapshot` mutation
+  - Comprehensive, atomic
+
+**Why this is better UX:**
+- ✅ **Affordance matches intent**: "Add" button → add one thing; "Edit" → review all
+- ✅ **Performance**: Quick-add uses minimal API (one holding create vs full snapshot update)
+- ✅ **Discoverability**: "Add Holding" button positioned exactly where user wants to use it (under brokerage)
+- ✅ **Task-oriented**: Each flow optimized for its task (like Gmail's "Quick reply" vs "Edit draft")
+- ✅ **Power-user friendly**: Advanced users can choose the right tool
+- ✅ **Real-world fit**: Matches actual workflow (add after snapshot, edit rarely)
+
+**Examples in real products:**
+- Gmail: "Quick reply" (one action) vs "Edit draft" (full editor)
+- Figma: "Add element" (inline) vs "Edit document" (settings modal)
+- Notion: "Quick add item" (inline) vs "Edit page properties" (settings modal)
+
+---
+
+## Phase Map (Updated)
+
+| Phase | Description | Files Changed |
+|-------|-------------|---|
+| 1 | Modal redesign: add tab toggle, show stock/cash sections conditionally | `src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx` |
+| 2 | Update form validation: allow cash-only snapshots | `src/server/schema/stock-asset.schema.ts` |
+| 3 | Summary redesign: show unified Stocks + Cash + Total | `src/app/(authorized)/assets/stocks/SummaryCards.tsx` |
+| 4 | **Update Mutation**: Add `updateSnapshot` to tRPC router | `src/server/trpc/router/stock-asset.ts` |
+| 5 | **Update Service**: Implement atomic snapshot update logic | `src/server/services/stock-asset.service.ts` + controller |
+| 6 | **Edit UI**: Add "Edit" button to snapshot view, reuse modal for edit mode | `NewSnapshotModal.tsx`, `StockAssetsClient.tsx` |
+| 7 | **Quick-Add UX**: Ensure "Add Holding" button remains as separate quick-add flow | `HoldingFormModal.tsx` (no changes needed) |
+
+**Dependencies:** 
+- 1 → 2 → 3 (creation flow)
+- 4 → 5 → 6 (update flow) 
+- 7 is independent (existing feature, retained as-is)

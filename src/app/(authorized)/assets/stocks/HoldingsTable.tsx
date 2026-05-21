@@ -256,7 +256,12 @@ export default function HoldingsTable({
 
       {/* Add Holding button */}
       <div className='mt-4 flex justify-end'>
-        <Button variant='secondary' onClick={() => onAddHolding(accountId)}>
+        <Button 
+          variant='secondary' 
+          onClick={() => onAddHolding(accountId)}
+          title='Quick-add one stock holding to this account (same snapshot date)'
+          data-testid='add-holding-button'
+        >
           <Plus className='mr-2 w-4 h-4' />
           Add Holding
         </Button>

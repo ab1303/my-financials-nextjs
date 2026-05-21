@@ -407,17 +407,20 @@ export default function StockAssetsClient({ initialData }: Props) {
 
       {/* Stock Holdings Accordions */}
       <div>
-        <div className='flex justify-between items-center mb-4'>
+        <div className='flex flex-col gap-4 mb-4'>
           <h2 className='text-lg font-semibold text-foreground'>
             Stock Holdings
           </h2>
-          <div className='flex gap-2 items-center'>
+          
+          {/* Controls: Toggles on left, Actions on right */}
+          <div className='flex justify-between items-center gap-4'>
+            {/* Toggles (left side) */}
             {currencyGroups.length > 0 && (
-              <div className='flex rounded-md border border-border overflow-hidden text-sm'>
+              <div className='flex rounded-md border border-border overflow-hidden text-xs'>
                 <button
                   onClick={() => handleGroupByChange('currency')}
                   className={clsx(
-                    'px-3 py-1.5 font-medium transition-colors',
+                    'px-2.5 py-1.5 font-medium transition-colors',
                     groupBy === 'currency'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-card text-muted-foreground hover:bg-muted',
@@ -428,7 +431,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                 <button
                   onClick={() => handleGroupByChange('brokerage')}
                   className={clsx(
-                    'px-3 py-1.5 font-medium transition-colors border-l border-border',
+                    'px-2.5 py-1.5 font-medium transition-colors border-l border-border',
                     groupBy === 'brokerage'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-card text-muted-foreground hover:bg-muted',
@@ -438,38 +441,49 @@ export default function StockAssetsClient({ initialData }: Props) {
                 </button>
               </div>
             )}
-            <Button
-              variant='primary'
-              onClick={() => setIsNewSnapshotModalOpen(true)}
-            >
-              <Plus className='mr-2 w-4 h-4' />
-              New Snapshot
-            </Button>
-            {selectedSnapshotId && (
-              <>
-                <Button
-                  variant='secondary'
-                  onClick={() => setEditingSnapshotId(selectedSnapshotId)}
-                >
-                  ✏️ Edit
-                </Button>
-                <Button
-                  variant='secondary'
-                  className='text-red-600 hover:text-red-700 border-red-300'
-                  onClick={() => {
-                    if (selectedSnapshot) {
-                      setDeleteConfirm({
-                        snapshotId: selectedSnapshotId,
-                        snapshotDate: selectedSnapshot.label,
-                      });
-                    }
-                  }}
-                >
-                  <Trash2 className='mr-2' />
-                  Delete
-                </Button>
-              </>
-            )}
+            
+            {/* Actions (right side) */}
+            <div className='flex gap-2 items-center ml-auto'>
+              <Button
+                variant='primary'
+                size='sm'
+                onClick={() => setIsNewSnapshotModalOpen(true)}
+              >
+                <Plus className='mr-1.5 w-4 h-4' />
+                New Snapshot
+              </Button>
+              {selectedSnapshotId && (
+                <>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    onClick={() => setEditingSnapshotId(selectedSnapshotId)}
+                    title='Edit snapshot date, all holdings, and cash balances'
+                    data-testid='edit-snapshot-button'
+                  >
+                    ✏️ Edit
+                  </Button>
+                  <Button
+                    variant='secondary'
+                    size='sm'
+                    className='text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400 border-red-300 dark:border-red-800'
+                    onClick={() => {
+                      if (selectedSnapshot) {
+                        setDeleteConfirm({
+                          snapshotId: selectedSnapshotId,
+                          snapshotDate: selectedSnapshot.label,
+                        });
+                      }
+                    }}
+                    title='Delete this snapshot'
+                    data-testid='delete-snapshot-button'
+                  >
+                    <Trash2 className='mr-1.5 w-4 h-4' />
+                    Delete
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

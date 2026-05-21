@@ -555,7 +555,83 @@ getSnapshotDetails: privateProcedure
 
 ---
 
-## File Inventory
+## Phase 7: Dual-Flow UX Confirmation
+
+### Goal
+Confirm that "Add Holding" remains as a separate quick-add flow (not removed), and document why both flows coexist for optimal UX.
+
+### Implementation Details
+
+**No code changes needed** — this phase is architecture documentation confirming the existing pattern is correct.
+
+#### Quick-Add Flow (Existing)
+```typescript
+// In HoldingsTable or under each brokerage account
+<Button onClick={() => setIsHoldingFormModalOpen(true)}>
+  <Plus className='mr-2 w-4 h-4' />
+  Add Holding
+</Button>
+
+// Opens HoldingFormModal (lightweight form)
+// User input: account, ticker, quantity, price
+// API: POST /trpc/stockAsset.createHolding
+// Time: ~10 seconds
+// Scope: One holding to one account
+```
+
+#### Comprehensive Edit Flow (Phase 6 - implemented)
+```typescript
+// In snapshot header
+<Button onClick={() => setEditingSnapshotId(selectedSnapshotId)}>
+  ✏️ Edit
+</Button>
+
+// Opens NewSnapshotModal in edit mode
+// User input: snapshot date, all holdings, cash balances, FX rate
+// API: POST /trpc/stockAsset.updateSnapshot
+// Time: ~2-5 minutes
+// Scope: Entire snapshot with atomic updates
+```
+
+#### Why Both Flows?
+
+| Aspect | Quick-Add (Add Holding) | Comprehensive (Edit) |
+|--------|---|---|
+| **When** | After snapshot exists, user remembers one holding | User reviews/updates entire portfolio |
+| **Frequency** | High (80% of edits) | Low (20% of edits) |
+| **Scope** | One holding to one account | All holdings + cash + metadata |
+| **Interaction** | Quick form, minimal fields | Full modal, all fields |
+| **API** | Lightweight (one holding create) | Full atomic update |
+| **User goal** | "Add one thing I forgot" | "Review and fix everything" |
+
+### TDD Test Cases
+
+| Test | Verifies |
+|------|----------|
+| "Add Holding" button visible under each brokerage | Quick-add entry point discoverable |
+| "Edit" button visible in snapshot header | Comprehensive edit entry point available |
+| Clicking "Add Holding" opens HoldingFormModal (not Edit modal) | Quick-add remains lightweight |
+| Clicking "Edit" opens NewSnapshotModal in edit mode | Comprehensive edit available |
+| Both flows independently functional | No conflicts or dependencies |
+
+### Success Criteria
+
+✅ "Add Holding" button remains under each brokerage (unchanged)  
+✅ "Edit" button added to snapshot header (Phase 6)  
+✅ Both flows are clearly differentiated in UX  
+✅ Users understand when to use each flow  
+✅ No TypeScript errors; build passes  
+✅ Dual-flow pattern documented in spec  
+
+### Out of Scope
+
+- Merging the two flows into one
+- Changing "Add Holding" interaction model
+- Removing either flow
+
+---
+
+## File Inventory (Updated)
 
 | File | Action | Change Description |
 |------|--------|---|

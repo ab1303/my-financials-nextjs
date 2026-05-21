@@ -38,6 +38,8 @@ This feature builds on:
 | **Reuse same modal for editing existing snapshots** | Edit permissions / ownership checks |
 | **Prefill holdings and cash on edit** | Batch editing multiple snapshots |
 | **Support add/edit/delete within modal** | |
+| **Maintain "Add Holding" as separate quick-add flow** | |
+| **Ensure dual-flow UX (Edit modal + Add Holding button)** | |
 
 ## Schema References
 
