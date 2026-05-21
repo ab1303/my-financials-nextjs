@@ -31,7 +31,13 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
 
   const initMutation = trpc.bankInterest.initializeBankInterestYear.useMutation({
     onSuccess: () => router.refresh(),
-    onError: () => toast.error('Failed to initialise year'),
+    onError: (error) => {
+      let message = 'Failed to initialise year';
+      if (error?.data?.code === 'INTERNAL_SERVER_ERROR' && error?.message) {
+        message = error.message;
+      }
+      toast.error(message);
+    },
   });
 
   const updateMutation = trpc.bankInterest.updateBankInterestDetail.useMutation({

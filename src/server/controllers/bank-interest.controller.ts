@@ -16,6 +16,10 @@ export const initializeBankInterestYearHandler = async (
   try {
     await initializeBankInterestYear(bankId, calendarYearId);
   } catch (e) {
+    if (e instanceof Error) {
+      // Pass error message to client for better UI feedback
+      throw new Error(e.message);
+    }
     handleCaughtError(e);
     throw e; // TypeScript: unreachable but satisfies type checker
   }

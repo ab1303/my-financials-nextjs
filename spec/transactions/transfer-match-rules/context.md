@@ -33,6 +33,32 @@ Users with regular inter-account transfers (weekly top-ups, monthly salary routi
 - Rule engine re-checks `transferLinkedTransactionId` before each link (prevents double-match)
 - Keywords extracted at rule creation time (lowercased, split on `\W+`, stop-words filtered)
 
+## Future Scoping — Background Jobs
+
+The MVP runs rule matching **synchronously** at the end of the import confirm step. This is acceptable for small uploads (~50–200 transactions) but will degrade UX at scale. Two operations are prime candidates for async/background execution:
+
+### 1. Transfer Match Rule Engine (`runTransferMatchRules`)
+- Currently: runs inline after `ImportSession` transitions to `COMPLETED`, blocking the HTTP response
+- Future: enqueue a job after import completes; respond immediately with a "processing" state; push a notification/banner when done
+- **Trigger for migration**: sustained uploads > 500 transactions, or p95 import response time > 3s
+
+### 2. LLM Categorisation (post-import AI categorise)
+- Currently: called synchronously after CSV parse, applying LLM category suggestions before the user reviews
+- This is the **most expensive** operation — an LLM call per uncategorised transaction can take 5–20s for a typical upload
+- Future: move to a background job; show a "Categorising with AI…" skeleton in the review screen that resolves when the job completes
+- User can proceed to review manually while the AI job runs; AI suggestions overlay once ready
+- **Trigger for migration**: any upload > ~30 uncategorised transactions noticeably delays the review screen
+
+### Candidate Infrastructure
+| Option | Fits when |
+|---|---|
+| **pg-boss** (Postgres-backed queue) | Already on Postgres; no new infra; good for Render.com |
+| **Inngest** | Serverless-friendly; good for Vercel/edge deployments |
+| **AWS Lambda + SQS** | If workload justifies dedicated compute separation |
+| **Vercel Cron / Background Functions** | Lightweight; suits the current Vercel deployment model |
+
+> **Decision deferred to a separate ADR.** Until that threshold is reached, synchronous execution is intentional and simpler to reason about.
+
 ## Files
 
 | File | Action | Description |
