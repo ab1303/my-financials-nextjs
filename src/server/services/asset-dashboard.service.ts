@@ -121,64 +121,41 @@ export const getNetWorthTrend = async (
     };
   });
 
-  // Create a map of cash snapshots by date for quick lookup
-  const cashSnapshotsByDate = new Map(
-    cashSnapshots.map((snapshot) => [
-      toIsoDate(snapshot.snapshotDate),
-      snapshot,
-    ]),
+  const cashByDate = new Map(
+    cashSnapshots.map((s) => [toIsoDate(s.snapshotDate), s]),
+  );
+  const stockByDate = new Map(
+    stockSnapshotsWithTotals.map((s) => [toIsoDate(s.snapshotDate), s]),
   );
 
-  // Create a map of stock snapshots by date for quick lookup
-  const stockSnapshotsByDate = new Map(
-    stockSnapshotsWithTotals.map((snapshot) => [
-      toIsoDate(snapshot.snapshotDate),
-      snapshot,
-    ]),
-  );
-
-  // Merge all unique dates from both cash and stock snapshots
   const allDates = Array.from(
-    new Set([
-      ...cashSnapshotsByDate.keys(),
-      ...stockSnapshotsByDate.keys(),
-    ]),
+    new Set([...cashByDate.keys(), ...stockByDate.keys()]),
   ).sort();
 
-  // Track the last known values for forward-filling
-  let lastCashSnapshot: (typeof cashSnapshots)[0] | null = null;
-  let lastStockSnapshot: (typeof stockSnapshotsWithTotals)[0] | null = null;
+  let lastCash: (typeof cashSnapshots)[0] | null = null;
+  let lastStock: (typeof stockSnapshotsWithTotals)[0] | null = null;
 
   const dataPoints: NetWorthDataPoint[] = allDates.map((dateStr) => {
-    const cashSnapshot = cashSnapshotsByDate.get(dateStr);
-    const stockSnapshot = stockSnapshotsByDate.get(dateStr);
+    lastCash = cashByDate.get(dateStr) ?? lastCash;
+    lastStock = stockByDate.get(dateStr) ?? lastStock;
 
-    if (cashSnapshot) {
-      lastCashSnapshot = cashSnapshot;
-    }
-    if (stockSnapshot) {
-      lastStockSnapshot = stockSnapshot;
-    }
-
-    const cashTotal = lastCashSnapshot
-      ? lastCashSnapshot.balanceRecords.reduce(
+    const cashTotal = lastCash
+      ? lastCash.balanceRecords.reduce(
           (sum, entry) => sum + entry.balance.toNumber(),
           0,
         )
       : 0;
-    const stockTotal = lastStockSnapshot?.stockTotal ?? 0;
 
     return {
       date: dateStr,
       cashTotal,
-      stockTotal,
-      netWorthTotal: cashTotal + stockTotal,
-      cashSnapshotId: lastCashSnapshot?.id ?? '',
-      stockSnapshotId: lastStockSnapshot?.id ?? null,
-      isStockStale:
-        lastStockSnapshot && cashSnapshot
-          ? !isSameDay(lastStockSnapshot.snapshotDate, cashSnapshot.snapshotDate)
-          : false,
+      stockTotal: lastStock?.stockTotal ?? 0,
+      netWorthTotal: cashTotal + (lastStock?.stockTotal ?? 0),
+      cashSnapshotId: lastCash?.id ?? '',
+      stockSnapshotId: lastStock?.id ?? null,
+      isStockStale: lastStock && cashByDate.get(dateStr)
+        ? !isSameDay(lastStock.snapshotDate, cashByDate.get(dateStr)!.snapshotDate)
+        : false,
     };
   });
 
