@@ -65,6 +65,8 @@ export default function NewSnapshotModal({
   const [buyDateModes, setBuyDateModes] = useState<Record<number, 'exact' | 'month'>>({});
   // Track idle cash balances per account: { [accountId]: { AUD, USD } }
   const [cashBalanceAmounts, setCashBalanceAmounts] = useState<Record<string, { AUD: number; USD: number }>>({});
+  // Track which entry tab is active: 'stocks' or 'cash'
+  const [activeEntryTab, setActiveEntryTab] = useState<'stocks' | 'cash'>('stocks');
   const utils = trpc.useUtils();
 
   const {
@@ -201,7 +203,7 @@ export default function NewSnapshotModal({
       // Process holdings to convert month input to dates when in month mode
       const processedData = {
         ...data,
-        holdings: data.holdings.map((holding, index) => {
+        holdings: data.holdings?.map((holding, index) => {
           const mode = buyDateModes[index] ?? 'month'; // default to month
           // If in month mode and buyDate has a value, parse it to first day of month
           if (mode === 'month' && holding.buyDate) {
@@ -345,23 +347,50 @@ export default function NewSnapshotModal({
             )}
           </div>
 
+          {/* Entry Type Toggle */}
+          <div className='flex gap-2 border-b border-border mb-4'>
+            <button
+              type='button'
+              onClick={() => setActiveEntryTab('stocks')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeEntryTab === 'stocks'
+                  ? 'border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              📈 Stocks
+            </button>
+            <button
+              type='button'
+              onClick={() => setActiveEntryTab('cash')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeEntryTab === 'cash'
+                  ? 'border-b-2 border-amber-500 text-amber-600 dark:text-amber-400'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              💰 Cash
+            </button>
+          </div>
+
           {/* Holdings */}
-          <div>
-            <div className='flex justify-between items-center mb-4'>
-              <h3 className='text-lg font-semibold text-foreground'>
-                Stock Holdings
-              </h3>
-              {latestSnapshot && (
-                <Button
-                  type='button'
-                  variant='secondary'
-                  onClick={handlePrefill}
-                  disabled={isLoadingPrefill}
-                >
-                  {isLoadingPrefill ? 'Loading...' : '↩ Prefill from previous'}
-                </Button>
-              )}
-            </div>
+          {activeEntryTab === 'stocks' && (
+            <div>
+              <div className='flex justify-between items-center mb-4'>
+                <h3 className='text-lg font-semibold text-foreground'>
+                  Stock Holdings
+                </h3>
+                {latestSnapshot && (
+                  <Button
+                    type='button'
+                    variant='secondary'
+                    onClick={handlePrefill}
+                    disabled={isLoadingPrefill}
+                  >
+                    {isLoadingPrefill ? 'Loading...' : '↩ Prefill from previous'}
+                  </Button>
+                )}
+              </div>
 
             {fields.map((field, index) => {
               // Current selected institution for this holding
@@ -816,31 +845,33 @@ export default function NewSnapshotModal({
               <Plus className='w-4 h-4' />
               Add Another Holding
             </button>
-          </div>
+            </div>
+          )}
 
           {/* Idle Cash Balances */}
-          <div className='border border-border rounded-lg bg-muted/30 p-4'>
-            <div>
-              <h3 className='text-lg font-semibold text-foreground'>
-                💰 Idle Cash Balances
-              </h3>
-              <p className='text-sm text-muted-foreground mt-1'>
-                Enter unallocated cash sitting in each brokerage account
-              </p>
-            </div>
+          {activeEntryTab === 'cash' && (
+            <div className='border border-border rounded-lg bg-muted/30 p-4'>
+              <div>
+                <h3 className='text-lg font-semibold text-foreground'>
+                  💰 Idle Cash Balances
+                </h3>
+                <p className='text-sm text-muted-foreground mt-1'>
+                  Enter unallocated cash sitting in each brokerage account
+                </p>
+              </div>
 
-            {(() => {
-              // Derive unique accountIds from current holdings
-              const watchedHoldings = watch('holdings');
-              const uniqueAccountIds = [...new Set(watchedHoldings.filter(h => h.accountId).map(h => h.accountId))];
+              {(() => {
+                // Derive unique accountIds from current holdings
+                const watchedHoldings = watch('holdings') ?? [];
+                const uniqueAccountIds = [...new Set(watchedHoldings.filter(h => h.accountId).map(h => h.accountId))];
 
-              if (uniqueAccountIds.length === 0) {
-                return (
-                  <div className='mt-4 p-4 bg-muted rounded-lg text-muted-foreground text-sm'>
-                    Add holdings above to enter cash balances
-                  </div>
-                );
-              }
+                if (uniqueAccountIds.length === 0) {
+                  return (
+                    <div className='mt-4 p-4 bg-muted rounded-lg text-muted-foreground text-sm'>
+                      Add a stock holding first to select an account for cash entry
+                    </div>
+                  );
+                }
 
               return (
                 <div className='mt-4 space-y-4'>
@@ -911,7 +942,8 @@ export default function NewSnapshotModal({
                 </div>
               );
             })()}
-          </div>
+            </div>
+          )}
         </Modal.Body>
 
         <Modal.Footer>

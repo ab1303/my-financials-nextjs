@@ -54,11 +54,15 @@ export const stockHoldingEntrySchema = object({
 export const createStockSnapshotSchema = object({
   snapshotDate: z.coerce.date({ required_error: 'Snapshot date is required' }),
   usdToAudRate: z.coerce.number().positive().optional().nullable(),
-  holdings: z
-    .array(stockHoldingEntrySchema)
-    .min(1, 'At least one holding is required'),
+  holdings: z.array(stockHoldingEntrySchema).optional(),
   cashBalances: z.array(cashBalanceEntrySchema).optional(),
-});
+}).refine(
+  data => (data.holdings?.length ?? 0) + (data.cashBalances?.length ?? 0) > 0,
+  {
+    message: 'Add at least one holding or cash balance',
+    path: ['holdings'],
+  }
+);
 
 // Create a single holding (add to existing snapshot)
 export const createStockHoldingSchema = object({

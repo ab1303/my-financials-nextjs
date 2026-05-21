@@ -15,20 +15,24 @@ export const createStockSnapshot = async (
 ) => {
   // Create snapshot with holdings in a transaction
   return await prisma.$transaction(async (tx) => {
-    // Verify all accounts belong to the user and are BROKERAGE type
-    const accountIds = [...new Set(input.holdings.map((h) => h.accountId))];
-    const accounts = await tx.financialAccount.findMany({
-      where: {
-        id: { in: accountIds },
-        userId,
-        institution: { type: 'BROKERAGE' },
-      },
-    });
+    // Verify all accounts belong to the user and are BROKERAGE type (only if holdings present)
+    const holdings = input.holdings ?? [];
+    const accountIds = [...new Set(holdings.map((h) => h.accountId))];
+    
+    if (accountIds.length > 0) {
+      const accounts = await tx.financialAccount.findMany({
+        where: {
+          id: { in: accountIds },
+          userId,
+          institution: { type: 'BROKERAGE' },
+        },
+      });
 
-    if (accounts.length !== accountIds.length) {
-      throw new Error(
-        'One or more accounts not found, do not belong to user, or are not brokerage accounts',
-      );
+      if (accounts.length !== accountIds.length) {
+        throw new Error(
+          'One or more accounts not found, do not belong to user, or are not brokerage accounts',
+        );
+      }
     }
 
     // Create the snapshot
@@ -39,7 +43,7 @@ export const createStockSnapshot = async (
         usdToAudRate: input.usdToAudRate ?? null,
         userId,
         holdings: {
-          create: input.holdings.map((holding) => ({
+          create: holdings.map((holding) => ({
             ticker: holding.ticker,
             companyName: holding.companyName,
             quantity: holding.quantity,
