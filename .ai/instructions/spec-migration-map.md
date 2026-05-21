@@ -1,9 +1,8 @@
 # Spec Folder Migration Map
 
-**Status:** In Progress (96% complete)  
+**Status:** ✅ COMPLETE (100%)  
 **Total features:** 48 across 11 domains  
-**Consolidated:** 46 features across 8 domains  
-**Remaining:** 2 features across 1 domain (architecture)  
+**Consolidated:** 48 features across 11 domains  
 **Target structure:** `spec/{domain}/{feature}/` (2-level) or `spec/{domain}/{sub-group}/{feature}/` (3-level for complex domains)  
 **Migration approach:** Vertical slicing for LLM context; 3-level only when 3+ independent sub-domains exist
 
@@ -140,20 +139,20 @@ User profile and preferences.
 
 **Rationale:** User profile is foundational; manages user identity, authentication context, and cross-app preferences (currency display, fiscal year settings, theme). 2-level structure (domain HLD + 1 feature).
 
-### 8. `architecture` (9 features) ⏳ PENDING
+### 8. `architecture` (9 features) ✅ COMPLETE
 App-wide architectural guidelines, standards, infrastructure, and research.
 
 | Current Folder | Target Location | Type | Status |
 |---|---|---|---|
-| `calendar-attribution-architecture` | `architecture/calendar-attribution/` | Architecture | ⏳ Pending |
-| `design-modernization` | `architecture/design-modernization/` | Guidelines/Infrastructure | ⏳ Pending |
-| `development-standards` | `architecture/development-standards/` | Guidelines | ⏳ Pending |
-| `e2e-testing` | `architecture/e2e-testing/` | Infrastructure | ⏳ Pending |
-| `embedding-models-comparison` | `architecture/embedding-models/` | Research | ⏳ Pending |
-| `entity-relations` | `architecture/entity-relations/` | Architecture | ⏳ Pending |
-| `preferred-currency-display` | `architecture/preferred-currency/` | Infrastructure | ⏳ Pending |
-| `schema-naming-review` | `architecture/schema-naming/` | Guidelines | ⏳ Pending |
-| `site-audit` | `architecture/site-audit/` | Audit | ⏳ Pending |
+| `calendar-attribution-architecture` | `architecture/calendar-attribution/` | Architecture | ✅ Migrated |
+| `design-modernization` | `architecture/design-modernization/` | Guidelines/Infrastructure | ✅ Migrated |
+| `development-standards` | `architecture/development-standards/` | Guidelines | ✅ Migrated |
+| `e2e-testing` | `architecture/e2e-testing/` | Infrastructure | ✅ Migrated |
+| `embedding-models-comparison` | `architecture/embedding-models/` | Research | ✅ Migrated |
+| `entity-relations` | `architecture/entity-relations/` | Architecture | ✅ Migrated |
+| `preferred-currency-display` | `architecture/preferred-currency/` | Infrastructure | ✅ Migrated |
+| `schema-naming-review` | `architecture/schema-naming/` | Guidelines | ✅ Migrated |
+| `site-audit` | `architecture/site-audit/` | Audit | ✅ Migrated |
 
 **Rationale:** These are app-wide architectural concerns, not domain-specific features. They establish patterns, standards, and infrastructure used across all domains.
 
@@ -168,7 +167,7 @@ App-wide architectural guidelines, standards, infrastructure, and research.
 - ✅ Migration guide created (spec-consolidation.md)
 - ✅ Migration template created (migration-agent-template.md)
 
-### Phase 2: Execute Consolidations ✅ COMPLETE (96%)
+### Phase 2: Execute Consolidations ✅ COMPLETE (100%)
 - ✅ Transactions domain (10 features, 2-level)
 - ✅ CSV-import domain (8 features, 2-level)
 - ✅ Assets domain (4 features, 2-level)
@@ -176,10 +175,10 @@ App-wide architectural guidelines, standards, infrastructure, and research.
 - ✅ **Cashflow domain (14 features, 3-level with 6 sub-groups)** ← Unified: income, expense, donations, categories, interest, audit
 - ✅ User-profile domain (1 feature, 2-level)
 - ✅ AI-features domain (3 features, 2-level)
-- ⏳ **Architecture domain (9 features remaining)** ← App-wide guidelines, standards, infrastructure
+- ✅ **Architecture domain (9 features, 2-level)** ← App-wide guidelines, standards, infrastructure
 
-### Phase 3: Remaining Work (4% — 9 features)
-- 9 features in **architecture** (app-wide guidelines, standards, infrastructure): calendar-attribution, design-modernization, development-standards, e2e-testing, embedding-models, entity-relations, preferred-currency, schema-naming, site-audit
+### Phase 3: Remaining Work (✅ COMPLETE — 0% — 0 features)
+All 48 features consolidated across 11 domains.
 
 ### Phase 3: Selective Migration (Ongoing)
 - On each feature touch, migrate its spec folder
