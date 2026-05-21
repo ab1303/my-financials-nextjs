@@ -29,12 +29,15 @@ This feature builds on:
 
 | IN SCOPE | OUT OF SCOPE |
 |----------|--------------|
-| Add toggle ("Stocks" / "Cash") to NewSnapshotModal | Editing/deleting holdings after snapshot |
-| Show only relevant form fields per tab | Cash transfer between accounts |
-| Unified summary showing Stocks + Cash + Total | Portfolio rebalancing suggestions |
-| Pass both stocks and cash to `createSnapshot` mutation | Performance charts or trends |
-| Update `SummaryCards` to show breakdown | Expense ratio or fee calculations |
-| Allow cash-only snapshots | Dividend tracking |
+| Add toggle ("Stocks" / "Cash") to NewSnapshotModal | Cash transfer between accounts |
+| Show only relevant form fields per tab | Portfolio rebalancing suggestions |
+| Unified summary showing Stocks + Cash + Total | Performance charts or trends |
+| Pass both stocks and cash to `createSnapshot` mutation | Expense ratio or fee calculations |
+| Update `SummaryCards` to show breakdown | Dividend tracking |
+| Allow cash-only snapshots | Edit history / audit trail |
+| **Reuse same modal for editing existing snapshots** | Edit permissions / ownership checks |
+| **Prefill holdings and cash on edit** | Batch editing multiple snapshots |
+| **Support add/edit/delete within modal** | |
 
 ## Schema References
 

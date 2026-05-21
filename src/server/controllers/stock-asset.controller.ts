@@ -12,6 +12,7 @@ import {
   getBrokerageAccounts,
   createBrokerageSubAccount,
   updateSnapshotFxRate,
+  updateStockSnapshot,
 } from '@/server/services/stock-asset.service';
 
 import type {
@@ -52,6 +53,27 @@ export const createSnapshotHandler = async ({
 }) => {
   try {
     const snapshot = await createStockSnapshot(userId, input);
+    return {
+      status: 'success',
+      data: {
+        snapshot,
+      },
+    };
+  } catch (e) {
+    handleCaughtError(e);
+  }
+};
+
+// Phase 5: Update snapshot with holdings and cash in atomic transaction
+export const updateSnapshotHandler = async ({
+  input,
+  userId,
+}: {
+  input: CreateStockSnapshotInput & { snapshotId: string };
+  userId: string;
+}) => {
+  try {
+    const snapshot = await updateStockSnapshot(userId, input);
     return {
       status: 'success',
       data: {

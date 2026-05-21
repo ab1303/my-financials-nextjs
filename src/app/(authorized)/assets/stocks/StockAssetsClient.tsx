@@ -59,6 +59,7 @@ export default function StockAssetsClient({ initialData }: Props) {
     snapshotId: string;
   } | null>(null);
   const [addingToAccountId, setAddingToAccountId] = useState<string | null>(null);
+  const [editingSnapshotId, setEditingSnapshotId] = useState<string | null>(null);
 
   // Grouping toggle state — persisted to localStorage
   const [groupBy, setGroupBy] = useState<'currency' | 'brokerage'>(() => {
@@ -445,21 +446,29 @@ export default function StockAssetsClient({ initialData }: Props) {
               New Snapshot
             </Button>
             {selectedSnapshotId && (
-              <Button
-                variant='secondary'
-                className='text-red-600 hover:text-red-700 border-red-300'
-                onClick={() => {
-                  if (selectedSnapshot) {
-                    setDeleteConfirm({
-                      snapshotId: selectedSnapshotId,
-                      snapshotDate: selectedSnapshot.label,
-                    });
-                  }
-                }}
-              >
-                <Trash2 className='mr-2' />
-                Delete
-              </Button>
+              <>
+                <Button
+                  variant='secondary'
+                  onClick={() => setEditingSnapshotId(selectedSnapshotId)}
+                >
+                  ✏️ Edit
+                </Button>
+                <Button
+                  variant='secondary'
+                  className='text-red-600 hover:text-red-700 border-red-300'
+                  onClick={() => {
+                    if (selectedSnapshot) {
+                      setDeleteConfirm({
+                        snapshotId: selectedSnapshotId,
+                        snapshotDate: selectedSnapshot.label,
+                      });
+                    }
+                  }}
+                >
+                  <Trash2 className='mr-2' />
+                  Delete
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -753,14 +762,19 @@ export default function StockAssetsClient({ initialData }: Props) {
 
       {/* New Snapshot Modal */}
       <NewSnapshotModal
-        isOpen={isNewSnapshotModalOpen}
-        onClose={() => setIsNewSnapshotModalOpen(false)}
+        isOpen={isNewSnapshotModalOpen || !!editingSnapshotId}
+        onClose={() => {
+          setIsNewSnapshotModalOpen(false);
+          setEditingSnapshotId(null);
+        }}
         onSuccess={() => {
           setIsNewSnapshotModalOpen(false);
+          setEditingSnapshotId(null);
           refetchSnapshots();
           refetchBrokerageAccounts();
           refetchBrokerageInstitutions();
         }}
+        snapshotId={editingSnapshotId || undefined}
         brokerageAccounts={brokerageAccounts}
         brokerageInstitutions={brokerageInstitutions}
       />

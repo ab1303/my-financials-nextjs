@@ -14,6 +14,7 @@ import {
   getBrokerageAccountsHandler,
   createBrokerageSubAccountHandler,
   updateSnapshotFxRateHandler,
+  updateSnapshotHandler,
 } from '@/server/controllers/stock-asset.controller';
 import {
   createStockSnapshotSchema,
@@ -24,6 +25,7 @@ import {
   getSnapshotsSchema,
   getSnapshotByIdSchema,
   updateSnapshotFxRateSchema,
+  updateStockSnapshotSchema,
 } from '@/server/schema/stock-asset.schema';
 
 export const stockAssetRouter = router({
@@ -32,6 +34,12 @@ export const stockAssetRouter = router({
     .input(createStockSnapshotSchema)
     .mutation(({ input, ctx: { session } }) =>
       createSnapshotHandler({ input, userId: session.user.id }),
+    ),
+
+  updateSnapshot: protectedProcedure
+    .input(updateStockSnapshotSchema)
+    .mutation(({ input, ctx: { session } }) =>
+      updateSnapshotHandler({ input, userId: session.user.id }),
     ),
 
   getSnapshots: protectedProcedure

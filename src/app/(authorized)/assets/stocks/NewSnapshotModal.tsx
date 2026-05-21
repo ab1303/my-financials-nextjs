@@ -25,6 +25,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  snapshotId?: string;  // Optional: if present, modal is in edit mode
   brokerageAccounts: Array<{
     id: string;
     name: string;
@@ -55,10 +56,13 @@ export default function NewSnapshotModal({
   isOpen,
   onClose,
   onSuccess,
+  snapshotId,
   brokerageAccounts,
   brokerageInstitutions,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Detect edit mode
+  const isEditMode = !!snapshotId;
   // Per-holding institution selection: { [holdingIndex]: { id, name } | null }
   const [selectedInstitutions, setSelectedInstitutions] = useState<Record<number, { id: string; name: string } | null>>({});
   // Track buy date mode per holding index: 'month' (quick-pick) or 'exact' (full date)
@@ -105,7 +109,14 @@ export default function NewSnapshotModal({
   const { data: latestSnapshot, isLoading: isLoadingPrefill } =
     trpc.stockAsset.getMostRecentSnapshot.useQuery(
       {},
-      { enabled: isOpen },
+      { enabled: isOpen && !isEditMode },  // Only load prefill data if not in edit mode
+    );
+
+  // Query snapshot data if editing (for prefill)
+  const { data: snapshotData, isLoading: isLoadingSnapshot } =
+    trpc.stockAsset.getSnapshotById.useQuery(
+      { snapshotId: snapshotId! },
+      { enabled: isEditMode && isOpen }
     );
 
   const { data: exchangeRateData } = trpc.stockAsset.getExchangeRate.useQuery(
@@ -119,6 +130,59 @@ export default function NewSnapshotModal({
       setValue('usdToAudRate', exchangeRateData.rate);
     }
   }, [exchangeRateData, setValue, watch]);
+
+  // Prefill form when snapshot data loads (edit mode)
+  useEffect(() => {
+    if (isEditMode && snapshotData && !isLoadingSnapshot) {
+      // Convert holdings from DB (with Decimal types) to form data (with numbers)
+      const convertedHoldings = snapshotData.holdings?.map((holding) => ({
+        ticker: holding.ticker,
+        companyName: holding.companyName,
+        quantity: Number(holding.quantity),
+        buyPrice: Number(holding.buyPrice),
+        buyDate: holding.buyDate,
+        currentPrice: Number(holding.currentPrice),
+        currency: holding.currency,
+        plannedTerm: holding.plannedTerm,
+        salePrice: holding.salePrice ? Number(holding.salePrice) : null,
+        saleDate: holding.saleDate,
+        soldQuantity: holding.soldQuantity ? Number(holding.soldQuantity) : null,
+        accountId: holding.accountId,
+      })) ?? [];
+
+      // Reset form with snapshot data
+      reset({
+        snapshotDate: new Date(snapshotData.snapshotDate),
+        usdToAudRate: snapshotData.usdToAudRate ? Number(snapshotData.usdToAudRate) : undefined,
+        holdings: convertedHoldings,
+      });
+
+      // Populate selectedInstitutions from holdings
+      const institutionsByHoldingIndex: Record<number, { id: string; name: string } | null> = {};
+      snapshotData.holdings?.forEach((holding, idx) => {
+        if (holding.account?.institution) {
+          institutionsByHoldingIndex[idx] = {
+            id: holding.account.institution.id,
+            name: holding.account.institution.name,
+          };
+        }
+      });
+      setSelectedInstitutions(institutionsByHoldingIndex);
+
+      // Populate cash balances from snapshot
+      const cashByAccountId: Record<string, { AUD: number; USD: number }> = {};
+      snapshotData.cashBalances?.forEach((cb) => {
+        if (!cashByAccountId[cb.accountId]) {
+          cashByAccountId[cb.accountId] = { AUD: 0, USD: 0 };
+        }
+        const balance = cashByAccountId[cb.accountId];
+        if (balance) {
+          balance[cb.currency as 'AUD' | 'USD'] = Number(cb.amount);
+        }
+      });
+      setCashBalanceAmounts(cashByAccountId);
+    }
+  }, [snapshotData, isEditMode, isLoadingSnapshot, reset]);
 
   // Create new institution (Business/BROKERAGE)
   const createInstitution = trpc.business.create.useMutation({
@@ -197,6 +261,24 @@ export default function NewSnapshotModal({
     },
   });
 
+  // Update mutation (new)
+  const updateSnapshot = trpc.stockAsset.updateSnapshot.useMutation({
+    onSuccess: () => {
+      toast.success('Snapshot updated successfully!');
+      utils.stockAsset.getSnapshots.invalidate();
+      utils.stockAsset.getSnapshotById.invalidate({ snapshotId: snapshotId! });
+      reset();
+      setSelectedInstitutions({});
+      setBuyDateModes({});
+      setCashBalanceAmounts({});
+      onClose();
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update snapshot');
+    },
+  });
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
@@ -232,7 +314,16 @@ export default function NewSnapshotModal({
           ...(amounts.USD > 0 ? [{ accountId, currency: 'USD' as const, amount: amounts.USD }] : []),
         ]);
 
-      await createSnapshot.mutateAsync({ ...processedData, cashBalances });
+      // Choose mutation based on mode
+      if (isEditMode) {
+        await updateSnapshot.mutateAsync({
+          ...processedData,
+          cashBalances,
+          snapshotId: snapshotId!,
+        });
+      } else {
+        await createSnapshot.mutateAsync({ ...processedData, cashBalances });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -294,21 +385,34 @@ export default function NewSnapshotModal({
     <Modal show={isOpen} onClose={handleClose} panelClassName='max-w-4xl'>
       <Modal.Header>
         <span className='text-xl font-semibold text-foreground'>
-          New Stock Snapshot
+          {isEditMode ? 'Edit Stock Snapshot' : 'New Stock Snapshot'}
         </span>
         <p className='text-sm text-muted-foreground mt-1'>
-          Record your current stock portfolio position
+          {isEditMode ? 'Update your stock portfolio position' : 'Record your current stock portfolio position'}
         </p>
       </Modal.Header>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+      {isEditMode && isLoadingSnapshot ? (
+        <Modal.Body variant='spacious'>
+          <p className='text-center text-muted-foreground'>Loading snapshot data...</p>
+        </Modal.Body>
+      ) : (
+        <>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
         <Modal.Body variant='spacious'>
           {/* Snapshot Date */}
           <div>
             <Label htmlFor='snapshotDate'>Snapshot Date *</Label>
             <input
-              {...register('snapshotDate')}
               type='date'
+              value={(() => {
+                const val = watch('snapshotDate');
+                if (val instanceof Date) {
+                  return val.toISOString().split('T')[0];
+                }
+                return val || '';
+              })()}
+              onChange={(e) => setValue('snapshotDate', new Date(e.target.value))}
               className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
             />
             {errors.snapshotDate && (
@@ -948,11 +1052,20 @@ export default function NewSnapshotModal({
 
         <Modal.Footer>
           <Button variant='secondary' onClick={handleClose} disabled={isSubmitting}>Cancel</Button>
-          <Button variant='primary' type='submit' disabled={isSubmitting || createSnapshot.isPending}>
-            {isSubmitting || createSnapshot.isPending ? 'Creating...' : 'Create Snapshot'}
+          <Button 
+            variant='primary' 
+            type='submit' 
+            disabled={isSubmitting || createSnapshot.isPending || updateSnapshot.isPending}
+          >
+            {isSubmitting || createSnapshot.isPending || updateSnapshot.isPending 
+              ? (isEditMode ? 'Updating...' : 'Creating...')
+              : (isEditMode ? 'Update Snapshot' : 'Create Snapshot')
+            }
           </Button>
         </Modal.Footer>
-      </form>
+        </form>
+        </>
+      )}
     </Modal>
   );
 }

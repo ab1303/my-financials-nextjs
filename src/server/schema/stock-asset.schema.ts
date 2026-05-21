@@ -64,6 +64,11 @@ export const createStockSnapshotSchema = object({
   }
 );
 
+// Update snapshot with multiple holdings - extends create schema with snapshotId
+export const updateStockSnapshotSchema = z.object({
+  snapshotId: z.string().cuid('Snapshot ID must be a valid CUID'),
+}).and(createStockSnapshotSchema);
+
 // Create a single holding (add to existing snapshot)
 export const createStockHoldingSchema = object({
   snapshotId: string({ required_error: 'Snapshot ID is required' }),
@@ -119,6 +124,9 @@ export type CashBalanceEntryInput = z.infer<typeof cashBalanceEntrySchema>;
 export type UpdateSnapshotFxRateInput = z.infer<typeof updateSnapshotFxRateSchema>;
 export type CreateStockSnapshotInput = z.infer<
   typeof createStockSnapshotSchema
+>;
+export type UpdateStockSnapshotInput = z.infer<
+  typeof updateStockSnapshotSchema
 >;
 export type CreateStockHoldingInput = z.infer<typeof createStockHoldingSchema>;
 export type UpdateStockHoldingInput = z.infer<typeof updateStockHoldingSchema>;

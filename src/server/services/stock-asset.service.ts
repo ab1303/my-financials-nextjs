@@ -94,6 +94,119 @@ export const createStockSnapshot = async (
   });
 };
 
+// Phase 5: Update snapshot with holdings and cash in atomic transaction
+export const updateStockSnapshot = async (
+  userId: string,
+  input: CreateStockSnapshotInput & { snapshotId: string },
+) => {
+  // Update snapshot with holdings in a transaction
+  return await prisma.$transaction(async (tx) => {
+    // 1. Verify snapshot exists and belongs to user
+    const snapshot = await tx.portfolioSnapshot.findUnique({
+      where: { id: input.snapshotId },
+    });
+
+    if (!snapshot) {
+      throw new Error('Snapshot not found');
+    }
+
+    if (snapshot.userId !== userId) {
+      throw new Error('Unauthorized: snapshot does not belong to user');
+    }
+
+    // 2. Verify new account IDs (same as create)
+    const holdings = input.holdings ?? [];
+    const accountIds = [...new Set(holdings.map((h) => h.accountId))];
+    
+    if (accountIds.length > 0) {
+      const accounts = await tx.financialAccount.findMany({
+        where: {
+          id: { in: accountIds },
+          userId,
+          institution: { type: 'BROKERAGE' },
+        },
+      });
+
+      if (accounts.length !== accountIds.length) {
+        throw new Error(
+          'One or more accounts not found, do not belong to user, or are not brokerage accounts',
+        );
+      }
+    }
+
+    // 3. Delete existing holdings for this snapshot
+    await tx.stockHolding.deleteMany({
+      where: { snapshotId: input.snapshotId },
+    });
+
+    // 4. Delete existing cash balances for this snapshot
+    await tx.brokerageCashBalance.deleteMany({
+      where: { snapshotId: input.snapshotId },
+    });
+
+    // 5. Create new holdings
+    if (holdings.length > 0) {
+      await tx.stockHolding.createMany({
+        data: holdings.map((holding) => ({
+          snapshotId: input.snapshotId,
+          ticker: holding.ticker,
+          companyName: holding.companyName,
+          quantity: holding.quantity,
+          buyPrice: holding.buyPrice,
+          buyDate: holding.buyDate,
+          currentPrice: holding.currentPrice,
+          currency: holding.currency,
+          plannedTerm: holding.plannedTerm,
+          salePrice: holding.salePrice,
+          saleDate: holding.saleDate,
+          soldQuantity: holding.soldQuantity,
+          accountId: holding.accountId,
+        })),
+      });
+    }
+
+    // 6. Create new cash balances
+    if (input.cashBalances && input.cashBalances.length > 0) {
+      const validCashBalances = input.cashBalances.filter((cb) => cb.amount > 0);
+      
+      if (validCashBalances.length > 0) {
+        await tx.brokerageCashBalance.createMany({
+          data: validCashBalances.map((cb) => ({
+            snapshotId: input.snapshotId,
+            accountId: cb.accountId,
+            currency: cb.currency,
+            amount: cb.amount,
+          })),
+        });
+      }
+    }
+
+    // 7. Update snapshot metadata
+    const updatedSnapshot = await tx.portfolioSnapshot.update({
+      where: { id: input.snapshotId },
+      data: {
+        snapshotDate: input.snapshotDate,
+        usdToAudRate: input.usdToAudRate ?? null,
+      },
+      include: {
+        holdings: {
+          include: {
+            account: {
+              select: {
+                id: true,
+                name: true,
+                institution: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return updatedSnapshot;
+  });
+};
+
 export const getStockSnapshots = async (
   userId: string,
   filters?: {

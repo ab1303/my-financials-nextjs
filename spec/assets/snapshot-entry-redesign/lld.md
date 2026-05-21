@@ -7,8 +7,14 @@
 | 1 | Modal: tab toggle + conditional rendering for stocks/cash | `src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx` |
 | 2 | Schema: allow cash-only snapshots (validation) | `src/server/schema/stock-asset.schema.ts` |
 | 3 | Summary: unified Stocks + Cash + Total display | `src/app/(authorized)/assets/stocks/SummaryCards.tsx` |
+| 4 | Router: add `updateStockSnapshot` mutation | `src/server/trpc/routers/stock-asset.ts` |
+| 5 | Service: add update logic to handle stocks + cash | `src/server/services/stock-asset.service.ts` |
+| 6 | UI: add Edit button to snapshot detail view; reuse modal for both create/edit | `src/app/(authorized)/assets/stocks/SnapshotView.tsx` + `NewSnapshotModal.tsx` |
 
-**Dependencies:** 1 → 2 (validation check) → 3 (display)
+**Dependencies:** 
+- 1 → 2 → 3 (creation flow, completed)
+- 4 → 5 → 6 (update flow, new)
+- 6 depends on 5 (needs mutation), 6 depends on 1/2/3 (reuses modal)
 
 ---
 
@@ -281,7 +287,318 @@ const cashInAud = (total.totalCash ?? 0) * usdToAudRate;
 
 ---
 
+## Phase 4: Update Mutation (tRPC Router)
+
+### Goal
+Add `updateStockSnapshot` mutation to allow updating existing snapshots with new/edited holdings and cash.
+
+### Changes to `src/server/trpc/routers/stock-asset.ts`
+
+```typescript
+// Add new mutation alongside createStockSnapshot
+export const stockAssetRouter = createTRPCRouter({
+  // ... existing mutations
+  
+  updateStockSnapshot: privateProcedure
+    .input(
+      createStockSnapshotSchema.extend({
+        snapshotId: z.string().cuid(),  // ADD: existing snapshot ID to update
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.$transaction(async (tx) => {
+        // Verify snapshot exists and belongs to user
+        const existing = await tx.portfolioSnapshot.findUniqueOrThrow({
+          where: { id: input.snapshotId },
+          include: { portfolio: true },
+        });
+
+        if (existing.portfolio.userId !== ctx.session.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+
+        // Call service to update
+        return stockAssetService.updateStockSnapshot(tx, input);
+      });
+    }),
+});
+```
+
+### TDD Test Cases
+| Test | Type | Verifies |
+|------|------|----------|
+| Update existing snapshot with new stocks | integration | Mutation updates holdings; old holdings deleted |
+| Update snapshot with new cash | integration | Mutation updates cash; old balances updated |
+| Update snapshot both stocks + cash | integration | Both arrays updated in single transaction |
+| Add cash to stocks-only snapshot | integration | Cash balances inserted for existing stocks |
+| Remove all stocks, keep cash | integration | Stocks deleted, cash preserved |
+| Forbidden: update another user's snapshot | security | Returns 403 if userId mismatch |
+
+---
+
+## Phase 5: Update Service Logic
+
+### Goal
+Implement `updateStockSnapshot` in service layer to handle atomic update of holdings + cash.
+
+### Changes to `src/server/services/stock-asset.service.ts`
+
+Add new export function after `createStockSnapshot`:
+
+```typescript
+export async function updateStockSnapshot(
+  tx: PrismaClient,
+  input: z.infer<typeof createStockSnapshotSchema> & { snapshotId: string },
+) {
+  const { snapshotId, holdings, cashBalances, snapshotDate, usdToAudRate } = input;
+
+  // 1. Delete existing holdings for this snapshot
+  if (holdings && holdings.length > 0) {
+    await tx.stockHolding.deleteMany({
+      where: { snapshotId },
+    });
+  }
+
+  // 2. Delete existing cash balances for this snapshot
+  if (cashBalances && cashBalances.length > 0) {
+    await tx.brokerageCashBalance.deleteMany({
+      where: { snapshotId },
+    });
+  }
+
+  // 3. Create new holdings
+  const createdHoldings = holdings && holdings.length > 0
+    ? await tx.stockHolding.createMany({
+        data: holdings.map((holding) => ({
+          snapshotId,
+          symbol: holding.symbol,
+          accountId: holding.accountId,
+          quantityOwned: holding.quantityOwned,
+          averageBuyPrice: holding.averageBuyPrice,
+          currentPrice: holding.currentPrice,
+        })),
+      })
+    : null;
+
+  // 4. Create new cash balances
+  const createdCash = cashBalances && cashBalances.length > 0
+    ? await tx.brokerageCashBalance.createMany({
+        data: cashBalances.map((cb) => ({
+          snapshotId,
+          accountId: cb.accountId,
+          currency: cb.currency,
+          amount: cb.amount,
+        })),
+      })
+    : null;
+
+  // 5. Update snapshot metadata
+  const updatedSnapshot = await tx.portfolioSnapshot.update({
+    where: { id: snapshotId },
+    data: {
+      snapshotDate,
+      usdToAudRate,
+    },
+  });
+
+  return { snapshotId: updatedSnapshot.id, createdHoldings, createdCash };
+}
+```
+
+### TDD Test Cases
+| Test | Type | Verifies |
+|------|------|----------|
+| Delete old holdings before creating new | unit | Old holdings removed via `deleteMany` |
+| Delete old cash before creating new | unit | Old cash balances removed |
+| Atomic transaction (all-or-nothing) | integration | Prisma transaction rolls back on error |
+| Empty arrays handled gracefully | unit | No error if `holdings` or `cashBalances` is empty/undefined |
+
+---
+
+## Phase 6: Edit UI Integration
+
+### Goal
+Add "Edit Snapshot" button to snapshot detail view; reuse `NewSnapshotModal` for both create and edit modes.
+
+### Changes to `NewSnapshotModal.tsx`
+
+Enhance component to accept optional `snapshotId` prop for edit mode:
+
+```typescript
+interface NewSnapshotModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  snapshotId?: string;  // ADD: if present, edit mode; if absent, create mode
+}
+
+export function NewSnapshotModal({
+  isOpen,
+  onClose,
+  snapshotId,
+}: NewSnapshotModalProps) {
+  const isEditMode = !!snapshotId;
+  
+  // Fetch snapshot data if editing
+  const { data: snapshotData, isLoading: isLoadingSnapshot } = 
+    trpc.stockAsset.getSnapshotDetails.useQuery(
+      { snapshotId: snapshotId! },
+      { enabled: isEditMode && isOpen }
+    );
+
+  // Use update mutation if editing, create if creating
+  const createSnapshot = trpc.stockAsset.createStockSnapshot.useMutation({...});
+  const updateSnapshot = trpc.stockAsset.updateStockSnapshot.useMutation({...});
+
+  // Prefill form when snapshot data loads
+  useEffect(() => {
+    if (isEditMode && snapshotData) {
+      reset({
+        snapshotDate: snapshotData.snapshotDate,
+        usdToAudRate: snapshotData.usdToAudRate ?? undefined,
+        holdings: snapshotData.holdings ?? [],
+      });
+      // Also populate cash state from snapshotData.cashBalances
+      setCashBalanceAmounts(...);
+    }
+  }, [snapshotData, isEditMode]);
+
+  const onSubmit = async (data: ...) => {
+    if (isEditMode) {
+      await updateSnapshot.mutateAsync({ ...data, snapshotId: snapshotId! });
+    } else {
+      await createSnapshot.mutateAsync(data);
+    }
+    // Invalidate queries, close modal, etc.
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogTitle>
+          {isEditMode ? 'Edit Snapshot' : 'New Stock Snapshot'}  {/* ← Toggle title */}
+        </DialogTitle>
+        {/* Rest of modal unchanged; tab toggle, form sections all reused */}
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+### Changes to `SnapshotView.tsx` (or snapshot detail page)
+
+Add "Edit" button in snapshot header:
+
+```typescript
+export function SnapshotHeader({ snapshotId }: { snapshotId: string }) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  return (
+    <div className='flex justify-between items-center'>
+      <h1 className='text-2xl font-bold'>Snapshot</h1>
+      <Button
+        onClick={() => setIsEditModalOpen(true)}
+        variant='outline'
+      >
+        ✏️ Edit
+      </Button>
+      
+      <NewSnapshotModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        snapshotId={snapshotId}  {/* ← Pass ID for edit mode */}
+      />
+    </div>
+  );
+}
+```
+
+### New tRPC Query: `getSnapshotDetails`
+
+Add to router (needed for prefill in edit mode):
+
+```typescript
+getSnapshotDetails: privateProcedure
+  .input(z.object({ snapshotId: z.string().cuid() }))
+  .query(async ({ ctx, input }) => {
+    const snapshot = await ctx.prisma.portfolioSnapshot.findUniqueOrThrow({
+      where: { id: input.snapshotId },
+      include: {
+        portfolio: true,
+        holdings: true,
+        cashBalances: true,
+      },
+    });
+
+    if (snapshot.portfolio.userId !== ctx.session.user.id) {
+      throw new TRPCError({ code: 'FORBIDDEN' });
+    }
+
+    return {
+      snapshotId: snapshot.id,
+      snapshotDate: snapshot.snapshotDate,
+      usdToAudRate: snapshot.usdToAudRate,
+      holdings: snapshot.holdings,
+      cashBalances: snapshot.cashBalances,
+    };
+  }),
+```
+
+### TDD Test Cases
+| Test | Type | Verifies |
+|------|------|----------|
+| Edit button visible on snapshot view | unit | Button renders with ✏️ icon |
+| Clicking Edit opens modal in edit mode | unit | Modal opens with `snapshotId` prop |
+| Modal title changes to "Edit Snapshot" | unit | Conditional `DialogTitle` text |
+| Prefill loads holdings + cash | integration | Form fields populated from snapshot data |
+| Submit calls `updateSnapshot` mutation (not create) | unit | Correct mutation called based on `isEditMode` |
+| Success redirects/refreshes snapshot view | integration | Post-update, cache invalidated and UI updated |
+
+---
+
 ## File Inventory
+
+| File | Action | Change Description |
+|------|--------|---|
+| `src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx` | MODIFY | Add `snapshotId` optional prop; add `isEditMode` logic; prefill form from snapshot data; toggle title; call appropriate mutation |
+| `src/server/trpc/routers/stock-asset.ts` | MODIFY | Add `updateStockSnapshot` mutation with CUID validation and user ownership check |
+| `src/server/services/stock-asset.service.ts` | MODIFY | Add `updateStockSnapshot` function with atomic delete-then-create pattern |
+| `src/app/(authorized)/assets/stocks/SnapshotView.tsx` | MODIFY | Add Edit button header; pass `snapshotId` to modal; manage edit modal state |
+| `src/server/trpc/routers/stock-asset.ts` | MODIFY | Add `getSnapshotDetails` query for edit prefill |
+
+---
+
+## Edge Cases & Integration Points
+
+### Edit Mode: Data Mutation
+- **Scenario:** User edits snapshot, changes 1 stock, removes 2 others, adds new cash
+- **Expected:** Old holdings deleted, new ones created, cash updated atomically
+- **Verify:** Transaction rolls back if any step fails; snapshot state consistent
+
+### Edit Mode: Prefill Timing
+- **Scenario:** User opens modal, waits for data to load, then starts editing
+- **Expected:** Form fields populated once `snapshotData` available; no duplicate submissions
+- **Verify:** `useEffect` dependency array correct; mutation loading state prevents double-submit
+
+### Security: Ownership Check
+- **Scenario:** User tries to edit snapshot via URL manipulation (direct snapshotId)
+- **Expected:** If not owned by user, mutation/query returns 403 FORBIDDEN
+- **Verify:** Both `updateStockSnapshot` and `getSnapshotDetails` check `portfolio.userId`
+
+### UI: Modal Reuse for Create/Edit
+- **Scenario:** User creates snapshot, then edits it, then creates new one
+- **Expected:** Modal switches between create ↔ edit modes without state pollution
+- **Verify:** Title changes, form resets correctly, mutations called appropriately
+
+---
+
+## Success Metrics
+
+✅ **Edit Discoverability:** "Edit" button clearly visible on snapshot detail  
+✅ **Modal Reuse:** Same modal UI for both create and edit (DRY principle)  
+✅ **Atomic Updates:** All holdings + cash updated together (no partial states)  
+✅ **Prefill Accuracy:** Form loaded with correct existing data  
+✅ **Security:** Ownership check prevents cross-user edits  
+✅ **Completeness:** No TypeScript errors; build passes; existing tests remain green  
 
 | File | Action | Change Description |
 |------|--------|---|
