@@ -80,6 +80,12 @@ export const getNetWorthTrend = async (
             currency: true,
           },
         },
+        cashBalances: {
+          select: {
+            amount: true,
+            currency: true,
+          },
+        },
       },
     }),
   ]);
@@ -89,12 +95,24 @@ export const getNetWorthTrend = async (
       ? Number(snapshot.usdToAudRate)
       : null;
 
-    const stockTotal = snapshot.holdings.reduce((sum, holding) => {
+    // Calculate holdings total
+    const holdingsTotal = snapshot.holdings.reduce((sum, holding) => {
       const value = Number(holding.quantity) * Number(holding.currentPrice);
       if (holding.currency === 'AUD') return sum + value;
       if (holding.currency === 'USD' && usdToAudRate) return sum + value * usdToAudRate;
       return sum; // USD with no rate: skip gracefully
     }, 0);
+
+    // Calculate cash balances total
+    const cashAud = snapshot.cashBalances
+      .filter((cb) => cb.currency === 'AUD')
+      .reduce((sum, cb) => sum + Number(cb.amount), 0);
+    const cashUsd = snapshot.cashBalances
+      .filter((cb) => cb.currency === 'USD')
+      .reduce((sum, cb) => sum + Number(cb.amount), 0);
+
+    // Combine holdings and cash for total
+    const stockTotal = holdingsTotal + cashAud + (usdToAudRate ? cashUsd * usdToAudRate : 0);
 
     return {
       id: snapshot.id,

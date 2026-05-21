@@ -372,6 +372,7 @@ model FinancialAccount {
   user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   balanceRecords BankBalanceRecord[]
   stockHoldings  StockHolding[]
+  cashBalances   BrokerageCashBalance[]
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
 
@@ -414,16 +415,34 @@ model BankBalanceRecord {
 
 // PortfolioSnapshot — point-in-time portfolio snapshot header (one per date)
 model PortfolioSnapshot {
-  id           String         @id @default(cuid())
+  id           String                  @id @default(cuid())
   snapshotDate DateTime
-  usdToAudRate Decimal?       // USD→AUD rate at snapshot time; null for pre-existing snapshots
+  usdToAudRate Decimal?                // USD→AUD rate at snapshot time; null for pre-existing snapshots
   userId       String
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   holdings     StockHolding[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  cashBalances BrokerageCashBalance[]
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
 
   @@index([userId, snapshotDate])
+}
+
+// BrokerageCashBalance — idle cash per account per currency at snapshot time
+model BrokerageCashBalance {
+  id         String           @id @default(cuid())
+  amount     Decimal          @db.Money
+  currency   CurrencyEnumType
+  accountId  String
+  account    FinancialAccount @relation(fields: [accountId], references: [id])
+  snapshotId String
+  snapshot   PortfolioSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([accountId, currency, snapshotId])
+  @@index([snapshotId])
+  @@index([accountId])
 }
 
 // StockHolding — individual holding within a portfolio snapshot

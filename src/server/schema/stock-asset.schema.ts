@@ -4,6 +4,15 @@ import { object, string, z } from 'zod';
 const currencyEnum = z.enum(['AUD', 'USD']);
 const investmentTermEnum = z.enum(['SHORT_TERM', 'MID_TERM', 'LONG_TERM']);
 
+// Cash balance schema (for brokerage cash holdings)
+export const cashBalanceEntrySchema = object({
+  accountId: string({ required_error: 'Account ID is required' }),
+  currency: currencyEnum,
+  amount: z.coerce
+    .number({ invalid_type_error: 'Amount must be a number' })
+    .nonnegative('Amount must be greater than or equal to 0'),
+});
+
 // Single holding schema (used in snapshot creation)
 export const stockHoldingEntrySchema = object({
   ticker: string({ required_error: 'Ticker symbol is required' })
@@ -48,6 +57,7 @@ export const createStockSnapshotSchema = object({
   holdings: z
     .array(stockHoldingEntrySchema)
     .min(1, 'At least one holding is required'),
+  cashBalances: z.array(cashBalanceEntrySchema).optional(),
 });
 
 // Create a single holding (add to existing snapshot)
@@ -101,6 +111,7 @@ export const updateSnapshotFxRateSchema = object({
 
 // Export inferred types
 export type StockHoldingEntryInput = z.infer<typeof stockHoldingEntrySchema>;
+export type CashBalanceEntryInput = z.infer<typeof cashBalanceEntrySchema>;
 export type UpdateSnapshotFxRateInput = z.infer<typeof updateSnapshotFxRateSchema>;
 export type CreateStockSnapshotInput = z.infer<
   typeof createStockSnapshotSchema

@@ -17,6 +17,7 @@ interface CurrencyTotalFromService {
   totalCostBasis: number;
   totalUnrealizedPL: number;
   totalRealizedPL: number;
+  totalCash?: number;
   accounts: any[];
 }
 
@@ -99,10 +100,31 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
             {/* Portfolio Value + Invested Amount */}
             <div className='mb-4 flex items-end justify-between gap-4'>
               <div>
-                <p className='text-sm text-muted-foreground mb-1'>Portfolio Value</p>
-                <p className='text-2xl font-bold text-foreground'>
-                  {formatCurrency(total.totalValue, total.currency as any)}
+                <p className='text-sm text-muted-foreground mb-1'>
+                  {(total.totalCash ?? 0) > 0 ? 'Total Portfolio Value' : 'Portfolio Value'}
                 </p>
+                <p className='text-2xl font-bold text-foreground'>
+                  {formatCurrency(
+                    total.totalValue + (total.totalCash ?? 0),
+                    total.currency as any
+                  )}
+                </p>
+                {(total.totalCash ?? 0) > 0 && (
+                  <div className='mt-2 text-xs space-y-1'>
+                    <div className='flex justify-between gap-4 text-muted-foreground'>
+                      <span>Stocks:</span>
+                      <span className='font-medium text-foreground'>
+                        {formatCurrency(total.totalValue, total.currency as any)}
+                      </span>
+                    </div>
+                    <div className='flex justify-between gap-4 text-muted-foreground'>
+                      <span>Cash:</span>
+                      <span className='font-medium text-foreground'>
+                        {formatCurrency(total.totalCash ?? 0, total.currency as any)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className='text-right'>
                 <p className='text-sm text-muted-foreground mb-1'>Invested Amount</p>
@@ -205,7 +227,7 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
                     <div>
                       <p className='text-xs text-muted-foreground mb-0.5'>Portfolio Value</p>
                       <p className='text-lg font-semibold text-foreground'>
-                        {formatCurrency(total.totalValue * usdToAudRate, 'AUD')}
+                        {formatCurrency((total.totalValue + (total.totalCash ?? 0)) * usdToAudRate, 'AUD')}
                       </p>
                     </div>
                     <div className='text-right'>

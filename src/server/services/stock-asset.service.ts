@@ -70,6 +70,22 @@ export const createStockSnapshot = async (
       },
     });
 
+    // Create cash balance records if provided (filter out amounts <= 0)
+    if (input.cashBalances && input.cashBalances.length > 0) {
+      const validCashBalances = input.cashBalances.filter((cb) => cb.amount > 0);
+      
+      if (validCashBalances.length > 0) {
+        await tx.brokerageCashBalance.createMany({
+          data: validCashBalances.map((cb) => ({
+            amount: cb.amount,
+            currency: cb.currency,
+            accountId: cb.accountId,
+            snapshotId: snapshot.id,
+          })),
+        });
+      }
+    }
+
     return snapshot;
   });
 };
@@ -154,6 +170,17 @@ export const getSnapshotById = async (snapshotId: string, userId: string) => {
         orderBy: {
           account: {
             institution: { name: 'asc' },
+          },
+        },
+      },
+      cashBalances: {
+        include: {
+          account: {
+            select: {
+              id: true,
+              name: true,
+              institution: { select: { id: true, name: true } },
+            },
           },
         },
       },
@@ -460,6 +487,7 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
           totalCostBasis: 0,
           totalUnrealizedPL: 0,
           totalRealizedPL: 0,
+          totalCash: 0,
           accounts: [],
         };
       }
@@ -480,6 +508,7 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
         totalCostBasis: number;
         totalUnrealizedPL: number;
         totalRealizedPL: number;
+        totalCash: number;
         accounts: Array<{
           accountId: string;
           accountName: string;
@@ -506,11 +535,37 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
     >,
   );
 
+  // Build cash balance summaries and add to currency totals
+  const cashBalanceSummaries = snapshot.cashBalances.map((cashBalance) => ({
+    accountId: cashBalance.accountId,
+    accountName: `${cashBalance.account.institution.name} — ${cashBalance.account.name}`,
+    currency: cashBalance.currency,
+    amount: Number(cashBalance.amount),
+  }));
+
+  // Add cash totals to each currency
+  for (const cashBalance of cashBalanceSummaries) {
+    if (!currencyTotals[cashBalance.currency]) {
+      currencyTotals[cashBalance.currency] = {
+        currency: cashBalance.currency,
+        totalValue: 0,
+        totalCostBasis: 0,
+        totalUnrealizedPL: 0,
+        totalRealizedPL: 0,
+        totalCash: 0,
+        accounts: [],
+      };
+    }
+    currencyTotals[cashBalance.currency]!.totalCash += cashBalance.amount;
+  }
+
   return {
     snapshotId: snapshot.id,
     snapshotDate: snapshot.snapshotDate,
     usdToAudRate: snapshot.usdToAudRate ? Number(snapshot.usdToAudRate) : null,
-    currencies: Object.values(currencyTotals),
+    accounts: Object.values(accountTotals),
+    currencyTotals: Object.values(currencyTotals),
+    cashBalances: cashBalanceSummaries,
   };
 };
 

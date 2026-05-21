@@ -395,9 +395,9 @@ export default function StockAssetsClient({ initialData }: Props) {
       )}
 
       {/* Grand Total Summary Cards */}
-      {totals && totals.currencies && (
+      {totals && totals.currencyTotals && (
         <SummaryCards
-          currencyTotals={totals.currencies}
+          currencyTotals={totals.currencyTotals}
           usdToAudRate={totals.usdToAudRate ?? null}
           snapshotDate={snapshotDate}
           snapshotId={selectedSnapshotId}
@@ -595,6 +595,40 @@ export default function StockAssetsClient({ initialData }: Props) {
                         )}
                       </Disclosure>
                     ))}
+
+                    {/* Cash Balances for this currency */}
+                    {(() => {
+                      const cashForCurrency = totals?.cashBalances?.filter(cb => cb.currency === currencyGroup.currency) ?? [];
+                      if (cashForCurrency.length === 0) return null;
+                      return (
+                        <div className='mt-2 p-4 border border-border rounded-lg bg-amber-50 dark:bg-amber-950/20'>
+                          <h4 className='text-sm font-semibold text-foreground mb-3'>
+                            💰 Idle Cash ({currencyGroup.currency})
+                          </h4>
+                          <div className='space-y-2'>
+                            {cashForCurrency.map(cb => (
+                              <div key={cb.accountId} className='flex justify-between items-center text-sm'>
+                                <span className='text-muted-foreground'>{cb.accountName}</span>
+                                <span className='font-medium text-foreground'>{formatCurrency(cb.amount, cb.currency as any)}</span>
+                              </div>
+                            ))}
+                            {cashForCurrency.length > 1 && (
+                              <div className='flex justify-between items-center text-sm pt-2 border-t border-border'>
+                                <span className='font-semibold text-foreground'>Total Cash</span>
+                                <span className='font-bold text-foreground'>
+                                  {formatCurrency(cashForCurrency.reduce((s, cb) => s + cb.amount, 0), currencyGroup.currency as any)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {currencyGroup.currency === 'USD' && totals?.usdToAudRate && (
+                            <p className='text-xs text-muted-foreground mt-2'>
+                              ≈ {formatCurrency(cashForCurrency.reduce((s, cb) => s + cb.amount, 0) * totals.usdToAudRate, 'AUD')} AUD
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })
@@ -677,6 +711,36 @@ export default function StockAssetsClient({ initialData }: Props) {
                             </div>
                           );
                         })}
+
+                        {/* Cash Balances for this brokerage */}
+                        {(() => {
+                          const cashForBrokerage = totals?.cashBalances?.filter(cb => cb.accountId === brokerageGroup.accountId) ?? [];
+                          if (cashForBrokerage.length === 0) return null;
+                          return (
+                            <div className='mt-2 p-4 border border-border rounded-lg bg-amber-50 dark:bg-amber-950/20'>
+                              <h4 className='text-sm font-semibold text-foreground mb-3'>
+                                💰 Idle Cash Balances
+                              </h4>
+                              <div className='space-y-2'>
+                                {cashForBrokerage.map(cb => (
+                                  <div key={`${cb.accountId}-${cb.currency}`} className='flex justify-between items-center text-sm'>
+                                    <span className='text-muted-foreground flex items-center gap-1'>
+                                      {cb.currency === 'AUD' ? '🇦🇺' : '🇺🇸'} {cb.currency}
+                                    </span>
+                                    <div className='text-right'>
+                                      <span className='font-medium text-foreground'>{formatCurrency(cb.amount, cb.currency as any)}</span>
+                                      {cb.currency === 'USD' && totals?.usdToAudRate && (
+                                        <p className='text-xs text-muted-foreground'>
+                                          ≈ {formatCurrency(cb.amount * totals.usdToAudRate, 'AUD')} AUD
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </Disclosure.Panel>
                     </div>
                   )}

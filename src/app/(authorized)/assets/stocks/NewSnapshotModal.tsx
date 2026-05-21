@@ -63,6 +63,8 @@ export default function NewSnapshotModal({
   const [selectedInstitutions, setSelectedInstitutions] = useState<Record<number, { id: string; name: string } | null>>({});
   // Track buy date mode per holding index: 'month' (quick-pick) or 'exact' (full date)
   const [buyDateModes, setBuyDateModes] = useState<Record<number, 'exact' | 'month'>>({});
+  // Track idle cash balances per account: { [accountId]: { AUD, USD } }
+  const [cashBalanceAmounts, setCashBalanceAmounts] = useState<Record<string, { AUD: number; USD: number }>>({});
   const utils = trpc.useUtils();
 
   const {
@@ -184,6 +186,7 @@ export default function NewSnapshotModal({
       reset();
       setSelectedInstitutions({});
       setBuyDateModes({});
+      setCashBalanceAmounts({});
       onClose();
       onSuccess?.();
     },
@@ -219,7 +222,15 @@ export default function NewSnapshotModal({
           return holding;
         }),
       };
-      await createSnapshot.mutateAsync(processedData);
+
+      // Build cash balances array from state
+      const cashBalances = Object.entries(cashBalanceAmounts)
+        .flatMap(([accountId, amounts]) => [
+          ...(amounts.AUD > 0 ? [{ accountId, currency: 'AUD' as const, amount: amounts.AUD }] : []),
+          ...(amounts.USD > 0 ? [{ accountId, currency: 'USD' as const, amount: amounts.USD }] : []),
+        ]);
+
+      await createSnapshot.mutateAsync({ ...processedData, cashBalances });
     } finally {
       setIsSubmitting(false);
     }
@@ -229,6 +240,7 @@ export default function NewSnapshotModal({
     reset();
     setSelectedInstitutions({});
     setBuyDateModes({});
+    setCashBalanceAmounts({});
     onClose();
   };
 
@@ -804,6 +816,101 @@ export default function NewSnapshotModal({
               <Plus className='w-4 h-4' />
               Add Another Holding
             </button>
+          </div>
+
+          {/* Idle Cash Balances */}
+          <div className='border border-border rounded-lg bg-muted/30 p-4'>
+            <div>
+              <h3 className='text-lg font-semibold text-foreground'>
+                💰 Idle Cash Balances
+              </h3>
+              <p className='text-sm text-muted-foreground mt-1'>
+                Enter unallocated cash sitting in each brokerage account
+              </p>
+            </div>
+
+            {(() => {
+              // Derive unique accountIds from current holdings
+              const watchedHoldings = watch('holdings');
+              const uniqueAccountIds = [...new Set(watchedHoldings.filter(h => h.accountId).map(h => h.accountId))];
+
+              if (uniqueAccountIds.length === 0) {
+                return (
+                  <div className='mt-4 p-4 bg-muted rounded-lg text-muted-foreground text-sm'>
+                    Add holdings above to enter cash balances
+                  </div>
+                );
+              }
+
+              return (
+                <div className='mt-4 space-y-4'>
+                  {uniqueAccountIds.map(accountId => {
+                    const accountName = accountNameForId(accountId);
+                    const amounts = cashBalanceAmounts[accountId] || { AUD: 0, USD: 0 };
+
+                    return (
+                      <div key={accountId} className='grid grid-cols-1 md:grid-cols-3 gap-4 items-end'>
+                        <div>
+                          <Label className='text-foreground font-medium'>
+                            {accountName}
+                          </Label>
+                        </div>
+                        {/* AUD Cash Input */}
+                        <div>
+                          <Label htmlFor={`cash-aud-${accountId}`} className='text-xs text-muted-foreground'>
+                            AUD Cash
+                          </Label>
+                          <NumericFormat
+                            id={`cash-aud-${accountId}`}
+                            value={amounts.AUD}
+                            onValueChange={({ floatValue }) => {
+                              setCashBalanceAmounts(prev => ({
+                                ...prev,
+                                [accountId]: {
+                                  AUD: floatValue ?? 0,
+                                  USD: prev[accountId]?.USD ?? 0,
+                                },
+                              }));
+                            }}
+                            prefix='$'
+                            decimalScale={2}
+                            thousandSeparator
+                            allowNegative={false}
+                            placeholder='0.00'
+                            className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                          />
+                        </div>
+                        {/* USD Cash Input */}
+                        <div>
+                          <Label htmlFor={`cash-usd-${accountId}`} className='text-xs text-muted-foreground'>
+                            USD Cash
+                          </Label>
+                          <NumericFormat
+                            id={`cash-usd-${accountId}`}
+                            value={amounts.USD}
+                            onValueChange={({ floatValue }) => {
+                              setCashBalanceAmounts(prev => ({
+                                ...prev,
+                                [accountId]: {
+                                  AUD: prev[accountId]?.AUD ?? 0,
+                                  USD: floatValue ?? 0,
+                                },
+                              }));
+                            }}
+                            prefix='$'
+                            decimalScale={2}
+                            thousandSeparator
+                            allowNegative={false}
+                            placeholder='0.00'
+                            className='mt-1 block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-ring'
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </Modal.Body>
 

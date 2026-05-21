@@ -53,11 +53,19 @@ export type AccountTotalSummary = {
   totalRealizedPL: number;
 };
 
+export type CashBalanceSummary = {
+  accountId: string;
+  accountName: string;
+  currency: CurrencyEnumType;
+  amount: number;
+};
+
 export type CurrencyTotal = {
   currency: CurrencyEnumType;
   totalMarketValue: number;
   totalUnrealizedPL: number;
   totalRealizedPL: number;
+  totalCash: number;
 };
 
 export type StockSnapshotTotals = {
@@ -66,6 +74,7 @@ export type StockSnapshotTotals = {
   usdToAudRate: number | null;
   accounts: AccountTotalSummary[];
   currencyTotals: CurrencyTotal[];
+  cashBalances: CashBalanceSummary[];
 };
 
 // ── Form Types ───────────────────────────────────────────────────
