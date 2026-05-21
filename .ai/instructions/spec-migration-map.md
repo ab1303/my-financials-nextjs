@@ -1,9 +1,9 @@
 # Spec Folder Migration Map
 
-**Status:** In Progress (90% complete)  
+**Status:** In Progress (96% complete)  
 **Total features:** 48 across 11 domains  
-**Consolidated:** 43 features across 7 domains (cashflow as unified 3-level domain with 14 features)  
-**Remaining:** 5 features across 2 domains  
+**Consolidated:** 46 features across 8 domains  
+**Remaining:** 2 features across 1 domain (architecture)  
 **Target structure:** `spec/{domain}/{feature}/` (2-level) or `spec/{domain}/{sub-group}/{feature}/` (3-level for complex domains)  
 **Migration approach:** Vertical slicing for LLM context; 3-level only when 3+ independent sub-domains exist
 
@@ -108,14 +108,16 @@ spec/cashflow/
 - **Categories as infrastructure**: Shared by all cashflow sub-groups; the HLD explains how category model applies across all flows
 - **LLM-friendly**: HLD provides complete financial taxonomy patterns; agents fetch sub-group contexts for focused slices (e.g., expense categorization, income drill-down)
 
-### 6. `ai-features` (3 features) ⏳ PENDING
+### 6. `ai-features` (3 features) ✅ COMPLETE
 AI-driven features: image import, usage logging, chat.
 
 | Current Folder | Target Location | Status |
 |---|---|---|
-| `ai-image-import` | `ai-features/ai-image-import/` | ⏳ Pending |
-| `ai-usage-logging` | `ai-features/ai-usage-logging/` | ⏳ Pending |
-| `finance-chat-assistant` | `ai-features/finance-chat/` | ⏳ Pending |
+| `ai-image-import` | `ai-features/ai-image-import/` | ✅ Migrated |
+| `ai-usage-logging` | `ai-features/ai-usage-logging/` | ✅ Migrated |
+| `finance-chat-assistant` | `ai-features/finance-chat/` | ✅ Migrated |
+
+**Rationale:** AI-Features domain unifies AI-powered capabilities (image recognition, usage tracking, LLM chat). 2-level structure with shared domain HLD for model selection and token management patterns.
 
 ### 7. `donations` ✅ CONSOLIDATED → MOVED TO CASHFLOW
 **Status:** Moved under cashflow domain (see section 5a above)
@@ -166,19 +168,18 @@ App-wide architectural guidelines, standards, infrastructure, and research.
 - ✅ Migration guide created (spec-consolidation.md)
 - ✅ Migration template created (migration-agent-template.md)
 
-### Phase 2: Execute Consolidations ✅ COMPLETE (90%)
+### Phase 2: Execute Consolidations ✅ COMPLETE (96%)
 - ✅ Transactions domain (10 features, 2-level)
 - ✅ CSV-import domain (8 features, 2-level)
 - ✅ Assets domain (4 features, 2-level)
 - ✅ Banking domain (4 features, 2-level)
 - ✅ **Cashflow domain (14 features, 3-level with 6 sub-groups)** ← Unified: income, expense, donations, categories, interest, audit
 - ✅ User-profile domain (1 feature, 2-level)
-- ⏳ AI-features domain (3 features remaining)
+- ✅ AI-features domain (3 features, 2-level)
 - ⏳ **Architecture domain (9 features remaining)** ← App-wide guidelines, standards, infrastructure
 
-### Phase 3: Remaining Work (10% — 5 features)
-- 3 features in ai-features (ai-image-import, ai-usage-logging, finance-chat)
-- 9 features in **architecture** (app-wide guidelines, standards, infrastructure)
+### Phase 3: Remaining Work (4% — 9 features)
+- 9 features in **architecture** (app-wide guidelines, standards, infrastructure): calendar-attribution, design-modernization, development-standards, e2e-testing, embedding-models, entity-relations, preferred-currency, schema-naming, site-audit
 
 ### Phase 3: Selective Migration (Ongoing)
 - On each feature touch, migrate its spec folder
