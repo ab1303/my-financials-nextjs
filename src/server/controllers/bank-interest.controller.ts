@@ -1,4 +1,5 @@
 import { handleCaughtError } from '@/server/utils/prisma';
+import type { BankInterestModel } from '@/server/models';
 import {
   addBankInterestPaymentDetail,
   getBankInterestDetails,
@@ -11,23 +12,25 @@ import {
 export const initializeBankInterestYearHandler = async (
   bankId: string,
   calendarYearId: string,
-) => {
+): Promise<void> => {
   try {
     await initializeBankInterestYear(bankId, calendarYearId);
   } catch (e) {
     handleCaughtError(e);
+    throw e; // TypeScript: unreachable but satisfies type checker
   }
 };
 
 export const bankInterestDetailsHandler = async (
   bankId: string,
   yearId: string
-) => {
+): Promise<BankInterestModel[]> => {
   try {
     const bankInterestDetails = await getBankInterestDetails(bankId, yearId);
     return bankInterestDetails;
   } catch (e) {
     handleCaughtError(e);
+    throw e; // TypeScript: unreachable but satisfies type checker
   }
 };
 
@@ -36,11 +39,12 @@ export const updateBankInterestDetailsHandler = async (
   bankId: string,
   calendarYearId: string,
   amountDue: number
-) => {
+): Promise<void> => {
   try {
     await updateBankInterestDetail(id, bankId, calendarYearId, amountDue);
   } catch (e) {
     handleCaughtError(e);
+    throw e; // TypeScript: unreachable but satisfies type checker
   }
 };
 
@@ -77,6 +81,7 @@ export const updateBankInterestPaymentHandler = async (
     );
   } catch (e) {
     handleCaughtError(e);
+    throw e; // TypeScript: unreachable but satisfies type checker
   }
 };
 
@@ -88,5 +93,6 @@ export const removeBankInterestPaymentHandler = async (
     return await removeBankInterestPaymentDetail(bankInterestId, paymentId);
   } catch (e) {
     handleCaughtError(e);
+    throw e; // TypeScript: unreachable but satisfies type checker
   }
 };
