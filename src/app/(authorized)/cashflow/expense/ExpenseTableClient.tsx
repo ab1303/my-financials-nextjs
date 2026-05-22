@@ -203,18 +203,28 @@ export default function ExpenseTableClient({
                 </td>
               </Table.TBody.TR>
             ) : (
-              table.getRowModel().rows.map((row) => (
-                <Table.TBody.TR key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Table.TBody.TD key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </Table.TBody.TD>
-                  ))}
-                </Table.TBody.TR>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const month = row.original.month;
+                const year = row.original.calendarYear;
+                return (
+                  <tr
+                    key={row.id}
+                    className="odd:bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      window.location.href = `/cashflow/transactions?month=${month}&year=${year}`;
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Table.TBody.TD key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </Table.TBody.TD>
+                    ))}
+                  </tr>
+                );
+              })
             )}
           </Table.TBody>
 

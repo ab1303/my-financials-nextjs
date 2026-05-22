@@ -978,15 +978,15 @@ function CategoryBreakdownContent({
 
 
 
-          <button type='button' className={clsx(buttonStyles.primary)} onClick={onClose}>
+          <div className='flex gap-2'>
 
+            <button type='button' className={clsx(buttonStyles.primary)} onClick={onClose}>
 
+              Close
 
-            Close
+            </button>
 
-
-
-          </button>
+          </div>
 
 
 
