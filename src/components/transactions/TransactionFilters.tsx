@@ -180,7 +180,6 @@ export default function TransactionFilters({
   onReset,
   resetKey,
 }: TransactionFiltersProps) {
-  const [internalDatePreset, setInternalDatePreset] = useState<DatePreset>('this-fy');
   const [isPeriodOpen, setIsPeriodOpen] = useState(false);
   const minDate = useMemo(() => getTwoYearsAgoDate(), []);
   const bankSelectId = useId();
@@ -201,10 +200,10 @@ export default function TransactionFilters({
     [categoryOptions, category],
   );
 
+  // Close period panel when reset
   useEffect(() => {
-    onDatePresetChange('this-fy');
     setIsPeriodOpen(false);
-  }, [resetKey, onDatePresetChange]);
+  }, [resetKey]);
 
   const applyPreset = (preset: DatePreset) => {
     onDatePresetChange(preset);
