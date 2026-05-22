@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import InfoTooltip from '@/components/ui/InfoTooltip';
 import { trpc } from '@/server/trpc/client';
 import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
-import TransactionFilters, { getPresetDateRange } from './TransactionFilters';
+import TransactionFilters, { getPresetDateRange, type DatePreset } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
 import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer';
 import SmartMatchDialog from '@/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog';
@@ -103,11 +103,13 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   };
 
   const initialDateRange = getInitialDateRange();
+  const initialPreset = (initialMonth !== undefined && initialYear !== undefined) ? 'custom' : 'this-fy';
 
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [page, setPage] = useState(1);
   const [bankAccountId, setBankAccountId] = useState<string | undefined>(undefined);
   const [category, setCategory] = useState<string | undefined>(undefined);
+  const [datePreset, setDatePreset] = useState<DatePreset>(initialPreset);
   const [dateFrom, setDateFrom] = useState<string | undefined>(initialDateRange.from);
   const [dateTo, setDateTo] = useState<string | undefined>(initialDateRange.to);
   const [amountMin, setAmountMin] = useState('');
@@ -290,6 +292,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         category={category}
         dateFrom={dateFrom}
         dateTo={dateTo}
+        datePreset={datePreset}
         search={search}
         amountMin={amountMin}
         amountMax={amountMax}
@@ -307,6 +310,10 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         }}
         onDateToChange={(v) => {
           setDateTo(v);
+          setPage(1);
+        }}
+        onDatePresetChange={(preset) => {
+          setDatePreset(preset);
           setPage(1);
         }}
         onSearchChange={(v) => {

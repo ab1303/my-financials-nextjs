@@ -17,6 +17,7 @@ interface TransactionFiltersProps {
   category: string | undefined;
   dateFrom: string | undefined;
   dateTo: string | undefined;
+  datePreset: DatePreset;
   search: string;
   amountMin: string;
   amountMax: string;
@@ -24,6 +25,7 @@ interface TransactionFiltersProps {
   onCategoryChange: (category: string | undefined) => void;
   onDateFromChange: (v: string | undefined) => void;
   onDateToChange: (v: string | undefined) => void;
+  onDatePresetChange: (preset: DatePreset) => void;
   onSearchChange: (v: string) => void;
   onAmountMinChange: (v: string) => void;
   onAmountMaxChange: (v: string) => void;
@@ -163,6 +165,7 @@ export default function TransactionFilters({
   category,
   dateFrom,
   dateTo,
+  datePreset,
   search,
   amountMin,
   amountMax,
@@ -170,13 +173,14 @@ export default function TransactionFilters({
   onCategoryChange,
   onDateFromChange,
   onDateToChange,
+  onDatePresetChange,
   onSearchChange,
   onAmountMinChange,
   onAmountMaxChange,
   onReset,
   resetKey,
 }: TransactionFiltersProps) {
-  const [datePreset, setDatePreset] = useState<DatePreset>('this-fy');
+  const [internalDatePreset, setInternalDatePreset] = useState<DatePreset>('this-fy');
   const [isPeriodOpen, setIsPeriodOpen] = useState(false);
   const minDate = useMemo(() => getTwoYearsAgoDate(), []);
   const bankSelectId = useId();
@@ -198,12 +202,12 @@ export default function TransactionFilters({
   );
 
   useEffect(() => {
-    setDatePreset('this-fy');
+    onDatePresetChange('this-fy');
     setIsPeriodOpen(false);
-  }, [resetKey]);
+  }, [resetKey, onDatePresetChange]);
 
   const applyPreset = (preset: DatePreset) => {
-    setDatePreset(preset);
+    onDatePresetChange(preset);
     const range = getPresetDateRange(preset);
     if (!range) return;
     onDateFromChange(range.from);
@@ -211,7 +215,7 @@ export default function TransactionFilters({
   };
 
   const handleReset = () => {
-    setDatePreset('this-fy');
+    onDatePresetChange('this-fy');
     setIsPeriodOpen(false);
     onReset();
   };
@@ -361,7 +365,7 @@ export default function TransactionFilters({
             <button
               type="button"
               aria-pressed={datePreset === 'custom'}
-              onClick={() => setDatePreset('custom')}
+              onClick={() => onDatePresetChange('custom')}
               className={`rounded-full border px-3 py-0.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
                 datePreset === 'custom'
                   ? 'border-teal-500 bg-teal-500 text-white dark:border-teal-400 dark:bg-teal-600'
