@@ -7,6 +7,7 @@ import { trpc } from '@/server/trpc/client';
 import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import TransactionFilters, { getPresetDateRange, type DatePreset } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
+import TransactionSummary from './TransactionSummary';
 import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer';
 import SmartMatchDialog from '@/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog';
 import UnmatchedTransfersBadge from '@/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge';
@@ -331,6 +332,10 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         onReset={handleReset}
         resetKey={resetKey}
       />
+
+      {!loading && data && data.transactions.length > 0 && (
+        <TransactionSummary transactions={data.transactions} />
+      )}
 
       {loading ? (
         <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
