@@ -31,6 +31,7 @@ export const CreateZakatPaymentSchema = z.object({
   }),
   beneficiaryId: z.string().optional(),
   calendarYearId: z.string().nonempty('Calendar year is required'),
+  transactionId: z.string().optional(),
 });
 
 export const UpdateZakatPaymentSchema = z.object({

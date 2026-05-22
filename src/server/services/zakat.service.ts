@@ -90,7 +90,7 @@ export const updateZakatPayment = async (
 
 export const addZakatPaymentDetail = async (
   zakatId: string,
-  payment: Omit<ZakatPaymentInput, 'id' | 'zakatObligationId'>,
+  payment: Omit<ZakatPaymentInput, 'id' | 'zakatObligationId'> & { transactionId?: string },
 ) => {
   return await prisma.zakatPayment.create({
     data: {
@@ -102,6 +102,7 @@ export const addZakatPaymentDetail = async (
         payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
       individualId:
         payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
+      transactionId: payment.transactionId || null,
     },
   });
 };
@@ -113,3 +114,32 @@ export const deleteZakatPayment = async (zakatPaymentId: string) => {
     },
   });
 };
+
+export async function getUnlinkedZakatTransactions(
+  userId: string,
+  fromYear: number,
+  toYear: number,
+): Promise<Array<{ id: string; date: string; description: string; amount: number }>> {
+  const dateFrom = new Date(fromYear, 6, 1);
+  const dateTo = new Date(toYear, 5, 30, 23, 59, 59);
+
+  const rows = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: 'DEBIT',
+      status: 'CONFIRMED',
+      category: { equals: 'Gifts & donations', mode: 'insensitive' },
+      date: { gte: dateFrom, lte: dateTo },
+      zakatPayment: null,
+    },
+    orderBy: { date: 'desc' },
+    select: { id: true, date: true, description: true, amount: true },
+  });
+
+  return rows.map((tx) => ({
+    id: tx.id,
+    date: tx.date.toISOString().slice(0, 10),
+    description: tx.description,
+    amount: Number(tx.amount),
+  }));
+}

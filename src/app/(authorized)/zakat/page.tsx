@@ -10,6 +10,7 @@ import {
 import ZakatForm from './form';
 import type { FormInput } from './_schema';
 import ZakatPaymentsTableServer from './ZakatTableServer';
+import UnlinkedZakatTransactionsBanner from './_components/UnlinkedZakatTransactionsBanner';
 
 export const metadata: Metadata = {
   title: 'Zakat',
@@ -77,6 +78,17 @@ export default async function ZakatPage({
           yearIdParam={selectedCalendarYearId}
           addZakatCalendarYear={addZakatCalendarYear}
         >
+          {selectedCalendarYear && (
+            <Suspense fallback={null}>
+              <UnlinkedZakatTransactionsBanner
+                fromYear={selectedCalendarYear.fromYear}
+                toYear={selectedCalendarYear.toYear}
+                dateFrom={`${selectedCalendarYear.fromYear}-01-01`}
+                dateTo={`${selectedCalendarYear.toYear}-12-31`}
+                calendarYearId={selectedCalendarYearId}
+              />
+            </Suspense>
+          )}
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             <p className='text-sm font-semibold text-foreground mb-4'>
               {selectedCalendarYear?.description} Payments

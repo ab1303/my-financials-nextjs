@@ -45,6 +45,7 @@ export async function addRow(input: CreateZakatPaymentInput) {
       amount: validatedInput.amount,
       beneficiaryType: validatedInput.beneficiaryType,
       beneficiaryId: validatedInput.beneficiaryId,
+      transactionId: validatedInput.transactionId,
     });
 
     return {

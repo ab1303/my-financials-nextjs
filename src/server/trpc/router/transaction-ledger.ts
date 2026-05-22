@@ -16,6 +16,7 @@ import {
 } from '@/server/services/transactions/ledger.service';
 import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import { getUnlinkedDonationTransactions } from '@/server/services/transactions/donation-link.service';
+import { getUnlinkedZakatTransactions } from '@/server/services/zakat.service';
 
 type PrismaReimbursement = {
   id: string;
@@ -647,6 +648,20 @@ export const transactionLedgerRouter = router({
       const dateFrom = new Date(`${input.dateFrom}T00:00:00`);
       const dateTo = new Date(`${input.dateTo}T23:59:59`);
       return getUnlinkedDonationTransactions(userId, dateFrom, dateTo);
+    }),
+
+  getUnlinkedZakatTransactions: protectedProcedure
+    .input(
+      z.object({
+        dateFrom: z.string().min(1),
+        dateTo: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const fromYear = parseInt(input.dateFrom.split('-')[0] ?? '2024');
+      const toYear = parseInt(input.dateTo.split('-')[0] ?? '2024');
+      return getUnlinkedZakatTransactions(userId, fromYear, toYear);
     }),
 });
 
