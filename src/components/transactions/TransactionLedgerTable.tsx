@@ -93,11 +93,12 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   // Calculate date range from initialMonth/initialYear if provided
   const getInitialDateRange = () => {
     if (initialMonth !== undefined && initialYear !== undefined) {
-      const start = new Date(initialYear, initialMonth - 1, 1);
-      const end = new Date(initialYear, initialMonth, 0, 23, 59, 59);
+      // Use local date string directly to avoid UTC timezone offset issues
+      const mm = String(initialMonth).padStart(2, '0');
+      const lastDay = new Date(initialYear, initialMonth, 0).getDate();
       return {
-        from: start.toISOString().split('T')[0],
-        to: end.toISOString().split('T')[0],
+        from: `${initialYear}-${mm}-01`,
+        to: `${initialYear}-${mm}-${String(lastDay).padStart(2, '0')}`,
       };
     }
     return { from: defaultFY.from, to: defaultFY.to };
@@ -333,8 +334,8 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         resetKey={resetKey}
       />
 
-      {!loading && data && data.transactions.length > 0 && (
-        <TransactionSummary transactions={data.transactions} />
+      {!loading && data && (data.totalDebitAmount > 0 || data.totalCreditAmount > 0) && (
+        <TransactionSummary totalDebitAmount={data.totalDebitAmount} totalCreditAmount={data.totalCreditAmount} />
       )}
 
       {loading ? (

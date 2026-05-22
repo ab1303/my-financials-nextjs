@@ -108,6 +108,8 @@ export interface GetAllOutput {
   total: number;
   page: number;
   totalPages: number;
+  totalDebitAmount: number;
+  totalCreditAmount: number;
 }
 
 export interface GetFilterOptionsOutput {
@@ -240,7 +242,7 @@ export const transactionLedgerRouter = router({
     const userId = ctx.session.user.id;
     const where = buildTransactionWhere(input, userId);
 
-    const [transactions, total] = await Promise.all([
+    const [transactions, total, debitAggregate, creditAggregate] = await Promise.all([
       ctx.prisma.transaction.findMany({
         where,
         orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
@@ -289,6 +291,14 @@ export const transactionLedgerRouter = router({
         },
       }),
       ctx.prisma.transaction.count({ where }),
+      ctx.prisma.transaction.aggregate({
+        where: { ...where, type: TransactionTypeEnum.DEBIT },
+        _sum: { amount: true },
+      }),
+      ctx.prisma.transaction.aggregate({
+        where: { ...where, type: TransactionTypeEnum.CREDIT },
+        _sum: { amount: true },
+      }),
     ]);
 
     const outputTransactions: TransactionRow[] = (transactions as PrismaTransaction[]).map((tx) => ({
@@ -354,6 +364,8 @@ export const transactionLedgerRouter = router({
       total,
       page: input.page,
       totalPages: Math.max(1, Math.ceil(total / input.limit)),
+      totalDebitAmount: Number(debitAggregate._sum.amount ?? 0),
+      totalCreditAmount: Number(creditAggregate._sum.amount ?? 0),
     } satisfies GetAllOutput;
   }),
 

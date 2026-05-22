@@ -4,25 +4,14 @@ import { ArrowDownLeft, ArrowUpRight, Zap } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
 
 interface TransactionSummaryProps {
-  transactions: Array<{
-    amount: number;
-    type: 'DEBIT' | 'CREDIT';
-  }>;
+  totalDebitAmount: number;
+  totalCreditAmount: number;
 }
 
-export default function TransactionSummary({ transactions }: TransactionSummaryProps) {
-  // Calculate totals
-  const totalDebit = transactions
-    .filter((tx) => tx.type === 'DEBIT')
-    .reduce((sum, tx) => sum + tx.amount, 0);
+export default function TransactionSummary({ totalDebitAmount, totalCreditAmount }: TransactionSummaryProps) {
+  const net = totalCreditAmount - totalDebitAmount;
 
-  const totalCredit = transactions
-    .filter((tx) => tx.type === 'CREDIT')
-    .reduce((sum, tx) => sum + tx.amount, 0);
-
-  const net = totalCredit - totalDebit;
-
-  if (transactions.length === 0) {
+  if (totalDebitAmount === 0 && totalCreditAmount === 0) {
     return null;
   }
 
@@ -36,7 +25,7 @@ export default function TransactionSummary({ transactions }: TransactionSummaryP
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Expenses</p>
           <p className="truncate text-sm font-semibold text-red-700 dark:text-red-300">
-            <NumericFormat prefix="$" displayType="text" thousandSeparator value={totalDebit.toFixed(2)} />
+            <NumericFormat prefix="$" displayType="text" thousandSeparator value={totalDebitAmount.toFixed(2)} />
           </p>
         </div>
       </div>
@@ -49,7 +38,7 @@ export default function TransactionSummary({ transactions }: TransactionSummaryP
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Income</p>
           <p className="truncate text-sm font-semibold text-green-700 dark:text-green-300">
-            <NumericFormat prefix="$" displayType="text" thousandSeparator value={totalCredit.toFixed(2)} />
+            <NumericFormat prefix="$" displayType="text" thousandSeparator value={totalCreditAmount.toFixed(2)} />
           </p>
         </div>
       </div>
