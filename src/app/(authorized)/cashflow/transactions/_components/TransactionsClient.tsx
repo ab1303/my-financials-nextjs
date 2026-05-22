@@ -160,6 +160,8 @@ export default function TransactionsClient({
         <TransactionLedgerTable
           bankAccounts={bankAccounts}
           refreshKey={refreshKey}
+          initialMonth={initialMonth}
+          initialYear={initialYear}
         />
       </div>
 

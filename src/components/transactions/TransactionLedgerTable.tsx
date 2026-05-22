@@ -35,6 +35,8 @@ type GetAllInput = {
 interface TransactionLedgerTableProps {
   bankAccounts: Array<{ id: string; name: string; bankName: string }>;
   refreshKey?: number;
+  initialMonth?: number;
+  initialYear?: number;
 }
 
 const PAGE_SIZE = 50;
@@ -71,24 +73,43 @@ function parseAmount(value: string) {
 export default function TransactionLedgerTable({
   bankAccounts,
   refreshKey,
+  initialMonth,
+  initialYear,
 }: TransactionLedgerTableProps) {
   return (
     <TransactionLedgerBody
       bankAccounts={bankAccounts}
       refreshKey={refreshKey}
+      initialMonth={initialMonth}
+      initialYear={initialYear}
     />
   );
 }
 
-function TransactionLedgerBody({ bankAccounts, refreshKey }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey'>) {
+function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear'>) {
   const defaultFY = getPresetDateRange('this-fy')!;
+
+  // Calculate date range from initialMonth/initialYear if provided
+  const getInitialDateRange = () => {
+    if (initialMonth !== undefined && initialYear !== undefined) {
+      const start = new Date(initialYear, initialMonth - 1, 1);
+      const end = new Date(initialYear, initialMonth, 0, 23, 59, 59);
+      return {
+        from: start.toISOString().split('T')[0],
+        to: end.toISOString().split('T')[0],
+      };
+    }
+    return { from: defaultFY.from, to: defaultFY.to };
+  };
+
+  const initialDateRange = getInitialDateRange();
 
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [page, setPage] = useState(1);
   const [bankAccountId, setBankAccountId] = useState<string | undefined>(undefined);
   const [category, setCategory] = useState<string | undefined>(undefined);
-  const [dateFrom, setDateFrom] = useState<string | undefined>(defaultFY.from);
-  const [dateTo, setDateTo] = useState<string | undefined>(defaultFY.to);
+  const [dateFrom, setDateFrom] = useState<string | undefined>(initialDateRange.from);
+  const [dateTo, setDateTo] = useState<string | undefined>(initialDateRange.to);
   const [amountMin, setAmountMin] = useState('');
   const [amountMax, setAmountMax] = useState('');
   const [search, setSearch] = useState('');
