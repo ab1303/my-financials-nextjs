@@ -102,7 +102,7 @@ export default function ExpenseTableClient({
         );
       },
     }),
-    columnHelper.display({
+     columnHelper.display({
       id: 'categoryBreakdown',
       size: 150,
       header: () => <span>Category Breakdown</span>,
@@ -113,7 +113,8 @@ export default function ExpenseTableClient({
         return (
           <div className='flex justify-center'>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setSelectedMonth(month);
                 setSelectedMonthYear(year);
               }}
