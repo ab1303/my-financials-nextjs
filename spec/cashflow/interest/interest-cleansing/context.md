@@ -1,22 +1,25 @@
-# Interest Cleansing — Context
+# Interest Cleansing – Context
 
-## Problem
-The bank-interest flow must track interest received and the donations used to cleanse it without forcing users into disconnected manual ledgers. Interest is a special cash inflow: it affects cashflow visibility, but it must remain segregated from ordinary income and reconciled against a yearly cleansing obligation.
+## Problem Summary
+The Interest Cleansing feature tracks both religious obligation (interest received and cleansed in a calendar year) and tax deductibility (cleansing donations paid in the fiscal year for ATO purposes). The original implementation incorrectly restricted the page to ANNUAL years and hardcoded Jan-Dec windows, causing errors for FISCAL years and back-dated records. The correct design is calendar-reactive: all queries use the selected CalendarYear's window, supporting both ANNUAL and FISCAL types.
 
 ## Domain Dependencies
-
-- Uses `CashflowPeriod`, `InterestCredit`, and `InterestCleansingDonation` from [`../../hld.md`](../../hld.md).
-- Depends on transaction-ledger evidence for interest received and donation-ledger records for cleansing payments.
-- Shares auditability requirements with the cashflow audit feature because the route combines filters, aggregation, and interactive remediation.
+- [Cashflow Domain HLD](../hld.md)
+- [Calendar Attribution ADR-1, ADR-4](../../../architecture/calendar-attribution/lld.md)
+- [Calendar Year Picker ADR](../../../architecture/calendar-year-picker/lld.md)
 
 ## Scope
+**IN scope:**
+- Tracking interest received and cleansing donations by selected CalendarYear (ANNUAL or FISCAL)
+- CalendarYearPicker integration for calendar type selection
+- Correct date-range queries for liabilities and donations
+- Back-dating support via historical CalendarYear records
 
-**In scope:**
-- Deriving interest received from bank transactions with monthly visibility.
-- Recording cleansing donations through linked or manual paths.
-- Showing annual totals, remaining obligation, and unlinked follow-up work.
+**OUT of scope:**
+- Zakat calendar support
+- Manual tax advice or ATO integration
+- Editing or deleting CalendarYear records from this page
 
-**Out of scope:**
-- Treating interest as ordinary income.
-- Replacing the transactions or donations domains as canonical data owners.
-- Broader charitable-giving workflows unrelated to interest cleansing.
+## Known Constraints
+- Cleansing donations are tax-deductible in Australia (ATO)
+- The app does not provide tax or legal advice

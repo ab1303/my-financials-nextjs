@@ -353,15 +353,27 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         </div>
       ) : (
         <div className={`overflow-x-auto rounded-xl border bg-white dark:bg-gray-900 transition-colors ${syncing ? 'border-teal-400 dark:border-teal-600' : 'border-gray-200 dark:border-gray-700'}`}>
-          <table className="min-w-full">
+          <table className="w-full table-layout-fixed" style={{ tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '32px' }} />
+              <col style={{ width: '80px' }} />
+              <col style={{ width: '200px' }} />
+              <col style={{ width: '90px' }} />
+              <col style={{ width: '70px' }} />
+              <col style={{ width: '140px' }} />
+              <col style={{ width: '60px' }} />
+              <col style={{ width: '100px' }} />
+              <col style={{ width: '120px' }} />
+              <col style={{ width: '80px' }} />
+            </colgroup>
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="w-8 px-1 py-3" />
+                <th className="px-1 py-3" />
                 {['Date', 'Description', 'Amount', 'Type', 'Category', 'Source', 'Status', 'Bank Account', 'Actions'].map((h) => (
                   <th
                     key={h}
-                    className={`select-none cursor-default px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300 ${
-                      h === 'Source' ? 'w-20 text-center' : 'text-left'
+                    className={`select-none cursor-default overflow-hidden px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300 ${
+                      h === 'Source' ? 'text-center' : 'text-left'
                     }`}
                   >
                     {h}

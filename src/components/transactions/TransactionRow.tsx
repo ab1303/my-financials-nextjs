@@ -215,7 +215,7 @@ export default function TransactionRow({
   return (
     <>
       <tr className="border-b border-gray-200 dark:border-gray-700">
-        <td className="w-8 px-1 py-3 text-center">
+        <td className="overflow-hidden px-1 py-3 text-center">
           {hasReimbursements && (
             <button
               type="button"
@@ -227,20 +227,20 @@ export default function TransactionRow({
             </button>
           )}
         </td>
-        <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.date.slice(0, 10)}</td>
-        <td className="max-w-[240px] px-4 py-3 text-sm text-gray-900 dark:text-white">
+        <td className="overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.date.slice(0, 10)}</td>
+        <td className="overflow-hidden px-4 py-3 text-sm text-gray-900 dark:text-white">
           <span className="block truncate" title={transaction.description}>
             {transaction.description}
           </span>
         </td>
-        <td className={`px-4 py-3 text-sm font-medium tabular-nums ${amountClass}`}>
+        <td className={`overflow-hidden px-4 py-3 text-sm font-medium tabular-nums ${amountClass}`}>
           <div className="flex flex-col">
             <span>{formatCurrency(transaction.amount)}</span>
             {hasReimbursements && <span className="text-xs text-teal-600 dark:text-teal-400">net {formatCurrency(netAmount)}</span>}
           </div>
         </td>
-        <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.type}</td>
-        <td className="px-4 py-3">
+        <td className="overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.type}</td>
+        <td className="overflow-hidden px-4 py-3">
           <div className="flex flex-col gap-1">
             <Select
               instanceId={categorySelectId}
@@ -255,7 +255,7 @@ export default function TransactionRow({
                 ...compactSelectStyles,
                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               }}
-              className="w-full min-w-[140px]"
+              className="w-full"
               menuPortalTarget={document.body}
               menuPosition="fixed"
             />
@@ -276,7 +276,7 @@ export default function TransactionRow({
                     ...compactSelectStyles,
                     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                   }}
-                  className="w-full min-w-[140px]"
+                  className="w-full"
                   menuPortalTarget={document.body}
                   menuPosition="fixed"
                 />
@@ -348,10 +348,10 @@ export default function TransactionRow({
             )}
           </div>
         </td>
-        <td className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300">
+        <td className="overflow-hidden px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300">
           <TransactionSourceIndicator source={transaction.source} />
         </td>
-        <td className="px-4 py-3">
+        <td className="overflow-hidden px-4 py-3">
           <div className="flex flex-col gap-1">
             <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClasses[transaction.status] ?? statusClasses.EXCLUDED}`}>
               {transaction.status}
@@ -392,12 +392,12 @@ export default function TransactionRow({
             )}
           </div>
         </td>
-        <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+        <td className="overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
           {transaction.bankAccountName
             ? `${transaction.bankAccountName}${transaction.bankName ? ` (${transaction.bankName})` : ''}`
             : transaction.bankName ?? '-'}
         </td>
-        <td className="px-4 py-3">
+        <td className="overflow-hidden px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             {transaction.status !== 'VOIDED' && onVoided && (
               <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} status={transaction.status} />

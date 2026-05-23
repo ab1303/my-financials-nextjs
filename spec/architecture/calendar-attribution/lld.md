@@ -1,79 +1,173 @@
-# Calendar Attribution — Low-Level Design
+# Calendar Attribution ADR
 
-## Architectural Decision
+| Status  | Date       | Decision Makers   |
+| ------- | ---------- | ----------------- |
+| Adopted | 2026-05-23 | Architecture Team |
 
-**Transaction-as-source-of-truth is the correct architecture.** A single bank transaction can—and *should*—be attributed to multiple independent calendar year types simultaneously.
+---
 
-This is not double-counting; it is correct multi-dimensional accounting where each calendar year type represents a different legal/religious obligation with its own reporting ledger.
+## ADR-1: Calendar Year as Time Window (not ownership container)
 
-## Key Insight
+**Context:**
+Historically, records (donations, interest, income) were linked to a calendar year via a `calendarId` FK. This led to hardcoded logic, e.g., always assuming Jan-Dec boundaries, and errors when records didn't fit the expected type.
 
-A $500 donation on 2024-11-15 is simultaneously:
+**Decision:**
+A CalendarYear record defines a time window: `(fromYear, fromMonth)` → `(toYear, toMonth)`. It does NOT own records. All queries must derive `dateFrom`/`dateTo` from the CalendarYear fields, not filter by FK.
 
-| Context | Calendar Year | Record | Purpose |
-|---------|--------------|--------|---------|
-| Tax deduction | FY2025 (FISCAL: Jul 1 2024 – Jun 30 2025) | `DonationPayment` → `DonationLedger` → `CalendarYear(FISCAL)` | ATO claim |
-| Zakat fulfilment | 1446H (ZAKAT: Jul 7 2024 – Jun 26 2025) | `ZakatPayment` → `ZakatObligation` → `CalendarYear(ZAKAT)` | Islamic obligation |
+**Rationale:**
 
-These are **independent ledgers for independent legal/religious obligations**. The Australian Tax Office and Islamic Zakat have no bearing on each other. They overlap in time but serve completely different purposes.
+- Supports arbitrary date windows (not just Jan-Dec)
+- Enables back-dating and historical records
+- Avoids type errors from mismatched calendar types
 
-## Schema Design Pattern
+**Anti-pattern:**
 
-The Prisma schema already supports this correctly:
+```typescript
+// INCORRECT: Hardcodes January, ignores fromMonth
+new Date(calendarYear.fromYear, 0, 1);
+```
+
+**Correct pattern:**
+
+```typescript
+// CORRECT: Uses fromMonth
+new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
+```
+
+**Schema excerpt:**
 
 ```prisma
-model Transaction {
-  id String @id @default(cuid())
-  amount Decimal
-  date DateTime
-  
-  // Each junction table has its own 1:1 link to Transaction
-  donationPayment DonationPayment?  // @unique on transactionId
-  zakatPayment    ZakatPayment?     // @unique on transactionId
+model CalendarYear {
+  id          String           @id @default(cuid())
+  description String
+  fromYear    Int
+  fromMonth   Int
+  toYear      Int
+  toMonth     Int
+  type        CalendarEnumType?
+  lockedAt    DateTime?
+  zakatObligations        ZakatObligation[]
+  bankInterestLiabilities BankInterestLiability[]
+  incomeLedgers           IncomeLedger[]
+  expenseLedgers          ExpenseLedger[]
+  donationLedgers         DonationLedger[]
 }
 
-model DonationPayment {
-  id String @id @default(cuid())
-  transactionId String @unique  // Prevents 2+ donation records per transaction
-  donationLedgerId String
-  donationLedger DonationLedger @relation(fields: [donationLedgerId], references: [id])
-  transaction Transaction @relation(fields: [transactionId], references: [id])
-}
-
-model ZakatPayment {
-  id String @id @default(cuid())
-  transactionId String @unique  // Prevents 2+ zakat records per transaction
-  zakatObligationId String
-  zakatObligation ZakatObligation @relation(fields: [zakatObligationId], references: [id])
-  transaction Transaction @relation(fields: [transactionId], references: [id])
+enum CalendarEnumType {
+  ZAKAT
+  ANNUAL
+  FISCAL
 }
 ```
 
-**Key constraint**: `@unique` on `DonationPayment.transactionId` prevents a transaction from being linked to *two donation records*. Similarly, `@unique` on `ZakatPayment.transactionId` prevents a transaction from being linked to *two zakat records*. However, **cross-purpose linking is unrestricted and correct**—a single transaction can be both a `DonationPayment` AND a `ZakatPayment`.
+**Consequences:**
 
-## Date Boundary Handling
+- Back-dating works by creating historical CalendarYear records
+- No more hardcoded Jan-Dec logic
+- Engineers must audit all date logic for compliance
 
-When a transaction straddles calendar year boundaries (e.g., 2024-06-30 is the last day of FY2024 and the first day of FY2025), the application should:
+---
 
-1. Determine which calendar year the transaction date falls into for each calendar type
-2. Record the transaction in the appropriate ledger(s)
-3. Handle partial attribution if needed (user can count only $400 of a $500 donation toward Zakat, for example)
+## ADR-2: Multi-Dimensional Attribution
 
-## Implementation Files
+**Context:**
+A single transaction/payment can be valid in multiple calendar years if its date falls within their windows (e.g., a donation in both Annual and Fiscal years).
 
-| File | Type | Purpose |
-|------|------|---------|
-| `src/server/services/calendar.service.ts` | Service | Calendar year lookup and attribution logic |
-| `src/server/services/donation.service.ts` | Service | Donation payment creation with calendar attribution |
-| `src/server/services/zakat.service.ts` | Service | Zakat payment creation with calendar attribution |
-| `prisma/schema.prisma` | Schema | FK and @unique constraints as described above |
-| `src/types/calendar.types.ts` | Types | Calendar attribution type definitions |
+**Decision:**
+A transaction is attributed to every calendar year whose window contains its date. This is not double-counting; each calendar serves a distinct purpose.
 
-## Validation Checklist
+**Rationale:**
 
-- [ ] Schema supports 1:1 relationship between Transaction and DonationPayment
-- [ ] Schema supports 1:1 relationship between Transaction and ZakatPayment
-- [ ] A single transaction can be both a donation and zakat payment (confirmed via Prisma constraints)
-- [ ] Date boundary logic correctly assigns transactions to calendar years
-- [ ] Partial attribution (amount differs between ledgers) is supported
-- [ ] No duplicate records created when a transaction is attributed multiple times
+- Supports tax, religious, and civic obligations
+- Schema enforces uniqueness per type (e.g., DonationPayment, ZakatPayment)
+
+**Consequences:**
+
+- Cross-calendar views are supported naturally
+- No risk of duplicate records per obligation
+
+---
+
+## ADR-3: Screen-Declared Calendar Types
+
+**Context:**
+Features previously allowed users to select incompatible calendar types, causing errors.
+
+**Decision:**
+Each feature page must declare which `CalendarEnumType` values are valid. The year picker UI only shows those types. If only one type is valid, no toggle is shown.
+
+**Rationale:**
+
+- Prevents user error
+- Ensures type safety per feature
+
+**Per-Screen Calendar Type Declarations:**
+| Feature Page | Allowed Calendar Types |
+|---------------------|-------------------------|
+| Interest Cleansing | ANNUAL, FISCAL |
+| Donations | FISCAL |
+| Zakat | ZAKAT |
+| Income / Expenses | FISCAL |
+
+**Consequences:**
+
+- Users cannot select incompatible types
+- UI is simplified when only one type is valid
+
+---
+
+## ADR-4: Date-Range Queries as the Primary Scope
+
+**Context:**
+Queries previously filtered by `calendarId` FK, which was inflexible and prevented back-dating.
+
+**Decision:**
+All queries must use `date BETWEEN dateFrom AND dateTo` derived from the CalendarYear record. The `calendarId` FK is for audit trail only.
+
+**Rationale:**
+
+- Enables historical and cross-calendar views
+- Decouples data from calendar ownership
+
+**Consequences:**
+
+- Back-dating and cross-calendar attribution work seamlessly
+- Engineers must update all queries to use date windows
+
+---
+
+## ADR-5: URL State Standard
+
+**Context:**
+URL params for calendar selection were inconsistent (sometimes using fromYear/toYear, sometimes description strings).
+
+**Decision:**
+The canonical URL param for selected year is `?year=<calendarYearId>`. The server resolves the CalendarYear and derives date boundaries. Other patterns are deprecated.
+
+**Rationale:**
+
+- Consistent, type-safe routing
+- Enables deep linking and bookmarking
+
+**Consequences:**
+
+- Requires coordinated changes across pages
+- Known inconsistencies must be fixed
+
+---
+
+## Migration Notes
+
+| Area / File                   | Violation / Action Needed                               |
+| ----------------------------- | ------------------------------------------------------- |
+| interest-cleansing.service.ts | Hardcoded Jan-Dec dates; must use CalendarYear window   |
+| donations form (URL params)   | Uses ?fromYear/?toYear; must use ?year=<calendarYearId> |
+| All ledger queries            | Must use date windows, not calendarId as primary filter |
+
+---
+
+## Reference
+
+Other specs should cite this ADR as:
+
+`See [Calendar Attribution ADR](../../../architecture/calendar-attribution/lld.md#adr-X)`

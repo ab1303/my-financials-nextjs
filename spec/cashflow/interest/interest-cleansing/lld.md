@@ -1,39 +1,77 @@
-# Interest Cleansing — Low-Level Design
+# Interest Cleansing – LLD
 
-## Implementation Details
+## Phase Map
+| Phase | Description |
+|-------|-------------|
+| 1     | Service fix: derive date window from CalendarYear, fix donation query |
+| 2     | Page integration: CalendarYearPicker (ANNUAL+FISCAL), pass applicableTypes |
+| 3     | Back-dating validation: test with historical CalendarYear records |
 
-### Ledger-First Interest Model
-- Treat confirmed `Transaction` credits categorized as bank interest as the primary source for interest received.
-- Keep `BankInterestLiability.amountDue` as a monthly manual override for statement gaps or non-imported interest.
-- Reuse `DonationPayment` with `donationPurpose = INTEREST_CLEANSING` instead of maintaining a separate long-term payment model.
+## Architecture Decisions
+- > Per [ADR-1](../../../architecture/calendar-attribution/lld.md#adr-1): derive `dateFrom`/`dateTo` from CalendarYear fields, never hardcode.
+- > Per [ADR-4](../../../architecture/calendar-attribution/lld.md#adr-4): query donations by `datePaid` within window, not just FK.
+- > CalendarYearPicker: see [Calendar Year Picker ADR](../../../architecture/calendar-year-picker/lld.md)
 
-### Service and Aggregation Layer
-- Provide a bank-interest service that combines bank accounts, calendar-year boundaries, confirmed interest credits, monthly overrides, and interest-cleansing donations.
-- Preserve monthly credit visibility for what was received while calculating cleansing totals as a yearly obligation pool.
-- Return derived yearly summary data for total received, total cleansed, remaining balance, and any unlinked interest transactions.
+## Phase 1: Service Fix
 
-### UI Flow
-- Keep the page server-first with summary cards for received, cleansed, and remaining totals.
-- Show a monthly interest-credits table for ledger-derived and manually overridden amounts.
-- Surface unlinked interest work through a banner and a cleansing drawer that supports linked-transaction and manual-entry modes.
-- Keep row-level editing limited to manual overrides; donation creation happens through the dedicated cleansing flow.
+### Before (buggy)
+```typescript
+// WRONG — ignores fromMonth, hardcodes January start
+const dateFrom = new Date(calendarYear.fromYear, 0, 1);
+const dateTo = new Date(calendarYear.fromYear, 11, 31, 23, 59, 59);
 
-### Schema and Migration Notes
-- Introduce `DonationPurposeEnum` and default ordinary donations to `VOLUNTARY` when the schema has not yet been upgraded.
-- Backfill legacy `BankInterestPayment` rows into `DonationPayment(INTEREST_CLEANSING)` where data quality allows.
-- Treat legacy month-attribution behavior as superseded by the yearly cleansing-pool model, while preserving monthly receipt reporting.
+const donations = await prisma.donationPayment.findMany({
+  where: {
+    donationPurpose: 'INTEREST_CLEANSING',
+    donationLedger: { calendarId: calendarYearId }, // FK-based — wrong
+  }
+});
+```
+
+### After (fixed)
+```typescript
+// CORRECT — respects actual calendar window boundaries
+const dateFrom = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
+const dateTo = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59);
+
+const donations = await prisma.donationPayment.findMany({
+  where: {
+    donationPurpose: 'INTEREST_CLEANSING',
+    datePaid: { gte: dateFrom, lte: dateTo }, // date-range — correct
+  }
+});
+```
+
+#### Function Signature
+```typescript
+async function getInterestCleansingSummary(calendarYear: CalendarYear): Promise<InterestCleansingSummary>;
+```
+
+## Phase 2: Page Integration
+- Pass `applicableTypes: ['ANNUAL', 'FISCAL']` to CalendarYearPicker
+- Remove restriction to ANNUAL only
+- CalendarYearPicker controls the window for all queries
+
+## Phase 3: Back-dating Validation
+- Create/select historical CalendarYear (e.g., Annual 2022, Fiscal 2021-22)
+- Validate that all liabilities and donations within the window are included
+
+## TDD Test Cases
+| Test Case | Description |
+|-----------|-------------|
+| 1 | Returns correct interest/donation totals for ANNUAL year |
+| 2 | Returns correct interest/donation totals for FISCAL year |
+| 3 | Back-dated CalendarYear includes all matching records |
+| 4 | Donations outside window are excluded |
+| 5 | Service fix: no hardcoded Jan-Dec, respects fromMonth/toMonth |
 
 ## File Inventory
-- `prisma/schema.prisma` — `DonationPurposeEnum`, donation purpose field, and legacy interest comments.
-- `prisma/migrations/<timestamp>_add_donation_purpose_enum/migration.sql` — schema and backfill migration.
-- `src/server/services/bank-interest/interest-cleansing.service.ts` — yearly aggregation and derived summary logic.
-- `src/server/trpc/router/bank-interest.ts` — protected procedures for cleansing data and unlinked transactions.
-- `src/app/(authorized)/cashflow/bank-interest/BankInterestTableServer.tsx` — server data loading and section orchestration.
-- `src/app/(authorized)/cashflow/bank-interest/InterestCreditsTable.tsx` — monthly credits view and manual override editing.
-- `src/app/(authorized)/cashflow/bank-interest/_components/UnlinkedInterestBanner.tsx` — follow-up banner for uncleansed interest credits.
-- `src/app/(authorized)/cashflow/bank-interest/_components/CleanseDonationDrawer.tsx` — linked/manual cleansing entry flow.
-- `src/app/(authorized)/cashflow/bank-interest/_components/CleansingDonationsList.tsx` — yearly donation list for cleansing records.
-- `src/app/(authorized)/cashflow/bank-interest/_types.ts` — derived yearly data types shared with the client layer.
-- `src/app/(authorized)/cashflow/bank-interest/reducer.ts` — client state updates for derived interest data.
-- `src/app/(authorized)/cashflow/bank-interest/page.tsx` — summary cards and top-level page composition.
-- `src/app/(authorized)/cashflow/donations/actions.ts` — donation creation path reused for cleansing payments.
+| File | Change |
+|------|--------|
+| src/server/services/bank-interest/interest-cleansing.service.ts | Fix date window, fix donation query |
+| src/app/(authorized)/cashflow/bank-interest/page.tsx | Pass applicableTypes, integrate CalendarYearPicker |
+| src/app/(authorized)/cashflow/bank-interest/BankInterestTableServer.tsx | Fix date derivation |
+
+## Migration Notes
+- Existing BankInterestLiability records are now queried by date range, not just year/month
+- Verify all records have correct year/month fields for accurate inclusion in new queries

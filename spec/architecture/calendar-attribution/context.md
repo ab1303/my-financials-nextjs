@@ -1,28 +1,30 @@
-# Calendar Attribution — Context
+# Calendar Attribution ADR — Context
 
-## Problem Statement
-
-The application supports multiple calendar year types (Fiscal, Calendar, Zakat, Islamic), but there is ambiguity around whether a single financial transaction can be attributed to multiple calendar years simultaneously.
-
-This is an architectural decision about multi-dimensional accounting: should a $500 donation on a given date be recorded in only one calendar's ledger, or should it be attributable to multiple independent calendar systems?
+## Problem Summary
+The app's original use of `calendarId` as a foreign key for associating records with calendar years led to hardcoded logic, type errors, and inflexible date boundaries. This prevented correct handling of back-dated records and multi-dimensional attribution (e.g., a donation counting for both fiscal and zakat years).
 
 ## Domain Dependencies
-
-See `.../hld.md` for architecture domain scope.
-
-This feature depends on understanding:
-- **Cashflow domain**: How transactions, donations, and zakat payments are recorded and attributed
-- **Data modeling**: Prisma schema relationships and constraint patterns (FK, @unique)
+This ADR is referenced by: cashflow/interest/interest-cleansing, cashflow/donations, cashflow/categories, and potentially all cashflow features.
 
 ## Scope
+**IN scope:**
+- How calendar years are defined and attributed to records
+- Querying and UI patterns for calendar selection
+- Multi-calendar attribution logic
+- URL parameter standards for calendar selection
 
-### In Scope
-- Transaction-as-source-of-truth architecture decision
-- Multi-calendar attribution (can a single transaction be in multiple calendar ledgers?)
-- Schema design for cross-calendar linking (how are FKs and unique constraints applied?)
-- Date boundary edge cases (when a transaction straddles calendar year boundaries)
+**OUT of scope:**
+- Implementation details of individual feature pages
+- UI design for year pickers
+- Database migration scripts
 
-### Out of Scope
-- Calendar year type definitions (that's cashflow domain)
-- UI changes or reporting visualizations
-- User configuration of calendar attribution rules
+## Known Constraints / Gotchas
+- All queries must use date windows, not calendarId FKs, as the primary filter
+- calendarId on ledger records is for audit trail only
+- URL param for year must be `?year=<calendarYearId>` (not fromYear/toYear)
+- Features must declare supported calendar types per screen
+
+## Reference Format
+Other specs should cite this ADR as:
+
+`See [Calendar Attribution ADR](../../../architecture/calendar-attribution/lld.md#adr-X)`
