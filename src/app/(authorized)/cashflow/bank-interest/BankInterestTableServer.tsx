@@ -18,9 +18,8 @@ export default async function BankInterestTableServer({
 
   const data = await getYearlyCleansingData(bankId, calendarYearId, session.user.id);
 
-  const year = data.monthlyCredits[0]?.year ?? new Date().getFullYear();
-  const dateFrom = `${year}-01-01`;
-  const dateTo = `${year}-12-31`;
+  // FIX: Use dateFrom/dateTo from service (respects fromMonth/toMonth from calendarYear)
+  const { dateFrom, dateTo } = data;
 
   return (
     <div className="space-y-8">

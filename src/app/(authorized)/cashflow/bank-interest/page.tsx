@@ -11,6 +11,7 @@ import { getUserFiscalYearType } from '@/server/services/user-profile/user-profi
 import { prisma } from '@/server/utils/prisma';
 
 import type { OptionType } from '@/types';
+import type { CalendarEnumType } from '@prisma/client';
 
 import BankInterestForm from './form';
 import BankInterestTableServer from './BankInterestTableServer';
@@ -54,24 +55,18 @@ export default async function BanksPage({
     ? banks.map((b) => ({ id: b.id, label: b.name }))
     : [];
 
-  const yearParamLabel = getSelectedParam(params?.year);
+  const yearIdParam = getSelectedParam(params?.year);
 
   const selectedBank = bankOptions.find(
     (b) => b.label === getSelectedParam(params?.bank),
   );
   const selectedBankId = selectedBank ? selectedBank.id : '';
 
-  const selectedCalendarYear = yearlyData.find(
-    (yd) => yd.description === yearParamLabel,
-  );
-  const selectedCalendarYearId = selectedCalendarYear
-    ? selectedCalendarYear.id
-    : '';
+  const selectedCalendarYearId = yearlyData.some(yd => yd.id === yearIdParam) ? yearIdParam : '';
 
   const initialData = {
     bankOptions,
     yearlyData,
-    initialYearType: (fiscalYearType ?? 'FISCAL') as 'FISCAL' | 'ANNUAL',
   };
 
   const yearlyCleansingData =
@@ -102,6 +97,7 @@ export default async function BanksPage({
           initialData={initialData}
           bankIdParam={selectedBankId}
           yearIdParam={selectedCalendarYearId}
+          defaultType={(fiscalYearType ?? 'FISCAL') as CalendarEnumType}
         >
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             {selectedBankId && selectedCalendarYearId ? (

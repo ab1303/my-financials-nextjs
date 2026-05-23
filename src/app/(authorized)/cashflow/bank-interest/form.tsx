@@ -2,76 +2,45 @@
 
 import { Label } from '@/components/ui/Label';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
-import React, { useId, useMemo, useState } from 'react';
+import React, { useId, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 
 import { Card } from '@/components';
+import CalendarYearPicker from '@/components/CalendarYearPicker';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
+import type { CalendarEnumType } from '@prisma/client';
 
 type BankInterestFormProps = {
   initialData: {
     bankOptions: OptionType[];
     yearlyData: Array<CalendarYearType>;
-    initialYearType: 'FISCAL' | 'ANNUAL';
   };
   bankIdParam: string;
   yearIdParam: string;
+  defaultType?: CalendarEnumType;
   children?: React.ReactNode;
 };
 
 export default function BankInterestForm({
-  initialData: { bankOptions, yearlyData, initialYearType },
+  initialData: { bankOptions, yearlyData },
   bankIdParam,
   yearIdParam,
+  defaultType,
   children,
 }: BankInterestFormProps) {
   const uniqSelectBankId = useId();
-  const uniqFiscalYearId = useId();
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  // State for switching between calendar types
-  const [currentYearType, setCurrentYearType] =
-    useState<CalendarYearType['type']>(initialYearType);
-
-  // Get available year types from the data
-  const availableYearTypes = useMemo(
-    () => Array.from(new Set(yearlyData.map((yd) => yd.type))),
-    [yearlyData],
-  );
-
-  const currentYearData = yearlyData.find((yd) => yd.id === yearIdParam);
-  const currentYearOption = currentYearData
-    ? {
-        id: currentYearData.id,
-        label: currentYearData.description,
-      }
-    : undefined;
-
-  const [selectedYear, setSelectedYear] = useState<
-    SingleValue<OptionType> | undefined
-  >(currentYearOption);
 
   const currentBank = bankOptions.find((b) => b.id === bankIdParam);
 
   const [selectedBank, setSelectedBank] = useState<
     SingleValue<OptionType> | undefined
   >(currentBank);
-
-  // const [data, setData] = React.useState(() => [...bankInterestData]);
-
-  const fiscalYearOptions = useMemo(() => {
-    return yearlyData
-      .filter((yd) => yd.type === currentYearType)
-      .map((yd) => ({
-        id: yd.id,
-        label: yd.description,
-      }));
-  }, [currentYearType, yearlyData]);
 
   const handleOptionChange = (option: SingleValue<OptionType>) => {
     if (!option) {
@@ -102,48 +71,14 @@ export default function BankInterestForm({
 
   return (
     <form className='mb-0 space-y-6'>
-      {/* Calendar Type Toggle */}
-      {availableYearTypes.length > 1 && (
-        <div className='mx-10'>
-          <Label>Calendar Type</Label>
-          <div className='mt-3 flex gap-2'>
-            {availableYearTypes.map((type) => (
-              <button
-                key={type}
-                type='button'
-                onClick={() => {
-                  setCurrentYearType(type);
-                  setSelectedYear(undefined); // Clear selection when switching types
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  currentYearType === type
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className='mx-10'>
-        <Label>Financial Year</Label>
-        <div className='mt-3'>
-          <Select<OptionType>
-            isClearable
-            className='w-3/5 mr-2'
-            value={selectedYear}
-            options={fiscalYearOptions}
-            instanceId={uniqFiscalYearId}
-            getOptionValue={(option) => option.id}
-            onChange={(option) => {
-              setSelectedYear(option);
-              updateURLSearchParams('year', option?.label);
-            }}
-          />
-        </div>
-      </div>
+      <CalendarYearPicker
+        applicableTypes={['ANNUAL', 'FISCAL']}
+        calendarYears={yearlyData}
+        selectedYearId={yearIdParam || undefined}
+        defaultType={defaultType}
+        onYearChange={(yearId) => updateURLSearchParams('year', yearId ?? undefined)}
+        className='mx-10'
+      />
       <div className='mx-10'>
         <Label>Bank</Label>
         <div className='mt-1'>

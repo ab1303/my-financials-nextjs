@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
@@ -34,8 +36,7 @@ export default async function DonationPage({
   const params = await searchParams;
   const session = await auth();
 
-  const fromYearParam = +getSelectedParam(params?.fromYear);
-  const toYearParam = +getSelectedParam(params?.toYear);
+  const yearIdParam = getSelectedParam(params?.year);
   const [donationYearData, fiscalYearType] = await Promise.all([
     getCalendarYearsHandler(['FISCAL']),
     session?.user?.id
@@ -44,19 +45,16 @@ export default async function DonationPage({
   ]);
 
   const selectedCalendarYear =
-    donationYearData.find(
-      (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
-    ) ?? getDefaultCalendarYear(donationYearData, fiscalYearType ?? 'FISCAL');
+    donationYearData.find((yd) => yd.id === yearIdParam) ??
+    getDefaultCalendarYear(donationYearData, fiscalYearType ?? 'FISCAL');
 
   const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
-  const defaultCalendarYearId = selectedCalendarYear?.id ?? '';
 
   const totalDonations = await totalDonationsHandler(selectedCalendarYearId);
 
   const initialData = {
     donationYearData,
     totalDonations,
-    defaultCalendarYearId,
   };
 
   return (
@@ -79,8 +77,8 @@ export default async function DonationPage({
               <UnlinkedTransactionsBanner
                 fromYear={selectedCalendarYear.fromYear}
                 toYear={selectedCalendarYear.toYear}
-                dateFrom={`${selectedCalendarYear.fromYear}-07-01`}
-                dateTo={`${selectedCalendarYear.toYear}-06-30`}
+                dateFrom={`${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01`}
+                dateTo={`${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}`}
                 calendarYearId={selectedCalendarYearId}
               />
             </Suspense>

@@ -32,6 +32,8 @@ export type YearlyCleansingData = {
   cleansingDonations: CleansingDonation[];
   yearlySummary: YearlySummary;
   unlinkedInterestCount: number;
+  dateFrom: string;
+  dateTo: string;
 };
 
 export const getYearlyCleansingData = async (
@@ -53,8 +55,11 @@ export const getYearlyCleansingData = async (
   const calendarYear = await prisma.calendarYear.findUniqueOrThrow({
     where: { id: calendarYearId },
   });
-  const dateFrom = new Date(calendarYear.fromYear, 0, 1);
-  const dateTo = new Date(calendarYear.fromYear, 11, 31, 23, 59, 59);
+  // FIX 1: Use fromMonth/toMonth from calendarYear, respecting fiscal year windows
+  // ADR-1: CalendarYear is a time window — derive dateFrom/dateTo from fromYear/fromMonth → toYear/toMonth
+  // Use UTC to avoid timezone offset issues
+  const dateFrom = new Date(Date.UTC(calendarYear.fromYear, calendarYear.fromMonth - 1, 1));
+  const dateTo = new Date(Date.UTC(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59));
 
   const interestTx = await prisma.transaction.findMany({
     where: {
@@ -86,7 +91,9 @@ export const getYearlyCleansingData = async (
   const rawDonations = await prisma.donationPayment.findMany({
     where: {
       donationPurpose: 'INTEREST_CLEANSING',
-      donationLedger: { calendarId: calendarYearId },
+      // FIX 2: Use datePaid date range instead of FK-based calendarId lookup
+      // ADR-4: Use datePaid BETWEEN dateFrom AND dateTo, not calendarId FK as primary scope
+      datePaid: { gte: dateFrom, lte: dateTo },
     },
     include: {
       business: { select: { name: true } },
@@ -122,6 +129,8 @@ export const getYearlyCleansingData = async (
     cleansingDonations,
     yearlySummary: { totalReceived, totalCleansed, balance },
     unlinkedInterestCount,
+    dateFrom: dateFrom.toISOString().slice(0, 10),
+    dateTo: dateTo.toISOString().slice(0, 10),
   };
 };
 

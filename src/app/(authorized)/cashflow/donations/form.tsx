@@ -1,20 +1,18 @@
 'use client';
 
-import { Label } from '@/components/ui/Label';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useId } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
 
 import { Card } from '@/components';
+import CalendarYearPicker from '@/components/CalendarYearPicker';
+import { Label } from '@/components/ui/Label';
 
-import type { SingleValue } from 'react-select';
-import type { OptionType, CalendarYearType } from '@/types';
+import type { CalendarYearType } from '@/types';
 
 type InitialDataType = {
   donationYearData: Array<CalendarYearType>;
   totalDonations: number;
-  defaultCalendarYearId?: string;
 };
 
 type Props = {
@@ -33,117 +31,30 @@ export default function DonationForm({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [selectedDonationYear, setSelectedDonationYear] =
-    useState<SingleValue<OptionType>>(null);
-  const [totalDonations, setTotalDonations] = useState(
-    initialData.totalDonations,
-  );
+  const totalDonations = initialData.totalDonations;
 
-  const donationYearOptions: Array<OptionType> = useMemo(
-    () =>
-      initialData.donationYearData.map((zy) => ({
-        id: zy.id,
-        label: zy.description,
-      })),
-    [initialData.donationYearData],
-  );
-
-  // Set selected year based on URL params
-  useEffect(() => {
-    const fromYear = searchParams?.get('fromYear');
-    const toYear = searchParams?.get('toYear');
-
-    if (fromYear && toYear) {
-      const yearData = initialData.donationYearData.find(
-        (yd) => yd.fromYear === +fromYear && yd.toYear === +toYear,
-      );
-      const yearOption = yearData
-        ? {
-            id: yearData.id,
-            label: yearData.description,
-          }
-        : null;
-      setSelectedDonationYear(yearOption);
-    } else if (donationYearOptions.length > 0 && !fromYear && !toYear) {
-      const defaultId = initialData.defaultCalendarYearId;
-      const targetYear = defaultId
-        ? initialData.donationYearData.find((yd) => yd.id === defaultId)
-        : initialData.donationYearData[0];
-
-      if (targetYear) {
-        setSelectedDonationYear({
-          id: targetYear.id,
-          label: targetYear.description,
-        });
-
-        const current = new URLSearchParams();
-        current.set('fromYear', targetYear.fromYear.toString());
-        current.set('toYear', targetYear.toYear.toString());
-
-        const search = current.toString();
-        const query = search ? `?${search}` : '';
-
-        router.replace(`${pathname}${query}`);
-      }
-    }
-  }, [
-    donationYearOptions,
-    searchParams,
-    initialData.donationYearData,
-    router,
-    pathname,
-  ]);
-
-  // Update total donations when year changes
-  useEffect(() => {
-    if (yearIdParam) {
-      setTotalDonations(initialData.totalDonations);
-    }
-  }, [yearIdParam, initialData.totalDonations]);
-
-  const onYearChange = (selectedOption: SingleValue<OptionType>) => {
-    setSelectedDonationYear(selectedOption);
-
-    const selectedYearData = selectedOption
-      ? initialData.donationYearData.find((yd) => yd.id === selectedOption.id)
-      : undefined;
-
-    const current = new URLSearchParams(
-      Array.from(searchParams?.entries() || []),
-    );
-
-    if (selectedYearData) {
-      current.set('fromYear', selectedYearData.fromYear.toString());
-      current.set('toYear', selectedYearData.toYear.toString());
+  const handleYearChange = (yearId: string | null) => {
+    const current = new URLSearchParams(searchParams || '');
+    if (!yearId) {
+      current.delete('year');
     } else {
-      // Clear the parameters when no year is selected
-      current.delete('fromYear');
-      current.delete('toYear');
+      current.set('year', yearId);
     }
-
     const search = current.toString();
     const query = search ? `?${search}` : '';
-
-    router.push(`${pathname}${query}`);
+    router.replace(`${pathname}${query}`);
   };
 
   return (
     <form className='mb-0 space-y-6'>
-      <div className='mx-10'>
-        <Label>Fiscal Year</Label>
-        <div className='mt-3'>
-          <Select<OptionType>
-            isClearable
-            className='w-3/5'
-            value={selectedDonationYear}
-            options={donationYearOptions}
-            instanceId={id}
-            getOptionValue={(option) => option.id}
-            onChange={onYearChange}
-            placeholder='Select fiscal year...'
-          />
-        </div>
-      </div>
+      <CalendarYearPicker
+        applicableTypes={['FISCAL']}
+        calendarYears={initialData.donationYearData}
+        selectedYearId={yearIdParam || undefined}
+        onYearChange={handleYearChange}
+        label='Fiscal Year'
+        className='mx-10'
+      />
       <div className='mx-10'>
         <Label>Total Donations</Label>
         <div className='mt-3'>
