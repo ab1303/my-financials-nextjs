@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 
 import Table from '@/components/table';
 import { useDonationPaymentState } from './StateProvider';
+import LinkTransactionsDrawerTrigger from './_components/LinkTransactionsDrawerTrigger';
 
 import { getTableColumns } from './_table/columns';
 
@@ -35,6 +36,8 @@ type DonationTableClientProps = {
   ) => Promise<ServerActionType<DonationPaymentType>>;
   deleteRow: (input: DeleteDonationPaymentInput) => Promise<ServerActionType>;
   calendarYearId: string;
+  dateFrom?: string;
+  dateTo?: string;
 };
 
 export default function DonationTableClient({
@@ -44,6 +47,8 @@ export default function DonationTableClient({
   editRow,
   deleteRow,
   calendarYearId,
+  dateFrom,
+  dateTo,
 }: DonationTableClientProps) {
   const [editedRows, setEditedRows] = useState<
     Map<number, DonationPaymentType>
@@ -288,16 +293,25 @@ export default function DonationTableClient({
             <span className='ml-2 text-sm text-muted-foreground'>(Updating...)</span>
           )}
         </h3>
-        <button
-          type='button'
-          className='inline-flex items-center justify-center w-10 h-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary/10 text-primary hover:bg-primary/20 focus:ring-primary transition-colors'
-          onClick={handleAddPayment}
-          disabled={!calendarYearId || isPending}
-          aria-label='Add new donation'
-          title='Add Donation'
-        >
-          <Plus className='w-4 h-4' />
-        </button>
+        <div className='flex gap-2'>
+          {dateFrom && dateTo && (
+            <LinkTransactionsDrawerTrigger
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              calendarYearId={calendarYearId}
+            />
+          )}
+          <button
+            type='button'
+            className='inline-flex items-center justify-center w-10 h-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary/10 text-primary hover:bg-primary/20 focus:ring-primary transition-colors'
+            onClick={handleAddPayment}
+            disabled={!calendarYearId || isPending}
+            aria-label='Add new donation'
+            title='Add Donation'
+          >
+            <Plus className='w-4 h-4' />
+          </button>
+        </div>
       </div>
 
       <div className='overflow-x-auto'>

@@ -94,6 +94,7 @@ function CalendarYearPicker({
 
       {/* Year dropdown */}
       <AppSelect<OptionType>
+        instanceId={labelId}
         inputId={labelId}
         options={yearOptions}
         value={selectedOption}

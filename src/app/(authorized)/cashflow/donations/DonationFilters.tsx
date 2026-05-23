@@ -4,7 +4,6 @@ import React, { useId } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
 
-import { Card } from '@/components';
 import CalendarYearPicker from '@/components/CalendarYearPicker';
 import { Label } from '@/components/ui/Label';
 
@@ -18,13 +17,11 @@ type InitialDataType = {
 type Props = {
   initialData: InitialDataType;
   yearIdParam: string;
-  children: React.ReactNode;
 };
 
-export default function DonationForm({
+export default function DonationFilters({
   initialData,
   yearIdParam,
-  children,
 }: Props) {
   const id = useId();
   const router = useRouter();
@@ -46,16 +43,15 @@ export default function DonationForm({
   };
 
   return (
-    <form className='mb-0 space-y-6'>
+    <div className='mb-6 space-y-6'>
       <CalendarYearPicker
         applicableTypes={['FISCAL', 'ANNUAL']}
         calendarYears={initialData.donationYearData}
         selectedYearId={yearIdParam || undefined}
         onYearChange={handleYearChange}
         label='Year'
-        className='mx-10'
       />
-      <div className='mx-10'>
+      <div>
         <Label>Total Donations</Label>
         <div className='mt-3'>
           <NumericFormat
@@ -69,9 +65,6 @@ export default function DonationForm({
           />
         </div>
       </div>
-      <div className='mt-8'>
-        <Card.Body>{children}</Card.Body>
-      </div>
-    </form>
+    </div>
   );
 }

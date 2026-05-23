@@ -74,7 +74,7 @@ export const getYearlyCleansingData = async (
 
   const monthlyCredits: MonthlyCredit[] = liabilities.map((liability) => {
     const monthTx = interestTx.filter(
-      (tx) => tx.date.getMonth() + 1 === liability.month,
+      (tx) => tx.date.getMonth() + 1 === liability.month && tx.date.getFullYear() === liability.year,
     );
     const receivedFromLedger = monthTx.reduce((s, tx) => s + tx.amount.toNumber(), 0);
     const manualOverride = liability.amountDue.toNumber();

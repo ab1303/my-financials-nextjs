@@ -1,18 +1,17 @@
 'use client';
 
+import { useId, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import type { SingleValue } from 'react-select';
+
 import { Label } from '@/components/ui/Label';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
-import React, { useId, useState } from 'react';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-
-import { Card } from '@/components';
 import CalendarYearPicker from '@/components/CalendarYearPicker';
 
-import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
 import type { CalendarEnumType } from '@prisma/client';
 
-type BankInterestFormProps = {
+type BankInterestFiltersProps = {
   initialData: {
     bankOptions: OptionType[];
     yearlyData: Array<CalendarYearType>;
@@ -20,16 +19,14 @@ type BankInterestFormProps = {
   bankIdParam: string;
   yearIdParam: string;
   defaultType?: CalendarEnumType;
-  children?: React.ReactNode;
 };
 
-export default function BankInterestForm({
+export default function BankInterestFilters({
   initialData: { bankOptions, yearlyData },
   bankIdParam,
   yearIdParam,
   defaultType,
-  children,
-}: BankInterestFormProps) {
+}: BankInterestFiltersProps) {
   const uniqSelectBankId = useId();
 
   const router = useRouter();
@@ -69,16 +66,16 @@ export default function BankInterestForm({
   };
 
   return (
-    <form className='mb-0 space-y-6'>
+    <div className='mb-6 space-y-6'>
       <CalendarYearPicker
         applicableTypes={['ANNUAL', 'FISCAL']}
         calendarYears={yearlyData}
         selectedYearId={yearIdParam || undefined}
         defaultType={defaultType}
         onYearChange={(yearId) => updateURLSearchParams('year', yearId ?? undefined)}
-        className='mx-10'
+        label='Year'
       />
-      <div className='mx-10'>
+      <div>
         <Label>Bank</Label>
         <div className='mt-1'>
           <Select<OptionType>
@@ -92,9 +89,6 @@ export default function BankInterestForm({
           />
         </div>
       </div>
-      <div className='mt-8 overflow-x-scroll'>
-        <Card.Body>{children}</Card.Body>
-      </div>
-    </form>
+    </div>
   );
 }

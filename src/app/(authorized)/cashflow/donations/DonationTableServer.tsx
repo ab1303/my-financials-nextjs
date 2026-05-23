@@ -11,10 +11,14 @@ import { addRow, deleteRow, editRow } from './actions';
 
 export type DonationTableServerProps = {
   calendarYearId: string;
+  dateFrom?: string;
+  dateTo?: string;
 };
 
 export default async function DonationPaymentsTableServer({
   calendarYearId,
+  dateFrom,
+  dateTo,
 }: DonationTableServerProps) {
   try {
     // Get user session for user-specific data
@@ -66,6 +70,8 @@ export default async function DonationPaymentsTableServer({
           editRow={editRow}
           deleteRow={deleteRow}
           calendarYearId={calendarYearId}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
         />
       </DonationPaymentStateProvider>
     );

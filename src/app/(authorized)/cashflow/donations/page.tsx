@@ -10,7 +10,7 @@ import { getUserFiscalYearType } from '@/server/services/user-profile/user-profi
 import { prisma } from '@/server/utils/prisma';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
-import DonationForm from './form';
+import DonationFilters from './DonationFilters';
 import DonationPaymentsTableServer from './DonationTableServer';
 import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
 
@@ -68,33 +68,34 @@ export default async function DonationPage({
         </p>
       </div>
       <div className='rounded-xl border border-border bg-card shadow p-6'>
-        <DonationForm
+        <DonationFilters
           initialData={initialData}
           yearIdParam={selectedCalendarYearId}
-        >
-          {selectedCalendarYear && (
-            <Suspense fallback={null}>
-              <UnlinkedTransactionsBanner
-                fromYear={selectedCalendarYear.fromYear}
-                toYear={selectedCalendarYear.toYear}
-                dateFrom={`${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01`}
-                dateTo={`${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}`}
-                calendarYearId={selectedCalendarYearId}
-              />
-            </Suspense>
-          )}
-          <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
-            {selectedCalendarYear && (
-              <div className='font-mono text-muted-foreground mb-3'>
-                {selectedCalendarYear.description} Donations
-              </div>
-            )}
-
-            <DonationPaymentsTableServer
+        />
+        {selectedCalendarYear && (
+          <Suspense fallback={null}>
+            <UnlinkedTransactionsBanner
+              fromYear={selectedCalendarYear.fromYear}
+              toYear={selectedCalendarYear.toYear}
+              dateFrom={`${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01`}
+              dateTo={`${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}`}
               calendarYearId={selectedCalendarYearId}
             />
           </Suspense>
-        </DonationForm>
+        )}
+        <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
+          {selectedCalendarYear && (
+            <div className='font-mono text-muted-foreground mb-3'>
+              {selectedCalendarYear.description} Donations
+            </div>
+          )}
+
+          <DonationPaymentsTableServer
+            calendarYearId={selectedCalendarYearId}
+            dateFrom={selectedCalendarYear ? `${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01` : ''}
+            dateTo={selectedCalendarYear ? `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}` : ''}
+          />
+        </Suspense>
       </div>
     </main>
   );
