@@ -38,7 +38,7 @@ export default async function DonationPage({
 
   const yearIdParam = getSelectedParam(params?.year);
   const [donationYearData, fiscalYearType] = await Promise.all([
-    getCalendarYearsHandler(['FISCAL']),
+    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
     session?.user?.id
       ? getUserFiscalYearType(prisma, session.user.id)
       : Promise.resolve(null),

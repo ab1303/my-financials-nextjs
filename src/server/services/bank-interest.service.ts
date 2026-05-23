@@ -154,21 +154,31 @@ const createYearlyBankInterestDetails = async (
     },
   });
 
-  // Validate calendar year is ANNUAL type
-  if (calendarYear.type !== 'ANNUAL') {
-    throw new Error(
-      `Calendar year ${calendarYearId} must be of type ANNUAL, but found ${calendarYear.type}`,
-    );
-  }
+  // Create 12 monthly rows for the calendar year window
+  // Supports both ANNUAL (Jan-Dec) and FISCAL (e.g., Jul-Jun) types
+  const startYear = calendarYear.fromYear;
+  const startMonth = calendarYear.fromMonth;
+  const endYear = calendarYear.toYear;
+  const endMonth = calendarYear.toMonth;
+
+  let currentYear = startYear;
+  let currentMonth = startMonth;
 
   for (let i = 1; i <= 12; ++i) {
     newBankInterestDetails.push({
       bankId,
       month: i,
-      year: calendarYear.fromYear,
+      year: currentYear,
       amountDue: 0.0,
       calendarId: calendarYear.id,
     });
+
+    // Advance to next month
+    currentMonth += 1;
+    if (currentMonth > 12) {
+      currentMonth = 1;
+      currentYear += 1;
+    }
   }
 
   const result = await prisma.bankInterestLiability.createMany({

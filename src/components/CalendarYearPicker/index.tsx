@@ -36,8 +36,11 @@ function CalendarYearPicker({
   const labelId = useId();
   
   // Initialize selected type: prefer defaultType, else first applicable type
+  const initialType: CalendarEnumType = (
+    defaultType || applicableTypes[0] || 'FISCAL'
+  ) as CalendarEnumType;
   const [selectedType, setSelectedType] = useState<CalendarEnumType>(
-    defaultType ?? applicableTypes[0]
+    initialType
   );
 
   // Handle type change: clear year selection and notify parent
@@ -100,6 +103,8 @@ function CalendarYearPicker({
         isClearable
         placeholder='Select year...'
         className='w-3/5'
+        getOptionValue={(opt) => opt.id}
+        getOptionLabel={(opt) => opt.label}
       />
     </div>
   );

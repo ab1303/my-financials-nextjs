@@ -65,8 +65,7 @@ export default function BankInterestForm({
     }
     const search = current.toString();
     const query = search ? `?${search}` : '';
-    router.refresh(); // invalidate client cache so that after navigating back to this route; we get updated state rather than stale state
-    router.replace(`${pathname}${query}`); // move to the next path
+    router.replace(`${pathname}${query}`);
   };
 
   return (

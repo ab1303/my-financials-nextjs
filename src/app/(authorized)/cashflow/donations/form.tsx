@@ -48,11 +48,11 @@ export default function DonationForm({
   return (
     <form className='mb-0 space-y-6'>
       <CalendarYearPicker
-        applicableTypes={['FISCAL']}
+        applicableTypes={['FISCAL', 'ANNUAL']}
         calendarYears={initialData.donationYearData}
         selectedYearId={yearIdParam || undefined}
         onYearChange={handleYearChange}
-        label='Fiscal Year'
+        label='Year'
         className='mx-10'
       />
       <div className='mx-10'>
