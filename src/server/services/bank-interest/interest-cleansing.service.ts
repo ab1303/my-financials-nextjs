@@ -3,12 +3,9 @@ import { prisma } from '@/server/utils/prisma';
 const CLEANSING_CATEGORY_NAME = 'Interest Cleansing';
 
 export type MonthlyCredit = {
-  bankInterestLiabilityId: string;
   month: number;
   year: number;
   receivedFromLedger: number;
-  manualOverride: number;
-  receivedTotal: number;
 };
 
 export type CleansingDonation = {
@@ -70,17 +67,7 @@ export const getYearlyCleansingData = async (
     }
   }
 
-  // Fetch existing liabilities (may be sparse if not yet initialized)
-  const existingLiabilities = await prisma.bankInterestLiability.findMany({
-    where: { bankId, calendarId: calendarYearId },
-  });
-  const liabilityMap = new Map(
-    existingLiabilities.map((l) => [`${l.month}-${l.year}`, l.id])
-  );
-  const amountDueMap = new Map(
-    existingLiabilities.map((l) => [`${l.month}-${l.year}`, l.amountDue.toNumber()])
-  );
-
+  // Fetch interest transactions from the ledger
   const interestTx = await prisma.transaction.findMany({
     where: {
       userId,
@@ -99,22 +86,17 @@ export const getYearlyCleansingData = async (
     },
   });
 
-  // Build monthlyCredits from all 12 months (even if liability doesn't exist yet)
+  // Build monthlyCredits from all 12 months
   const monthlyCredits: MonthlyCredit[] = allMonths.map(({ month, year }) => {
     const monthTx = interestTx.filter(
       (tx) => tx.date.getMonth() + 1 === month && tx.date.getFullYear() === year,
     );
     const receivedFromLedger = monthTx.reduce((s, tx) => s + tx.amount.toNumber(), 0);
-    const liabilityId = liabilityMap.get(`${month}-${year}`);
-    const manualOverride = amountDueMap.get(`${month}-${year}`) ?? 0;
 
     return {
-      bankInterestLiabilityId: liabilityId || '',
       month,
       year,
       receivedFromLedger,
-      manualOverride,
-      receivedTotal: receivedFromLedger + manualOverride,
     };
   });
 
@@ -150,7 +132,7 @@ export const getYearlyCleansingData = async (
   );
   const unlinkedInterestCount = interestTx.filter((tx) => !linkedTxIds.has(tx.id)).length;
 
-  const totalReceived = monthlyCredits.reduce((s, m) => s + m.receivedTotal, 0);
+  const totalReceived = monthlyCredits.reduce((s, m) => s + m.receivedFromLedger, 0);
   const totalCleansed = cleansingDonations.reduce((s, d) => s + d.amount, 0);
   const balance = Math.max(0, totalReceived - totalCleansed);
 
