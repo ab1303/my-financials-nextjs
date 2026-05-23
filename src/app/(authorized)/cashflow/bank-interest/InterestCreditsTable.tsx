@@ -37,6 +37,14 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
     onError: () => toast.error('Failed to update amount'),
   });
 
+  const createMutation = trpc.bankInterest.createSingleBankInterestLiability.useMutation({
+    onSuccess: () => {
+      setEditingId(null);
+      router.refresh();
+    },
+    onError: () => toast.error('Failed to create liability record'),
+  });
+
   const totalFromLedger = credits.reduce((s, m) => s + m.receivedFromLedger, 0);
   const totalManual = credits.reduce((s, m) => s + m.manualOverride, 0);
   const totalReceived = credits.reduce((s, m) => s + m.receivedTotal, 0);
@@ -59,8 +67,28 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
       id: 'manualOverride',
       header: () => <span>Manual Override</span>,
       cell: ({ row }) => {
-        const { bankInterestLiabilityId, manualOverride } = row.original;
+        const { bankInterestLiabilityId, manualOverride, month, year } = row.original;
         const isEditing = editingId === bankInterestLiabilityId;
+
+        const handleSave = () => {
+          // If bankInterestLiabilityId is empty, create a new record first
+          if (!bankInterestLiabilityId) {
+            createMutation.mutate({
+              bankId,
+              calendarYearId,
+              month,
+              year,
+              amountDue: editingAmount,
+            });
+          } else {
+            updateMutation.mutate({
+              bankInterestId: bankInterestLiabilityId,
+              bankId,
+              calendarYearId,
+              amount: editingAmount,
+            });
+          }
+        };
 
         if (isEditing) {
           return (
@@ -73,9 +101,7 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
                 value={editingAmount}
                 onChange={(e) => setEditingAmount(parseFloat(e.target.value) || 0)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    updateMutation.mutate({ bankInterestId: bankInterestLiabilityId, bankId, calendarYearId, amount: editingAmount });
-                  }
+                  if (e.key === 'Enter') handleSave();
                   if (e.key === 'Escape') setEditingId(null);
                 }}
                 className="w-24 rounded border border-gray-300 px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
@@ -83,8 +109,9 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
               <button
                 type="button"
                 aria-label="Save"
-                onClick={() => updateMutation.mutate({ bankInterestId: bankInterestLiabilityId, bankId, calendarYearId, amount: editingAmount })}
-                className="rounded p-0.5 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950"
+                onClick={handleSave}
+                disabled={updateMutation.isPending || createMutation.isPending}
+                className="rounded p-0.5 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-950 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Check className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
@@ -92,7 +119,8 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
                 type="button"
                 aria-label="Cancel"
                 onClick={() => setEditingId(null)}
-                className="rounded p-0.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                disabled={updateMutation.isPending || createMutation.isPending}
+                className="rounded p-0.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
@@ -109,7 +137,7 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
               type="button"
               aria-label="Edit manual override"
               onClick={() => {
-                setEditingId(bankInterestLiabilityId);
+                setEditingId(bankInterestLiabilityId || `temp-${month}-${year}`);
                 setEditingAmount(manualOverride);
               }}
               className="ml-1 rounded p-0.5 text-muted-foreground opacity-0 transition-[opacity] group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-800"

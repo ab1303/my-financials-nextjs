@@ -67,6 +67,29 @@ export const updateBankInterestDetail = async (
   });
 };
 
+/**
+ * Create a single BankInterestLiability record for a specific month/year.
+ * Used when user adds an override to a month that doesn't have a liability record yet.
+ */
+export const createSingleBankInterestLiability = async (
+  bankId: string,
+  calendarYearId: string,
+  month: number,
+  year: number,
+  amountDue: number,
+): Promise<string> => {
+  const result = await prisma.bankInterestLiability.create({
+    data: {
+      bankId,
+      calendarId: calendarYearId,
+      month,
+      year,
+      amountDue,
+    },
+  });
+  return result.id;
+};
+
 export const addBankInterestPaymentDetail = async (
   bankInterestId: string,
   payment: Omit<PaymentModel, 'id'>,

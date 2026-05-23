@@ -13,6 +13,7 @@ import {
   bankInterestDetailsHandler,
   initializeBankInterestYearHandler,
   updateBankInterestDetailsHandler,
+  createSingleBankInterestLiabilityHandler,
   createBankInterestPaymentHandler,
   updateBankInterestPaymentHandler,
   removeBankInterestPaymentHandler,
@@ -42,6 +43,23 @@ export const bankInterestRouter = router({
         bankId,
         calendarYearId,
         amount
+      )
+    ),
+  createSingleBankInterestLiability: protectedProcedure
+    .input(z.object({
+      bankId: z.string(),
+      calendarYearId: z.string(),
+      month: z.number().min(1).max(12),
+      year: z.number().positive(),
+      amountDue: z.number().nonnegative(),
+    }))
+    .mutation(({ input: { bankId, calendarYearId, month, year, amountDue } }) =>
+      createSingleBankInterestLiabilityHandler(
+        bankId,
+        calendarYearId,
+        month,
+        year,
+        amountDue
       )
     ),
   addBankInterestPayment: protectedProcedure

@@ -6,6 +6,7 @@ import {
   initializeBankInterestYear,
   removeBankInterestPaymentDetail,
   updateBankInterestDetail,
+  createSingleBankInterestLiability,
   updateBankInterestPaymentDetail,
 } from '@/server/services/bank-interest.service';
 
@@ -49,6 +50,21 @@ export const updateBankInterestDetailsHandler = async (
   } catch (e) {
     handleCaughtError(e);
     throw e; // TypeScript: unreachable but satisfies type checker
+  }
+};
+
+export const createSingleBankInterestLiabilityHandler = async (
+  bankId: string,
+  calendarYearId: string,
+  month: number,
+  year: number,
+  amountDue: number
+): Promise<string> => {
+  try {
+    return await createSingleBankInterestLiability(bankId, calendarYearId, month, year, amountDue);
+  } catch (e) {
+    handleCaughtError(e);
+    throw e;
   }
 };
 
