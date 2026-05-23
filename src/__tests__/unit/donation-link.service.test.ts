@@ -37,6 +37,7 @@ describe('donation-link.service', () => {
         date: '2025-01-15',
         description: 'Donation to charity',
         amount: 125.5,
+        category: '',
       },
     ]);
 

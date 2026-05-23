@@ -56,7 +56,22 @@ async function getInterestCleansingSummary(calendarYear: CalendarYear): Promise<
 - Create/select historical CalendarYear (e.g., Annual 2022, Fiscal 2021-22)
 - Validate that all liabilities and donations within the window are included
 
-## TDD Test Cases
+## Transaction Category Matching
+
+The AI classifier assigns `OTHER` to credit interest transactions (description "Credit Interest") because `Bank Interest` is not a defined income category. The service therefore uses an `OR` query:
+
+```typescript
+OR: [
+  { category: { equals: 'Bank Interest', mode: 'insensitive' } },
+  { description: { contains: 'interest', mode: 'insensitive' } },
+]
+```
+
+This handles:
+- Existing data categorised as `Other` with description `Credit Interest`  
+- Future data explicitly categorised as `Bank Interest`
+
+
 | Test Case | Description |
 |-----------|-------------|
 | 1 | Returns correct interest/donation totals for ANNUAL year |

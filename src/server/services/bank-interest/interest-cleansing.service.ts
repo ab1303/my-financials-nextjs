@@ -41,10 +41,15 @@ export const getYearlyCleansingData = async (
   calendarYearId: string,
   userId: string,
 ): Promise<YearlyCleansingData> => {
-  const liabilities = await prisma.bankInterestLiability.findMany({
-    where: { bankId, calendarId: calendarYearId },
-    orderBy: { month: 'asc' },
+  const calendarYear = await prisma.calendarYear.findUniqueOrThrow({
+    where: { id: calendarYearId },
   });
+
+  // FIX 1: Use fromMonth/toMonth from calendarYear, respecting fiscal year windows
+  // ADR-1: CalendarYear is a time window — derive dateFrom/dateTo from fromYear/fromMonth → toYear/toMonth
+  // Use UTC to avoid timezone offset issues
+  const dateFrom = new Date(Date.UTC(calendarYear.fromYear, calendarYear.fromMonth - 1, 1));
+  const dateTo = new Date(Date.UTC(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59));
 
   const bankAccounts = await prisma.financialAccount.findMany({
     where: { institutionId: bankId, userId },
@@ -52,36 +57,61 @@ export const getYearlyCleansingData = async (
   });
   const bankAccountIds = bankAccounts.map((a) => a.id);
 
-  const calendarYear = await prisma.calendarYear.findUniqueOrThrow({
-    where: { id: calendarYearId },
+  // Generate all 12 months for this calendar window (Jan-Dec for Annual, Jul-Jun for Fiscal, etc.)
+  const allMonths: Array<{ month: number; year: number }> = [];
+  let currentYear = calendarYear.fromYear;
+  let currentMonth = calendarYear.fromMonth;
+  for (let i = 0; i < 12; i++) {
+    allMonths.push({ month: currentMonth, year: currentYear });
+    currentMonth += 1;
+    if (currentMonth > 12) {
+      currentMonth = 1;
+      currentYear += 1;
+    }
+  }
+
+  // Fetch existing liabilities (may be sparse if not yet initialized)
+  const existingLiabilities = await prisma.bankInterestLiability.findMany({
+    where: { bankId, calendarId: calendarYearId },
   });
-  // FIX 1: Use fromMonth/toMonth from calendarYear, respecting fiscal year windows
-  // ADR-1: CalendarYear is a time window — derive dateFrom/dateTo from fromYear/fromMonth → toYear/toMonth
-  // Use UTC to avoid timezone offset issues
-  const dateFrom = new Date(Date.UTC(calendarYear.fromYear, calendarYear.fromMonth - 1, 1));
-  const dateTo = new Date(Date.UTC(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59));
+  const liabilityMap = new Map(
+    existingLiabilities.map((l) => [`${l.month}-${l.year}`, l.id])
+  );
+  const amountDueMap = new Map(
+    existingLiabilities.map((l) => [`${l.month}-${l.year}`, l.amountDue.toNumber()])
+  );
 
   const interestTx = await prisma.transaction.findMany({
     where: {
       userId,
       bankAccountId: { in: bankAccountIds },
       type: 'CREDIT',
-      category: { equals: 'Bank Interest', mode: 'insensitive' },
       status: 'CONFIRMED',
       date: { gte: dateFrom, lte: dateTo },
+      // Match both explicitly-categorised "Bank Interest" records and any CREDIT
+      // transactions whose description contains the word "interest" (e.g. the
+      // "Credit Interest" entries imported from Australian banks, which the AI
+      // classifier assigns to category "Other").
+      OR: [
+        { category: { equals: 'Bank Interest', mode: 'insensitive' } },
+        { description: { contains: 'interest', mode: 'insensitive' } },
+      ],
     },
   });
 
-  const monthlyCredits: MonthlyCredit[] = liabilities.map((liability) => {
+  // Build monthlyCredits from all 12 months (even if liability doesn't exist yet)
+  const monthlyCredits: MonthlyCredit[] = allMonths.map(({ month, year }) => {
     const monthTx = interestTx.filter(
-      (tx) => tx.date.getMonth() + 1 === liability.month && tx.date.getFullYear() === liability.year,
+      (tx) => tx.date.getMonth() + 1 === month && tx.date.getFullYear() === year,
     );
     const receivedFromLedger = monthTx.reduce((s, tx) => s + tx.amount.toNumber(), 0);
-    const manualOverride = liability.amountDue.toNumber();
+    const liabilityId = liabilityMap.get(`${month}-${year}`);
+    const manualOverride = amountDueMap.get(`${month}-${year}`) ?? 0;
+
     return {
-      bankInterestLiabilityId: liability.id,
-      month: liability.month,
-      year: liability.year,
+      bankInterestLiabilityId: liabilityId || '',
+      month,
+      year,
       receivedFromLedger,
       manualOverride,
       receivedTotal: receivedFromLedger + manualOverride,
@@ -151,12 +181,19 @@ export const getUnlinkedInterestTransactions = async (
       userId,
       bankAccountId: { in: bankAccountIds },
       type: 'CREDIT',
-      category: { equals: 'Bank Interest', mode: 'insensitive' },
       status: 'CONFIRMED',
       date: { gte: dateFrom, lte: dateTo },
       OR: [
-        { donationPayment: null },
-        { donationPayment: { donationPurpose: { not: 'INTEREST_CLEANSING' } } },
+        { category: { equals: 'Bank Interest', mode: 'insensitive' } },
+        { description: { contains: 'interest', mode: 'insensitive' } },
+      ],
+      AND: [
+        {
+          OR: [
+            { donationPayment: null },
+            { donationPayment: { donationPurpose: { not: 'INTEREST_CLEANSING' } } },
+          ],
+        },
       ],
     },
     orderBy: { date: 'asc' },

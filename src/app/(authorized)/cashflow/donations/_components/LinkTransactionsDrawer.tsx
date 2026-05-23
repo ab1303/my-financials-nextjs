@@ -26,7 +26,6 @@ type LinkTransactionsDrawerProps = {
 };
 
 const linkFormSchema = z.object({
-  taxCategory: z.string().min(1, 'Tax category is required'),
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
   beneficiaryId: z.string().min(1, 'Please select a beneficiary'),
 });
@@ -38,6 +37,7 @@ type TransactionRow = {
   date: string;
   description: string;
   amount: number;
+  category: string;
 };
 
 type BeneficiaryOption = {
@@ -88,7 +88,6 @@ export default function LinkTransactionsDrawer({
     resolver: zodResolver(linkFormSchema),
     mode: 'onChange',
     defaultValues: {
-      taxCategory: '',
       beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
       beneficiaryId: '',
     },
@@ -131,7 +130,6 @@ export default function LinkTransactionsDrawer({
   const handleSelectTransaction = (transactionId: string) => {
     setSelectedTransactionId(transactionId);
     reset({
-      taxCategory: '',
       beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
       beneficiaryId: '',
     });
@@ -141,7 +139,6 @@ export default function LinkTransactionsDrawer({
     setTransactions([]);
     setSelectedTransactionId('');
     reset({
-      taxCategory: '',
       beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
       beneficiaryId: '',
     });
@@ -159,7 +156,7 @@ export default function LinkTransactionsDrawer({
       const result = await addRow({
         datePaid: new Date(selectedTransaction.date),
         amount: selectedTransaction.amount,
-        taxCategory: values.taxCategory,
+        taxCategory: selectedTransaction.category,
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
         calendarYearId,
@@ -181,7 +178,6 @@ export default function LinkTransactionsDrawer({
         return remaining;
       });
       reset({
-        taxCategory: '',
         beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
         beneficiaryId: '',
       });
@@ -294,26 +290,15 @@ export default function LinkTransactionsDrawer({
 
               <div className="grid gap-4">
                 <div>
-                  <label htmlFor="taxCategory" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Tax category
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Category
                   </label>
-                  <Controller
-                    control={control}
-                    name="taxCategory"
-                    render={({ field }) => (
-                      <input
-                        id="taxCategory"
-                        {...field}
-                        disabled={!selectedTransaction}
-                        type="text"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-amber-500 disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:disabled:bg-gray-800"
-                        placeholder="e.g. Deductible gift recipient"
-                      />
-                    )}
-                  />
-                  {errors.taxCategory ? (
-                    <p className="mt-1 text-xs text-red-600">{errors.taxCategory.message}</p>
-                  ) : null}
+                  <div className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                    {selectedTransaction?.category || <span className="italic text-gray-400">Select a transaction</span>}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                    Derived from the transaction record — read-only
+                  </p>
                 </div>
 
                 <div>

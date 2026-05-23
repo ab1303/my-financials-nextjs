@@ -167,7 +167,7 @@ const createYearlyBankInterestDetails = async (
   for (let i = 1; i <= 12; ++i) {
     newBankInterestDetails.push({
       bankId,
-      month: i,
+      month: currentMonth,
       year: currentYear,
       amountDue: 0.0,
       calendarId: calendarYear.id,

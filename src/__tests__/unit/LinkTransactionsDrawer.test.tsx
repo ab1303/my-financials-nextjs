@@ -116,12 +116,14 @@ const baseTransactions = [
     date: '2024-07-02',
     description: 'Donation to charity A',
     amount: 100,
+    category: 'Gifts & donations',
   },
   {
     id: 'tx-2',
     date: '2024-07-10',
     description: 'Donation to charity B',
     amount: 50,
+    category: 'Gifts & donations',
   },
 ];
 
@@ -169,12 +171,13 @@ describe('LinkTransactionsDrawer', () => {
     expect(screen.getByText(/no unlinked donation transactions found/i)).toBeDefined();
   });
 
-  it('selecting a transaction highlights it and enables form', () => {
+  it('selecting a transaction shows its category as readonly and enables form', () => {
     renderDrawer();
 
     fireEvent.click(screen.getByText('Donation to charity A'));
 
-    expect(screen.getByLabelText(/tax category/i)).not.toHaveAttribute('disabled');
+    // Category is now readonly, derived from transaction
+    expect(screen.getByText('Gifts & donations')).toBeDefined();
     expect(screen.getByRole('button', { name: /save & next/i })).toBeDefined();
   });
 
@@ -185,13 +188,11 @@ describe('LinkTransactionsDrawer', () => {
     expect(screen.getByRole('button', { name: /save & next/i })).toHaveAttribute('disabled');
   });
 
-  it('submitting calls addRow with correct transactionId', async () => {
+  it('submitting calls addRow with transactionId and category as taxCategory', async () => {
     renderDrawer();
 
     fireEvent.click(screen.getByText('Donation to charity A'));
-    fireEvent.change(screen.getByLabelText(/tax category/i), {
-      target: { value: 'Deductible gift recipient' },
-    });
+    // taxCategory is now auto-populated from transaction.category — no user input needed
     fireEvent.change(screen.getByLabelText(/beneficiary type/i), {
       target: { value: BeneficiaryEnumType.INDIVIDUAL },
     });
@@ -210,6 +211,7 @@ describe('LinkTransactionsDrawer', () => {
         expect.objectContaining({
           transactionId: 'tx-1',
           calendarYearId: 'cal-1',
+          taxCategory: 'Gifts & donations',
         }),
       );
     });
@@ -219,9 +221,7 @@ describe('LinkTransactionsDrawer', () => {
     renderDrawer();
 
     fireEvent.click(screen.getByText('Donation to charity A'));
-    fireEvent.change(screen.getByLabelText(/tax category/i), {
-      target: { value: 'Deductible gift recipient' },
-    });
+    // taxCategory comes from transaction.category automatically
     fireEvent.change(screen.getByLabelText(/^Beneficiary$/i), {
       target: { value: 'ind-1' },
     });

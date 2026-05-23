@@ -29,17 +29,6 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
   const [editingAmount, setEditingAmount] = useState<number>(0);
   const [collapsed, setCollapsed] = useState(true);
 
-  const initMutation = trpc.bankInterest.initializeBankInterestYear.useMutation({
-    onSuccess: () => router.refresh(),
-    onError: (error) => {
-      let message = 'Failed to initialise year';
-      if (error?.data?.code === 'INTERNAL_SERVER_ERROR' && error?.message) {
-        message = error.message;
-      }
-      toast.error(message);
-    },
-  });
-
   const updateMutation = trpc.bankInterest.updateBankInterestDetail.useMutation({
     onSuccess: () => {
       setEditingId(null);
@@ -170,22 +159,6 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
             </span>
           </div>
         </button>
-        {credits.length === 0 && !collapsed && (
-          <button
-            type="button"
-            className="inline-flex items-center justify-center w-8 h-8 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary/10 text-primary hover:bg-primary/20 focus:ring-primary transition-colors"
-            onClick={() => {
-              initMutation.mutate({ bankId, calendarYearId });
-            }}
-            disabled={initMutation.isPending}
-            aria-label="Initialise interest tracking for this year"
-          >
-            {initMutation.isPending
-              ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              : <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-            }
-          </button>
-        )}
       </div>
 
       {!collapsed && (
@@ -194,7 +167,7 @@ export default function InterestCreditsTable({ credits, bankId, calendarYearId }
             <div className="flex flex-col items-center py-8 text-center rounded-lg border border-dashed border-border">
               <Plus className="mb-2 h-5 w-5 text-muted-foreground/50" aria-hidden="true" />
               <p className="mb-1 text-sm font-medium text-foreground">No interest records for this year</p>
-              <p className="text-xs text-muted-foreground">Click + in the header to initialise all 12 months</p>
+              <p className="text-xs text-muted-foreground">Select a different calendar year or create interest records in settings</p>
             </div>
           ) : (
             <Table className="w-full">

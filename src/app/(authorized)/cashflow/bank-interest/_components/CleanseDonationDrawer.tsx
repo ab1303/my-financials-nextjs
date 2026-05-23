@@ -120,8 +120,8 @@ export default function CleanseDonationDrawer({
 
   const shouldFetchLinkedTransactions = isOpen && mode === 'linked';
 
-  const unlinkedTxQuery = trpc.bankInterest.getUnlinkedCleansingDebitTransactions.useQuery(
-    { bankId },
+  const unlinkedTxQuery = trpc.bankInterest.getUnlinkedInterestTransactions.useQuery(
+    { bankId, dateFrom, dateTo },
     { enabled: shouldFetchLinkedTransactions },
   );
   const individualsQuery = trpc.individual.getAllIndividuals.useQuery(undefined, { enabled: isOpen });

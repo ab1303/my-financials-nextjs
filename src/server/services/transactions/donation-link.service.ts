@@ -5,6 +5,7 @@ export interface UnlinkedDonationTransaction {
   date: string;
   description: string;
   amount: number;
+  category: string;
 }
 
 /**
@@ -28,7 +29,7 @@ export async function getUnlinkedDonationTransactions(
       donationPayment: null,
     },
     orderBy: { date: 'desc' },
-    select: { id: true, date: true, description: true, amount: true },
+    select: { id: true, date: true, description: true, amount: true, category: true },
   });
 
   return rows.map((tx) => ({
@@ -36,6 +37,7 @@ export async function getUnlinkedDonationTransactions(
     date: tx.date.toISOString().slice(0, 10),
     description: tx.description,
     amount: Number(tx.amount),
+    category: tx.category ?? '',
   }));
 }
 
