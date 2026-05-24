@@ -114,6 +114,18 @@ model TransferMatchRule {
 
 ---
 
+## Data Model Reference
+
+Canonical table specs live in [`architecture/DataModel/transactions/`](../../../architecture/DataModel/transactions/):
+
+| Table | Description |
+|-------|-------------|
+| [Transaction](../../../architecture/DataModel/transactions/Transaction.md) | Central staging table for every imported transaction |
+| [TransferMatchRule](../../../architecture/DataModel/transactions/TransferMatchRule.md) | User-defined rule for automatic debit/credit transfer matching |
+| [TransferMatchJobResult](../../../architecture/DataModel/transactions/TransferMatchJobResult.md) | Audit log for one transfer-matching job run |
+
+---
+
 ## Out of Scope
 
 | Item | Reason |

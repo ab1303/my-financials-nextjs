@@ -166,6 +166,28 @@ A structured quality record for cashflow routes.
 - Interest-cleansing donations reduce retained cashflow and should remain auditable against the original interest received.
 - Audit features validate that all cashflow routes remain trustworthy across CRUD behavior, SSR boundaries, dark mode, accessibility, metadata, and time-filter interactions.
 
+## Data Model Reference
+
+Canonical table specs live in [`architecture/DataModel/expenses/`](../../architecture/DataModel/expenses/), [`architecture/DataModel/income/`](../../architecture/DataModel/income/), and [`architecture/DataModel/philanthropy/`](../../architecture/DataModel/philanthropy/):
+
+| Table | Domain | Description |
+|-------|--------|-------------|
+| [ExpenseCategory](../../architecture/DataModel/expenses/ExpenseCategory.md) | Expenses | System-managed expense category lookup |
+| [SpecialCategory](../../architecture/DataModel/expenses/SpecialCategory.md) | Expenses | Special transaction category lookup (Transfer, Excluded, etc.) |
+| [ExpenseLedger](../../architecture/DataModel/expenses/ExpenseLedger.md) | Expenses | Per-user expense ledger for a reporting period |
+| [MonthlyExpenseSummary](../../architecture/DataModel/expenses/MonthlyExpenseSummary.md) | Expenses | Aggregated monthly spend by category |
+| [IncomeSource](../../architecture/DataModel/income/IncomeSource.md) | Income | Income source lookup (Salary, Freelance, etc.) |
+| [IncomeLedger](../../architecture/DataModel/income/IncomeLedger.md) | Income | Per-user income ledger for a reporting period |
+| [IncomeRecord](../../architecture/DataModel/income/IncomeRecord.md) | Income | Individual income event |
+| [DonationLedger](../../architecture/DataModel/philanthropy/DonationLedger.md) | Philanthropy | Header for donations in a reporting period |
+| [DonationPayment](../../architecture/DataModel/philanthropy/DonationPayment.md) | Philanthropy | Individual donation or interest-cleansing payment |
+| [ZakatObligation](../../architecture/DataModel/philanthropy/ZakatObligation.md) | Philanthropy | Annual zakat obligation header |
+| [ZakatPayment](../../architecture/DataModel/philanthropy/ZakatPayment.md) | Philanthropy | Individual zakat payment |
+| [BankInterestLiability](../../architecture/DataModel/philanthropy/BankInterestLiability.md) | Philanthropy | Monthly interest tax liability per bank |
+| ~~[BankInterestPayment](../../architecture/DataModel/philanthropy/BankInterestPayment.md)~~ | Philanthropy | ⚠️ Deprecated — rows migrated to `DonationPayment(INTEREST_CLEANSING)` |
+
+---
+
 ## Out of Scope
 
 - Replacing the transaction, banking, calendar, or assets domains as canonical data owners.

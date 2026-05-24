@@ -94,6 +94,19 @@ CSV-specific classifiers feed this chain with better inputs:
   - Embedding failure → fuzzy fallback
 - AI usage logging is best-effort and must not fail the import path.
 
+## Data Model Reference
+
+Canonical table specs for the persistence layer used by CSV import:
+
+| Table | Domain | Description |
+|-------|--------|-------------|
+| [ImportSession](../../architecture/DataModel/import-ai/ImportSession.md) | Import/AI | Import lifecycle and status tracking |
+| [ImportImage](../../architecture/DataModel/import-ai/ImportImage.md) | Import/AI | Uploaded file metadata |
+| [AIUsageLog](../../architecture/DataModel/import-ai/AIUsageLog.md) | Import/AI | AI token usage audit |
+| [Transaction](../../architecture/DataModel/transactions/Transaction.md) | Transactions | Staging record created per imported CSV row |
+
+---
+
 ## Cross-Domain Dependencies
 
 - `spec/semantic-category-matching/*` for embedding services, thresholds, and category matching behavior.

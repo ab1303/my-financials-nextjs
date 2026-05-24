@@ -162,6 +162,9 @@ const updateCategorySchema = z
 export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, userId: string) {
   const where: Prisma.TransactionWhereInput = { userId };
 
+  // Exclude VOIDED transactions by default from ledger view
+  where.status = { not: TransactionStatusEnum.VOIDED };
+
   if (input.type) {
     where.type = input.type;
   }
@@ -675,5 +678,90 @@ export const transactionLedgerRouter = router({
       const toYear = parseInt(input.dateTo.split('-')[0] ?? '2024');
       return getUnlinkedZakatTransactions(userId, fromYear, toYear);
     }),
+
+  getVoidedTransactions: protectedProcedure
+    .input(
+      z.object({
+        importSessionId: z.string().optional(),
+        limit: z.number().int().min(1).max(100).default(50),
+        page: z.number().int().min(1).default(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const where: Prisma.TransactionWhereInput = {
+        userId,
+        status: TransactionStatusEnum.VOIDED,
+        ...(input.importSessionId && { importSessionId: input.importSessionId }),
+      };
+
+      const [transactions, total] = await Promise.all([
+        ctx.prisma.transaction.findMany({
+          where,
+          orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+          skip: (input.page - 1) * input.limit,
+          take: input.limit,
+          select: {
+            id: true,
+            date: true,
+            description: true,
+            amount: true,
+            type: true,
+            category: true,
+            status: true,
+            importSessionId: true,
+            createdAt: true,
+          },
+        }),
+        ctx.prisma.transaction.count({ where }),
+      ]);
+
+      return {
+        transactions: transactions.map((tx) => ({
+          id: tx.id,
+          date: tx.date.toISOString(),
+          description: tx.description,
+          amount: Number(tx.amount),
+          type: tx.type,
+          category: tx.category,
+          status: tx.status,
+          importSessionId: tx.importSessionId,
+          createdAt: tx.createdAt.toISOString(),
+        })),
+        total,
+        page: input.page,
+        totalPages: Math.max(1, Math.ceil(total / input.limit)),
+      };
+    }),
+
+  restoreVoidedTransaction: protectedProcedure
+    .input(z.object({ transactionId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const transaction = await ctx.prisma.transaction.findUnique({
+        where: { id: input.transactionId },
+        select: { userId: true, status: true, id: true },
+      });
+
+      if (!transaction || transaction.userId !== userId) {
+        throw new TRPCError({ code: 'NOT_FOUND' });
+      }
+
+      if (transaction.status !== TransactionStatusEnum.VOIDED) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Only VOIDED transactions can be restored',
+        });
+      }
+
+      await ctx.prisma.transaction.update({
+        where: { id: input.transactionId },
+        data: { status: TransactionStatusEnum.PENDING },
+      });
+
+      return { success: true };
+    }),
 });
+
 

@@ -104,6 +104,21 @@ interface NetWorthDataPoint {
 
 ---
 
+## Data Model Reference
+
+Canonical table specs live in [`architecture/DataModel/banking/`](../../../architecture/DataModel/banking/) and [`architecture/DataModel/portfolio/`](../../../architecture/DataModel/portfolio/):
+
+| Table | Domain | Description |
+|-------|--------|-------------|
+| [FinancialAccount](../../../architecture/DataModel/banking/FinancialAccount.md) | Banking | User bank or brokerage account |
+| [BankBalanceSnapshot](../../../architecture/DataModel/banking/BankBalanceSnapshot.md) | Banking | Point-in-time balance snapshot header |
+| [BankBalanceRecord](../../../architecture/DataModel/banking/BankBalanceRecord.md) | Banking | Per-account balance at one snapshot date |
+| [PortfolioSnapshot](../../../architecture/DataModel/portfolio/PortfolioSnapshot.md) | Portfolio | Point-in-time portfolio snapshot header |
+| [StockHolding](../../../architecture/DataModel/portfolio/StockHolding.md) | Portfolio | Individual stock position within a snapshot |
+| [BrokerageCashBalance](../../../architecture/DataModel/portfolio/BrokerageCashBalance.md) | Portfolio | Idle brokerage cash by account, currency, and snapshot |
+
+---
+
 ## Out of Scope
 
 | Item | Reason |

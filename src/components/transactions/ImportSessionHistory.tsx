@@ -5,6 +5,7 @@ import { trpc } from '@/server/trpc/client';
 import { toast } from 'sonner';
 import { Modal } from '@/components/ui/Modal';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import { VoidedTransactionsModal } from '@/components/transactions/VoidedTransactionsModal';
 import { AlertTriangle } from 'lucide-react';
 
 interface SessionRow {
@@ -67,9 +68,13 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
       } else {
         toast.success(`Undone — ${result.voided} transactions reversed`);
       }
+      setUndoConfirmId(null);
       void refetch();
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => {
+      toast.error(err.message);
+      setUndoConfirmId(null);
+    },
   });
 
   const deleteMutation = trpc.transactionClearing.deletePendingSession.useMutation({
@@ -82,6 +87,7 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
 
   const [undoConfirmId, setUndoConfirmId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [voidedModalId, setVoidedModalId] = useState<string | null>(null);
 
   const undoSession = (data as Array<SessionRow & { yearWarning: boolean }> | undefined)?.find(
     (s) => s.id === undoConfirmId,
@@ -151,14 +157,13 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
                       <td className="px-4 py-3 text-right">
                         {(session.status === 'COMPLETED' || session.status === 'PARTIAL') && (
                           <div className="flex items-center gap-2 justify-end">
-                            {/* Details button for Phase 3 modal (disabled for now) */}
                             <button
                               type="button"
-                              className="rounded px-2 py-1 text-xs font-medium text-muted-foreground border border-border bg-background hover:bg-muted/50 cursor-not-allowed opacity-60"
-                              disabled
-                              title="Review details (coming soon)"
+                              onClick={() => setVoidedModalId(session.id)}
+                              className="rounded px-2 py-1 text-xs font-medium text-teal-600 border border-teal-200 bg-teal-50 hover:bg-teal-100 dark:border-teal-700 dark:bg-teal-900/30 dark:text-teal-400 dark:hover:bg-teal-900/50"
+                              title="View voided transactions"
                             >
-                              Details
+                              Voided
                             </button>
                             {session.isLocked ? (
                               <span
@@ -201,7 +206,6 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
         onConfirm={() => {
           if (undoConfirmId) {
             undoMutation.mutate({ importSessionId: undoConfirmId });
-            setUndoConfirmId(null);
           }
         }}
         title="Undo Import?"
@@ -234,6 +238,15 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
         confirmButtonText="Delete"
         variant="warning"
         isLoading={deleteMutation.isPending}
+      />
+
+      <VoidedTransactionsModal
+        show={!!voidedModalId}
+        onClose={() => setVoidedModalId(null)}
+        importSessionId={voidedModalId || ''}
+        onRestored={() => {
+          void refetch();
+        }}
       />
     </>
   );

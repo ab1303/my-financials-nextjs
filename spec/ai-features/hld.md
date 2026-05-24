@@ -41,6 +41,19 @@ This domain covers all AI-powered features: image import (OCR), chat assistant, 
 - AI_PROVIDER, AI_VISION_MODEL, AI_API_KEY, IMAGE_STORAGE_PROVIDER
 - S3 vars if using S3
 
+## Data Model Reference
+
+Canonical table specs live in [`architecture/DataModel/import-ai/`](../../architecture/DataModel/import-ai/):
+
+| Table | Description |
+|-------|-------------|
+| [ImportSession](../../architecture/DataModel/import-ai/ImportSession.md) | Import lifecycle record for image or CSV processing |
+| [ImportImage](../../architecture/DataModel/import-ai/ImportImage.md) | Uploaded file metadata within an import session |
+| [AIUsageLog](../../architecture/DataModel/import-ai/AIUsageLog.md) | AI token usage and cost audit log |
+| [MerchantCategoryMap](../../architecture/DataModel/import-ai/MerchantCategoryMap.md) | Per-user merchant → expense category dictionary |
+
+---
+
 ## References
 - See ../ai-image-import/context.md and lld.md for image import
 - See ../ai-usage-logging/context.md and lld.md for usage logging

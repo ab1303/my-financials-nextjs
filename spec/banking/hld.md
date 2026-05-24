@@ -23,5 +23,17 @@ This document defines the shared architecture, models, and patterns for all feat
 - See `/prisma/schema.prisma` for canonical models.
 - See `.ai/instructions/database-safety.md` for migration safety.
 
+## Data Model Reference
+
+Canonical table specs live in [`architecture/DataModel/banking/`](../../../architecture/DataModel/banking/) and [`architecture/DataModel/core/`](../../../architecture/DataModel/core/):
+
+| Table | Domain | Description |
+|-------|--------|-------------|
+| [FinancialAccount](../../../architecture/DataModel/banking/FinancialAccount.md) | Banking | User bank or brokerage account |
+| [BankBalanceSnapshot](../../../architecture/DataModel/banking/BankBalanceSnapshot.md) | Banking | Point-in-time balance snapshot header |
+| [BankBalanceRecord](../../../architecture/DataModel/banking/BankBalanceRecord.md) | Banking | Per-account balance at one snapshot date |
+| [Business](../../../architecture/DataModel/core/Business.md) | Core | Institution (bank, charity, or brokerage) |
+
 ---
+
 This HLD is referenced by all features in `spec/banking/`.
