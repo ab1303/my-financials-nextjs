@@ -31,18 +31,37 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
   }));
 
   const resolvedSearchParams = await searchParams;
-  const initialCategory = resolvedSearchParams.category
-    ? decodeURIComponent(resolvedSearchParams.category as string)
-    : undefined;
+  
+  // Handle categoryId instead of category name
+  let initialCategory: string | undefined;
+  let initialCategoryId: string | undefined;
+  const categoryId = resolvedSearchParams.category as string | undefined;
+  
+  if (categoryId) {
+    // Look up category name from ID
+    const category = await prisma.expenseCategory.findUnique({
+      where: { id: categoryId },
+      select: { name: true },
+    });
+    
+    if (category) {
+      initialCategory = category.name;
+      initialCategoryId = categoryId;
+    }
+  }
+  
   const initialMonth = resolvedSearchParams.month ? Number.parseInt(resolvedSearchParams.month as string, 10) : undefined;
   const initialYear = resolvedSearchParams.year ? Number.parseInt(resolvedSearchParams.year as string, 10) : undefined;
+  const viewMode = resolvedSearchParams.view as string | undefined;
 
   return (
     <TransactionsClient
       bankAccounts={bankAccounts}
       initialCategory={initialCategory}
+      initialCategoryId={initialCategoryId}
       initialMonth={initialMonth}
       initialYear={initialYear}
+      viewMode={viewMode}
     />
   );
 }

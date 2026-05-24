@@ -52,6 +52,7 @@ This domain uses a 2-level structure (no sub-groups) because each architectural 
 
 Individual features in this domain:
 - calendar-attribution
+- category-url-filtering
 - design-modernization
 - development-standards
 - e2e-testing

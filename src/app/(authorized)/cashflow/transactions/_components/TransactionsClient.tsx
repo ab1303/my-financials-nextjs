@@ -50,15 +50,19 @@ function ImportCard({ title, description, onClick, icon }: ImportCardProps) {
 interface Props {
   bankAccounts: BankAccount[];
   initialCategory?: string;
+  initialCategoryId?: string;
   initialMonth?: number;
   initialYear?: number;
+  viewMode?: string;
 }
 
 export default function TransactionsClient({
   bankAccounts,
   initialCategory,
+  initialCategoryId,
   initialMonth,
   initialYear,
+  viewMode,
 }: Props) {
   const [csvOpen, setCsvOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
@@ -69,12 +73,13 @@ export default function TransactionsClient({
     setRefreshKey((key) => key + 1);
   }, []);
 
-  // Drill-down mode: category + month present → show focused view only
-  if (initialCategory && initialMonth !== undefined) {
+  // Drill-down mode: category + month present and not explicitly requesting full ledger
+  if (initialCategory && initialMonth !== undefined && viewMode !== 'ledger') {
     return (
       <main className="px-4 py-6 sm:px-6 lg:px-8">
         <CategoryFilteredLedger
           category={initialCategory}
+          categoryId={initialCategoryId ?? ''}
           month={initialMonth}
           year={initialYear ?? new Date().getFullYear()}
         />
@@ -160,6 +165,7 @@ export default function TransactionsClient({
         <TransactionLedgerTable
           bankAccounts={bankAccounts}
           refreshKey={refreshKey}
+          initialCategory={initialCategory}
           initialMonth={initialMonth}
           initialYear={initialYear}
         />

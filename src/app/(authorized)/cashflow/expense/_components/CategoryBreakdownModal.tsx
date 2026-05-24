@@ -518,8 +518,8 @@ function CategoryBreakdownDialog({
 
 
 
-export function buildCategoryTransactionHref(categoryName: string, month: number, year: number = new Date().getFullYear()) {
-  return `/cashflow/transactions?category=${encodeURIComponent(categoryName.toLowerCase())}&month=${month}&year=${year}`;
+export function buildCategoryTransactionHref(categoryId: string, month: number, year: number = new Date().getFullYear()) {
+  return `/cashflow/transactions?category=${encodeURIComponent(categoryId)}&month=${month}&year=${year}`;
 }
 
 function CategoryBreakdownContent({
@@ -1358,7 +1358,7 @@ function CategoryBreakdownContent({
 
 
 
-                          href={buildCategoryTransactionHref(entry.categoryName, month, monthYear)}
+                          href={buildCategoryTransactionHref(entry.categoryId, month, monthYear)}
 
 
 

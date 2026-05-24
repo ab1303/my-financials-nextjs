@@ -8,7 +8,8 @@ import MONTHS_MAP from '@/constants/map';
 import { trpc } from '@/server/trpc/client';
 
 interface CategoryFilteredLedgerProps {
-  category: string;
+  category: string;  // Category name (for display and tRPC query)
+  categoryId: string; // Category ID (for URL parameter)
   month: number;
   year: number;
 }
@@ -40,7 +41,7 @@ function formatCategoryLabel(category: string) {
     .join(' ');
 }
 
-export function CategoryFilteredLedger({ category, month, year }: CategoryFilteredLedgerProps) {
+export function CategoryFilteredLedger({ category, categoryId, month, year }: CategoryFilteredLedgerProps) {
   const effectiveYear = year ?? new Date().getFullYear();
 
   const prevMonth = month === 1 ? 12 : month - 1;
@@ -79,7 +80,7 @@ export function CategoryFilteredLedger({ category, month, year }: CategoryFilter
           Expense Management
         </Link>
         <Link
-          href="/cashflow/transactions"
+          href={`/cashflow/transactions?view=ledger&category=${encodeURIComponent(categoryId)}&month=${month}&year=${effectiveYear}`}
           className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-teal-400 hover:text-foreground dark:border-border dark:text-muted-foreground dark:hover:border-teal-500 dark:hover:text-foreground"
         >
           View in Transactions

@@ -38,6 +38,7 @@ interface TransactionLedgerTableProps {
   refreshKey?: number;
   initialMonth?: number;
   initialYear?: number;
+  initialCategory?: string;
 }
 
 const PAGE_SIZE = 50;
@@ -76,6 +77,7 @@ export default function TransactionLedgerTable({
   refreshKey,
   initialMonth,
   initialYear,
+  initialCategory,
 }: TransactionLedgerTableProps) {
   return (
     <TransactionLedgerBody
@@ -83,11 +85,12 @@ export default function TransactionLedgerTable({
       refreshKey={refreshKey}
       initialMonth={initialMonth}
       initialYear={initialYear}
+      initialCategory={initialCategory}
     />
   );
 }
 
-function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear'>) {
+function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear, initialCategory }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear' | 'initialCategory'>) {
   const defaultFY = getPresetDateRange('this-fy')!;
 
   // Calculate date range from initialMonth/initialYear if provided
@@ -110,7 +113,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [page, setPage] = useState(1);
   const [bankAccountId, setBankAccountId] = useState<string | undefined>(undefined);
-  const [category, setCategory] = useState<string | undefined>(undefined);
+  const [category, setCategory] = useState<string | undefined>(initialCategory);
   const [datePreset, setDatePreset] = useState<DatePreset>(initialPreset);
   const [dateFrom, setDateFrom] = useState<string | undefined>(initialDateRange.from);
   const [dateTo, setDateTo] = useState<string | undefined>(initialDateRange.to);
