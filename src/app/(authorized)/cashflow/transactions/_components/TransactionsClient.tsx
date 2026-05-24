@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, type ReactNode } from 'react';
-import { History, GitMerge } from 'lucide-react';
+import { History, GitMerge, Tag } from 'lucide-react';
 import Link from 'next/link';
 
 import CSVImportWizard from './csv/CSVImportWizard';
@@ -105,6 +105,14 @@ export default function TransactionsClient({
           >
             <GitMerge className="h-4 w-4" />
             Transfer Rules
+          </Link>
+          <Link
+            href="/cashflow/category-rules"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            title="Manage category rules"
+          >
+            <Tag className="h-4 w-4" />
+            Category Rules
           </Link>
           <button
             onClick={() => setHistoryOpen(true)}

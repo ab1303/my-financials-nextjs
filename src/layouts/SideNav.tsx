@@ -67,6 +67,7 @@ const cashflowItems: NavItem[] = [
   { name: 'Transactions', href: '/cashflow/transactions', icon: ArrowLeftRight },
   { name: 'Bank Interest', href: '/cashflow/bank-interest', icon: Percent },
   { name: 'Transfer Rules', href: '/cashflow/transfer-rules', icon: GitMerge },
+  { name: 'Category Rules', href: '/cashflow/category-rules', icon: Tag },
 ];
 
 const assetItems: NavItem[] = [

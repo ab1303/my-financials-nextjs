@@ -15,6 +15,7 @@ import { userProfileRouter } from './user-profile';
 import { transactionClearingRouter } from './transaction-clearing';
 import { transferRouter } from './transfer';
 import { transferRuleRouter } from './transfer-rule';
+import { categoryRuleRouter } from './category-rule';
 import { calendarYearRouter } from './calendar-year';
 import { incomeSourceRouter } from './income-source';
 import { expenseCategoryRouter } from './expense-category';
@@ -38,6 +39,7 @@ export const appRouter = router({
   transactionClearing: transactionClearingRouter,
   transfer: transferRouter,
   transferRule: transferRuleRouter,
+  categoryRule: categoryRuleRouter,
   assetDashboard: assetDashboardRouter,
   calendarYear: calendarYearRouter,
   incomeSource: incomeSourceRouter,

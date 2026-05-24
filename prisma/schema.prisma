@@ -78,6 +78,7 @@ model User {
   merchantCategoryMaps MerchantCategoryMap[]
   transactions        Transaction[]
   transferMatchRules  TransferMatchRule[]
+  categoryRules       CategoryRule[]
 }
 
 model VerificationToken {
@@ -661,4 +662,26 @@ model TransferMatchJobResult {
   rule          TransferMatchRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
 
   @@index([userId, importSessionId])
+}
+
+enum CategoryRuleMatchType {
+  CONTAINS
+  STARTS_WITH
+  EXACT
+}
+
+model CategoryRule {
+  id           String                @id @default(cuid())
+  userId       String
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  matchType    CategoryRuleMatchType @default(CONTAINS)
+  pattern      String
+  category     String
+  isActive     Boolean               @default(true)
+  appliedCount Int                   @default(0)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@index([userId, isActive])
 }

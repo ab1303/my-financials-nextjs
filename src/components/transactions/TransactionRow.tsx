@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
@@ -14,6 +14,8 @@ import ReimbursementSubRow from './ReimbursementSubRow';
 import VoidTransactionButton from './VoidTransactionButton';
 import RestoreTransactionButton from './RestoreTransactionButton';
 import { UnlinkTransferButton } from './UnlinkTransferButton';
+import CategoryRulePrompt from './CategoryRulePrompt';
+import CategoryRuleDrawer from './CategoryRuleDrawer';
 
 interface TransactionRowProps {
   transaction: LedgerTransactionRow;
@@ -73,10 +75,15 @@ export default function TransactionRow({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [localOffsetTxId, setLocalOffsetTxId] = useState<string | null>(transaction.offsetTransactionId ?? null);
   const [selectedLinkOption, setSelectedLinkOption] = useState<LinkOption | null>(null);
+  const [showRulePrompt, setShowRulePrompt] = useState(false);
+  const [showRuleDrawer, setShowRuleDrawer] = useState(false);
+  const [ruleCategory, setRuleCategory] = useState('');
+  const [similarCount, setSimilarCount] = useState(0);
   const categorySelectId = useId();
   const offsetCategorySelectId = useId();
   const linkSelectId = useId();
   const utils = trpc.useUtils();
+  const similarCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setLocalCategory(transaction.category);
@@ -182,9 +189,30 @@ export default function TransactionRow({
 
   function handleChange(newCategory: string) {
     setLocalCategory(newCategory);
+    setShowRulePrompt(false); // reset any previous prompt
     if (newCategory !== REIMBURSEMENT_CATEGORY) {
       setLocalOffsetCategory('');
       onCategoryChange(transaction.id, newCategory);
+      // Only suggest a rule for real category changes (not Transfer/Reimbursement),
+      // and only when the category actually differs from the original.
+      if (newCategory !== TRANSFER_CATEGORY && newCategory !== transaction.category) {
+        setRuleCategory(newCategory);
+        // Debounce: cancel any in-flight timer before starting a new one.
+        if (similarCheckTimerRef.current) clearTimeout(similarCheckTimerRef.current);
+        similarCheckTimerRef.current = setTimeout(() => {
+          utils.categoryRule.findSimilar
+            .fetch({ description: transaction.description, excludeTransactionId: transaction.id })
+            .then((result) => {
+              if (result.count >= 2) {
+                setSimilarCount(result.count);
+                setShowRulePrompt(true);
+              }
+            })
+            .catch(() => {
+              // silently ignore — rule prompt is non-critical
+            });
+        }, 400);
+      }
     }
   }
 
@@ -211,6 +239,17 @@ export default function TransactionRow({
       <span className="shrink-0 tabular-nums text-xs text-gray-500 dark:text-gray-400">{option.meta}</span>
     </div>
   );
+
+  function extractPattern(description: string): string {
+    const STOP_WORDS = new Set(['to', 'from', 'the', 'a', 'an', 'and', 'or', 'of', 'in', 'at', 'on', 'for', 'by']);
+    return description
+      .toLowerCase()
+      .split(/\W+/)
+      .filter(Boolean)
+      .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
+      .slice(0, 3)
+      .join(' ');
+  }
 
   return (
     <>
@@ -427,6 +466,29 @@ export default function TransactionRow({
           </div>
         </td>
       </tr>
+
+      {showRulePrompt && (
+        <CategoryRulePrompt
+          count={similarCount}
+          colCount={colCount}
+          onCreateRule={() => {
+            setShowRulePrompt(false);
+            setShowRuleDrawer(true);
+          }}
+          onDismiss={() => setShowRulePrompt(false)}
+        />
+      )}
+
+      {showRuleDrawer && (
+        <CategoryRuleDrawer
+          open={showRuleDrawer}
+          initialPattern={extractPattern(transaction.description)}
+          initialCategory={ruleCategory}
+          transactionDescription={transaction.description}
+          onClose={() => setShowRuleDrawer(false)}
+          onSaved={() => setShowRuleDrawer(false)}
+        />
+      )}
 
       {isExpanded && transaction.reimbursements.map((r) => <ReimbursementSubRow key={r.id} reimbursement={r} colCount={colCount} />)}
     </>

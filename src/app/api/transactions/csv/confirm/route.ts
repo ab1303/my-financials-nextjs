@@ -8,6 +8,7 @@ import {
   confirmDebitTransactions,
 } from '@/server/services/transactions/csv-confirm.service';
 import { runTransferMatchRules } from '@/server/services/transactions/transfer-rule-job.service';
+import { runCategoryRules } from '@/server/services/transactions/category-rule.service';
 
 const ConfirmRequestSchema = z.object({
   fileId: z.string().min(1),
@@ -120,6 +121,17 @@ export async function POST(req: NextRequest) {
       console.error('Transfer match job error:', jobErr);
     }
 
+    let categoryRulesSummary: { rulesRan: number; appliedCount: number } | null = null;
+    try {
+      categoryRulesSummary = await runCategoryRules({
+        prisma,
+        userId: session.user.id,
+        importSessionId: fileId,
+      });
+    } catch (catErr) {
+      console.error('Category rules job error:', catErr);
+    }
+
     return NextResponse.json(
       {
         success: status !== 'FAILED',
@@ -131,6 +143,7 @@ export async function POST(req: NextRequest) {
         totalEntries,
         errors,
         matchJobSummary,
+        categoryRulesSummary,
       },
       { status: errors.length > 0 && totalEntries === 0 ? 500 : 200 },
     );
