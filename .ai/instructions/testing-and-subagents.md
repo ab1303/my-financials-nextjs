@@ -3,12 +3,12 @@
 ## Model Selection — Use Cheap Models for Mechanical Work
 
 **Default rule: only use the orchestrating model (Sonnet) for reasoning and context gathering.
-Delegate all mechanical output — spec writing, doc generation, boilerplate — to `gpt-4.1`.**
+Delegate all mechanical output — spec writing, doc generation, boilerplate, phase implementation — to cheap agents.**
 
 | Task | Model | Reason |
 |---|---|---|
 | Spec writing (`context.md`, `hld.md`, `lld.md`) | `gpt-4.1` | Mechanical document structure; cheap and fast |
-| Implementing a well-defined phase | `gpt-4.1` | Code follows a clear contract |
+| **Implementing a spec phase (via `implement-from-spec`)** | **`claude-haiku-4.5` via `Next.js Expert` agent** | **Self-contained contract; ~10× cheaper than orchestrator** |
 | Fixing test failures (per category) | `gpt-4.1` | Narrow scope, clear root cause |
 | Complex cross-cutting refactors | `claude-sonnet-4.6` (default) | Needs reasoning across many files |
 | Architecture / PO analysis | orchestrator only | No subagent; in-conversation reasoning |

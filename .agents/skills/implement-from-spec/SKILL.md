@@ -21,6 +21,32 @@ running independent phases in parallel and sequential phases in order.
 
 ---
 
+## ⚠️ ORCHESTRATOR ROLE — READ BEFORE STEP 1
+
+**You are the ORCHESTRATOR. You do NOT write code. You DELEGATE.**
+
+| ✅ Allowed | ❌ FORBIDDEN — hard stop |
+|---|---|
+| Read `context.md` and `lld.md` | Call `edit` or `create` on any source file |
+| Read source files to build context bundles | Run `prisma migrate` or `prisma generate` in main conversation |
+| Launch `Next.js Expert` background agents | Implement code "just for speed" or "just this once" |
+| Read agent results, surface errors to user | Fix agent errors by directly editing files yourself |
+| Run `pnpm run build` for final verification | Mark a phase done without an agent having run it |
+
+**MANDATORY DECLARATION — before reading any source file in Step 4, post this to the user:**
+
+> "Delegating {N} phase(s) to background Next.js Expert (haiku) agents:
+> - Phase 0 → `{feature}-phase-0` (no dependencies)
+> - Phase 1 → `{feature}-phase-1` (depends on Phase 0)
+> - Phase 2, 3 → parallel (depends on Phase 1)
+> ..."
+
+If you find yourself writing a code change in the main conversation — **STOP**. Put it in an agent prompt instead.
+
+**Cost contract**: haiku agents cost ~10× less than the orchestrator model. Direct implementation wastes budget AND bypasses scope enforcement. Agents get hard file constraints; the orchestrator does not.
+
+---
+
 ## Step 1 — Resolve the Feature and Spec Files
 
 **Feature name** — from argument (e.g. `implement-from-spec reimbursements`),

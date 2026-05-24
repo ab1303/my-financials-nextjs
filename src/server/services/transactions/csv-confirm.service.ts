@@ -116,6 +116,7 @@ async function createTransactionRecord(params: {
   bankAccountId: string;
   importSessionId: string;
   source: TransactionSourceEnum;
+  runningBalance?: number;
 }) {
   await prisma.transaction.create({
     data: {
@@ -130,6 +131,7 @@ async function createTransactionRecord(params: {
       userId: params.userId,
       bankAccountId: params.bankAccountId,
       importSessionId: params.importSessionId,
+      runningBalance: params.runningBalance ?? null,
     },
   });
 }
@@ -188,6 +190,7 @@ export async function confirmDebitTransactions(
           description: tx.description,
           amount: tx.amount,
           type: 'DEBIT',
+          runningBalance: tx.balance ?? null,
         });
         if (isDuplicate(dedupKey, dedupSet)) {
           result.duplicatesSkipped += 1;
@@ -209,6 +212,7 @@ export async function confirmDebitTransactions(
             userId,
             bankAccountId,
             importSessionId,
+            runningBalance: tx.balance,
           });
           result.totalEntries += 1;
           dedupSet.add(dedupKey);
@@ -239,6 +243,7 @@ export async function confirmDebitTransactions(
           userId,
           bankAccountId,
           importSessionId,
+          runningBalance: tx.balance,
         });
 
         await prisma.merchantCategoryMap.upsert({
@@ -313,6 +318,7 @@ export async function confirmCreditTransactions(
           description: tx.description,
           amount: tx.amount,
           type: 'CREDIT',
+          runningBalance: tx.balance ?? null,
         });
         if (isDuplicate(dedupKey, dedupSet)) {
           result.duplicatesSkipped += 1;
@@ -333,6 +339,7 @@ export async function confirmCreditTransactions(
             userId,
             bankAccountId,
             importSessionId,
+            runningBalance: tx.balance,
           });
         } else {
           const incomeLedger = await getOrCreateIncomeLedger(calendarYear.id, userId);
@@ -357,6 +364,7 @@ export async function confirmCreditTransactions(
             userId,
             bankAccountId,
             importSessionId,
+            runningBalance: tx.balance,
           });
         }
 

@@ -122,6 +122,7 @@ ${transactionsList}`;
         llmCategory,
         confirmedCategory: llmCategory,
         overridden: false,
+        balance: tx.balance,
       };
     });
 
@@ -145,6 +146,7 @@ ${transactionsList}`;
       llmCategory: tx.description,
       confirmedCategory: tx.description,
       overridden: false,
+      balance: tx.balance,
     }));
 
     return {
@@ -231,6 +233,7 @@ ${transactionsList}`;
         confirmedCategory: llmCategory,
         overridden: false,
         type: 'CREDIT' as const,
+        balance: tx.balance,
       };
     });
 
@@ -254,6 +257,7 @@ ${transactionsList}`;
       confirmedCategory: 'OTHER',
       overridden: false,
       type: 'CREDIT' as const,
+      balance: tx.balance,
     }));
 
     return {

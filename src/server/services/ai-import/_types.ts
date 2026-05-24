@@ -189,6 +189,7 @@ export interface ClassifiedTransaction {
   llmCategory: string; // LLM's suggestion
   confirmedCategory: string; // starts = llmCategory; user may change
   overridden: boolean; // true if user changed from llmCategory
+  balance?: number; // bank running balance after this tx; preserved for dedup tiebreaker
 }
 
 /**
@@ -211,6 +212,7 @@ export interface ClassifiedCreditTransaction {
   confirmedCategory: string; // starts = llmCategory; user may change
   overridden: boolean; // true if user changed from llmCategory
   type: 'CREDIT';
+  balance?: number; // bank running balance after this tx; preserved for dedup tiebreaker
 }
 
 /**

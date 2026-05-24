@@ -35,6 +35,19 @@ Rules for all AI agents working in this repository.
 - Pass file content directly in sub-agent prompts; don't tell them to read the codebase.
 - Batch all independent file reads into one parallel tool-call turn.
 
+## Skill Delegation Mandate
+
+**When `implement-from-spec` is active, the orchestrator writes ZERO production code.**
+
+- ❌ Never call `edit` or `create` on `.ts`, `.tsx`, `.prisma`, or any source file
+- ❌ Never run `prisma migrate` or `prisma generate` in the main conversation
+- ❌ Never rationalize "I'll just do this small change myself" — all code changes go through agents
+- ✅ Spawn `Next.js Expert` background agents with `model: "claude-haiku-4.5"` for every phase
+- ✅ Pass all file contents inline in the agent prompt — never say "read the codebase"
+- ✅ Run `pnpm run build` AFTER all agents complete — this is the orchestrator's only code interaction
+
+**Enforcement**: The SKILL.md requires a public delegation declaration to the user before any source files are read for bundles. If that declaration was not posted, the orchestrator skipped the guardrail — stop and post it now.
+
 ## Planning
 
 - Spec and PRD files → `spec/{domain}/{feature}/` only (see Spec Documents below).

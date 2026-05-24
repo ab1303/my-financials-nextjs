@@ -607,6 +607,9 @@ model Transaction {
   // Void / restore
   preVoidStatus                TransactionStatusEnum?
 
+  // Running account balance after this transaction — bank's own unique differentiator for dedup
+  runningBalance               Decimal?              @db.Money
+
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 

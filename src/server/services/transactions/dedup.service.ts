@@ -7,6 +7,7 @@ export interface DedupKeyParams {
   description: string;
   amount: number;
   type: TransactionTypeEnum;
+  runningBalance?: number | null; // optional: bank balance after tx; tiebreaker for same-day same-amount
 }
 
 export interface BuildDedupSetParams {
@@ -21,7 +22,11 @@ export function makeDedupKey(params: DedupKeyParams): string {
   const desc = params.description.trim().toLowerCase();
   const amount = params.amount.toFixed(2);
   const type = params.type;
-  return `${dateStr}|${desc}|${amount}|${type}`;
+  // Only append balance when it's a real number; null/undefined = omit (graceful fallback for banks without balance)
+  const balance = params.runningBalance != null
+    ? `|${Number(params.runningBalance).toFixed(2)}`
+    : '';
+  return `${dateStr}|${desc}|${amount}|${type}${balance}`;
 }
 
 export async function buildDedupSet(params: BuildDedupSetParams): Promise<Set<string>> {
@@ -33,12 +38,14 @@ export async function buildDedupSet(params: BuildDedupSetParams): Promise<Set<st
         gte: params.startDate,
         lte: params.endDate,
       },
+      status: { not: 'VOIDED' },
     },
     select: {
       date: true,
       description: true,
       amount: true,
       type: true,
+      runningBalance: true,
     },
   });
 
@@ -49,6 +56,7 @@ export async function buildDedupSet(params: BuildDedupSetParams): Promise<Set<st
       description: tx.description,
       amount: Number(tx.amount),
       type: tx.type,
+      runningBalance: tx.runningBalance != null ? Number(tx.runningBalance) : null,
     });
     set.add(key);
   }

@@ -28,6 +28,9 @@ model Transaction {
   importSessionId String?
   importSession   ImportSession?
 
+  // Running account balance after this transaction — used as dedup tiebreaker
+  runningBalance  Decimal?               @db.Money
+
   // Transfer reconciliation
   transferLinkedTransactionId  String?                @unique
   transferLinkedTransaction    Transaction?           @relation("TransferLink", fields: [transferLinkedTransactionId], references: [id])
@@ -105,7 +108,7 @@ model TransferMatchRule {
 | 1 | **Transaction = immutable cash record** | Date and amount are canonical; enrichment records add purpose | Prevents amount drift across donation, Zakat, and income attribution layers |
 | 2 | **VOIDED is a terminal status** | Voided transactions excluded from all financial aggregates; not hard-deleted | Audit trail preservation; VOIDED rows remain visible in a dedicated tab |
 | 3 | **Transfer uses EXCLUDED status, not a new enum** | `category='Transfer'` discriminates; `status=EXCLUDED` suppresses rollup | Avoids migrating existing EXCLUDED rows; all status-based queries unchanged |
-| 4 | **Dedup is auto-skip, not user-review** | Matches Copilot Money pattern; O(n) batch pre-fetch via Set lookup | Zero friction for the common case; deterministic bank CSVs make review unnecessary |
+| 4 | **Dedup key includes running balance** | 6-field key: `(date, description, amount, type, runningBalance?)` when balance available; falls back to 5-field without it | Running balance is the bank's own unique differentiator — two separate $197.73 payments on the same day produce the same 4-field key but different balances, so balance must be in the key |
 | 5 | **IncomeRecord.transactionId FK** | Nullable FK with `onDelete: SetNull` | Makes CREDIT reversal deterministic; same pattern as DonationPayment |
 | 6 | **Transfer matching is manual + assisted** | User confirms all links; auto-suggestions score candidates | Financial accuracy is paramount — no auto-link without confirmation in MVP |
 | 7 | **Reversal is always atomic** | All undo/void operations run inside `prisma.$transaction` | Partial reversal creates worse data corruption than the original problem |
