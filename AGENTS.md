@@ -4,6 +4,31 @@ Rules for all AI agents working in this repository.
 
 ---
 
+## File Governance: AGENTS.md vs CLAUDE.md
+
+**This section prevents conflicting/duplicate advice across instruction files.**
+
+| File | Audience | Content | When to Update |
+|------|----------|---------|-----------------|
+| **AGENTS.md** | All agents (universal rules) | Efficiency, planning, specs, code standards, database safety, dev server safety, scope control | Any change affecting all agents |
+| **CLAUDE.md** | Copilot CLI sessions powered by Claude | Persona/expertise, MCP tools, Claude-specific context, references to AGENTS.md | Claude-specific behavior or MCP changes only |
+
+**Golden Rule:**
+- **Universal rules** (database, form patterns, auth, pnpm, migrations) → `AGENTS.md` **ONLY**
+- **Claude-specific** (MCP tools, persona, expertise) → `CLAUDE.md` **ONLY**
+- **Never duplicate** a rule across both files — leads to agent confusion and maintenance drift
+- **When updating AGENTS.md**: Check if CLAUDE.md repeats it; remove the duplicate and add a cross-reference instead
+
+**Current Audit (last checked 2026-05-24):**
+- ✅ Database Safety: unified in AGENTS.md (line 127-134)
+- ✅ pnpm usage: defined in AGENTS.md (line 125), CLAUDE.md references it (line 21)
+- ✅ MCP tools: in CLAUDE.md (line 23-28) — read-only Postgres restriction documented
+- ✅ Spec-driven: unified in AGENTS.md (line 15), CLAUDE.md adds "Read instructions" context (line 41)
+
+**For detailed governance rules and maintenance procedures, see `.ai/instructions/instruction-governance.md`.**
+
+---
+
 ## Efficiency
 
 - Read files yourself before delegating — only launch sub-agents for work you haven't done.
@@ -126,6 +151,12 @@ Never pass all three docs at once for a single implementation task — context.m
 - Ask user to Run `pnpm run build` before marking any feature complete.
 - Stop the dev server before any Prisma CLI operation (prevents EPERM on Windows).
 - Never run `prisma migrate reset` without explicit user consent and a confirmed backup.
+- **NEVER use `prisma db push` for schema changes** — it modifies the DB without creating a migration file, causing irreversible schema drift. Always use `pnpm prisma migrate dev --name <descriptive-name>`. See `.ai/instructions/database-safety.md`.
+- **NEVER modify the DB schema directly** via MCP Postgres tools, Prisma Studio, or raw SQL — all schema changes must go through `prisma migrate dev`.
+- **Schema change workflow (mandatory)**:
+  1. Edit `prisma/schema.prisma`
+  2. Run `pnpm prisma migrate dev --name <descriptive-name>`
+  3. Commit `schema.prisma` AND the new `prisma/migrations/<name>/migration.sql` together
 
 ## Subagent Scope Control (Critical Lesson)
 

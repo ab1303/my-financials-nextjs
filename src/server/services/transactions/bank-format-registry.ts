@@ -105,10 +105,27 @@ const BANK_NAME_ALIASES: Record<string, string> = {
 
 /**
  * Normalise a bank name string to a registry key.
- * Lowercases and strips whitespace/punctuation before lookup.
+ * 
+ * Steps:
+ * 1. Remove parenthetical descriptors: "(CommBank)" → ""
+ * 2. Remove em-dashes and extra descriptors after them: "— Complete Access - 9870" → ""
+ * 3. Lowercase and keep only alphanumerics
+ * 
+ * Examples:
+ * - "Commonwealth Bank (CommBank)" → "commonwealthbank"
+ * - "Commonwealth Bank (CommBank) — Complete Access - 9870" → "commonwealthbank"
+ * - "National Australia Bank" → "nationalaustraliabank"
  */
 function normaliseBankName(bankName: string): string {
-  return bankName.toLowerCase().replace(/[\s\-.,&]/g, '');
+  // Step 1: Remove parenthetical content (e.g., "(CommBank)")
+  let cleaned = bankName.replace(/\([^)]*\)/g, '');
+  
+  // Step 2: Remove everything after em-dash or similar descriptors
+  // This handles "— Complete Access - 9870" or similar account/product descriptors
+  cleaned = cleaned.replace(/[—–-].*$/g, '');
+  
+  // Step 3: Lowercase and keep only alphanumeric
+  return cleaned.toLowerCase().replace(/[^\da-z]/g, '').trim();
 }
 
 /**

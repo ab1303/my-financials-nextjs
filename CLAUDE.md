@@ -1,6 +1,14 @@
 # CLAUDE.md - Foundational Mandates
 
-This file contains foundational mandates for Claude Code agent. These instructions take absolute precedence over general workflows and tool defaults.
+This file contains foundational mandates for Copilot CLI sessions. See `AGENTS.md` for universal rules that apply to all agents.
+
+---
+
+## File Governance
+
+See `AGENTS.md#File Governance` for which rules belong in which file. **CLAUDE.md focuses on Claude-specific persona, expertise, and MCP tools only.** All universal rules (database, specs, code, safety) are defined in `AGENTS.md` to prevent duplication and confusion.
+
+---
 
 ## Persona & Expertise
 
@@ -12,20 +20,17 @@ This file contains foundational mandates for Claude Code agent. These instructio
 
 ## Critical Safety & Standards
 
-- **Database Safety**: Never run `prisma migrate reset` without explicit user consent and confirmed backup. Stop dev server before any Prisma CLI operation to prevent EPERM errors on Windows. See `.ai/instructions/database-safety.md`.
-- **Form Patterns**: Use `react-hook-form` + `zod` for all forms. Follow the Client Wrapper Pattern for interactive forms that call Server Actions. See `.ai/instructions/form-patterns.md`.
-- **Auth & State**: Use NextAuth `auth()` in Server Components; use `useSession()` only in Client Components. Never pass `userId` from client to server — rely on server-side session. See `.ai/instructions/auth.md`.
-- **Dark Mode & react-select**: Always use `unstyled` + `classNames` const on react-select. See `.ai/instructions/dark-mode-and-react-select.md`.
-- **Cursor/Labels**: Table `<th>` needs `select-none cursor-default`; `<label htmlFor>` needs `cursor-pointer`. See `.ai/instructions/cursor-and-text-selection.md`.
-- **Middleware (Next.js 16+)**: Use `middleware.ts` at project root; keep it lightweight (auth checks only). Do not import heavy server-side modules.
-- **Always use `pnpm`**: Never use `npm` or `yarn` for installs or scripts.
+**For database safety, schema migrations, form patterns, auth, dev server safety, and all other universal rules: See `AGENTS.md#Code`** (lines 123-179).
+
+The rules below are Claude-specific additions:
+- **Postgres MCP read-only**: Use Postgres MCP for SELECT queries and schema inspection only. **Never execute `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`, or any DDL.** All schema changes must go through `pnpm prisma migrate dev`. See `.ai/instructions/database-safety.md`.
 
 ## MCP Tools Available
 
 - **Playwright MCP** (`@playwright/mcp`): Use to browse and interact with the running app (http://localhost:3000) to ground implementation in real UI state.
 - **Next.js DevTools MCP** (`next-devtools-mcp`): Use to inspect routes, components, and Next.js build artifacts during development.
 - **Prisma MCP** (`prisma mcp`): Use to inspect schema, run queries, and explore migrations safely.
-- **Postgres MCP** (`@modelcontextprotocol/server-postgres`): Direct DB access to `postgresql://postgres:postgres@host.docker.internal:5432/financials`.
+- **Postgres MCP** (`@modelcontextprotocol/server-postgres`): Direct DB access to `postgresql://postgres:postgres@host.docker.internal:5432/financials`. ⚠️ **READ-ONLY USE ONLY** — never execute DDL (CREATE, ALTER, DROP). All schema changes must go through `prisma migrate dev`.
 
 ## Project Context
 
@@ -39,6 +44,7 @@ This file contains foundational mandates for Claude Code agent. These instructio
 
 - **Browse first**: Use Playwright MCP to view the running app before implementing UI changes.
 - **Read instructions**: Load applicable `.github/instructions/*.instructions.md` files before starting feature work.
-- **Spec-driven**: Create or reference a spec in `spec/` for any non-trivial feature.
+- **Spec-driven**: See `AGENTS.md#Planning` for complete spec workflow.
 - **Directives**: Perform implementation with minimal confirmation unless critically underspecified.
 - **Inquiries**: Provide analysis or advice only when explicitly asked; do not modify files.
+

@@ -57,6 +57,8 @@ pnpm prisma migrate reset   # ❌ BLOCKED - requires approval
 pnpm prisma db push         # ❌ BLOCKED - requires approval
 ```
 
+> ⚠️ **`db push` is blocked for a critical reason beyond data loss**: even when allowed via `PRISMA_FORCE_APPROVED=true`, `db push` modifies the database WITHOUT creating a migration file. This causes silent schema drift — the DB state diverges from migration history. Recovery requires hours of engineering work (squashing migrations, baselining). **Never use `db push` for schema changes, even with approval.**
+
 Attempting to run without `PRISMA_FORCE_APPROVED=true` will fail with a clear error message.
 
 ## For Users

@@ -1,18 +1,17 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
     "paths": {
-      "@/*": ["*"],
-      "@/components/*": ["components/*"],
-      "@/config/*": ["config/*"],
-      "@/features/*": ["features/*"],
-      "@/helpers/*": ["helpers/*"],
-      "@/layouts/*": ["layouts/*"],
-      "@/server/*": ["server/*"],
-      "@/styles/*": ["styles/*"],
-      "@/types/*": ["types/*"],
-      "@/utils/*": ["utils/*"],
-      "@/static-props/*": ["static-props/*"]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/config/*": ["./src/config/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/helpers/*": ["./src/helpers/*"],
+      "@/layouts/*": ["./src/layouts/*"],
+      "@/server/*": ["./src/server/*"],
+      "@/styles/*": ["./src/styles/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/static-props/*": ["./src/static-props/*"]
     }
   }
 }
