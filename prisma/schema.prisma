@@ -561,6 +561,7 @@ enum TransactionTypeEnum {
 enum TransactionSourceEnum {
   LLM_CLASSIFIED
   USER_OVERRIDE
+  USER_MANUAL
 }
 
 enum TransactionStatusEnum {

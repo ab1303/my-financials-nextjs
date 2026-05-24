@@ -34,7 +34,7 @@ import { AppSelect as Select } from '@/components/ui/AppSelect';
 
 
 
-import { X } from 'lucide-react';
+import { X, Lock } from 'lucide-react';
 
 
 
@@ -1150,7 +1150,7 @@ function CategoryBreakdownContent({
 
 
 
-              <p className='text-sm'>No expenses recorded for this month. Click + to add your first expense.</p>
+              <p className='text-sm'>No expenses found for this month.</p>
 
 
 
@@ -1402,11 +1402,19 @@ function CategoryBreakdownContent({
 
 
 
-                          <button type='button' className={clsx(buttonStyles.iconCompact, 'text-muted-foreground hover:bg-muted/30 hover:text-primary')} onClick={() => startEdit(entry)} disabled={isLoading} aria-label='Edit entry'><PenIcon className='h-5 w-5' /></button>
+                          {entry.source === 'bank' && (
+                            <span className='flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground' title='Bank-imported transaction — edit via Transaction Ledger'>
+                              <Lock className='h-2.5 w-2.5' />Bank
+                            </span>
+                          )}
 
 
 
-                          <button type='button' className={clsx(buttonStyles.iconCompact, 'text-muted-foreground hover:bg-muted/30 hover:text-destructive')} onClick={() => handleDeleteEntry(entry.id)} disabled={isLoading} aria-label='Delete entry'><TrashIcon className='h-5 w-5' /></button>
+                          {entry.source === 'USER_MANUAL' && <button type='button' className={clsx(buttonStyles.iconCompact, 'text-muted-foreground hover:bg-muted/30 hover:text-primary')} onClick={() => startEdit(entry)} disabled={isLoading} aria-label='Edit entry'><PenIcon className='h-5 w-5' /></button>}
+
+
+
+                          {entry.source === 'USER_MANUAL' && <button type='button' className={clsx(buttonStyles.iconCompact, 'text-muted-foreground hover:bg-muted/30 hover:text-destructive')} onClick={() => handleDeleteEntry(entry.id)} disabled={isLoading} aria-label='Delete entry'><TrashIcon className='h-5 w-5' /></button>}
 
 
 

@@ -99,53 +99,101 @@ export const getExpenseEntries = async (
 };
 
 /**
- * Get expense entries for a specific month
+ * Get expense entries for a specific month, derived from Transaction table (source of truth).
+ * - USER_MANUAL transactions are returned as individual editable entries (id = transaction.id).
+ * - Bank-imported transactions are aggregated per category into a single read-only entry.
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
  * @param month - Month number (1-12)
- * @returns Array of expense entries for the specified month
+ * @returns Array of per-entry expense aggregates for the specified month
  */
 export const getExpenseEntriesForMonth = async (
   calendarYearId: string,
   userId: string,
   month: number,
 ): Promise<Array<ExpenseEntryWithCategory>> => {
-  const where: Partial<Prisma.MonthlyExpenseSummaryWhereInput> = {
-    expenseLedger: {
-      calendarId: calendarYearId,
-      userId,
-    },
-    month,
-  };
-
-  const expenseEntries = await prisma.monthlyExpenseSummary.findMany({
-    where,
-    include: {
-      expenseLedger: true,
-      category: true,
-      importImage: {
-        select: { id: true, fileName: true },
-      },
-    },
-    orderBy: {
-      category: { name: 'asc' },
-    },
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
   });
 
-  return expenseEntries.map<ExpenseEntryWithCategory>((entry) => ({
-    id: entry.id,
-    month: entry.month,
-    amount: entry.amount.toNumber(),
-    categoryId: entry.categoryId,
-    expenseLedgerId: entry.expenseLedgerId,
-    categoryName: entry.category.name,
-    importImageId: entry.importImageId ?? undefined,
-    importImage: entry.importImage ?? undefined,
-  }));
+  if (!calendarYear) return [];
+
+  // Determine the calendar year for this month within the fiscal year.
+  // Months >= fromMonth are in fromYear; months < fromMonth are in toYear.
+  const year = month >= calendarYear.fromMonth ? calendarYear.fromYear : calendarYear.toYear;
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: 'DEBIT',
+      status: 'CONFIRMED',
+      date: { gte: startDate, lte: endDate },
+    },
+    select: { id: true, category: true, amount: true, source: true },
+    orderBy: { date: 'asc' },
+  });
+
+  // Separate USER_MANUAL from bank-imported transactions
+  const userManualTxs = transactions.filter((tx) => tx.source === 'USER_MANUAL');
+  const bankTxs = transactions.filter((tx) => tx.source !== 'USER_MANUAL');
+
+  // Aggregate bank transactions by category name
+  const bankCategoryMap = new Map<string, number>();
+  for (const tx of bankTxs) {
+    if (!tx.category) continue;
+    bankCategoryMap.set(tx.category, (bankCategoryMap.get(tx.category) ?? 0) + Number(tx.amount));
+  }
+
+  // Resolve category IDs by name for all entries
+  const allCategoryNames = [
+    ...Array.from(bankCategoryMap.keys()),
+    ...userManualTxs.filter((tx) => tx.category).map((tx) => tx.category as string),
+  ];
+  const expenseCategories = await prisma.expenseCategory.findMany({
+    where: { name: { in: allCategoryNames } },
+    select: { id: true, name: true },
+  });
+  const catNameToId = new Map(expenseCategories.map((c) => [c.name, c.id]));
+
+  const entries: ExpenseEntryWithCategory[] = [];
+
+  // Bank-imported entries: one aggregate row per category, read-only
+  for (const [categoryName, amount] of bankCategoryMap.entries()) {
+    entries.push({
+      id: catNameToId.get(categoryName) ?? categoryName,
+      month,
+      amount,
+      categoryId: catNameToId.get(categoryName) ?? '',
+      expenseLedgerId: '',
+      source: 'bank',
+      categoryName,
+    });
+  }
+
+  // USER_MANUAL entries: one row per transaction, fully editable
+  for (const tx of userManualTxs) {
+    if (!tx.category) continue;
+    entries.push({
+      id: tx.id,
+      month,
+      amount: Number(tx.amount),
+      categoryId: catNameToId.get(tx.category) ?? '',
+      expenseLedgerId: '',
+      source: 'USER_MANUAL',
+      categoryName: tx.category,
+    });
+  }
+
+  return entries;
 };
 
 /**
- * Calculate monthly expense totals for a calendar year
+ * Calculate monthly expense totals for a calendar year.
+ * Derives totals directly from the Transaction table (source of truth)
+ * using DEBIT + CONFIRMED transactions within the fiscal year's date range.
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
  * @returns Array of monthly summaries with total amounts and entry counts
@@ -154,11 +202,12 @@ export const getMonthlyExpenseSummaries = async (
   calendarYearId: string,
   userId: string,
 ): Promise<Array<MonthlyExpenseSummary>> => {
-  // Get the expense record first
-  const expense = await getExpense(calendarYearId, userId);
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
 
-  if (!expense.id) {
-    // No expense record exists, return empty summaries for all 12 months
+  if (!calendarYear) {
     return Array.from({ length: 12 }, (_, i) => ({
       month: i + 1,
       totalAmount: 0,
@@ -166,45 +215,46 @@ export const getMonthlyExpenseSummaries = async (
     }));
   }
 
-  // Aggregate by month
-  const monthlyAggregates = await prisma.monthlyExpenseSummary.groupBy({
-    by: ['month'],
+  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
+  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+
+  const transactions = await prisma.transaction.findMany({
     where: {
-      expenseLedgerId: expense.id,
+      userId,
+      type: 'DEBIT',
+      status: 'CONFIRMED',
+      date: { gte: startDate, lte: endDate },
     },
-    _sum: {
-      amount: true,
-    },
-    _count: {
-      id: true,
-    },
+    select: { date: true, amount: true },
   });
 
-  // Create a map for quick lookup
-  const aggregateMap = new Map(
-    monthlyAggregates.map((agg) => [
-      agg.month,
-      {
-        totalAmount: agg._sum.amount?.toNumber() || 0,
-        entryCount: agg._count.id,
-      },
-    ]),
-  );
+  // Aggregate by calendar month
+  const monthMap = new Map<number, { totalAmount: number; entryCount: number }>();
+  for (const tx of transactions) {
+    const month = tx.date.getMonth() + 1;
+    const existing = monthMap.get(month) ?? { totalAmount: 0, entryCount: 0 };
+    monthMap.set(month, {
+      totalAmount: existing.totalAmount + Number(tx.amount),
+      entryCount: existing.entryCount + 1,
+    });
+  }
 
   // Return all 12 months with zero totals for months without entries
   return Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
-    const aggregate = aggregateMap.get(month);
+    const agg = monthMap.get(month);
     return {
       month,
-      totalAmount: aggregate?.totalAmount || 0,
-      entryCount: aggregate?.entryCount || 0,
+      totalAmount: agg?.totalAmount ?? 0,
+      entryCount: agg?.entryCount ?? 0,
     };
   });
 };
 
 /**
- * Calculate total expenses for a calendar year
+ * Calculate total expenses for a calendar year.
+ * Derives totals directly from the Transaction table (source of truth)
+ * using DEBIT + CONFIRMED transactions within the fiscal year's date range.
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
  * @returns Total expense amount
@@ -213,22 +263,27 @@ export const getTotalExpenses = async (
   calendarYearId: string,
   userId: string,
 ): Promise<number> => {
-  const expense = await getExpense(calendarYearId, userId);
-
-  if (!expense.id) {
-    return 0;
-  }
-
-  const result = await prisma.monthlyExpenseSummary.aggregate({
-    where: {
-      expenseLedgerId: expense.id,
-    },
-    _sum: {
-      amount: true,
-    },
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
   });
 
-  return result._sum.amount?.toNumber() || 0;
+  if (!calendarYear) return 0;
+
+  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
+  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+
+  const result = await prisma.transaction.aggregate({
+    where: {
+      userId,
+      type: 'DEBIT',
+      status: 'CONFIRMED',
+      date: { gte: startDate, lte: endDate },
+    },
+    _sum: { amount: true },
+  });
+
+  return Number(result._sum.amount ?? 0);
 };
 
 /**
@@ -324,7 +379,7 @@ export const getExpenseCategories = async () => {
 };
 
 /**
- * Get category breakdown for a specific month
+ * Get category breakdown for a specific month, derived from Transaction table (source of truth).
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
  * @param month - Month number (1-12)
@@ -335,44 +390,49 @@ export const getCategoryBreakdownForMonth = async (
   userId: string,
   month: number,
 ): Promise<Array<CategoryBreakdown>> => {
-  const expense = await getExpense(calendarYearId, userId);
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
 
-  if (!expense.id) {
-    return [];
+  if (!calendarYear) return [];
+
+  const year = month >= calendarYear.fromMonth ? calendarYear.fromYear : calendarYear.toYear;
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: 'DEBIT',
+      status: 'CONFIRMED',
+      date: { gte: startDate, lte: endDate },
+    },
+    select: { category: true, amount: true },
+  });
+
+  // Aggregate by category name
+  const categoryAmountMap = new Map<string, number>();
+  for (const tx of transactions) {
+    if (!tx.category) continue;
+    const current = categoryAmountMap.get(tx.category) ?? 0;
+    categoryAmountMap.set(tx.category, current + Number(tx.amount));
   }
 
-  const categoryAggregates = await prisma.monthlyExpenseSummary.groupBy({
-    by: ['categoryId'],
-    where: {
-      expenseLedgerId: expense.id,
-      month,
-    },
-    _sum: {
-      amount: true,
-    },
+  // Resolve category IDs by name
+  const categoryNames = Array.from(categoryAmountMap.keys());
+  const expenseCategories = await prisma.expenseCategory.findMany({
+    where: { name: { in: categoryNames } },
+    select: { id: true, name: true },
   });
+  const catNameToId = new Map(expenseCategories.map((c) => [c.name, c.id]));
 
-  // Get category names
-  const categoryIds = categoryAggregates.map((agg) => agg.categoryId);
-  const categories = await prisma.expenseCategory.findMany({
-    where: {
-      id: { in: categoryIds },
-    },
-  });
+  const total = Array.from(categoryAmountMap.values()).reduce((sum, amt) => sum + amt, 0);
 
-  const categoryMap = new Map(categories.map((cat) => [cat.id, cat.name]));
-
-  // Calculate total for percentage
-  const total = categoryAggregates.reduce(
-    (sum, agg) => sum + (agg._sum.amount?.toNumber() || 0),
-    0,
-  );
-
-  return categoryAggregates.map((agg) => ({
-    categoryId: agg.categoryId,
-    categoryName: categoryMap.get(agg.categoryId) || 'Unknown',
-    amount: agg._sum.amount?.toNumber() || 0,
-    percentage:
-      total > 0 ? ((agg._sum.amount?.toNumber() || 0) / total) * 100 : 0,
+  return Array.from(categoryAmountMap.entries()).map(([categoryName, amount]) => ({
+    categoryId: catNameToId.get(categoryName) ?? '',
+    categoryName,
+    amount,
+    percentage: total > 0 ? (amount / total) * 100 : 0,
   }));
 };

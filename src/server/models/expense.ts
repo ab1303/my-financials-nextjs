@@ -17,6 +17,8 @@ export type ExpenseEntryModel = {
   amount: number;
   categoryId: string;
   expenseLedgerId: string;
+  /** 'USER_MANUAL' for manually entered transactions; 'bank' for imported transactions. Undefined for legacy MonthlyExpenseSummary entries. */
+  source?: 'USER_MANUAL' | 'bank';
   categoryName?: string; // Populated from join
   importImageId?: string | null; // Link to imported image
   importImage?: {
