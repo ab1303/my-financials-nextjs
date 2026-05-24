@@ -153,6 +153,23 @@ export async function confirmDebitTransactions(
   const categories = await prisma.expenseCategory.findMany({ where: { isActive: true } });
   const categoryMap = new Map(categories.map((category) => [category.name.toLowerCase(), category.id]));
 
+  // Get or create "Other" category for unmapped transactions
+  let otherCategoryId = categoryMap.get('other');
+  if (!otherCategoryId) {
+    const otherCategory = categories.find((c) => c.name.toLowerCase() === 'other');
+    if (otherCategory) {
+      otherCategoryId = otherCategory.id;
+      categoryMap.set('other', otherCategoryId);
+    } else {
+      // Create "Other" category if it doesn't exist
+      const created = await prisma.expenseCategory.create({
+        data: { name: 'Other', isActive: true },
+      });
+      otherCategoryId = created.id;
+      categoryMap.set('other', otherCategoryId);
+    }
+  }
+
   for (const { month: monthKey, transactions } of debitMonths) {
     try {
       const { year, monthNum } = parseMonthKey(monthKey);
@@ -198,9 +215,10 @@ export async function confirmDebitTransactions(
           continue;
         }
 
-        const categoryId = categoryMap.get(tx.confirmedCategory.toLowerCase());
+        // Try to find category; fallback to "Other" if not found (instead of silently skipping)
+        let categoryId = categoryMap.get(tx.confirmedCategory.toLowerCase());
         if (!categoryId) {
-          continue;
+          categoryId = otherCategoryId;
         }
 
         await upsertMonthlyExpenseSummary({

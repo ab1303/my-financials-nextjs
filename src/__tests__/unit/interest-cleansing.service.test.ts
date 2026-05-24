@@ -25,8 +25,6 @@ describe('interest-cleansing.service', () => {
         type: 'FISCAL',
         userId,
       } as never);
-
-      prismaMock.bankInterestLiability.findMany.mockResolvedValue([]);
       prismaMock.financialAccount.findMany.mockResolvedValue([]);
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.donationPayment.findMany.mockResolvedValue([]);
@@ -68,8 +66,6 @@ describe('interest-cleansing.service', () => {
         type: 'FISCAL',
         userId,
       } as never);
-
-      prismaMock.bankInterestLiability.findMany.mockResolvedValue([]);
       prismaMock.financialAccount.findMany.mockResolvedValue([]);
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.donationPayment.findMany.mockResolvedValue([]);
@@ -99,8 +95,6 @@ describe('interest-cleansing.service', () => {
         type: 'FISCAL',
         userId,
       } as never);
-
-      prismaMock.bankInterestLiability.findMany.mockResolvedValue([]);
       prismaMock.financialAccount.findMany.mockResolvedValue([]);
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.donationPayment.findMany.mockResolvedValue([]);
@@ -133,8 +127,6 @@ describe('interest-cleansing.service', () => {
         type: 'FISCAL',
         userId,
       } as never);
-
-      prismaMock.bankInterestLiability.findMany.mockResolvedValue([]);
       prismaMock.financialAccount.findMany.mockResolvedValue([]);
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.donationPayment.findMany.mockResolvedValue([]);
@@ -177,17 +169,7 @@ describe('interest-cleansing.service', () => {
         userId,
       } as never);
 
-      prismaMock.bankInterestLiability.findMany.mockResolvedValue([
-        {
-          id: 'liability-1',
-          bankId,
-          calendarId: calendarYearId,
-          month: 1,
-          year: 2024,
-          amountDue: new Decimal('50.00'),
-        } as never,
-      ]);
-
+      
       prismaMock.financialAccount.findMany.mockResolvedValue([]);
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.donationPayment.findMany.mockResolvedValue([]);

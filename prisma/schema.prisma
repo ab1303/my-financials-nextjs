@@ -161,8 +161,6 @@ model Business {
   postcode         Int?
   state            String?
   type             BusinessEnumType?
-  bankInterestPayments BankInterestPayment[]
-  bankInterestLiabilities BankInterestLiability[]
   zakatPayments    ZakatPayment[]
   donationPayments DonationPayment[]
   financialAccounts FinancialAccount[]
@@ -170,31 +168,6 @@ model Business {
   // userId is set for user-specific institutions (e.g. PHILANTHROPY).
   userId           String?
   user             User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
-}
-
-// BankInterestPayment — DEPRECATED. Existing rows migrated to DonationPayment(INTEREST_CLEANSING).
-// This model will be dropped in a future migration once tRPC procedures referencing it are removed.
-model BankInterestPayment {
-  id                      String                 @id @default(cuid())
-  datePaid                DateTime
-  amount                  Decimal                @db.Money
-  business                Business?              @relation(fields: [businessId], references: [id])
-  businessId              String?
-  bankInterestLiability   BankInterestLiability? @relation(fields: [bankInterestLiabilityId], references: [id])
-  bankInterestLiabilityId String?
-}
-
-// BankInterestLiability — monthly interest tax liability owed to the ATO for a given bank
-model BankInterestLiability {
-  id         String                @id @default(cuid())
-  month      Int
-  year       Int
-  amountDue  Decimal               @db.Money
-  bank       Business              @relation(fields: [bankId], references: [id])
-  bankId     String
-  calendar   CalendarYear          @relation(fields: [calendarId], references: [id], onDelete: Restrict)
-  calendarId String
-  payments   BankInterestPayment[]
 }
 
 // ZakatObligation — per-calendar-year header for zakat obligations
@@ -359,7 +332,6 @@ model CalendarYear {
   type                    CalendarEnumType?
   lockedAt                DateTime?
   zakatObligations        ZakatObligation[]
-  bankInterestLiabilities BankInterestLiability[]
   incomeLedgers           IncomeLedger[]
   expenseLedgers          ExpenseLedger[]
   donationLedgers         DonationLedger[]
