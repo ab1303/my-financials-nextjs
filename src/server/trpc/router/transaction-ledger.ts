@@ -71,6 +71,7 @@ type PrismaTransaction = {
     type: TransactionTypeEnum;
     bankAccount?: { name: string; bank?: { name: string | null } | null } | null;
   } | null;
+  importSession?: { id: string; createdAt: Date } | null;
 };
 
 export interface TransactionRow {
@@ -102,6 +103,10 @@ export interface TransactionRow {
     bankName: string | null;
   } | null;
   isTransferClassified: boolean;
+  importSource?: {
+    id: string;
+    createdAt: string;
+  };
 }
 
 export interface GetAllOutput {
@@ -289,6 +294,7 @@ export const transactionLedgerRouter = router({
               financialAccount: { select: { name: true, institution: { select: { name: true } } } },
             },
           },
+          importSession: { select: { id: true, createdAt: true } },
         },
       }),
       ctx.prisma.transaction.count({ where }),
@@ -358,6 +364,9 @@ export const transactionLedgerRouter = router({
         };
       })(),
       isTransferClassified: tx.category === TRANSFER_CATEGORY,
+      importSource: tx.importSession
+        ? { id: tx.importSession.id, createdAt: tx.importSession.createdAt.toISOString() }
+        : undefined,
     }));
 
     return {
@@ -625,7 +634,7 @@ export const transactionLedgerRouter = router({
         },
         orderBy: [{ date: 'desc' }],
         take: input.limit,
-        select: { id: true, date: true, description: true, amount: true, category: true },
+        select: { id: true, date: true, description: true, amount: true, category: true, importSession: { select: { id: true, createdAt: true } } },
       });
       return transactions.map((tx) => ({
         id: tx.id,
@@ -633,6 +642,9 @@ export const transactionLedgerRouter = router({
         description: tx.description,
         amount: Number(tx.amount),
         category: tx.category,
+        importSource: tx.importSession
+          ? { id: tx.importSession.id, createdAt: tx.importSession.createdAt.toISOString() }
+          : undefined,
       }));
     }),
 

@@ -13,6 +13,7 @@ interface SessionRow {
   status: string;
   recordsCreated: number;
   transactionCount: number;
+  skippedCount: number; // Phase 1: Add skippedCount
   createdAt: string;
   startDate: string | null;
   endDate:   string | null;
@@ -111,7 +112,7 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
               <table className="w-full text-left text-sm">
                 <thead className="bg-muted">
                   <tr>
-                    {['Date', 'Type', 'Records', 'Coverage', 'Status', ''].map((h) => (
+                    {['Date', 'Type', 'Records', 'Skipped', 'Coverage', 'Status', ''].map((h) => (
                       <th
                         key={h}
                         className="cursor-default select-none px-4 py-3 font-medium text-foreground"
@@ -133,6 +134,9 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
                       <td className="px-4 py-3 text-muted-foreground">
                         {session.transactionCount}
                       </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {session.skippedCount > 0 ? `${session.skippedCount} skipped` : '—'}
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                         {formatCoverage(session.startDate, session.endDate)}
                       </td>
@@ -146,7 +150,16 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
                       </td>
                       <td className="px-4 py-3 text-right">
                         {(session.status === 'COMPLETED' || session.status === 'PARTIAL') && (
-                          <>
+                          <div className="flex items-center gap-2 justify-end">
+                            {/* Details button for Phase 3 modal (disabled for now) */}
+                            <button
+                              type="button"
+                              className="rounded px-2 py-1 text-xs font-medium text-muted-foreground border border-border bg-background hover:bg-muted/50 cursor-not-allowed opacity-60"
+                              disabled
+                              title="Review details (coming soon)"
+                            >
+                              Details
+                            </button>
                             {session.isLocked ? (
                               <span
                                 className="rounded px-3 py-1 text-xs font-medium text-muted-foreground cursor-not-allowed"
@@ -162,7 +175,7 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
                                 Undo
                               </button>
                             )}
-                          </>
+                          </div>
                         )}
                         {session.status === 'PENDING' && (
                           <button
@@ -192,11 +205,16 @@ export default function ImportSessionHistory({ isOpen, onClose }: Props) {
           }
         }}
         title="Undo Import?"
-        message={
-          undoSession?.yearWarning
-            ? `This import is from a previous fiscal year. Undoing it will reverse ${undoSession.transactionCount ?? 0} transactions and remove associated financial records that may have been used for tax reporting. This cannot be re-done.`
-            : `This will void all ${undoSession?.transactionCount ?? 0} transactions from this import and reverse their expense summaries and income records. This cannot be re-done.`
-        }
+        message={(() => {
+          if (!undoSession) return '';
+          const txCount = undoSession.transactionCount ?? 0;
+          const skipped = undoSession.skippedCount ?? 0;
+          const skippedMsg = skipped > 0 ? ` (${skipped} skipped)` : '';
+          if (undoSession.yearWarning) {
+            return `This import is from a previous fiscal year. Undoing it will reverse ${txCount} transactions${skippedMsg} and remove associated financial records that may have been used for tax reporting. This cannot be re-done.`;
+          }
+          return `This will void all ${txCount} transactions${skippedMsg} from this import and reverse their expense summaries and income records. This cannot be re-done.`;
+        })()}
         confirmButtonText="Yes, Undo Import"
         variant="danger"
         isLoading={undoMutation.isPending}

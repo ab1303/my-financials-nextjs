@@ -40,6 +40,8 @@ async function deriveYearFlags(
   };
 }
 
+import { getImportSessionDetails } from '@/server/services/transactions/import-audit.service';
+
 export const transactionClearingRouter = router({
   undoImportSession: protectedProcedure
     .input(z.object({ importSessionId: z.string().min(1) }))
@@ -75,9 +77,11 @@ export const transactionClearingRouter = router({
         if (err instanceof TRPCError) {
           throw err;
         }
+        const message = err instanceof Error ? err.message : 'Undo failed';
+        console.error('[undoImportSession] Error:', message, err);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: err instanceof Error ? err.message : 'Undo failed',
+          message,
         });
       }
     }),
@@ -92,9 +96,11 @@ export const transactionClearingRouter = router({
         );
         return { success: true };
       } catch (err) {
+        const message = err instanceof Error ? err.message : 'Void failed';
+        console.error('[voidTransaction] Error:', message, err);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: err instanceof Error ? err.message : 'Void failed',
+          message,
         });
       }
     }),
@@ -109,9 +115,11 @@ export const transactionClearingRouter = router({
         );
         return { success: true };
       } catch (err) {
+        const message = err instanceof Error ? err.message : 'Restore failed';
+        console.error('[restoreTransaction] Error:', message, err);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: err instanceof Error ? err.message : 'Restore failed',
+          message,
         });
       }
     }),
@@ -175,5 +183,17 @@ export const transactionClearingRouter = router({
           };
         }),
       );
+    }),
+
+  getImportSessionDetails: protectedProcedure
+    .input(z.object({ sessionId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const { sessionId } = input;
+      const userId = ctx.session.user.id;
+      const detail = await getImportSessionDetails(sessionId, userId, ctx.prisma);
+      // Validate response against Zod schema
+      // Import Zod schema inline to avoid circular deps
+      const { ImportSessionDetailSchema } = await import('@/server/trpc/schemas/import-audit');
+      return ImportSessionDetailSchema.parse(detail);
     }),
 });

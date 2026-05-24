@@ -18,6 +18,7 @@ export async function voidSingleTransaction(
       donationPayment: { select: { id: true } },
       transferLinkedTransaction: { select: { id: true } },
       transferCounterpart: { select: { id: true } },
+      reimbursements: { select: { id: true } },
     },
   }) as
     | {
@@ -33,6 +34,7 @@ export async function voidSingleTransaction(
         transferLinkedTransactionId: string | null;
         preLinkCategory: string | null;
         preLinkStatus: string | null;
+        reimbursements: Array<{ id: string }>;
       }
     | null;
 
@@ -43,18 +45,36 @@ export async function voidSingleTransaction(
     return; // idempotent
   }
 
-  await ctx.prisma.$transaction(async (db) => {
-    await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, new Set([tx.id]));
-    await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
-    await (db.transaction as any).update({
-      where: { id: transactionId },
-      data: {
-        status: 'VOIDED',
-        confirmedAt: null,
-        preVoidStatus: tx.status, // persist so restore can return to the exact prior state
-      },
-    });
-  });
+  await ctx.prisma.$transaction(
+    async (db) => {
+      // Clear any reimbursement links before voiding
+      if (tx.reimbursements.length > 0) {
+        await (db.transaction as any).updateMany({
+          where: { id: { in: tx.reimbursements.map((r) => r.id) } },
+          data: { offsetTransactionId: null },
+        });
+      }
+      // Clear offset transaction link (this tx is a reimbursement)
+      if ((tx as any).offsetTransactionId) {
+        await (db.transaction as any).update({
+          where: { id: tx.id },
+          data: { offsetTransactionId: null },
+        });
+      }
+
+      await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, new Set([tx.id]));
+      await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
+      await (db.transaction as any).update({
+        where: { id: transactionId },
+        data: {
+          status: 'VOIDED',
+          confirmedAt: null,
+          preVoidStatus: tx.status, // persist so restore can return to the exact prior state
+        },
+      });
+    },
+    { timeout: 30000 }, // 30s timeout instead of default 5s
+  );
 }
 
 export async function restoreTransaction(
@@ -87,25 +107,28 @@ export async function restoreTransaction(
   // but defensively handles any rows voided before this field existed).
   const restoreStatus = tx.preVoidStatus ?? 'EXCLUDED';
 
-  await ctx.prisma.$transaction(async (db) => {
-    await (db.transaction as any).update({
-      where: { id: transactionId },
-      data: {
-        status: restoreStatus,
-        preVoidStatus: null,
-        ...(restoreStatus === 'CONFIRMED' ? { confirmedAt: new Date() } : {}),
-      },
-    });
+  await ctx.prisma.$transaction(
+    async (db) => {
+      await (db.transaction as any).update({
+        where: { id: transactionId },
+        data: {
+          status: restoreStatus,
+          preVoidStatus: null,
+          ...(restoreStatus === 'CONFIRMED' ? { confirmedAt: new Date() } : {}),
+        },
+      });
 
-    // Re-apply downstream records for CONFIRMED transactions
-    if (restoreStatus === 'CONFIRMED') {
-      if (tx.type === 'DEBIT') {
-        await reapplyExpenseSummary(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category);
-      } else if (tx.type === 'CREDIT') {
-        await reapplyIncomeRecord(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category, transactionId);
+      // Re-apply downstream records for CONFIRMED transactions
+      if (restoreStatus === 'CONFIRMED') {
+        if (tx.type === 'DEBIT') {
+          await reapplyExpenseSummary(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category);
+        } else if (tx.type === 'CREDIT') {
+          await reapplyIncomeRecord(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category, transactionId);
+        }
       }
-    }
-  });
+    },
+    { timeout: 30000 }, // 30s timeout instead of default 5s
+  );
 }
 
 
@@ -123,6 +146,7 @@ export async function undoImportSession(
           donationPayment: { select: { id: true } },
           transferLinkedTransaction: { select: { id: true } },
           transferCounterpart: { select: { id: true } },
+          reimbursements: { select: { id: true } },
         },
       },
     },
@@ -143,6 +167,7 @@ export async function undoImportSession(
           transferLinkedTransactionId: string | null;
           preLinkCategory: string | null;
           preLinkStatus: string | null;
+          reimbursements: Array<{ id: string }>;
         }>;
       }
     | null;
@@ -157,22 +182,40 @@ export async function undoImportSession(
   const txs = session.transactions;
   const sessionTxIds = new Set(txs.map((t) => t.id));
 
-  await ctx.prisma.$transaction(async (db) => {
-    for (const tx of txs) {
-      await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, sessionTxIds);
-      await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
-    }
+  await ctx.prisma.$transaction(
+    async (db) => {
+      for (const tx of txs) {
+        // Clear any reimbursement links before voiding
+        if (tx.reimbursements.length > 0) {
+          await (db.transaction as any).updateMany({
+            where: { id: { in: tx.reimbursements.map((r) => r.id) } },
+            data: { offsetTransactionId: null },
+          });
+        }
+        // Clear offset transaction link (this tx is a reimbursement)
+        if ((tx as any).offsetTransactionId) {
+          await (db.transaction as any).update({
+            where: { id: tx.id },
+            data: { offsetTransactionId: null },
+          });
+        }
 
-    await db.transaction.updateMany({
-      where: { importSessionId, userId: ctx.userId, status: { not: 'VOIDED' } },
-      data: { status: 'VOIDED', confirmedAt: null },
-    });
+        await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, sessionTxIds);
+        await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
+      }
 
-    await db.importSession.update({
-      where: { id: importSessionId },
-      data: { status: 'VOIDED' },
-    });
-  });
+      await db.transaction.updateMany({
+        where: { importSessionId, userId: ctx.userId, status: { not: 'VOIDED' } },
+        data: { status: 'VOIDED', confirmedAt: null },
+      });
+
+      await db.importSession.update({
+        where: { id: importSessionId },
+        data: { status: 'VOIDED' },
+      });
+    },
+    { timeout: 60000 }, // 60s timeout for bulk operations
+  );
 
   return { voided: txs.length, yearWarning: false };
 }
