@@ -1,11 +1,12 @@
 # Phase Map
 
-| Phase | Description |
-|-------|-------------|
-| 1     | Schema & Model: Add `CategoryRule` model, enum, and User relation |
-| 2     | Service & Router: CRUD, findSimilar, runCategoryRules, applyToPast |
-| 3     | UX: Inline prompt, drawer, TransactionRow integration |
-| 4     | Management Page: List, toggle, delete rules, navigation |
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1     | Schema & Model: Add `CategoryRule` model, enum, and User relation | ✅ Done |
+| 2     | Service & Router: CRUD, findSimilar, runCategoryRules, applyToPast | ✅ Done |
+| 3     | UX: Inline prompt, drawer, TransactionRow integration | ✅ Done |
+| 4     | Management Page: List, toggle, delete rules, navigation | ✅ Done |
+| 5     | Performance: pg_trgm index + DB-push refactor | ✅ Done |
 
 ---
 
@@ -193,17 +194,59 @@ export interface CategoryRulesTableProps {
 
 ---
 
+## 5. Performance: pg_trgm Index + DB-Push Refactor
+
+### Migration
+Add to `Transaction` model in `schema.prisma`:
+```prisma
+@@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
+```
+
+The `pg_trgm` extension is installed via a separate raw SQL migration (`add_description_trgm_index`).
+The index itself is fully Prisma-managed as of migration `add_description_trgm_index_managed` —
+no drift detection issues on subsequent `migrate dev` runs.
+
+### buildDescriptionFilter helper (service)
+Shared helper that maps `CategoryRuleMatchType` → Prisma filter object.
+Eliminates the duplicated JS `includes` / `startsWith` / `===` logic that existed
+in both `runCategoryRules` and `applyRuleToPast`:
+```typescript
+function buildDescriptionFilter(matchType: CategoryRuleMatchType, pattern: string) {
+  if (matchType === CategoryRuleMatchType.STARTS_WITH)
+    return { startsWith: pattern, mode: 'insensitive' as const };
+  if (matchType === CategoryRuleMatchType.EXACT)
+    return { equals: pattern, mode: 'insensitive' as const };
+  return { contains: pattern, mode: 'insensitive' as const };
+}
+```
+
+### applyRuleToPast refactor
+Before: loaded ALL non-voided transactions into Node.js memory, matched in JS loop.
+After: single `prisma.transaction.updateMany` with DB-level `WHERE description LIKE ...`
+
+### runCategoryRules refactor
+Before: loaded all import session transactions, ran N×M double-loop in JS.
+After: one `prisma.transaction.updateMany` per rule — DB handles matching.
+
+### findSimilar debounce (TransactionRow)
+Added 400ms debounce via `useRef<ReturnType<typeof setTimeout>>` in `handleChange`.
+Added guard: skips `findSimilar` call if `newCategory === transaction.category` (no real change).
+
+---
+
 ## File Inventory
 | File | Action | Description |
 |------|--------|-------------|
 | prisma/schema.prisma | MODIFY | Add `CategoryRuleMatchType` enum, `CategoryRule` model; add `categoryRules CategoryRule[]` to User |
-| src/server/services/transactions/category-rule.service.ts | CREATE | `createRule`, `listRules`, `toggleRule`, `deleteRule`, `findSimilarTransactions`, `runCategoryRules`, `applyRuleToPast` |
+| prisma/migrations/20260524121110_category_rule_model/migration.sql | CREATE | Auto-generated: CategoryRule table, enum, index |
+| prisma/migrations/20260524130550_add_description_trgm_index/migration.sql | CREATE | Raw SQL: `CREATE EXTENSION IF NOT EXISTS pg_trgm` |
+| prisma/migrations/20260524130857_add_description_trgm_index_managed/migration.sql | CREATE | Prisma-managed: `CREATE INDEX ... USING GIN (description gin_trgm_ops)` |
+| src/server/services/transactions/category-rule.service.ts | CREATE | `createRule`, `listRules`, `toggleRule`, `deleteRule`, `findSimilarTransactions`, `runCategoryRules`, `applyRuleToPast`, `buildDescriptionFilter` |
 | src/server/trpc/router/category-rule.ts | CREATE | tRPC router: `create`, `list`, `toggle`, `delete`, `findSimilar`, `applyToPast` |
 | src/server/trpc/router/_app.ts | MODIFY | Register `categoryRule: categoryRuleRouter` |
 | src/components/transactions/CategoryRulePrompt.tsx | CREATE | Inline banner: "X similar found. Save as rule?" with Create Rule + Dismiss |
 | src/components/transactions/CategoryRuleDrawer.tsx | CREATE | Rule creation drawer: pattern (editable), matchType select, category (pre-filled), name, scope (future / future+past) |
-| src/components/transactions/TransactionRow.tsx | MODIFY | After `handleChange`: call `findSimilar`, store count in state, render `CategoryRulePrompt` below row when count ≥ 2 |
-| src/components/transactions/TransactionLedgerTable.tsx | MODIFY | Accept `onRuleCreated` callback; pass down to rows |
+| src/components/transactions/TransactionRow.tsx | MODIFY | After `handleChange`: debounced `findSimilar` call (400ms, skip if same category), render `CategoryRulePrompt` when count ≥ 2 |
 | src/app/(authorized)/cashflow/category-rules/page.tsx | CREATE | Server Component: fetch rules, render `CategoryRulesTable` |
 | src/app/(authorized)/cashflow/category-rules/_components/CategoryRulesTable.tsx | CREATE | Client Component: list rules, toggle active, delete |
 | src/app/(authorized)/cashflow/transactions/_components/TransactionsClient.tsx | MODIFY | Add Category Rules link button alongside Transfer Rules |

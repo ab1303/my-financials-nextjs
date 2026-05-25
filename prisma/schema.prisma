@@ -618,6 +618,9 @@ model Transaction {
   @@index([userId, bankAccountId, date])
   @@index([userId, type, status])
   @@index([importSessionId])
+  // GIN trigram index: enables fast ILIKE '%pattern%' for category rule matching.
+  // Requires pg_trgm extension (installed via migration 20260524130550).
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
 }
 
 model TransferMatchRule {

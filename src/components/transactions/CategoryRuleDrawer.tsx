@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,8 +35,13 @@ export default function CategoryRuleDrawer({
   onClose,
   onSaved,
 }: CategoryRuleDrawerProps) {
+  const [mounted, setMounted] = useState(false);
   const createMutation = trpc.categoryRule.create.useMutation();
   const applyPastMutation = trpc.categoryRule.applyToPast.useMutation();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const {
     register,
@@ -92,13 +98,13 @@ export default function CategoryRuleDrawer({
     }
   }
 
-  if (!open) {
+  if (!mounted || !open) {
     return null;
   }
 
   const isLoading = isSubmitting || createMutation.isPending || applyPastMutation.isPending;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -123,7 +129,7 @@ export default function CategoryRuleDrawer({
             </button>
           </div>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Context: "{transactionDescription}"
+            Context: &quot;{transactionDescription}&quot;
           </p>
         </div>
 
@@ -153,7 +159,7 @@ export default function CategoryRuleDrawer({
               <select
                 {...register('matchType')}
                 disabled={isLoading}
-                className="flex-shrink-0 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-0 dark:focus:ring-amber-400"
+                className="w-32 flex-shrink-0 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-0 dark:focus:ring-amber-400"
               >
                 <option value="CONTAINS">contains</option>
                 <option value="STARTS_WITH">starts with</option>
@@ -163,7 +169,8 @@ export default function CategoryRuleDrawer({
                 {...register('pattern')}
                 type="text"
                 disabled={isLoading}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-0 dark:focus:ring-amber-400"
+                placeholder="e.g. paypal"
+                className="min-w-0 flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-0 dark:focus:ring-amber-400"
               />
             </div>
             {errors.pattern && (
@@ -221,6 +228,7 @@ export default function CategoryRuleDrawer({
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
