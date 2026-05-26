@@ -48,7 +48,7 @@ export default function BankAccountsSection() {
   const updateTrackingMutation = trpc.bankAccount.updateTracking.useMutation({
     onSuccess: () => {
       toast.success('Account tracking updated');
-      void utils.bankAccount.list.invalidate();
+      void utils.bankAccount.list.refetch();
     },
     onError: (err) => toast.error(err.message),
   });
