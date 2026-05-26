@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalExpensesHandler } from '@/server/controllers/expense.controller';
+import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/utils/prisma';
@@ -10,6 +11,8 @@ import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 import { UnresolvedTransfersBanner } from '@/components/UnresolvedTransfersBanner';
 import { TransferExclusionSummary } from '@/components/TransferExclusionSummary';
 import { TRANSFER_CATEGORY, ORPHAN_RESOLUTION_DAYS } from '@/server/services/transactions/constants';
+
+import type { OptionType } from '@/types';
 
 import ExpenseForm from './form';
 import ExpenseTableServer from './ExpenseTableServer';
@@ -51,8 +54,13 @@ export default async function ExpensePage({
 
   const fromYearParam = +getSelectedParam(params?.fromYear);
   const toYearParam = +getSelectedParam(params?.toYear);
+  const bankNameParam = getSelectedParam(params?.bank);
   const fiscalYearType = await getUserFiscalYearType(prisma, session.user.id);
-  const calendarYears = await getCalendarYearsHandler([fiscalYearType ?? 'FISCAL']);
+  
+  const [calendarYears, banks] = await Promise.all([
+    getCalendarYearsHandler([fiscalYearType ?? 'FISCAL', 'ANNUAL']),
+    allBankDetailsHandler(),
+  ]);
 
   const expenseYearData = calendarYears;
 
@@ -66,6 +74,15 @@ export default async function ExpensePage({
   const selectedCalendarYearId = selectedCalendarYear
     ? selectedCalendarYear.id
     : '';
+
+  // Derive selected bank
+  const bankOptions: OptionType[] = banks
+    ? banks.map((b) => ({ id: b.id, label: b.name }))
+    : [];
+  const selectedBank = bankOptions.find(
+    (b) => b.label === bankNameParam,
+  );
+  const selectedBankId = selectedBank ? selectedBank.id : '';
 
   const totalExpense = selectedCalendarYearId
     ? await totalExpensesHandler(selectedCalendarYearId, session.user.id)
@@ -127,6 +144,8 @@ export default async function ExpensePage({
           <ExpenseForm
             expenseYearData={expenseYearData}
             selectedCalendarYear={selectedCalendarYear}
+            bankOptions={bankOptions}
+            selectedBankId={selectedBankId}
           />
         </div>
 

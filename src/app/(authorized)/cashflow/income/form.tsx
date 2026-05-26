@@ -15,6 +15,8 @@ type InitialDataType = {
   incomeYearData: Array<CalendarYearType>;
   totalIncome: number;
   defaultCalendarYearId?: string;
+  bankOptions?: OptionType[];
+  selectedBankId?: string;
 };
 
 type Props = {
@@ -35,6 +37,7 @@ export default function IncomeForm({
 
   const [selectedIncomeYear, setSelectedIncomeYear] =
     useState<SingleValue<OptionType>>(null);
+  const [selectedBank, setSelectedBank] = useState<SingleValue<OptionType>>(null);
   const [totalIncome, setTotalIncome] = useState(initialData.totalIncome);
 
   const incomeYearOptions: Array<OptionType> = useMemo(
@@ -45,6 +48,21 @@ export default function IncomeForm({
       })),
     [initialData.incomeYearData],
   );
+
+  // Initialize bank selection from props
+  useEffect(() => {
+    const bankOptions = initialData.bankOptions || [];
+    const selectedBankId = initialData.selectedBankId || '';
+    
+    if (selectedBankId) {
+      const currentBank = bankOptions.find((b) => b.id === selectedBankId);
+      if (currentBank) {
+        setSelectedBank(currentBank);
+      }
+    } else {
+      setSelectedBank(null);
+    }
+  }, [initialData.bankOptions, initialData.selectedBankId]);
 
   // Set selected year based on URL params
   useEffect(() => {
@@ -125,6 +143,19 @@ export default function IncomeForm({
     router.push(`${pathname}${query}`);
   };
 
+  const updateURLSearchParams = (key: 'bank', value?: string) => {
+    const current = new URLSearchParams(searchParams || '');
+    if (!value) current.delete(key);
+    else current.set(key, value);
+    router.replace(`${pathname}?${current.toString() ? `?${current.toString()}` : ''}`);
+  };
+
+  const handleBankChange = (option: SingleValue<OptionType>) => {
+    if (!option) setSelectedBank(null);
+    else if (option.id) setSelectedBank(option);
+    updateURLSearchParams('bank', option?.label);
+  };
+
   return (
     <div className='mb-0 space-y-6'>
       <div className='mx-10'>
@@ -142,6 +173,23 @@ export default function IncomeForm({
           />
         </div>
       </div>
+
+      <div className='mx-10'>
+        <Label htmlFor={`income-bank-${id}`}>Bank Account</Label>
+        <div className='mt-3'>
+          <Select<OptionType>
+            instanceId={`income-bank-${id}`}
+            isClearable
+            className='w-3/5'
+            value={selectedBank}
+            options={initialData.bankOptions || []}
+            getOptionValue={(option) => option.id}
+            onChange={(option) => handleBankChange(option)}
+            placeholder='Select bank...'
+          />
+        </div>
+      </div>
+
       <div className='mx-10'>
         <Label>Total Earned</Label>
         <div className='mt-3'>
