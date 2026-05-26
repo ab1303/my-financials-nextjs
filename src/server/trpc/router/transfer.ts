@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '@/server/trpc/trpc';
 import { TRPCError } from '@trpc/server';
+import { Prisma } from '@prisma/client';
 import {
   getCandidates,
   searchTransferCandidates,
@@ -10,7 +11,7 @@ import {
   findSimilarUnmatchedPairs,
   batchLinkTransferPairs,
 } from '@/server/services/transactions/transfer.service';
-import { TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
+import { TRANSFER_CATEGORY, ORPHAN_RESOLUTION_DAYS } from '@/server/services/transactions/constants';
 
 const getCandidatesSchema = z.object({
   transactionId: z.string().min(1),
@@ -213,6 +214,54 @@ export const transferRouter = router({
       ]);
 
       return { pairs, total, page: input.page, totalPages: Math.ceil(total / input.limit) };
+    }),
+
+  getOrphanedTransfers: protectedProcedure
+    .input(z.object({
+      bankAccountId: z.string().optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - ORPHAN_RESOLUTION_DAYS);
+
+      return ctx.prisma.transaction.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          category: TRANSFER_CATEGORY,
+          transferLinkedTransactionId: null,
+          date: { lt: cutoffDate },
+          ...(input.bankAccountId ? { bankAccountId: input.bankAccountId } : {}),
+        },
+        include: {
+          financialAccount: { select: { name: true } },
+        },
+        orderBy: { date: 'desc' },
+      });
+    }),
+
+  getExcludedTransferSummary: protectedProcedure
+    .input(z.object({ year: z.number().int().optional() }))
+    .query(async ({ ctx, input }) => {
+      const where: Prisma.TransactionWhereInput = {
+        userId: ctx.session.user.id,
+        category: TRANSFER_CATEGORY,
+        ...(input.year ? {
+          date: {
+            gte: new Date(input.year, 0, 1),
+            lte: new Date(input.year, 11, 31, 23, 59, 59),
+          },
+        } : {}),
+      };
+
+      const [count, aggregate] = await Promise.all([
+        ctx.prisma.transaction.count({ where }),
+        ctx.prisma.transaction.aggregate({ where, _sum: { amount: true } }),
+      ]);
+
+      return {
+        count,
+        totalAmount: Number(aggregate._sum.amount ?? 0),
+      };
     }),
 });
 

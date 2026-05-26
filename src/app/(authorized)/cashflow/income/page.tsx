@@ -7,6 +7,9 @@ import { getUserFiscalYearType } from '@/server/services/user-profile/user-profi
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/utils/prisma';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
+import { UnresolvedTransfersBanner } from '@/components/UnresolvedTransfersBanner';
+import { TransferExclusionSummary } from '@/components/TransferExclusionSummary';
+import { TRANSFER_CATEGORY, ORPHAN_RESOLUTION_DAYS } from '@/server/services/transactions/constants';
 
 import IncomeForm from './form';
 import IncomeTableServer from './IncomeTableServer';
@@ -66,6 +69,37 @@ export default async function IncomePage({
     session.user.id,
   );
 
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - ORPHAN_RESOLUTION_DAYS);
+
+  const [orphanedCount, transferSummary] = await Promise.all([
+    prisma.transaction.count({
+      where: {
+        userId: session.user.id,
+        category: TRANSFER_CATEGORY,
+        transferLinkedTransactionId: null,
+        date: { lt: cutoffDate },
+      },
+    }),
+    (async () => {
+      const where = {
+        userId: session.user.id,
+        category: TRANSFER_CATEGORY,
+        ...(selectedCalendarYear ? {
+          date: {
+            gte: new Date(selectedCalendarYear.fromYear, selectedCalendarYear.fromMonth - 1, 1),
+            lte: new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0, 23, 59, 59),
+          },
+        } : {}),
+      };
+      const [count, agg] = await Promise.all([
+        prisma.transaction.count({ where }),
+        prisma.transaction.aggregate({ where, _sum: { amount: true } }),
+      ]);
+      return { count, totalAmount: Number(agg._sum.amount ?? 0) };
+    })(),
+  ]);
+
   const initialData = {
     incomeYearData,
     totalIncome,
@@ -83,6 +117,15 @@ export default async function IncomePage({
         </p>
       </div>
       <div className='rounded-xl border border-border bg-card shadow p-6'>
+        <UnresolvedTransfersBanner
+          count={orphanedCount}
+          href="/cashflow/transactions?tab=transfers"
+        />
+        <TransferExclusionSummary
+          count={transferSummary.count}
+          totalAmount={transferSummary.totalAmount}
+          href="/cashflow/transactions?tab=transfers"
+        />
         <IncomeForm
           initialData={initialData}
           yearIdParam={selectedCalendarYearId}
