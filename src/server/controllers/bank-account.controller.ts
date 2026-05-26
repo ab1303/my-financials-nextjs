@@ -3,6 +3,7 @@ import {
   createBankAccount,
   deleteBankAccount,
   getBankAccounts,
+  updateTracking,
 } from '@/server/services/bank-account.service';
 import type {
   CreateBankAccountInput,
@@ -44,4 +45,11 @@ export const deleteBankAccountHandler = async (
   }
 
   return result;
+};
+
+export const updateTrackingHandler = async (
+  input: { accountId: string; isTracked: boolean },
+  userId: string,
+) => {
+  return updateTracking(input.accountId, input.isTracked, userId);
 };
