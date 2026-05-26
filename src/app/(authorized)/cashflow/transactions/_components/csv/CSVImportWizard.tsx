@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,6 +28,32 @@ const STEPS: { key: CSVWizardStep; label: string }[] = [
 
 const STEP_KEYS = STEPS.map((s) => s.key);
 
+/**
+ * Detect transfer likelihood based on description and amount patterns.
+ * Returns 'HIGH', 'MEDIUM', or 'LOW'.
+ */
+function detectTransferLikelihood(description: string, amount: number): 'HIGH' | 'MEDIUM' | 'LOW' {
+  const desc = description.toLowerCase();
+
+  // HIGH: explicit transfer keywords or account/BSB number patterns
+  const highPatterns = [
+    /\btrsf\b/,
+    /\btfr\b/,
+    /\btransfer\b/,
+    /\binternal transfer\b/,
+    /\bbank transfer\b/,
+    /\bfunds transfer\b/,
+    /\b\d{3}-?\d{3}\b/, // BSB pattern (e.g. 062-000)
+    /\b\d{8,10}\b/, // Account number pattern
+  ];
+  if (highPatterns.some((p) => p.test(desc))) return 'HIGH';
+
+  // MEDIUM: large round amounts with vague descriptions
+  if (amount >= 1000 && amount % 100 === 0 && desc.split(' ').length <= 3) return 'MEDIUM';
+
+  return 'LOW';
+}
+
 export default function CSVImportWizard({
   isOpen,
   onClose,
@@ -44,6 +70,8 @@ export default function CSVImportWizard({
   const [llmModel, setLlmModel] = useState<string>('gpt-4o-mini');
   const [bankAccountId, setBankAccountId] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [showTransferWarningModal, setShowTransferWarningModal] = useState(false);
+  const [transferWarningAcknowledged, setTransferWarningAcknowledged] = useState(false);
 
   const context: CSVImportContext = {
     importType: 'EXPENSE',
@@ -74,8 +102,28 @@ export default function CSVImportWizard({
     incomeSrcLabels: string[],
     model: string,
   ) => {
-    setClassifiedMonths(debitMonths);
-    setClassifiedCreditMonths(creditMonths);
+    // Enrich debit months with transfer likelihood
+    const enrichedDebitMonths = debitMonths.map((month) => ({
+      ...month,
+      transactions: month.transactions.map((tx) => ({
+        ...tx,
+        transferLikelihood:
+          tx.transferLikelihood ?? detectTransferLikelihood(tx.description, tx.amount),
+      })),
+    }));
+
+    // Enrich credit months with transfer likelihood
+    const enrichedCreditMonths = creditMonths.map((month) => ({
+      ...month,
+      transactions: month.transactions.map((tx) => ({
+        ...tx,
+        transferLikelihood:
+          tx.transferLikelihood ?? detectTransferLikelihood(tx.description, tx.amount),
+      })),
+    }));
+
+    setClassifiedMonths(enrichedDebitMonths);
+    setClassifiedCreditMonths(enrichedCreditMonths);
     setCategories(cats);
     setIncomeSourceLabels(incomeSrcLabels);
     setLlmModel(model);
@@ -87,12 +135,32 @@ export default function CSVImportWizard({
     setCurrentStep('upload');
   };
 
-  const handleConfirmReview = async (
+  // Calculate flagged transaction count
+  const flaggedCount = useMemo(() => {
+    const debitFlagged = classifiedMonths.reduce(
+      (sum, month) =>
+        sum +
+        month.transactions.filter(
+          (tx) => tx.transferLikelihood === 'HIGH' || tx.transferLikelihood === 'MEDIUM'
+        ).length,
+      0
+    );
+    const creditFlagged = classifiedCreditMonths.reduce(
+      (sum, month) =>
+        sum +
+        month.transactions.filter(
+          (tx) => tx.transferLikelihood === 'HIGH' || tx.transferLikelihood === 'MEDIUM'
+        ).length,
+      0
+    );
+    return debitFlagged + creditFlagged;
+  }, [classifiedMonths, classifiedCreditMonths]);
+
+  const doConfirm = async (
     confirmedDebitMonths: ClassifiedMonth[],
     confirmedCreditMonths: ClassifiedCreditMonth[],
   ) => {
     if (!file || !bankAccountId) return;
-    setIsConfirming(true);
 
     const totalLlmUsage = [...confirmedDebitMonths, ...confirmedCreditMonths].reduce(
       (acc, month) => ({
@@ -122,19 +190,27 @@ export default function CSVImportWizard({
         throw new Error(data.error ?? 'Confirm request failed');
       }
 
-      const debitsSaved = data.debitsSaved ?? confirmedDebitMonths.reduce((sum, month) => sum + month.transactions.length, 0);
+      const debitsSaved =
+        data.debitsSaved ??
+        confirmedDebitMonths.reduce((sum, month) => sum + month.transactions.length, 0);
       const creditsSaved =
         data.creditsSaved ??
         confirmedCreditMonths.reduce(
           (sum, month) =>
-            sum + month.transactions.filter((tx) => tx.confirmedCategory !== 'Transfer' && tx.confirmedCategory !== 'Excluded').length,
+            sum +
+            month.transactions.filter(
+              (tx) => tx.confirmedCategory !== 'Transfer' && tx.confirmedCategory !== 'Excluded'
+            ).length,
           0,
         );
       const creditsExcluded =
         data.creditsExcluded ??
         confirmedCreditMonths.reduce(
           (sum, month) =>
-            sum + month.transactions.filter((tx) => tx.confirmedCategory === 'Transfer' || tx.confirmedCategory === 'Excluded').length,
+            sum +
+            month.transactions.filter(
+              (tx) => tx.confirmedCategory === 'Transfer' || tx.confirmedCategory === 'Excluded'
+            ).length,
           0,
         );
       const duplicatesSkipped = data.duplicatesSkipped ?? 0;
@@ -160,6 +236,33 @@ export default function CSVImportWizard({
     } finally {
       setIsConfirming(false);
     }
+  };
+
+  const handleConfirmReview = async (
+    confirmedDebitMonths: ClassifiedMonth[],
+    confirmedCreditMonths: ClassifiedCreditMonth[],
+  ) => {
+    if (!file || !bankAccountId) return;
+
+    // Check if there are flagged transfers and if user hasn't acknowledged the warning yet
+    if (flaggedCount > 0 && !transferWarningAcknowledged) {
+      setShowTransferWarningModal(true);
+      return;
+    }
+
+    // Proceed with confirmation
+    setIsConfirming(true);
+    await doConfirm(confirmedDebitMonths, confirmedCreditMonths);
+  };
+
+  const handleContinueAnyway = async () => {
+    setShowTransferWarningModal(false);
+    setTransferWarningAcknowledged(true);
+
+    // Trigger confirm with current months
+    if (!file || !bankAccountId) return;
+    setIsConfirming(true);
+    await doConfirm(classifiedMonths, classifiedCreditMonths);
   };
 
   const handleClose = () => {
@@ -188,6 +291,8 @@ export default function CSVImportWizard({
     setLlmModel('gpt-4o-mini');
     setBankAccountId(null);
     setIsConfirming(false);
+    setShowTransferWarningModal(false);
+    setTransferWarningAcknowledged(false);
   }
 
   const currentStepIndex = STEP_KEYS.indexOf(currentStep);
@@ -333,6 +438,40 @@ export default function CSVImportWizard({
               </div>
             </Transition.Child>
           </div>
+
+          {/* Transfer Warning Modal */}
+          {showTransferWarningModal && (
+            <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
+              <div className='mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800'>
+                <h3 className='mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100'>
+                  Possible transfers detected
+                </h3>
+                <p className='mb-2 text-sm text-gray-600 dark:text-gray-300'>
+                  <span className='font-semibold dark:text-gray-100'>{flaggedCount} transaction{flaggedCount > 1 ? 's' : ''}</span>{' '}
+                  look like inter-account transfers. Confirming them now may inflate your expense
+                  figures if the matching counterpart hasn't been imported yet.
+                </p>
+                <p className='mb-4 text-xs text-gray-500 dark:text-gray-400'>
+                  You can still confirm and resolve any unmatched transfers in the Transfers tab
+                  after import.
+                </p>
+                <div className='flex justify-end gap-3'>
+                  <button
+                    onClick={() => setShowTransferWarningModal(false)}
+                    className='rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                  >
+                    Review first
+                  </button>
+                  <button
+                    onClick={handleContinueAnyway}
+                    className='rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700'
+                  >
+                    Continue anyway
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </Dialog>
       </Transition>
     </Portal>

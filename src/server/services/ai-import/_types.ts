@@ -190,6 +190,9 @@ export interface ClassifiedTransaction {
   confirmedCategory: string; // starts = llmCategory; user may change
   overridden: boolean; // true if user changed from llmCategory
   balance?: number; // bank running balance after this tx; preserved for dedup tiebreaker
+  // NEW: Transfer likelihood indicators (optional, client-side derived)
+  transferLikelihood?: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+  transferLikelihoodReason?: string | null;
 }
 
 /**
@@ -213,6 +216,9 @@ export interface ClassifiedCreditTransaction {
   overridden: boolean; // true if user changed from llmCategory
   type: 'CREDIT';
   balance?: number; // bank running balance after this tx; preserved for dedup tiebreaker
+  // NEW: Transfer likelihood indicators (optional, client-side derived)
+  transferLikelihood?: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+  transferLikelihoodReason?: string | null;
 }
 
 /**

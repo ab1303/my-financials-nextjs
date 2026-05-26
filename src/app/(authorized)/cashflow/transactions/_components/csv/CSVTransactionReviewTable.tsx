@@ -162,8 +162,43 @@ export default function CSVTransactionReviewTable({
     [totalCreditCount, excludedCount],
   );
 
+  // Calculate flagged transaction count (HIGH or MEDIUM transfer likelihood)
+  const flaggedCount = useMemo(() => {
+    const debitFlagged = localDebitMonths.reduce(
+      (sum, month) =>
+        sum +
+        month.transactions.filter(
+          (tx) => tx.transferLikelihood === 'HIGH' || tx.transferLikelihood === 'MEDIUM'
+        ).length,
+      0
+    );
+    const creditFlagged = localCreditMonths.reduce(
+      (sum, month) =>
+        sum +
+        month.transactions.filter(
+          (tx) => tx.transferLikelihood === 'HIGH' || tx.transferLikelihood === 'MEDIUM'
+        ).length,
+      0
+    );
+    return debitFlagged + creditFlagged;
+  }, [localDebitMonths, localCreditMonths]);
+
   return (
     <div className='flex h-full min-h-0 flex-col'>
+      {/* Transfer Likelihood Warning Banner */}
+      {flaggedCount > 0 && (
+        <div className='mb-4 flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950'>
+          <span className='mt-0.5 flex-shrink-0 text-lg text-yellow-600 dark:text-yellow-400'>↔</span>
+          <p className='text-sm text-yellow-800 dark:text-yellow-200'>
+            <span className='font-medium dark:text-yellow-100'>
+              {flaggedCount} transaction{flaggedCount > 1 ? 's' : ''}
+            </span>{' '}
+            look like possible transfers. Review them before confirming — or continue and resolve any unmatched transfers in the Transfers
+            tab after import.
+          </p>
+        </div>
+      )}
+
       <div className='mb-4 flex flex-shrink-0 gap-4 border-b'>
         <button
           onClick={() => setActiveTab('debits')}
