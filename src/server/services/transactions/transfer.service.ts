@@ -1,11 +1,10 @@
 import { type PrismaClient, TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
 import type { TransferCandidateScore, TransferLinkResult, TransferUnlinkResult } from './_types';
-import { TRANSFER_CATEGORY } from './constants';
+import { TRANSFER_CATEGORY, TRANSFER_DATE_TOLERANCE_DAYS, TRANSFER_DATE_TOLERANCE_DAYS_CROSS } from './constants';
 import { rerollupExpenseSummary } from './ledger.service';
 
-export const TRANSFER_DATE_TOLERANCE_DAYS = 5;
-export const TRANSFER_AMOUNT_FEE_TOLERANCE = 10;
+const TRANSFER_AMOUNT_FEE_TOLERANCE = 10;
 
 /**
  * Score a potential transfer match candidate.
@@ -23,7 +22,9 @@ export function scoreCandidate(params: {
     bankId: string | null;
   };
   sourceDescription: string;
+  dateTolerance?: number; // NEW: optional override; defaults to TRANSFER_DATE_TOLERANCE_DAYS
 }): { score: number; breakdown: TransferCandidateScore['scoreBreakdown']; amountDiffWarning: string | null } {
+  const tolerance = params.dateTolerance ?? TRANSFER_DATE_TOLERANCE_DAYS;
   // Amount match (0–40)
   const amountDiff = Math.abs(Number(params.sourceAmount) - Number(params.candidate.amount));
   const amountMatch = amountDiff === 0 ? 40 : amountDiff <= TRANSFER_AMOUNT_FEE_TOLERANCE ? 20 : 0;
@@ -32,10 +33,9 @@ export function scoreCandidate(params: {
       ? `Amounts differ by $${amountDiff.toFixed(2)} (possible transfer fee)`
       : null;
 
-  // Date proximity (0–30): full score ≤1 day, scaled to 0 at 5 days
+  // Date proximity (0–30): full score ≤1 day, scaled to 0 at tolerance days
   const daysDiff = Math.abs((params.sourceDate.getTime() - params.candidate.date.getTime()) / 86_400_000);
-  const dateProximity =
-    daysDiff === 0 ? 30 : Math.max(0, Math.round(30 * (1 - daysDiff / TRANSFER_DATE_TOLERANCE_DAYS)));
+  const dateProximity = daysDiff === 0 ? 30 : Math.max(0, Math.round(30 * (1 - daysDiff / tolerance)));
 
   // Description similarity (0–20): keyword overlap heuristic
   const sourceWords = new Set(params.sourceDescription.toLowerCase().split(/\W+/).filter(Boolean));
@@ -79,10 +79,11 @@ export async function getCandidates(params: {
       ? TransactionTypeEnum.CREDIT
       : TransactionTypeEnum.DEBIT;
 
+  // Use CROSS tolerance for the date window query so we don't miss cross-institution pairs
   const dateFrom = new Date(source.date);
-  dateFrom.setDate(dateFrom.getDate() - TRANSFER_DATE_TOLERANCE_DAYS);
+  dateFrom.setDate(dateFrom.getDate() - TRANSFER_DATE_TOLERANCE_DAYS_CROSS);
   const dateTo = new Date(source.date);
-  dateTo.setDate(dateTo.getDate() + TRANSFER_DATE_TOLERANCE_DAYS);
+  dateTo.setDate(dateTo.getDate() + TRANSFER_DATE_TOLERANCE_DAYS_CROSS);
 
   const candidates = await (params.prisma.transaction as any).findMany({
     where: {
@@ -103,14 +104,28 @@ export async function getCandidates(params: {
     type: TransactionTypeEnum;
     status: TransactionStatusEnum;
     bankAccountId: string | null;
-    financialAccount: { name: string; institutionId: string; institution: { name: string | null } | null } | null;
+    financialAccount: { name: string; institutionId: string; isTracked: boolean; institution: { name: string | null } | null } | null;
   }>;
 
   // @ts-ignore — bankId on bankAccount available after migration
   const sourceBankId: string | null = (source as any).financialAccount?.institutionId ?? null;
+  const sourceIsTracked: boolean = (source as any).financialAccount?.isTracked !== false;
 
   return candidates
+    .filter((candidate) => {
+      // Skip candidates where either account is untracked (budget boundary crossing)
+      const candidateIsTracked = candidate.financialAccount?.isTracked !== false;
+      if (!sourceIsTracked || !candidateIsTracked) return false;
+      return true;
+    })
     .map((candidate) => {
+      // Determine if cross-institution for dynamic date tolerance
+      const candidateBankId = candidate.financialAccount?.institutionId ?? null;
+      const isCrossInstitution = !sourceBankId || !candidateBankId || sourceBankId !== candidateBankId;
+      const dateTolerance = isCrossInstitution
+        ? TRANSFER_DATE_TOLERANCE_DAYS_CROSS
+        : TRANSFER_DATE_TOLERANCE_DAYS;
+
       const { score, breakdown, amountDiffWarning } = scoreCandidate({
         sourceAmount: source.amount,
         sourceDate: source.date,
@@ -121,8 +136,9 @@ export async function getCandidates(params: {
           date: candidate.date,
           description: candidate.description,
           bankAccountId: candidate.bankAccountId!,
-          bankId: candidate.financialAccount?.institutionId ?? null,
+          bankId: candidateBankId,
         },
+        dateTolerance,
       });
       return {
         transactionId: candidate.id,
