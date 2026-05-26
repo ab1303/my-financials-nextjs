@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '@/server/trpc/trpc';
 import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { Prisma, TransferOrphanResolution } from '@prisma/client';
 import {
   getCandidates,
   searchTransferCandidates,
@@ -224,11 +224,13 @@ export const transferRouter = router({
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - ORPHAN_RESOLUTION_DAYS);
 
-      return ctx.prisma.transaction.findMany({
+      return (ctx.prisma.transaction as any).findMany({
         where: {
           userId: ctx.session.user.id,
           category: TRANSFER_CATEGORY,
           transferLinkedTransactionId: null,
+          transferCounterpart: { is: null },  // exclude CREDIT legs already linked as counterparts
+          orphanResolution: null,             // only show unresolved orphans
           date: { lt: cutoffDate },
           ...(input.bankAccountId ? { bankAccountId: input.bankAccountId } : {}),
         },
@@ -236,6 +238,42 @@ export const transferRouter = router({
           financialAccount: { select: { name: true } },
         },
         orderBy: { date: 'desc' },
+      });
+    }),
+
+  resolveOrphan: protectedProcedure
+    .input(z.object({
+      transactionId: z.string(),
+      resolution: z.enum(['EXCLUDED', 'EXPENSE', 'INCOME']),
+      newCategory: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Guard: verify it IS an orphaned transfer owned by this user
+      const tx = await (ctx.prisma.transaction as any).findFirst({
+        where: {
+          id: input.transactionId,
+          userId: ctx.session.user.id,
+          category: TRANSFER_CATEGORY,
+          transferLinkedTransactionId: null,
+        },
+      });
+
+      if (!tx) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Orphaned transfer not found' });
+      }
+
+      if ((input.resolution === 'EXPENSE' || input.resolution === 'INCOME') && !input.newCategory) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'newCategory required for EXPENSE/INCOME resolution' });
+      }
+
+      return (ctx.prisma.transaction as any).update({
+        where: { id: input.transactionId },
+        data: {
+          orphanResolution: input.resolution,
+          ...(input.resolution !== 'EXCLUDED' && input.newCategory
+            ? { category: input.newCategory }
+            : {}),
+        },
       });
     }),
 

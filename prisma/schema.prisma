@@ -349,6 +349,7 @@ model FinancialAccount {
   balanceRecords BankBalanceRecord[]
   stockHoldings  StockHolding[]
   cashBalances   BrokerageCashBalance[]
+  isTracked    Boolean              @default(true)
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
 
@@ -572,6 +573,12 @@ enum TransactionStatusEnum {
   VOIDED
 }
 
+enum TransferOrphanResolution {
+  EXCLUDED    // User confirmed: single-sided transfer, exclude from all reports
+  EXPENSE     // User confirmed: re-categorised as real expense
+  INCOME      // User confirmed: re-categorised as real income
+}
+
 // Transaction — staging record for every line in a CSV or AI-extracted receipt
 model Transaction {
   id                  String                @id @default(cuid())
@@ -608,6 +615,9 @@ model Transaction {
 
   // Void / restore
   preVoidStatus                TransactionStatusEnum?
+
+  // Orphan resolution
+  orphanResolution   TransferOrphanResolution?  // null = unresolved orphan
 
   // Running account balance after this transaction — bank's own unique differentiator for dedup
   runningBalance               Decimal?              @db.Money

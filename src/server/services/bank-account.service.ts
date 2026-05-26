@@ -28,3 +28,15 @@ export const deleteBankAccount = async (id: string, userId: string) => {
 
   return deleted;
 };
+
+export const updateTracking = async (
+  accountId: string,
+  isTracked: boolean,
+  userId: string,
+) => {
+  return (prisma.financialAccount as any).update({
+    where: { id: accountId, userId },
+    data: { isTracked },
+    select: { id: true, isTracked: true },
+  });
+};

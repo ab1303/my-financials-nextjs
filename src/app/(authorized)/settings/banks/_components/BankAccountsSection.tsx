@@ -45,6 +45,14 @@ export default function BankAccountsSection() {
     onError: (err) => toast.error(err.message),
   });
 
+  const updateTrackingMutation = trpc.bankAccount.updateTracking.useMutation({
+    onSuccess: () => {
+      toast.success('Account tracking updated');
+      void utils.bankAccount.list.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   const deleteTarget = accounts.find((a) => a.id === deleteConfirmId);
   const hasBanks = banks.length > 0;
 
@@ -69,7 +77,7 @@ export default function BankAccountsSection() {
               <table className='w-full text-left text-sm'>
                 <thead className='bg-muted'>
                   <tr>
-                    {['Bank', 'Account Name', 'Transactions', ''].map((h) => (
+                    {['Bank', 'Account Name', 'Transactions', 'Tracked', ''].map((h) => (
                       <th
                         key={h}
                         className='cursor-default select-none px-4 py-3 font-medium text-foreground'
@@ -90,6 +98,32 @@ export default function BankAccountsSection() {
                       </td>
                       <td className='px-4 py-3 text-muted-foreground'>
                         {acc._count.transactions}
+                      </td>
+                      <td className='px-4 py-3'>
+                        <button
+                          type='button'
+                          role='switch'
+                          aria-checked={(acc as any).isTracked !== false}
+                          aria-label={`${(acc as any).isTracked !== false ? 'Untrack' : 'Track'} ${acc.name}`}
+                          onClick={() =>
+                            updateTrackingMutation.mutate({
+                              accountId: acc.id,
+                              isTracked: !((acc as any).isTracked !== false),
+                            })
+                          }
+                          className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${
+                            (acc as any).isTracked !== false
+                              ? 'bg-teal-500 dark:bg-teal-600'
+                              : 'bg-gray-300 dark:bg-gray-600'
+                          }`}
+                          disabled={updateTrackingMutation.isPending}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                              (acc as any).isTracked !== false ? 'translate-x-5' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
                       </td>
                       <td className='px-4 py-3 text-right'>
                         <button
