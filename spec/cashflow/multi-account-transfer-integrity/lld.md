@@ -10,10 +10,10 @@
 | Priority | Sub-Feature | Spec | Schema? | Run when? |
 |---|---|---|---|---|
 | 🔴 **P0 — Critical** ✅ SHIPPED | Fix transfer exclusion in all cashflow queries | [`fix-transfer-exclusion/`](./fix-transfer-exclusion/lld.md) | ❌ No | **Deployed 2026-05-26** |
-| 🟠 **P1 — High** ✅ SHIPPED (Phase 2) | Surface + resolve orphaned transfers | [`handle-orphans/`](./handle-orphans/lld.md) | ✅ Phase 3 only | **Phase 2 deployed 2026-05-27 · Phase 3 pending** |
+| 🟠 **P1 — High** ✅ SHIPPED | Surface + resolve orphaned transfers | [`handle-orphans/`](./handle-orphans/lld.md) | ✅ Phase 3 | **Phase 2 deployed 2026-05-27 · Phase 3 deployed 2026-05-26** |
 | 🟡 **P2 — Medium** ✅ SHIPPED | Add bank filter + year toggle to Expense/Income | [`add-filtration-parity/`](./add-filtration-parity/lld.md) | ❌ No | **Deployed 2026-05-27** |
 | 🟡 **P2 — Medium** ✅ SHIPPED | Warn on probable transfers in CSV import wizard | [`harden-import-wizard/`](./harden-import-wizard/lld.md) | ❌ No | **Deployed 2026-05-27** |
-| 🔵 **P3 — Low** | Widen date tolerance + respect isTracked in scoring | [`improve-detection/`](./improve-detection/lld.md) | ❌ No | After handle-orphans Phase 3 |
+| 🔵 **P3 — Low** ← **IN PROGRESS** | Widen date tolerance + respect isTracked in scoring | [`improve-detection/`](./improve-detection/lld.md) | ❌ No | After handle-orphans Phase 3 |
 
 **Why P0 is a blocker:** Every cashflow page is currently showing incorrect totals until
 `fix-transfer-exclusion` is deployed. All other sub-features improve UX but don't fix
@@ -43,8 +43,8 @@ existing data integrity bugs.
 |---|---|---|
 | **Wave 1** ✅ DONE | `fix-transfer-exclusion` | Shipped 2026-05-26 |
 | **Wave 2** ✅ DONE | `handle-orphans` (Phase 2) + `add-filtration-parity` + `harden-import-wizard` | Shipped 2026-05-27 |
-| **Wave 3** ← **NEXT** | `handle-orphans` (Phase 3) | Schema migration required — `orphanResolution` enum + `FinancialAccount.isTracked` |
-| **Wave 4** | `improve-detection` | After Wave 3: `isTracked` field must exist in DB |
+| **Wave 3** ✅ DONE | `handle-orphans` (Phase 3) | Schema migration — `orphanResolution` enum + `FinancialAccount.isTracked` deployed 2026-05-26 |
+| **Wave 4** ← **IN PROGRESS** | `improve-detection` | After Wave 3: `isTracked` field must exist in DB |
 
 ---
 
