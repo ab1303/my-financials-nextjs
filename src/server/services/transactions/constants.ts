@@ -20,3 +20,9 @@ export const EXCLUDED_DEBIT_LABELS = ['Transfer'] as const;
  * Single source of truth for all cashflow query guards across the app.
  */
 export const EXCLUDED_FROM_EXPENSE_AGGREGATION = [TRANSFER_CATEGORY] as const;
+
+/**
+ * Number of days after which a transfer is considered orphaned if not linked to a counterpart.
+ * Used to identify stale unresolved transfers that may inflate expense/income figures.
+ */
+export const ORPHAN_RESOLUTION_DAYS = 30;

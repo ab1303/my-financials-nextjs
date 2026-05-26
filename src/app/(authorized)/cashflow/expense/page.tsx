@@ -7,6 +7,9 @@ import { getUserFiscalYearType } from '@/server/services/user-profile/user-profi
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/utils/prisma';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
+import { UnresolvedTransfersBanner } from '@/components/UnresolvedTransfersBanner';
+import { TransferExclusionSummary } from '@/components/TransferExclusionSummary';
+import { TRANSFER_CATEGORY, ORPHAN_RESOLUTION_DAYS } from '@/server/services/transactions/constants';
 
 import ExpenseForm from './form';
 import ExpenseTableServer from './ExpenseTableServer';
@@ -68,6 +71,37 @@ export default async function ExpensePage({
     ? await totalExpensesHandler(selectedCalendarYearId, session.user.id)
     : 0;
 
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - ORPHAN_RESOLUTION_DAYS);
+
+  const [orphanedCount, transferSummary] = await Promise.all([
+    prisma.transaction.count({
+      where: {
+        userId: session.user.id,
+        category: TRANSFER_CATEGORY,
+        transferLinkedTransactionId: null,
+        date: { lt: cutoffDate },
+      },
+    }),
+    (async () => {
+      const where = {
+        userId: session.user.id,
+        category: TRANSFER_CATEGORY,
+        ...(selectedCalendarYear ? {
+          date: {
+            gte: new Date(selectedCalendarYear.fromYear, selectedCalendarYear.fromMonth - 1, 1),
+            lte: new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0, 23, 59, 59),
+          },
+        } : {}),
+      };
+      const [count, agg] = await Promise.all([
+        prisma.transaction.count({ where }),
+        prisma.transaction.aggregate({ where, _sum: { amount: true } }),
+      ]);
+      return { count, totalAmount: Number(agg._sum.amount ?? 0) };
+    })(),
+  ]);
+
   return (
     <main className='px-4 sm:px-6 lg:px-8 py-6'>
       <div className='mb-6'>
@@ -81,6 +115,15 @@ export default async function ExpensePage({
       <div className='rounded-xl border border-border bg-card shadow p-6'>
         {/* Fiscal Year Selection Form */}
         <div className='mb-6 pt-6'>
+          <UnresolvedTransfersBanner
+            count={orphanedCount}
+            href="/cashflow/transactions?tab=transfers"
+          />
+          <TransferExclusionSummary
+            count={transferSummary.count}
+            totalAmount={transferSummary.totalAmount}
+            href="/cashflow/transactions?tab=transfers"
+          />
           <ExpenseForm
             expenseYearData={expenseYearData}
             selectedCalendarYear={selectedCalendarYear}
