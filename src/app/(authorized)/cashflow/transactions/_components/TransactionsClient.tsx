@@ -21,9 +21,10 @@ interface ImportCardProps {
   description: string;
   onClick: () => void;
   icon: ReactNode;
+  testId?: string;
 }
 
-function ImportCard({ title, description, onClick, icon }: ImportCardProps) {
+function ImportCard({ title, description, onClick, icon, testId }: ImportCardProps) {
   return (
     <div
       role="button"
@@ -32,6 +33,7 @@ function ImportCard({ title, description, onClick, icon }: ImportCardProps) {
       onKeyDown={(e) => {
         if (e.key === 'Enter') onClick();
       }}
+      data-testid={testId}
       className="cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="flex items-center gap-4">
@@ -128,6 +130,7 @@ export default function TransactionsClient({
         <ImportCard
           title="CSV Bank Statement"
           description="Import transactions from a CommBank CSV statement"
+          testId="open-csv-import-wizard"
           icon={
             <svg
               xmlns="http://www.w3.org/2000/svg"

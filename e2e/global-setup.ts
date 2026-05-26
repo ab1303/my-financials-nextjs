@@ -176,10 +176,10 @@ async function globalSetup() {
     });
 
     // Transfer — orphan (Aug 2025, no linked counterpart, well past 30-day cutoff)
-    // This should appear in UnresolvedTransfersBanner count
+    // Reset orphanResolution to null each run so Wave 3 resolution tests start clean
     await prisma.transaction.upsert({
       where: { id: 'e2e-transfer-orphan-fy26' },
-      update: {},
+      update: { category: 'Transfer', transferLinkedTransactionId: null, bankAccountId: bankAccount.id },
       create: {
         id: 'e2e-transfer-orphan-fy26',
         date: new Date('2025-08-01'),
@@ -196,10 +196,10 @@ async function globalSetup() {
     });
 
     // Transfer — mid-year (Oct 2025, no linked counterpart, also past 30-day cutoff)
-    // This adds to TransferExclusionSummary count so we have >1 transfer
+    // Reset orphanResolution each run so Wave 3 tests can resolve it fresh
     await prisma.transaction.upsert({
       where: { id: 'e2e-transfer-midyear-fy26' },
-      update: {},
+      update: { category: 'Transfer', transferLinkedTransactionId: null, bankAccountId: bankAccount.id },
       create: {
         id: 'e2e-transfer-midyear-fy26',
         date: new Date('2025-10-01'),
@@ -221,6 +221,39 @@ async function globalSetup() {
     console.log(
       '   Test assertions: totalExpense=300, transferCount=2, transferTotal=1500, orphanCount=2',
     );
+
+    // Explicitly reset orphanResolution to null AND category to 'Transfer' for both seeded orphans
+    // (Prisma upsert update block silently ignores unrecognised typed fields)
+    // Also resets category in case orphan-resolution tests reclassified them (EXPENSE/INCOME)
+    await (prisma.transaction as any).updateMany({
+      where: { id: { in: ['e2e-transfer-orphan-fy26', 'e2e-transfer-midyear-fy26'] } },
+      data: { orphanResolution: null, category: 'Transfer' },
+    });
+    console.log('✅ Orphan resolutions reset to null for Wave 3 tests');
+
+    // -------------------------------------------------------------------------
+    // Seed second bank account for isTracked (Wave 4) tests
+    // -------------------------------------------------------------------------
+    let secondBankAccount = await prisma.financialAccount.findFirst({
+      where: { userId: testUser.id, name: 'E2E Savings Account' },
+    });
+    if (!secondBankAccount) {
+      secondBankAccount = await prisma.financialAccount.create({
+        data: {
+          name: 'E2E Savings Account',
+          institutionId: e2eTestBank.id,
+          userId: testUser.id,
+          isTracked: true,
+        },
+      });
+    } else {
+      // Always reset to isTracked=true so toggle tests start from known state
+      await prisma.financialAccount.update({
+        where: { id: secondBankAccount.id },
+        data: { isTracked: true },
+      });
+    }
+    console.log(`✅ Second bank account seeded/reset: ${secondBankAccount.id} (isTracked=true)`);
   } catch (error) {
     console.error('❌ Global setup failed:', error);
     process.exit(1);

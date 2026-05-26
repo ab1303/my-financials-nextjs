@@ -1,6 +1,6 @@
 # Cashflow Section Audit Report
 
-Generated: 2026-05-14T00:56:14.853Z
+Generated: 2026-05-26T06:43:56.966Z
 
 ## Summary
 
@@ -12,11 +12,11 @@ Generated: 2026-05-14T00:56:14.853Z
 
 ## Findings by Page
 
-### donations
+### expense
 
 **load**
 
-- ✅ Page title: "My Financials"
+- ✅ Page title: "Expense Tracking | My Financials"
 - ✅ Heading visible: true
 - ✅ No React error boundary
 
@@ -32,14 +32,14 @@ Generated: 2026-05-14T00:56:14.853Z
 
 **ui**
 
-- ✅ Data table visible: true
+- ✅ Expense table visible: true
 
 **crud**
 
-- ✅ --- Testing CRUD ---
-- ✅ Add button visible: icon=false, aria=true
-- ✅ Edit button clicked and save attempted
-- ✅ Delete buttons found: 0
+- ✅ --- Testing Category Breakdown Modal ---
+- ✅ Category/list icon buttons (aria): 12, table row buttons: 12
+- ✅ Category breakdown modal opened: true
+- ✅ React Select controls in modal: 0
 
 **console**
 
@@ -47,5 +47,5 @@ Generated: 2026-05-14T00:56:14.853Z
 
 ## ⚠️ All Warnings
 
-- [donations][dropdown] No React Select control found at index 0
+- [expense][dropdown] No React Select control found at index 0
 

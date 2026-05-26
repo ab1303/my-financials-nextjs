@@ -334,7 +334,7 @@ export default function CSVImportWizard({
               leaveTo='opacity-0 scale-95'
             >
               <div className='w-full max-w-5xl'>
-                <Dialog.Panel className='flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
+                <Dialog.Panel data-testid="csv-import-wizard" className='flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
                   <div className='flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700'>
                     <div>
                       <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-white'>
@@ -347,6 +347,7 @@ export default function CSVImportWizard({
                     {canClose && (
                       <button
                         onClick={handleClose}
+                        data-testid="close-csv-import-wizard"
                         className='text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                         aria-label='Close wizard'
                       >

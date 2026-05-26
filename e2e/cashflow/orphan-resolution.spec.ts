@@ -15,6 +15,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { PrismaClient } from '@prisma/client';
 
 const TRANSACTIONS_URL = '/cashflow/transactions';
 
@@ -111,11 +112,26 @@ test.describe('handle-orphans P3 — Resolution flows (sequential)', () => {
    * These tests mutate orphanResolution in the DB and must run sequentially.
    * They share a single describe block so Playwright runs them in order with one worker.
    *
+   * afterAll resets orphan state so downstream specs (transfer-transparency) see clean data.
+   *
    * Flow:
    *   1. Exclude one orphan → count decreases
    *   2. Real expense on next → count decreases further
    *   3. Resolve all remaining → panel disappears
    */
+  test.describe.configure({ mode: 'serial' });
+
+  test.afterAll(async () => {
+    const prisma = new PrismaClient();
+    try {
+      await (prisma.transaction as any).updateMany({
+        where: { id: { in: ['e2e-transfer-orphan-fy26', 'e2e-transfer-midyear-fy26'] } },
+        data: { orphanResolution: null, category: 'Transfer' },
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
+  });
 
   test('clicking "Exclude" removes that orphan row from panel', async ({ page }) => {
     await goToTransfersTab(page);

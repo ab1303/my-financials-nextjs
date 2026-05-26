@@ -184,7 +184,7 @@ export default function CSVTransactionReviewTable({
   }, [localDebitMonths, localCreditMonths]);
 
   return (
-    <div className='flex h-full min-h-0 flex-col'>
+    <div data-testid="csv-review-table" className='flex h-full min-h-0 flex-col'>
       {/* Transfer Likelihood Warning Banner */}
       {flaggedCount > 0 && (
         <div className='mb-4 flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950'>
@@ -263,6 +263,7 @@ export default function CSVTransactionReviewTable({
 
       <div className='flex flex-shrink-0 justify-end border-t pt-4'>
         <button
+          data-testid="csv-confirm-import"
           onClick={() => void onConfirm(localDebitMonths, localCreditMonths)}
           disabled={isConfirming}
           className='rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50'

@@ -1,78 +1,78 @@
 [
   {
-    "page": "donations",
+    "page": "expense",
     "category": "load",
     "severity": "ok",
-    "detail": "Page title: \"My Financials\""
+    "detail": "Page title: \"Expense Tracking | My Financials\""
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "load",
     "severity": "ok",
     "detail": "Heading visible: true"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "load",
     "severity": "ok",
     "detail": "No React error boundary"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "darkmode",
     "severity": "ok",
     "detail": "Dark mode active: false"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "dropdown",
     "severity": "ok",
     "detail": "--- Testing fiscal year React Select ---"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "dropdown",
     "severity": "ok",
     "detail": "Found 0 React Select control(s)"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "dropdown",
     "severity": "warn",
     "detail": "No React Select control found at index 0"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "ui",
     "severity": "ok",
-    "detail": "Data table visible: true"
+    "detail": "Expense table visible: true"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "crud",
     "severity": "ok",
-    "detail": "--- Testing CRUD ---"
+    "detail": "--- Testing Category Breakdown Modal ---"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "crud",
     "severity": "ok",
-    "detail": "Add button visible: icon=false, aria=true"
+    "detail": "Category/list icon buttons (aria): 12, table row buttons: 12"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "crud",
     "severity": "ok",
-    "detail": "Edit button clicked and save attempted"
+    "detail": "Category breakdown modal opened: true"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "crud",
     "severity": "ok",
-    "detail": "Delete buttons found: 0"
+    "detail": "React Select controls in modal: 0"
   },
   {
-    "page": "donations",
+    "page": "expense",
     "category": "console",
     "severity": "ok",
     "detail": "No console errors"

@@ -18,12 +18,31 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { PrismaClient } from '@prisma/client';
 
 const EXPENSE_URL = '/cashflow/expense?fromYear=2025&toYear=2026';
 const INCOME_URL = '/cashflow/income?fromYear=2025&toYear=2026';
 const TRANSFERS_TAB_URL = '/cashflow/transactions?tab=transfers';
 
+/** Reset orphan transfer state so these read-only tests always see 2 transfers = $1,500 */
+async function resetOrphanTransfers() {
+  const prisma = new PrismaClient();
+  try {
+    await (prisma.transaction as any).updateMany({
+      where: { id: { in: ['e2e-transfer-orphan-fy26', 'e2e-transfer-midyear-fy26'] } },
+      data: { orphanResolution: null, category: 'Transfer' },
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 test.describe('handle-orphans P2 — TransferExclusionSummary on Expense page', () => {
+  test.beforeAll(async () => {
+    // Ensure orphan transfers are in 'Transfer' category regardless of prior test mutations
+    await resetOrphanTransfers();
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.goto(EXPENSE_URL);
     await page.waitForLoadState('networkidle');
@@ -88,6 +107,10 @@ test.describe('handle-orphans P2 — TransferExclusionSummary on Expense page', 
 });
 
 test.describe('handle-orphans P2 — TransferExclusionSummary on Income page', () => {
+  test.beforeAll(async () => {
+    await resetOrphanTransfers();
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.goto(INCOME_URL);
     await page.waitForLoadState('networkidle');
