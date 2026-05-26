@@ -1,3 +1,9 @@
+/**
+ * Transfer matching tolerances
+ */
+export const TRANSFER_DATE_TOLERANCE_DAYS = 5; // Same-institution: ±5 days
+export const TRANSFER_DATE_TOLERANCE_DAYS_CROSS = 10; // Cross-institution: ±10 days (YNAB standard)
+
 export const REIMBURSEMENT_CATEGORY = 'Reimbursement' as const;
 
 export const TRANSFER_CATEGORY = 'Transfer' as const;
