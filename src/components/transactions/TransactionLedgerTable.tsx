@@ -45,8 +45,8 @@ const PAGE_SIZE = 50;
 
 const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'status' | 'reimbursementOnly' | 'transferOnly' | 'excludeTransferCategory'>>> = {
   all: {},
-  expenses: { type: 'DEBIT', status: 'CONFIRMED' },
-  income: { type: 'CREDIT', status: 'CONFIRMED' },
+  expenses: { type: 'DEBIT', status: 'CONFIRMED', excludeTransferCategory: true },
+  income: { type: 'CREDIT', status: 'CONFIRMED', excludeTransferCategory: true },
   excluded: { status: 'EXCLUDED', excludeTransferCategory: true },
   reimbursements: { type: 'CREDIT', status: 'CONFIRMED', reimbursementOnly: true },
   uncategorized: {},

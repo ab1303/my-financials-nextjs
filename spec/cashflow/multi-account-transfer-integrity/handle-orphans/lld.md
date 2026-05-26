@@ -18,11 +18,12 @@ before orphan resolution makes sense).
 
 | File | Change | Phase |
 |---|---|---|
-| `src/server/trpc/router/transfer.ts` *(or `transfer-match.ts`)* | Add `getOrphanedTransfers` query | 2 |
+| `src/server/trpc/router/transfer.ts` *(or `transfer-match.ts`)* | Add `getOrphanedTransfers` + `getExcludedTransferSummary` queries | 2 |
 | `src/server/services/transactions/constants.ts` | Add `ORPHAN_RESOLUTION_DAYS` | 2 |
-| `src/app/(authorized)/cashflow/expense/page.tsx` | Add `UnresolvedTransfersBanner` | 2 |
-| `src/app/(authorized)/cashflow/income/page.tsx` *(or equivalent)* | Add `UnresolvedTransfersBanner` | 2 |
+| `src/app/(authorized)/cashflow/expense/page.tsx` | Add `UnresolvedTransfersBanner` + `TransferExclusionSummary` | 2 |
+| `src/app/(authorized)/cashflow/income/page.tsx` *(or equivalent)* | Add `UnresolvedTransfersBanner` + `TransferExclusionSummary` | 2 |
 | `src/components/UnresolvedTransfersBanner.tsx` | New shared banner component | 2 |
+| `src/components/TransferExclusionSummary.tsx` | New shared transparency summary component | 2 |
 | `prisma/schema.prisma` | Add `orphanResolution` enum + field, `isTracked` to FinancialAccount | 3 |
 | `src/server/trpc/router/transfer.ts` | Add `resolveOrphan` mutation | 3 |
 | Bank account settings UI *(locate existing page)* | Add `isTracked` toggle | 3 |
@@ -130,6 +131,73 @@ const orphanedTransfers = await api.transfer.getOrphanedTransfers.query();
 ```
 
 Repeat the same pattern for the Income page.
+
+### 2.4 Transfer Summary Line — Transparency Footer
+
+Silently excluding transfers without acknowledgement erodes trust in the totals.
+Add a **read-only summary line** below the main totals section on both the Expense
+and Income pages. This is always visible (even when 0 orphans), so users understand
+what is excluded:
+
+```tsx
+// src/components/TransferExclusionSummary.tsx — new shared component
+
+interface TransferExclusionSummaryProps {
+  count: number;      // number of Transfer-category transactions excluded
+  totalAmount: number; // sum of excluded amounts
+  href: string;       // link to Transfers tab
+}
+
+export function TransferExclusionSummary({ count, totalAmount, href }: TransferExclusionSummaryProps) {
+  if (count === 0) return null;
+
+  return (
+    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      ↔{' '}
+      <span className="font-medium">{count} transfer{count > 1 ? 's' : ''}</span>{' '}
+      excluded from totals — ${totalAmount.toLocaleString()} moved between accounts.{' '}
+      <Link href={href} className="underline hover:text-gray-700 dark:hover:text-gray-200">
+        View or reclassify →
+      </Link>
+    </p>
+  );
+}
+```
+
+**"View or reclassify →"** links to the Transfers tab, which is where users go to:
+- Review matched transfer pairs
+- Reclassify a transfer as a real expense/income (the existing `updateCategory` path)
+- Resolve orphaned transfers (Phase 3)
+
+Add a `getExcludedTransferSummary` tRPC query to `transfer.ts`:
+
+```typescript
+getExcludedTransferSummary: protectedProcedure
+  .input(z.object({ year: z.number().int().optional() }))
+  .query(async ({ ctx, input }) => {
+    const where: Prisma.TransactionWhereInput = {
+      userId: ctx.session.user.id,
+      category: TRANSFER_CATEGORY,
+      status: { in: [TransactionStatusEnum.CONFIRMED, TransactionStatusEnum.EXCLUDED] },
+      ...(input.year ? {
+        date: {
+          gte: new Date(input.year, 0, 1),
+          lte: new Date(input.year, 11, 31, 23, 59, 59),
+        },
+      } : {}),
+    };
+
+    const [count, aggregate] = await Promise.all([
+      ctx.prisma.transaction.count({ where }),
+      ctx.prisma.transaction.aggregate({ where, _sum: { amount: true } }),
+    ]);
+
+    return {
+      count,
+      totalAmount: Number(aggregate._sum.amount ?? 0),
+    };
+  }),
+```
 
 ---
 
@@ -276,6 +344,10 @@ where: {
 - [ ] Expense page shows `UnresolvedTransfersBanner` when orphaned count > 0
 - [ ] Income page shows `UnresolvedTransfersBanner` when orphaned count > 0
 - [ ] Banner links to the Transfers tab
+- [ ] `getExcludedTransferSummary` returns count and total amount of Transfer-category transactions
+- [ ] Expense page shows `TransferExclusionSummary` when excluded transfer count > 0
+- [ ] Income page shows `TransferExclusionSummary` when excluded transfer count > 0
+- [ ] Summary line includes "View or reclassify →" link to the Transfers tab
 
 ### Phase 3 (after migration)
 - [ ] `prisma migrate dev` completes without errors for `add-orphan-resolution-and-tracked-account`

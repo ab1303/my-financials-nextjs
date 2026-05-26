@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma';
+import { TRANSFER_CATEGORY } from './transactions/constants';
 import type {
   ExpenseModel,
   ExpenseEntryModel,
@@ -131,6 +132,7 @@ export const getExpenseEntriesForMonth = async (
       type: 'DEBIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
+      category: { not: TRANSFER_CATEGORY },
     },
     select: { id: true, category: true, amount: true, source: true },
     orderBy: { date: 'asc' },
@@ -224,6 +226,7 @@ export const getMonthlyExpenseSummaries = async (
       type: 'DEBIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
+      category: { not: TRANSFER_CATEGORY },
     },
     select: { date: true, amount: true },
   });
@@ -279,6 +282,7 @@ export const getTotalExpenses = async (
       type: 'DEBIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
+      category: { not: TRANSFER_CATEGORY },
     },
     _sum: { amount: true },
   });
@@ -407,6 +411,7 @@ export const getCategoryBreakdownForMonth = async (
       type: 'DEBIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
+      category: { not: TRANSFER_CATEGORY },
     },
     select: { category: true, amount: true },
   });

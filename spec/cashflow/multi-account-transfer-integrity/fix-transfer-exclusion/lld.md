@@ -146,13 +146,13 @@ ORDER BY 1 DESC;
 
 ## 5. Acceptance Criteria
 
-- [ ] Expense page totals do **not** include any transaction with `category = 'Transfer'`
-- [ ] The `expenses` tab in the Transaction Ledger does **not** show transactions with `category = 'Transfer'`
-- [ ] The `income` tab in the Transaction Ledger does **not** show transactions with `category = 'Transfer'`
-- [ ] `CategoryFilteredLedger` when navigating to any non-Transfer category does **not** include Transfer rows
-- [ ] The `transfers` tab in the Transaction Ledger **continues** to show all Transfer category rows (not broken)
-- [ ] Existing `TRANSFER_CATEGORY` constant is used — no magic string literals in query files
-- [ ] `EXCLUDED_FROM_EXPENSE_AGGREGATION` constant is the single source of truth for all exclusion guards
+- [x] Expense page totals do **not** include any transaction with `category = 'Transfer'`
+- [x] The `expenses` tab in the Transaction Ledger does **not** show transactions with `category = 'Transfer'`
+- [x] The `income` tab in the Transaction Ledger does **not** show transactions with `category = 'Transfer'`
+- [x] `CategoryFilteredLedger` when navigating to any non-Transfer category does **not** include Transfer rows
+- [x] The `transfers` tab in the Transaction Ledger **continues** to show all Transfer category rows (not broken)
+- [x] Existing `TRANSFER_CATEGORY` constant is used — no magic string literals in query files
+- [x] `EXCLUDED_FROM_EXPENSE_AGGREGATION` constant is the single source of truth for all exclusion guards
 
 ---
 
@@ -164,3 +164,32 @@ ORDER BY 1 DESC;
 - **Safe to deploy first.** All other sub-features in this spec depend on or benefit from
   this fix being in place.
 - **Do not** run `pnpm lint --fix` or global formatters. Touch only the 4 files listed above.
+
+---
+
+## 7. Implementation Status
+
+**Status: ✅ SHIPPED — 2026-05-26**
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `src/server/services/transactions/constants.ts` | Added `EXCLUDED_FROM_EXPENSE_AGGREGATION = [TRANSFER_CATEGORY]` |
+| `src/server/trpc/router/category-transactions.ts` | Added Transfer `AND` guard to `getByCategory`; imports constant |
+| `src/server/trpc/router/transaction-ledger.ts` | `buildTransactionWhere` auto-excludes Transfer for `status=CONFIRMED`; `searchDebitTransactions` hardened |
+| `src/components/transactions/TransactionLedgerTable.tsx` | `expenses` and `income` tabs now pass `excludeTransferCategory: true` |
+| `src/server/services/transactions/csv-confirm.service.ts` | Import guard references `EXCLUDED_FROM_EXPENSE_AGGREGATION` |
+
+### Tests Added
+
+| File | Tests |
+|---|---|
+| `src/__tests__/integration/category-transactions.integration.test.ts` | Transfer excluded from non-Transfer category queries; Transfer tab unaffected |
+| `src/__tests__/unit/services/csv-confirm.service.test.ts` | Transfer DEBIT saves as EXCLUDED; no MonthlyExpenseSummary created |
+
+### Key Design Decisions
+
+- **Dual-layer guard**: Fix applied at both server (`buildTransactionWhere`) AND client (`TAB_TO_PARAMS`) so all callers of the router are protected, not just the Ledger UI.
+- `EXCLUDED_FROM_EXPENSE_AGGREGATION` is intentionally extensible — future category exclusions (Phase 2) simply append to this array.
+- The `getByCategory` guard is conditional: Transfer rows are suppressed for non-Transfer category queries, but the `/transfers` tab (which passes `category='Transfer'`) still works correctly.

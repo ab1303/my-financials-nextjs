@@ -9,7 +9,7 @@ import type { ClassifiedCreditTransaction, ClassifiedTransactionV2 } from '@/ser
 
 import { buildDedupSet, getDateRangeFromMonthKeys, isDuplicate, makeDedupKey } from './dedup.service';
 import type { CreditMonth, DebitMonth, TransactionSaveResult } from './_types';
-import { EXCLUDED_CREDIT_LABELS, EXCLUDED_DEBIT_LABELS } from './constants';
+import { EXCLUDED_CREDIT_LABELS, EXCLUDED_FROM_EXPENSE_AGGREGATION } from './constants';
 
 function createEmptyResult(): TransactionSaveResult {
   return {
@@ -197,8 +197,8 @@ export async function confirmDebitTransactions(
           continue;
         }
 
-        // Guard: Transfer debits are saved as EXCLUDED — no expense rollup
-        const isTransferDebit = (EXCLUDED_DEBIT_LABELS as readonly string[]).includes(tx.confirmedCategory);
+        // Guard: categories in EXCLUDED_FROM_EXPENSE_AGGREGATION are saved as EXCLUDED — no expense rollup
+        const isTransferDebit = (EXCLUDED_FROM_EXPENSE_AGGREGATION as readonly string[]).includes(tx.confirmedCategory);
 
         if (isTransferDebit) {
           await createTransactionRecord({

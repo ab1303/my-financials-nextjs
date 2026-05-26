@@ -243,6 +243,21 @@ export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, 
     ];
   }
 
+  // Auto-exclude Transfer category from confirmed expense/income queries.
+  // Applies when filtering by CONFIRMED status without an explicit category or transferOnly flag.
+  // This prevents transfer-linked transactions (category='Transfer', status='CONFIRMED') from
+  // leaking into expense/income reports when auto-matching sets category without changing status.
+  if (
+    input.status === TransactionStatusEnum.CONFIRMED &&
+    !input.transferOnly &&
+    !input.unmatchedTransferOnly &&
+    !input.reimbursementOnly &&
+    !input.category &&
+    !input.uncategorized
+  ) {
+    where.category = { not: TRANSFER_CATEGORY };
+  }
+
   return where;
 }
 
@@ -618,6 +633,7 @@ export const transactionLedgerRouter = router({
           userId,
           type: TransactionTypeEnum.DEBIT,
           status: TransactionStatusEnum.CONFIRMED,
+          category: { not: TRANSFER_CATEGORY },
           ...(input.search?.trim()
             ? {
                 OR: [

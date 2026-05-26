@@ -4,7 +4,7 @@ vi.mock('@/server/db/client', () => ({
   prisma: prismaMock,
 }));
 
-import { confirmCreditTransactions } from '@/server/services/transactions/csv-confirm.service';
+import { confirmCreditTransactions, confirmDebitTransactions } from '@/server/services/transactions/csv-confirm.service';
 import { appRouter } from '@/server/trpc/router/_app';
 
 const mockCredits = [
@@ -87,6 +87,93 @@ describe('csv-confirm.service', () => {
         incomeSourceId: 'source-other',
         incomeLedgerId: 'income-ledger-1',
       },
+    });
+  });
+
+  describe('confirmDebitTransactions — Transfer exclusion guard', () => {
+    beforeEach(() => {
+      prismaMock.expenseLedger.findUnique.mockResolvedValue({ id: 'ledger-1' } as never);
+      prismaMock.expenseLedger.create.mockResolvedValue({ id: 'ledger-1' } as never);
+      prismaMock.expenseCategory.findMany.mockResolvedValue([
+        { id: 'cat-groceries', name: 'Groceries', isActive: true },
+        { id: 'cat-other', name: 'Other', isActive: true },
+      ] as never);
+      prismaMock.monthlyExpenseSummary.findFirst.mockResolvedValue(null);
+      prismaMock.merchantCategoryMap.upsert.mockResolvedValue({} as never);
+    });
+
+    it('saves Transfer DEBIT as EXCLUDED and skips MonthlyExpenseSummary', async () => {
+      await confirmDebitTransactions(
+        [
+          {
+            month: '2024-01',
+            transactions: [
+              {
+                id: 'tx-transfer',
+                description: 'Transfer to Savings',
+                amount: 3000,
+                date: '2024-01-15',
+                llmCategory: 'Transfer',
+                confirmedCategory: 'Transfer',
+                overridden: false,
+                balance: null,
+              },
+            ],
+          },
+        ] as never,
+        'user-1',
+        'bank-1',
+        'session-1',
+      );
+
+      expect(prismaMock.transaction.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            category: 'Transfer',
+            status: 'EXCLUDED',
+          }),
+        }),
+      );
+
+      // Must NOT create a MonthlyExpenseSummary entry for Transfer transactions
+      expect(prismaMock.monthlyExpenseSummary.create).not.toHaveBeenCalled();
+      expect(prismaMock.monthlyExpenseSummary.update).not.toHaveBeenCalled();
+    });
+
+    it('saves non-Transfer DEBIT as CONFIRMED and creates MonthlyExpenseSummary', async () => {
+      await confirmDebitTransactions(
+        [
+          {
+            month: '2024-01',
+            transactions: [
+              {
+                id: 'tx-grocery',
+                description: 'Woolworths',
+                amount: 85,
+                date: '2024-01-10',
+                llmCategory: 'Groceries',
+                confirmedCategory: 'Groceries',
+                overridden: false,
+                balance: null,
+              },
+            ],
+          },
+        ] as never,
+        'user-1',
+        'bank-1',
+        'session-1',
+      );
+
+      expect(prismaMock.transaction.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            category: 'Groceries',
+            status: 'CONFIRMED',
+          }),
+        }),
+      );
+
+      expect(prismaMock.monthlyExpenseSummary.create).toHaveBeenCalled();
     });
   });
 });

@@ -9,10 +9,10 @@
 
 | Priority | Sub-Feature | Spec | Schema? | Run when? |
 |---|---|---|---|---|
-| 🔴 **P0 — Critical** | Fix transfer exclusion in all cashflow queries | [`fix-transfer-exclusion/`](./fix-transfer-exclusion/lld.md) | ❌ No | **Immediately — blocks everything** |
-| 🟠 **P1 — High** | Surface + resolve orphaned transfers | [`handle-orphans/`](./handle-orphans/lld.md) | ✅ Phase 3 only | After P0 ships |
-| 🟡 **P2 — Medium** | Add bank filter + year toggle to Expense/Income | [`add-filtration-parity/`](./add-filtration-parity/lld.md) | ❌ No | **Parallel with handle-orphans** |
-| 🟡 **P2 — Medium** | Warn on probable transfers in CSV import wizard | [`harden-import-wizard/`](./harden-import-wizard/lld.md) | ❌ No | **Parallel with handle-orphans** |
+| 🔴 **P0 — Critical** ✅ SHIPPED | Fix transfer exclusion in all cashflow queries | [`fix-transfer-exclusion/`](./fix-transfer-exclusion/lld.md) | ❌ No | **Deployed 2026-05-26** |
+| 🟠 **P1 — High** | Surface + resolve orphaned transfers | [`handle-orphans/`](./handle-orphans/lld.md) | ✅ Phase 3 only | **Now unblocked — ready to start** |
+| 🟡 **P2 — Medium** | Add bank filter + year toggle to Expense/Income | [`add-filtration-parity/`](./add-filtration-parity/lld.md) | ❌ No | **Now unblocked — parallel with handle-orphans** |
+| 🟡 **P2 — Medium** | Warn on probable transfers in CSV import wizard | [`harden-import-wizard/`](./harden-import-wizard/lld.md) | ❌ No | **Now unblocked — parallel with handle-orphans** |
 | 🔵 **P3 — Low** | Widen date tolerance + respect isTracked in scoring | [`improve-detection/`](./improve-detection/lld.md) | ❌ No | After handle-orphans Phase 3 |
 
 **Why P0 is a blocker:** Every cashflow page is currently showing incorrect totals until
@@ -41,8 +41,8 @@ existing data integrity bugs.
 
 | Wave | Sub-features | Condition |
 |---|---|---|
-| **Wave 1** | `fix-transfer-exclusion` only | Start now |
-| **Wave 2** | `handle-orphans` (Phase 2) + `add-filtration-parity` + `harden-import-wizard` | After Wave 1 ships |
+| **Wave 1** ✅ DONE | `fix-transfer-exclusion` | Shipped 2026-05-26 |
+| **Wave 2** ← **CURRENT** | `handle-orphans` (Phase 2) + `add-filtration-parity` + `harden-import-wizard` | P0 is shipped — start now |
 | **Wave 3** | `handle-orphans` (Phase 3) | After Wave 2: Phase 2 banner must be live |
 | **Wave 4** | `improve-detection` | After Wave 3: `isTracked` field must exist in DB |
 

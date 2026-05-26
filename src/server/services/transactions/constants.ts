@@ -14,3 +14,9 @@ export const EXCLUDED_CREDIT_LABELS = ['Transfer', 'Excluded', 'Reimbursement'] 
  * Transfer debits must not create MonthlyExpenseSummary entries.
  */
 export const EXCLUDED_DEBIT_LABELS = ['Transfer'] as const;
+
+/**
+ * Categories that must be excluded from all expense and income aggregation queries.
+ * Single source of truth for all cashflow query guards across the app.
+ */
+export const EXCLUDED_FROM_EXPENSE_AGGREGATION = [TRANSFER_CATEGORY] as const;

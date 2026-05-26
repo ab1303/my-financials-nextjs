@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { router, protectedProcedure } from '@/server/trpc/trpc';
+import { EXCLUDED_FROM_EXPENSE_AGGREGATION, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 
 const GetByCategoryInputSchema = z.object({
   category: z.string().min(1),
@@ -43,11 +44,19 @@ export const categoryTransactionsRouter = router({
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
+      // Only exclude Transfer rows when the caller is NOT querying the Transfer category itself.
+      // The "Transfers" tab uses this path and must still see Transfer rows.
+      const transferGuard =
+        category.toLowerCase() !== TRANSFER_CATEGORY.toLowerCase()
+          ? { category: { notIn: [...EXCLUDED_FROM_EXPENSE_AGGREGATION] } }
+          : undefined;
+
       const where = {
         userId,
         type: 'DEBIT' as const,
         status: 'CONFIRMED' as const,
         category: { equals: category, mode: 'insensitive' as const },
+        ...(transferGuard ? { AND: transferGuard } : {}),
         date: {
           gte: startDate,
           lte: endDate,

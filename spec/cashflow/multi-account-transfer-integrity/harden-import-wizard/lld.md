@@ -12,6 +12,16 @@ Prisma fields. Safe to implement in parallel with `add-filtration-parity` and `h
 
 **Depends on:** Nothing — implement independently.
 
+### ⚠️ Core UX Principle: Warn, Never Block
+
+> The import wizard must **always allow the user to proceed**. Signals are advisory —
+> the LLM classification is probabilistic, not authoritative. A user who knowingly imports
+> a transfer transaction should not be blocked; they can recategorise it in the Transfers
+> tab after import. Adding friction to the confirm step increases abandonment and erodes
+> trust in the tool.
+>
+> Every warning in this spec is a **soft prompt**, not a gate.
+
 ---
 
 ## Files to Modify
@@ -182,8 +192,8 @@ interface ImportResult {
 - [ ] Transactions with `transferLikelihood = 'HIGH'` show a warning chip in the Review step table
 - [ ] Transactions with `transferLikelihood = 'MEDIUM'` show a softer warning chip
 - [ ] Clicking "Confirm All" when HIGH or MEDIUM rows are present shows the warning modal
-- [ ] User can choose "Continue anyway" to proceed with confirmation, or "Review first" to dismiss the modal
-- [ ] Individual row confirm (if supported) also checks likelihood before confirming HIGH rows
+- [ ] User can choose "Continue anyway" to proceed with confirmation, or "Review first" to dismiss the modal and stay on the review step
+- [ ] Individual row confirm (if supported) shows an inline tooltip/hint on HIGH rows but does **not** block confirmation — the confirm action always proceeds
 - [ ] `CSVResultsStep` shows the flagged-transfer alert when `flaggedTransferCount > 0`
 - [ ] Alert links directly to `/cashflow/transactions?tab=transfers`
 - [ ] All new UI is visible in dark mode (all `dark:` variants present)
