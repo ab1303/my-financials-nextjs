@@ -1,13 +1,23 @@
 # ExpenseLedger
 
+## ⚠️ DEPRECATED
+
+> **This table is deprecated.** Expense data is now sourced directly from the `Transaction` table
+> (type=DEBIT, status=CONFIRMED). Expense totals and monthly breakdowns are computed via live
+> queries on Transaction, not materialized into a ledger structure.
+>
+> **Migration path:** No data migration needed — expense views already read from Transaction.
+> This table remains in schema for historical compatibility but should not be referenced by
+> new code. See `spec/cashflow/hld.md` Architecture Decision #2.
+
 ## Purpose
-Acts as the per-user, per-calendar ledger header for monthly expense aggregates, grouping summarized spend into a reporting period.
+~~Acts as the per-user, per-calendar ledger header for monthly expense aggregates, grouping summarized spend into a reporting period.~~
 
 ## Domain
 Expenses
 
 ## Status
-Active
+**Deprecated** — superseded by live Transaction queries
 
 ## Fields
 | Field | Type | Nullable | Description |

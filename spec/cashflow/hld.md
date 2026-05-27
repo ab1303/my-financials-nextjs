@@ -12,12 +12,13 @@ A reusable time window for cashflow features.
 - Must align with `CalendarYear` state and route-level filter parameters.
 - Allows one feature to show monthly detail while another rolls up to fiscal-year, annual, or Zakat-year totals.
 
-### `IncomeRecord`
-A user-owned inflow entry managed directly by the app.
+### `IncomeRecord` ⚠️ **DEPRECATED**
+A legacy user-owned **manual** inflow entry — now **deprecated** in favor of storing all income in the `Transaction` table.
 
-- Captures source, amount, date, category, and notes.
-- Participates in fiscal-year summaries and net-cash calculations.
-- Can be enhanced by richer filtering, grouping, and editing UX without changing the base record shape.
+- ⚠️ **Deprecation notice**: This table will be removed in v2.0. Manual income entries should now be created as `Transaction(type=CREDIT, source=MANUAL)` records.
+- Historical manual entries still exist but should be migrated to Transaction during the next schema release.
+- The Income Tracking view now queries `Transaction` live (type=CREDIT, status=CONFIRMED) instead of materializing manual `IncomeRecord` rows.
+- For context and migration path, see [`income-source-of-truth/context.md`](../income/income-source-of-truth/context.md)
 
 ### `ExpenseEntry`
 A user-owned outflow entry managed directly by the app.
@@ -110,29 +111,45 @@ A structured quality record for cashflow routes.
 1. **Cashflow is one financial-flow domain with six grouped feature areas.**
    Income, expense, donations, categories, interest, and audit specs share language, time models, taxonomy, and flow relationships even when their implementation details differ.
 
-2. **Each flow keeps its strongest source of truth.**
-   Income and expense remain app-managed CRUD records, voluntary donations and Zakat payments remain charitable ledgers, interest received is derived from the transaction ledger, and audits remain evidence records rather than product data.
+2. **Transaction is the single source of truth for everyday cash flows.**
+   All income (type=CREDIT) and expense (type=DEBIT) — both imported bank activity and 
+   manually-entered entries — live exclusively in the `Transaction` table with a `source` 
+   discriminator (BANK / LLM_CLASSIFIED / MANUAL / USER_MANUAL). Legacy tables (`IncomeRecord`,
+   `IncomeLedger`, `ExpenseLedger`, `MonthlyExpenseSummary`) are **deprecated** and will be 
+   removed. Interest received is also derived from CREDIT transactions with interest-category 
+   matching. Cashflow views query `Transaction` live — no materialized projections.
 
-3. **Charitable outflows share a header + payment-row pattern.**
-   Donations and Zakat both use a year-scoped header record with many payment rows so totals, beneficiaries, and yearly obligations remain consistent across the subgroup.
+3. **Charitable outflows use enrichment tables, not Transaction duplication.**
+   Donations and Zakat have rich metadata (beneficiary, tax category, purpose, donation type) 
+   that exceeds `Transaction`'s schema. They use header + payment-row tables (`DonationLedger` → 
+   `DonationPayment`, `ZakatObligation` → `ZakatPayment`) with an **optional** `transactionId` 
+   link for reconciliation against imported bank evidence. This is enrichment, not duplication — 
+   the DonationPayment IS the source of truth for charitable semantics; the Transaction merely 
+   confirms the cash movement.
 
 4. **Transaction linking is enrichment, not source mutation.**
    Imported `Transaction` rows remain the immutable cash evidence; charitable pages attach metadata through optional one-to-one links.
 
-5. **Categories provide shared taxonomy rather than a separate ledger.**
+5. **Bank account filtering uses user-owned FinancialAccount records.**
+   All cashflow pages that offer a bank filter must show the authenticated user's own 
+   `FinancialAccount` records (not global Business/institution entities). Filtering is by 
+   `Transaction.bankAccountId`. Manual entries (`bankAccountId = null`) always appear 
+   regardless of the selected bank account filter.
+
+6. **Categories provide shared taxonomy rather than a separate ledger.**
    Lookup management, label resolution, and drill-down contracts are centralized at the domain level so income, expense, donation, and interest features do not re-encode category rules.
 
-6. **Time scoping is first-class and multi-calendar.**
+7. **Time scoping is first-class and multi-calendar.**
    Fiscal-year planning, donation review, Zakat-year obligations, annual bank-interest reporting, monthly tables, and other calendar contexts can coexist without redefining the underlying models in each feature spec.
 
-7. **User scoping is enforced through session context and owned relations.**
+8. **User scoping is enforced through session context and owned relations.**
    Beneficiaries, linked transactions, and charitable pages are filtered through the authenticated user, even when header tables themselves do not carry a direct `userId`.
 
-8. **Audit work is flow-aware but non-owning.**
+9. **Audit work is flow-aware but non-owning.**
    Audits can inspect income, expense, donation, category-management, drill-down, and bank-interest routes together because they belong to the same cashflow surface, but remediation still lands in the downstream feature that owns the behavior.
 
-9. **Server-first delivery remains the default across the domain.**
-   Data loading, aggregation, and mutations happen server-side; client wrappers are reserved for interactive tables, drawers, filters, and inline editing.
+10. **Server-first delivery remains the default across the domain.**
+    Data loading, aggregation, and mutations happen server-side; client wrappers are reserved for interactive tables, drawers, filters, and inline editing.
 
 ## Time Contexts
 
@@ -172,15 +189,16 @@ Canonical table specs live in [`architecture/DataModel/expenses/`](../../archite
 
 | Table | Domain | Description |
 |-------|--------|-------------|
+| **[Transaction](../../architecture/data-model/transactions/Transaction.md)** | **Core** | **Single source of truth for all income (CREDIT) and expense (DEBIT) flows** |
 | [ExpenseCategory](../../architecture/DataModel/expenses/ExpenseCategory.md) | Expenses | System-managed expense category lookup |
 | [SpecialCategory](../../architecture/DataModel/expenses/SpecialCategory.md) | Expenses | Special transaction category lookup (Transfer, Excluded, etc.) |
-| [ExpenseLedger](../../architecture/DataModel/expenses/ExpenseLedger.md) | Expenses | Per-user expense ledger for a reporting period |
-| [MonthlyExpenseSummary](../../architecture/DataModel/expenses/MonthlyExpenseSummary.md) | Expenses | Aggregated monthly spend by category |
-| [IncomeSource](../../architecture/DataModel/income/IncomeSource.md) | Income | Income source lookup (Salary, Freelance, etc.) |
-| [IncomeLedger](../../architecture/DataModel/income/IncomeLedger.md) | Income | Per-user income ledger for a reporting period |
-| [IncomeRecord](../../architecture/DataModel/income/IncomeRecord.md) | Income | Individual income event |
+| ~~[ExpenseLedger](../../architecture/DataModel/expenses/ExpenseLedger.md)~~ | Expenses | ⚠️ Deprecated — expenses now read from Transaction(type=DEBIT) |
+| ~~[MonthlyExpenseSummary](../../architecture/DataModel/expenses/MonthlyExpenseSummary.md)~~ | Expenses | ⚠️ Deprecated — monthly totals now computed from Transaction aggregates |
+| [IncomeSource](../../architecture/DataModel/income/IncomeSource.md) | Income | Income source vocabulary/lookup (Salary, Freelance, etc.) |
+| ~~[IncomeLedger](../../architecture/DataModel/income/IncomeLedger.md)~~ | Income | ⚠️ Deprecated — fiscal-year scoping via Transaction.date range |
+| ~~[IncomeRecord](../../architecture/DataModel/income/IncomeRecord.md)~~ | Income | ⚠️ Deprecated — all income now in Transaction(type=CREDIT) |
 | [DonationLedger](../../architecture/DataModel/philanthropy/DonationLedger.md) | Philanthropy | Header for donations in a reporting period |
-| [DonationPayment](../../architecture/DataModel/philanthropy/DonationPayment.md) | Philanthropy | Individual donation or interest-cleansing payment |
+| [DonationPayment](../../architecture/DataModel/philanthropy/DonationPayment.md) | Philanthropy | Individual donation or interest-cleansing payment (enrichment table) |
 | [ZakatObligation](../../architecture/DataModel/philanthropy/ZakatObligation.md) | Philanthropy | Annual zakat obligation header |
 | [ZakatPayment](../../architecture/DataModel/philanthropy/ZakatPayment.md) | Philanthropy | Individual zakat payment |
 | [BankInterestLiability](../../architecture/DataModel/philanthropy/BankInterestLiability.md) | Philanthropy | Monthly interest tax liability per bank |

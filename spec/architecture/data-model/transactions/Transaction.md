@@ -1,13 +1,27 @@
 # Transaction
 
 ## Purpose
-Stores staged transaction lines imported from CSV or AI extraction, supporting review, confirmation, exclusions, transfers, reimbursements, and downstream linkage to income or philanthropic records.
+The single source of truth for all everyday cash flows. Stores imported bank transactions AND manually-entered income/expense records. Used directly by Income, Expense, and Interest views via live queries. Supports review, confirmation, exclusions, transfers, reimbursements, and downstream linkage to philanthropic records.
 
 ## Domain
 Transactions
 
 ## Status
 Active
+
+## Architecture Role
+
+Transaction is the **primary fact table** for the cashflow domain:
+
+| Flow | Query Pattern | Manual Entry Source |
+|------|--------------|---------------------|
+| **Income** | `type=CREDIT, status=CONFIRMED` | `source=MANUAL` |
+| **Expense** | `type=DEBIT, status=CONFIRMED` | `source=USER_MANUAL` |
+| **Interest** | `type=CREDIT, status=CONFIRMED, category~interest` | N/A (derived) |
+| **Donations** | Linked via `DonationPayment.transactionId` (enrichment) | N/A (DonationPayment owns) |
+
+Legacy tables (`IncomeRecord`, `IncomeLedger`, `ExpenseLedger`, `MonthlyExpenseSummary`) are deprecated.
+See `spec/cashflow/hld.md` Architecture Decision #2.
 
 ## Fields
 | Field | Type | Nullable | Description |

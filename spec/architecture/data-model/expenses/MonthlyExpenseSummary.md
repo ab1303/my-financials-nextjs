@@ -1,13 +1,23 @@
 # MonthlyExpenseSummary
 
+## ⚠️ DEPRECATED
+
+> **This table is deprecated.** Monthly expense breakdowns are now computed via live aggregate
+> queries on the `Transaction` table (type=DEBIT, status=CONFIRMED, grouped by category and month).
+> Manual expenses are created as `Transaction(type=DEBIT, source=USER_MANUAL)` records.
+>
+> **Migration path:** No data migration needed — expense views already read from Transaction.
+> This table remains in schema for historical reference only. Do not write new rows.
+> See `spec/cashflow/expense/manual-expense-transaction/context.md` and `spec/cashflow/hld.md` Architecture Decision #2.
+
 ## Purpose
-Stores aggregated monthly spend totals by category, representing summarized expense data rather than individual bank or card transactions.
+~~Stores aggregated monthly spend totals by category, representing summarized expense data rather than individual bank or card transactions.~~
 
 ## Domain
 Expenses
 
 ## Status
-Active
+**Deprecated** — superseded by live Transaction aggregate queries
 
 ## Fields
 | Field | Type | Nullable | Description |

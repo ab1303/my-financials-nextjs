@@ -1,35 +1,29 @@
 # IncomeLedger
 
-## Purpose
-Acts as a per-user, per-calendar container for income records, grouping detailed income events under a specific reporting period.
-
-## Domain
-Income
-
 ## Status
-Active
+⚠️ **DEPRECATED** — Fiscal-year scoping moved to Transaction date range queries.
 
-## Fields
-| Field | Type | Nullable | Description |
-|-------|------|----------|-------------|
-| id | String | No | Primary key generated with `cuid()`. |
-| calendarId | String | No | Foreign key to the reporting period. |
-| userId | String | No | Owner user foreign key. |
-| createdAt | DateTime | No | Record creation timestamp. |
-| updatedAt | DateTime | No | Auto-updated modification timestamp. |
+## Purpose (Historical)
+Previously acted as a per-user, per-calendar container for income records. This was part of a CQRS-like pattern that has been consolidated.
 
-## Relationships
-### Belongs To
-- CalendarYear (`calendarId` → `CalendarYear.id`)
-- User (`userId` → `User.id`)
+## Deprecation Rationale
 
-### Has Many
-- IncomeRecord
+The `IncomeLedger` table exists solely to group `IncomeRecord` rows by fiscal year. Since `IncomeRecord` is deprecated (see [`IncomeRecord.md`](./IncomeRecord.md)), the grouping mechanism is no longer needed.
 
-## Indexes & Constraints
-- Primary key on `id`
-- Composite unique constraint on `[calendarId, userId]`
-- Foreign keys to `CalendarYear` and `User`
+Fiscal-year scoping is now handled via date-range queries on `Transaction`:
 
-## Notes
-This table is the ledger header for detailed income entries.
+```sql
+SELECT * FROM Transaction 
+WHERE type = 'CREDIT' 
+  AND status = 'CONFIRMED'
+  AND date BETWEEN calendarYear.startDate AND calendarYear.endDate
+  AND userId = ?
+```
+
+## Migration Path
+
+- Delete all `IncomeLedger` rows
+- Remove `incomeLedgerId` FK from any remaining data structures
+- Fiscal-year queries use `CalendarYear.fromYear/fromMonth/toYear/toMonth` to resolve date ranges
+
+See: [`spec/cashflow/income/income-source-of-truth/`](../../cashflow/income/income-source-of-truth/) for full rationale.
