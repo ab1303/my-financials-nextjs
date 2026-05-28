@@ -277,6 +277,52 @@ export const transferRouter = router({
       });
     }),
 
+  getResolvedOrphans: protectedProcedure
+    .input(z.object({
+      limit: z.number().int().min(1).max(100).default(50),
+    }))
+    .query(async ({ ctx, input }) => {
+      return (ctx.prisma.transaction as any).findMany({
+        where: {
+          userId: ctx.session.user.id,
+          category: TRANSFER_CATEGORY,
+          transferLinkedTransactionId: null,
+          transferCounterpart: { is: null },
+          orphanResolution: { not: null },
+        },
+        include: {
+          financialAccount: { select: { name: true } },
+        },
+        orderBy: { date: 'desc' },
+        take: input.limit,
+      });
+    }),
+
+  resetOrphanResolution: protectedProcedure
+    .input(z.object({ transactionId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const tx = await (ctx.prisma.transaction as any).findFirst({
+        where: {
+          id: input.transactionId,
+          userId: ctx.session.user.id,
+          transferLinkedTransactionId: null,
+          orphanResolution: { not: null },
+        },
+      });
+
+      if (!tx) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Resolved orphan not found' });
+      }
+
+      return (ctx.prisma.transaction as any).update({
+        where: { id: input.transactionId },
+        data: {
+          orphanResolution: null,
+          category: TRANSFER_CATEGORY,
+        },
+      });
+    }),
+
   getExcludedTransferSummary: protectedProcedure
     .input(z.object({ year: z.number().int().optional() }))
     .query(async ({ ctx, input }) => {
