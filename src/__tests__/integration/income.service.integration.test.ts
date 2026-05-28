@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Decimal } from '@prisma/client/runtime/library';
 import {
   getIncomeEntries,
@@ -43,17 +43,17 @@ describe('Income Service (integration)', () => {
       ] as any);
 
       prismaMock.incomeSource.findMany.mockResolvedValue([
-        { id: 'src-1', name: 'Employment', isActive: true },
-        { id: 'src-2', name: 'Freelance', isActive: true },
+        { id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() },
+        { id: 'src-2', name: 'Freelance', description: null, isActive: true, createdAt: new Date() },
       ] as any);
 
       const result = await getIncomeEntries(calendarYearId, userId, prismaMock);
 
       expect(result).toHaveLength(2);
-      expect(result[0].incomeSourceName).toBe('Employment');
-      expect(result[0].amount).toBe(5000);
-      expect(result[1].incomeSourceName).toBe('Freelance');
-      expect(result[1].amount).toBe(2000);
+      expect(result[0]!.incomeSourceName).toBe('Employment');
+      expect(result[0]!.amount).toBe(5000);
+      expect(result[1]!.incomeSourceName).toBe('Freelance');
+      expect(result[1]!.amount).toBe(2000);
     });
 
     it('returns [] when calendarYear not found', async () => {
@@ -65,7 +65,7 @@ describe('Income Service (integration)', () => {
 
   describe('addIncomeEntry', () => {
     it('creates a Transaction with correct fields', async () => {
-      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment' });
+      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() } as any);
       prismaMock.transaction.create.mockResolvedValue(
         createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' })
       );
@@ -105,9 +105,9 @@ describe('Income Service (integration)', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'USER_MANUAL',
         userId,
-      });
-      prismaMock.incomeSource.findUnique.mockResolvedValue({ name: 'Employment' });
-      prismaMock.transaction.update.mockResolvedValue({});
+      } as any);
+      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() } as any);
+      prismaMock.transaction.update.mockResolvedValue({} as any);
 
       await updateIncomeEntry('txn-1', userId, {
         dateEarned: new Date('2024-01-15'),
@@ -122,7 +122,7 @@ describe('Income Service (integration)', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'LLM_CLASSIFIED',
         userId,
-      });
+      } as any);
       await expect(
         updateIncomeEntry('txn-1', userId, { dateEarned: new Date(), amount: 1, incomeSourceId: 'src-1' }, prismaMock)
       ).rejects.toThrow('Cannot edit an imported income entry');
@@ -132,7 +132,7 @@ describe('Income Service (integration)', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'USER_MANUAL',
         userId: 'other-user',
-      });
+      } as any);
       await expect(
         updateIncomeEntry('txn-1', userId, { dateEarned: new Date(), amount: 1, incomeSourceId: 'src-1' }, prismaMock)
       ).rejects.toThrow('Income entry not found');
@@ -144,8 +144,8 @@ describe('Income Service (integration)', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'USER_MANUAL',
         userId,
-      });
-      prismaMock.transaction.delete.mockResolvedValue({});
+      } as any);
+      prismaMock.transaction.delete.mockResolvedValue({} as any);
       await deleteIncomeEntry('txn-1', userId, prismaMock);
       expect(prismaMock.transaction.delete).toHaveBeenCalledWith({ where: { id: 'txn-1' } });
     });
@@ -154,7 +154,7 @@ describe('Income Service (integration)', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'LLM_CLASSIFIED',
         userId,
-      });
+      } as any);
       await expect(deleteIncomeEntry('txn-1', userId, prismaMock)).rejects.toThrow('Cannot delete an imported income entry');
     });
 
@@ -177,7 +177,7 @@ describe('Income Service (integration)', () => {
       } as any);
       prismaMock.transaction.aggregate.mockResolvedValue({
         _sum: { amount: new Decimal('15000') },
-      });
+      } as any);
       const total = await getTotalIncome(calendarYearId, userId, prismaMock);
       expect(total).toBe(15000);
     });

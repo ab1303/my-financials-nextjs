@@ -28,7 +28,7 @@ describe('Income Server Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(auth).mockResolvedValue(mockSession);
+    vi.mocked(auth).mockResolvedValue(mockSession as any);
   });
 
   describe('addRow', () => {
@@ -39,7 +39,7 @@ describe('Income Server Actions', () => {
         toYear: 2024,
         toMonth: 12,
       } as any);
-      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment' });
+      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() } as any);
       prismaMock.transaction.create.mockResolvedValue(
         createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' })
       );
@@ -60,7 +60,7 @@ describe('Income Server Actions', () => {
     });
 
     it('returns error when user is not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(null as any);
 
       const input = {
         calendarYearId,
@@ -95,9 +95,9 @@ describe('Income Server Actions', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'USER_MANUAL',
         userId,
-      });
-      prismaMock.incomeSource.findUnique.mockResolvedValue({ name: 'Employment' });
-      prismaMock.transaction.update.mockResolvedValue({});
+      } as any);
+      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() } as any);
+      prismaMock.transaction.update.mockResolvedValue({} as any);
 
       const input = {
         id: 'txn-1',
@@ -113,7 +113,7 @@ describe('Income Server Actions', () => {
     });
 
     it('returns error when user is not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(null as any);
 
       const input = {
         id: 'txn-1',
@@ -148,16 +148,7 @@ describe('Income Server Actions', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'LLM_CLASSIFIED',
         userId,
-      });
-
-      const input = {
-        id: 'txn-1',
-        dateEarned: new Date('2024-01-15'),
-        amount: 5000,
-        incomeSourceId: 'src-1',
-      };
-
-      const result = await editRow(input);
+      } as any);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('imported income entry');
@@ -169,8 +160,8 @@ describe('Income Server Actions', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'USER_MANUAL',
         userId,
-      });
-      prismaMock.transaction.delete.mockResolvedValue({});
+      } as any);
+      prismaMock.transaction.delete.mockResolvedValue({} as any);
 
       const input = { id: 'txn-1' };
 
@@ -182,7 +173,7 @@ describe('Income Server Actions', () => {
     });
 
     it('returns error when user is not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
+      vi.mocked(auth).mockResolvedValue(null as any);
 
       const input = { id: 'txn-1' };
 
@@ -207,7 +198,7 @@ describe('Income Server Actions', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'LLM_CLASSIFIED',
         userId,
-      });
+      } as any);
 
       const input = { id: 'txn-1' };
 

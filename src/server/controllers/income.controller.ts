@@ -59,9 +59,10 @@ export const incomeHandler = async (calendarYearId: string, userId: string) => {
 export const incomeEntriesHandler = async (
   calendarYearId: string,
   userId: string,
+  bankAccountId?: string,
 ) => {
   try {
-    const incomeEntries = await getIncomeEntries(calendarYearId, userId);
+    const incomeEntries = await getIncomeEntries(calendarYearId, userId, undefined, bankAccountId);
     return incomeEntries;
   } catch (e) {
     handleCaughtError(e);
@@ -77,9 +78,10 @@ export const incomeEntriesHandler = async (
 export const totalIncomeHandler = async (
   calendarYearId: string,
   userId: string,
+  bankAccountId?: string,
 ) => {
   try {
-    const totalIncome = await getTotalIncome(calendarYearId, userId);
+    const totalIncome = await getTotalIncome(calendarYearId, userId, undefined, bankAccountId);
     return totalIncome;
   } catch (e) {
     handleCaughtError(e);

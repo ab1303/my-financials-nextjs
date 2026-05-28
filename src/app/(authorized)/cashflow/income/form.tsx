@@ -76,7 +76,7 @@ export default function IncomeForm({
   const handleBankChange = (option: SingleValue<OptionType>) => {
     if (!option) setSelectedBank(null);
     else if (option.id) setSelectedBank(option);
-    updateURLSearchParams('bank', option?.label);
+    updateURLSearchParams('bank', option?.id);
   };
 
   return (

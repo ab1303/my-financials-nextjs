@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalIncomeHandler } from '@/server/controllers/income.controller';
-import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
+import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/utils/prisma';
@@ -54,12 +54,12 @@ export default async function IncomePage({
   }
 
   const yearIdParam = getSelectedParam(params?.year);
-  const bankNameParam = getSelectedParam(params?.bank);
+  const bankIdParam = getSelectedParam(params?.bank);
   const fiscalYearType = await getUserFiscalYearType(prisma, session.user.id);
 
-  const [incomeYearData, banks] = await Promise.all([
+  const [incomeYearData, bankAccounts] = await Promise.all([
     getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
-    allBankDetailsHandler(),
+    listBankAccountsHandler(session.user.id),
   ]);
 
   const selectedCalendarYear =
@@ -68,18 +68,17 @@ export default async function IncomePage({
 
   const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
 
-  // Derive selected bank
-  const bankOptions: OptionType[] = banks
-    ? banks.map((b) => ({ id: b.id, label: b.name }))
-    : [];
-  const selectedBank = bankOptions.find(
-    (b) => b.label === bankNameParam,
-  );
-  const selectedBankId = selectedBank ? selectedBank.id : '';
+  // Derive selected bank account (user-scoped FinancialAccount, not global banks)
+  const bankOptions: OptionType[] = bankAccounts.map((a) => ({
+    id: a.id,
+    label: `${a.name} (${a.institution.name})`,
+  }));
+  const selectedBankId = bankOptions.find((b) => b.id === bankIdParam)?.id ?? '';
 
   const totalIncome = await totalIncomeHandler(
     selectedCalendarYearId,
     session.user.id,
+    selectedBankId || undefined,
   );
 
   const cutoffDate = new Date();
@@ -158,7 +157,7 @@ export default async function IncomePage({
               </h2>
             )}
 
-            <IncomeTableServer calendarYearId={selectedCalendarYearId} />
+            <IncomeTableServer calendarYearId={selectedCalendarYearId} bankAccountId={selectedBankId || undefined} />
           </Suspense>
         </IncomeForm>
       </div>

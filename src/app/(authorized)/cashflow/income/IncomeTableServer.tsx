@@ -8,10 +8,12 @@ import { addRow, deleteRow, editRow } from './actions';
 
 export type IncomeTableServerProps = {
   calendarYearId: string;
+  bankAccountId?: string;
 };
 
 export default async function IncomeTableServer({
   calendarYearId,
+  bankAccountId,
 }: IncomeTableServerProps) {
   try {
     // Get user session for user-specific data
@@ -23,6 +25,7 @@ export default async function IncomeTableServer({
     const incomeEntries = await incomeEntriesHandler(
       calendarYearId,
       session.user.id,
+      bankAccountId,
     );
 
     const data =

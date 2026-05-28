@@ -8,14 +8,14 @@ const {
   mockTotalIncomeHandler,
   mockGetUserFiscalYearType,
   mockGetDefaultCalendarYear,
-  mockAllBankDetailsHandler,
+  mockListBankAccountsHandler,
 } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
   mockGetCalendarYearsHandler: vi.fn(),
   mockTotalIncomeHandler: vi.fn(),
   mockGetUserFiscalYearType: vi.fn(),
   mockGetDefaultCalendarYear: vi.fn(),
-  mockAllBankDetailsHandler: vi.fn(),
+  mockListBankAccountsHandler: vi.fn(),
 }));
 
 vi.mock('@/server/auth', () => ({
@@ -30,8 +30,8 @@ vi.mock('@/server/controllers/income.controller', () => ({
   totalIncomeHandler: mockTotalIncomeHandler,
 }));
 
-vi.mock('@/server/controllers/bank.controller', () => ({
-  allBankDetailsHandler: mockAllBankDetailsHandler,
+vi.mock('@/server/controllers/bank-account.controller', () => ({
+  listBankAccountsHandler: mockListBankAccountsHandler,
 }));
 
 vi.mock('@/server/services/user-profile/user-profile.service', () => ({
@@ -76,7 +76,7 @@ describe('IncomePage fiscal year heading', () => {
 
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } });
     mockGetUserFiscalYearType.mockResolvedValue('FISCAL');
-    mockAllBankDetailsHandler.mockResolvedValue([]);
+    mockListBankAccountsHandler.mockResolvedValue([]);
     mockGetCalendarYearsHandler.mockResolvedValue([
       {
         id: 'year-1',

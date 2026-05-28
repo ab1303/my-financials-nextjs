@@ -41,6 +41,7 @@ export const getIncomeEntries = async (
   calendarYearId: string,
   userId: string,
   prismaClient = prisma,
+  bankAccountId?: string,
 ): Promise<Array<IncomeEntryModel>> => {
   const calendarYear = await prismaClient.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -57,6 +58,7 @@ export const getIncomeEntries = async (
       type: 'CREDIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
+      ...(bankAccountId ? { bankAccountId } : {}),
     },
     select: { id: true, date: true, amount: true, category: true, source: true },
     orderBy: { date: 'desc' },
@@ -194,6 +196,7 @@ export const getTotalIncome = async (
   calendarYearId: string,
   userId: string,
   prismaClient = prisma,
+  bankAccountId?: string,
 ): Promise<number> => {
   const calendarYear = await prismaClient.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -210,6 +213,7 @@ export const getTotalIncome = async (
       type: 'CREDIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
+      ...(bankAccountId ? { bankAccountId } : {}),
     },
     _sum: { amount: true },
   });
