@@ -19,7 +19,7 @@ Users need clear expense capture and analysis so they can understand where cash 
 - Querying expenses from the `Transaction` ledger (type=DEBIT, status=CONFIRMED).
 - Creating manual expense entries as `Transaction(type=DEBIT, source=USER_MANUAL)` records.
 - Editing and deleting only USER_MANUAL expense entries; imported expenses are read-only.
-- Category and time-based (month + fiscal-year) expense analysis.
+- Category and time-based (month + fiscal-year **and annual-year**) expense analysis.
 - Bank account filter using user's FinancialAccount records.
 - Monthly and fiscal-year views that contribute to net cashflow reporting.
 

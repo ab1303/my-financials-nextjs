@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
 import { auth } from '@/server/auth';
-import { allBankDetailsHandler } from '@/server/controllers/bank.controller';
+import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
@@ -44,22 +44,33 @@ export default async function BanksPage({
   const params = await searchParams;
   const session = await auth();
 
-  const [allYearlyData, banks, fiscalYearType] = await Promise.all([
+  if (!session?.user?.id) {
+    return (
+      <div className='p-4 bg-red-50 border border-red-200 rounded-md'>
+        <p className='text-red-800 font-medium'>Authentication required</p>
+        <p className='text-red-600 text-sm mt-1'>
+          Please log in to access bank interest tracking.
+        </p>
+      </div>
+    );
+  }
+
+  const [allYearlyData, bankAccounts, fiscalYearType] = await Promise.all([
     getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
-    allBankDetailsHandler(),
-    session?.user?.id
-      ? getUserFiscalYearType(prisma, session.user.id)
-      : Promise.resolve(null),
+    listBankAccountsHandler(session.user.id),
+    getUserFiscalYearType(prisma, session.user.id),
   ]);
   const yearlyData = allYearlyData;
-  const bankOptions: OptionType[] = banks
-    ? banks.map((b) => ({ id: b.id, label: b.name }))
-    : [];
+  // Bank options use user's FinancialAccount records (not global institution registry)
+  const bankOptions: OptionType[] = bankAccounts.map((a) => ({
+    id: a.id,
+    label: `${a.name} (${a.institution.name})`,
+  }));
 
   const yearIdParam = getSelectedParam(params?.year);
 
   const selectedBank = bankOptions.find(
-    (b) => b.label === getSelectedParam(params?.bank),
+    (b) => b.id === getSelectedParam(params?.bank),
   );
   const selectedBankId = selectedBank ? selectedBank.id : '';
 
@@ -71,7 +82,7 @@ export default async function BanksPage({
   };
 
   const yearlyCleansingData =
-    selectedBankId && selectedCalendarYearId && session?.user?.id
+    selectedBankId && selectedCalendarYearId
       ? await getYearlyCleansingData(
           selectedBankId,
           selectedCalendarYearId,

@@ -46,7 +46,7 @@ export default function BankInterestFilters({
       setSelectedBank(option);
     }
 
-    updateURLSearchParams('bank', option?.label);
+    updateURLSearchParams('bank', option?.id);
   };
 
   const updateURLSearchParams = (

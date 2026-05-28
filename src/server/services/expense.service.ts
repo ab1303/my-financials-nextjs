@@ -198,11 +198,13 @@ export const getExpenseEntriesForMonth = async (
  * using DEBIT + CONFIRMED transactions within the fiscal year's date range.
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
+ * @param bankAccountId - Optional FinancialAccount ID filter; USER_MANUAL entries always included
  * @returns Array of monthly summaries with total amounts and entry counts
  */
 export const getMonthlyExpenseSummaries = async (
   calendarYearId: string,
   userId: string,
+  bankAccountId?: string,
 ): Promise<Array<MonthlyExpenseSummary>> => {
   const calendarYear = await prisma.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -227,6 +229,9 @@ export const getMonthlyExpenseSummaries = async (
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
       category: { not: TRANSFER_CATEGORY },
+      ...(bankAccountId
+        ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
+        : {}),
     },
     select: { date: true, amount: true },
   });
@@ -260,11 +265,13 @@ export const getMonthlyExpenseSummaries = async (
  * using DEBIT + CONFIRMED transactions within the fiscal year's date range.
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
+ * @param bankAccountId - Optional FinancialAccount ID filter; USER_MANUAL entries always included
  * @returns Total expense amount
  */
 export const getTotalExpenses = async (
   calendarYearId: string,
   userId: string,
+  bankAccountId?: string,
 ): Promise<number> => {
   const calendarYear = await prisma.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -283,6 +290,9 @@ export const getTotalExpenses = async (
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
       category: { not: TRANSFER_CATEGORY },
+      ...(bankAccountId
+        ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
+        : {}),
     },
     _sum: { amount: true },
   });

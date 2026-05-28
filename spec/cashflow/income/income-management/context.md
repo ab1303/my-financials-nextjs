@@ -17,7 +17,8 @@ Users need a reliable way to record, review, and maintain recurring and ad-hoc i
 - Querying income from the `Transaction` ledger (type=CREDIT, status=CONFIRMED).
 - Creating manual income entries as `Transaction(type=CREDIT, source=MANUAL)` records.
 - Editing and deleting only manually-created income entries; imported income is read-only.
-- Fiscal-year and date-scoped filtering for income review.
+- Fiscal-year **and Annual-year** filtering via `CalendarYearPicker` (Fiscal/Annual toggle).
+- Bank account filter using user's `FinancialAccount` records — manual entries always visible.
 - Income totals aggregated from all CREDIT transactions that feed downstream cashflow summaries.
 
 **Out of scope:**
