@@ -33,6 +33,7 @@ export default async function IncomeTableServer({
         incomeSourceName: entry.incomeSourceName,
         dateEarned: entry.dateEarned,
         incomeLedgerId: entry.incomeLedgerId,
+        source: entry.source,
       })) || [];
 
     return (

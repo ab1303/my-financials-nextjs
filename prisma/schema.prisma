@@ -67,7 +67,6 @@ model User {
   individuals         Individual[]
   businesses          Business[]
   relationshipTypes   RelationshipType[]
-  incomeLedgers       IncomeLedger[]
   expenseLedgers      ExpenseLedger[]
   financialAccounts   FinancialAccount[]
   bankBalanceSnapshots BankBalanceSnapshot[]
@@ -113,7 +112,6 @@ model IncomeSource {
   description   String?        @db.Text
   isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
-  incomeRecords IncomeRecord[]
 }
 
 // RelationshipType — lookup table of relationship labels (e.g. "Mother", "Spouse")
@@ -220,37 +218,6 @@ model DonationPayment {
   donationPurpose DonationPurposeEnum @default(VOLUNTARY)
 }
 
-// IncomeLedger — per-user per-calendar-year container for income records
-model IncomeLedger {
-  id         String         @id @default(cuid())
-  calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
-  calendarId String
-  userId     String
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  records    IncomeRecord[]
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  @@unique([calendarId, userId])
-}
-
-// IncomeRecord — an individual income event (dated, with source)
-model IncomeRecord {
-  id              String       @id @default(cuid())
-  dateEarned      DateTime
-  amount          Decimal      @db.Money
-  incomeSource    IncomeSource @relation(fields: [incomeSourceId], references: [id])
-  incomeSourceId  String
-  incomeLedger    IncomeLedger @relation(fields: [incomeLedgerId], references: [id], onDelete: Cascade)
-  incomeLedgerId  String
-  transaction     Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  transactionId   String?      @unique
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  @@index([incomeLedgerId, dateEarned])
-}
-
 // SpecialCategory — system-managed categories (Transfer, Excluded, etc) with descriptions
 model SpecialCategory {
   id            String   @id @default(cuid())
@@ -333,7 +300,6 @@ model CalendarYear {
   type                    CalendarEnumType?
   lockedAt                DateTime?
   zakatObligations        ZakatObligation[]
-  incomeLedgers           IncomeLedger[]
   expenseLedgers          ExpenseLedger[]
   donationLedgers         DonationLedger[]
 }
@@ -604,7 +570,6 @@ model Transaction {
   reimbursements    Transaction[] @relation("ReimbursementLink")
   donationPayment   DonationPayment?
   zakatPayment      ZakatPayment?
-  incomeRecord      IncomeRecord?
 
   // Transfer reconciliation
   transferLinkedTransactionId  String?                @unique

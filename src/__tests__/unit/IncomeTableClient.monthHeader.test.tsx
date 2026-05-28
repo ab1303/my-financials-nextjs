@@ -43,95 +43,21 @@ const mockServerActions = {
   deleteRow: vi.fn(async () => ({ success: true })) as any,
 };
 
-describe('IncomeTableClient — Month Header', () => {
-  it('renders a native <tr> element for month header (not TBodyTR)', () => {
-    const entries: IncomeEntryType[] = [
-      {
-        id: '1',
-        dateEarned: new Date('2024-01-15'),
-        amount: 1000,
-        incomeSourceId: 'source-1',
-        incomeSourceName: 'Employment',
-        incomeLedgerId: 'ledger-1',
-      },
-    ];
+describe('IncomeTableClient — Month Header (Accordion)', () => {
+  const singleEntry: IncomeEntryType[] = [
+    {
+      id: '1',
+      dateEarned: new Date('2024-01-15'),
+      amount: 1000,
+      incomeSourceId: 'source-1',
+      incomeSourceName: 'Employment',
+      incomeLedgerId: 'ledger-1',
+    },
+  ];
 
-    const { container } = render(
-      <IncomeEntryStateProvider data={entries}>
-        <IncomeTableClient
-          editRow={mockServerActions.editRow}
-          addRow={mockServerActions.addRow}
-          deleteRow={mockServerActions.deleteRow}
-          calendarYearId='year-2024'
-        />
-      </IncomeEntryStateProvider>
-    );
-
-    // Find the month header row by looking for the month label text
-    const monthLabel = screen.getByText('January 2024');
-
-    // Traverse up to find the parent <tr>
-    const row = monthLabel.closest('tr');
-
-    // Verify it's a raw <tr>, not wrapped in a component
-    expect(row).toBeInTheDocument();
-    expect(row?.tagName).toBe('TR');
-  });
-
-  it('month header <td> spans all columns', () => {
-    const entries: IncomeEntryType[] = [
-      {
-        id: '1',
-        dateEarned: new Date('2024-01-15'),
-        amount: 1000,
-        incomeSourceId: 'source-1',
-        incomeSourceName: 'Employment',
-        incomeLedgerId: 'ledger-1',
-      },
-    ];
-
-    const { container } = render(
-      <IncomeEntryStateProvider data={entries}>
-        <IncomeTableClient
-          editRow={mockServerActions.editRow}
-          addRow={mockServerActions.addRow}
-          deleteRow={mockServerActions.deleteRow}
-          calendarYearId='year-2024'
-        />
-      </IncomeEntryStateProvider>
-    );
-
-    const monthLabel = screen.getByText('January 2024');
-    const cell = monthLabel.closest('td');
-
-    // Check that colSpan is set (number of columns in the table)
-    expect(cell).toHaveAttribute('colSpan');
-    const colSpan = cell?.getAttribute('colSpan');
-    expect(colSpan).toBeTruthy();
-  });
-
-  it('month header contains flex layout with month label and subtotal', () => {
-    const entries: IncomeEntryType[] = [
-      {
-        id: '1',
-        dateEarned: new Date('2024-01-15'),
-        amount: 1000,
-        incomeSourceId: 'source-1',
-        incomeSourceName: 'Employment',
-        incomeLedgerId: 'ledger-1',
-      },
-      {
-        id: '2',
-        dateEarned: new Date('2024-01-20'),
-        amount: 500,
-        incomeSourceId: 'source-1',
-        incomeSourceName: 'Employment',
-        incomeLedgerId: 'ledger-1',
-      },
-    ];
-
+  it('renders accordion button header with month label', () => {
     render(
-      <IncomeEntryStateProvider data={entries}>
+      <IncomeEntryStateProvider data={singleEntry}>
         <IncomeTableClient
           editRow={mockServerActions.editRow}
           addRow={mockServerActions.addRow}
@@ -141,36 +67,19 @@ describe('IncomeTableClient — Month Header', () => {
       </IncomeEntryStateProvider>
     );
 
-    // Verify month label is present
+    // Month label rendered inside accordion toggle button
     const monthLabel = screen.getByText('January 2024');
     expect(monthLabel).toBeInTheDocument();
 
-    // Verify subtotal is rendered (sum: $1500)
-    expect(screen.getByText('$1,500.00')).toBeInTheDocument();
-
-    // Verify the flex container exists
-    const monthLabelSpan = monthLabel;
-    const flexContainer = monthLabelSpan.closest('div');
-
-    // The flex div should have display: flex (flex class applied)
-    expect(flexContainer).toHaveClass('flex');
-    expect(flexContainer).toHaveClass('justify-between');
+    // The header is an accordion button, not a <tr>
+    const button = monthLabel.closest('button');
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveAttribute('aria-expanded');
   });
 
-  it('renders entry rows using TBodyTR (regular rows unchanged)', () => {
-    const entries: IncomeEntryType[] = [
-      {
-        id: '1',
-        dateEarned: new Date('2024-01-15'),
-        amount: 1000,
-        incomeSourceId: 'source-1',
-        incomeSourceName: 'Employment',
-        incomeLedgerId: 'ledger-1',
-      },
-    ];
-
-    const { container } = render(
-      <IncomeEntryStateProvider data={entries}>
+  it('accordion header has flex layout with justify-between', () => {
+    render(
+      <IncomeEntryStateProvider data={singleEntry}>
         <IncomeTableClient
           editRow={mockServerActions.editRow}
           addRow={mockServerActions.addRow}
@@ -180,9 +89,49 @@ describe('IncomeTableClient — Month Header', () => {
       </IncomeEntryStateProvider>
     );
 
-    // Count all <tr> elements (should be: 1 header + 1 month header + 1 entry row = 3)
-    const allRows = container.querySelectorAll('tbody tr');
-    expect(allRows.length).toBeGreaterThanOrEqual(2); // At least month header and entry row
+    const monthLabel = screen.getByText('January 2024');
+    const button = monthLabel.closest('button');
+    // The accordion toggle button has justify-between layout
+    expect(button).toHaveClass('justify-between');
+  });
+
+  it('accordion header shows subtotal amount', () => {
+    const twoEntries: IncomeEntryType[] = [
+      { id: '1', dateEarned: new Date('2024-01-15'), amount: 1000, incomeSourceId: 'source-1', incomeSourceName: 'Employment', incomeLedgerId: 'ledger-1' },
+      { id: '2', dateEarned: new Date('2024-01-20'), amount: 500, incomeSourceId: 'source-1', incomeSourceName: 'Employment', incomeLedgerId: 'ledger-1' },
+    ];
+
+    render(
+      <IncomeEntryStateProvider data={twoEntries}>
+        <IncomeTableClient
+          editRow={mockServerActions.editRow}
+          addRow={mockServerActions.addRow}
+          deleteRow={mockServerActions.deleteRow}
+          calendarYearId='year-2024'
+        />
+      </IncomeEntryStateProvider>
+    );
+
+    expect(screen.getByText('January 2024')).toBeInTheDocument();
+    // Subtotal is displayed in the accordion header ($1,500.00)
+    expect(screen.getByText('$1,500.00')).toBeInTheDocument();
+  });
+
+  it('renders entry count badge in accordion header', () => {
+    render(
+      <IncomeEntryStateProvider data={singleEntry}>
+        <IncomeTableClient
+          editRow={mockServerActions.editRow}
+          addRow={mockServerActions.addRow}
+          deleteRow={mockServerActions.deleteRow}
+          calendarYearId='year-2024'
+        />
+      </IncomeEntryStateProvider>
+    );
+
+    // Entry count badge showing number of entries in the month
+    const badge = screen.getByText('1');
+    expect(badge).toBeInTheDocument();
   });
 });
 

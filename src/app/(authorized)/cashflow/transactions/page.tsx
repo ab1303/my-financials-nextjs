@@ -53,6 +53,7 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
   const initialMonth = resolvedSearchParams.month ? Number.parseInt(resolvedSearchParams.month as string, 10) : undefined;
   const initialYear = resolvedSearchParams.year ? Number.parseInt(resolvedSearchParams.year as string, 10) : undefined;
   const viewMode = resolvedSearchParams.view as string | undefined;
+  const initialTab = resolvedSearchParams.tab as string | undefined;
 
   return (
     <TransactionsClient
@@ -62,6 +63,7 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
       initialMonth={initialMonth}
       initialYear={initialYear}
       viewMode={viewMode}
+      initialTab={initialTab}
     />
   );
 }

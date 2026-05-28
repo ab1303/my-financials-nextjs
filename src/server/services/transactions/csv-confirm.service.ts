@@ -48,31 +48,6 @@ async function getOrCreateExpenseLedger(calendarYearId: string, userId: string) 
   return ledger;
 }
 
-async function getOrCreateIncomeLedger(calendarYearId: string, userId: string) {
-  let ledger = await prisma.incomeLedger.findUnique({
-    where: { calendarId_userId: { calendarId: calendarYearId, userId } },
-  });
-
-  if (!ledger) {
-    ledger = await prisma.incomeLedger.create({
-      data: { calendarId: calendarYearId, userId },
-    });
-  }
-
-  return ledger;
-}
-
-
-function resolveIncomeSourceId(
-  categoryName: string,
-  allSources: Array<{ id: string; name: string }>,
-): string {
-  const match = allSources.find((s) => s.name.toLowerCase() === categoryName.toLowerCase());
-  if (match) return match.id;
-  const other = allSources.find((s) => s.name === 'Other');
-  return other?.id ?? allSources[0]!.id;
-}
-
 async function upsertMonthlyExpenseSummary(params: {
   ledgerId: string;
   categoryId: string;
@@ -117,8 +92,8 @@ async function createTransactionRecord(params: {
   importSessionId: string;
   source: TransactionSourceEnum;
   runningBalance?: number;
-}) {
-  await prisma.transaction.create({
+}): Promise<string> {
+  const tx = await prisma.transaction.create({
     data: {
       date: new Date(params.date),
       description: params.description,
@@ -133,7 +108,9 @@ async function createTransactionRecord(params: {
       importSessionId: params.importSessionId,
       runningBalance: params.runningBalance ?? null,
     },
+    select: { id: true },
   });
+  return tx.id;
 }
 
 /**
@@ -282,7 +259,8 @@ export async function confirmDebitTransactions(
 }
 
 /**
- * Confirm credit transactions: route to IncomeLedger+IncomeRecord (income) or EXCLUDED Transaction only.
+ * Confirm credit transactions: create Transaction records (type=CREDIT) as the income source of truth.
+ * Income Tracking page queries Transaction directly — no IncomeRecord is created.
  */
 export async function confirmCreditTransactions(
   creditMonths: CreditMonth[],
@@ -296,11 +274,6 @@ export async function confirmCreditTransactions(
   if (monthKeys.length === 0) return result;
   const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
   const dedupSet = await buildDedupSet({ userId, bankAccountId, startDate, endDate });
-
-  const allIncomeSources = await prisma.incomeSource.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true },
-  });
 
   for (const { month: monthKey, transactions } of creditMonths) {
     try {
@@ -342,17 +315,7 @@ export async function confirmCreditTransactions(
             runningBalance: tx.balance,
           });
         } else {
-          const incomeLedger = await getOrCreateIncomeLedger(calendarYear.id, userId);
-
-          await prisma.incomeRecord.create({
-            data: {
-              dateEarned: new Date(tx.date),
-              amount: String(tx.amount),
-              incomeSourceId: resolveIncomeSourceId(tx.confirmedCategory, allIncomeSources),
-              incomeLedgerId: incomeLedger.id,
-            },
-          });
-
+          // Create Transaction record — income view queries Transaction directly (source of truth).
           await createTransactionRecord({
             date: tx.date,
             description: tx.description,

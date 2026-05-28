@@ -73,6 +73,7 @@ export default function MonthAccordionPanel({
       incomeSourceId: '',
       incomeSourceName: '',
       incomeLedgerId: '',
+      source: 'USER_MANUAL',
     };
     dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: tempId, entry: newRow } });
     setEditedRows(new Map([[entries.length, newRow]]));

@@ -40,6 +40,7 @@ interface TransactionLedgerTableProps {
   initialMonth?: number;
   initialYear?: number;
   initialCategory?: string;
+  initialTab?: string;
 }
 
 const PAGE_SIZE = 50;
@@ -79,6 +80,7 @@ export default function TransactionLedgerTable({
   initialMonth,
   initialYear,
   initialCategory,
+  initialTab,
 }: TransactionLedgerTableProps) {
   return (
     <TransactionLedgerBody
@@ -87,11 +89,12 @@ export default function TransactionLedgerTable({
       initialMonth={initialMonth}
       initialYear={initialYear}
       initialCategory={initialCategory}
+      initialTab={initialTab}
     />
   );
 }
 
-function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear, initialCategory }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear' | 'initialCategory'>) {
+function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear, initialCategory, initialTab }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear' | 'initialCategory' | 'initialTab'>) {
   const defaultFY = getPresetDateRange('this-fy')!;
 
   // Calculate date range from initialMonth/initialYear if provided
@@ -111,7 +114,12 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   const initialDateRange = getInitialDateRange();
   const initialPreset = (initialMonth !== undefined && initialYear !== undefined) ? 'custom' : 'this-fy';
 
-  const [activeTab, setActiveTab] = useState<TabFilter>('all');
+  const [activeTab, setActiveTab] = useState<TabFilter>(() => {
+    const validTabs: TabFilter[] = ['all', 'expenses', 'income', 'excluded', 'reimbursements', 'uncategorized', 'voided', 'transfers'];
+    return (initialTab && validTabs.includes(initialTab as TabFilter))
+      ? (initialTab as TabFilter)
+      : 'all';
+  });
   const [page, setPage] = useState(1);
   const [bankAccountId, setBankAccountId] = useState<string | undefined>(undefined);
   const [category, setCategory] = useState<string | undefined>(initialCategory);

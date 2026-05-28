@@ -86,6 +86,7 @@ export default function IncomeTableClient({
       incomeSourceId: '',
       incomeSourceName: '',
       incomeLedgerId: '',
+      source: 'USER_MANUAL',
     };
     dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: tempId, entry: newRow } });
     toast.info('New income row added. Fill in the details and save.');

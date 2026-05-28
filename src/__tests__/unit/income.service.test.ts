@@ -3,149 +3,113 @@ import { Decimal } from '@prisma/client/runtime/library';
 import {
   addIncomeEntry,
   getIncomeEntries,
+  updateIncomeEntry,
+  deleteIncomeEntry,
 } from '@/server/services/income.service';
 import { createMockContext, type MockContext } from '../helpers/mock-context';
+import { createMockIncomeTransaction } from '../mocks/income.mock';
 
-describe('Income Service - Phase 3', () => {
+describe('Income Service (unit, with MockContext)', () => {
   let mockCtx: MockContext;
+  const userId = 'test-user-id';
+  const calendarYearId = 'test-calendar-id';
 
   beforeEach(() => {
     mockCtx = createMockContext();
   });
 
-  const userId = 'test-user-id';
-  const calendarYearId = 'test-calendar-id';
-  const incomeId = 'test-income-id';
+  it('addIncomeEntry saves Transaction with correct fields', async () => {
+    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment' });
+    mockCtx.prisma.transaction.create.mockResolvedValue(
+      createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' })
+    );
 
-  it('addIncomeEntry saves with valid incomeSourceId', async () => {
-    const entryData = {
+    await addIncomeEntry(userId, {
       dateEarned: new Date('2024-01-15'),
       amount: 5000,
-      incomeSourceId: 'income-source-id-1',
-    };
+      incomeSourceId: 'src-1',
+    }, mockCtx.prisma);
 
-    mockCtx.prisma.incomeRecord.create.mockResolvedValue({
-      id: 'new-entry-id',
-      incomeLedgerId: incomeId,
-      dateEarned: entryData.dateEarned,
-      amount: new Decimal('5000.00'),
-      incomeSourceId: entryData.incomeSourceId,
-      incomeSource: {
-        id: entryData.incomeSourceId,
-        name: 'Employment',
-      },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as never);
-
-    await addIncomeEntry(incomeId, entryData, mockCtx.prisma);
-
-    expect(mockCtx.prisma.incomeRecord.create).toHaveBeenCalledWith({
-      data: {
-        incomeLedgerId: incomeId,
-        dateEarned: entryData.dateEarned,
-        amount: entryData.amount,
-        incomeSourceId: entryData.incomeSourceId,
-      },
-      include: {
-        incomeSource: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+    expect(mockCtx.prisma.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId,
+        type: 'CREDIT',
+        source: 'USER_MANUAL',
+        status: 'CONFIRMED',
+        date: new Date('2024-01-15'),
+        amount: 5000,
+        category: 'Employment',
+      }),
     });
   });
 
-  it('addIncomeEntry result includes incomeSourceName from relation', async () => {
-    mockCtx.prisma.incomeRecord.create.mockResolvedValue({
-      id: 'new-entry-id',
-      incomeLedgerId: incomeId,
+  it('addIncomeEntry result includes incomeSource data', async () => {
+    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment' });
+    mockCtx.prisma.transaction.create.mockResolvedValue(
+      createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' })
+    );
+
+    const result = await addIncomeEntry(userId, {
       dateEarned: new Date('2024-01-15'),
-      amount: new Decimal('5000.00'),
-      incomeSourceId: 'income-source-id-1',
-      incomeSource: {
-        id: 'income-source-id-1',
-        name: 'Employment',
-      },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as never);
+      amount: 5000,
+      incomeSourceId: 'src-1',
+    }, mockCtx.prisma);
 
-    const result = await addIncomeEntry(
-      incomeId,
-      {
-        dateEarned: new Date('2024-01-15'),
-        amount: 5000,
-        incomeSourceId: 'income-source-id-1',
-      },
-      mockCtx.prisma,
-    );
-
-    expect(result.incomeSourceName).toBe('Employment');
-    expect(result.incomeSource.id).toBe('income-source-id-1');
+    expect(result.incomeSourceId).toBe('src-1');
+    expect(result.source).toBe('USER_MANUAL');
   });
 
-  it('getIncomeEntries returns incomeSourceId and incomeSourceName in each entry', async () => {
-    mockCtx.prisma.incomeRecord.findMany.mockResolvedValue([
-      {
-        id: 'entry-1',
-        incomeLedgerId: incomeId,
-        dateEarned: new Date('2024-01-15'),
+  it('getIncomeEntries returns entries mapped from Transactions', async () => {
+    mockCtx.prisma.calendarYear.findUnique.mockResolvedValue({
+      fromYear: 2024,
+      fromMonth: 1,
+      toYear: 2024,
+      toMonth: 12,
+    } as any);
+
+    mockCtx.prisma.transaction.findMany.mockResolvedValue([
+      createMockIncomeTransaction({
+        id: 'txn-1',
+        date: new Date('2024-01-15'),
         amount: new Decimal('5000.00'),
-        incomeSourceId: 'income-source-id-1',
-        incomeSource: {
-          id: 'income-source-id-1',
-          name: 'Employment',
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        incomeLedger: {
-          id: incomeId,
-          calendarId: calendarYearId,
-          userId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      },
-    ] as never);
+        category: 'Employment',
+      }),
+    ] as any);
 
-    const result = await getIncomeEntries(
-      calendarYearId,
+    mockCtx.prisma.incomeSource.findMany.mockResolvedValue([
+      { id: 'src-1', name: 'Employment', isActive: true },
+    ] as any);
+
+    const result = await getIncomeEntries(calendarYearId, userId, mockCtx.prisma);
+    expect(result).toHaveLength(1);
+    expect(result[0].incomeSourceName).toBe('Employment');
+    expect(result[0].amount).toBe(5000);
+  });
+
+  it('updateIncomeEntry updates Transaction correctly', async () => {
+    mockCtx.prisma.transaction.findUnique.mockResolvedValue({
+      source: 'USER_MANUAL',
       userId,
-      mockCtx.prisma,
-    );
-
-    expect(result).toEqual([
-      {
-        id: 'entry-1',
-        dateEarned: new Date('2024-01-15'),
-        amount: 5000,
-        incomeSourceId: 'income-source-id-1',
-        incomeSourceName: 'Employment',
-        incomeLedgerId: incomeId,
-      },
-    ]);
-    expect(mockCtx.prisma.incomeRecord.findMany).toHaveBeenCalledWith({
-      where: {
-        incomeLedger: {
-          calendarId: calendarYearId,
-          userId,
-        },
-      },
-      include: {
-        incomeLedger: true,
-        incomeSource: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        dateEarned: 'desc',
-      },
     });
+    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({ name: 'Employment' });
+    mockCtx.prisma.transaction.update.mockResolvedValue({});
+
+    await updateIncomeEntry('txn-1', userId, {
+      dateEarned: new Date('2024-01-15'),
+      amount: 1234,
+      incomeSourceId: 'src-1',
+    }, mockCtx.prisma);
+
+    expect(mockCtx.prisma.transaction.update).toHaveBeenCalled();
+  });
+
+  it('deleteIncomeEntry deletes Transaction correctly', async () => {
+    mockCtx.prisma.transaction.findUnique.mockResolvedValue({
+      source: 'USER_MANUAL',
+      userId,
+    });
+    mockCtx.prisma.transaction.delete.mockResolvedValue({});
+    await deleteIncomeEntry('txn-1', userId, mockCtx.prisma);
+    expect(mockCtx.prisma.transaction.delete).toHaveBeenCalledWith({ where: { id: 'txn-1' } });
   });
 });

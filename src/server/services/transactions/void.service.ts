@@ -14,7 +14,6 @@ export async function voidSingleTransaction(
   const tx = await (ctx.prisma.transaction as any).findUnique({
     where: { id: transactionId },
     include: {
-      incomeRecord: true,
       donationPayment: { select: { id: true } },
       transferLinkedTransaction: { select: { id: true } },
       transferCounterpart: { select: { id: true } },
@@ -29,7 +28,6 @@ export async function voidSingleTransaction(
         amount: Decimal;
         date: Date;
         category: string;
-        incomeRecord: { id: string } | null;
         donationPayment: { id: string } | null;
         transferLinkedTransactionId: string | null;
         preLinkCategory: string | null;
@@ -122,9 +120,8 @@ export async function restoreTransaction(
       if (restoreStatus === 'CONFIRMED') {
         if (tx.type === 'DEBIT') {
           await reapplyExpenseSummary(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category);
-        } else if (tx.type === 'CREDIT') {
-          await reapplyIncomeRecord(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category, transactionId);
         }
+        // CREDIT: no downstream sync needed — income view queries Transaction live
       }
     },
     { timeout: 30000 }, // 30s timeout instead of default 5s
@@ -142,7 +139,6 @@ export async function undoImportSession(
       transactions: {
         where: { userId: ctx.userId, status: { not: 'VOIDED' } },
         include: {
-          incomeRecord: true,
           donationPayment: { select: { id: true } },
           transferLinkedTransaction: { select: { id: true } },
           transferCounterpart: { select: { id: true } },
@@ -162,7 +158,6 @@ export async function undoImportSession(
           amount: Decimal;
           date: Date;
           category: string;
-          incomeRecord: { id: string } | null;
           donationPayment: { id: string } | null;
           transferLinkedTransactionId: string | null;
           preLinkCategory: string | null;
@@ -230,7 +225,6 @@ async function reverseDownstream(
     amount: Decimal;
     date: Date;
     category: string;
-    incomeRecord: { id: string } | null;
     donationPayment: { id: string } | null;
   },
 ): Promise<void> {
@@ -247,9 +241,8 @@ async function reverseDownstream(
 
   if (tx.type === 'DEBIT') {
     await reverseExpenseSummary(db, userId, tx.amount, tx.date, tx.category);
-  } else if (tx.type === 'CREDIT') {
-    await reverseIncomeRecord(db, userId, tx.amount, tx.date, tx.incomeRecord?.id);
   }
+  // CREDIT: no downstream sync needed — income view queries Transaction live
 }
 
 async function reverseExpenseSummary(
@@ -295,50 +288,6 @@ async function reverseExpenseSummary(
       where: { id: summary.id },
       data: { amount: { decrement: amount } },
     });
-  }
-}
-
-async function reverseIncomeRecord(
-  db: PrismaClient,
-  userId: string,
-  amount: Decimal,
-  date: Date,
-  incomeRecordId: string | undefined,
-): Promise<void> {
-  if (incomeRecordId) {
-    await db.incomeRecord.delete({ where: { id: incomeRecordId } }).catch(() => {
-      // Already deleted — idempotent
-    });
-    return;
-  }
-
-  // Fallback: fuzzy match for pre-backfill records
-  const monthNum = date.getMonth() + 1;
-  const calendar = await db.calendarYear.findFirst({
-    where: {
-      type: 'FISCAL',
-      OR: [
-        { fromYear: date.getFullYear(), fromMonth: { lte: monthNum } },
-        { toYear: date.getFullYear(), toMonth: { gte: monthNum } },
-      ],
-    },
-  });
-  if (!calendar) return;
-
-  const ledger = await db.incomeLedger.findUnique({
-    where: { calendarId_userId: { calendarId: calendar.id, userId } },
-  });
-  if (!ledger) return;
-
-  const record = await db.incomeRecord.findFirst({
-    where: {
-      incomeLedgerId: ledger.id,
-      dateEarned: date,
-      amount: String(amount),
-    },
-  });
-  if (record) {
-    await db.incomeRecord.delete({ where: { id: record.id } });
   }
 }
 
@@ -388,52 +337,4 @@ async function reapplyExpenseSummary(
       data: { month: monthNum, amount, categoryId: expenseCat.id, expenseLedgerId: ledger.id },
     });
   }
-}
-
-async function reapplyIncomeRecord(
-  db: PrismaClient,
-  userId: string,
-  amount: Decimal,
-  date: Date,
-  category: string,
-  transactionId: string,
-): Promise<void> {
-  const calendar = await db.calendarYear.findFirst({
-    where: {
-      type: 'FISCAL',
-      OR: [
-        { fromYear: date.getFullYear(), fromMonth: { lte: date.getMonth() + 1 } },
-        { toYear: date.getFullYear(), toMonth: { gte: date.getMonth() + 1 } },
-      ],
-    },
-  });
-  if (!calendar) return;
-
-  let ledger = await db.incomeLedger.findUnique({
-    where: { calendarId_userId: { calendarId: calendar.id, userId } },
-  });
-  if (!ledger) {
-    ledger = await db.incomeLedger.create({ data: { calendarId: calendar.id, userId } });
-  }
-
-  // Avoid duplicate if a record already exists for this transaction
-  const existing = await db.incomeRecord.findFirst({
-    where: { incomeLedgerId: ledger.id, transactionId },
-  });
-  if (existing) return;
-
-  const incomeSource = await db.incomeSource.findFirst({
-    where: { name: { equals: category, mode: 'insensitive' } },
-  });
-  if (!incomeSource) return; // category is no longer a valid income source — skip silently
-
-  await db.incomeRecord.create({
-    data: {
-      dateEarned: date,
-      amount: String(amount),
-      incomeSourceId: incomeSource.id,
-      incomeLedgerId: ledger.id,
-      transactionId,
-    },
-  });
 }

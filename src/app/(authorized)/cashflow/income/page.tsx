@@ -13,6 +13,7 @@ import { TransferExclusionSummary } from '@/components/TransferExclusionSummary'
 import { TRANSFER_CATEGORY, ORPHAN_RESOLUTION_DAYS } from '@/server/services/transactions/constants';
 
 import type { OptionType } from '@/types';
+import type { CalendarEnumType } from '@prisma/client';
 
 import IncomeForm from './form';
 import IncomeTableServer from './IncomeTableServer';
@@ -52,25 +53,20 @@ export default async function IncomePage({
     );
   }
 
-  const fromYearParam = +getSelectedParam(params?.fromYear);
-  const toYearParam = +getSelectedParam(params?.toYear);
+  const yearIdParam = getSelectedParam(params?.year);
   const bankNameParam = getSelectedParam(params?.bank);
   const fiscalYearType = await getUserFiscalYearType(prisma, session.user.id);
-  
-  const [calendarYears, banks] = await Promise.all([
-    getCalendarYearsHandler([fiscalYearType ?? 'FISCAL', 'ANNUAL']),
+
+  const [incomeYearData, banks] = await Promise.all([
+    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
     allBankDetailsHandler(),
   ]);
 
-  const incomeYearData = calendarYears;
-  const urlSelectedYear = incomeYearData.find(
-    (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
-  );
-  const defaultYear = getDefaultCalendarYear(incomeYearData, fiscalYearType);
-  const selectedCalendarYear = urlSelectedYear ?? defaultYear;
+  const selectedCalendarYear =
+    incomeYearData.find((yd) => yd.id === yearIdParam) ??
+    getDefaultCalendarYear(incomeYearData, fiscalYearType);
 
   const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
-  const defaultCalendarYearId = defaultYear?.id ?? '';
 
   // Derive selected bank
   const bankOptions: OptionType[] = banks
@@ -120,9 +116,9 @@ export default async function IncomePage({
   const initialData = {
     incomeYearData,
     totalIncome,
-    defaultCalendarYearId,
     bankOptions,
     selectedBankId,
+    defaultCalendarType: (fiscalYearType ?? 'FISCAL') as CalendarEnumType,
   };
 
   return (

@@ -17,17 +17,23 @@ export type IncomeSourceRecord = {
 export const incomeSourceRouter = router({
   getAll: protectedProcedure.query(async ({ ctx }): Promise<IncomeSourceRecord[]> => {
     // Returns ALL income sources (including inactive) for management UI
-    // Includes usageCount from IncomeRecord count
+    // usageCount = number of this user's CREDIT transactions whose category matches the source name
+    const userId = ctx.session.user.id;
     const sources = await ctx.prisma.incomeSource.findMany({
       orderBy: { name: 'asc' },
-      include: { _count: { select: { incomeRecords: true } } },
     });
+    const usageCounts = await ctx.prisma.transaction.groupBy({
+      by: ['category'],
+      where: { userId, type: 'CREDIT', status: 'CONFIRMED' },
+      _count: { category: true },
+    });
+    const countByName = new Map(usageCounts.map((r) => [r.category.toLowerCase(), r._count.category]));
     return sources.map((s) => ({
       id: s.id,
       name: s.name,
       description: s.description || undefined,
       isActive: s.isActive,
-      usageCount: s._count.incomeRecords,
+      usageCount: countByName.get(s.name.toLowerCase()) ?? 0,
     }));
   }),
 
@@ -81,9 +87,23 @@ export const incomeSourceRouter = router({
   }),
 
   remove: protectedProcedure.input(removeSchema).mutation(async ({ ctx, input }) => {
-    // Count usage
-    const usageCount = await ctx.prisma.incomeRecord.count({
-      where: { incomeSourceId: input.id },
+    // Resolve source name first to avoid inline async in query and fix race condition
+    const source = await ctx.prisma.incomeSource.findUnique({
+      where: { id: input.id },
+      select: { name: true },
+    });
+    if (!source) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Income source not found' });
+    }
+
+    // Count this user's CREDIT transactions using this source name
+    const usageCount = await ctx.prisma.transaction.count({
+      where: {
+        userId: ctx.session.user.id,
+        type: 'CREDIT',
+        status: 'CONFIRMED',
+        category: { equals: source.name, mode: 'insensitive' },
+      },
     });
     if (usageCount > 0) {
       // Soft-delete: set isActive = false

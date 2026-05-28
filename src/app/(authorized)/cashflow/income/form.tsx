@@ -2,19 +2,21 @@
 
 import { Label } from '@/components/ui/Label';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
-import React, { useEffect, useId, useMemo, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
 
 import { Card } from '@/components';
+import CalendarYearPicker from '@/components/CalendarYearPicker';
 
 import type { SingleValue } from 'react-select';
 import type { OptionType, CalendarYearType } from '@/types';
+import type { CalendarEnumType } from '@prisma/client';
 
 type InitialDataType = {
   incomeYearData: Array<CalendarYearType>;
   totalIncome: number;
-  defaultCalendarYearId?: string;
+  defaultCalendarType: CalendarEnumType;
   bankOptions?: OptionType[];
   selectedBankId?: string;
 };
@@ -35,25 +37,14 @@ export default function IncomeForm({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [selectedIncomeYear, setSelectedIncomeYear] =
-    useState<SingleValue<OptionType>>(null);
   const [selectedBank, setSelectedBank] = useState<SingleValue<OptionType>>(null);
   const [totalIncome, setTotalIncome] = useState(initialData.totalIncome);
-
-  const incomeYearOptions: Array<OptionType> = useMemo(
-    () =>
-      initialData.incomeYearData.map((iy) => ({
-        id: iy.id,
-        label: iy.description,
-      })),
-    [initialData.incomeYearData],
-  );
 
   // Initialize bank selection from props
   useEffect(() => {
     const bankOptions = initialData.bankOptions || [];
     const selectedBankId = initialData.selectedBankId || '';
-    
+
     if (selectedBankId) {
       const currentBank = bankOptions.find((b) => b.id === selectedBankId);
       if (currentBank) {
@@ -64,90 +55,22 @@ export default function IncomeForm({
     }
   }, [initialData.bankOptions, initialData.selectedBankId]);
 
-  // Set selected year based on URL params
-  useEffect(() => {
-    const fromYear = searchParams?.get('fromYear');
-    const toYear = searchParams?.get('toYear');
-
-    if (fromYear && toYear) {
-      const yearData = initialData.incomeYearData.find(
-        (yd) => yd.fromYear === +fromYear && yd.toYear === +toYear,
-      );
-      const yearOption = yearData
-        ? {
-            id: yearData.id,
-            label: yearData.description,
-          }
-        : null;
-      setSelectedIncomeYear(yearOption);
-    } else if (incomeYearOptions.length > 0 && !fromYear && !toYear) {
-      const defaultId = initialData.defaultCalendarYearId;
-      const targetYear = defaultId
-        ? initialData.incomeYearData.find((yd) => yd.id === defaultId)
-        : initialData.incomeYearData[0];
-
-      if (targetYear) {
-        setSelectedIncomeYear({
-          id: targetYear.id,
-          label: targetYear.description,
-        });
-
-        const current = new URLSearchParams();
-        current.set('fromYear', targetYear.fromYear.toString());
-        current.set('toYear', targetYear.toYear.toString());
-
-        const search = current.toString();
-        const query = search ? `?${search}` : '';
-
-        router.replace(`${pathname}${query}`);
-      }
-    }
-  }, [
-    incomeYearOptions,
-    searchParams,
-    initialData.incomeYearData,
-    router,
-    pathname,
-  ]);
-
   // Update total income when year changes
   useEffect(() => {
-    if (yearIdParam) {
-      setTotalIncome(initialData.totalIncome);
-    }
-  }, [yearIdParam, initialData.totalIncome]);
+    setTotalIncome(initialData.totalIncome);
+  }, [initialData.totalIncome]);
 
-  const onYearChange = (selectedOption: SingleValue<OptionType>) => {
-    setSelectedIncomeYear(selectedOption);
-
-    const selectedYearData = selectedOption
-      ? initialData.incomeYearData.find((yd) => yd.id === selectedOption.id)
-      : undefined;
-
-    const current = new URLSearchParams(
-      Array.from(searchParams?.entries() || []),
-    );
-
-    if (selectedYearData) {
-      current.set('fromYear', selectedYearData.fromYear.toString());
-      current.set('toYear', selectedYearData.toYear.toString());
-    } else {
-      // Clear the parameters when no year is selected
-      current.delete('fromYear');
-      current.delete('toYear');
-    }
-
-    const search = current.toString();
-    const query = search ? `?${search}` : '';
-
-    router.push(`${pathname}${query}`);
-  };
-
-  const updateURLSearchParams = (key: 'bank', value?: string) => {
-    const current = new URLSearchParams(searchParams || '');
+  const updateURLSearchParams = (key: 'year' | 'bank', value?: string) => {
+    const current = new URLSearchParams(searchParams?.toString() ?? '');
     if (!value) current.delete(key);
     else current.set(key, value);
-    router.replace(`${pathname}?${current.toString() ? `?${current.toString()}` : ''}`);
+    const search = current.toString();
+    const query = search ? `?${search}` : '';
+    router.replace(`${pathname}${query}`);
+  };
+
+  const handleYearChange = (yearId: string | null) => {
+    updateURLSearchParams('year', yearId ?? undefined);
   };
 
   const handleBankChange = (option: SingleValue<OptionType>) => {
@@ -159,19 +82,13 @@ export default function IncomeForm({
   return (
     <div className='mb-0 space-y-6'>
       <div className='mx-10'>
-        <Label>Fiscal Year</Label>
-        <div className='mt-3'>
-          <Select<OptionType>
-            isClearable
-            className='w-3/5'
-            value={selectedIncomeYear}
-            options={incomeYearOptions}
-            instanceId={id}
-            getOptionValue={(option) => option.id}
-            onChange={onYearChange}
-            placeholder='Select fiscal year...'
-          />
-        </div>
+        <CalendarYearPicker
+          applicableTypes={['FISCAL', 'ANNUAL']}
+          calendarYears={initialData.incomeYearData}
+          selectedYearId={yearIdParam || undefined}
+          defaultType={initialData.defaultCalendarType}
+          onYearChange={handleYearChange}
+        />
       </div>
 
       <div className='mx-10'>

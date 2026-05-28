@@ -56,6 +56,7 @@ interface Props {
   initialMonth?: number;
   initialYear?: number;
   viewMode?: string;
+  initialTab?: string;
 }
 
 export default function TransactionsClient({
@@ -65,6 +66,7 @@ export default function TransactionsClient({
   initialMonth,
   initialYear,
   viewMode,
+  initialTab,
 }: Props) {
   const [csvOpen, setCsvOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
@@ -179,6 +181,7 @@ export default function TransactionsClient({
           initialCategory={initialCategory}
           initialMonth={initialMonth}
           initialYear={initialYear}
+          initialTab={initialTab}
         />
       </div>
 

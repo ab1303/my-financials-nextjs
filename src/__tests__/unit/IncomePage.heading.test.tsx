@@ -8,12 +8,14 @@ const {
   mockTotalIncomeHandler,
   mockGetUserFiscalYearType,
   mockGetDefaultCalendarYear,
+  mockAllBankDetailsHandler,
 } = vi.hoisted(() => ({
   mockAuth: vi.fn(),
   mockGetCalendarYearsHandler: vi.fn(),
   mockTotalIncomeHandler: vi.fn(),
   mockGetUserFiscalYearType: vi.fn(),
   mockGetDefaultCalendarYear: vi.fn(),
+  mockAllBankDetailsHandler: vi.fn(),
 }));
 
 vi.mock('@/server/auth', () => ({
@@ -28,12 +30,22 @@ vi.mock('@/server/controllers/income.controller', () => ({
   totalIncomeHandler: mockTotalIncomeHandler,
 }));
 
+vi.mock('@/server/controllers/bank.controller', () => ({
+  allBankDetailsHandler: mockAllBankDetailsHandler,
+}));
+
 vi.mock('@/server/services/user-profile/user-profile.service', () => ({
   getUserFiscalYearType: mockGetUserFiscalYearType,
 }));
 
 vi.mock('@/server/utils/prisma', () => ({
-  prisma: {},
+  prisma: {
+    transaction: {
+      count: vi.fn().mockResolvedValue(0),
+      aggregate: vi.fn().mockResolvedValue({ _sum: { amount: 0 } }),
+    },
+  },
+  handleCaughtError: vi.fn(),
 }));
 
 vi.mock('@/utils/calendar-year-defaults', () => ({
@@ -48,6 +60,14 @@ vi.mock('@/app/(authorized)/cashflow/income/IncomeTableServer', () => ({
   default: () => <div data-testid='income-table' />,
 }));
 
+vi.mock('@/components/UnresolvedTransfersBanner', () => ({
+  UnresolvedTransfersBanner: () => null,
+}));
+
+vi.mock('@/components/TransferExclusionSummary', () => ({
+  TransferExclusionSummary: () => null,
+}));
+
 import IncomePage from '@/app/(authorized)/cashflow/income/page';
 
 describe('IncomePage fiscal year heading', () => {
@@ -56,18 +76,23 @@ describe('IncomePage fiscal year heading', () => {
 
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } });
     mockGetUserFiscalYearType.mockResolvedValue('FISCAL');
+    mockAllBankDetailsHandler.mockResolvedValue([]);
     mockGetCalendarYearsHandler.mockResolvedValue([
       {
         id: 'year-1',
         fromYear: 2023,
+        fromMonth: 7,
         toYear: 2024,
+        toMonth: 6,
         description: 'FY 2023-2024',
       },
     ]);
     mockGetDefaultCalendarYear.mockReturnValue({
       id: 'year-1',
       fromYear: 2023,
+      fromMonth: 7,
       toYear: 2024,
+      toMonth: 6,
       description: 'FY 2023-2024',
     });
     mockTotalIncomeHandler.mockResolvedValue(0);

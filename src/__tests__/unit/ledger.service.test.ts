@@ -136,9 +136,7 @@ describe('ledger.service', () => {
   });
 
   describe('updateIncomeRecordSource', () => {
-    it('returns early when no calendar is found', async () => {
-      prismaMock.calendarYear.findFirst.mockResolvedValue(null);
-
+    it('is a no-op — does not query any Prisma models', async () => {
       await updateIncomeRecordSource({
         prismaClient: prismaMock,
         userId: 'user-1',
@@ -147,80 +145,10 @@ describe('ledger.service', () => {
         transactionDate: new Date('2024-02-01'),
       });
 
-      expect(prismaMock.incomeLedger.findUnique).not.toHaveBeenCalled();
-    });
-
-    it('returns early when no income ledger is found', async () => {
-      prismaMock.calendarYear.findFirst.mockResolvedValue({
-        id: 'calendar-1',
-        type: 'FISCAL',
-      } as never);
-      prismaMock.incomeLedger.findUnique.mockResolvedValue(null);
-
-      await updateIncomeRecordSource({
-        prismaClient: prismaMock,
-        userId: 'user-1',
-        newSourceName: 'Employment',
-        amount: new Decimal('1200.00'),
-        transactionDate: new Date('2024-02-01'),
-      });
-
-      expect(prismaMock.incomeRecord.findFirst).not.toHaveBeenCalled();
-    });
-
-    it('updates source when a matching income record is found', async () => {
-      prismaMock.calendarYear.findFirst.mockResolvedValue({
-        id: 'calendar-1',
-        type: 'FISCAL',
-      } as never);
-      prismaMock.incomeLedger.findUnique.mockResolvedValue({
-        id: 'income-ledger-1',
-        calendarId: 'calendar-1',
-        userId: 'user-1',
-      } as never);
-      prismaMock.incomeRecord.findFirst.mockResolvedValue({
-        id: 'income-record-1',
-      } as never);
-      prismaMock.incomeSource.findFirst.mockResolvedValue({ id: 'source-business' } as never);
-      prismaMock.incomeRecord.update.mockResolvedValue({
-        id: 'income-record-1',
-      } as never);
-
-      await updateIncomeRecordSource({
-        prismaClient: prismaMock,
-        userId: 'user-1',
-        newSourceName: 'Business',
-        amount: new Decimal('1200.00'),
-        transactionDate: new Date('2024-02-01'),
-      });
-
-      expect(prismaMock.incomeRecord.update).toHaveBeenCalledWith({
-        where: { id: 'income-record-1' },
-        data: { incomeSourceId: 'source-business' },
-      });
-    });
-
-    it('does nothing when no matching income record is found', async () => {
-      prismaMock.calendarYear.findFirst.mockResolvedValue({
-        id: 'calendar-1',
-        type: 'FISCAL',
-      } as never);
-      prismaMock.incomeLedger.findUnique.mockResolvedValue({
-        id: 'income-ledger-1',
-        calendarId: 'calendar-1',
-        userId: 'user-1',
-      } as never);
-      prismaMock.incomeRecord.findFirst.mockResolvedValue(null);
-
-      await updateIncomeRecordSource({
-        prismaClient: prismaMock,
-        userId: 'user-1',
-        newSourceName: 'Business',
-        amount: new Decimal('1200.00'),
-        transactionDate: new Date('2024-02-01'),
-      });
-
-      expect(prismaMock.incomeRecord.update).not.toHaveBeenCalled();
+      // Transaction is now the SoT; category update is applied to Transaction.category by the caller.
+      // This function is a no-op and must not touch any DB tables.
+      expect(prismaMock.transaction.update).not.toHaveBeenCalled();
+      expect(prismaMock.incomeSource.update).not.toHaveBeenCalled();
     });
   });
 });

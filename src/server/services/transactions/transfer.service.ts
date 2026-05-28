@@ -300,7 +300,6 @@ export async function linkTransferPair(params: {
   }
 
   let rollupReversed = false;
-  let incomeRecordDeleted = false;
 
   await params.prisma.$transaction(async (tx) => {
     // Store pre-link state and mark debit as Transfer/CONFIRMED
@@ -341,14 +340,8 @@ export async function linkTransferPair(params: {
       });
       rollupReversed = true;
     }
-
-    // Delete orphaned IncomeRecord if credit was previously CONFIRMED
-    if (credit.status === TransactionStatusEnum.CONFIRMED) {
-      const deleted = await tx.incomeRecord.deleteMany({
-        where: { transactionId: credit.id },
-      });
-      incomeRecordDeleted = deleted.count > 0;
-    }
+    // IncomeRecord table removed — no secondary sync needed when linking a CREDIT as Transfer.
+    // Transaction.category will be updated to TRANSFER_CATEGORY above.
   });
 
   return {
@@ -356,7 +349,6 @@ export async function linkTransferPair(params: {
     creditTransactionId: credit.id,
     linkedAt: new Date(),
     rollupReversed,
-    incomeRecordDeleted,
   };
 }
 
