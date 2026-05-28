@@ -222,22 +222,7 @@ describe("category-rule service", () => {
         },
       ]);
 
-      mockTransactionFindMany.mockResolvedValue([
-        {
-          id: "tx-1",
-          description: "Amazon store purchase",
-          category: "Uncategorized",
-          source: "LLM_CLASSIFIED",
-          status: "PENDING",
-        },
-        {
-          id: "tx-2",
-          description: "Bank transfer",
-          category: "Transfer",
-          source: "LLM_CLASSIFIED",
-          status: "PENDING",
-        },
-      ]);
+      mockTransactionUpdateMany.mockResolvedValue({ count: 1 });
 
       const result = await runCategoryRules({
         prisma: mockPrisma,
@@ -248,7 +233,13 @@ describe("category-rule service", () => {
       expect(result.rulesRan).toBe(1);
       expect(result.appliedCount).toBe(1);
       expect(mockTransactionUpdateMany).toHaveBeenCalledWith({
-        where: { id: { in: ["tx-1"] } },
+        where: {
+          userId: "user-1",
+          importSessionId: "session-1",
+          source: "LLM_CLASSIFIED",
+          status: { in: ["PENDING", "CONFIRMED"] },
+          description: expect.objectContaining({ contains: "amazon" }),
+        },
         data: {
           category: "Shopping",
           source: "USER_OVERRIDE",
@@ -256,7 +247,7 @@ describe("category-rule service", () => {
       });
     });
 
-    it("skips non-LLM_CLASSIFIED transactions", async () => {
+    it("skips non-LLM_CLASSIFIED transactions via source filter in updateMany", async () => {
       mockRuleFindMany.mockResolvedValue([
         {
           id: "rule-1",
@@ -266,7 +257,7 @@ describe("category-rule service", () => {
         },
       ]);
 
-      mockTransactionFindMany.mockResolvedValue([]);
+      mockTransactionUpdateMany.mockResolvedValue({ count: 0 });
 
       const result = await runCategoryRules({
         prisma: mockPrisma,
@@ -274,14 +265,13 @@ describe("category-rule service", () => {
         importSessionId: "session-1",
       });
 
-      expect(mockTransactionFindMany).toHaveBeenCalledWith({
-        where: {
-          userId: "user-1",
-          importSessionId: "session-1",
-          source: "LLM_CLASSIFIED",
-          status: { in: ["PENDING", "CONFIRMED"] },
-        },
-      });
+      // Service uses updateMany directly with source filter — no separate findMany call
+      expect(mockTransactionFindMany).not.toHaveBeenCalled();
+      expect(mockTransactionUpdateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ source: "LLM_CLASSIFIED" }),
+        }),
+      );
       expect(result.appliedCount).toBe(0);
     });
   });

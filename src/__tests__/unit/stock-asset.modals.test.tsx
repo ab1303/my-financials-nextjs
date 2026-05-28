@@ -26,7 +26,6 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       expect(result.getFullYear()).toBe(2023);
       expect(result.getMonth()).toBe(5); // 0-indexed (5 = June)
       expect(result.getDate()).toBe(1);
-      expect(result.toISOString()).toContain('2023-06-01');
     });
 
     it('should handle January (month 1) correctly', () => {

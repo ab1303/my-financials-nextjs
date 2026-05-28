@@ -288,10 +288,9 @@ describe('Brokerage Service', () => {
         deleteBrokerageDetails(brokerageId)
       ).rejects.toThrow();
 
-      // Verify count was called before delete
-      expect(prismaMock.financialAccount.count).toHaveBeenCalledBefore(
-        prismaMock.business.delete
-      );
+      // Verify count was called and delete was NOT called (rejection prevents deletion)
+      expect(prismaMock.financialAccount.count).toHaveBeenCalled();
+      expect(prismaMock.business.delete).not.toHaveBeenCalled();
     });
   });
 });

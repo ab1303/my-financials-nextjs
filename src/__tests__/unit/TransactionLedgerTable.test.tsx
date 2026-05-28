@@ -224,7 +224,7 @@ describe('TransactionLedgerTable', () => {
     });
   });
 
-  it('renders filtered ledger when category props are provided', () => {
+  it('renders normal ledger when category prop is provided (no CategoryFilteredLedger)', () => {
     render(
       <TransactionLedgerTable
         bankAccounts={bankAccounts}
@@ -234,9 +234,8 @@ describe('TransactionLedgerTable', () => {
       />,
     );
 
-    expect(screen.getByTestId('category-filtered-ledger')).toBeDefined();
-    expect(mockUseAllQuery).not.toHaveBeenCalled();
-    expect(mockUseFilterOptionsQuery).not.toHaveBeenCalled();
+    // The ledger renders normally with category filter applied — no separate CategoryFilteredLedger component
+    expect(mockUseAllQuery).toHaveBeenCalled();
   });
 
   it('calls refetch when refreshKey prop changes', async () => {
