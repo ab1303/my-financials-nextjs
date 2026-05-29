@@ -6,6 +6,7 @@
 |---|---|---|
 | P1 | Category picker in resolution flow | OrphanResolutionPanel.tsx (UI only, uses existing resolveOrphan) |
 | P2 | Re-classify resolved orphans | transfer.ts (new query + mutation) + OrphanResolutionPanel.tsx (resolved section) |
+| P3 | Link to counterpart + Unlink (surface TransferLinkDrawer in orphan panel) | transfer.ts (new getLinkedTransferPairs query) + OrphanResolutionPanel.tsx (4th Link button, linked pairs section) |
 
 ## Interfaces & Schemas
 
@@ -66,6 +67,55 @@ interface CategoryOption {
 }
 ```
 
+### tRPC Procedures (P3)
+
+```typescript
+// transfer.ts
+
+// P3: Get linked transfer pairs for display (DEBIT side only, includes counterpart)
+getLinkedTransferPairs: protectedProcedure
+  .query(async ({ ctx }) => {
+    return (ctx.prisma.transaction as any).findMany({
+      where: {
+        userId: ctx.session.user.id,
+        category: TRANSFER_CATEGORY,
+        type: 'DEBIT',
+        transferLinkedTransactionId: { not: null },
+      },
+      include: {
+        financialAccount: { select: { name: true } },
+        transferLinkedTransaction: {
+          include: { financialAccount: { select: { name: true } } },
+        },
+      },
+      orderBy: { date: 'desc' },
+      take: 50,
+    });
+  }),
+```
+
+### UI State (P3)
+
+```typescript
+// OrphanResolutionPanel.tsx additions
+
+// State
+const [drawerOrphanId, setDrawerOrphanId] = useState<string | null>(null);
+const [showLinked, setShowLinked] = useState(false);
+const [unlinkingId, setUnlinkingId] = useState<string | null>(null);
+
+// Props fed to TransferLinkDrawer
+interface DrawerSourceTransaction {
+  id: string;
+  description: string;
+  amount: number;
+  type: 'DEBIT' | 'CREDIT';
+  date: string;
+  bankAccountId: string | null;
+  bankAccountName: string | null;
+}
+```
+
 ## TDD Test Cases
 
 | Test | Type | Verifies |
@@ -75,13 +125,17 @@ interface CategoryOption {
 | Only owner can reset orphan resolution | tRPC | Security guard on mutation |
 | Resetting reverts orphan to unresolved | tRPC | Transaction reappears in unresolved list |
 | Excluded resolution remains single-click | UI | No category required for EXCLUDED |
+| Link button opens TransferLinkDrawer for the correct orphan | UI | Drawer pre-populates with source transaction |
+| After link, orphan disappears from unresolved list | UI | Successful link invalidates getOrphanedTransfers |
+| Linked pairs appear in collapsible "Linked transfers" section | UI | getLinkedTransferPairs shown |
+| Unlink button resets pair — both sides return to Transfer category | tRPC | transfer.unlink called with debit transactionId |
 
 ## File Inventory
 
 | File | Action | Description |
 |---|---|---|
-| src/server/trpc/router/transfer.ts | MODIFY | Add getResolvedOrphans query and resetOrphanResolution mutation |
-| src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx | MODIFY | Rewrite: two-step category/source picker, resolved section with re-classify |
+| src/server/trpc/router/transfer.ts | MODIFY | Add getResolvedOrphans query, resetOrphanResolution mutation, getLinkedTransferPairs query |
+| src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx | MODIFY | Rewrite: category picker, resolved section, Link button (4th), linked pairs section with Unlink |
 
 ## Edge Cases
 - User tries to reset a transfer they do not own → forbidden

@@ -323,6 +323,26 @@ export const transferRouter = router({
       });
     }),
 
+  getLinkedTransferPairs: protectedProcedure
+    .query(async ({ ctx }) => {
+      return (ctx.prisma.transaction as any).findMany({
+        where: {
+          userId: ctx.session.user.id,
+          category: TRANSFER_CATEGORY,
+          type: 'DEBIT',
+          transferLinkedTransactionId: { not: null },
+        },
+        include: {
+          financialAccount: { select: { name: true } },
+          transferLinkedTransaction: {
+            include: { financialAccount: { select: { name: true } } },
+          },
+        },
+        orderBy: { date: 'desc' },
+        take: 50,
+      });
+    }),
+
   getExcludedTransferSummary: protectedProcedure
     .input(z.object({ year: z.number().int().optional() }))
     .query(async ({ ctx, input }) => {
