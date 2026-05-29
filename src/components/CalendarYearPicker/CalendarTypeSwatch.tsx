@@ -32,12 +32,12 @@ export default function CalendarTypeSwatch({
   };
 
   return (
-    <div className={`flex gap-2 ${className || ''}`}>
+    <div className={`flex gap-1.5 ${className || ''}`}>
       {types.map((type) => (
         <button
           key={type}
           onClick={() => onTypeChange(type)}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
+          className={`min-w-[60px] px-3 py-1 rounded-full text-sm font-medium transition-colors cursor-pointer text-center focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary ${
             selectedType === type
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-muted-foreground hover:bg-muted/80'

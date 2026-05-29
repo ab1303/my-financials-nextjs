@@ -14,6 +14,7 @@ import { NetCashflowChart } from './NetCashflowChart';
 import { ExpenseCategoryChart } from './ExpenseCategoryChart';
 import { IncomeSourceChart } from './IncomeSourceChart';
 import { ChartSkeleton } from './ChartSkeleton';
+import AnalyticsDrillDownDrawer, { type DrillDownFilter } from './AnalyticsDrillDownDrawer';
 
 type CashflowAnalyticsClientProps = {
   calendarYears: CalendarYearType[];
@@ -33,8 +34,13 @@ export default function CashflowAnalyticsClient({
   const [data, setData] = useState<CashflowAnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [drillDownFilter, setDrillDownFilter] = useState<DrillDownFilter | null>(null);
 
   const selectedBank = bankOptions.find((b) => b.id === selectedBankId) ?? null;
+
+  // Get the year number from the selected calendar year
+  const selectedYear = calendarYears.find((y) => y.id === selectedYearId);
+  const yearNumber = selectedYear?.fromYear ?? new Date().getFullYear();
 
   const fetchAnalytics = useCallback(async (yearId: string, bankId: string | null) => {
     if (!yearId) return;
@@ -66,24 +72,40 @@ export default function CashflowAnalyticsClient({
   };
 
   const handleMonthClick = (point: MonthlyTrendPoint, series: 'income' | 'expenses') => {
-    // Navigate to transactions filtered by month + year (future enhancement)
-    const path = series === 'income' ? '/cashflow/income' : '/cashflow/expense';
-    window.location.href = path;
+    setDrillDownFilter({
+      type: 'month',
+      month: point.month,
+      year: point.year,
+      label: point.label,
+      transactionType: series === 'income' ? 'CREDIT' : 'DEBIT',
+    });
   };
 
-  const handleCategoryClick = (_categoryName: string) => {
-    window.location.href = '/cashflow/expense';
+  const handleCategoryClick = (categoryName: string) => {
+    setDrillDownFilter({
+      type: 'category',
+      categoryName,
+      year: yearNumber,
+      label: categoryName,
+      transactionType: 'DEBIT',
+    });
   };
 
-  const handleSourceClick = (_sourceName: string) => {
-    window.location.href = '/cashflow/income';
+  const handleSourceClick = (sourceName: string) => {
+    setDrillDownFilter({
+      type: 'source',
+      source: sourceName,
+      year: yearNumber,
+      label: `${sourceName} income`,
+      transactionType: 'CREDIT',
+    });
   };
 
   return (
     <div className="space-y-6">
       {/* Filter Bar */}
       <div className="rounded-xl border border-border bg-card shadow p-4">
-        <div className="flex flex-wrap items-start gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           {/* Calendar Year Picker */}
           <CalendarYearPicker
             applicableTypes={['FISCAL', 'ANNUAL']}
@@ -95,7 +117,7 @@ export default function CashflowAnalyticsClient({
 
           {/* Bank Account Filter */}
           {bankOptions.length > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               <Label htmlFor="bank-filter">Bank Account</Label>
               <AppSelect<OptionType>
                 instanceId="bank-filter"
@@ -164,6 +186,13 @@ export default function CashflowAnalyticsClient({
           </>
         )}
       </div>
+
+      {/* Drill-Down Drawer */}
+      <AnalyticsDrillDownDrawer
+        open={drillDownFilter !== null}
+        onClose={() => setDrillDownFilter(null)}
+        filter={drillDownFilter}
+      />
     </div>
   );
 }

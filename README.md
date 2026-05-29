@@ -119,7 +119,7 @@ We provide a convenient script to backup and restore your PostgreSQL database.
 docker exec postgres-financials-db pg_dump -U postgres financials > backup-$(date +%Y%m%d-%H%M%S).sql
 
 # Compressed backup (smaller file size)
-docker exec postgres-financials-db pg_dump -U postgres -Fc financials > backup.dump
+docker exec postgres-financials-db pg_dump -U postgres -Fc financials > backup-$(date +%Y%m%d-%H%M%S).dump
 ```
 
 **Restore from Backup:**

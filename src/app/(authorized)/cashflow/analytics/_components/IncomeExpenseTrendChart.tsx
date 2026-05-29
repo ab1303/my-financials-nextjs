@@ -3,7 +3,6 @@
 import {
   ComposedChart,
   Bar,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -75,14 +74,6 @@ export function IncomeExpenseTrendChart({
                 radius={[4, 4, 0, 0]}
                 onClick={(d) => onMonthClick?.(d as unknown as MonthlyTrendPoint, 'expenses')}
                 cursor={onMonthClick ? 'pointer' : 'default'}
-              />
-              <Line
-                type="monotone"
-                dataKey="net"
-                name="Net"
-                stroke="#2563eb"
-                strokeDasharray="4 2"
-                dot={false}
               />
             </ComposedChart>
           </ResponsiveContainer>

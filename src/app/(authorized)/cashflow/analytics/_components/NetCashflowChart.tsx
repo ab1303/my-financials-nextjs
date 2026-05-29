@@ -1,13 +1,16 @@
 'use client';
 
 import {
+  ComposedChart,
   BarChart,
   Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   ReferenceLine,
   Tooltip,
+  Legend,
   Cell,
   ResponsiveContainer,
 } from 'recharts';
@@ -19,9 +22,15 @@ type NetCashflowChartProps = {
 };
 
 const formatTick = (v: number) =>
-  v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`;
+  v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : v <= -1000 ? `-$${(Math.abs(v) / 1000).toFixed(0)}k` : `$${v}`;
 
 export function NetCashflowChart({ data }: NetCashflowChartProps) {
+  // Compute cumulative savings line
+  let running = 0;
+  const chartData = data.map((point) => {
+    running += point.net;
+    return { ...point, cumulative: running };
+  });
   return (
     <Card>
       <CardHeader>
@@ -36,16 +45,22 @@ export function NetCashflowChart({ data }: NetCashflowChartProps) {
           </p>
         ) : (
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart
-              data={data}
+            <ComposedChart
+              data={chartData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
               <YAxis tickFormatter={formatTick} tick={{ fontSize: 11 }} />
               <Tooltip
-                formatter={(value) => {
+                formatter={(value, name) => {
                   const num = Number(value);
+                  if (name === 'Cumulative') {
+                    return [
+                      num >= 0 ? `+$${num.toLocaleString()}` : `-$${Math.abs(num).toLocaleString()}`,
+                      'Cumulative',
+                    ];
+                  }
                   return [
                     num >= 0
                       ? `+$${num.toLocaleString()}`
@@ -54,6 +69,7 @@ export function NetCashflowChart({ data }: NetCashflowChartProps) {
                   ];
                 }}
               />
+              <Legend />
               <ReferenceLine
                 y={0}
                 stroke="hsl(var(--muted-foreground))"
@@ -61,14 +77,22 @@ export function NetCashflowChart({ data }: NetCashflowChartProps) {
                 opacity={0.5}
               />
               <Bar dataKey="net" name="Net Cashflow" radius={[4, 4, 0, 0]}>
-                {data.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.net >= 0 ? '#16a34a' : '#dc2626'}
                   />
                 ))}
               </Bar>
-            </BarChart>
+              <Line
+                type="monotone"
+                dataKey="cumulative"
+                name="Cumulative"
+                stroke="#2563eb"
+                strokeWidth={2.5}
+                dot={false}
+              />
+            </ComposedChart>
           </ResponsiveContainer>
         )}
       </CardContent>

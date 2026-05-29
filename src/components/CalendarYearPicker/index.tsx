@@ -81,7 +81,7 @@ function CalendarYearPicker({
   const displayLabel = label ?? typeLabels[selectedType];
 
   return (
-    <div className={`space-y-3 ${className || ''}`}>
+    <div className={`space-y-2 ${className || ''}`}>
       {/* Type swatch — only rendered if multiple types */}
       <CalendarTypeSwatch
         types={applicableTypes}
@@ -103,7 +103,7 @@ function CalendarYearPicker({
         }}
         isClearable
         placeholder='Select year...'
-        className='w-3/5'
+        className='min-w-[200px] w-full max-w-xs'
         getOptionValue={(opt) => opt.id}
         getOptionLabel={(opt) => opt.label}
       />

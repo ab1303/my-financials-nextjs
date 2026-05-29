@@ -5,6 +5,11 @@
 /.pnp
 .pnp.js
 
+
+# Database backups
+
+/db-backups
+
 # testing
 /coverage
 
