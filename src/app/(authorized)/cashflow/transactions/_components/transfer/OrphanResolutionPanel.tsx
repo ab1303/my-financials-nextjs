@@ -31,6 +31,7 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
   // per-orphan pick state: orphanId → 'expense' | 'income' | null
   const [pickMode, setPickMode] = useState<Record<string, PickMode>>({});
   const [selectedCategory, setSelectedCategory] = useState<Record<string, CategoryOption | null>>({});
+  const [saveAsRule, setSaveAsRule] = useState<Record<string, boolean>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [resetingId, setResetingId] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
@@ -88,6 +89,11 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
     },
   });
 
+  const createRuleMutation = trpc.categoryRule.create.useMutation({
+    onSuccess: () => toast.success('Category rule saved — future imports will auto-classify this'),
+    onError: () => toast.error('Transfer resolved but rule could not be saved'),
+  });
+
   const expenseCategoryOptions: CategoryOption[] = expenseCategories.map((c) => ({ label: c.name, value: c.name }));
   const incomeSourceOptions: CategoryOption[] = incomeSources.map((s) => ({ label: s.name, value: s.name }));
 
@@ -99,18 +105,33 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
   function cancelPick(orphanId: string) {
     setPickMode((prev) => ({ ...prev, [orphanId]: null }));
     setSelectedCategory((prev) => ({ ...prev, [orphanId]: null }));
+    setSaveAsRule((prev) => ({ ...prev, [orphanId]: false }));
   }
 
   function confirmResolve(orphanId: string) {
     const mode = pickMode[orphanId];
     const category = selectedCategory[orphanId];
     if (!mode || !category) return;
+
+    const orphan = (orphans as any[]).find((o) => o.id === orphanId);
+    const shouldSave = saveAsRule[orphanId] ?? false;
+
     setResolvingId(orphanId);
     resolveMutation.mutate({
       transactionId: orphanId,
       resolution: mode === 'expense' ? 'EXPENSE' : 'INCOME',
       newCategory: category.value,
     });
+
+    if (shouldSave && orphan) {
+      const desc = String(orphan.description);
+      createRuleMutation.mutate({
+        name: desc.length > 50 ? desc.slice(0, 50) + '…' : desc,
+        pattern: desc,
+        matchType: 'CONTAINS',
+        category: category.value,
+      });
+    }
   }
 
   function resolveExclude(orphanId: string) {
@@ -227,6 +248,27 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
                               placeholder={mode === 'expense' ? 'Expense category…' : 'Income source…'}
                               className='text-sm'
                             />
+                            {/* Save as category rule */}
+                            <label className='flex cursor-pointer items-start gap-2 pt-0.5'>
+                              <input
+                                type='checkbox'
+                                checked={saveAsRule[orphan.id] ?? false}
+                                onChange={(e) =>
+                                  setSaveAsRule((prev) => ({ ...prev, [orphan.id]: e.target.checked }))
+                                }
+                                className='mt-0.5 h-3.5 w-3.5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 dark:border-gray-600'
+                              />
+                              <span className='text-xs text-gray-500 dark:text-gray-400'>
+                                Auto-classify future transactions matching this description as{' '}
+                                {pickedCategory ? (
+                                  <span className='font-medium text-gray-700 dark:text-gray-200'>
+                                    &ldquo;{pickedCategory.value}&rdquo;
+                                  </span>
+                                ) : (
+                                  'the selected category'
+                                )}
+                              </span>
+                            </label>
                             <div className='flex gap-2'>
                               <button
                                 type='button'
