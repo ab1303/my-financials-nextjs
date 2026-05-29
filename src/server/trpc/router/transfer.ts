@@ -343,6 +343,15 @@ export const transferRouter = router({
       });
     }),
 
+  runRetroactiveDetection: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const { runRetroactiveDetection } = await import('@/server/services/transactions/transfer.service');
+      return runRetroactiveDetection({
+        prisma: ctx.prisma,
+        userId: ctx.session.user.id,
+      });
+    }),
+
   getExcludedTransferSummary: protectedProcedure
     .input(z.object({ year: z.number().int().optional() }))
     .query(async ({ ctx, input }) => {

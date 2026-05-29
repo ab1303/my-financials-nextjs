@@ -39,20 +39,32 @@ model Transaction {
 
 ## Component/Service Changes (High-Level)
 
-- **OrphanResolutionPanel.tsx**: Rewrite to support two-step category/source selection and resolved section with re-classify.
-- **tRPC transfer router**: Add `getResolvedOrphans` query and `resetOrphanResolution` mutation.
+- **OrphanResolutionPanel.tsx**: Full rewrite — two-step category/source selection (P1), resolved section with re-classify (P2), Link/Unlink via TransferLinkDrawer with DEBIT/CREDIT badges and save-as-rule checkbox (P3), "Run auto-detection" button (P0).
+- **tRPC transfer router**: Added `getResolvedOrphans`, `resetOrphanResolution`, `getLinkedTransferPairs`, `runRetroactiveDetection`.
+- **transfer.service.ts**: Added `runRetroactiveDetection` (two-pass: score-based pairing + Category Rule application).
 
 ## Success Criteria
 
-- Users can select a category/source before confirming EXPENSE/INCOME resolutions.
-- Resolved orphans are visible in a collapsible section with a re-classify option.
-- Users can reclassify any resolved orphan they own (if unlinked).
-- No schema migrations are required; all changes are additive.
-- No resolved orphan is permanently hidden; all can be reclassified.
+- ✅ Users can select a category/source before confirming EXPENSE/INCOME resolutions.
+- ✅ Resolved orphans visible in collapsible section with re-classify option.
+- ✅ Users can reclassify any resolved orphan they own (if unlinked).
+- ✅ Users can manually link two orphans via TransferLinkDrawer.
+- ✅ Linked pairs show in teal section; Unlink restores both to orphan list.
+- ✅ "Run auto-detection" button retroactively pairs orphans and applies Category Rules.
+- ✅ No schema migrations required; all changes are additive.
+- ✅ DEBIT/CREDIT badges aid in manual linkage decisions.
 
 ## Out of Scope / Future Phases
 
+| Phase | Description | Status |
+|-------|-------------|--------|
+| P4    | Immediate undo toast (5-second undo after resolution action) | 🔲 Future |
+
+## Implemented Phases Summary
+
 | Phase | Description |
 |-------|-------------|
-| P0    | Retroactive auto-detection/backfill for existing orphans |
-| P3    | Immediate undo toast after resolution |
+| P0 | Retroactive auto-detection: "Run auto-detection" button scans all orphans using score-based pairing (Pass 1) and Category Rule application (Pass 2). Returns `{ pairedCount, categorisedCount, remainingCount }`. |
+| P1 | Category picker in resolution flow (two-step: pick category then confirm) |
+| P2 | Re-classify resolved orphans (collapsible resolved section + re-classify button) |
+| P3 | Manual Link/Unlink via TransferLinkDrawer, DEBIT/CREDIT badges, save-as-category-rule checkbox |

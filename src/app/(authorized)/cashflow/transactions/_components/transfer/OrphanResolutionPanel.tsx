@@ -46,6 +46,24 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
   const { data: orphans = [], isLoading } = trpc.transfer.getOrphanedTransfers.useQuery({});
   const { data: resolved = [], isLoading: resolvedLoading } = trpc.transfer.getResolvedOrphans.useQuery({ limit: 50 });
   const { data: linkedPairs = [], isLoading: linkedLoading } = trpc.transfer.getLinkedTransferPairs.useQuery();
+
+  const [isRunningDetection, setIsRunningDetection] = useState(false);
+
+  const detectionMutation = trpc.transfer.runRetroactiveDetection.useMutation({
+    onSuccess: (result) => {
+      toast.success(
+        `Detection complete: ${result.pairedCount} paired, ${result.categorisedCount} categorised, ${result.remainingCount} need manual review`,
+      );
+      void utils.transfer.getOrphanedTransfers.invalidate();
+      void utils.transfer.getLinkedTransferPairs.invalidate();
+      void utils.transfer.getResolvedOrphans.invalidate();
+      setIsRunningDetection(false);
+    },
+    onError: (err) => {
+      toast.error(`Detection failed: ${err.message}`);
+      setIsRunningDetection(false);
+    },
+  });
   const { data: expenseCategories = [] } = trpc.expenseCategory.getAllActive.useQuery();
   const { data: incomeSources = [] } = trpc.incomeSource.getAllActive.useQuery();
 
@@ -167,9 +185,24 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
             <div className='flex items-start gap-3'>
               <AlertTriangle className='mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500' />
               <div className='flex-1 min-w-0'>
-                <h3 className='font-medium text-amber-800 dark:text-amber-200'>
-                  {(orphans as any[]).length} orphaned transfer{(orphans as any[]).length !== 1 ? 's' : ''} need resolution
-                </h3>
+                <div className='flex items-center gap-2'>
+                                  <h3 className='font-medium text-amber-800 dark:text-amber-200'>
+                                    {(orphans as any[]).length} orphaned transfer{(orphans as any[]).length !== 1 ? 's' : ''} need resolution
+                                  </h3>
+                                  <button
+                                    type='button'
+                                    className='ml-2 flex items-center gap-1 rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800'
+                                    disabled={isRunningDetection}
+                                    onClick={() => { setIsRunningDetection(true); detectionMutation.mutate(); }}
+                                  >
+                                    {isRunningDetection ? (
+                                      <span className='animate-spin mr-1'><RotateCcw className='h-3 w-3' /></span>
+                                    ) : (
+                                      <span className='mr-1'><Link2 className='h-3 w-3' /></span>
+                                    )}
+                                    Run auto-detection
+                                  </button>
+                                </div>
                 <p className='mt-0.5 text-sm text-amber-700 dark:text-amber-300'>
                   These transfers have no matching counterpart after 30 days. Classify each one so it&apos;s correctly included in your reports.
                 </p>

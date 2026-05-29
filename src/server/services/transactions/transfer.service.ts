@@ -520,6 +520,211 @@ export interface SimilarPairSuggestion {
   amountDiffWarning: string | null;
 }
 
+
+/**
+ * Retroactively auto-detect and resolve orphaned transfers and apply category rules.
+ * Returns: { pairedCount, categorisedCount, remainingCount }
+ */
+export async function runRetroactiveDetection({
+  prisma,
+  userId,
+}: {
+  prisma: PrismaClient;
+  userId: string;
+}): Promise<{ pairedCount: number; categorisedCount: number; remainingCount: number }> {
+  // --- Pass 1: Score-based pairing ---
+  // Fetch unresolved DEBIT and CREDIT orphans
+  const [debitOrphans, creditOrphans] = await Promise.all([
+    (prisma.transaction as any).findMany({
+      where: {
+        userId,
+        category: TRANSFER_CATEGORY,
+        type: TransactionTypeEnum.DEBIT,
+        transferLinkedTransactionId: null,
+        transferCounterpart: { is: null },
+        orphanResolution: null,
+      },
+      include: { financialAccount: { include: { institution: true } } },
+    }),
+    (prisma.transaction as any).findMany({
+      where: {
+        userId,
+        category: TRANSFER_CATEGORY,
+        type: TransactionTypeEnum.CREDIT,
+        transferLinkedTransactionId: null,
+        transferCounterpart: { is: null },
+        orphanResolution: null,
+      },
+      include: { financialAccount: { include: { institution: true } } },
+    }),
+  ]);
+
+  // Build candidate pairs with scores
+  type Orphan = {
+    id: string;
+    amount: Decimal;
+    date: Date;
+    description: string;
+    bankAccountId: string;
+    financialAccount: { institutionId: string | null; institution: { name: string | null } | null } | null;
+  };
+  const debitList: Orphan[] = debitOrphans;
+  const creditList: Orphan[] = creditOrphans;
+
+  // Map for quick lookup
+  const creditMap = new Map<string, Orphan>();
+  for (const c of creditList) creditMap.set(c.id, c);
+
+  // Score all DEBIT→CREDIT pairs
+  type PairScore = { debitId: string; creditId: string; score: number };
+  const scoredPairs: PairScore[] = [];
+  for (const debit of debitList) {
+    for (const credit of creditList) {
+      // Don't allow self-linking (shouldn't happen, but be safe)
+      if (debit.id === credit.id) continue;
+      // Use cross-institution tolerance
+      const { score } = scoreCandidate({
+        sourceAmount: debit.amount,
+        sourceDate: debit.date,
+        sourceBankId: debit.financialAccount?.institutionId ?? null,
+        sourceDescription: debit.description,
+        candidate: {
+          amount: credit.amount,
+          date: credit.date,
+          description: credit.description,
+          bankAccountId: credit.bankAccountId,
+          bankId: credit.financialAccount?.institutionId ?? null,
+        },
+        dateTolerance: TRANSFER_DATE_TOLERANCE_DAYS_CROSS,
+      });
+      if (score >= 70) {
+        scoredPairs.push({ debitId: debit.id, creditId: credit.id, score });
+      }
+    }
+  }
+
+  // Conflict resolution: keep only highest score per DEBIT and per CREDIT
+  // 1. For each DEBIT, keep only highest scoring CREDIT
+  const bestCreditForDebit = new Map<string, PairScore>();
+  for (const pair of scoredPairs) {
+    const existing = bestCreditForDebit.get(pair.debitId);
+    if (!existing || pair.score > existing.score) {
+      bestCreditForDebit.set(pair.debitId, pair);
+    }
+  }
+  // 2. For each CREDIT, keep only highest scoring DEBIT
+  const bestDebitForCredit = new Map<string, PairScore>();
+  for (const pair of bestCreditForDebit.values()) {
+    const existing = bestDebitForCredit.get(pair.creditId);
+    if (!existing || pair.score > existing.score) {
+      bestDebitForCredit.set(pair.creditId, pair);
+    }
+  }
+  // Final pairs to link: only those that survived both filters
+  const finalPairs: PairScore[] = [];
+  for (const pair of bestDebitForCredit.values()) {
+    // Double check: only if this is still the best for both sides
+    if (
+      bestCreditForDebit.get(pair.debitId)?.creditId === pair.creditId &&
+      bestDebitForCredit.get(pair.creditId)?.debitId === pair.debitId
+    ) {
+      finalPairs.push(pair);
+    }
+  }
+
+  // Link the pairs
+  let pairedCount = 0;
+  for (const pair of finalPairs) {
+    try {
+      await linkTransferPair({
+        prisma,
+        debitTransactionId: pair.debitId,
+        creditTransactionId: pair.creditId,
+        userId,
+      });
+      pairedCount++;
+    } catch (err) {
+      // Ignore errors (already linked, etc)
+    }
+  }
+
+  // --- Pass 2: Category Rule application ---
+  // Re-fetch unresolved orphans
+  const unresolvedOrphans: Array<{
+    id: string;
+    description: string;
+  }> = await (prisma.transaction as any).findMany({
+    where: {
+      userId,
+      category: TRANSFER_CATEGORY,
+      transferLinkedTransactionId: null,
+      transferCounterpart: { is: null },
+      orphanResolution: null,
+    },
+    select: { id: true, description: true },
+  });
+
+  // Fetch active category rules
+  const categoryRules: Array<{
+    id: string;
+    pattern: string;
+    matchType: string;
+    category: string;
+    appliedCount: number;
+  }> = await (prisma.categoryRule as any).findMany({
+    where: { userId, isActive: true },
+    select: { id: true, pattern: true, matchType: true, category: true, appliedCount: true },
+  });
+
+  // Inline matcher
+  function matchesRule(description: string, pattern: string, matchType: string): boolean {
+    const d = description.toLowerCase();
+    const p = pattern.toLowerCase();
+    if (matchType === 'EXACT') return d === p;
+    if (matchType === 'STARTS_WITH') return d.startsWith(p);
+    return d.includes(p); // CONTAINS (default)
+  }
+
+  // For each orphan, check for rule match
+  let categorisedCount = 0;
+  const ruleIdToApplyCount = new Map<string, number>();
+  for (const orphan of unresolvedOrphans) {
+    for (const rule of categoryRules) {
+      if (matchesRule(orphan.description, rule.pattern, rule.matchType)) {
+        // Update orphan category and source
+        await (prisma.transaction as any).update({
+          where: { id: orphan.id },
+          data: { category: rule.category, source: 'USER_OVERRIDE' },
+        });
+        categorisedCount++;
+        ruleIdToApplyCount.set(rule.id, (ruleIdToApplyCount.get(rule.id) ?? 0) + 1);
+        break; // Only apply first matching rule
+      }
+    }
+  }
+
+  // Update appliedCount for rules
+  for (const [ruleId, count] of ruleIdToApplyCount.entries()) {
+    await (prisma.categoryRule as any).update({
+      where: { id: ruleId },
+      data: { appliedCount: { increment: count } },
+    });
+  }
+
+  // Final unresolved count
+  const remainingCount: number = await (prisma.transaction as any).count({
+    where: {
+      userId,
+      category: TRANSFER_CATEGORY,
+      transferLinkedTransactionId: null,
+      transferCounterpart: { is: null },
+      orphanResolution: null,
+    },
+  });
+
+  return { pairedCount, categorisedCount, remainingCount };
+}
+
 export interface BatchLinkResult {
   linkedCount: number;
   errors: Array<{ debitId: string; creditId: string; message: string }>;

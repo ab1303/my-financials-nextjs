@@ -2,11 +2,13 @@
 
 ## Phase Map
 
-| Phase | Scope | Files |
-|---|---|---|
-| P1 | Category picker in resolution flow | OrphanResolutionPanel.tsx (UI only, uses existing resolveOrphan) |
-| P2 | Re-classify resolved orphans | transfer.ts (new query + mutation) + OrphanResolutionPanel.tsx (resolved section) |
-| P3 | Link to counterpart + Unlink (surface TransferLinkDrawer in orphan panel) | transfer.ts (new getLinkedTransferPairs query) + OrphanResolutionPanel.tsx (4th Link button, linked pairs section) |
+| Phase | Scope | Status | Files |
+|---|---|---|---|
+| P0 | Retroactive auto-detection: score-based pairing + Category Rule application | ✅ Implemented | transfer.service.ts (runRetroactiveDetection) + transfer.ts (mutation) + OrphanResolutionPanel.tsx (button) |
+| P1 | Category picker in resolution flow | ✅ Implemented | OrphanResolutionPanel.tsx (UI only, uses existing resolveOrphan) |
+| P2 | Re-classify resolved orphans | ✅ Implemented | transfer.ts (getResolvedOrphans + resetOrphanResolution) + OrphanResolutionPanel.tsx (resolved section) |
+| P3 | Link to counterpart + Unlink (surface TransferLinkDrawer in orphan panel) | ✅ Implemented | transfer.ts (getLinkedTransferPairs) + OrphanResolutionPanel.tsx (4th Link button, linked pairs section, DEBIT/CREDIT badges, save-as-rule checkbox) |
+| P4 | Undo toast (5-second undo after resolution) | 🔲 Future | OrphanResolutionPanel.tsx |
 
 ## Interfaces & Schemas
 
@@ -129,13 +131,43 @@ interface DrawerSourceTransaction {
 | After link, orphan disappears from unresolved list | UI | Successful link invalidates getOrphanedTransfers |
 | Linked pairs appear in collapsible "Linked transfers" section | UI | getLinkedTransferPairs shown |
 | Unlink button resets pair — both sides return to Transfer category | tRPC | transfer.unlink called with debit transactionId |
+| Run auto-detection pairs DEBIT+CREDIT orphans with score >= 70 | service | scoreCandidate drives Pass 1 pairing |
+| Run auto-detection applies Category Rules to unmatched orphans | service | Pass 2 reclassifies via active rules |
+| Run auto-detection returns correct pairedCount/categorisedCount/remainingCount | service | Summary stats accurate |
+| Conflict resolution: same CREDIT claimed by two DEBITs → highest score wins | service | No double-linking |
+
+## P0: runRetroactiveDetection Interface
+
+```typescript
+// src/server/services/transactions/transfer.service.ts
+export async function runRetroactiveDetection(params: {
+  prisma: PrismaClient;
+  userId: string;
+}): Promise<{ pairedCount: number; categorisedCount: number; remainingCount: number }>
+
+// Algorithm:
+// Pass 1 — Score-based pairing (score >= 70 threshold):
+//   1. Fetch all unresolved DEBIT orphans + CREDIT orphans
+//   2. Score each DEBIT→CREDIT pair using scoreCandidate()
+//   3. Resolve conflicts (one CREDIT per DEBIT, highest score wins)
+//   4. Link pairs using existing linkTransferPair()
+//
+// Pass 2 — Category Rule application:
+//   1. Re-fetch unresolved orphans after Pass 1
+//   2. Match description against active CategoryRules (CONTAINS/STARTS_WITH/EXACT)
+//   3. updateMany: category = rule.category, source = 'USER_OVERRIDE'
+//   4. Increment rule.appliedCount
+
+// tRPC router: transfer.runRetroactiveDetection (protectedProcedure, no input, returns summary)
+```
 
 ## File Inventory
 
 | File | Action | Description |
 |---|---|---|
-| src/server/trpc/router/transfer.ts | MODIFY | Add getResolvedOrphans query, resetOrphanResolution mutation, getLinkedTransferPairs query |
-| src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx | MODIFY | Rewrite: category picker, resolved section, Link button (4th), linked pairs section with Unlink |
+| `src/server/services/transactions/transfer.service.ts` | MODIFY | Add `runRetroactiveDetection` (P0 two-pass detection) |
+| `src/server/trpc/router/transfer.ts` | MODIFY | Add `runRetroactiveDetection` mutation + `getResolvedOrphans` query + `resetOrphanResolution` mutation + `getLinkedTransferPairs` query |
+| `src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx` | MODIFY | Full rewrite: category picker (P1), resolved section + re-classify (P2), Link button + linked pairs section + DEBIT/CREDIT badges + save-as-rule checkbox (P3), "Run auto-detection" button (P0) |
 
 ## Edge Cases
 - User tries to reset a transfer they do not own → forbidden
@@ -144,3 +176,6 @@ interface DrawerSourceTransaction {
 - More than 50 resolved orphans → only 50 most recent shown
 - Category lists are empty → disable confirm button, show message
 - User cancels category selection → returns to initial state
+- P0 conflict: same CREDIT orphan scores ≥70 with multiple DEBITs → highest score DEBIT wins
+- P0 edge: detection run with 0 active rules → Pass 2 skipped cleanly, returns 0 categorised
+- P0 edge: no orphans exist → returns `{ pairedCount: 0, categorisedCount: 0, remainingCount: 0 }`
