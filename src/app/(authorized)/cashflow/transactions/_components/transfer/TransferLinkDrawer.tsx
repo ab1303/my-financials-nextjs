@@ -270,14 +270,25 @@ function CandidateRow({
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
-              {candidate.bankAccountName}
-              {candidate.bankName && (
-                <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
-                  ({candidate.bankName})
-                </span>
-              )}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold ${
+                  candidate.type === 'DEBIT'
+                    ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                    : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                }`}
+              >
+                {candidate.type}
+              </span>
+              <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                {candidate.bankAccountName}
+                {candidate.bankName && (
+                  <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
+                    ({candidate.bankName})
+                  </span>
+                )}
+              </p>
+            </div>
             <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
               {new Date(candidate.date).toLocaleDateString('en-AU')} · {candidate.description}
             </p>

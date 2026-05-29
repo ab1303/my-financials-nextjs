@@ -169,9 +169,9 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
                           <p className='text-sm font-medium text-gray-900 truncate dark:text-white'>
                             {orphan.description}
                           </p>
-                          <p className='mt-0.5 text-xs text-gray-500 dark:text-gray-400'>
-                            {formatDate(orphan.date)} · {formatAmount(orphan.amount)} ·{' '}
-                            {(orphan.financialAccount as any)?.name ?? 'Unknown account'}
+                         <p className='mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400'>
+                           <TransactionTypeBadge type={(orphan as any).type} />
+                           <span>{formatDate(orphan.date)} · {formatAmount(orphan.amount)} · {(orphan.financialAccount as any)?.name ?? 'Unknown account'}</span>
                           </p>
                         </div>
 
@@ -406,5 +406,21 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
         />
       )}
     </>
+  );
+}
+
+function TransactionTypeBadge({ type }: { type?: string }) {
+  if (!type) return null;
+  const isDebit = type === 'DEBIT';
+  return (
+    <span
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold ${
+        isDebit
+          ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+          : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+      }`}
+    >
+      {isDebit ? 'DEBIT' : 'CREDIT'}
+    </span>
   );
 }
