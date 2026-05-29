@@ -82,28 +82,28 @@ export default function IncomeForm({
   return (
     <div className='mb-0 space-y-6'>
       <div className='mx-10'>
-        <CalendarYearPicker
-          applicableTypes={['FISCAL', 'ANNUAL']}
-          calendarYears={initialData.incomeYearData}
-          selectedYearId={yearIdParam || undefined}
-          defaultType={initialData.defaultCalendarType}
-          onYearChange={handleYearChange}
-        />
-      </div>
-
-      <div className='mx-10'>
-        <Label htmlFor={`income-bank-${id}`}>Bank Account</Label>
-        <div className='mt-3'>
-          <Select<OptionType>
-            instanceId={`income-bank-${id}`}
-            isClearable
-            className='w-3/5'
-            value={selectedBank}
-            options={initialData.bankOptions || []}
-            getOptionValue={(option) => option.id}
-            onChange={(option) => handleBankChange(option)}
-            placeholder='Select bank...'
+        <div className='flex flex-wrap items-end gap-4'>
+          <CalendarYearPicker
+            applicableTypes={['FISCAL', 'ANNUAL']}
+            calendarYears={initialData.incomeYearData}
+            selectedYearId={yearIdParam || undefined}
+            defaultType={initialData.defaultCalendarType}
+            onYearChange={handleYearChange}
           />
+          <div className='flex flex-col space-y-1.5 flex-1 min-w-[280px]'>
+            <Label htmlFor={`income-bank-${id}`}>Bank Account</Label>
+            <Select<OptionType>
+              instanceId={`income-bank-${id}`}
+              inputId={`income-bank-${id}`}
+              isClearable
+              className='w-full'
+              value={selectedBank}
+              options={initialData.bankOptions || []}
+              getOptionValue={(option) => option.id}
+              onChange={(option) => handleBankChange(option)}
+              placeholder='Select bank…'
+            />
+          </div>
         </div>
       </div>
 

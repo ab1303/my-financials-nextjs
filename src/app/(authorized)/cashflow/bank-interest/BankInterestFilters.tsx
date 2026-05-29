@@ -66,22 +66,23 @@ export default function BankInterestFilters({
   };
 
   return (
-    <div className='mb-6 space-y-6'>
-      <CalendarYearPicker
-        applicableTypes={['ANNUAL', 'FISCAL']}
-        calendarYears={yearlyData}
-        selectedYearId={yearIdParam || undefined}
-        defaultType={defaultType}
-        onYearChange={(yearId) => updateURLSearchParams('year', yearId ?? undefined)}
-        label='Year'
-      />
-      <div>
-        <Label>Bank</Label>
-        <div className='mt-1'>
+    <div className='mb-6'>
+      <div className='flex flex-wrap items-end gap-4'>
+        <CalendarYearPicker
+          applicableTypes={['ANNUAL', 'FISCAL']}
+          calendarYears={yearlyData}
+          selectedYearId={yearIdParam || undefined}
+          defaultType={defaultType}
+          onYearChange={(yearId) => updateURLSearchParams('year', yearId ?? undefined)}
+          label='Year'
+        />
+        <div className='flex flex-col space-y-1.5 flex-1 min-w-[280px]'>
+          <Label htmlFor={uniqSelectBankId}>Bank</Label>
           <Select<OptionType>
             instanceId={uniqSelectBankId}
+            inputId={uniqSelectBankId}
             isClearable
-            className='w-3/5 mr-2'
+            className='w-full'
             value={selectedBank}
             options={bankOptions}
             getOptionValue={(option) => option.id}

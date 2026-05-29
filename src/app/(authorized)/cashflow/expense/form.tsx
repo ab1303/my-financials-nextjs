@@ -65,25 +65,26 @@ export default function ExpenseForm({
 
   return (
     <div className='w-full space-y-6'>
-      <CalendarYearPicker
-        applicableTypes={['FISCAL', 'ANNUAL']}
-        calendarYears={expenseYearData}
-        selectedYearId={yearIdParam || undefined}
-        defaultType={defaultCalendarType}
-        onYearChange={handleYearChange}
-      />
-
-      <div className='w-full max-w-md'>
-        <Label htmlFor={`expense-bank-${id}`}>Bank Account</Label>
-        <div className='mt-2'>
+      <div className='flex flex-wrap items-end gap-4'>
+        <CalendarYearPicker
+          applicableTypes={['FISCAL', 'ANNUAL']}
+          calendarYears={expenseYearData}
+          selectedYearId={yearIdParam || undefined}
+          defaultType={defaultCalendarType}
+          onYearChange={handleYearChange}
+        />
+        <div className='flex flex-col space-y-1.5 flex-1 min-w-[280px]'>
+          <Label htmlFor={`expense-bank-${id}`}>Bank Account</Label>
           <Select<OptionType>
             instanceId={`expense-bank-${id}`}
+            inputId={`expense-bank-${id}`}
             isClearable
+            className='w-full'
             value={selectedBank}
             options={bankOptions}
             getOptionValue={(option) => option.id}
             onChange={(option) => handleBankChange(option)}
-            placeholder='Select bank...'
+            placeholder='Select bank…'
           />
         </div>
       </div>

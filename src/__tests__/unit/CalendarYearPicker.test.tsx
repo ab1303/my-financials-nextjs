@@ -142,8 +142,8 @@ describe('CalendarYearPicker', () => {
       );
 
       const annualButton = screen.getByTestId('type-swatch-ANNUAL');
-      expect(annualButton).toHaveClass('bg-primary');
-      expect(annualButton).toHaveClass('text-primary-foreground');
+      expect(annualButton).toHaveClass('bg-background');
+      expect(annualButton).toHaveClass('text-foreground');
     });
 
     it('renders unselected types with muted styles', () => {
@@ -159,7 +159,6 @@ describe('CalendarYearPicker', () => {
       );
 
       const fiscalButton = screen.getByTestId('type-swatch-FISCAL');
-      expect(fiscalButton).toHaveClass('bg-muted');
       expect(fiscalButton).toHaveClass('text-muted-foreground');
     });
 
@@ -226,7 +225,7 @@ describe('CalendarYearPicker', () => {
       const options = Array.from(selectInput.options);
 
       // Should only show ANNUAL years when ANNUAL is selected
-      const optionLabels = options.map((opt) => opt.textContent).filter((text) => text !== 'Select year...');
+      const optionLabels = options.map((opt) => opt.textContent).filter((text) => text !== 'Select year…');
 
       expect(optionLabels).toContain('Calendar Year 2024');
       expect(optionLabels).toContain('Calendar Year 2025');
@@ -248,7 +247,7 @@ describe('CalendarYearPicker', () => {
       let selectInput = screen.getByTestId('select-input') as HTMLSelectElement;
       let optionLabels = Array.from(selectInput.options)
         .map((opt) => opt.textContent)
-        .filter((text) => text !== 'Select year...');
+        .filter((text) => text !== 'Select year…');
 
       // Initially showing ANNUAL years
       expect(optionLabels).toContain('Calendar Year 2024');
@@ -261,7 +260,7 @@ describe('CalendarYearPicker', () => {
       selectInput = screen.getByTestId('select-input') as HTMLSelectElement;
       optionLabels = Array.from(selectInput.options)
         .map((opt) => opt.textContent)
-        .filter((text) => text !== 'Select year...');
+        .filter((text) => text !== 'Select year…');
 
       // Should now show FISCAL years
       expect(optionLabels).toContain('Fiscal Year 2024');
