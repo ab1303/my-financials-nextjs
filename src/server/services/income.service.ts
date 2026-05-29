@@ -340,3 +340,124 @@ export const getSourceBreakdown = async (
 
   return breakdowns;
 };
+
+/**
+ * Get monthly income summary for a calendar year with optional bank account filter.
+ * Extends getMonthlyIncomeSummary to support filtering by FinancialAccount.
+ * USER_MANUAL entries (bankAccountId=null) are always included when filter is active.
+ */
+export const getMonthlyIncomeSummaryFiltered = async (
+  calendarYearId: string,
+  userId: string,
+  bankAccountId?: string,
+): Promise<Array<MonthlyIncomeSummary>> => {
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
+  if (!calendarYear) return [];
+
+  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
+  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: 'CREDIT',
+      status: 'CONFIRMED',
+      date: { gte: startDate, lte: endDate },
+      ...(bankAccountId
+        ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
+        : {}),
+    },
+    select: { date: true, amount: true },
+  });
+
+  const monthlyMap = new Map<string, { totalAmount: number; count: number }>();
+  for (const tx of transactions) {
+    const month = tx.date.getMonth() + 1;
+    const year = tx.date.getFullYear();
+    const key = `${year}-${month}`;
+    const existing = monthlyMap.get(key) ?? { totalAmount: 0, count: 0 };
+    monthlyMap.set(key, {
+      totalAmount: existing.totalAmount + tx.amount.toNumber(),
+      count: existing.count + 1,
+    });
+  }
+
+  const summaries: MonthlyIncomeSummary[] = [];
+  monthlyMap.forEach((value, key) => {
+    const [yearStr, monthStr] = key.split('-');
+    summaries.push({
+      month: parseInt(monthStr!, 10),
+      year: parseInt(yearStr!, 10),
+      totalAmount: value.totalAmount,
+      entryCount: value.count,
+    });
+  });
+
+  summaries.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.month - b.month;
+  });
+
+  return summaries;
+};
+
+/**
+ * Get income breakdown by source for a full calendar year with optional bank account filter.
+ * Groups CREDIT CONFIRMED Transactions by category (= income source name).
+ * USER_MANUAL entries are always included when filter is active.
+ */
+export const getIncomeSourceBreakdownForYear = async (
+  calendarYearId: string,
+  userId: string,
+  bankAccountId?: string,
+): Promise<Array<SourceBreakdown>> => {
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
+  if (!calendarYear) return [];
+
+  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
+  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: 'CREDIT',
+      status: 'CONFIRMED',
+      date: { gte: startDate, lte: endDate },
+      ...(bankAccountId
+        ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
+        : {}),
+    },
+    select: { category: true, amount: true },
+  });
+
+  const sourceMap = new Map<string, { amount: number; count: number }>();
+  let totalAmount = 0;
+
+  for (const tx of transactions) {
+    const sourceName = tx.category;
+    const amount = tx.amount.toNumber();
+    totalAmount += amount;
+    const existing = sourceMap.get(sourceName) ?? { amount: 0, count: 0 };
+    sourceMap.set(sourceName, { amount: existing.amount + amount, count: existing.count + 1 });
+  }
+
+  const breakdowns: SourceBreakdown[] = [];
+  sourceMap.forEach((value, sourceKey) => {
+    breakdowns.push({
+      source: sourceKey,
+      amount: value.amount,
+      percentage: totalAmount > 0 ? (value.amount / totalAmount) * 100 : 0,
+      entryCount: value.count,
+    });
+  });
+
+  breakdowns.sort((a, b) => b.amount - a.amount);
+  return breakdowns;
+};
+

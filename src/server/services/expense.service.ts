@@ -451,3 +451,63 @@ export const getCategoryBreakdownForMonth = async (
     percentage: total > 0 ? (amount / total) * 100 : 0,
   }));
 };
+
+/**
+ * Get expense breakdown by category for a full calendar year with optional bank account filter.
+ * Groups DEBIT CONFIRMED Transactions (excluding TRANSFER) by category name.
+ * USER_MANUAL entries are always included when filter is active.
+ */
+export const getExpenseCategoryBreakdownForYear = async (
+  calendarYearId: string,
+  userId: string,
+  bankAccountId?: string,
+): Promise<Array<CategoryBreakdown>> => {
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
+  if (!calendarYear) return [];
+
+  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
+  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: 'DEBIT',
+      status: 'CONFIRMED',
+      date: { gte: startDate, lte: endDate },
+      category: { not: TRANSFER_CATEGORY },
+      ...(bankAccountId
+        ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
+        : {}),
+    },
+    select: { category: true, amount: true },
+  });
+
+  const categoryAmountMap = new Map<string, number>();
+  for (const tx of transactions) {
+    if (!tx.category) continue;
+    categoryAmountMap.set(tx.category, (categoryAmountMap.get(tx.category) ?? 0) + Number(tx.amount));
+  }
+
+  const categoryNames = Array.from(categoryAmountMap.keys());
+  const expenseCategories = await prisma.expenseCategory.findMany({
+    where: { name: { in: categoryNames } },
+    select: { id: true, name: true },
+  });
+  const catNameToId = new Map(expenseCategories.map((c) => [c.name, c.id]));
+
+  const total = Array.from(categoryAmountMap.values()).reduce((sum, amt) => sum + amt, 0);
+
+  const results = Array.from(categoryAmountMap.entries()).map(([categoryName, amount]) => ({
+    categoryId: catNameToId.get(categoryName) ?? '',
+    categoryName,
+    amount,
+    percentage: total > 0 ? (amount / total) * 100 : 0,
+  }));
+
+  results.sort((a, b) => b.amount - a.amount);
+  return results;
+};
+

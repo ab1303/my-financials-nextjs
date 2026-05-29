@@ -12,6 +12,7 @@ import {
   Receipt,
   Building2,
   BarChart3,
+  BarChart2,
   Settings,
   LogOut,
   ChevronDown,
@@ -66,6 +67,7 @@ const cashflowItems: NavItem[] = [
   { name: 'Expenses', href: '/cashflow/expense', icon: Receipt },
   { name: 'Transactions', href: '/cashflow/transactions', icon: ArrowLeftRight },
   { name: 'Bank Interest', href: '/cashflow/bank-interest', icon: Percent },
+  { name: 'Analytics', href: '/cashflow/analytics', icon: BarChart2 },
   { name: 'Transfer Rules', href: '/cashflow/transfer-rules', icon: GitMerge },
   { name: 'Category Rules', href: '/cashflow/category-rules', icon: Tag },
 ];
@@ -221,6 +223,7 @@ export default function SideNav({
         pathname.startsWith('/cashflow/expense') ||
         pathname.startsWith('/cashflow/transactions') ||
         pathname.startsWith('/cashflow/bank-interest') ||
+        pathname.startsWith('/cashflow/analytics') ||
         pathname.startsWith('/cashflow/transfer-rules'),
     },
     {

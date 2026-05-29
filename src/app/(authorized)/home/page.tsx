@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import {
   TrendingUp,
+  BarChart2,
   DollarSign,
   Receipt,
   CircleDollarSign,
@@ -94,18 +95,18 @@ export default async function HomePage() {
         <Card className='hover:shadow-md transition-shadow'>
           <CardHeader className='pb-2'>
             <div className='flex items-center gap-2'>
-              <div className='p-2 rounded-lg bg-green-100 dark:bg-green-900/20'>
-                <DollarSign className='h-4 w-4 text-green-600 dark:text-green-400' />
+              <div className='p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20'>
+                <BarChart2 className='h-4 w-4 text-blue-600 dark:text-blue-400' />
               </div>
               <CardTitle className='text-sm font-medium text-muted-foreground'>
-                Assets
+                Analytics
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <Link href='/assets/bank'>
+            <Link href='/cashflow/analytics'>
               <Button variant='outline' size='sm' className='w-full'>
-                View Assets
+                View Analytics
               </Button>
             </Link>
           </CardContent>
@@ -183,6 +184,15 @@ export default async function HomePage() {
           </CardHeader>
           <CardContent>
             <div className='space-y-3'>
+              <Link href='/cashflow/analytics'>
+                <Button
+                  variant='ghost'
+                  className='w-full justify-start gap-3 text-muted-foreground hover:text-foreground'
+                >
+                  <BarChart2 className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+                  Cashflow Analytics
+                </Button>
+              </Link>
               <Link href='/reports/income-summary'>
                 <Button
                   variant='ghost'
