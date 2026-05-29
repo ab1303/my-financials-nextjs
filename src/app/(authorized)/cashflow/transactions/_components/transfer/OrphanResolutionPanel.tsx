@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { AlertTriangle, ChevronDown, ChevronUp, Link2, RotateCcw, Unlink } from 'lucide-react';
-import Select from 'react-select';
 import type { SingleValue } from 'react-select';
 import { trpc } from '@/server/trpc/client';
+import { AppSelect } from '@/components/ui/AppSelect';
 import TransferLinkDrawer from './TransferLinkDrawer';
 
 interface OrphanResolutionPanelProps {
@@ -218,16 +218,13 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
                             <p className='text-xs font-medium text-gray-700 dark:text-gray-300'>
                               {mode === 'expense' ? 'Select expense category:' : 'Select income source:'}
                             </p>
-                            <Select<CategoryOption>
+                            <AppSelect<CategoryOption>
                               options={options}
                               value={pickedCategory}
                               onChange={(v: SingleValue<CategoryOption>) =>
                                 setSelectedCategory((prev) => ({ ...prev, [orphan.id]: v ?? null }))
                               }
                               placeholder={mode === 'expense' ? 'Expense category…' : 'Income source…'}
-                              classNamePrefix='orphan-cat'
-                              menuPortalTarget={typeof window !== 'undefined' ? document.body : undefined}
-                              styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
                               className='text-sm'
                             />
                             <div className='flex gap-2'>
