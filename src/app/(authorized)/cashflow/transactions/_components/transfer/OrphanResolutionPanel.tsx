@@ -398,6 +398,7 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
           }}
           onLinked={() => {
             setDrawerOrphanId(null);
+            setShowLinked(true); // auto-expand linked pairs so the Unlink button is immediately visible
             void utils.transfer.getOrphanedTransfers.invalidate();
             void utils.transfer.getLinkedTransferPairs.invalidate();
             onResolved?.();
