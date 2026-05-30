@@ -30,7 +30,7 @@ import CategoryRuleDrawer from './CategoryRuleDrawer';
 interface TransactionRowProps {
   transaction: LedgerTransactionRow;
   expenseCategories: Array<{ id: string; name: string }>;
-  incomeSourceLabels: string[];
+  incomeSourceLabels: Array<{ id: string; name: string }>;
   onCategoryChange: (
     id: string,
     newCategory: string,
@@ -156,11 +156,10 @@ export default function TransactionRow({
 
   const categoryOptions = useMemo<CategoryOption[]>(
     () => [
-      ...options.map((option) =>
-        typeof option === 'string'
-          ? { label: option, value: option }
-          : { label: option.name, value: option.name },
-      ),
+      ...options.map((option) => ({
+        label: option.name,
+        value: option.name,
+      })),
       ...(showReimbursementOption
         ? [{ label: REIMBURSEMENT_CATEGORY, value: REIMBURSEMENT_CATEGORY }]
         : []),

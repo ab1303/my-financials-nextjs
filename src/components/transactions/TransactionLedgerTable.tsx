@@ -244,7 +244,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     const incomeGroup = {
       label: '💰 Income Sources',
       options: incomeSourceLabels
-        .map((name) => ({ label: name, value: name }))
+        .map((item) => ({ label: item.name, value: item.name }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     };
 

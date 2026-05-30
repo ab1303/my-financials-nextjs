@@ -120,7 +120,7 @@ export interface GetAllOutput {
 
 export interface GetFilterOptionsOutput {
   expenseCategories: Array<{ id: string; name: string }>;
-  incomeSourceLabels: string[];
+  incomeSourceLabels: Array<{ id: string; name: string }>;
 }
 
 const getAllInputSchema = z.object({
@@ -413,7 +413,7 @@ export const transactionLedgerRouter = router({
 
     return {
       expenseCategories,
-      incomeSourceLabels: incomeSources.map((s) => s.name),
+      incomeSourceLabels: incomeSources,
     } satisfies GetFilterOptionsOutput;
   }),
 
