@@ -22,6 +22,16 @@ import {
   AIUsageDashboardCard,
   AIUsageDashboardCardSkeleton,
 } from './_components/AIUsageDashboardCard';
+import { NetWorthWidget } from './_components/NetWorthWidget';
+import { AssetBalanceCards } from './_components/AssetBalanceCards';
+import { CashflowPulseCard } from './_components/CashflowPulseCard';
+import { RecentTransactionsWidget } from './_components/RecentTransactionsWidget';
+import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
+import { getCalendarYears } from '@/server/services/calendar-year.service';
+import { getTotalIncome } from '@/server/services/income.service';
+import { getTotalExpenses } from '@/server/services/expense.service';
+import { prisma } from '@/server/utils/prisma';
+import type { DashboardSummaryResponse } from '@/server/models/dashboard';
 
 export const metadata: Metadata = {
   title: 'Dashboard — My Financials',
@@ -39,6 +49,73 @@ export default async function HomePage() {
   const dateFrom = new Date(now.getFullYear(), now.getMonth(), 1);
   const dateTo = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
+  // Fetch dashboard data (only if authenticated)
+  let netWorth: DashboardSummaryResponse['netWorth'] | null = null;
+  let cashflowYTD: DashboardSummaryResponse['cashflowYTD'] | null = null;
+  let recentTransactions: DashboardSummaryResponse['recentTransactions'] = [];
+
+  if (userId) {
+    // 1. Parallel fetch: net worth + calendar years + recent transactions
+    const [netWorthData, calendarYears, recentTxns] = await Promise.all([
+      getNetWorthTrend(userId),
+      getCalendarYears(),
+      prisma.transaction.findMany({
+        where: { userId, status: 'CONFIRMED', category: { not: 'Transfer' } },
+        include: { financialAccount: { select: { name: true } } },
+        orderBy: { date: 'desc' },
+        take: 5,
+      }),
+    ]);
+
+    // 2. Build sparkline (last 6 points)
+    const sparklinePoints = netWorthData.dataPoints
+      .slice(-6)
+      .map((p) => ({ date: p.date, value: p.netWorthTotal }));
+
+    // 3. Build cashflowYTD (if calendar year exists)
+    if (calendarYears.length > 0) {
+      const year = calendarYears[0]!;
+      const [totalIncome, totalExpenses] = await Promise.all([
+        getTotalIncome(year.id, userId),
+        getTotalExpenses(year.id, userId),
+      ]);
+      const netCashflow = totalIncome - totalExpenses;
+      const savingsRate =
+        totalIncome > 0
+          ? Math.max(0, Math.min(100, Math.round((netCashflow / totalIncome) * 100)))
+          : 0;
+      cashflowYTD = {
+        calendarYearId: year.id,
+        calendarYearDescription: year.description,
+        totalIncome,
+        totalExpenses,
+        netCashflow,
+        savingsRate,
+      };
+    }
+
+    // 4. Map transactions to response shape
+    recentTransactions = recentTxns.map((txn) => ({
+      id: txn.id,
+      date: txn.date.toISOString().split('T')[0] ?? '',
+      description: txn.description ?? '',
+      amount: Number(txn.amount),
+      type: txn.type as 'DEBIT' | 'CREDIT',
+      category: txn.category ?? '',
+      bankAccountName: txn.financialAccount?.name ?? null,
+    }));
+
+    // 5. Build netWorth prop
+    netWorth = {
+      latestTotal: netWorthData.latestNetWorth,
+      latestCashTotal: netWorthData.latestCashTotal,
+      latestStockTotal: netWorthData.latestStockTotal,
+      latestCashDate: netWorthData.latestCashDate,
+      latestStockDate: netWorthData.latestStockDate,
+      sparklinePoints,
+    };
+  }
+
   return (
     <main className='px-4 sm:px-6 lg:px-8 py-8'>
       <div className='mb-8'>
@@ -49,6 +126,32 @@ export default async function HomePage() {
           Your financial overview at a glance
         </p>
       </div>
+
+      {/* === Dashboard Widgets === */}
+      {userId && netWorth ? (
+        <section aria-label='Financial overview widgets' className='mb-8 space-y-4'>
+          {/* Row 1: Net Worth Hero (full width) */}
+          <div className='grid grid-cols-1'>
+            <NetWorthWidget netWorth={netWorth} />
+          </div>
+
+          {/* Row 2: Asset KPI Cards (two side by side) */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <AssetBalanceCards
+              latestCashTotal={netWorth.latestCashTotal}
+              latestStockTotal={netWorth.latestStockTotal}
+              latestCashDate={netWorth.latestCashDate}
+              latestStockDate={netWorth.latestStockDate}
+            />
+          </div>
+
+          {/* Row 3: Cashflow Pulse + Recent Transactions */}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <CashflowPulseCard cashflowYTD={cashflowYTD} />
+            <RecentTransactionsWidget transactions={recentTransactions} />
+          </div>
+        </section>
+      ) : null}
 
       {/* Quick Action Cards */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8'>
