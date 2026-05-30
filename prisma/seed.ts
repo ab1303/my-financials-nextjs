@@ -157,11 +157,11 @@ async function seedExpenseCategories() {
 
 const SPECIAL_CATEGORIES = [
   {
-    name: 'Transfer',
+    name: 'Donation',
     description:
-      'Money moved between your own accounts. Excluded from income and expense totals.',
+      'Charitable donation or zakat payment. Linked to the Philanthropy module.',
     isEditable: false,
-    color: 'blue',
+    color: 'purple',
   },
   {
     name: 'Excluded',
@@ -178,11 +178,23 @@ const SPECIAL_CATEGORIES = [
     color: 'green',
   },
   {
-    name: 'Donation',
-    description:
-      'Charitable donation or zakat payment. Linked to the Philanthropy module.',
+    name: 'Pending',
+    description: 'Unconfirmed transactions awaiting categorization.',
     isEditable: false,
-    color: 'purple',
+    color: 'yellow',
+  },
+  {
+    name: 'Reimbursement',
+    description: 'Transactions awaiting reimbursement or manual reconciliation.',
+    isEditable: true,
+    color: null,
+  },
+  {
+    name: 'Transfer',
+    description:
+      'Money moved between your own accounts. Excluded from income and expense totals.',
+    isEditable: false,
+    color: 'blue',
   },
 ];
 

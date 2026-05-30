@@ -26,12 +26,15 @@ import { NetWorthWidget } from './_components/NetWorthWidget';
 import { AssetBalanceCards } from './_components/AssetBalanceCards';
 import { CashflowPulseCard } from './_components/CashflowPulseCard';
 import { RecentTransactionsWidget } from './_components/RecentTransactionsWidget';
+import { MonthlyTrendWidget } from './_components/MonthlyTrendWidget';
+import { TopExpensesWidget } from './_components/TopExpensesWidget';
 import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
 import { getCalendarYears } from '@/server/services/calendar-year.service';
 import { getTotalIncome } from '@/server/services/income.service';
 import { getTotalExpenses } from '@/server/services/expense.service';
+import { getMonthlyIncomeExpenseTrend, getTopExpenseCategories } from '@/server/services/dashboard.service';
 import { prisma } from '@/server/utils/prisma';
-import type { DashboardSummaryResponse } from '@/server/models/dashboard';
+import type { DashboardSummaryResponse, MonthlyTrendPoint, TopExpenseCategory } from '@/server/models/dashboard';
 
 export const metadata: Metadata = {
   title: 'Dashboard — My Financials',
@@ -53,12 +56,14 @@ export default async function HomePage() {
   let netWorth: DashboardSummaryResponse['netWorth'] | null = null;
   let cashflowYTD: DashboardSummaryResponse['cashflowYTD'] | null = null;
   let recentTransactions: DashboardSummaryResponse['recentTransactions'] = [];
+  let monthlyTrend: MonthlyTrendPoint[] = [];
+  let topExpenseCategories: TopExpenseCategory[] = [];
 
   if (userId) {
     // 1. Parallel fetch: net worth + calendar years + recent transactions
     const [netWorthData, calendarYears, recentTxns] = await Promise.all([
       getNetWorthTrend(userId),
-      getCalendarYears(),
+      getCalendarYears(['FISCAL', 'ANNUAL']),
       prisma.transaction.findMany({
         where: { userId, status: 'CONFIRMED', category: { not: 'Transfer' } },
         include: { financialAccount: { select: { name: true } } },
@@ -114,6 +119,12 @@ export default async function HomePage() {
       latestStockDate: netWorthData.latestStockDate,
       sparklinePoints,
     };
+
+    // 6. Fetch income/expense trend and top categories in parallel
+    [monthlyTrend, topExpenseCategories] = await Promise.all([
+      getMonthlyIncomeExpenseTrend(userId, 6),
+      getTopExpenseCategories(userId, dateFrom, dateTo, 5),
+    ]);
   }
 
   return (
@@ -149,6 +160,15 @@ export default async function HomePage() {
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <CashflowPulseCard cashflowYTD={cashflowYTD} />
             <RecentTransactionsWidget transactions={recentTransactions} />
+          </div>
+
+          {/* Row 4: Income vs Expenses Trend + Top Expense Categories */}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <MonthlyTrendWidget data={monthlyTrend} />
+            <TopExpensesWidget
+              data={topExpenseCategories}
+              periodLabel={now.toLocaleString('en-AU', { month: 'long', year: 'numeric' })}
+            />
           </div>
         </section>
       ) : null}

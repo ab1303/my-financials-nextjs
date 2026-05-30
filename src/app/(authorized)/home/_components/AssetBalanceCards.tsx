@@ -52,8 +52,8 @@ export function AssetBalanceCards({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
-          {latestCashTotal === 0 ? (
-            <p className="text-sm text-muted-foreground">No data</p>
+          {!latestCashDate ? (
+            <p className="text-sm text-muted-foreground">No snapshots recorded yet</p>
           ) : (
             <>
               <p className="text-2xl font-bold tabular-nums text-foreground">
@@ -76,8 +76,8 @@ export function AssetBalanceCards({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
-          {latestStockTotal === 0 ? (
-            <p className="text-sm text-muted-foreground">No data</p>
+          {!latestStockDate ? (
+            <p className="text-sm text-muted-foreground">No snapshots recorded yet</p>
           ) : (
             <>
               <p className="text-2xl font-bold tabular-nums text-foreground">

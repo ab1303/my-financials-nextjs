@@ -24,8 +24,8 @@ export function NetWorthWidget({ netWorth }: Props) {
       maximumFractionDigits: 0,
     }).format(value);
 
-  // Empty state: no data yet
-  if (latestTotal === 0 || sparklinePoints.length === 0) {
+  // Empty state: no snapshots recorded yet
+  if (sparklinePoints.length === 0) {
     return (
       <Card className="col-span-full dark:border-slate-700">
         <CardHeader className="pb-2">

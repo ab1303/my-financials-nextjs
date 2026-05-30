@@ -33,4 +33,4 @@ The home page currently provides no live financial data, only navigation and sta
 ## Known Constraints & Gotchas
 - `getNetWorthTrend` may return empty `dataPoints` if no snapshots exist; widgets must handle and display empty state gracefully
 - Cashflow pulse uses fiscal year (CalendarYear), not calendar month
-- Transaction query must filter `status = CONFIRMED` and exclude `category = 'Transfer'` to avoid noise
+- getCalendarYears(['FISCAL', 'ANNUAL']) must be used — passing no filter returns ALL types including ZAKAT years, which would pick the wrong year for cashflow calculation

@@ -1,10 +1,26 @@
 # Reimbursement Tracking — Context
 
+## Definition
+
+> **Reimbursement** — Transactions awaiting reimbursement or manual reconciliation.
+
+A Reimbursement is user-assignable (not system-managed) and applies to two symmetric cases:
+
+| Direction | Scenario | Example |
+|---|---|---|
+| **DEBIT** | You paid on behalf of someone else and are waiting to be paid back | Paid $100 dinner for group; owed $50 back |
+| **CREDIT** | Someone paid you back for an expense you fronted | Received $50 from colleague for that dinner |
+
+**Contrast with Transfer:** A Transfer is money moved between *your own* accounts — it nets to $0 and is excluded from all P&L. A Reimbursement involves a *third party* and should offset the relevant expense category in reports.
+
 ## Problem
 
-`CREDIT` transactions that the LLM classifies as `Transfer` or `Excluded` are saved with `status = EXCLUDED` and no downstream record is written. This correctly handles true inter-account transfers, but silently buries **reimbursements** — money a third party pays you back after you fronted a shared cost. 
+Without a dedicated Reimbursement category:
 
-Because the offsetting credit is excluded, expense roll-ups are overstated: a $100 dinner you split equally shows as $100 expense with no $50 offset. Users need a way to mark a credit as a reimbursement and link it to the expense category it offsets.
+- **DEBIT side**: When you pay for something you'll be reimbursed for, the full amount hits expense roll-ups — overstating your personal costs.
+- **CREDIT side**: When someone pays you back, the credit is often classified as `Transfer` or `Excluded` (`status = EXCLUDED`), silently burying the offset. A $100 group dinner you split equally shows as $100 expense with no $50 reduction.
+
+Users need a way to mark transactions as Reimbursements and, optionally, link them to the specific expense they offset.
 
 ## Domain Dependencies
 

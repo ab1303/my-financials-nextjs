@@ -5,6 +5,7 @@ import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
 import { getCalendarYears } from '@/server/services/calendar-year.service';
 import { getTotalIncome } from '@/server/services/income.service';
 import { getTotalExpenses } from '@/server/services/expense.service';
+import { getMonthlyIncomeExpenseTrend, getTopExpenseCategories } from '@/server/services/dashboard.service';
 import type { DashboardSummaryResponse } from '@/server/models/dashboard';
 
 /**
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
     // Fetch net worth trend, calendar years, and transactions in parallel
     const [netWorthData, calendarYears, recentTransactionsData] = await Promise.all([
       getNetWorthTrend(userId),
-      getCalendarYears(),
+      getCalendarYears(['FISCAL', 'ANNUAL']),
       prisma.transaction.findMany({
         where: {
           userId,
@@ -104,6 +105,16 @@ export async function GET(request: Request) {
       bankAccountName: txn.financialAccount?.name ?? null,
     }));
 
+    // Fetch monthly trend and top expense categories for current month
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const [monthlyTrend, topExpenseCategories] = await Promise.all([
+      getMonthlyIncomeExpenseTrend(userId, 6),
+      getTopExpenseCategories(userId, monthStart, monthEnd, 5),
+    ]);
+
     const response: DashboardSummaryResponse = {
       netWorth: {
         latestTotal,
@@ -115,6 +126,8 @@ export async function GET(request: Request) {
       },
       cashflowYTD,
       recentTransactions,
+      monthlyTrend,
+      topExpenseCategories,
     };
 
     return NextResponse.json(response);
