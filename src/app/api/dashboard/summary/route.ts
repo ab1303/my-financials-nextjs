@@ -67,7 +67,11 @@ export async function GET(request: Request) {
     let cashflowYTD: DashboardSummaryResponse['cashflowYTD'] = null;
 
     if (calendarYears.length > 0) {
-      const currentCalendarYear = calendarYears[0]!;
+      // Prefer FISCAL year, fall back to ANNUAL
+      const currentCalendarYear =
+        calendarYears.find((y) => y.type === 'FISCAL') ??
+        calendarYears.find((y) => y.type === 'ANNUAL') ??
+        calendarYears[0]!;
 
       // Fetch income and expenses for the most recent fiscal year in parallel
       const [totalIncome, totalExpenses] = await Promise.all([

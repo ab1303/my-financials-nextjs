@@ -32,7 +32,7 @@ import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
 import { getCalendarYears } from '@/server/services/calendar-year.service';
 import { getTotalIncome } from '@/server/services/income.service';
 import { getTotalExpenses } from '@/server/services/expense.service';
-import { getMonthlyIncomeExpenseTrend, getTopExpenseCategories } from '@/server/services/dashboard.service';
+import { getMonthlyIncomeExpenseTrend, getTopExpenseCategories, getMonthlyTrendForDateRange } from '@/server/services/dashboard.service';
 import { prisma } from '@/server/utils/prisma';
 import type { DashboardSummaryResponse, MonthlyTrendPoint, TopExpenseCategory } from '@/server/models/dashboard';
 
@@ -59,39 +59,68 @@ export default async function HomePage() {
   let monthlyTrend: MonthlyTrendPoint[] = [];
   let topExpenseCategories: TopExpenseCategory[] = [];
 
+  let topExpensesLabel = '';
+
   if (userId) {
-    // 1. Parallel fetch: net worth + calendar years + recent transactions
-    const [netWorthData, calendarYears, recentTxns] = await Promise.all([
+    // Wave 1: net worth + calendar years in parallel (calendar years needed to scope everything else)
+    const [netWorthData, calendarYears] = await Promise.all([
       getNetWorthTrend(userId),
       getCalendarYears(['FISCAL', 'ANNUAL']),
+    ]);
+
+    // Determine the anchor year: FISCAL preferred, fall back to ANNUAL
+    const selectedYear =
+      calendarYears.find((y) => y.type === 'FISCAL') ??
+      calendarYears.find((y) => y.type === 'ANNUAL') ??
+      calendarYears[0] ??
+      null;
+
+    // Compute fiscal year date bounds (all widgets use this same anchor)
+    const fiscalStart = selectedYear
+      ? new Date(selectedYear.fromYear, selectedYear.fromMonth - 1, 1)
+      : dateFrom;
+    const fiscalEnd = selectedYear
+      ? new Date(selectedYear.toYear, selectedYear.toMonth, 0, 23, 59, 59, 999)
+      : dateTo;
+
+    topExpensesLabel = selectedYear?.description ?? now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+
+    // Wave 2: all fiscal-year-scoped data in parallel
+    const [totalIncome, totalExpenses, recentTxns, trendData, topCats] = await Promise.all([
+      selectedYear ? getTotalIncome(selectedYear.id, userId) : Promise.resolve(0),
+      selectedYear ? getTotalExpenses(selectedYear.id, userId) : Promise.resolve(0),
       prisma.transaction.findMany({
-        where: { userId, status: 'CONFIRMED', category: { not: 'Transfer' } },
+        where: {
+          userId,
+          status: 'CONFIRMED',
+          category: { not: 'Transfer' },
+          date: { gte: fiscalStart, lte: fiscalEnd },
+        },
         include: { financialAccount: { select: { name: true } } },
         orderBy: { date: 'desc' },
         take: 5,
       }),
+      selectedYear
+        ? getMonthlyTrendForDateRange(userId, fiscalStart, fiscalEnd)
+        : getMonthlyIncomeExpenseTrend(userId, 6),
+      getTopExpenseCategories(userId, fiscalStart, fiscalEnd, 5),
     ]);
 
-    // 2. Build sparkline (last 6 points)
+    // Build sparkline (last 6 points — net worth is not year-scoped)
     const sparklinePoints = netWorthData.dataPoints
       .slice(-6)
       .map((p) => ({ date: p.date, value: p.netWorthTotal }));
 
-    // 3. Build cashflowYTD (if calendar year exists)
-    if (calendarYears.length > 0) {
-      const year = calendarYears[0]!;
-      const [totalIncome, totalExpenses] = await Promise.all([
-        getTotalIncome(year.id, userId),
-        getTotalExpenses(year.id, userId),
-      ]);
+    // Build cashflowYTD
+    if (selectedYear) {
       const netCashflow = totalIncome - totalExpenses;
       const savingsRate =
         totalIncome > 0
           ? Math.max(0, Math.min(100, Math.round((netCashflow / totalIncome) * 100)))
           : 0;
       cashflowYTD = {
-        calendarYearId: year.id,
-        calendarYearDescription: year.description,
+        calendarYearId: selectedYear.id,
+        calendarYearDescription: selectedYear.description,
         totalIncome,
         totalExpenses,
         netCashflow,
@@ -99,7 +128,7 @@ export default async function HomePage() {
       };
     }
 
-    // 4. Map transactions to response shape
+    // Map recent transactions
     recentTransactions = recentTxns.map((txn) => ({
       id: txn.id,
       date: txn.date.toISOString().split('T')[0] ?? '',
@@ -110,7 +139,7 @@ export default async function HomePage() {
       bankAccountName: txn.financialAccount?.name ?? null,
     }));
 
-    // 5. Build netWorth prop
+    // Build netWorth prop
     netWorth = {
       latestTotal: netWorthData.latestNetWorth,
       latestCashTotal: netWorthData.latestCashTotal,
@@ -120,11 +149,8 @@ export default async function HomePage() {
       sparklinePoints,
     };
 
-    // 6. Fetch income/expense trend and top categories in parallel
-    [monthlyTrend, topExpenseCategories] = await Promise.all([
-      getMonthlyIncomeExpenseTrend(userId, 6),
-      getTopExpenseCategories(userId, dateFrom, dateTo, 5),
-    ]);
+    monthlyTrend = trendData;
+    topExpenseCategories = topCats;
   }
 
   return (
@@ -167,7 +193,7 @@ export default async function HomePage() {
             <MonthlyTrendWidget data={monthlyTrend} />
             <TopExpensesWidget
               data={topExpenseCategories}
-              periodLabel={now.toLocaleString('en-AU', { month: 'long', year: 'numeric' })}
+              periodLabel={topExpensesLabel}
             />
           </div>
         </section>

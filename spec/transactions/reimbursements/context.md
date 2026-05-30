@@ -27,21 +27,23 @@ Users need a way to mark transactions as Reimbursements and, optionally, link th
 - Uses: `Transaction` model from [../hld.md](../hld.md) (added `offsetCategory` field)
 - Uses: Transaction categorization and status management from domain HLD
 - Uses: `MonthlyExpenseSummary` roll-up patterns from domain HLD
-- Related: `transfer-reconciliation` (similar credit transaction classification)
-- Related: `transaction-ledger` (UI entry point for setting reimbursement offset)
+- Related: `transfer-reconciliation` — Transfer = between your own accounts (excluded entirely); Reimbursement = third-party money (offsets an expense)
+- Related: `transaction-ledger` (UI entry point for assigning Reimbursement category)
 
 ## Scope
 
 **In scope**
-- Introduce first-class `Reimbursement` category for CREDIT transactions
+- Introduce first-class `Reimbursement` category assignable to both DEBIT and CREDIT transactions
+- DEBIT marked as Reimbursement = "I paid; awaiting payback" — excluded from expense roll-ups while pending
+- CREDIT marked as Reimbursement = "Received payback" — decrements `MonthlyExpenseSummary` for the offset category
 - Allow users to specify which expense category is being offset (e.g., "Food & Dining")
-- When reimbursement is assigned, decrement `MonthlyExpenseSummary` for the offset category
-- Make offset transparent: MonthlyExpenseSummary reflects net (gross − reimbursement)
+- Make offset transparent: `MonthlyExpenseSummary` reflects net (gross − reimbursement)
 - Preserve audit trail: `Transaction.category = 'Reimbursement'`, `Transaction.offsetCategory = 'Food & Dining'`
-- Phase 2 (optional): Link reimbursement to specific debit transaction via `offsetTransactionId` FK
+- Phase 2 (optional): Link reimbursement CREDIT to its originating DEBIT via `offsetTransactionId` FK; auto-derive `offsetCategory` from the linked debit's category
 
 **Out of scope**
 - Dashboard "Net Expense" visualization (gross / reimbursements / net breakdown)
 - LLM auto-detection of reimbursements (handled by EXCLUDED_CREDIT_LABELS constant)
 - Bulk reimbursement assignment
 - Reclassification of CONFIRMED income to Reimbursement (requires IncomeRecord voidance)
+- Loan / receivables tracking (round-trip household transfers → use Transfer category instead)

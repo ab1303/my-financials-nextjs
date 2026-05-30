@@ -146,7 +146,6 @@ export const getTopExpenseCategories = async (
     categoryMap.set(tx.category, current + amount);
   }
 
-  // Convert to array and compute percentages
   const result: TopExpenseCategory[] = Array.from(categoryMap.entries())
     .map(([category, amount]) => ({
       category,
@@ -155,6 +154,64 @@ export const getTopExpenseCategories = async (
     }))
     .sort((a, b) => b.amount - a.amount)
     .slice(0, limit);
+
+  return result;
+};
+
+/**
+ * Get monthly income vs expenses trend for an explicit date range (e.g. a full fiscal year).
+ * All months between fromDate and toDate are pre-populated so months with no data still appear.
+ */
+export const getMonthlyTrendForDateRange = async (
+  userId: string,
+  fromDate: Date,
+  toDate: Date,
+): Promise<MonthlyTrendPoint[]> => {
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      status: 'CONFIRMED',
+      date: { gte: fromDate, lte: toDate },
+      category: { not: TRANSFER_CATEGORY },
+      type: { in: ['CREDIT', 'DEBIT'] },
+    },
+    select: { date: true, amount: true, type: true },
+  });
+
+  // Pre-populate all months in the range (so months with $0 still appear)
+  const trendMap = new Map<string, { income: number; expenses: number }>();
+  const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+  const rangeEnd = new Date(toDate.getFullYear(), toDate.getMonth(), 1);
+  while (cursor <= rangeEnd) {
+    const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
+    trendMap.set(key, { income: 0, expenses: 0 });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  for (const tx of transactions) {
+    const year = tx.date.getFullYear();
+    const month = tx.date.getMonth() + 1;
+    const key = `${year}-${String(month).padStart(2, '0')}`;
+    const bucket = trendMap.get(key);
+    if (!bucket) continue;
+    const amount = tx.amount.toNumber();
+    if (tx.type === 'CREDIT') bucket.income += amount;
+    else bucket.expenses += amount;
+  }
+
+  const result: MonthlyTrendPoint[] = [];
+  for (const key of Array.from(trendMap.keys()).sort()) {
+    const parts = key.split('-');
+    const year = parseInt(parts[0]!, 10);
+    const month = parseInt(parts[1]!, 10);
+    const data = trendMap.get(key)!;
+    result.push({
+      month, year,
+      label: `${MONTH_NAMES[month - 1]} ${String(year).slice(2)}`,
+      income: data.income,
+      expenses: data.expenses,
+    });
+  }
 
   return result;
 };

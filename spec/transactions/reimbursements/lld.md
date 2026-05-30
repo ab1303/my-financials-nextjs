@@ -2,10 +2,13 @@
 
 ## Overview
 
-Reimbursements are CREDIT transactions where someone pays the user back for a shared expense. This feature adds `offsetCategory` to `Transaction` to track which expense category a reimbursement offsets, and applies roll-up offsets to `MonthlyExpenseSummary`.
+Reimbursements are transactions involving a third party — either money you paid on behalf of someone else (DEBIT, awaiting payback) or money received back for an expense you fronted (CREDIT, offsets an expense category). This feature adds `offsetCategory` to `Transaction` to track which expense category a reimbursement CREDIT offsets, and applies roll-up adjustments to `MonthlyExpenseSummary`.
+
+- **DEBIT + Reimbursement**: excluded from expense roll-ups while awaiting payback (similar to Transfer status but retains Reimbursement discriminator for reporting)
+- **CREDIT + Reimbursement**: promoted to CONFIRMED; decrements `MonthlyExpenseSummary` for the named `offsetCategory`
 
 Phase 1 (complete): Category-based offset with `offsetCategory` field.  
-Phase 2 (optional): Transaction-to-transaction linking via `offsetTransactionId` FK.
+Phase 2 (optional): Transaction-to-transaction linking via `offsetTransactionId` FK; `offsetCategory` auto-derived from linked debit's category — user does not need to choose it manually.
 
 ---
 
@@ -120,10 +123,14 @@ updateCategory: protectedProcedure
     
     if (!transaction || transaction.userId !== ctx.session.user.id) throw new TRPCError({ code: 'NOT_FOUND' });
     
-    // Validation: Reimbursement only on CREDIT + EXCLUDED
+    // Validation: Reimbursement allowed on DEBIT or CREDIT transactions
+    // - DEBIT + Reimbursement: excluded from expense roll-ups (awaiting payback)
+    // - CREDIT + Reimbursement: requires offsetCategory; decrements MonthlyExpenseSummary
     if (newCategory === REIMBURSEMENT_CATEGORY) {
-      if (transaction.type !== 'CREDIT') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Reimbursement only valid for CREDIT' });
-      if (transaction.status === 'CONFIRMED' && transaction.category !== REIMBURSEMENT_CATEGORY) {
+      if (transaction.type === 'CREDIT' && !offsetCategory) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'offsetCategory required when assigning Reimbursement to a CREDIT' });
+      }
+      if (transaction.status === 'CONFIRMED' && transaction.type === 'CREDIT' && transaction.category !== REIMBURSEMENT_CATEGORY) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot reclassify CONFIRMED income as Reimbursement' });
       }
     }
@@ -280,12 +287,12 @@ const handleCategoryChange = (
 
 ## Phase 1 Success Criteria
 
-1. ✅ User can set `category = Reimbursement` on CREDIT+EXCLUDED rows
-2. ✅ Offset-category dropdown appears when Reimbursement is selected
-3. ✅ Transaction status promotes to CONFIRMED when Reimbursement is assigned
-4. ✅ `MonthlyExpenseSummary` for offset category decrements by reimbursement amount
-5. ✅ Changing away from Reimbursement reverts status to EXCLUDED and restores MonthlyExpenseSummary
-6. ✅ "Reimbursement" option does NOT appear in DEBIT or CONFIRMED CREDIT dropdowns
+1. ✅ User can set `category = Reimbursement` on both DEBIT and CREDIT+EXCLUDED rows
+2. ✅ CREDIT + Reimbursement: offset-category dropdown appears and is required
+3. ✅ DEBIT + Reimbursement: transaction excluded from expense roll-ups (awaiting payback); no offsetCategory required
+4. ✅ CREDIT + Reimbursement: transaction status promotes to CONFIRMED; `MonthlyExpenseSummary` for offset category decrements by reimbursement amount
+5. ✅ Changing away from Reimbursement reverts CREDIT to EXCLUDED and restores MonthlyExpenseSummary
+6. ✅ "Reimbursement" option does NOT appear on CONFIRMED CREDIT rows that are classified as Income
 7. ✅ `pnpm run build` passes with no errors
 
 ---
@@ -322,6 +329,7 @@ searchDebitTransactions: protectedProcedure
         userId: ctx.session.user.id,
         type: 'DEBIT',
         status: 'CONFIRMED',
+        offsetTransactionId: null,          // exclude already-linked DEBITs
         description: search ? { contains: search, mode: 'insensitive' } : undefined,
       },
       select: { id: true, date: true, description: true, amount: true, category: true },
@@ -329,6 +337,8 @@ searchDebitTransactions: protectedProcedure
     });
   }),
 ```
+
+**Note:** When the user selects a DEBIT to link, `offsetCategory` is **auto-derived** from `linkedDebit.category` — the user does not choose it manually. The manual `offsetCategory` dropdown is only shown in the Phase 1 (category-only, no specific transaction linked) flow.
 
 ### 2.3 Component: Link to Expense
 
