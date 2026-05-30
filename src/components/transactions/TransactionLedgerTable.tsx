@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import InfoTooltip from '@/components/ui/InfoTooltip';
 import { trpc } from '@/server/trpc/client';
+import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
 import TransactionFilters, { getPresetDateRange, type DatePreset } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
@@ -132,6 +133,9 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
+  // Rows that were recategorized away from the current tab's filter — kept visible so
+  // the user can complete any follow-up action (e.g. reimbursement linking) before dismissing.
+  const [retainedRows, setRetainedRows] = useState<Map<string, LedgerTransactionRow>>(new Map());
   const [transferDrawerTx, setTransferDrawerTx] = useState<{
     id: string;
     description: string;
@@ -204,6 +208,27 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
 
   const handleCategoryChange = useCallback(
     (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null) => {
+      // On the transfers tab, if the row is being moved to a non-Transfer category,
+      // retain it in view so the user can complete follow-up actions (e.g. linking).
+      if (activeTab === 'transfers') {
+        const txData = data?.transactions.find(tx => tx.id === id) ?? retainedRows.get(id);
+        if (txData) {
+          if (newCategory !== TRANSFER_CATEGORY) {
+            setRetainedRows(prev => {
+              const next = new Map(prev);
+              next.set(id, { ...txData, category: newCategory });
+              return next;
+            });
+          } else {
+            // Re-categorized back to Transfer — remove from retained (it'll reappear normally)
+            setRetainedRows(prev => {
+              const next = new Map(prev);
+              next.delete(id);
+              return next;
+            });
+          }
+        }
+      }
       setSavingId(id);
       updateCategoryMutation.mutate({
         id,
@@ -212,8 +237,16 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         ...(offsetTransactionId !== undefined ? { offsetTransactionId: offsetTransactionId ?? undefined } : {}),
       });
     },
-    [updateCategoryMutation],
+    [updateCategoryMutation, activeTab, data, retainedRows],
   );
+
+  const handleDismissRetained = useCallback((id: string) => {
+    setRetainedRows(prev => {
+      const next = new Map(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
 
   const handleReset = useCallback(() => {
     setBankAccountId(undefined);
@@ -233,11 +266,19 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   const handleTabChange = useCallback((tab: TabFilter) => {
     setActiveTab(tab);
     setPage(1);
+    setRetainedRows(new Map());
   }, []);
 
   const loading = isLoading; // Only blank the table on initial load; background refetches use isFetching
   const syncing = !isLoading && isFetching; // Background sync — show subtle indicator without blanking table
   const transactions = data?.transactions ?? [];
+  // Retained rows: recategorized on this tab but kept visible until dismissed
+  const retainedVisible = useMemo(() => {
+    const currentIds = new Set(transactions.map(tx => tx.id));
+    return [...retainedRows.entries()]
+      .filter(([id]) => !currentIds.has(id))
+      .map(([, tx]) => tx);
+  }, [transactions, retainedRows]);
   const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
   const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
   const categoryOptions = useMemo(() => {
@@ -427,6 +468,37 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                       : undefined
                   }
                 />
+              ))}
+              {retainedVisible.map((tx) => (
+                <Fragment key={`retained-${tx.id}`}>
+                  <tr className="bg-amber-50 dark:bg-amber-900/20">
+                    <td colSpan={10} className="px-4 py-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-amber-700 dark:text-amber-300">
+                          Moved to <strong>{tx.category}</strong> — kept visible so you can complete any linking
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDismissRetained(tx.id)}
+                          className="ml-4 text-xs text-amber-600 underline hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <TransactionRow
+                    transaction={tx}
+                    expenseCategories={expenseCategories}
+                    incomeSourceLabels={incomeSourceLabels}
+                    onCategoryChange={handleCategoryChange}
+                    isSaving={savingId === tx.id}
+                    colCount={10}
+                    onVoided={() => { handleDismissRetained(tx.id); void refetch(); }}
+                    onRestored={() => { handleDismissRetained(tx.id); void refetch(); }}
+                    onUnlinked={() => void refetch()}
+                  />
+                </Fragment>
               ))}
             </tbody>
           </table>

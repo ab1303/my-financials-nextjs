@@ -631,8 +631,7 @@ export const transactionLedgerRouter = router({
         where: {
           userId,
           type: TransactionTypeEnum.DEBIT,
-          status: TransactionStatusEnum.CONFIRMED,
-          category: { not: TRANSFER_CATEGORY },
+          status: { in: [TransactionStatusEnum.CONFIRMED, TransactionStatusEnum.EXCLUDED] },
           ...(input.search?.trim()
             ? {
                 OR: [

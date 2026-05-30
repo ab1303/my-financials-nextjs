@@ -143,7 +143,8 @@ export default function TransactionRow({
 
   const showReimbursementOption =
     transaction.type === 'CREDIT' &&
-    (transaction.status === 'EXCLUDED' ||
+    (transaction.status === 'CONFIRMED' ||
+      transaction.status === 'EXCLUDED' ||
       transaction.category === REIMBURSEMENT_CATEGORY ||
       localCategory === REIMBURSEMENT_CATEGORY);
 
@@ -224,7 +225,7 @@ export default function TransactionRow({
         return matches.map((match) => ({
           value: match.id,
           label: match.description,
-          meta: `${match.date} · ${formatCurrency(match.amount)}`,
+          meta: `${match.date} · ${formatCurrency(match.amount)} · ${match.category}`,
         }));
       } catch (error) {
         console.error(
