@@ -57,6 +57,7 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
       void utils.transfer.getOrphanedTransfers.invalidate();
       void utils.transfer.getLinkedTransferPairs.invalidate();
       void utils.transfer.getResolvedOrphans.invalidate();
+      void utils.transfer.getUnmatchedCount.invalidate();
       setIsRunningDetection(false);
     },
     onError: (err) => {

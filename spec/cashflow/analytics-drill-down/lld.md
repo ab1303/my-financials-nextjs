@@ -1,3 +1,5 @@
+> ✅ IMPLEMENTED — 2026-05-29
+
 # Analytics Drill-Down — Low-Level Design (LLD)
 
 ## Phase Map
@@ -57,6 +59,12 @@ getTransactionsByFilter: publicProcedure
 - Ensure only one drawer open at a time
 - Chart click must pass correct filter (categoryId/source/month)
 - Drawer must not break analytics-dashboard or other drawers
+
+## Implementation Summary
+
+- `src/app/(authorized)/cashflow/analytics/_components/AnalyticsDrillDownDrawer.tsx` — CREATED
+- `src/server/trpc/router/category-transactions.ts` — MODIFIED (added `getForPeriod`)
+- `src/app/(authorized)/cashflow/analytics/_components/CashflowAnalyticsClient.tsx` — MODIFIED (drillDownFilter state + drawer integration)
 
 ## File Inventory
 

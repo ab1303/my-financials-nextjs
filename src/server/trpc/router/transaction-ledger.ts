@@ -480,10 +480,9 @@ export const transactionLedgerRouter = router({
     } else if (
       transaction.category === TRANSFER_CATEGORY &&
       input.newCategory !== TRANSFER_CATEGORY &&
-      transaction.type === TransactionTypeEnum.DEBIT &&
       transaction.status === TransactionStatusEnum.EXCLUDED
     ) {
-      // User is reclassifying a Transfer DEBIT as a real expense → promote to CONFIRMED
+      // User is reclassifying a Transfer (DEBIT or CREDIT) as a real category → promote to CONFIRMED
       newStatus = TransactionStatusEnum.CONFIRMED;
       newConfirmedAt = new Date();
     } else if (

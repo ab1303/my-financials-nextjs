@@ -1,3 +1,5 @@
+> ✅ FULLY IMPLEMENTED — 2026-05-29
+
 # Cashflow Analytics Dashboard — Low Level Design
 
 ## Overview
@@ -14,7 +16,10 @@ A new `/cashflow/analytics` page that surfaces income vs expense trends, categor
 /cashflow/analytics
 ┌────────────────────────────────────────────────────────────────┐
 │  Cashflow Analytics                                            │
-│  [Fiscal Year 2024/25 ▼]  [All Accounts ▼]                    │
+│  [Fiscal | Annual] [FY 2024-25 ▼] [All Accounts ▼] (single row, compact)
+- Uses `CalendarYearPicker` compound component
+- Bank Account dropdown: `flex-1 min-w-[280px]`
+- Layout: `flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4`                    │
 ├────────────┬────────────┬────────────┬────────────────────────┤
 │ Income     │ Expenses   │ Net Flow   │ Savings Rate           │
 │ $54,200    │ $38,100    │ +$16,100   │  29.7%                 │
@@ -46,9 +51,9 @@ A new `/cashflow/analytics` page that surfaces income vs expense trends, categor
 | Change year picker | Refetch all charts and KPIs; update URL `?calendarYearId=` |
 | Change bank filter | Refetch all charts and KPIs; update URL `?bankAccountId=` |
 | Hover on bar | Tooltip with formatted amount (currency), month label |
-| Click month bar (trend chart) | Navigate to `/cashflow/expense?calendarYearId=X&month=Y` |
-| Click category row/bar | Navigate to `/cashflow/transactions?category=X&calendarYearId=Y` |
-| Click income source row | Navigate to `/cashflow/income?calendarYearId=X&source=Y` |
+| Click month bar (trend chart) | Opens drill-down drawer (`AnalyticsDrillDownDrawer`) for that month. "View all in Transactions ↗" link inside drawer for full navigation |
+| Click category row/bar | Opens drill-down drawer (`AnalyticsDrillDownDrawer`) for that category. "View all in Transactions ↗" link inside drawer for full navigation |
+| Click income source row | Opens drill-down drawer (`AnalyticsDrillDownDrawer`) for that income source. "View all in Transactions ↗" link inside drawer for full navigation |
 | Page load / filter change | All sections show skeleton until data resolves |
 
 ### Chart Colour Palette
@@ -69,6 +74,15 @@ All colours must include `dark:` variants via the shadcn chart CSS variable syst
 ## Data Layer
 
 ### New Service Functions
+
+### New tRPC Procedure
+
+**`src/server/trpc/router/category-transactions.ts`**
+- New procedure: `getForPeriod`
+- Input: `{ year: number, type: 'DEBIT' | 'CREDIT', category?: string, source?: string, month?: number }`
+- Returns: `Transaction[]` for the given year/type/category/source filtered scope
+- Transfer guard applied for DEBIT queries (excludes isTransfer=true)
+
 
 **`src/server/services/income.service.ts` additions:**
 
@@ -187,9 +201,10 @@ src/app/(authorized)/cashflow/analytics/
     CashflowAnalyticsClient.tsx     ← Client: period/bank filter state, fetches analytics data
     KPISummaryCards.tsx             ← 4 KPI cards with color-coded values
     IncomeExpenseTrendChart.tsx      ← Grouped bar chart (shadcn BarChart)
-    NetCashflowChart.tsx            ← Single-series bar chart, positive=green/negative=red
+    NetCashflowChart.tsx            ← ComposedChart: net bars + cumulative savings line
     ExpenseCategoryChart.tsx        ← Horizontal bar chart for top expense categories
     IncomeSourceChart.tsx           ← Horizontal bar chart (or donut) for income sources
+    AnalyticsDrillDownDrawer.tsx    ← NEW right-side drawer for transaction drill-down
     ChartSkeleton.tsx               ← Shared skeleton placeholder for chart areas
 ```
 
