@@ -51,7 +51,7 @@ const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'statu
   expenses: { type: 'DEBIT', status: 'CONFIRMED', excludeTransferCategory: true },
   income: { type: 'CREDIT', status: 'CONFIRMED', excludeTransferCategory: true },
   excluded: { status: 'EXCLUDED', excludeTransferCategory: true },
-  reimbursements: { type: 'CREDIT', status: 'CONFIRMED', reimbursementOnly: true },
+  reimbursements: { reimbursementOnly: true },
   uncategorized: {},
   voided: { status: 'VOIDED' },
   transfers: { transferOnly: true },
@@ -173,6 +173,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   }, [page, activeTab, bankAccountId, category, dateFrom, dateTo, debouncedSearch, amountMin, amountMax]);
 
   const { data, isLoading, isFetching, refetch } = trpc.transactionLedger.getAll.useQuery(queryInput);
+  const utils = trpc.useUtils();
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
   const unmatchedCountQuery = trpc.transfer.getUnmatchedCount.useQuery(undefined, {
     enabled: activeTab === 'transfers',
@@ -198,6 +199,8 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     onSuccess: () => {
       setSavingId(null);
       void refetch();
+      // Invalidate the link picker cache so newly-linked DEBITs are excluded immediately
+      void utils.transactionLedger.searchDebitTransactions.invalidate();
       toast.success('Category updated');
     },
     onError: (error) => {

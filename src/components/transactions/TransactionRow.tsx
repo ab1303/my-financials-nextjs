@@ -61,6 +61,7 @@ type LinkOption = {
   label: string;
   value: string;
   meta: string;
+  category: string;
 };
 
 export default function TransactionRow({
@@ -142,11 +143,11 @@ export default function TransactionRow({
     transaction.type === 'DEBIT' ? expenseCategories : incomeSourceLabels;
 
   const showReimbursementOption =
-    transaction.type === 'CREDIT' &&
-    (transaction.status === 'CONFIRMED' ||
-      transaction.status === 'EXCLUDED' ||
-      transaction.category === REIMBURSEMENT_CATEGORY ||
-      localCategory === REIMBURSEMENT_CATEGORY);
+    transaction.category === REIMBURSEMENT_CATEGORY ||
+    localCategory === REIMBURSEMENT_CATEGORY ||
+    (transaction.type === 'CREDIT' &&
+      (transaction.status === 'CONFIRMED' || transaction.status === 'EXCLUDED')) ||
+    (transaction.type === 'DEBIT' && transaction.status === 'CONFIRMED');
 
   // Transfer is a special system category valid for any transaction;
   // show it when the row is currently Transfer, or when it's EXCLUDED (so the user can restore it).
@@ -225,6 +226,7 @@ export default function TransactionRow({
         return matches.map((match) => ({
           value: match.id,
           label: match.description,
+          category: match.category,
           meta: `${match.date} · ${formatCurrency(match.amount)} · ${match.category}`,
         }));
       } catch (error) {
@@ -286,13 +288,19 @@ export default function TransactionRow({
 
   function handleLinkTransaction(linkedOption: LinkOption | null) {
     const linkedId = linkedOption?.value ?? null;
+    // Auto-derive offsetCategory from the linked DEBIT's category if not already chosen.
+    const derivedOffsetCategory = linkedOption?.category ?? '';
+    const effectiveOffsetCategory = localOffsetCategory || derivedOffsetCategory;
     setSelectedLinkOption(linkedOption);
     setLocalOffsetTxId(linkedId);
+    if (!localOffsetCategory && derivedOffsetCategory) {
+      setLocalOffsetCategory(derivedOffsetCategory);
+    }
     setPickerOpen(false);
     onCategoryChange(
       transaction.id,
       REIMBURSEMENT_CATEGORY,
-      localOffsetCategory || undefined,
+      effectiveOffsetCategory || undefined,
       linkedId,
     );
   }
@@ -399,94 +407,114 @@ export default function TransactionRow({
 
             {localCategory === REIMBURSEMENT_CATEGORY && (
               <>
-                <Select
-                  instanceId={offsetCategorySelectId}
-                  inputId={offsetCategorySelectId}
-                  aria-label={`Offsets expense category for ${transaction.description}`}
-                  isDisabled={isSaving}
-                  isClearable={false}
-                  placeholder='Offsets category…'
-                  value={selectedOffsetCategory}
-                  options={offsetCategoryOptions}
-                  onChange={(option: SingleValue<CategoryOption>) =>
-                    handleOffsetChange(option?.value ?? '')
-                  }
-                  styles={{
-                    ...compactSelectStyles,
-                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  }}
-                  className='w-full'
-                  menuPortalTarget={document.body}
-                  menuPosition='fixed'
-                />
-
-                <div className='mt-1'>
-                  {localOffsetTxId ? (
-                    <div className='flex items-center gap-1 rounded border border-teal-300 bg-teal-50 px-2 py-1 text-xs dark:border-teal-700 dark:bg-teal-950/30'>
-                      <span className='text-teal-500'>🔗</span>
-                      <span className='truncate text-teal-700 dark:text-teal-300'>
-                        {selectedLinkOption?.label ?? 'Linked expense'}
-                      </span>
-                      <button
-                        type='button'
-                        aria-label='Unlink expense'
-                        onClick={() => handleLinkTransaction(null)}
-                        className='ml-auto text-gray-400 hover:text-red-500'
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : !pickerOpen ? (
-                    <button
-                      type='button'
-                      onClick={() => setPickerOpen(true)}
-                      className='text-xs text-teal-600 hover:underline dark:text-teal-400'
-                    >
-                      ＋ Link to original expense
-                    </button>
-                  ) : (
-                    <div className='flex flex-col gap-1'>
-                      <AsyncSelect<LinkOption, false>
-                        instanceId={linkSelectId}
-                        inputId={linkSelectId}
-                        aria-label={`Link original expense for ${transaction.description}`}
-                        autoFocus
-                        cacheOptions
-                        defaultOptions
-                        isClearable
-                        isDisabled={isSaving}
-                        menuIsOpen
-                        menuPortalTarget={document.body}
-                        menuPosition='fixed'
-                        placeholder='Search expenses…'
-                        loadOptions={loadLinkOptions}
-                        value={selectedLinkOption}
-                        getOptionValue={(option) => option.value}
-                        formatOptionLabel={formatLinkOptionLabel}
-                        onChange={(option: SingleValue<LinkOption>) =>
-                          handleLinkTransaction(option ?? null)
-                        }
-                        styles={{
-                          ...linkSelectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                        }}
-                        className='w-full min-w-[280px]'
-                        noOptionsMessage={({ inputValue }) =>
-                          inputValue.trim()
-                            ? 'No matching expenses found'
-                            : 'No recent expenses — type to search all time'
-                        }
-                      />
-                      <button
-                        type='button'
-                        onClick={handleResetLinkPicker}
-                        className='mt-1 text-xs text-gray-400 hover:text-gray-600'
-                      >
-                        Reset
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {transaction.type === 'CREDIT' ? (
+                  <>
+                    {localOffsetTxId ? (
+                      /* LINKED STATE: single compound chip — link + derived category as one unit */
+                      <div className='mt-1 flex items-center gap-1.5 overflow-hidden rounded-md border border-teal-300 bg-teal-50 px-2 py-1.5 text-xs dark:border-teal-700 dark:bg-teal-950/30'>
+                        <span className='shrink-0 text-teal-500' aria-hidden='true'>🔗</span>
+                        <span className='min-w-0 flex-1 truncate text-teal-700 dark:text-teal-300'>
+                          {selectedLinkOption?.label ?? 'Linked expense'}
+                        </span>
+                        {localOffsetCategory && (
+                          <span className='shrink-0 rounded bg-teal-100 px-1.5 py-0.5 font-medium text-teal-600 dark:bg-teal-900/60 dark:text-teal-400'>
+                            {localOffsetCategory}
+                          </span>
+                        )}
+                        <button
+                          type='button'
+                          aria-label='Unlink expense'
+                          onClick={() => handleLinkTransaction(null)}
+                          className='ml-0.5 shrink-0 rounded-full p-0.5 text-gray-400 transition-colors hover:bg-red-100 hover:text-red-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 dark:hover:bg-red-900/30'
+                        >
+                          <svg className='h-3 w-3' viewBox='0 0 12 12' fill='none' stroke='currentColor' strokeWidth={1.8} strokeLinecap='round' aria-hidden='true'>
+                            <path d='M1 1l10 10M11 1L1 11' />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      /* UNLINKED STATE: link action + offset category side by side */
+                      <div className='mt-1 flex flex-col gap-1'>
+                        {!pickerOpen ? (
+                          <button
+                            type='button'
+                            onClick={() => setPickerOpen(true)}
+                            className='self-start text-xs text-teal-600 hover:underline dark:text-teal-400'
+                          >
+                            ＋ Link to original expense
+                          </button>
+                        ) : (
+                          <div className='flex flex-col gap-1'>
+                            <AsyncSelect<LinkOption, false>
+                              instanceId={linkSelectId}
+                              inputId={linkSelectId}
+                              aria-label={`Link original expense for ${transaction.description}`}
+                              autoFocus
+                              cacheOptions
+                              defaultOptions
+                              isClearable
+                              isDisabled={isSaving}
+                              menuIsOpen
+                              menuPortalTarget={document.body}
+                              menuPosition='fixed'
+                              placeholder='Search expenses…'
+                              loadOptions={loadLinkOptions}
+                              value={selectedLinkOption}
+                              getOptionValue={(option) => option.value}
+                              formatOptionLabel={formatLinkOptionLabel}
+                              onChange={(option: SingleValue<LinkOption>) =>
+                                handleLinkTransaction(option ?? null)
+                              }
+                              styles={{
+                                ...linkSelectStyles,
+                                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                              }}
+                              className='w-full'
+                              noOptionsMessage={({ inputValue }) =>
+                                inputValue.trim()
+                                  ? 'No matching expenses found'
+                                  : 'No recent expenses — type to search all time'
+                              }
+                            />
+                            <button
+                              type='button'
+                              onClick={handleResetLinkPicker}
+                              className='mt-1 text-xs text-gray-400 hover:text-gray-600'
+                            >
+                              Reset
+                            </button>
+                          </div>
+                        )}
+                        {/* offset category — only visible when not linked; allows category-only reimbursement */}
+                        <Select
+                          instanceId={offsetCategorySelectId}
+                          inputId={offsetCategorySelectId}
+                          aria-label={`Offsets expense category for ${transaction.description}`}
+                          isDisabled={isSaving}
+                          isClearable={false}
+                          placeholder='Offsets category…'
+                          value={selectedOffsetCategory}
+                          options={offsetCategoryOptions}
+                          onChange={(option: SingleValue<CategoryOption>) =>
+                            handleOffsetChange(option?.value ?? '')
+                          }
+                          styles={{
+                            ...compactSelectStyles,
+                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          }}
+                          className='w-full'
+                          menuPortalTarget={document.body}
+                          menuPosition='fixed'
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  /* DEBIT Reimbursement: simple "awaiting payback" badge, no offsetCategory needed */
+                  <span className='mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'>
+                    ⏳ Awaiting payback
+                  </span>
+                )}
               </>
             )}
           </div>

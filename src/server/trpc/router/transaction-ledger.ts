@@ -142,22 +142,12 @@ const getAllInputSchema = z.object({
   excludeTransferCategory: z.boolean().optional(),
 });
 
-const updateCategorySchema = z
-  .object({
-    id: z.string().min(1),
-    newCategory: z.string().min(1),
-    offsetCategory: z.string().optional(),
-    offsetTransactionId: z.string().optional(),
-  })
-  .refine(
-    (data) =>
-      data.newCategory !== REIMBURSEMENT_CATEGORY ||
-      (!!data.offsetCategory && data.offsetCategory.length > 0),
-    {
-      message: 'offsetCategory is required when category is Reimbursement',
-      path: ['offsetCategory'],
-    },
-  );
+const updateCategorySchema = z.object({
+  id: z.string().min(1),
+  newCategory: z.string().min(1),
+  offsetCategory: z.string().optional(),
+  offsetTransactionId: z.string().optional(),
+});
 
 export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, userId: string) {
   const where: Prisma.TransactionWhereInput = { userId };
@@ -439,25 +429,38 @@ export const transactionLedgerRouter = router({
       throw new TRPCError({ code: 'NOT_FOUND' });
     }
 
-    if (input.newCategory === REIMBURSEMENT_CATEGORY && transaction.type !== TransactionTypeEnum.CREDIT) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Reimbursement category is only valid for CREDIT transactions',
-      });
+    if (input.newCategory === REIMBURSEMENT_CATEGORY) {
+      if (transaction.type === TransactionTypeEnum.CREDIT && !input.offsetCategory?.trim()) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'offsetCategory is required when assigning Reimbursement to a CREDIT transaction',
+        });
+      }
     }
 
     if (input.offsetTransactionId) {
       const linked = await ctx.prisma.transaction.findUnique({
         where: { id: input.offsetTransactionId },
-        select: { userId: true, type: true, status: true },
+        select: { userId: true, type: true, status: true, category: true },
       });
       if (!linked || linked.userId !== userId) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Linked transaction not found' });
       }
-      if (linked.type !== TransactionTypeEnum.DEBIT || linked.status !== TransactionStatusEnum.CONFIRMED) {
+      if (linked.type !== TransactionTypeEnum.DEBIT) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Linked transaction must be a confirmed expense (DEBIT)',
+          message: 'Linked transaction must be a DEBIT',
+        });
+      }
+      // Allow CONFIRMED expenses AND EXCLUDED DEBITs already marked as Reimbursement (awaiting payback)
+      const isConfirmedExpense = linked.status === TransactionStatusEnum.CONFIRMED;
+      const isAwaitingPayback =
+        linked.status === TransactionStatusEnum.EXCLUDED &&
+        linked.category === REIMBURSEMENT_CATEGORY;
+      if (!isConfirmedExpense && !isAwaitingPayback) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Linked transaction must be a confirmed expense or a DEBIT awaiting reimbursement',
         });
       }
     }
@@ -465,18 +468,26 @@ export const transactionLedgerRouter = router({
     let newStatus: TransactionStatusEnum = transaction.status;
     let newConfirmedAt: Date | undefined;
 
-    if (
-      input.newCategory === REIMBURSEMENT_CATEGORY &&
-      transaction.status === TransactionStatusEnum.EXCLUDED
-    ) {
-      newStatus = TransactionStatusEnum.CONFIRMED;
-      newConfirmedAt = new Date();
+    if (input.newCategory === REIMBURSEMENT_CATEGORY) {
+      if (transaction.type === TransactionTypeEnum.CREDIT && transaction.status === TransactionStatusEnum.EXCLUDED) {
+        // CREDIT Reimbursement: promote to CONFIRMED (someone paid you back)
+        newStatus = TransactionStatusEnum.CONFIRMED;
+        newConfirmedAt = new Date();
+      } else if (transaction.type === TransactionTypeEnum.DEBIT && transaction.status === TransactionStatusEnum.CONFIRMED) {
+        // DEBIT Reimbursement: demote to EXCLUDED (awaiting payback; remove from expense reports)
+        newStatus = TransactionStatusEnum.EXCLUDED;
+      }
     } else if (
       transaction.category === REIMBURSEMENT_CATEGORY &&
-      input.newCategory !== REIMBURSEMENT_CATEGORY &&
-      transaction.status === TransactionStatusEnum.CONFIRMED
+      input.newCategory !== REIMBURSEMENT_CATEGORY
     ) {
-      newStatus = TransactionStatusEnum.EXCLUDED;
+      if (transaction.type === TransactionTypeEnum.CREDIT && transaction.status === TransactionStatusEnum.CONFIRMED) {
+        newStatus = TransactionStatusEnum.EXCLUDED;
+      } else if (transaction.type === TransactionTypeEnum.DEBIT && transaction.status === TransactionStatusEnum.EXCLUDED) {
+        // Restoring DEBIT from Reimbursement → promote back to CONFIRMED
+        newStatus = TransactionStatusEnum.CONFIRMED;
+        newConfirmedAt = new Date();
+      }
     } else if (
       transaction.category === TRANSFER_CATEGORY &&
       input.newCategory !== TRANSFER_CATEGORY &&
@@ -512,7 +523,8 @@ export const transactionLedgerRouter = router({
     const offsetCatChanged = transaction.offsetCategory !== (input.offsetCategory ?? null);
 
     if (transaction.category !== REIMBURSEMENT_CATEGORY && input.newCategory === REIMBURSEMENT_CATEGORY) {
-      if (input.offsetCategory) {
+      if (transaction.type === TransactionTypeEnum.CREDIT && input.offsetCategory) {
+        // CREDIT Reimbursement: decrement the offset expense category
         await applyReimbursementOffset({
           prismaClient: ctx.prisma,
           userId,
@@ -520,13 +532,40 @@ export const transactionLedgerRouter = router({
           amount: transaction.amount as Decimal,
           date: transaction.date,
         });
+      } else if (
+        transaction.type === TransactionTypeEnum.DEBIT &&
+        transaction.status === TransactionStatusEnum.CONFIRMED
+      ) {
+        // DEBIT Reimbursement: remove from expense roll-up (awaiting payback)
+        await rerollupExpenseSummary({
+          prismaClient: ctx.prisma,
+          userId,
+          oldCategory: transaction.category,
+          newCategory: REIMBURSEMENT_CATEGORY, // not an expense category; effectively just decrements old
+          amount: transaction.amount as Decimal,
+          date: transaction.date,
+        });
       }
     } else if (transaction.category === REIMBURSEMENT_CATEGORY && input.newCategory !== REIMBURSEMENT_CATEGORY) {
-      if (transaction.offsetCategory) {
+      if (transaction.type === TransactionTypeEnum.CREDIT && transaction.offsetCategory) {
+        // CREDIT Reimbursement removed: restore the expense offset
         await reverseReimbursementOffset({
           prismaClient: ctx.prisma,
           userId,
           offsetCategory: transaction.offsetCategory,
+          amount: transaction.amount as Decimal,
+          date: transaction.date,
+        });
+      } else if (
+        transaction.type === TransactionTypeEnum.DEBIT &&
+        newStatus === TransactionStatusEnum.CONFIRMED
+      ) {
+        // DEBIT Reimbursement removed: restore the expense roll-up entry
+        await rerollupExpenseSummary({
+          prismaClient: ctx.prisma,
+          userId,
+          oldCategory: REIMBURSEMENT_CATEGORY, // no existing expense entry; just creates for new
+          newCategory: input.newCategory,
           amount: transaction.amount as Decimal,
           date: transaction.date,
         });
@@ -631,7 +670,12 @@ export const transactionLedgerRouter = router({
         where: {
           userId,
           type: TransactionTypeEnum.DEBIT,
-          status: { in: [TransactionStatusEnum.CONFIRMED, TransactionStatusEnum.EXCLUDED] },
+          // Include confirmed expenses AND DEBITs already marked as Reimbursement (awaiting payback)
+          OR: [
+            { status: TransactionStatusEnum.CONFIRMED },
+            { status: TransactionStatusEnum.EXCLUDED, category: REIMBURSEMENT_CATEGORY },
+          ],
+          reimbursements: { none: {} }, // exclude DEBITs that already have a reimbursement CREDIT linked
           ...(input.search?.trim()
             ? {
                 OR: [

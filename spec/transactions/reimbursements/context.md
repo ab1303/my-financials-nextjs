@@ -40,6 +40,7 @@ Users need a way to mark transactions as Reimbursements and, optionally, link th
 - Make offset transparent: `MonthlyExpenseSummary` reflects net (gross − reimbursement)
 - Preserve audit trail: `Transaction.category = 'Reimbursement'`, `Transaction.offsetCategory = 'Food & Dining'`
 - Phase 2 (optional): Link reimbursement CREDIT to its originating DEBIT via `offsetTransactionId` FK; auto-derive `offsetCategory` from the linked debit's category
+- Phase 3 (optional): Partial reimbursements — allow multiple CREDIT reimbursements to link to the same DEBIT (e.g., a group dinner split 4 ways with 3 separate paybacks)
 
 **Out of scope**
 - Dashboard "Net Expense" visualization (gross / reimbursements / net breakdown)
@@ -47,3 +48,14 @@ Users need a way to mark transactions as Reimbursements and, optionally, link th
 - Bulk reimbursement assignment
 - Reclassification of CONFIRMED income to Reimbursement (requires IncomeRecord voidance)
 - Loan / receivables tracking (round-trip household transfers → use Transfer category instead)
+
+## Known Limitations (current implementation)
+
+### Single reimbursement per DEBIT (Phase 3 gap)
+
+`searchDebitTransactions` filters with `reimbursements: { none: {} }`, which hides any DEBIT that already has at least one CREDIT linked to it. This correctly prevents duplicate linking in the 1:1 case (one monthly expense → one payback), but blocks **partial reimbursement workflows** where a single expense is split across multiple payees.
+
+**Example of blocked workflow:**  
+$90 group dinner; three friends each owe $30. First friend's $30 CREDIT links fine. After that, the dinner DEBIT disappears from search and the second/third CREDITs cannot find it.
+
+**Workaround:** The data model (`reimbursements Transaction[] @relation("ReimbursementLink")`) already supports N:1. Only the search filter needs to be relaxed in Phase 3. See Phase 3 in lld.md.

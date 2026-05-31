@@ -126,12 +126,13 @@ updateCategory: protectedProcedure
     // Validation: Reimbursement allowed on DEBIT or CREDIT transactions
     // - DEBIT + Reimbursement: excluded from expense roll-ups (awaiting payback)
     // - CREDIT + Reimbursement: requires offsetCategory; decrements MonthlyExpenseSummary
+    //
+    // ⚠️ DO NOT add a guard blocking CONFIRMED CREDITs from becoming Reimbursement.
+    // All bank-imported CREDITs are auto-confirmed — such a guard blocks all real-world use.
+    // UI visibility (showReimbursementOption) is the appropriate access control layer.
     if (newCategory === REIMBURSEMENT_CATEGORY) {
       if (transaction.type === 'CREDIT' && !offsetCategory) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'offsetCategory required when assigning Reimbursement to a CREDIT' });
-      }
-      if (transaction.status === 'CONFIRMED' && transaction.type === 'CREDIT' && transaction.category !== REIMBURSEMENT_CATEGORY) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot reclassify CONFIRMED income as Reimbursement' });
       }
     }
     
@@ -321,15 +322,22 @@ searchDebitTransactions: protectedProcedure
   .input(z.object({
     search: z.string().optional(),
     limit: z.number().default(10).max(20),
+    dateFrom: z.string().optional(),
+    dateTo: z.string().optional(),
   }))
   .query(async ({ input, ctx }) => {
-    const { search, limit } = input;
     return ctx.prisma.transaction.findMany({
       where: {
         userId: ctx.session.user.id,
         type: 'DEBIT',
-        status: 'CONFIRMED',
-        offsetTransactionId: null,          // exclude already-linked DEBITs
+        // Include CONFIRMED expenses AND EXCLUDED DEBITs already marked as Reimbursement (awaiting payback).
+        // DO NOT use status: { in: ['CONFIRMED', 'EXCLUDED'] } — this allows Transfer DEBITs which
+        // fail the offsetTransactionId validation and confuse users.
+        OR: [
+          { status: 'CONFIRMED' },
+          { status: 'EXCLUDED', category: REIMBURSEMENT_CATEGORY },
+        ],
+        reimbursements: { none: {} }, // ⚠️ Phase 3 gap: hides DEBITs with any reimbursement — see Known Limitations in context.md
         description: search ? { contains: search, mode: 'insensitive' } : undefined,
       },
       select: { id: true, date: true, description: true, amount: true, category: true },
@@ -338,7 +346,13 @@ searchDebitTransactions: protectedProcedure
   }),
 ```
 
-**Note:** When the user selects a DEBIT to link, `offsetCategory` is **auto-derived** from `linkedDebit.category` — the user does not choose it manually. The manual `offsetCategory` dropdown is only shown in the Phase 1 (category-only, no specific transaction linked) flow.
+**Filter rationale:** `reimbursements: { none: {} }` is correct — NOT `offsetTransactionId: null`.  
+`offsetTransactionId` is the FK on **CREDIT** rows (pointing TO the DEBIT). DEBIT rows always have `offsetTransactionId = null`, so filtering on it is a no-op. The back-relation `reimbursements` is the correct field to check on the DEBIT side.
+
+**EXCLUDED Reimbursement DEBITs must appear in search** so the CREDIT payback can link to them.  
+The `offsetTransactionId` validation must correspondingly allow `status = EXCLUDED` when `category = REIMBURSEMENT_CATEGORY`.
+
+**Note:** When the user selects a DEBIT to link, `offsetCategory` is **auto-derived** from `linkedDebit.category` — the user does not choose it manually. The `LinkOption` type must include a `category` field so `handleLinkTransaction` can derive `offsetCategory` without requiring the user to select it first. Firing the mutation before `offsetCategory` is resolved will throw `BAD_REQUEST`.
 
 ### 2.3 Component: Link to Expense
 
@@ -351,6 +365,91 @@ Return `React.Fragment` and add sub-row accordion + link combobox (see spec HLD 
 **File:** `src/components/transactions/ReimbursementSubRow.tsx` (new file)
 
 Presentation-only sub-row showing linked reimbursements with ↩ badge and teal background.
+
+---
+
+## Phase 3 (Optional): Partial Reimbursements
+
+Allows a single DEBIT to have **multiple** CREDIT reimbursements — e.g., a $90 group dinner split with three friends ($30 each).
+
+The data model already supports this (N:1 via `reimbursements Transaction[] @relation`). Only the search filter and UI need updating.
+
+### 3.1 tRPC: Relax `searchDebitTransactions` filter
+
+**File:** `src/server/trpc/router/transaction-ledger.ts`
+
+Remove `reimbursements: { none: {} }` and instead return available DEBITs with partial reimbursement metadata so the UI can show remaining balance:
+
+```typescript
+where: {
+  userId: ctx.session.user.id,
+  type: 'DEBIT',
+  status: { in: ['CONFIRMED', 'EXCLUDED'] },
+  // No reimbursements filter — allow partially-reimbursed DEBITs
+},
+select: {
+  id: true,
+  date: true,
+  description: true,
+  amount: true,
+  category: true,
+  reimbursements: {
+    where: { category: 'Reimbursement' },
+    select: { amount: true },
+  },
+},
+```
+
+Return the total already-reimbursed and remaining:
+```typescript
+return transactions.map((tx) => ({
+  id: tx.id,
+  date: ...,
+  description: tx.description,
+  amount: Number(tx.amount),
+  category: tx.category,
+  alreadyReimbursed: tx.reimbursements.reduce((sum, r) => sum + Number(r.amount), 0),
+  remaining: Number(tx.amount) - tx.reimbursements.reduce((sum, r) => sum + Number(r.amount), 0),
+}));
+```
+
+### 3.2 UI: Show partial reimbursement state in search results
+
+**File:** `src/components/transactions/TransactionRow.tsx`
+
+Update `formatOptionLabel` in the AsyncSelect to show remaining balance:
+```
+Netflix.com Melbourne  ·  2025-06-24 · $33.98 Entertainment  ·  $15.49 remaining
+```
+
+Add a warning in the option label if `remaining <= 0` (over-reimbursed):
+```
+⚠️ Fully reimbursed — $0.00 remaining
+```
+
+### 3.3 Guard: Prevent over-reimbursement
+
+**File:** `src/server/trpc/router/transaction-ledger.ts`
+
+In `updateCategory` mutation, when `offsetTransactionId` is provided, validate that the new reimbursement amount does not push the DEBIT's total above its original amount:
+
+```typescript
+const linked = await ctx.prisma.transaction.findUnique({
+  where: { id: input.offsetTransactionId },
+  include: { reimbursements: { select: { amount: true } } },
+});
+const alreadyReimbursed = linked.reimbursements.reduce((sum, r) => sum.add(r.amount), new Decimal(0));
+if (alreadyReimbursed.add(transaction.amount).gt(linked.amount)) {
+  // warn but don't block — over-reimbursement is auditable
+}
+```
+
+### 3.4 Success Criteria
+
+1. ✅ A DEBIT with an existing reimbursement still appears in the link search picker
+2. ✅ Each search result shows `alreadyReimbursed` and `remaining` amounts
+3. ✅ Over-reimbursement (total CREDITs > DEBIT amount) shows a warning badge but is not blocked
+4. ✅ DEBIT row `net amount` reflects the sum of ALL linked reimbursements
 
 ---
 
@@ -368,12 +467,9 @@ Presentation-only sub-row showing linked reimbursements with ↩ badge and teal 
 | `src/components/transactions/TransactionRow.tsx` | MODIFY | Add Reimbursement option, offset-category select, localOffsetCategory state |
 | `src/components/transactions/TransactionLedgerTable.tsx` | MODIFY | Extend handleCategoryChange signature, add "reimbursements" tab |
 
-### Phase 2 (Optional)
+### Phase 3 (Optional — Partial Reimbursements)
 
 | File | Action | Description |
 |---|---|---|
-| `prisma/schema.prisma` | MODIFY | Add offsetTransactionId FK, offsetTransaction relation, reimbursements array |
-| `src/server/trpc/router/transaction-ledger.ts` | MODIFY | Add searchDebitTransactions query, extend updateCategory with offsetTransactionId validation |
-| `src/components/transactions/TransactionRow.tsx` | MODIFY | Return Fragment, add accordion for DEBIT rows, add link combobox for Reimbursement rows |
-| `src/components/transactions/TransactionLedgerTable.tsx` | MODIFY | Add accordion chevron column, extend handleCategoryChange |
-| `src/components/transactions/ReimbursementSubRow.tsx` | CREATE | Sub-row component for linked reimbursements |
+| `src/server/trpc/router/transaction-ledger.ts` | MODIFY | Remove `reimbursements: { none: {} }` filter; return `alreadyReimbursed` + `remaining` in search results; add over-reimbursement guard in `updateCategory` |
+| `src/components/transactions/TransactionRow.tsx` | MODIFY | Update `formatOptionLabel` to show remaining balance; add "fully reimbursed" warning in picker |
