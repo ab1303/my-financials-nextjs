@@ -9,6 +9,18 @@
 
 ---
 
+## Implementation Note (Drift from Original Spec)
+
+The actual implementation diverges from this LLD in two ways:
+
+1. **No API route**: Data is fetched directly in `home/page.tsx` as a Server Component using direct service imports (not via `/api/dashboard/summary`). The API route was never created.
+2. **No per-widget Suspense**: All data is fetched in two parallel `Promise.all` waves in the page component. Individual `<Suspense>` wrappers per widget were not used.
+3. **Extra widgets**: `MonthlyTrendWidget` and `TopExpensesWidget` were added beyond the original spec scope, using `getMonthlyTrendForDateRange` and `getTopExpenseCategories` from `dashboard.service.ts`.
+
+The file inventory below is updated to reflect the as-built state.
+
+---
+
 ## Phase 1 — Dashboard API Route
 
 **DashboardSummaryResponse interface:**
@@ -99,14 +111,16 @@ interface DashboardSummaryResponse {
 
 ---
 
-## File Inventory
-| File                                                        | Action   | Description                                 |
+## File Inventory (As-Built)
+| File                                                        | Status   | Description                                 |
 |-------------------------------------------------------------|----------|---------------------------------------------|
-| src/app/api/dashboard/summary/route.ts                      | CREATE   | Dashboard summary GET endpoint              |
-| src/app/(authorized)/home/_components/NetWorthWidget.tsx    | CREATE   | Net worth hero + sparkline                  |
-| src/app/(authorized)/home/_components/AssetBalanceCards.tsx | CREATE   | Bank + stock KPI cards                      |
-| src/app/(authorized)/home/_components/CashflowPulseCard.tsx | CREATE   | MTD income/expense/net + savings rate       |
-| src/app/(authorized)/home/_components/RecentTransactionsWidget.tsx | CREATE | Last 5 confirmed transactions         |
-| src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx | CREATE | Shared skeleton placeholder           |
-| src/app/(authorized)/home/page.tsx                          | MODIFY   | Add Suspense widget sections above nav cards|
-| src/server/models/dashboard.ts                              | CREATE   | DashboardSummaryResponse type               |
+| src/app/api/dashboard/summary/route.ts                      | ❌ NOT BUILT | API route not created — data fetched in page.tsx directly |
+| src/server/models/dashboard.ts                              | ✅ BUILT | DashboardSummaryResponse type               |
+| src/app/(authorized)/home/_components/NetWorthWidget.tsx    | ✅ BUILT | Net worth hero + sparkline                  |
+| src/app/(authorized)/home/_components/AssetBalanceCards.tsx | ✅ BUILT | Bank + stock KPI cards                      |
+| src/app/(authorized)/home/_components/CashflowPulseCard.tsx | ✅ BUILT | MTD income/expense/net + savings rate       |
+| src/app/(authorized)/home/_components/RecentTransactionsWidget.tsx | ✅ BUILT | Last 5 confirmed transactions         |
+| src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx | ✅ BUILT | Shared skeleton placeholder           |
+| src/app/(authorized)/home/_components/MonthlyTrendWidget.tsx | ✅ BUILT (extra) | Monthly income vs expense trend chart (beyond original scope) |
+| src/app/(authorized)/home/_components/TopExpensesWidget.tsx | ✅ BUILT (extra) | Top expense categories chart (beyond original scope) |
+| src/app/(authorized)/home/page.tsx                          | ✅ BUILT | All data fetched in page.tsx via Promise.all; no Suspense per widget |

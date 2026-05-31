@@ -111,9 +111,7 @@ export interface TransactionRow {
 
 export interface GetAllOutput {
   transactions: TransactionRow[];
-  total: number;
-  page: number;
-  totalPages: number;
+  nextCursor: string | null;
   totalDebitAmount: number;
   totalCreditAmount: number;
 }
@@ -124,7 +122,7 @@ export interface GetFilterOptionsOutput {
 }
 
 const getAllInputSchema = z.object({
-  page: z.number().int().min(1).default(1),
+  cursor: z.string().cuid().optional(),
   limit: z.number().int().min(1).max(100).default(50),
   type: z.nativeEnum(TransactionTypeEnum).optional(),
   status: z.nativeEnum(TransactionStatusEnum).optional(),
@@ -256,12 +254,14 @@ export const transactionLedgerRouter = router({
     const userId = ctx.session.user.id;
     const where = buildTransactionWhere(input, userId);
 
-    const [transactions, total, debitAggregate, creditAggregate] = await Promise.all([
+    // Fetch limit + 1 rows to detect if there's a next page
+    const [rows, debitAggregate, creditAggregate] = await Promise.all([
       ctx.prisma.transaction.findMany({
         where,
-        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
-        skip: (input.page - 1) * input.limit,
-        take: input.limit,
+        orderBy: [{ date: 'desc' }, { id: 'desc' }],
+        take: input.limit + 1,
+        cursor: input.cursor ? { id: input.cursor } : undefined,
+        skip: input.cursor ? 1 : 0,
         include: {
           financialAccount: { select: { name: true, institution: { select: { name: true } } } },
           reimbursements: {
@@ -305,7 +305,6 @@ export const transactionLedgerRouter = router({
           importSession: { select: { id: true, createdAt: true } },
         },
       }),
-      ctx.prisma.transaction.count({ where }),
       ctx.prisma.transaction.aggregate({
         where: { ...where, type: TransactionTypeEnum.DEBIT },
         _sum: { amount: true },
@@ -315,6 +314,11 @@ export const transactionLedgerRouter = router({
         _sum: { amount: true },
       }),
     ]);
+
+    // Determine if there's a next page and slice results
+    const hasNextPage = rows.length > input.limit;
+    const transactions = hasNextPage ? rows.slice(0, input.limit) : rows;
+    const nextCursor = hasNextPage ? (transactions[transactions.length - 1]?.id ?? null) : null;
 
     const outputTransactions: TransactionRow[] = (transactions as PrismaTransaction[]).map((tx) => ({
       id: tx.id,
@@ -379,9 +383,7 @@ export const transactionLedgerRouter = router({
 
     return {
       transactions: outputTransactions,
-      total,
-      page: input.page,
-      totalPages: Math.max(1, Math.ceil(total / input.limit)),
+      nextCursor,
       totalDebitAmount: Number(debitAggregate._sum.amount ?? 0),
       totalCreditAmount: Number(creditAggregate._sum.amount ?? 0),
     } satisfies GetAllOutput;

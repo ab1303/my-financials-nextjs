@@ -226,8 +226,8 @@ Call after `ImportSession` status transitions to `COMPLETED` in the confirm rout
 | `src/server/api/root.ts` | MODIFY | Register `transferRule` router |
 | `src/components/transactions/TransactionRow.tsx` | MODIFY | Unlink chain-break icon button |
 | `src/components/transactions/TransferLinkDrawer.tsx` | MODIFY | Call `suggestSimilarPairs` after link; open SmartMatchDialog |
-| `src/components/transactions/SmartMatchDialog.tsx` | CREATE | Pair checkbox list + "Save as rule?" |
-| `src/components/transactions/PostImportMatchBanner.tsx` | CREATE | "X auto-linked · Y to review" after import |
-| `src/app/(authorized)/settings/transfer-rules/page.tsx` | CREATE | Server Component shell + pass rules to client |
-| `src/components/settings/TransferRulesTable.tsx` | CREATE | Active toggle, edit name/gap, delete |
-| `src/components/settings/RuleMatchHistoryDrawer.tsx` | CREATE | Transactions auto-linked by a specific rule |
+| `src/components/transactions/SmartMatchDialog.tsx` | ❌ NOT BUILT | Pair checkbox list + "Save as rule?" (Phase 1b gap) |
+| `src/components/transactions/PostImportMatchBanner.tsx` | ✅ BUILT | "X auto-linked · Y to review" after import |
+| `src/app/(authorized)/cashflow/transfer-rules/page.tsx` | ✅ BUILT | Server Component shell + pass rules to client (NOTE: placed under cashflow/ not settings/) |
+| `src/app/(authorized)/cashflow/transfer-rules/_components/TransferRulesTable.tsx` | ✅ BUILT | Active toggle, edit name/gap, delete |
+| `src/components/settings/RuleMatchHistoryDrawer.tsx` | ❌ NOT BUILT | Transactions auto-linked by a specific rule |

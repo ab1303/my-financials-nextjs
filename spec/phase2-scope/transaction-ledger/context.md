@@ -2,7 +2,7 @@ Domain HLD: `spec/transactions/hld.md`
 
 ## Phase 2 Scope — Transaction Ledger Scalability
 
-**Priority:** High  
+**Priority:** High ✅ **IMPLEMENTED (2026-05-31)**
 **Origin:** Identified during Category Rules scalability review (2026-05-24)  
 **Prerequisite:** Category Rules feature complete ✅
 

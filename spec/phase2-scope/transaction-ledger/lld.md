@@ -163,19 +163,21 @@ Because filters are part of the query key, tRPC `useInfiniteQuery` resets automa
 
 ## Acceptance Criteria
 
-- [ ] No `COUNT(*)` query fired on any page load
-- [ ] First page loads in the same latency as current implementation
-- [ ] Subsequent pages append rows to the table (do not replace)
-- [ ] Any filter change resets to the first page automatically
-- [ ] "Load More" button is hidden when on the last page
-- [ ] No regression in existing filter, sort, or aggregate behaviour
+- [x] No `COUNT(*)` query fired on any page load
+- [x] First page loads in the same latency as current implementation
+- [x] Subsequent pages append rows to the table (do not replace)
+- [x] Any filter change resets to the first page automatically (`useInfiniteQuery` resets on query key change)
+- [x] "Load More" button is hidden when on the last page
+- [x] No regression in existing filter, sort, or aggregate behaviour
 
 ---
 
-## File Inventory
+## File Inventory (As-Built)
 
-| File | Action | Description |
+| File | Status | Description |
 |------|--------|-------------|
-| `src/server/trpc/router/transaction-ledger.ts` | MODIFY | Replace `skip`/`take`/`count` with cursor + `take: limit+1`; change response to `{ transactions, nextCursor }` |
-| `src/app/(authorized)/cashflow/transactions/_components/TransactionsClient.tsx` | MODIFY | Replace `useQuery` + `<Pagination>` with `useInfiniteQuery` + "Load More" button |
-| `prisma/schema.prisma` | MAYBE MODIFY | Add `@@index([userId, date])` if query planner doesn't pick up existing index for unfiltered ledger |
+| `src/server/trpc/router/transaction-ledger.ts` | ✅ BUILT | `cursor` replaces `page`; `take: limit+1`; `nextCursor` in response; `COUNT(*)` removed |
+| `src/components/transactions/TransactionLedgerTable.tsx` | ✅ BUILT | `useInfiniteQuery` + "Load More" button; `pages.flatMap` for accumulation; all `setPage` calls removed |
+| `prisma/schema.prisma` | ✅ BUILT | Added `@@index([userId, date, id])` for cursor keyset pagination on unfiltered ledger |
+| `src/__tests__/unit/transaction-ledger.router.test.ts` | ✅ BUILT | 4 new cursor pagination tests: nextCursor present/null, cursor forwarded to findMany, no COUNT call |
+| `src/__tests__/unit/TransactionLedgerTable.test.tsx` | ✅ BUILT | Mock updated from `useQuery` to `useInfiniteQuery`; data shape updated to `pages[]` |

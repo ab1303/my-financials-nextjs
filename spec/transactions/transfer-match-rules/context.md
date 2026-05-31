@@ -59,15 +59,15 @@ The MVP runs rule matching **synchronously** at the end of the import confirm st
 
 > **Decision deferred to a separate ADR.** Until that threshold is reached, synchronous execution is intentional and simpler to reason about.
 
-## Files
+## Files (As-Built)
 
-| File | Action | Description |
+| File | Status | Description |
 |---|---|---|
-| `prisma/schema.prisma` | MODIFY | Add `TransferMatchRule` and `TransferMatchJobResult` models |
-| `src/server/services/transactions/transfer-rule.service.ts` | CREATE | `createRuleFromPair`, `listRules`, `toggleRule`, `deleteRule` |
-| `src/server/services/transactions/transfer-rule-job.service.ts` | CREATE | `runTransferMatchRules()` — load rules, score, link, write job result |
-| `src/server/api/routers/transfer-rule.ts` | CREATE | tRPC router for rule CRUD |
-| `src/components/transactions/SmartMatchDialog.tsx` | CREATE | Pair list with checkboxes, confirm/skip; "Save as rule?" prompt |
-| `src/components/transactions/TransferLinkDrawer.tsx` | MODIFY | After `onLinked()`, call `suggestSimilarPairs`; open SmartMatchDialog |
-| `src/app/(authorized)/settings/transfer-rules/page.tsx` | CREATE | Server Component shell |
-| `src/components/settings/TransferRulesTable.tsx` | CREATE | Active toggle, edit, delete |
+| `prisma/schema.prisma` | ✅ BUILT | `TransferMatchRule` and `TransferMatchJobResult` models added |
+| `src/server/services/transactions/transfer-rule.service.ts` | ✅ BUILT | `createRuleFromPair`, `listRules`, `toggleRule`, `deleteRule` |
+| `src/server/services/transactions/transfer-rule-job.service.ts` | ✅ BUILT | `runTransferMatchRules()` — load rules, score, link, write job result |
+| `src/server/trpc/router/transfer-rule.ts` | ✅ BUILT | tRPC router for rule CRUD |
+| `src/components/transactions/SmartMatchDialog.tsx` | ❌ NOT BUILT | Pair list with checkboxes, confirm/skip; "Save as rule?" prompt (Phase 1b gap) |
+| `src/components/transactions/TransferLinkDrawer.tsx` | ✅ BUILT | Drawer exists; SmartMatchDialog integration pending |
+| `src/app/(authorized)/cashflow/transfer-rules/page.tsx` | ✅ BUILT | Placed under cashflow/ (not settings/ as originally planned) |
+| `src/app/(authorized)/cashflow/transfer-rules/_components/TransferRulesTable.tsx` | ✅ BUILT | Active toggle, edit, delete |

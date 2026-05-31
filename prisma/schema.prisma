@@ -590,8 +590,9 @@ model Transaction {
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
-  @@index([userId, bankAccountId, date])
-  @@index([userId, type, status])
+  @@index([userId, date, id])            // cursor keyset pagination (unfiltered ledger: ORDER BY date DESC, id DESC)
+  @@index([userId, bankAccountId, date]) // bank-filtered queries
+  @@index([userId, type, status])        // tab filters (expenses/income/excluded)
   @@index([importSessionId])
   // GIN trigram index: enables fast ILIKE '%pattern%' for category rule matching.
   // Requires pg_trgm extension (installed via migration 20260524130550).

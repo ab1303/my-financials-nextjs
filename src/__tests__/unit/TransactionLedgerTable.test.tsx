@@ -73,7 +73,7 @@ vi.mock('@/server/trpc/client', () => ({
     }),
     transactionLedger: {
       getAll: {
-        useQuery: (...args: unknown[]) => mockUseAllQuery(...args),
+        useInfiniteQuery: (...args: unknown[]) => mockUseAllQuery(...args),
       },
       getFilterOptions: {
         useQuery: (...args: unknown[]) => mockUseFilterOptionsQuery(...args),
@@ -109,10 +109,14 @@ describe('TransactionLedgerTable', () => {
   const bankAccounts = [{ id: 'acc-1', name: 'Everyday Account', bankName: 'CommBank' }];
 
   const baseData = {
-    transactions: [],
-    total: 0,
-    page: 1,
-    totalPages: 1,
+    pages: [
+      {
+        transactions: [],
+        nextCursor: null,
+        totalDebitAmount: 0,
+        totalCreditAmount: 0,
+      },
+    ],
   };
 
   const filterOptions = {
@@ -120,7 +124,10 @@ describe('TransactionLedgerTable', () => {
       { id: 'cat-1', name: 'Groceries' },
       { id: 'cat-2', name: 'Transport' },
     ],
-    incomeSourceLabels: ['EMPLOYMENT', 'BUSINESS'],
+    incomeSourceLabels: [
+      { id: 'src-1', name: 'EMPLOYMENT' },
+      { id: 'src-2', name: 'BUSINESS' },
+    ],
   };
 
   beforeEach(() => {
@@ -129,6 +136,9 @@ describe('TransactionLedgerTable', () => {
       data: baseData,
       isLoading: false,
       isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
       refetch: mockRefetch,
     });
     mockUseFilterOptionsQuery.mockReturnValue({
@@ -159,6 +169,9 @@ describe('TransactionLedgerTable', () => {
       data: undefined,
       isLoading: true,
       isFetching: true,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
       refetch: mockRefetch,
     });
 
@@ -176,26 +189,34 @@ describe('TransactionLedgerTable', () => {
   it('renders transaction rows when data is available', () => {
     mockUseAllQuery.mockReturnValueOnce({
       data: {
-        ...baseData,
-        total: 1,
-        transactions: [
+        pages: [
           {
-            id: 'tx-1',
-            date: '2024-01-15T00:00:00.000Z',
-            description: 'Supermarket',
-            amount: 123.45,
-            type: 'DEBIT',
-            category: 'Groceries',
-            source: 'LLM_CLASSIFIED',
-            status: 'CONFIRMED',
-            bankAccountName: 'Everyday Account',
-            bankName: 'CommBank',
-            reimbursements: [],
+            transactions: [
+              {
+                id: 'tx-1',
+                date: '2024-01-15T00:00:00.000Z',
+                description: 'Supermarket',
+                amount: 123.45,
+                type: 'DEBIT',
+                category: 'Groceries',
+                source: 'LLM_CLASSIFIED',
+                status: 'CONFIRMED',
+                bankAccountName: 'Everyday Account',
+                bankName: 'CommBank',
+                reimbursements: [],
+              },
+            ],
+            nextCursor: null,
+            totalDebitAmount: 123.45,
+            totalCreditAmount: 0,
           },
         ],
       },
       isLoading: false,
       isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
       refetch: mockRefetch,
     });
 

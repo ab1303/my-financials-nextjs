@@ -17,7 +17,7 @@ import OrphanResolutionPanel from '@/app/(authorized)/cashflow/transactions/_com
 type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized' | 'voided' | 'transfers';
 
 type GetAllInput = {
-  page: number;
+  cursor?: string;
   limit: number;
   type?: 'DEBIT' | 'CREDIT';
   status?: 'PENDING' | 'CONFIRMED' | 'EXCLUDED' | 'VOIDED';
@@ -121,7 +121,6 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
       ? (initialTab as TabFilter)
       : 'all';
   });
-  const [page, setPage] = useState(1);
   const [bankAccountId, setBankAccountId] = useState<string | undefined>(undefined);
   const [category, setCategory] = useState<string | undefined>(initialCategory);
   const [datePreset, setDatePreset] = useState<DatePreset>(initialPreset);
@@ -156,7 +155,6 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     const parsedAmountMax = parseAmount(amountMax);
 
     return {
-      page,
       limit: PAGE_SIZE,
       ...TAB_TO_PARAMS[activeTab],
       ...(activeTab === 'uncategorized' ? { uncategorized: true } : {}),
@@ -170,9 +168,20 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
       ...(parsedAmountMin !== undefined ? { amountMin: parsedAmountMin } : {}),
       ...(parsedAmountMax !== undefined ? { amountMax: parsedAmountMax } : {}),
     } satisfies GetAllInput;
-  }, [page, activeTab, bankAccountId, category, dateFrom, dateTo, debouncedSearch, amountMin, amountMax]);
+  }, [activeTab, bankAccountId, category, dateFrom, dateTo, debouncedSearch, amountMin, amountMax]);
 
-  const { data, isLoading, isFetching, refetch } = trpc.transactionLedger.getAll.useQuery(queryInput);
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = trpc.transactionLedger.getAll.useInfiniteQuery(queryInput, {
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialPageParam: undefined,
+  });
   const utils = trpc.useUtils();
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
   const unmatchedCountQuery = trpc.transfer.getUnmatchedCount.useQuery(undefined, {
@@ -261,20 +270,18 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     setAmountMax('');
     setSearch('');
     setDebouncedSearch('');
-    setPage(1);
     setActiveTab('all');
     setResetKey((k) => k + 1);
   }, []);
 
   const handleTabChange = useCallback((tab: TabFilter) => {
     setActiveTab(tab);
-    setPage(1);
     setRetainedRows(new Map());
   }, []);
 
   const loading = isLoading; // Only blank the table on initial load; background refetches use isFetching
   const syncing = !isLoading && isFetching; // Background sync — show subtle indicator without blanking table
-  const transactions = data?.transactions ?? [];
+  const transactions = data?.pages.flatMap((p) => p.transactions) ?? [];
   // Retained rows: recategorized on this tab but kept visible until dismissed
   const retainedVisible = useMemo(() => {
     const currentIds = new Set(transactions.map(tx => tx.id));
@@ -284,6 +291,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   }, [transactions, retainedRows]);
   const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
   const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
+  const lastPage = data?.pages[data.pages.length - 1];
   const categoryOptions = useMemo(() => {
     const incomeGroup = {
       label: '💰 Income Sources',
@@ -360,42 +368,34 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         amountMax={amountMax}
         onBankChange={(v) => {
           setBankAccountId(v);
-          setPage(1);
         }}
         onCategoryChange={(v) => {
           setCategory(v);
-          setPage(1);
         }}
         onDateFromChange={(v) => {
           setDateFrom(v);
-          setPage(1);
         }}
         onDateToChange={(v) => {
           setDateTo(v);
-          setPage(1);
         }}
         onDatePresetChange={(preset) => {
           setDatePreset(preset);
-          setPage(1);
         }}
         onSearchChange={(v) => {
           setSearch(v);
-          setPage(1);
         }}
         onAmountMinChange={(v) => {
           setAmountMin(v);
-          setPage(1);
         }}
         onAmountMaxChange={(v) => {
           setAmountMax(v);
-          setPage(1);
         }}
         onReset={handleReset}
         resetKey={resetKey}
       />
 
-      {!loading && data && (data.totalDebitAmount > 0 || data.totalCreditAmount > 0) && (
-        <TransactionSummary totalDebitAmount={data.totalDebitAmount} totalCreditAmount={data.totalCreditAmount} />
+      {!loading && lastPage && (lastPage.totalDebitAmount > 0 || lastPage.totalCreditAmount > 0) && (
+        <TransactionSummary totalDebitAmount={lastPage.totalDebitAmount} totalCreditAmount={lastPage.totalCreditAmount} />
       )}
 
       {loading ? (
@@ -509,27 +509,18 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
       )}
 
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Page {data?.page ?? page} of {data?.totalPages ?? 1}
-        </p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => setPage((c) => Math.max(1, c - 1))}
-            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200"
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            disabled={(data?.totalPages ?? 1) <= page}
-            onClick={() => setPage((c) => c + 1)}
-            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200"
-          >
-            Next
-          </button>
-        </div>
+        {hasNextPage && (
+          <div className="flex justify-center py-4 w-full">
+            <button
+              type="button"
+              onClick={() => void fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="rounded border border-gray-300 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-teal-400 dark:hover:bg-teal-900/20"
+            >
+              {isFetchingNextPage ? 'Loading...' : 'Load more transactions'}
+            </button>
+          </div>
+        )}
       </div>
     </section>
 
