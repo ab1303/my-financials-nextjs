@@ -33,6 +33,7 @@ type GetAllInput = {
   transferOnly?: boolean;
   unmatchedTransferOnly?: boolean;
   excludeTransferCategory?: boolean;
+  ids?: string[]; // review mode: fetch exactly these transaction IDs
 };
 
 interface TransactionLedgerTableProps {
@@ -149,6 +150,12 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   // Review batch: transaction IDs that were auto-matched during a category update
   const [reviewBatch, setReviewBatch] = useState<string[] | null>(null);
   const [preReviewCategory, setPreReviewCategory] = useState<string | undefined>();
+  // Single active rule prompt — only one row's prompt shows at a time
+  const [activeRulePrompt, setActiveRulePrompt] = useState<{
+    transactionId: string;
+    count: number;
+    category: string;
+  } | null>(null);
   const [transferDrawerTx, setTransferDrawerTx] = useState<{
     id: string;
     description: string;
@@ -181,8 +188,9 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
       ...(parsedAmountMin !== undefined ? { amountMin: parsedAmountMin } : {}),
       ...(parsedAmountMax !== undefined ? { amountMax: parsedAmountMax } : {}),
+      ...(reviewBatch !== null ? { ids: reviewBatch } : {}),
     } satisfies GetAllInput;
-  }, [activeTab, bankAccountId, category, dateFrom, dateTo, debouncedSearch, amountMin, amountMax]);
+  }, [activeTab, bankAccountId, category, dateFrom, dateTo, debouncedSearch, amountMin, amountMax, reviewBatch]);
 
   const {
     data,
@@ -194,6 +202,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     refetch,
   } = trpc.transactionLedger.getAll.useInfiniteQuery(queryInput, {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    placeholderData: (previousData) => previousData,
   });
   const utils = trpc.useUtils();
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
@@ -220,20 +229,16 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   const updateCategoryMutation = trpc.transactionLedger.updateCategory.useMutation({
     onSuccess: (result) => {
       setSavingId(null);
-      void refetch();
-      // Invalidate the link picker cache so newly-linked DEBITs are excluded immediately
       void utils.transactionLedger.searchDebitTransactions.invalidate();
       if (result.matchedIds.length > 0) {
         setPreReviewCategory(category); // save so we can restore on exit
-        setReviewBatch(result.matchedIds);
-        // Clear category filter so the refetched data includes all newly-categorised transactions.
-        // Without this, an active category filter would hide the matched rows from the client-side filter.
-        setCategory(undefined);
+        setReviewBatch(result.matchedIds); // queryInput reacts → auto-refetches with ids filter
         toast.success(
-          `Category updated for ${result.matchedIds.length + 1} matching transaction${result.matchedIds.length > 1 ? 's' : ''} — scroll to review`,
+          `Category updated for ${result.matchedIds.length} matching transaction${result.matchedIds.length > 1 ? 's' : ''} — scroll to review`,
           { duration: 5000 },
         );
       } else {
+        void refetch(); // no review mode — manually refresh to show updated category
         toast.success('Category updated');
       }
     },
@@ -245,11 +250,11 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
 
   const handleCategoryChange = useCallback(
     (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null, applyToMatching?: boolean) => {
-      // On the transfers tab, if the row is being moved to a non-Transfer category,
-      // retain it in view so the user can complete follow-up actions (e.g. linking).
-      if (activeTab === 'transfers') {
-        const txData = data?.pages.flatMap(p => p.transactions).find(tx => tx.id === id) ?? retainedRows.get(id);
-        if (txData) {
+      const txData = data?.pages.flatMap(p => p.transactions).find(tx => tx.id === id) ?? retainedRows.get(id);
+      if (txData) {
+        // Transfers tab: retain row when moving away from Transfer category so the
+        // user can complete follow-up actions (e.g. linking the transfer pair).
+        if (activeTab === 'transfers') {
           if (newCategory !== TRANSFER_CATEGORY) {
             setRetainedRows(prev => {
               const next = new Map(prev);
@@ -288,6 +293,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
 
   const handleExitReview = useCallback(() => {
     setReviewBatch(null);
+    setActiveRulePrompt(null);
     setCategory(preReviewCategory); // restore the filter the user had before review
     setPreReviewCategory(undefined);
   }, [preReviewCategory]);
@@ -304,6 +310,8 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     setDebouncedSearch('');
     setActiveTab('all');
     setReviewBatch(null);
+    setRetainedRows(new Map());
+    setActiveRulePrompt(null);
     setResetKey((k) => k + 1);
   }, []);
 
@@ -311,14 +319,12 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     setActiveTab(tab);
     setRetainedRows(new Map());
     setReviewBatch(null);
+    setActiveRulePrompt(null);
   }, []);
 
   const loading = isLoading; // Only blank the table on initial load; background refetches use isFetching
   const syncing = !isLoading && isFetching; // Background sync — show subtle indicator without blanking table
-  const allTransactions = data?.pages.flatMap((p) => p.transactions) ?? [];
-  const transactions = reviewBatch !== null
-    ? allTransactions.filter((tx) => reviewBatch.includes(tx.id))
-    : allTransactions;
+  const transactions = data?.pages.flatMap((p) => p.transactions) ?? [];
   // Retained rows: recategorized on this tab but kept visible until dismissed
   const retainedVisible = useMemo(() => {
     const currentIds = new Set(transactions.map(tx => tx.id));
@@ -504,6 +510,11 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                   isSaving={savingId === transaction.id}
                   colCount={10}
                   isInReviewBatch={reviewBatch !== null && reviewBatch.includes(transaction.id)}
+                  showRulePrompt={activeRulePrompt?.transactionId === transaction.id}
+                  rulePromptCount={activeRulePrompt?.transactionId === transaction.id ? activeRulePrompt.count : 0}
+                  onRulePromptDismiss={() => setActiveRulePrompt(null)}
+                  onSuggestRule={(count, cat) => setActiveRulePrompt({ transactionId: transaction.id, count, category: cat })}
+                  onClearRulePrompt={() => setActiveRulePrompt((prev) => prev?.transactionId === transaction.id ? null : prev)}
                   onVoided={() => void refetch()}
                   onRestored={() => void refetch()}
                   onUnlinked={() => void refetch()}
@@ -550,6 +561,11 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                     onCategoryChange={handleCategoryChange}
                     isSaving={savingId === tx.id}
                     colCount={10}
+                    showRulePrompt={activeRulePrompt?.transactionId === tx.id}
+                    rulePromptCount={activeRulePrompt?.transactionId === tx.id ? activeRulePrompt.count : 0}
+                    onRulePromptDismiss={() => setActiveRulePrompt(null)}
+                    onSuggestRule={(count, cat) => setActiveRulePrompt({ transactionId: tx.id, count, category: cat })}
+                    onClearRulePrompt={() => setActiveRulePrompt((prev) => prev?.transactionId === tx.id ? null : prev)}
                     onVoided={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onRestored={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onUnlinked={() => void refetch()}

@@ -254,6 +254,7 @@ All coding standards live in `.ai/instructions/`. Read the relevant file before 
 | Dark mode & react-select         | `.ai/instructions/dark-mode-and-react-select.md` |
 | Cursor & text selection          | `.ai/instructions/cursor-and-text-selection.md`  |
 | Performance                      | `.ai/instructions/performance.md`                |
+| Transaction ledger patterns      | `.ai/instructions/transaction-ledger-patterns.md` |
 | Deployment                       | `.ai/instructions/deployment.md`                 |
 | Product / UX principles          | `.ai/instructions/product-owner-ux.md`           |
 | Testing & subagent orchestration | `.ai/instructions/testing-and-subagents.md`      |

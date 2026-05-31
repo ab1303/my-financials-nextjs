@@ -32,6 +32,7 @@ const GetAllInputSchema = z.object({
   dateFrom:      z.string().optional(), // ISO date YYYY-MM-DD
   dateTo:        z.string().optional(),
   search:        z.string().optional(),
+  ids:           z.array(z.string()).optional(), // review mode: fetch exactly these IDs, overrides all other filters
 });
 
 export type GetAllInput = z.infer<typeof GetAllInputSchema>;
@@ -243,31 +244,26 @@ const [reviewBatch, setReviewBatch] = useState<string[] | null>(null);
 const [preReviewCategory, setPreReviewCategory] = useState<string | undefined>();
 ```
 
-`preReviewCategory` saves the active category filter before review mode clears it, so it can be restored when the user exits review.
+`preReviewCategory` saves the active category filter before review mode so it can be restored when the user exits.
 
 On `updateCategory` mutation `onSuccess` when `matchedIds.length > 0`:
 ```typescript
-setPreReviewCategory(category);   // save current category filter
+setPreReviewCategory(category); // save current category filter
 setReviewBatch(result.matchedIds);
-setCategory(undefined);           // clear filter so refetch returns newly-categorised rows
-// show toast: "Category updated for N matching transactions — scroll to review"
+// queryInput reacts to reviewBatch → adds ids filter → server returns exactly these rows
 ```
 
-> **Why clear the category filter?** The matched transactions just changed category (e.g. away from "Other"). If the category filter stays active, the API query excludes them and the client-side `reviewBatch` filter has nothing to match against — resulting in "No transactions found". Clearing it ensures all matched rows are visible for review.
+**Why server-side `ids` filter (not client-side):** With infinite scroll pagination, matched transactions may be on page 3+. A client-side `.filter()` on the loaded pages would show "No transactions found" for any match not in the first 50 rows. Passing `ids` to the server ensures exactly those rows are returned regardless of their position.
 
-Client-side filtered view (no API change, no batchId parameter):
+`queryInput` includes `ids` when in review mode — this overrides all other filters server-side:
 ```typescript
-const allTransactions = data?.pages.flatMap(p => p.transactions) ?? [];
-const transactions = reviewBatch !== null
-  ? allTransactions.filter(tx => reviewBatch.includes(tx.id))
-  : allTransactions;
-
-// Each row receives isInReviewBatch based on whether its ID is in the batch:
-<TransactionRow
-  isInReviewBatch={reviewBatch !== null && reviewBatch.includes(transaction.id)}
-  onCategoryChange={handleCategoryChange}
-  {...otherProps}
-/>
+const queryInput = useMemo(() => ({
+  limit: PAGE_SIZE,
+  ...TAB_TO_PARAMS[activeTab],
+  ...(category ? { category } : {}),
+  // ... other filters ...
+  ...(reviewBatch !== null ? { ids: reviewBatch } : {}), // overrides everything when in review
+}), [...deps, reviewBatch]);
 ```
 
 `handleExitReview` restores the saved filter:
@@ -280,14 +276,15 @@ const handleExitReview = useCallback(() => {
 ```
 
 Review mode lifecycle:
-- **Entered**: `matchedIds.length > 0` on mutation success → save category filter, clear it, set `reviewBatch`, refetch returns matched rows
+- **Entered**: `matchedIds.length > 0` on mutation success → save category filter, set `reviewBatch`, `queryInput` gains `ids` filter → server returns exactly the matched rows
 - **Exited via button**: "Exit review" banner button → `handleExitReview` → restores saved category filter, clears `reviewBatch`
 - **Exited via tab change / reset**: `setReviewBatch(null)` only — no filter restore (user intentionally navigated away)
 - **Single edit in review**: passes `applyToMatching: false` → no recursion, only that row updates
 
 **Key design decisions:**
-- `reviewBatch` is pure React state — no DB column, no API filter parameter added to `getAll`
-- Category filter is cleared on enter and restored on exit — prevents "no results" from filter/data mismatch
+- `reviewBatch` is pure React state — no DB column, no `batchId` persisted anywhere
+- Server `ids` filter (`WHERE id IN (...)`) is the reliable way to retrieve specific rows regardless of pagination depth
+- Category filter is NOT cleared on enter — the `ids` filter overrides all filters server-side
 - `applyToMatching: false` during review prevents recursive auto-apply
 - Tab change and reset intentionally do NOT restore the pre-review filter (user navigated away deliberately)
 

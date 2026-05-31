@@ -138,6 +138,7 @@ const getAllInputSchema = z.object({
   transferOnly: z.boolean().optional(),
   unmatchedTransferOnly: z.boolean().optional(),
   excludeTransferCategory: z.boolean().optional(),
+  ids: z.array(z.string()).optional(), // review mode: fetch exactly these transaction IDs
 });
 
 const updateCategorySchema = z.object({
@@ -149,6 +150,12 @@ const updateCategorySchema = z.object({
 });
 
 export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, userId: string) {
+  // Review mode: return exactly these IDs only — ignore all other filters (tab, category, date, etc.)
+  // The matched transactions have already been re-categorised, so any tab/category filter would exclude them.
+  if (input.ids?.length) {
+    return { userId, id: { in: input.ids } } satisfies Prisma.TransactionWhereInput;
+  }
+
   const where: Prisma.TransactionWhereInput = { userId };
 
   // Exclude VOIDED transactions by default from ledger view
@@ -722,6 +729,11 @@ export const transactionLedgerRouter = router({
 
         matchedIds.push(match.id);
       }
+    }
+
+    // Include the original transaction in the review batch so it stays visible during review
+    if (matchedIds.length > 0) {
+      matchedIds.unshift(transaction.id);
     }
 
     return { success: true, matchedIds };

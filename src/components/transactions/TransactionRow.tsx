@@ -5,7 +5,6 @@ import {
   useEffect,
   useId,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import clsx from 'clsx';
@@ -19,6 +18,7 @@ import {
 import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 import { getCompactSelectStyles } from '@/lib/select-styles';
+import { useCategoryEdit } from './hooks/useCategoryEdit';
 import TransactionSourceIndicator from './TransactionSourceIndicator';
 import ReimbursementSubRow from './ReimbursementSubRow';
 import VoidTransactionButton from './VoidTransactionButton';
@@ -45,6 +45,16 @@ interface TransactionRowProps {
   onLinkTransfer?: () => void;
   onUnlinked?: () => void;
   isInReviewBatch?: boolean;
+  /** Whether this row's rule prompt is currently active (parent-owned) */
+  showRulePrompt?: boolean;
+  /** Count to display in the rule prompt */
+  rulePromptCount?: number;
+  /** Dismiss the active rule prompt */
+  onRulePromptDismiss?: () => void;
+  /** Notify parent that this row has found similar transactions */
+  onSuggestRule?: (count: number, category: string) => void;
+  /** Notify parent to clear the rule prompt for this row */
+  onClearRulePrompt?: () => void;
 }
 
 function formatCurrency(value: number): string {
@@ -78,6 +88,11 @@ export default function TransactionRow({
   onLinkTransfer,
   onUnlinked,
   isInReviewBatch = false,
+  showRulePrompt = false,
+  rulePromptCount = 0,
+  onRulePromptDismiss,
+  onSuggestRule,
+  onClearRulePrompt,
 }: TransactionRowProps) {
   const statusClasses: Record<string, string> = {
     CONFIRMED:
@@ -99,21 +114,30 @@ export default function TransactionRow({
   );
   const [selectedLinkOption, setSelectedLinkOption] =
     useState<LinkOption | null>(null);
-  const [showRulePrompt, setShowRulePrompt] = useState(false);
-  const [showRuleDrawer, setShowRuleDrawer] = useState(false);
-  const [ruleCategory, setRuleCategory] = useState('');
-  const [similarCount, setSimilarCount] = useState(0);
   const categorySelectId = useId();
   const offsetCategorySelectId = useId();
   const linkSelectId = useId();
   const utils = trpc.useUtils();
-  const similarCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
+  // Use the extracted category edit hook
+  const {
+    localCategory: hookLocalCategory,
+    showRuleDrawer,
+    setShowRuleDrawer,
+    ruleCategory,
+    handleChange: hookHandleChange,
+  } = useCategoryEdit({
+    transaction,
+    isInReviewBatch,
+    onCategoryChange,
+    onSuggestRule,
+    onClearRulePrompt,
+  });
+
+  // Keep localCategory synced with hook value
   useEffect(() => {
-    setLocalCategory(transaction.category);
-  }, [transaction.category]);
+    setLocalCategory(hookLocalCategory);
+  }, [hookLocalCategory]);
 
   useEffect(() => {
     setLocalOffsetCategory(transaction.offsetCategory ?? '');
@@ -245,39 +269,12 @@ export default function TransactionRow({
   );
 
   function handleChange(newCategory: string) {
-    setLocalCategory(newCategory);
-    setShowRulePrompt(false); // reset any previous prompt
+    // Keep the local offset category reset logic in the component
     if (newCategory !== REIMBURSEMENT_CATEGORY) {
       setLocalOffsetCategory('');
-      onCategoryChange(transaction.id, newCategory, undefined, undefined, !isInReviewBatch);
-      // Only suggest a rule for real category changes (not Transfer/Reimbursement),
-      // and only when the category actually differs from the original.
-      if (
-        newCategory !== TRANSFER_CATEGORY &&
-        newCategory !== transaction.category
-      ) {
-        setRuleCategory(newCategory);
-        // Debounce: cancel any in-flight timer before starting a new one.
-        if (similarCheckTimerRef.current)
-          clearTimeout(similarCheckTimerRef.current);
-        similarCheckTimerRef.current = setTimeout(() => {
-          utils.categoryRule.findSimilar
-            .fetch({
-              description: transaction.description,
-              excludeTransactionId: transaction.id,
-            })
-            .then((result) => {
-              if (result.count >= 2) {
-                setSimilarCount(result.count);
-                setShowRulePrompt(true);
-              }
-            })
-            .catch(() => {
-              // silently ignore — rule prompt is non-critical
-            });
-        }, 400);
-      }
     }
+    // Delegate to hook for all category change logic
+    hookHandleChange(newCategory);
   }
 
   function handleOffsetChange(newOffsetCategory: string) {
@@ -619,13 +616,13 @@ export default function TransactionRow({
 
       {showRulePrompt && (
         <CategoryRulePrompt
-          count={similarCount}
+          count={rulePromptCount}
           colCount={colCount}
           onCreateRule={() => {
-            setShowRulePrompt(false);
+            onRulePromptDismiss?.();
             setShowRuleDrawer(true);
           }}
-          onDismiss={() => setShowRulePrompt(false)}
+          onDismiss={() => onRulePromptDismiss?.()}
         />
       )}
 
