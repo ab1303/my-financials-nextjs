@@ -189,7 +189,7 @@ export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, 
     where.transferCounterpart = { is: null };
   }
 
-  if (input.excludeTransferCategory === true) {
+  if (input.excludeTransferCategory === true && !input.category) {
     where.category = { not: TRANSFER_CATEGORY };
   }
 
