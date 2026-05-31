@@ -1,4 +1,4 @@
-import { getExpenseDataHandler } from '@/server/controllers/expense.controller';
+import { getExpenseDataHandler, getExpenseCategoryBreakdownHandler } from '@/server/controllers/expense.controller';
 import ExpenseTableClient from './ExpenseTableClient';
 
 export type ExpenseTableServerProps = {
@@ -22,7 +22,10 @@ export default async function ExpenseTableServer({
   fromYear,
   bankAccountId,
 }: ExpenseTableServerProps) {
-  const expenseData = await getExpenseDataHandler(calendarYearId, userId, bankAccountId);
+  const [expenseData, categoryBreakdown] = await Promise.all([
+    getExpenseDataHandler(calendarYearId, userId, bankAccountId),
+    getExpenseCategoryBreakdownHandler(calendarYearId, userId, bankAccountId),
+  ]);
 
   if (!expenseData) {
     return (
@@ -47,6 +50,9 @@ export default async function ExpenseTableServer({
       calendarLabel={calendarLabel}
       fromMonth={fromMonth}
       fromYear={fromYear}
+      categoryBreakdown={categoryBreakdown}
+      yearDateFrom={dateFrom.toISOString().slice(0, 10)}
+      yearDateTo={dateTo.toISOString().slice(0, 10)}
     />
   );
 }

@@ -7,6 +7,7 @@ import {
   getMonthlyExpenseSummaries,
   getCategoryBreakdownForMonth,
   getExpenseCategories,
+  getExpenseCategoryBreakdownForYear,
 } from '../services/expense.service';
 import { handleCaughtError } from '../utils/prisma';
 
@@ -238,5 +239,25 @@ export const getMonthBreakdownHandler = async (
     return entries;
   } catch (e) {
     handleCaughtError(e);
+  }
+};
+
+/**
+ * Get yearly expense breakdown by category
+ * @param calendarYearId - Calendar year ID
+ * @param userId - User ID for ownership verification
+ * @param bankAccountId - Optional FinancialAccount ID filter
+ * @returns Array of category breakdowns sorted by amount descending, or [] on error
+ */
+export const getExpenseCategoryBreakdownHandler = async (
+  calendarYearId: string,
+  userId: string,
+  bankAccountId?: string,
+) => {
+  try {
+    return await getExpenseCategoryBreakdownForYear(calendarYearId, userId, bankAccountId);
+  } catch (e) {
+    handleCaughtError(e);
+    return [];
   }
 };
