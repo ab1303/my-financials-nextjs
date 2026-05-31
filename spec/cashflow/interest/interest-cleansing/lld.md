@@ -58,18 +58,25 @@ async function getInterestCleansingSummary(calendarYear: CalendarYear): Promise<
 
 ## Transaction Category Matching
 
-The AI classifier assigns `OTHER` to credit interest transactions (description "Credit Interest") because `Bank Interest` is not a defined income category. The service therefore uses an `OR` query:
+The `Credit Interest` income source is the canonical anchor for bank savings account interest.
+When transactions are imported from CSV, the AI classifier assigns `Credit Interest` as the category for bank interest payments.
+
+The service queries using a category-based OR clause:
 
 ```typescript
 OR: [
-  { category: { equals: 'Bank Interest', mode: 'insensitive' } },
-  { description: { contains: 'interest', mode: 'insensitive' } },
+  { category: { equals: 'Credit Interest', mode: 'insensitive' } }, // canonical anchor
+  { category: { equals: 'Bank Interest', mode: 'insensitive' } },   // legacy fallback
 ]
 ```
 
 This handles:
-- Existing data categorised as `Other` with description `Credit Interest`  
-- Future data explicitly categorised as `Bank Interest`
+- All newly imported transactions classified by AI as `Credit Interest`
+- Any historical data explicitly categorised as `Bank Interest`
+
+> **Note:** The previous description-based fallback (`description CONTAINS 'interest'`) has been
+> removed. A one-time data migration was run to re-categorize all existing transactions
+> where `description = 'Credit Interest'` and `category = 'Other'` → `category = 'Credit Interest'`.
 
 
 | Test Case | Description |

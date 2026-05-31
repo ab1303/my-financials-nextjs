@@ -18,6 +18,20 @@ import {
   BusinessEnumType,
 } from '@prisma/client';
 
+// ─── Income Sources ────────────────────────────────────────────────────────────
+
+const INCOME_SOURCES = [
+  { name: 'Employment', description: 'Salary, wages, payroll from an employer' },
+  { name: 'Freelance', description: 'Contractor payments, gig economy income' },
+  { name: 'Business', description: 'Business income, invoice payments' },
+  { name: 'Rental', description: 'Rent received, property income' },
+  { name: 'Dividend', description: 'ETF distributions, managed fund distributions, trust distributions' },
+  { name: 'Stocks', description: 'Dividends from individual shares, stock income' },
+  { name: 'Bonds', description: 'Bond interest, fixed income payments' },
+  { name: 'Credit Interest', description: 'Bank savings account interest credited by financial institutions' },
+  { name: 'Other', description: 'Government payments, tax refunds, miscellaneous income' },
+];
+
 const prisma = new PrismaClient();
 
 // ─── Calendar Years ────────────────────────────────────────────────────────────
@@ -297,6 +311,25 @@ async function seedBrokerages() {
   console.log(`  → ${created} brokerage(s) created`);
 }
 
+// ─── Income Sources ────────────────────────────────────────────────────────────
+
+async function seedIncomeSources() {
+  console.log('\n💰 Seeding Income Sources...');
+  let created = 0;
+
+  for (const source of INCOME_SOURCES) {
+    await prisma.incomeSource.upsert({
+      where: { name: source.name },
+      create: { ...source, isActive: true },
+      update: { description: source.description },
+    });
+    console.log(`  ✓ ${source.name}`);
+    created++;
+  }
+
+  console.log(`  → ${created} income source(s) upserted`);
+}
+
 // ─── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -305,6 +338,7 @@ async function main() {
   await seedCalendarYears();
   await seedExpenseCategories();
   await seedSpecialCategories();
+  await seedIncomeSources();
   await seedBanks();
   await seedBrokerages();
 

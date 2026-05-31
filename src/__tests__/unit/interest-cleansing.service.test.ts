@@ -190,5 +190,38 @@ describe('interest-cleansing.service', () => {
       expect(result.dateFrom).toBe('2024-01-01');
       expect(result.dateTo).toBe('2024-12-31');
     });
-  });
-});
+
+    // TEST 6: Transaction query uses category-based OR clause (Credit Interest anchor)
+    it('should query transactions by category Credit Interest and Bank Interest (not description)', async () => {
+      const calendarYearId = 'annual-2024';
+      const userId = 'user-1';
+      const bankId = 'bank-1';
+
+      prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
+        id: calendarYearId,
+        fromYear: 2024,
+        fromMonth: 1,
+        toYear: 2024,
+        toMonth: 12,
+        type: 'ANNUAL',
+        userId,
+      } as never);
+      prismaMock.financialAccount.findMany.mockResolvedValue([]);
+      prismaMock.transaction.findMany.mockResolvedValue([]);
+      prismaMock.donationPayment.findMany.mockResolvedValue([]);
+
+      await getYearlyCleansingData(bankId, calendarYearId, userId);
+
+      const callArg = (prismaMock.transaction.findMany as any).mock.calls[0][0];
+      const orClauses = callArg.where.OR as Array<Record<string, unknown>>;
+
+      // Must include category-based clauses
+      expect(orClauses).toContainEqual({ category: { equals: 'Credit Interest', mode: 'insensitive' } });
+      expect(orClauses).toContainEqual({ category: { equals: 'Bank Interest', mode: 'insensitive' } });
+
+      // Must NOT fall back to description-based matching
+      const hasDescriptionFallback = orClauses.some((c) => 'description' in c);
+      expect(hasDescriptionFallback).toBe(false);
+    });
+  }); // end describe('getYearlyCleansingData')
+}); // end describe('interest-cleansing.service')

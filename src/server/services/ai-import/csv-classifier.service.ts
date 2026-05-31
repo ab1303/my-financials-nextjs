@@ -10,14 +10,15 @@ import type { ExpenseCategory } from '@prisma/client';
  */
 
 const DEFAULT_INCOME_SOURCE_NAMES = [
-  'EMPLOYMENT',
-  'STOCKS',
-  'BONDS',
-  'RENTAL',
-  'BUSINESS',
-  'FREELANCE',
-  'DIVIDEND',
-  'OTHER',
+  'Employment',
+  'Stocks',
+  'Bonds',
+  'Rental',
+  'Business',
+  'Freelance',
+  'Dividend',
+  'Credit Interest',
+  'Other',
 ];
 
 function getAIProvider() {
@@ -188,7 +189,8 @@ Rules:
 - BUSINESS: business income, invoice payments
 - FREELANCE: contractor payments, gig economy
 - DIVIDEND: ETF distributions (IOZ, VAS, NDQ, A200, VDHG, DHHF etc.), managed fund distributions, trust distributions
-- OTHER: interest earned, government payments, tax refunds
+- Credit Interest: bank savings account interest, credit interest from financial institutions
+- OTHER: government payments, tax refunds, miscellaneous income
 - Transfer: internal bank transfer (savings, offset)
 - Excluded: refunds, reversals, or items to ignore
 - One object per transaction, preserving input order.`;

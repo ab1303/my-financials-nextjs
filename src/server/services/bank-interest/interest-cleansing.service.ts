@@ -64,7 +64,6 @@ export const getYearlyCleansingData = async (
     }
   }
 
-  // Fetch interest transactions from the ledger
   const interestTx = await prisma.transaction.findMany({
     where: {
       userId,
@@ -72,13 +71,11 @@ export const getYearlyCleansingData = async (
       type: 'CREDIT',
       status: 'CONFIRMED',
       date: { gte: dateFrom, lte: dateTo },
-      // Match both explicitly-categorised "Bank Interest" records and any CREDIT
-      // transactions whose description contains the word "interest" (e.g. the
-      // "Credit Interest" entries imported from Australian banks, which the AI
-      // classifier assigns to category "Other").
+      // "Credit Interest" income source is the canonical anchor for bank interest.
+      // "Bank Interest" is retained as a legacy fallback.
       OR: [
+        { category: { equals: 'Credit Interest', mode: 'insensitive' } },
         { category: { equals: 'Bank Interest', mode: 'insensitive' } },
-        { description: { contains: 'interest', mode: 'insensitive' } },
       ],
     },
   });
@@ -160,8 +157,8 @@ export const getUnlinkedInterestTransactions = async (
       status: 'CONFIRMED',
       date: { gte: dateFrom, lte: dateTo },
       OR: [
+        { category: { equals: 'Credit Interest', mode: 'insensitive' } },
         { category: { equals: 'Bank Interest', mode: 'insensitive' } },
-        { description: { contains: 'interest', mode: 'insensitive' } },
       ],
       AND: [
         {
