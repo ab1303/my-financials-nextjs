@@ -74,7 +74,10 @@ describe('TransactionRow', () => {
     { id: 'cat-2', name: 'Transport' },
   ];
 
-  const incomeSourceLabels = ['EMPLOYMENT', 'BUSINESS'];
+  const incomeSourceLabels = [
+    { id: 'src-1', name: 'EMPLOYMENT' },
+    { id: 'src-2', name: 'BUSINESS' },
+  ];
 
   const debitTransaction: LedgerTransactionRow = {
     id: 'tx-1',

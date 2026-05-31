@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma';
+import { TRANSFER_CATEGORY } from './transactions/constants';
 import type {
   IncomeModel,
   IncomeEntryModel,
@@ -57,6 +58,7 @@ export const getIncomeEntries = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
+      category: { not: TRANSFER_CATEGORY },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId ? { bankAccountId } : {}),
     },
@@ -212,6 +214,7 @@ export const getTotalIncome = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
+      category: { not: TRANSFER_CATEGORY },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId ? { bankAccountId } : {}),
     },
@@ -243,6 +246,7 @@ export const getMonthlyIncomeSummary = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
+      category: { not: TRANSFER_CATEGORY },
       date: { gte: startDate, lte: endDate },
     },
     select: { date: true, amount: true },
@@ -304,6 +308,7 @@ export const getSourceBreakdown = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
+      category: { not: TRANSFER_CATEGORY },
       date: { gte: startDate, lte: endDate },
     },
     select: { category: true, amount: true },
@@ -365,6 +370,7 @@ export const getMonthlyIncomeSummaryFiltered = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
+      category: { not: TRANSFER_CATEGORY },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
@@ -428,6 +434,7 @@ export const getIncomeSourceBreakdownForYear = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
+      category: { not: TRANSFER_CATEGORY },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }

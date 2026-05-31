@@ -90,6 +90,7 @@ export default async function IncomePage({
         userId: session.user.id,
         category: TRANSFER_CATEGORY,
         transferLinkedTransactionId: null,
+        transferCounterpart: { is: null }, // exclude CREDIT sides of properly-linked pairs
         date: { lt: cutoffDate },
       },
     }),

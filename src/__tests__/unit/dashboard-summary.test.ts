@@ -25,6 +25,11 @@ vi.mock('@/server/services/expense.service', () => ({
   getTotalExpenses: vi.fn(),
 }));
 
+vi.mock('@/server/services/dashboard.service', () => ({
+  getMonthlyIncomeExpenseTrend: vi.fn().mockResolvedValue([]),
+  getTopExpenseCategories: vi.fn().mockResolvedValue([]),
+}));
+
 // Import after mocking
 import { auth } from '@/server/auth';
 import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';

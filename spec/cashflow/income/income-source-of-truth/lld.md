@@ -75,6 +75,7 @@ export const getIncomeEntries = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
+      category: { not: 'Transfer' },         // exclude transfer-classified credits
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId && { bankAccountId }),  // optional bank filter
     },
@@ -123,6 +124,7 @@ export const getTotalIncome = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
+      category: { not: 'Transfer' },         // exclude transfer-classified credits
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId && { bankAccountId }),
     },

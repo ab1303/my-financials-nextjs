@@ -24,7 +24,8 @@ CSV Import → Transaction (type=CREDIT, source=BANK/LLM_CLASSIFIED, status=CONF
 Manual add → Transaction (type=CREDIT, source=MANUAL, status=CONFIRMED)
 
 getIncomeEntries = SELECT * FROM Transaction 
-                   WHERE type='CREDIT' AND status='CONFIRMED' AND date IN fiscal year
+                   WHERE type='CREDIT' AND status='CONFIRMED'
+                   AND category != 'Transfer'   -- transfers are money movement, not income AND date IN fiscal year
 ```
 
 **No UNION, no sync, no duplication.**

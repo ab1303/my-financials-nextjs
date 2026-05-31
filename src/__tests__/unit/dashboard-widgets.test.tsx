@@ -243,7 +243,7 @@ describe('AssetBalanceCards', () => {
     expect(screen.getAllByText(/as of/i).length).toBeGreaterThanOrEqual(2);
   });
 
-  it('renders "No data" when amounts are 0', () => {
+  it('renders "No snapshots recorded yet" when dates are null', () => {
     render(
       <AssetBalanceCards
         latestCashTotal={0}
@@ -253,8 +253,8 @@ describe('AssetBalanceCards', () => {
       />,
     );
 
-    // Should show "No data" twice (once for each card)
-    const noDataElements = screen.getAllByText('No data');
+    // Should show "No snapshots recorded yet" twice (once for each card)
+    const noDataElements = screen.getAllByText('No snapshots recorded yet');
     expect(noDataElements.length).toBe(2);
   });
 
@@ -268,8 +268,8 @@ describe('AssetBalanceCards', () => {
       />,
     );
 
-    // Should show "as of No data" for both cards
-    const noDataInDates = screen.getAllByText('as of No data');
-    expect(noDataInDates.length).toBe(2);
+    // Should show "No snapshots recorded yet" for both cards (null date hides balance row)
+    const noSnapshotElements = screen.getAllByText('No snapshots recorded yet');
+    expect(noSnapshotElements.length).toBe(2);
   });
 });

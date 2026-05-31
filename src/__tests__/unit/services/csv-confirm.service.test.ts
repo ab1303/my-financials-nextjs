@@ -189,7 +189,10 @@ describe('transactionLedger.getFilterOptions', () => {
   it('returns income sources from DB', async () => {
     await expect(caller.transactionLedger.getFilterOptions()).resolves.toEqual({
       expenseCategories: [{ id: 'cat-1', name: 'Groceries' }],
-      incomeSourceLabels: ['Employment', 'Other'],
+      incomeSourceLabels: [
+        { id: 'source-1', name: 'Employment' },
+        { id: 'source-2', name: 'Other' },
+      ],
     });
   });
 });
