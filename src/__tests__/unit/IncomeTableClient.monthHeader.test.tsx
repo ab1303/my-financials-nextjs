@@ -22,6 +22,12 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+vi.mock('next/link', () => ({
+  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
+    <a href={href} {...props}>{children}</a>
+  ),
+}));
+
 vi.mock('@/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget', () => ({
   default: () => <div>SourceBreakdownWidget</div>,
 }));
@@ -77,7 +83,7 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
     expect(button).toHaveAttribute('aria-expanded');
   });
 
-  it('accordion header has flex layout with justify-between', () => {
+  it('accordion header has flex layout with justify-between on the outer container', () => {
     render(
       <IncomeEntryStateProvider data={singleEntry}>
         <IncomeTableClient
@@ -90,9 +96,12 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
     );
 
     const monthLabel = screen.getByText('January 2024');
-    const button = monthLabel.closest('button');
-    // The accordion toggle button has justify-between layout
-    expect(button).toHaveClass('justify-between');
+    // After refactor, the outer container div has justify-between, not the toggle button
+    const toggleButton = monthLabel.closest('button');
+    expect(toggleButton).toBeInTheDocument();
+    // The outer header div wraps both the toggle button and the ledger link
+    const headerDiv = toggleButton?.parentElement;
+    expect(headerDiv).toHaveClass('justify-between');
   });
 
   it('accordion header shows subtotal amount', () => {
@@ -132,6 +141,50 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
     // Entry count badge showing number of entries in the month
     const badge = screen.getByText('1');
     expect(badge).toBeInTheDocument();
+  });
+
+  it('renders a link to the transaction ledger with correct month and year', () => {
+    render(
+      <IncomeEntryStateProvider data={singleEntry}>
+        <IncomeTableClient
+          editRow={mockServerActions.editRow}
+          addRow={mockServerActions.addRow}
+          deleteRow={mockServerActions.deleteRow}
+          calendarYearId='year-2024'
+        />
+      </IncomeEntryStateProvider>
+    );
+
+    const link = screen.getByRole('link', { name: /View January 2024 transactions in ledger/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute('href', '/cashflow/transactions?month=1&year=2024&tab=income');
+  });
+
+  it('ledger link href encodes month and year from monthKey correctly', () => {
+    const julyEntry: IncomeEntryType[] = [
+      {
+        id: '2',
+        dateEarned: new Date('2024-07-10'),
+        amount: 2500,
+        incomeSourceId: 'source-1',
+        incomeSourceName: 'Salary',
+        incomeLedgerId: 'ledger-1',
+      },
+    ];
+
+    render(
+      <IncomeEntryStateProvider data={julyEntry}>
+        <IncomeTableClient
+          editRow={mockServerActions.editRow}
+          addRow={mockServerActions.addRow}
+          deleteRow={mockServerActions.deleteRow}
+          calendarYearId='year-2024'
+        />
+      </IncomeEntryStateProvider>
+    );
+
+    const link = screen.getByRole('link', { name: /View July 2024 transactions in ledger/i });
+    expect(link).toHaveAttribute('href', '/cashflow/transactions?month=7&year=2024&tab=income');
   });
 });
 
