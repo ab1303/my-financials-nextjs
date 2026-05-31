@@ -88,10 +88,7 @@ describe('Income Service (unit, with MockContext)', () => {
 
   it('getIncomeEntries excludes Transfer-category credits from income', async () => {
     mockCtx.prisma.calendarYear.findUnique.mockResolvedValue({
-      fromYear: 2024,
-      fromMonth: 1,
-      toYear: 2024,
-      toMonth: 12,
+      fromYear: 2024, fromMonth: 1, toYear: 2024, toMonth: 12,
     } as any);
     mockCtx.prisma.transaction.findMany.mockResolvedValue([] as any);
     mockCtx.prisma.incomeSource.findMany.mockResolvedValue([] as any);
@@ -99,7 +96,22 @@ describe('Income Service (unit, with MockContext)', () => {
     await getIncomeEntries(calendarYearId, userId, mockCtx.prisma);
 
     const whereArg = mockCtx.prisma.transaction.findMany.mock.calls[0]![0] as any;
-    expect(whereArg.where.category).toEqual({ not: 'Transfer' });
+    expect(whereArg.where.category).toEqual({ notIn: ['Transfer', 'Reimbursement'] });
+  });
+
+  it('getIncomeEntries excludes Reimbursement-category credits from income', async () => {
+    mockCtx.prisma.calendarYear.findUnique.mockResolvedValue({
+      fromYear: 2024, fromMonth: 1, toYear: 2024, toMonth: 12,
+    } as any);
+    mockCtx.prisma.transaction.findMany.mockResolvedValue([] as any);
+    mockCtx.prisma.incomeSource.findMany.mockResolvedValue([] as any);
+
+    await getIncomeEntries(calendarYearId, userId, mockCtx.prisma);
+
+    const whereArg = mockCtx.prisma.transaction.findMany.mock.calls[0]![0] as any;
+    // Reimbursements are expense offsets (split payments), not earned income
+    expect(whereArg.where.category.notIn).toContain('Reimbursement');
+    expect(whereArg.where.category.notIn).toContain('Transfer');
   });
 
   it('updateIncomeEntry updates Transaction correctly', async () => {

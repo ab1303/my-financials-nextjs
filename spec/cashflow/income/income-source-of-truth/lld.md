@@ -75,7 +75,7 @@ export const getIncomeEntries = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { not: 'Transfer' },         // exclude transfer-classified credits
+      category: { notIn: ['Transfer', 'Reimbursement'] }, // Transfers are pass-through; Reimbursements are expense offsets, not earned income
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId && { bankAccountId }),  // optional bank filter
     },
@@ -124,7 +124,7 @@ export const getTotalIncome = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { not: 'Transfer' },         // exclude transfer-classified credits
+      category: { notIn: ['Transfer', 'Reimbursement'] }, // exclude transfer-classified credits and expense-offset reimbursements
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId && { bankAccountId }),
     },
@@ -354,6 +354,8 @@ DROP TABLE IncomeLedger;
 - [ ] Restoring a voided CREDIT transaction restores it to the Income Tracking view
 - [ ] `IncomeRecord` and `IncomeLedger` tables no longer exist
 - [ ] Bank filter only filters CREDIT transactions; works independently
-- [ ] Total income equals sum of all CREDIT+CONFIRMED transactions in the fiscal year
+- [ ] Total income equals sum of all CREDIT+CONFIRMED transactions in the fiscal year, **excluding** `category IN ('Transfer', 'Reimbursement')`
+- [ ] Reimbursements (split payment returns) do **not** appear in income totals or the source breakdown bar
+- [ ] Transfer-categorised CREDITs do **not** appear in income totals
 - [ ] TypeScript compiles with zero errors on income-related source files
 

@@ -1,5 +1,8 @@
 import { prisma } from '../utils/prisma';
-import { TRANSFER_CATEGORY } from './transactions/constants';
+import { TRANSFER_CATEGORY, REIMBURSEMENT_CATEGORY } from './transactions/constants';
+
+// Categories excluded from income totals — these are expense offsets, not earned income
+const INCOME_EXCLUDED_CATEGORIES = [TRANSFER_CATEGORY, REIMBURSEMENT_CATEGORY] as const;
 import type {
   IncomeModel,
   IncomeEntryModel,
@@ -58,7 +61,7 @@ export const getIncomeEntries = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { not: TRANSFER_CATEGORY },
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId ? { bankAccountId } : {}),
     },
@@ -214,7 +217,7 @@ export const getTotalIncome = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { not: TRANSFER_CATEGORY },
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId ? { bankAccountId } : {}),
     },
@@ -246,7 +249,7 @@ export const getMonthlyIncomeSummary = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { not: TRANSFER_CATEGORY },
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
       date: { gte: startDate, lte: endDate },
     },
     select: { date: true, amount: true },
@@ -308,7 +311,7 @@ export const getSourceBreakdown = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { not: TRANSFER_CATEGORY },
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
       date: { gte: startDate, lte: endDate },
     },
     select: { category: true, amount: true },
@@ -370,7 +373,7 @@ export const getMonthlyIncomeSummaryFiltered = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { not: TRANSFER_CATEGORY },
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
@@ -434,7 +437,7 @@ export const getIncomeSourceBreakdownForYear = async (
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { not: TRANSFER_CATEGORY },
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
