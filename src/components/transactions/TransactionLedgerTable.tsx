@@ -180,7 +180,6 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     refetch,
   } = trpc.transactionLedger.getAll.useInfiniteQuery(queryInput, {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    initialPageParam: undefined,
   });
   const utils = trpc.useUtils();
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
@@ -223,7 +222,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
       // On the transfers tab, if the row is being moved to a non-Transfer category,
       // retain it in view so the user can complete follow-up actions (e.g. linking).
       if (activeTab === 'transfers') {
-        const txData = data?.transactions.find(tx => tx.id === id) ?? retainedRows.get(id);
+        const txData = data?.pages.flatMap(p => p.transactions).find(tx => tx.id === id) ?? retainedRows.get(id);
         if (txData) {
           if (newCategory !== TRANSFER_CATEGORY) {
             setRetainedRows(prev => {

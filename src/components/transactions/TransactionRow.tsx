@@ -133,6 +133,7 @@ export default function TransactionRow({
             label: 'Linked expense',
             value: transaction.offsetTransactionId ?? '',
             meta: '',
+            category: transaction.offsetCategory ?? '',
           },
     );
   }, [transaction.offsetTransactionId]);

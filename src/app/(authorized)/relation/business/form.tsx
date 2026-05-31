@@ -124,6 +124,22 @@ export default function BusinessForm() {
       },
     });
 
+  const updateBusinessDetailsMutation =
+    trpc.business.updateBusinessDetails.useMutation({
+      onError(error: unknown) {
+        if (error instanceof TRPCError) {
+          toast.error(error.message);
+        }
+      },
+
+      onSuccess() {
+        queryClient.refetchQueries({
+          queryKey: [['business', 'getAllBusinesses']],
+        });
+        toast.success('Business details updated!');
+      },
+    });
+
   const uniqSelectBusinessId = useId();
   const [selectedBusiness, setSelectedBusiness] = useState<
     SingleValue<BusinessOptionType> | undefined
@@ -164,16 +180,37 @@ export default function BusinessForm() {
       address: { addressLine, postcode, state, street_address, suburb },
     } = formData;
 
-    saveBusinessDetailsMutation.mutate({
-      name: businessName,
-      type,
-      addressLine,
-      postcode: postCodeSchema.parse(postcode),
-      state,
-      streetAddress: street_address,
-      suburb,
-    });
-    resetForm();
+    if (selectedBusiness) {
+      // Update existing business
+      updateBusinessDetailsMutation.mutate(
+        {
+          id: selectedBusiness.id,
+          name: businessName,
+          addressLine,
+          postcode: postcode ? postCodeSchema.parse(postcode) : undefined,
+          state,
+          streetAddress: street_address,
+          suburb,
+        },
+        {
+          onSuccess: () => {
+            // Don't reset form for updates — keep updated data visible
+          },
+        }
+      );
+    } else {
+      // Create new business
+      saveBusinessDetailsMutation.mutate({
+        name: businessName,
+        type,
+        addressLine,
+        postcode: postCodeSchema.parse(postcode),
+        state,
+        streetAddress: street_address,
+        suburb,
+      });
+      resetForm();
+    }
   };
 
   const handleOptionChange = (option: SingleValue<BusinessOptionType>) => {
@@ -301,7 +338,10 @@ export default function BusinessForm() {
 
             <div>
               <Button
-                isLoading={saveBusinessDetailsMutation.isPending}
+                isLoading={
+                  saveBusinessDetailsMutation.isPending ||
+                  updateBusinessDetailsMutation.isPending
+                }
                 variant='primary'
                 type='submit'
               >
