@@ -121,6 +121,17 @@ export default async function IncomePage({
     defaultCalendarType: (fiscalYearType ?? 'FISCAL') as CalendarEnumType,
   };
 
+  // Compute date range for linking to transactions ledger
+  const yearDateFrom = selectedCalendarYear
+    ? `${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01`
+    : undefined;
+  const yearDateTo = selectedCalendarYear
+    ? (() => {
+        const lastDay = new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate();
+        return `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      })()
+    : undefined;
+
   return (
     <main className='px-4 sm:px-6 lg:px-8 py-6'>
       <div className='mb-6'>
@@ -158,7 +169,12 @@ export default async function IncomePage({
               </h2>
             )}
 
-            <IncomeTableServer calendarYearId={selectedCalendarYearId} bankAccountId={selectedBankId || undefined} />
+            <IncomeTableServer 
+             calendarYearId={selectedCalendarYearId} 
+             bankAccountId={selectedBankId || undefined}
+             yearDateFrom={yearDateFrom}
+             yearDateTo={yearDateTo}
+            />
           </Suspense>
         </IncomeForm>
       </div>

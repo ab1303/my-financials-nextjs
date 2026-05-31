@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
 
 import SourceBadge from './SourceBadge';
@@ -17,6 +19,8 @@ export const SOURCE_COLOR_BAR_MAP: Record<string, string> = {
 
 type SourceBreakdownWidgetProps = {
   entries: IncomeEntryType[];
+  yearDateFrom?: string;
+  yearDateTo?: string;
 };
 
 type SourceSummary = {
@@ -40,7 +44,7 @@ export function computeBreakdown(entries: IncomeEntryType[]): SourceSummary[] {
     .sort((a, b) => b.total - a.total);
 }
 
-export default function SourceBreakdownWidget({ entries }: SourceBreakdownWidgetProps) {
+export default function SourceBreakdownWidget({ entries, yearDateFrom, yearDateTo }: SourceBreakdownWidgetProps) {
   if (entries.length === 0) return null;
 
   const breakdown = computeBreakdown(entries);
@@ -58,20 +62,29 @@ export default function SourceBreakdownWidget({ entries }: SourceBreakdownWidget
         ))}
       </div>
       <div className='mt-2 flex flex-wrap gap-3'>
-        {breakdown.map((summary) => (
-          <div key={summary.sourceName} className='flex items-center gap-1.5 text-xs text-muted-foreground'>
-            <SourceBadge sourceName={summary.sourceName} />
-            <NumericFormat
-              value={summary.total}
-              displayType='text'
-              thousandSeparator
-              prefix='$'
-              decimalScale={2}
-              fixedDecimalScale
-            />
-            <span>({summary.percentage.toFixed(1)}%)</span>
-          </div>
-        ))}
+        {breakdown.map((summary) => {
+          const url = `/cashflow/transactions?tab=income&categoryName=${encodeURIComponent(summary.sourceName)}${yearDateFrom ? `&dateFrom=${yearDateFrom}` : ''}${yearDateTo ? `&dateTo=${yearDateTo}` : ''}`;
+          return (
+            <Link
+              key={summary.sourceName}
+              href={url}
+              className='flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted/50 rounded-md px-1.5 py-0.5 transition-colors'
+              title={`View ${summary.sourceName} transactions`}
+            >
+              <SourceBadge sourceName={summary.sourceName} />
+              <NumericFormat
+                value={summary.total}
+                displayType='text'
+                thousandSeparator
+                prefix='$'
+                decimalScale={2}
+                fixedDecimalScale
+              />
+              <span>({summary.percentage.toFixed(1)}%)</span>
+              <ExternalLink size={13} className='ml-0.5 opacity-70' />
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

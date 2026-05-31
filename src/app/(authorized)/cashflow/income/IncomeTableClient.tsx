@@ -27,6 +27,8 @@ type IncomeTableClientProps = {
   ) => Promise<ServerActionType<IncomeEntryType>>;
   deleteRow: (input: DeleteIncomeEntryInput) => Promise<ServerActionType>;
   calendarYearId: string;
+  yearDateFrom?: string;
+  yearDateTo?: string;
 };
 
 type MonthGroup = {
@@ -55,6 +57,8 @@ export default function IncomeTableClient({
   editRow,
   deleteRow,
   calendarYearId,
+  yearDateFrom,
+  yearDateTo,
 }: IncomeTableClientProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -108,7 +112,13 @@ export default function IncomeTableClient({
       </div>
 
       {/* Source Breakdown Widget */}
-      {data.length > 0 && <SourceBreakdownWidget entries={data} />}
+      {data.length > 0 && (
+        <SourceBreakdownWidget 
+          entries={data} 
+          yearDateFrom={yearDateFrom}
+          yearDateTo={yearDateTo}
+        />
+      )}
 
       {/* Empty State */}
       {monthGroups.length === 0 && (

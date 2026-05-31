@@ -42,6 +42,8 @@ interface TransactionLedgerTableProps {
   initialYear?: number;
   initialCategory?: string;
   initialTab?: string;
+  initialDateFrom?: string;
+  initialDateTo?: string;
 }
 
 const PAGE_SIZE = 50;
@@ -82,6 +84,8 @@ export default function TransactionLedgerTable({
   initialYear,
   initialCategory,
   initialTab,
+  initialDateFrom,
+  initialDateTo,
 }: TransactionLedgerTableProps) {
   return (
     <TransactionLedgerBody
@@ -91,11 +95,13 @@ export default function TransactionLedgerTable({
       initialYear={initialYear}
       initialCategory={initialCategory}
       initialTab={initialTab}
+      initialDateFrom={initialDateFrom}
+      initialDateTo={initialDateTo}
     />
   );
 }
 
-function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear, initialCategory, initialTab }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear' | 'initialCategory' | 'initialTab'>) {
+function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear, initialCategory, initialTab, initialDateFrom, initialDateTo }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear' | 'initialCategory' | 'initialTab' | 'initialDateFrom' | 'initialDateTo'>) {
   const defaultFY = getPresetDateRange('this-fy')!;
 
   // Calculate date range from initialMonth/initialYear if provided
@@ -109,11 +115,16 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         to: `${initialYear}-${mm}-${String(lastDay).padStart(2, '0')}`,
       };
     }
+    if (initialDateFrom || initialDateTo) {
+      return { from: initialDateFrom ?? defaultFY.from, to: initialDateTo ?? defaultFY.to };
+    }
     return { from: defaultFY.from, to: defaultFY.to };
   };
 
   const initialDateRange = getInitialDateRange();
-  const initialPreset = (initialMonth !== undefined && initialYear !== undefined) ? 'custom' : 'this-fy';
+  const initialPreset: DatePreset = (initialMonth !== undefined && initialYear !== undefined)
+    ? 'custom'
+    : (initialDateFrom || initialDateTo) ? 'custom' : 'this-fy';
 
   const [activeTab, setActiveTab] = useState<TabFilter>(() => {
     const validTabs: TabFilter[] = ['all', 'expenses', 'income', 'excluded', 'reimbursements', 'uncategorized', 'voided', 'transfers'];

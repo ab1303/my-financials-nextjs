@@ -36,7 +36,7 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
   let initialCategory: string | undefined;
   let initialCategoryId: string | undefined;
   const categoryId = resolvedSearchParams.category as string | undefined;
-  
+
   if (categoryId) {
     // Look up category name from ID
     const category = await prisma.expenseCategory.findUnique({
@@ -49,7 +49,17 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
       initialCategoryId = categoryId;
     }
   }
-  
+
+  // Also support direct category name (from income breakdown tiles)
+  const categoryName = resolvedSearchParams.categoryName as string | undefined;
+  if (!initialCategory && categoryName) {
+    initialCategory = categoryName;
+    // No categoryId needed — ledger filters by name directly
+  }
+
+  const initialDateFrom = resolvedSearchParams.dateFrom as string | undefined;
+  const initialDateTo = resolvedSearchParams.dateTo as string | undefined;
+
   const initialMonth = resolvedSearchParams.month ? Number.parseInt(resolvedSearchParams.month as string, 10) : undefined;
   const initialYear = resolvedSearchParams.year ? Number.parseInt(resolvedSearchParams.year as string, 10) : undefined;
   const viewMode = resolvedSearchParams.view as string | undefined;
@@ -64,6 +74,8 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
       initialYear={initialYear}
       viewMode={viewMode}
       initialTab={initialTab}
+      initialDateFrom={initialDateFrom}
+      initialDateTo={initialDateTo}
     />
   );
 }

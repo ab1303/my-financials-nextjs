@@ -9,11 +9,15 @@ import { addRow, deleteRow, editRow } from './actions';
 export type IncomeTableServerProps = {
   calendarYearId: string;
   bankAccountId?: string;
+  yearDateFrom?: string;
+  yearDateTo?: string;
 };
 
 export default async function IncomeTableServer({
   calendarYearId,
   bankAccountId,
+  yearDateFrom,
+  yearDateTo,
 }: IncomeTableServerProps) {
   try {
     // Get user session for user-specific data
@@ -46,6 +50,8 @@ export default async function IncomeTableServer({
           editRow={editRow}
           deleteRow={deleteRow}
           calendarYearId={calendarYearId}
+          yearDateFrom={yearDateFrom}
+          yearDateTo={yearDateTo}
         />
       </IncomeEntryStateProvider>
     );
