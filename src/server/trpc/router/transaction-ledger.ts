@@ -145,6 +145,7 @@ const updateCategorySchema = z.object({
   newCategory: z.string().min(1),
   offsetCategory: z.string().optional(),
   offsetTransactionId: z.string().optional(),
+  applyToMatching: z.boolean().optional(), // default true; pass false during review-batch edits to prevent recursion
 });
 
 export function buildTransactionWhere(input: z.infer<typeof getAllInputSchema>, userId: string) {
@@ -420,6 +421,7 @@ export const transactionLedgerRouter = router({
         type: true,
         status: true,
         category: true,
+        description: true,
         offsetCategory: true,
         offsetTransactionId: true,
         amount: true,
@@ -654,7 +656,75 @@ export const transactionLedgerRouter = router({
       });
     }
 
-    return { success: true };
+    // Auto-apply to matching transactions (same description + user, different category)
+    // Skipped when: applyToMatching is explicitly false (review-batch correction),
+    //   or when the new category is Reimbursement/Transfer (complex special logic — not safe to batch)
+    const matchedIds: string[] = [];
+    const isSpecialCategory =
+      input.newCategory === REIMBURSEMENT_CATEGORY || input.newCategory === TRANSFER_CATEGORY;
+
+    if (input.applyToMatching !== false && !isSpecialCategory) {
+      const matches = await ctx.prisma.transaction.findMany({
+        where: {
+          userId,
+          description: transaction.description,
+          id: { not: transaction.id },
+          category: { not: input.newCategory },
+          status: { not: TransactionStatusEnum.VOIDED },
+        },
+        select: {
+          id: true,
+          userId: true,
+          type: true,
+          status: true,
+          category: true,
+          amount: true,
+          date: true,
+        },
+      });
+
+      for (const match of matches) {
+        const matchCategoryChanged = match.category !== input.newCategory;
+        if (!matchCategoryChanged) continue;
+
+        await ctx.prisma.transaction.update({
+          where: { id: match.id },
+          data: {
+            category: input.newCategory,
+            source: TransactionSourceEnum.USER_OVERRIDE,
+          },
+        });
+
+        if (
+          match.type === TransactionTypeEnum.DEBIT &&
+          match.status === TransactionStatusEnum.CONFIRMED
+        ) {
+          await rerollupExpenseSummary({
+            prismaClient: ctx.prisma,
+            userId,
+            oldCategory: match.category,
+            newCategory: input.newCategory,
+            amount: match.amount as Decimal,
+            date: match.date,
+          });
+        } else if (
+          match.type === TransactionTypeEnum.CREDIT &&
+          match.status === TransactionStatusEnum.CONFIRMED
+        ) {
+          await updateIncomeRecordSource({
+            prismaClient: ctx.prisma,
+            userId,
+            newSourceName: input.newCategory,
+            amount: match.amount as Decimal,
+            transactionDate: match.date,
+          });
+        }
+
+        matchedIds.push(match.id);
+      }
+    }
+
+    return { success: true, matchedIds };
   }),
 
   searchDebitTransactions: protectedProcedure

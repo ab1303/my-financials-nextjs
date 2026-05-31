@@ -146,6 +146,9 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   // Rows that were recategorized away from the current tab's filter — kept visible so
   // the user can complete any follow-up action (e.g. reimbursement linking) before dismissing.
   const [retainedRows, setRetainedRows] = useState<Map<string, LedgerTransactionRow>>(new Map());
+  // Review batch: transaction IDs that were auto-matched during a category update
+  const [reviewBatch, setReviewBatch] = useState<string[] | null>(null);
+  const [preReviewCategory, setPreReviewCategory] = useState<string | undefined>();
   const [transferDrawerTx, setTransferDrawerTx] = useState<{
     id: string;
     description: string;
@@ -215,12 +218,24 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   }, [refreshKey, refetch]);
 
   const updateCategoryMutation = trpc.transactionLedger.updateCategory.useMutation({
-    onSuccess: () => {
+    onSuccess: (result) => {
       setSavingId(null);
       void refetch();
       // Invalidate the link picker cache so newly-linked DEBITs are excluded immediately
       void utils.transactionLedger.searchDebitTransactions.invalidate();
-      toast.success('Category updated');
+      if (result.matchedIds.length > 0) {
+        setPreReviewCategory(category); // save so we can restore on exit
+        setReviewBatch(result.matchedIds);
+        // Clear category filter so the refetched data includes all newly-categorised transactions.
+        // Without this, an active category filter would hide the matched rows from the client-side filter.
+        setCategory(undefined);
+        toast.success(
+          `Category updated for ${result.matchedIds.length + 1} matching transaction${result.matchedIds.length > 1 ? 's' : ''} — scroll to review`,
+          { duration: 5000 },
+        );
+      } else {
+        toast.success('Category updated');
+      }
     },
     onError: (error) => {
       setSavingId(null);
@@ -229,7 +244,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   });
 
   const handleCategoryChange = useCallback(
-    (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null) => {
+    (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null, applyToMatching?: boolean) => {
       // On the transfers tab, if the row is being moved to a non-Transfer category,
       // retain it in view so the user can complete follow-up actions (e.g. linking).
       if (activeTab === 'transfers') {
@@ -257,6 +272,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         newCategory,
         ...(offsetCategory ? { offsetCategory } : {}),
         ...(offsetTransactionId !== undefined ? { offsetTransactionId: offsetTransactionId ?? undefined } : {}),
+        ...(applyToMatching === false ? { applyToMatching: false } : {}),
       });
     },
     [updateCategoryMutation, activeTab, data, retainedRows],
@@ -270,6 +286,12 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     });
   }, []);
 
+  const handleExitReview = useCallback(() => {
+    setReviewBatch(null);
+    setCategory(preReviewCategory); // restore the filter the user had before review
+    setPreReviewCategory(undefined);
+  }, [preReviewCategory]);
+
   const handleReset = useCallback(() => {
     setBankAccountId(undefined);
     setCategory(undefined);
@@ -281,17 +303,22 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     setSearch('');
     setDebouncedSearch('');
     setActiveTab('all');
+    setReviewBatch(null);
     setResetKey((k) => k + 1);
   }, []);
 
   const handleTabChange = useCallback((tab: TabFilter) => {
     setActiveTab(tab);
     setRetainedRows(new Map());
+    setReviewBatch(null);
   }, []);
 
   const loading = isLoading; // Only blank the table on initial load; background refetches use isFetching
   const syncing = !isLoading && isFetching; // Background sync — show subtle indicator without blanking table
-  const transactions = data?.pages.flatMap((p) => p.transactions) ?? [];
+  const allTransactions = data?.pages.flatMap((p) => p.transactions) ?? [];
+  const transactions = reviewBatch !== null
+    ? allTransactions.filter((tx) => reviewBatch.includes(tx.id))
+    : allTransactions;
   // Retained rows: recategorized on this tab but kept visible until dismissed
   const retainedVisible = useMemo(() => {
     const currentIds = new Set(transactions.map(tx => tx.id));
@@ -404,6 +431,21 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         resetKey={resetKey}
       />
 
+      {reviewBatch !== null && (
+        <div className="flex items-center justify-between rounded-lg border border-teal-300 bg-teal-50 px-4 py-2 text-sm dark:border-teal-700 dark:bg-teal-900/20">
+          <span className="text-teal-800 dark:text-teal-200">
+            Reviewing <strong>{reviewBatch.length}</strong> auto-updated transaction{reviewBatch.length !== 1 ? 's' : ''} — inline edit any row to correct it (changes here apply to this transaction only)
+          </span>
+          <button
+            type="button"
+            onClick={handleExitReview}
+            className="ml-4 text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-300 dark:hover:text-teal-100"
+          >
+            Exit review
+          </button>
+        </div>
+      )}
+
       {!loading && lastPage && (lastPage.totalDebitAmount > 0 || lastPage.totalCreditAmount > 0) && (
         <TransactionSummary totalDebitAmount={lastPage.totalDebitAmount} totalCreditAmount={lastPage.totalCreditAmount} />
       )}
@@ -461,6 +503,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                   onCategoryChange={handleCategoryChange}
                   isSaving={savingId === transaction.id}
                   colCount={10}
+                  isInReviewBatch={reviewBatch !== null && reviewBatch.includes(transaction.id)}
                   onVoided={() => void refetch()}
                   onRestored={() => void refetch()}
                   onUnlinked={() => void refetch()}

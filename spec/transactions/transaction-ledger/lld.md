@@ -136,8 +136,9 @@ Add to `transaction-ledger.ts`:
 
 ```typescript
 const UpdateCategoryInputSchema = z.object({
-  id:          z.string().min(1),
-  newCategory: z.string().min(1),
+  id:              z.string().min(1),
+  newCategory:     z.string().min(1),
+  applyToMatching: z.boolean().optional(), // default true; pass false during review-batch edits
 });
 
 updateCategory: protectedProcedure
@@ -151,6 +152,7 @@ updateCategory: protectedProcedure
       data: { category: input.newCategory, source: 'USER_OVERRIDE' },
     });
 
+    // Re-rollup for the directly edited transaction
     if (tx.type === 'DEBIT' && tx.status === 'CONFIRMED' && tx.category !== input.newCategory) {
       await rerollupExpenseSummary({ userId: tx.userId, oldCategory: tx.category, newCategory: input.newCategory, amount: tx.amount, date: tx.date });
     }
@@ -158,7 +160,35 @@ updateCategory: protectedProcedure
       await updateIncomeRecordSource({ userId: tx.userId, newSource: input.newCategory as IncomeSourceEnumType, amount: tx.amount, transactionDate: tx.date });
     }
 
-    return updated;
+    // Auto-apply to matching transactions (same description, same user, different category)
+    // Skipped when applyToMatching is explicitly false (e.g. during review-batch corrections)
+    const matchedIds: string[] = [];
+    if (input.applyToMatching !== false) {
+      const matches = await ctx.db.transaction.findMany({
+        where: {
+          userId: tx.userId,
+          description: tx.description,
+          id: { not: tx.id },
+          category: { not: input.newCategory }, // only update those that differ
+        },
+      });
+
+      for (const match of matches) {
+        await ctx.db.transaction.update({
+          where: { id: match.id },
+          data: { category: input.newCategory, source: 'USER_OVERRIDE' },
+        });
+        if (match.type === 'DEBIT' && match.status === 'CONFIRMED') {
+          await rerollupExpenseSummary({ userId: match.userId, oldCategory: match.category, newCategory: input.newCategory, amount: match.amount, date: match.date });
+        }
+        if (match.type === 'CREDIT' && match.status === 'CONFIRMED') {
+          await updateIncomeRecordSource({ userId: match.userId, newSource: input.newCategory as IncomeSourceEnumType, amount: match.amount, transactionDate: match.date });
+        }
+        matchedIds.push(match.id);
+      }
+    }
+
+    return { updated, matchedIds };
   }),
 ```
 
@@ -166,11 +196,25 @@ updateCategory: protectedProcedure
 
 ## Phase 2b — Inline Edit in TransactionRow
 
+**File:** `src/components/transactions/TransactionRow.tsx`
+
+Component props:
+```typescript
+interface TransactionRowProps {
+  transaction:        TransactionRow;
+  expenseCategories:  Array<{ id: string; name: string }>;
+  incomeSourceLabels: string[];
+  isInReviewBatch:    boolean; // true when this row is shown in the review-batch filtered view
+  onCategoryChange:   (id: string, newCategory: string, applyToMatching: boolean) => void;
+}
+```
+
+Inline category edit:
 ```typescript
 <td>
   <select
     value={transaction.category}
-    onChange={(e) => onCategoryChange(transaction.id, e.target.value)}
+    onChange={(e) => onCategoryChange(transaction.id, e.target.value, !isInReviewBatch)}
     className="w-full min-w-[140px] rounded border border-gray-300 bg-transparent px-2 py-1 text-sm
                text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white
                focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -182,6 +226,71 @@ updateCategory: protectedProcedure
   </select>
 </td>
 ```
+
+Key behavior:
+- When `isInReviewBatch` is **false** (normal mode): pass `applyToMatching: true` → triggers bulk auto-apply of matching category to similar descriptions
+- When `isInReviewBatch` is **true** (review mode): pass `applyToMatching: false` → updates only that single transaction (no recursion)
+
+---
+
+## Phase 2b Review-Batch State Management
+
+**File:** `src/components/transactions/TransactionLedgerTable.tsx`
+
+Additional state to track review mode:
+```typescript
+const [reviewBatch, setReviewBatch] = useState<string[] | null>(null);
+const [preReviewCategory, setPreReviewCategory] = useState<string | undefined>();
+```
+
+`preReviewCategory` saves the active category filter before review mode clears it, so it can be restored when the user exits review.
+
+On `updateCategory` mutation `onSuccess` when `matchedIds.length > 0`:
+```typescript
+setPreReviewCategory(category);   // save current category filter
+setReviewBatch(result.matchedIds);
+setCategory(undefined);           // clear filter so refetch returns newly-categorised rows
+// show toast: "Category updated for N matching transactions — scroll to review"
+```
+
+> **Why clear the category filter?** The matched transactions just changed category (e.g. away from "Other"). If the category filter stays active, the API query excludes them and the client-side `reviewBatch` filter has nothing to match against — resulting in "No transactions found". Clearing it ensures all matched rows are visible for review.
+
+Client-side filtered view (no API change, no batchId parameter):
+```typescript
+const allTransactions = data?.pages.flatMap(p => p.transactions) ?? [];
+const transactions = reviewBatch !== null
+  ? allTransactions.filter(tx => reviewBatch.includes(tx.id))
+  : allTransactions;
+
+// Each row receives isInReviewBatch based on whether its ID is in the batch:
+<TransactionRow
+  isInReviewBatch={reviewBatch !== null && reviewBatch.includes(transaction.id)}
+  onCategoryChange={handleCategoryChange}
+  {...otherProps}
+/>
+```
+
+`handleExitReview` restores the saved filter:
+```typescript
+const handleExitReview = useCallback(() => {
+  setReviewBatch(null);
+  setCategory(preReviewCategory); // restore the filter the user had before review
+  setPreReviewCategory(undefined);
+}, [preReviewCategory]);
+```
+
+Review mode lifecycle:
+- **Entered**: `matchedIds.length > 0` on mutation success → save category filter, clear it, set `reviewBatch`, refetch returns matched rows
+- **Exited via button**: "Exit review" banner button → `handleExitReview` → restores saved category filter, clears `reviewBatch`
+- **Exited via tab change / reset**: `setReviewBatch(null)` only — no filter restore (user intentionally navigated away)
+- **Single edit in review**: passes `applyToMatching: false` → no recursion, only that row updates
+
+**Key design decisions:**
+- `reviewBatch` is pure React state — no DB column, no API filter parameter added to `getAll`
+- Category filter is cleared on enter and restored on exit — prevents "no results" from filter/data mismatch
+- `applyToMatching: false` during review prevents recursive auto-apply
+- Tab change and reset intentionally do NOT restore the pre-review filter (user navigated away deliberately)
+
 
 ---
 

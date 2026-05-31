@@ -36,6 +36,7 @@ interface TransactionRowProps {
     newCategory: string,
     offsetCategory?: string,
     offsetTransactionId?: string | null,
+    applyToMatching?: boolean,
   ) => void;
   isSaving?: boolean;
   colCount?: number;
@@ -43,6 +44,7 @@ interface TransactionRowProps {
   onRestored?: () => void;
   onLinkTransfer?: () => void;
   onUnlinked?: () => void;
+  isInReviewBatch?: boolean;
 }
 
 function formatCurrency(value: number): string {
@@ -75,6 +77,7 @@ export default function TransactionRow({
   onRestored,
   onLinkTransfer,
   onUnlinked,
+  isInReviewBatch = false,
 }: TransactionRowProps) {
   const statusClasses: Record<string, string> = {
     CONFIRMED:
@@ -246,7 +249,7 @@ export default function TransactionRow({
     setShowRulePrompt(false); // reset any previous prompt
     if (newCategory !== REIMBURSEMENT_CATEGORY) {
       setLocalOffsetCategory('');
-      onCategoryChange(transaction.id, newCategory);
+      onCategoryChange(transaction.id, newCategory, undefined, undefined, !isInReviewBatch);
       // Only suggest a rule for real category changes (not Transfer/Reimbursement),
       // and only when the category actually differs from the original.
       if (
@@ -284,6 +287,7 @@ export default function TransactionRow({
       REIMBURSEMENT_CATEGORY,
       newOffsetCategory,
       localOffsetTxId,
+      false, // never auto-apply Reimbursement changes
     );
   }
 
@@ -303,6 +307,7 @@ export default function TransactionRow({
       REIMBURSEMENT_CATEGORY,
       effectiveOffsetCategory || undefined,
       linkedId,
+      false, // never auto-apply Reimbursement changes
     );
   }
 
