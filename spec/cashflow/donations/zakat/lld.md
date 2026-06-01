@@ -1,4 +1,4 @@
-# Zakat — Low Level Design
+# Zakat - Low Level Design
 
 ## Concrete Data Model
 
@@ -19,40 +19,59 @@ model ZakatPayment {
   datePaid          DateTime
   amount            Decimal             @db.Money
   beneficiaryType   BeneficiaryEnumType
+  taxCategory       String
   businessId        String?
   individualId      String?
   zakatObligationId String
+  transactionId     String?             @unique
 }
 ```
+
+### Key Rules
+- `taxCategory` is derived from the selected beneficiary's DGR status and stored as a snapshot.
+- Zakat purpose does not itself determine deductibility.
+- A Zakat payment linked to a DGR beneficiary is deductible; otherwise it is non-deductible.
+- `transactionId` is optional so imported bank evidence can be reconciled without requiring a manual entry path first.
 
 ## Server Contracts
 
 ### Service Layer
-- `addZakatCalendarYearDetails()` — creates the yearly obligation record.
-- `getZakat()` — returns the `amountDue` header for a selected year.
-- `getZakatPayments()` — fetches payment rows plus beneficiary relations.
-- `addZakatPaymentDetail()` / `updateZakatPayment()` / `deleteZakatPayment()` — payment CRUD.
+- `addZakatCalendarYearDetails()` - creates the yearly obligation record.
+- `getZakat()` - returns the `amountDue` header for a selected year.
+- `getZakatPayments()` - fetches payment rows plus beneficiary relations.
+- `getZakatTotals()` - returns Zakat totals plus deductible and non-deductible breakdowns.
+- `addZakatPaymentDetail()` / `updateZakatPayment()` / `deleteZakatPayment()` - payment CRUD.
 
 ### Validation and Actions
 - `CreateZakatPaymentSchema`
 - `UpdateZakatPaymentSchema`
 - `DeleteZakatPaymentSchema`
 - `addRow()`, `editRow()`, and `deleteRow()` enforce auth, validate payloads, and mutate the selected obligation's payments.
+- Tax category is not user-entered; it is derived from beneficiary selection.
 
 ## UI Composition
-
 1. `page.tsx` loads Zakat years and selected obligation data.
 2. `form.tsx` handles year selection and `amountDue` display/editing.
 3. `ZakatTableServer.tsx` fetches payment rows for the selected year.
 4. `ZakatTableClient.tsx` renders the interactive payment table.
 5. `StateProvider.tsx` + `reducer.ts` manage client-side payment state.
 6. `_table/columns.tsx` and `BeneficiarySelectionCell.tsx` implement inline editing.
+7. A tax-category display column should show the derived deductible status for each payment row.
+
+### Unified Classification Flow
+- The ledger classification chooser must support a direct Zakat path.
+- When a user chooses Zakat, the flow should open the Zakat enrichment experience with beneficiary and tax derivation visible.
+- Zakat and donations should share the same transaction-linking expectations so imported bank entries can be reconciled consistently.
+
+## Reporting
+- Zakat totals must feed into the same year-end deductible summary as donations.
+- Reporting should distinguish deductible and non-deductible rows inside the Zakat view.
+- The obligation header should remain the source of truth for `amountDue`.
 
 ## File Inventory
-
 | File | Role |
 |---|---|
-| `prisma/schema.prisma` | `ZakatObligation` and `ZakatPayment` schema |
+| `prisma/schema.prisma` | `ZakatObligation`, `ZakatPayment`, optional `transactionId` relation |
 | `src/server/services/zakat.service.ts` | Obligation reads and payment CRUD |
 | `src/server/models/zakat.ts` | `ZakatModel`, `ZakatPaymentModel`, service input types |
 | `src/server/controllers/zakat.controller.ts` | Year-level Zakat handlers |
@@ -76,3 +95,4 @@ This feature now lives under `spec/cashflow/donations/zakat/`; this file is the 
 - `amountDue` remains attached to the year-scoped obligation header, not duplicated on each payment row.
 - Payment mutations validate date, positive amount, beneficiary type, and session state.
 - Beneficiary selection remains compatible with both `BUSINESS` and `INDIVIDUAL` paths in the current service layer.
+- Zakat payment rows expose derived tax category and contribute to year-end deductible reporting.

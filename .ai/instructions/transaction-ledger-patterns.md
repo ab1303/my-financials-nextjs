@@ -117,7 +117,7 @@ User changes category
       YES → setReviewBatch(matchedIds)     ← queryInput gains ids filter
               setPreReviewCategory(category) ← save to restore on exit
               toast (5 s)
-      NO  → void refetch()                 ← retained row handles the filter-out case
+      NO  → schedule deferred refetch      ← keep row mounted long enough for prompt
               toast
 
 Review banner → "Exit review" button
@@ -159,6 +159,33 @@ It has **no auto-dismiss timeout**. It disappears only when:
 The 400 ms value in `useCategoryEdit` is a **debounce** before the `findSimilar` API
 call, not a display duration. Increasing it delays the prompt appearing without
 making it more persistent.
+
+---
+
+## 8. Filter-sensitive prompts need deferred reconcile
+
+When a row changes category under an active filter, the server data will often exclude
+that row on the next refetch. If the UI refetches immediately, the row unmounts before
+the prompt can be read.
+
+**Correct pattern**:
+
+1. Save the category immediately.
+2. Delay the refetch long enough for the prompt to appear.
+3. Pause that delayed refetch while the rule drawer is open.
+4. Flush the refetch immediately when the user dismisses the prompt or finishes the drawer.
+
+```typescript
+// Keep the row mounted long enough for the prompt to be visible
+pendingCategoryRefreshRef.current = setTimeout(() => {
+  pendingCategoryRefreshRef.current = null;
+  setActiveRulePrompt(null);
+  void refetch();
+}, 4000);
+```
+
+**Why**: this preserves the current inline prompt UX without introducing retained-row
+noise or moving the prompt away from the row context.
 
 ---
 

@@ -150,6 +150,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   // Review batch: transaction IDs that were auto-matched during a category update
   const [reviewBatch, setReviewBatch] = useState<string[] | null>(null);
   const [preReviewCategory, setPreReviewCategory] = useState<string | undefined>();
+  const pendingCategoryRefreshRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Single active rule prompt — only one row's prompt shows at a time
   const [activeRulePrompt, setActiveRulePrompt] = useState<{
     transactionId: string;
@@ -205,6 +206,28 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     placeholderData: (previousData) => previousData,
   });
   const utils = trpc.useUtils();
+
+  const cancelPendingCategoryRefresh = useCallback(() => {
+    if (pendingCategoryRefreshRef.current) {
+      clearTimeout(pendingCategoryRefreshRef.current);
+      pendingCategoryRefreshRef.current = null;
+    }
+  }, []);
+
+  const schedulePendingCategoryRefresh = useCallback(() => {
+    cancelPendingCategoryRefresh();
+    pendingCategoryRefreshRef.current = setTimeout(() => {
+      pendingCategoryRefreshRef.current = null;
+      setActiveRulePrompt(null);
+      void refetch();
+    }, 4000);
+  }, [cancelPendingCategoryRefresh, refetch]);
+
+  const flushPendingCategoryRefresh = useCallback(() => {
+    cancelPendingCategoryRefresh();
+    setActiveRulePrompt(null);
+    void refetch();
+  }, [cancelPendingCategoryRefresh, refetch]);
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
   const unmatchedCountQuery = trpc.transfer.getUnmatchedCount.useQuery(undefined, {
     enabled: activeTab === 'transfers',
@@ -226,11 +249,18 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     }
   }, [refreshKey, refetch]);
 
+  useEffect(() => {
+    return () => {
+      cancelPendingCategoryRefresh();
+    };
+  }, [cancelPendingCategoryRefresh]);
+
   const updateCategoryMutation = trpc.transactionLedger.updateCategory.useMutation({
     onSuccess: (result) => {
       setSavingId(null);
       void utils.transactionLedger.searchDebitTransactions.invalidate();
       if (result.matchedIds.length > 0) {
+        cancelPendingCategoryRefresh();
         setPreReviewCategory(category); // save so we can restore on exit
         setReviewBatch(result.matchedIds); // queryInput reacts → auto-refetches with ids filter
         toast.success(
@@ -238,7 +268,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
           { duration: 5000 },
         );
       } else {
-        void refetch(); // no review mode — manually refresh to show updated category
+        schedulePendingCategoryRefresh(); // keep the row mounted long enough for the prompt to appear
         toast.success('Category updated');
       }
     },
@@ -292,13 +322,15 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   }, []);
 
   const handleExitReview = useCallback(() => {
+    cancelPendingCategoryRefresh();
     setReviewBatch(null);
     setActiveRulePrompt(null);
     setCategory(preReviewCategory); // restore the filter the user had before review
     setPreReviewCategory(undefined);
-  }, [preReviewCategory]);
+  }, [cancelPendingCategoryRefresh, preReviewCategory]);
 
   const handleReset = useCallback(() => {
+    cancelPendingCategoryRefresh();
     setBankAccountId(undefined);
     setCategory(undefined);
     const fy = getPresetDateRange('this-fy')!;
@@ -313,14 +345,15 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     setRetainedRows(new Map());
     setActiveRulePrompt(null);
     setResetKey((k) => k + 1);
-  }, []);
+  }, [cancelPendingCategoryRefresh]);
 
   const handleTabChange = useCallback((tab: TabFilter) => {
+    cancelPendingCategoryRefresh();
     setActiveTab(tab);
     setRetainedRows(new Map());
     setReviewBatch(null);
     setActiveRulePrompt(null);
-  }, []);
+  }, [cancelPendingCategoryRefresh]);
 
   const loading = isLoading; // Only blank the table on initial load; background refetches use isFetching
   const syncing = !isLoading && isFetching; // Background sync — show subtle indicator without blanking table
@@ -515,6 +548,8 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                   onRulePromptDismiss={() => setActiveRulePrompt(null)}
                   onSuggestRule={(count, cat) => setActiveRulePrompt({ transactionId: transaction.id, count, category: cat })}
                   onClearRulePrompt={() => setActiveRulePrompt((prev) => prev?.transactionId === transaction.id ? null : prev)}
+                  onPausePendingRefresh={cancelPendingCategoryRefresh}
+                  onResolvePendingRefresh={flushPendingCategoryRefresh}
                   onVoided={() => void refetch()}
                   onRestored={() => void refetch()}
                   onUnlinked={() => void refetch()}
@@ -566,6 +601,8 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                     onRulePromptDismiss={() => setActiveRulePrompt(null)}
                     onSuggestRule={(count, cat) => setActiveRulePrompt({ transactionId: tx.id, count, category: cat })}
                     onClearRulePrompt={() => setActiveRulePrompt((prev) => prev?.transactionId === tx.id ? null : prev)}
+                    onPausePendingRefresh={cancelPendingCategoryRefresh}
+                    onResolvePendingRefresh={flushPendingCategoryRefresh}
                     onVoided={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onRestored={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onUnlinked={() => void refetch()}

@@ -55,6 +55,10 @@ interface TransactionRowProps {
   onSuggestRule?: (count: number, category: string) => void;
   /** Notify parent to clear the rule prompt for this row */
   onClearRulePrompt?: () => void;
+  /** Pause the delayed refetch while the rule drawer is open */
+  onPausePendingRefresh?: () => void;
+  /** Flush the delayed refetch after the rule prompt is resolved */
+  onResolvePendingRefresh?: () => void;
 }
 
 function formatCurrency(value: number): string {
@@ -93,6 +97,8 @@ export default function TransactionRow({
   onRulePromptDismiss,
   onSuggestRule,
   onClearRulePrompt,
+  onPausePendingRefresh,
+  onResolvePendingRefresh,
 }: TransactionRowProps) {
   const statusClasses: Record<string, string> = {
     CONFIRMED:
@@ -619,10 +625,14 @@ export default function TransactionRow({
           count={rulePromptCount}
           colCount={colCount}
           onCreateRule={() => {
+            onPausePendingRefresh?.();
             onRulePromptDismiss?.();
             setShowRuleDrawer(true);
           }}
-          onDismiss={() => onRulePromptDismiss?.()}
+          onDismiss={() => {
+            onRulePromptDismiss?.();
+            onResolvePendingRefresh?.();
+          }}
         />
       )}
 
@@ -632,8 +642,14 @@ export default function TransactionRow({
           initialPattern={extractPattern(transaction.description)}
           initialCategory={ruleCategory}
           transactionDescription={transaction.description}
-          onClose={() => setShowRuleDrawer(false)}
-          onSaved={() => setShowRuleDrawer(false)}
+          onClose={() => {
+            setShowRuleDrawer(false);
+            onResolvePendingRefresh?.();
+          }}
+          onSaved={() => {
+            setShowRuleDrawer(false);
+            onResolvePendingRefresh?.();
+          }}
         />
       )}
 

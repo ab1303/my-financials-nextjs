@@ -1,4 +1,4 @@
-# Donations — Low Level Design
+# Donations - Low Level Design
 
 ## Concrete Data Model
 The canonical `DonationRecord` concept is implemented as a fiscal-year header plus row records.
@@ -6,9 +6,9 @@ The canonical `DonationRecord` concept is implemented as a fiscal-year header pl
 ### `DonationLedger`
 ```prisma
 model DonationLedger {
-  id         String            @id @default(cuid())
-  calendar   CalendarYear      @relation(fields: [calendarId], references: [id])
-  calendarId String            @unique
+  id         String       @id @default(cuid())
+  calendar   CalendarYear @relation(fields: [calendarId], references: [id])
+  calendarId String       @unique
   payments   DonationPayment[]
 }
 ```
@@ -30,40 +30,62 @@ model DonationPayment {
 ```
 
 ### Key Enums
-- `BeneficiaryEnumType` — `INDIVIDUAL | BUSINESS`
-- `DonationPurposeEnum` — `VOLUNTARY | INTEREST_CLEANSING`
+- `BeneficiaryEnumType` - `INDIVIDUAL | BUSINESS`
+- `DonationPurposeEnum` - `VOLUNTARY | INTEREST_CLEANSING`
+- `taxCategory` is a derived value based on the selected beneficiary's DGR status. It is stored as a snapshot for reporting consistency, but it is not manually edited.
+
+### Tax Logic
+- If the selected beneficiary is a registered DGR, the payment is deductible.
+- If the selected beneficiary is not DGR-registered, the payment is non-deductible.
+- Donation purpose does not change deductibility.
+- The UI should render tax category as a read-only badge or label derived from the beneficiary selection.
 
 ## Server Contracts
 
 ### Service Layer
-- `addDonationCalendarYearDetails()` — creates the year header on demand.
-- `getDonation()` — fetches the header for a fiscal year.
-- `getDonationPayments()` — fetches row records plus beneficiary relations.
-- `getTotalDonations()` — aggregates fiscal-year totals.
-- `addDonationPaymentDetail()` / `updateDonationPayment()` / `deleteDonationPayment()` — row CRUD.
+- `addDonationCalendarYearDetails()` - creates the year header on demand.
+- `getDonation()` - fetches the header for a fiscal year.
+- `getDonationPayments()` - fetches row records plus beneficiary relations.
+- `getDonationTotals()` - returns fiscal-year totals broken down by purpose and deductible status.
+- `addDonationPaymentDetail()` / `updateDonationPayment()` / `deleteDonationPayment()` - row CRUD.
 
 ### Controllers and Actions
 - `createDonationYearHandler()` ensures a `DonationLedger` exists before a write.
-- `totalDonationsHandler()` wraps aggregate reads for the page.
+- `totalDonationsHandler()` wraps aggregate reads for the page, including voluntary donations, interest cleansing, and deductible totals.
 - `addRow()`, `editRow()`, and `deleteRow()` validate input, enforce auth, mutate, and `revalidatePath('/cashflow/donations')`.
 
 ### Validation
 - `CreateDonationPaymentSchema`
 - `UpdateDonationPaymentSchema`
 - `DeleteDonationPaymentSchema`
-- Form input requires valid date, positive amount, beneficiary selection, and tax category.
+- Form input requires valid date, positive amount, beneficiary selection, and donation purpose.
+- Tax category is not user-entered; it is derived after beneficiary selection and persisted as a snapshot.
 
 ## UI Composition
-
-1. `page.tsx` resolves the selected fiscal year and total donations.
-2. `form.tsx` owns year selection and total display.
+1. `page.tsx` resolves the selected fiscal year and summary totals.
+2. `form.tsx` owns year selection, totals display, and deductible summary.
 3. `DonationTableServer.tsx` fetches payment rows server-side.
 4. `DonationTableClient.tsx` renders TanStack Table rows with inline editing.
 5. `StateProvider.tsx` + `reducer.ts` hold edit-row and loading state.
-6. `_components/` contain enrichment and beneficiary helpers such as `UnlinkedTransactionsBanner`, `LinkTransactionsDrawer`, and `CreateBeneficiaryModal`.
+6. `_table/columns.tsx` must include a visible donation-purpose column and a tax-category display column.
+7. `_components/` contain enrichment and beneficiary helpers such as `UnlinkedTransactionsBanner`, `LinkTransactionsDrawer`, and `CreateBeneficiaryModal`.
+
+### Unified Classification Flow
+- The transaction ledger should present a single classification choice for charitable outflows.
+- The chooser must route to Donation - Voluntary, Donation - Interest Cleansing, or Zakat.
+- Classification into Donation should open the donations enrichment flow with purpose preselected.
+- The tax-category display must update when the beneficiary changes, even if the transaction link already exists.
+
+## Reporting
+- Page totals must show at minimum:
+  - Voluntary donations total
+  - Interest cleansing total
+  - Deductible total
+  - Non-deductible total
+- Totals should be grouped by fiscal year and reflect linked and manual rows together.
+- Year-end tax summary should expose the deductible total for use in ATO reporting.
 
 ## File Inventory
-
 | File | Role |
 |---|---|
 | `prisma/schema.prisma` | `DonationLedger`, `DonationPayment`, enums, optional `transactionId` relation |
@@ -78,6 +100,8 @@ model DonationPayment {
 | `src/app/(authorized)/cashflow/donations/reducer.ts` | Reducer actions for edit and loading state |
 | `src/app/(authorized)/cashflow/donations/_schema.ts` | Zod schemas and inferred input types |
 | `src/app/(authorized)/cashflow/donations/_types.ts` | `DonationType`, `DonationPaymentType`, server action types |
+| `src/app/(authorized)/cashflow/donations/_table/columns.tsx` | TanStack column config, including purpose and tax display |
+| `src/app/(authorized)/cashflow/donations/_table/DonationTypeSelectionCell.tsx` | Editable purpose cell for donation rows |
 | `src/app/(authorized)/cashflow/donations/_components/UnlinkedTransactionsBanner.tsx` | Banner for imported but unlinked donation transactions |
 | `src/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer.tsx` | Drawer UI for transaction enrichment |
 | `src/app/(authorized)/cashflow/donations/_components/CreateBeneficiaryModal.tsx` | Inline beneficiary creation flow |
