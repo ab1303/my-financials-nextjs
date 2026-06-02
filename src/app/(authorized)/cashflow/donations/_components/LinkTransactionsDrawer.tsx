@@ -22,7 +22,8 @@ type LinkTransactionsDrawerProps = {
   onClose: () => void;
   dateFrom: string;
   dateTo: string;
-  calendarYearId: string;
+  calendarYearId?: string;
+  selectedTransactionId?: string;
 };
 
 const linkFormSchema = z.object({
@@ -57,13 +58,15 @@ export default function LinkTransactionsDrawer({
   onClose,
   dateFrom,
   dateTo,
-  calendarYearId,
+  calendarYearId: initialCalendarYearId,
+  selectedTransactionId: initialSelectedTransactionId,
 }: LinkTransactionsDrawerProps) {
   const [transactions, setTransactions] = useState<Array<TransactionRow>>([]);
-  const [selectedTransactionId, setSelectedTransactionId] = useState('');
+  const [selectedTransactionId, setSelectedTransactionId] = useState(initialSelectedTransactionId ?? '');
   const [isSaving, setIsSaving] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [pendingBeneficiaryName, setPendingBeneficiaryName] = useState('');
+  const [effectiveCalendarYearId, setEffectiveCalendarYearId] = useState(initialCalendarYearId ?? '');
 
   const unlinkedTransactionsQuery = trpc.transactionLedger.getUnlinkedDonationTransactions.useQuery(
     { dateFrom, dateTo },
@@ -75,6 +78,10 @@ export default function LinkTransactionsDrawer({
   const businessesQuery = trpc.business.getBusinessesByType.useQuery(
     { type: 'PHILANTHROPY' },
     { enabled: isOpen },
+  );
+  const calendarYearsQuery = trpc.calendarYear.getAll.useQuery(
+    { types: ['FISCAL', 'ANNUAL'] },
+    { enabled: isOpen && !initialCalendarYearId },
   );
 
   const {
@@ -100,10 +107,23 @@ export default function LinkTransactionsDrawer({
   );
 
   useEffect(() => {
+    if (initialCalendarYearId) {
+      setEffectiveCalendarYearId(initialCalendarYearId);
+    } else if (calendarYearsQuery.data && calendarYearsQuery.data.length > 0) {
+      // Use the first calendar year (most recent) as default if none provided
+      setEffectiveCalendarYearId(calendarYearsQuery.data[0]?.id ?? '');
+    }
+  }, [initialCalendarYearId, calendarYearsQuery.data]);
+
+  useEffect(() => {
     if (unlinkedTransactionsQuery.data) {
       setTransactions(unlinkedTransactionsQuery.data);
+      // If an initial transaction ID was provided and it exists in the list, don't override it
+      if (!initialSelectedTransactionId && unlinkedTransactionsQuery.data.length > 0) {
+        setSelectedTransactionId(unlinkedTransactionsQuery.data[0]?.id ?? '');
+      }
     }
-  }, [unlinkedTransactionsQuery.data]);
+  }, [unlinkedTransactionsQuery.data, initialSelectedTransactionId]);
 
   useEffect(() => {
     setValue('beneficiaryId', '');
@@ -151,6 +171,11 @@ export default function LinkTransactionsDrawer({
       return;
     }
 
+    if (!effectiveCalendarYearId) {
+      toast.error('Unable to determine fiscal year for this transaction.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await addRow({
@@ -159,7 +184,7 @@ export default function LinkTransactionsDrawer({
         // taxCategory is now derived from beneficiary DGR status, not from transaction category
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
-        calendarYearId,
+        calendarYearId: effectiveCalendarYearId,
         transactionId: selectedTransaction.id,
         donationPurpose: 'VOLUNTARY',
       });

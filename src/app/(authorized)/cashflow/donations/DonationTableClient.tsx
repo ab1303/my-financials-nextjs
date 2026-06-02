@@ -76,7 +76,7 @@ export default function DonationTableClient({
       amount: 0,
       beneficiaryType: 'INDIVIDUAL',
       beneficiaryId: '',
-      taxCategory: '', // Will be derived from beneficiary DGR status
+      taxCategory: 'NON_DEDUCTIBLE', // Will be derived from beneficiary DGR status
       donationPurpose: 'VOLUNTARY', // Default purpose
     };
 
@@ -151,7 +151,6 @@ export default function DonationTableClient({
               datePaid: updatedRecord.datePaid,
               amount: updatedRecord.amount,
               beneficiaryType: updatedRecord.beneficiaryType,
-              taxCategory: updatedRecord.taxCategory,
               beneficiaryId: updatedRecord.beneficiaryId,
               calendarYearId: calendarYearId,
             });
@@ -212,7 +211,6 @@ export default function DonationTableClient({
               datePaid: updatedRecord.datePaid,
               amount: updatedRecord.amount,
               beneficiaryType: updatedRecord.beneficiaryType,
-              taxCategory: updatedRecord.taxCategory,
               beneficiaryId: updatedRecord.beneficiaryId,
             });
 

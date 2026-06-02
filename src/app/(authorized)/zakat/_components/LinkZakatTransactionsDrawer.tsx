@@ -19,7 +19,8 @@ type LinkZakatTransactionsDrawerProps = {
   onClose: () => void;
   dateFrom: string;
   dateTo: string;
-  calendarYearId: string;
+  calendarYearId?: string;
+  selectedTransactionId?: string;
 };
 
 const linkFormSchema = z.object({
@@ -53,11 +54,13 @@ export default function LinkZakatTransactionsDrawer({
   onClose,
   dateFrom,
   dateTo,
-  calendarYearId,
+  calendarYearId: initialCalendarYearId,
+  selectedTransactionId: initialSelectedTransactionId,
 }: LinkZakatTransactionsDrawerProps) {
   const [transactions, setTransactions] = useState<Array<TransactionRow>>([]);
-  const [selectedTransactionId, setSelectedTransactionId] = useState("");
+  const [selectedTransactionId, setSelectedTransactionId] = useState(initialSelectedTransactionId ?? "");
   const [isSaving, setIsSaving] = useState(false);
+  const [effectiveCalendarYearId, setEffectiveCalendarYearId] = useState(initialCalendarYearId ?? "");
 
   const unlinkedTransactionsQuery = trpc.transactionLedger.getUnlinkedZakatTransactions.useQuery(
     { dateFrom, dateTo },
@@ -69,6 +72,10 @@ export default function LinkZakatTransactionsDrawer({
   const businessesQuery = trpc.business.getBusinessesByType.useQuery(
     { type: "PHILANTHROPY" },
     { enabled: isOpen },
+  );
+  const calendarYearsQuery = trpc.calendarYear.getAll.useQuery(
+    { types: ["FISCAL", "ANNUAL"] },
+    { enabled: isOpen && !initialCalendarYearId },
   );
 
   const {
@@ -94,13 +101,22 @@ export default function LinkZakatTransactionsDrawer({
   );
 
   useEffect(() => {
+    if (initialCalendarYearId) {
+      setEffectiveCalendarYearId(initialCalendarYearId);
+    } else if (calendarYearsQuery.data && calendarYearsQuery.data.length > 0) {
+      // Use the first calendar year (most recent) as default if none provided
+      setEffectiveCalendarYearId(calendarYearsQuery.data[0]?.id ?? "");
+    }
+  }, [initialCalendarYearId, calendarYearsQuery.data]);
+
+  useEffect(() => {
     if (unlinkedTransactionsQuery.data && unlinkedTransactionsQuery.data.length > 0) {
       setTransactions(unlinkedTransactionsQuery.data);
-      if (!selectedTransactionId) {
+      if (!initialSelectedTransactionId && !selectedTransactionId) {
         setSelectedTransactionId(unlinkedTransactionsQuery.data[0]?.id ?? "");
       }
     }
-  }, [unlinkedTransactionsQuery.data, selectedTransactionId]);
+  }, [unlinkedTransactionsQuery.data, initialSelectedTransactionId]);
 
   useEffect(() => {
     setValue("beneficiaryId", "");
@@ -142,6 +158,11 @@ export default function LinkZakatTransactionsDrawer({
       return;
     }
 
+    if (!effectiveCalendarYearId) {
+      toast.error("Unable to determine fiscal year for this transaction.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await addRow({
@@ -149,7 +170,7 @@ export default function LinkZakatTransactionsDrawer({
         amount: selectedTransaction.amount,
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
-        calendarYearId,
+        calendarYearId: effectiveCalendarYearId,
         transactionId: selectedTransaction.id,
       });
 

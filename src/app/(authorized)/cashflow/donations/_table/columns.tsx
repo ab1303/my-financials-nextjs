@@ -49,7 +49,7 @@ export function getTableColumns(
     columnHelper.accessor('donationPurpose', {
       size: 150,
       header: () => <span>Purpose</span>,
-      cell: ({ row, table }) => {
+      cell: ({ row, table, column, getValue }) => {
         const tableMeta = table.options.meta;
         const editedRecord = tableMeta?.editedRows.get(row.index);
         const purpose = editedRecord?.donationPurpose || row.original.donationPurpose || 'VOLUNTARY';
@@ -57,9 +57,10 @@ export function getTableColumns(
         if (editedRecord) {
           return (
             <TableCell
-              cell={row.getContext()}
-              colType="SELECT"
-              selectOptions={donationPurposeOptions}
+              table={table}
+              row={row}
+              column={column}
+              getValue={getValue}
             />
           );
         }

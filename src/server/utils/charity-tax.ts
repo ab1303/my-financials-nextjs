@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import type { BeneficiaryEnumType } from '@prisma/client';
+import type { BeneficiaryEnumType, TaxCategoryEnumType } from '@prisma/client';
 
 /**
  * Derives the tax category (DEDUCTIBLE or NON_DEDUCTIBLE) for a donation or zakat payment
@@ -18,7 +18,7 @@ export async function deriveTaxCategory(
   beneficiaryId: string,
   beneficiaryType: BeneficiaryEnumType,
   userId?: string
-): Promise<string> {
+): Promise<TaxCategoryEnumType> {
   try {
     // DGR status only applies to BUSINESS beneficiaries, not INDIVIDUAL
     if (beneficiaryType === 'BUSINESS') {

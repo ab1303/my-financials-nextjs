@@ -1,4 +1,5 @@
 import { BeneficiaryEnumType } from '@prisma/client';
+import type { TaxCategoryEnumType } from '@prisma/client';
 
 export type ServerActionType<T = unknown> = {
   success: boolean;
@@ -20,7 +21,7 @@ export type ZakatPaymentType = {
   beneficiaryId: string;
   beneficiaryType: BeneficiaryEnumType;
   // Tax category is derived from beneficiary DGR status (DEDUCTIBLE or NON_DEDUCTIBLE)
-  taxCategory: string;
+  taxCategory?: TaxCategoryEnumType;
 };
 
 const BENEFICIARY_ENUM_KEYS = Object.entries(BeneficiaryEnumType).map(

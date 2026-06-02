@@ -44,6 +44,8 @@ interface TransactionRowProps {
   onRestored?: () => void;
   onLinkTransfer?: () => void;
   onUnlinked?: () => void;
+  onClassifyAsDonation?: (transactionId: string) => void;
+  onClassifyAsZakat?: (transactionId: string) => void;
   isInReviewBatch?: boolean;
   /** Whether this row's rule prompt is currently active (parent-owned) */
   showRulePrompt?: boolean;
@@ -91,6 +93,8 @@ export default function TransactionRow({
   onRestored,
   onLinkTransfer,
   onUnlinked,
+  onClassifyAsDonation,
+  onClassifyAsZakat,
   isInReviewBatch = false,
   showRulePrompt = false,
   rulePromptCount = 0,
@@ -545,18 +549,38 @@ export default function TransactionRow({
             )}
             {transaction.category.toLowerCase() === 'gifts & donations' &&
               transaction.type === 'DEBIT' && (
-                <span
-                  className={clsx(
-                    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                    transaction.isDonationLinked
-                      ? 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200'
-                      : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+                <>
+                  {transaction.isDonationLinked && (
+                    <span
+                      className={clsx(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                        'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+                      )}
+                    >
+                      🔗 Donation linked
+                    </span>
                   )}
-                >
-                  {transaction.isDonationLinked
-                    ? '🔗 Linked'
-                    : '⚠️ Needs recipient'}
-                </span>
+                  {transaction.isZakatLinked && (
+                    <span
+                      className={clsx(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                      )}
+                    >
+                      🔗 Zakat linked
+                    </span>
+                  )}
+                  {!transaction.isDonationLinked && !transaction.isZakatLinked && (
+                    <span
+                      className={clsx(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                        'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+                      )}
+                    >
+                      ⚠️ Needs classification
+                    </span>
+                  )}
+                </>
               )}
             {transaction.transferCounterpart && (
               <div className='mt-1 flex items-center gap-1.5 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-xs dark:border-blue-800 dark:bg-blue-950/30'>
@@ -615,6 +639,33 @@ export default function TransactionRow({
                 >
                   Link
                 </button>
+              )}
+            {transaction.category.toLowerCase() === 'gifts & donations' &&
+              transaction.type === 'DEBIT' &&
+              !transaction.isDonationLinked &&
+              !transaction.isZakatLinked && (
+                <>
+                  {onClassifyAsDonation && (
+                    <button
+                      type='button'
+                      onClick={() => onClassifyAsDonation(transaction.id)}
+                      className='rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20'
+                      title='Classify as Donation'
+                    >
+                      🎁 Donation
+                    </button>
+                  )}
+                  {onClassifyAsZakat && (
+                    <button
+                      type='button'
+                      onClick={() => onClassifyAsZakat(transaction.id)}
+                      className='rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20'
+                      title='Classify as Zakat'
+                    >
+                      🕌 Zakat
+                    </button>
+                  )}
+                </>
               )}
           </div>
         </td>

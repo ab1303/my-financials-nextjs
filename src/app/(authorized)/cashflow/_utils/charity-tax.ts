@@ -1,6 +1,14 @@
 import type { DonationPurposeEnum } from '@prisma/client';
-import type { DonationPaymentType } from '../donations/_types';
-import type { ZakatPaymentType } from '../../zakat/_types';
+type DonationPaymentLike = {
+  amount: number;
+  donationPurpose?: DonationPurposeEnum;
+  taxCategory?: string;
+};
+
+type ZakatPaymentLike = {
+  amount: number;
+  taxCategory?: string;
+};
 
 /**
  * Converts a tax category code to a human-readable label for display.
@@ -75,11 +83,19 @@ export type ZakatBreakdownTotals = {
  * @returns Breakdown totals object with appropriate structure for the type
  */
 export function calculateBreakdownTotals(
+  type: 'donation',
+  payments: DonationPaymentLike[],
+): DonationBreakdownTotals;
+export function calculateBreakdownTotals(
+  type: 'zakat',
+  payments: ZakatPaymentLike[],
+): ZakatBreakdownTotals;
+export function calculateBreakdownTotals(
   type: 'donation' | 'zakat',
-  payments: DonationPaymentType[] | ZakatPaymentType[],
+  payments: DonationPaymentLike[] | ZakatPaymentLike[],
 ): DonationBreakdownTotals | ZakatBreakdownTotals {
   if (type === 'donation') {
-    const donationPayments = payments as DonationPaymentType[];
+    const donationPayments = payments as DonationPaymentLike[];
 
     let voluntaryDeductible = 0;
     let voluntaryNonDeductible = 0;
@@ -120,7 +136,7 @@ export function calculateBreakdownTotals(
     };
   } else {
     // Zakat breakdown
-    const zakatPayments = payments as ZakatPaymentType[];
+    const zakatPayments = payments as ZakatPaymentLike[];
 
     let totalDeductible = 0;
     let totalNonDeductible = 0;

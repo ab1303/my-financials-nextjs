@@ -684,7 +684,7 @@ function BeneficiaryFormFields({
           name="taxCategory"
           render={({ field }) => (
             <div className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-              {field.value || TAX_CATEGORY_FOR_CLEANSING}
+              {field.value || 'DEDUCTIBLE'}
               <input {...field} type="hidden" />
             </div>
           )}

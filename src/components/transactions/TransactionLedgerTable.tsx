@@ -13,6 +13,8 @@ import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_compon
 import SmartMatchDialog from '@/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog';
 import UnmatchedTransfersBadge from '@/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge';
 import OrphanResolutionPanel from '@/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel';
+import LinkTransactionsDrawer from '@/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer';
+import LinkZakatTransactionsDrawer from '@/app/(authorized)/zakat/_components/LinkZakatTransactionsDrawer';
 
 type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized' | 'voided' | 'transfers';
 
@@ -170,6 +172,9 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     debitTransactionId: string;
     creditTransactionId: string;
   } | null>(null);
+  const [donationDrawerOpen, setDonationDrawerOpen] = useState(false);
+  const [zakatDrawerOpen, setZakatDrawerOpen] = useState(false);
+  const [charitySelectedTransactionId, setCharitySelectedTransactionId] = useState<string>('');
   const previousRefreshKey = useRef(refreshKey);
 
   const queryInput: GetAllInput = useMemo(() => {
@@ -569,6 +574,14 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                           })
                       : undefined
                   }
+                  onClassifyAsDonation={() => {
+                    setCharitySelectedTransactionId(transaction.id);
+                    setDonationDrawerOpen(true);
+                  }}
+                  onClassifyAsZakat={() => {
+                    setCharitySelectedTransactionId(transaction.id);
+                    setZakatDrawerOpen(true);
+                  }}
                 />
               ))}
               {retainedVisible.map((tx) => (
@@ -606,6 +619,14 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                     onVoided={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onRestored={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onUnlinked={() => void refetch()}
+                    onClassifyAsDonation={() => {
+                      setCharitySelectedTransactionId(tx.id);
+                      setDonationDrawerOpen(true);
+                    }}
+                    onClassifyAsZakat={() => {
+                      setCharitySelectedTransactionId(tx.id);
+                      setZakatDrawerOpen(true);
+                    }}
                   />
                 </Fragment>
               ))}
@@ -651,6 +672,32 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
           createRuleMutation.mutate({ debitTransactionId, creditTransactionId, name: suggestedName });
           setSmartMatchPair(null);
         }}
+      />
+    )}
+    {donationDrawerOpen && dateFrom && dateTo && (
+      <LinkTransactionsDrawer
+        isOpen={donationDrawerOpen}
+        onClose={() => {
+          setDonationDrawerOpen(false);
+          setCharitySelectedTransactionId('');
+          void refetch();
+        }}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        selectedTransactionId={charitySelectedTransactionId}
+      />
+    )}
+    {zakatDrawerOpen && dateFrom && dateTo && (
+      <LinkZakatTransactionsDrawer
+        isOpen={zakatDrawerOpen}
+        onClose={() => {
+          setZakatDrawerOpen(false);
+          setCharitySelectedTransactionId('');
+          void refetch();
+        }}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        selectedTransactionId={charitySelectedTransactionId}
       />
     )}
   </>
