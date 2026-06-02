@@ -51,6 +51,7 @@ export const addBusinessDetailsHandler = async ({
     const businessResult = await addBusinessDetails({
       name: input.name,
       type: (input.type || 'PHILANTHROPY') as BusinessEnumType,
+      isDgrRegistered: input.isDgrRegistered ?? false,
       addressLine: input.addressLine || null,
       streetAddress: input.streetAddress || null,
       postcode: input.postcode || null,
@@ -98,6 +99,8 @@ export const updateBusinessDetailsHandler = async ({
     if (input.name !== undefined) updateData.name = input.name;
     if (input.addressLine !== undefined)
       updateData.addressLine = input.addressLine || null;
+    if (input.isDgrRegistered !== undefined)
+      updateData.isDgrRegistered = input.isDgrRegistered;
     if (input.streetAddress !== undefined)
       updateData.streetAddress = input.streetAddress || null;
     if (input.suburb !== undefined) updateData.suburb = input.suburb || null;

@@ -14,6 +14,7 @@ The relation domain manages user contactsâ€”both individuals and organisationsâ€
 - **Individual**: A person the user transacts with. Has name, optional first/last name, address, and relationship type.
 - **RelationshipType**: User-defined label for individual relationships. Unique per user.
 - **Business**: Organisation the user transacts with. Dual-purpose: global (BANK, BROKERAGE) or user (PHILANTHROPY).
+- **Business**: Organisation the user transacts with. Dual-purpose: global (BANK, BROKERAGE) or user (PHILANTHROPY). Philanthropic businesses can be flagged as DGR-registered so deductible payments are explicit in the UI and reporting.
 
 ## Features in this Domain
 

@@ -11,6 +11,7 @@ export const createBusinessSchema = object({
     required_error: 'Business type is required',
     invalid_type_error: 'Invalid business type',
   }).optional(),
+  isDgrRegistered: optional(z.boolean()),
   // Address fields are all optional
   addressLine: optional(string().max(500, 'Address line must be less than 500 characters')),
   streetAddress: optional(string().max(200, 'Street address must be less than 200 characters')),
@@ -22,6 +23,7 @@ export const createBusinessSchema = object({
 export const updateBusinessSchema = object({
   id: string({ required_error: 'Business ID is required' }),
   name: optional(string().max(100, 'Business Name must be less than 100 characters')),
+  isDgrRegistered: optional(z.boolean()),
   // Address fields are all optional for updates
   addressLine: optional(string().max(500, 'Address line must be less than 500 characters')),
   streetAddress: optional(string().max(200, 'Street address must be less than 200 characters')),

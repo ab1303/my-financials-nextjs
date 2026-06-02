@@ -20,6 +20,7 @@ export interface Business {
   postcode?: number;
   state?: string;
   type?: 'PHILANTHROPY';
+  isDgrRegistered?: boolean;
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -33,6 +34,7 @@ import { z } from 'zod';
 
 export const businessSchema = z.object({
   name: z.string().min(1),
+  isDgrRegistered: z.boolean().optional(),
   addressLine: z.string().optional(),
   streetAddress: z.string().optional(),
   suburb: z.string().optional(),
@@ -43,6 +45,7 @@ export const businessSchema = z.object({
 export const updateBusinessSchema = z.object({
   id: z.string(),
   name: z.string().min(1).optional(),
+  isDgrRegistered: z.boolean().optional(),
   addressLine: z.string().optional(),
   streetAddress: z.string().optional(),
   suburb: z.string().optional(),
@@ -51,6 +54,12 @@ export const updateBusinessSchema = z.object({
   // type is NOT included — business type cannot change after creation
 });
 ```
+
+## UX Note
+
+- The Business details form should expose a DGR / tax-deductible toggle for philanthropic businesses.
+- When enabled, payments to that business are treated as deductible in donation and Zakat linking flows.
+- The toggle is not shown for global non-charity institutions such as banks or brokerages.
 
 ## TDD Test Cases
 

@@ -28,6 +28,7 @@ describe('business.service', () => {
     id: mockBusinessId,
     name: 'Acme Corp',
     type: BusinessEnumType.PHILANTHROPY,
+    isDgrRegistered: true,
     addressLine: '123 Main St',
     streetAddress: 'Main Street',
     postcode: 2000,
@@ -50,6 +51,7 @@ describe('business.service', () => {
       const input = {
         name: 'Acme Corp',
         type: BusinessEnumType.PHILANTHROPY,
+        isDgrRegistered: true,
         addressLine: '123 Main St',
         streetAddress: 'Main Street',
         postcode: 2000,
@@ -79,6 +81,7 @@ describe('business.service', () => {
       const input = {
         name: 'Tech Ventures',
         type: BusinessEnumType.PHILANTHROPY,
+        isDgrRegistered: false,
         userId: mockUserId,
       };
 

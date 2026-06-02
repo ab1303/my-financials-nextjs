@@ -21,6 +21,7 @@ import { BusinessEnumType } from '@/types/enum';
 type BusinessType = {
   businessName: string;
   type: BusinessEnumType;
+  isDgrRegistered: boolean;
   address: {
     addressLine: string;
     street_address: string;
@@ -150,6 +151,7 @@ export default function BusinessForm() {
     defaultValues: {
       businessName: '',
       type: BusinessEnumType.BANK,
+      isDgrRegistered: false,
       address: {
         addressLine: '',
         street_address: '',
@@ -170,6 +172,7 @@ export default function BusinessForm() {
   const resetForm = () => {
     formFieldSetValue('businessName', '');
     formFieldSetValue('type', BusinessEnumType.BANK);
+    formFieldSetValue('isDgrRegistered', false);
     setSelectedBusiness(null);
   };
 
@@ -177,8 +180,11 @@ export default function BusinessForm() {
     const {
       businessName,
       type,
+      isDgrRegistered,
       address: { addressLine, postcode, state, street_address, suburb },
     } = formData;
+    const resolvedIsDgrRegistered =
+      type === BusinessEnumType.PHILANTHROPY ? isDgrRegistered : false;
 
     if (selectedBusiness) {
       // Update existing business
@@ -186,6 +192,7 @@ export default function BusinessForm() {
         {
           id: selectedBusiness.id,
           name: businessName,
+          isDgrRegistered: resolvedIsDgrRegistered,
           addressLine,
           postcode: postcode ? postCodeSchema.parse(postcode) : undefined,
           state,
@@ -203,6 +210,7 @@ export default function BusinessForm() {
       saveBusinessDetailsMutation.mutate({
         name: businessName,
         type,
+        isDgrRegistered: resolvedIsDgrRegistered,
         addressLine,
         postcode: postCodeSchema.parse(postcode),
         state,
@@ -222,6 +230,7 @@ export default function BusinessForm() {
     if (option.value) {
       formFieldSetValue('businessName', option.value.businessName);
       formFieldSetValue('type', option.value.type);
+      formFieldSetValue('isDgrRegistered', option.value.isDgrRegistered ?? false);
       setSelectedBusiness(option);
     }
     return;
@@ -239,6 +248,7 @@ export default function BusinessForm() {
       value: {
         businessName: o.name,
         type: (o.type as BusinessEnumType) || BusinessEnumType.BANK,
+        isDgrRegistered: o.isDgrRegistered ?? false,
         address: {
           addressLine: o.addressLine || '',
           postcode: String(o.postcode || ''),
@@ -318,6 +328,31 @@ export default function BusinessForm() {
                 </select>
               </div>
             </div>
+
+            {formMethods.watch('type') === BusinessEnumType.PHILANTHROPY ? (
+              <div className='rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/60'>
+                <div className='flex items-start gap-3'>
+                  <input
+                    id='isDgrRegistered'
+                    type='checkbox'
+                    className='mt-1 h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-teal-400'
+                    {...register('isDgrRegistered')}
+                  />
+                  <div>
+                    <Label htmlFor='isDgrRegistered' className='cursor-pointer'>
+                      Tax deductible (DGR registered)
+                    </Label>
+                    <p className='mt-1 text-sm text-muted-foreground'>
+                      Payments to this business will be marked deductible when this is enabled.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className='text-sm text-muted-foreground'>
+                Tax deductibility only applies to philanthropic businesses.
+              </p>
+            )}
 
             <AddressComponent<BusinessType>
               basePropertyName='address'
