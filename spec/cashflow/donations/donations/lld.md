@@ -74,6 +74,7 @@ model DonationPayment {
 - The transaction ledger should present a single classification choice for charitable outflows.
 - The chooser must route to Donation - Voluntary, Donation - Interest Cleansing, or Zakat.
 - Classification into Donation should open the donations enrichment flow with purpose preselected.
+- The donation enrichment drawer should default `beneficiaryType` to `Business`; `Individual` is a deliberate exception.
 - The tax-category display must update when the beneficiary changes, even if the transaction link already exists.
 
 ## Reporting

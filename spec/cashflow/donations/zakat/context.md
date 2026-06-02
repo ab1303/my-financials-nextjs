@@ -9,6 +9,7 @@ Users need to record an annual Zakat obligation and the individual payments made
 - Tax deductibility is derived from the beneficiary's DGR status, not from the fact that the payment is Zakat.
 - The unified ledger classification flow must route Zakat as its own destination, so users can classify a payment before they decide whether it belongs in Donations or Zakat.
 - Zakat payment rows should expose the same beneficiary-driven tax category snapshot used in Donations.
+- When linking a Zakat transaction, the beneficiary type should default to `Business` to match the common charitable recipient flow; `Individual` remains an explicit exception.
 
 ## Domain Dependencies
 - Uses `ZakatObligation`, `CharitablePaymentRecord`, and the donations-outflow rules from [`../../hld.md`](../../hld.md).

@@ -10,6 +10,7 @@ Users need a fiscal-year view of charitable outflows that records what was paid,
 - Tax category should be visible in the UI as a derived result so users can confirm deductibility before saving.
 - The transaction-ledger entry point must support a unified classification choice that routes a payment into Donation or Zakat, rather than forcing users through donation-only linking.
 - Zakat and donations must both contribute to year-end deductible reporting.
+- When enriching a donation from the ledger, the beneficiary type should default to `Business` so the common charitable case is one click less friction; `Individual` remains an explicit exception.
 
 ## Architecture Note - Why Donations Are NOT in the Transaction Table
 Unlike income and expense, donations require rich charitable metadata that exceeds `Transaction`:

@@ -61,6 +61,7 @@ model ZakatPayment {
 ### Unified Classification Flow
 - The ledger classification chooser must support a direct Zakat path.
 - When a user chooses Zakat, the flow should open the Zakat enrichment experience with beneficiary and tax derivation visible.
+- The Zakat enrichment drawer should default `beneficiaryType` to `Business`; `Individual` is an explicit exception.
 - Zakat and donations should share the same transaction-linking expectations so imported bank entries can be reconciled consistently.
 
 ## Reporting
@@ -96,3 +97,4 @@ This feature now lives under `spec/cashflow/donations/zakat/`; this file is the 
 - Payment mutations validate date, positive amount, beneficiary type, and session state.
 - Beneficiary selection remains compatible with both `BUSINESS` and `INDIVIDUAL` paths in the current service layer.
 - Zakat payment rows expose derived tax category and contribute to year-end deductible reporting.
+- The beneficiary type dropdown defaults to `Business`.

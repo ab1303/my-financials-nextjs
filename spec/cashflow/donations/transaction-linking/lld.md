@@ -35,7 +35,7 @@ model DonationPayment {
 1. User selects a fiscal year on `/cashflow/donations`.
 2. Server counts `DEBIT` + `CONFIRMED` transactions categorized as `Gifts & donations` within that fiscal-year range.
 3. Banner appears when at least one transaction is still unlinked.
-4. Drawer fetches the candidate transactions and lets the user complete beneficiary and tax metadata.
+4. Drawer fetches the candidate transactions and lets the user complete beneficiary and tax metadata, defaulting the beneficiary type to `Business`.
 5. Save calls the existing donation create path with an added `transactionId`.
 6. The linked transaction disappears from the banner count and can display a linked badge in the ledger.
 
@@ -63,3 +63,4 @@ This feature now lives under `spec/cashflow/donations/transaction-linking/`; thi
 - Saving a linked donation pre-fills immutable date and amount from the source transaction.
 - A linked transaction cannot be linked again because of the unique FK.
 - Manual donation entry continues to work when `transactionId` is absent.
+- The default beneficiary type in the link drawer is `Business`, with `Individual` available as an explicit exception.

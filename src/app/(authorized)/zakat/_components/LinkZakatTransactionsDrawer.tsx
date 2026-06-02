@@ -89,7 +89,7 @@ export default function LinkZakatTransactionsDrawer({
     resolver: zodResolver(linkFormSchema),
     mode: "onChange",
     defaultValues: {
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: "",
     },
   });
@@ -137,7 +137,7 @@ export default function LinkZakatTransactionsDrawer({
   const handleSelectTransaction = (transactionId: string) => {
     setSelectedTransactionId(transactionId);
     reset({
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: "",
     });
   };
@@ -146,7 +146,7 @@ export default function LinkZakatTransactionsDrawer({
     setTransactions([]);
     setSelectedTransactionId("");
     reset({
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: "",
     });
     onClose();
@@ -188,7 +188,7 @@ export default function LinkZakatTransactionsDrawer({
         return remaining;
       });
       reset({
-        beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+        beneficiaryType: BeneficiaryEnumType.BUSINESS,
         beneficiaryId: "",
       });
     } catch (error) {
@@ -225,8 +225,8 @@ export default function LinkZakatTransactionsDrawer({
               </button>
             </div>
 
-            <div className="grid flex-1 grid-cols-5 gap-0 overflow-hidden">
-              <aside className="col-span-2 border-r border-gray-200 p-4 dark:border-gray-800">
+            <div className="grid min-h-0 flex-1 grid-cols-5 gap-0 overflow-hidden">
+              <aside className="col-span-2 min-h-0 border-r border-gray-200 p-4 dark:border-gray-800">
                 <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                   Unlinked transactions
                 </h3>
@@ -268,8 +268,8 @@ export default function LinkZakatTransactionsDrawer({
                 )}
               </aside>
 
-              <section className="col-span-3 flex flex-col p-4">
-                <div className="flex flex-1 flex-col gap-4">
+              <section className="col-span-3 flex min-h-0 flex-col overflow-y-auto p-4">
+                <div className="flex min-h-full flex-col gap-4">
                   <div className="rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
                     {selectedTransaction ? (
                       <>
@@ -311,12 +311,12 @@ export default function LinkZakatTransactionsDrawer({
                             inputId="beneficiaryType"
                             isDisabled={!selectedTransaction}
                             options={[
+                              { value: BeneficiaryEnumType.BUSINESS, label: "Business" },
                               { value: BeneficiaryEnumType.INDIVIDUAL, label: "Individual" },
-                              { value: BeneficiaryEnumType.BUSINESS, label: "Organization" },
                             ]}
                             value={{
                               value: field.value,
-                              label: field.value === BeneficiaryEnumType.BUSINESS ? "Organization" : "Individual",
+                              label: field.value === BeneficiaryEnumType.BUSINESS ? "Business" : "Individual",
                             }}
                             onChange={(option) => field.onChange(option?.value)}
                           />
@@ -363,7 +363,7 @@ export default function LinkZakatTransactionsDrawer({
                     </div>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-800">
+                  <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-3 border-t border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-gray-900">
                     <button
                       type="button"
                       onClick={handleClose}
@@ -377,7 +377,7 @@ export default function LinkZakatTransactionsDrawer({
                       disabled={!selectedTransaction || !isValid || isSaving}
                       className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {isSaving ? "Saving..." : "Save & Next"}
+                      {isSaving ? "Linking..." : "Link Zakat payment"}
                     </button>
                   </div>
                 </div>

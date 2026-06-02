@@ -16,6 +16,7 @@ Imported `DEBIT` transactions categorized as `Gifts & donations` land in the tra
 - Showing a banner and drawer workflow on the Donations page.
 - Creating an optional one-to-one `DonationPayment.transactionId` link.
 - Preserving manual donations that have no transaction link.
+- Defaulting the enrichment flow to `Business` beneficiaries, since charitable recipients are typically organisations and `Individual` is the exception.
 
 **Out of scope:**
 - Changing the CSV import wizard.
