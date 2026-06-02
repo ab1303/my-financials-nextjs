@@ -76,7 +76,8 @@ export default function DonationTableClient({
       amount: 0,
       beneficiaryType: 'INDIVIDUAL',
       beneficiaryId: '',
-      taxCategory: '',
+      taxCategory: '', // Will be derived from beneficiary DGR status
+      donationPurpose: 'VOLUNTARY', // Default purpose
     };
 
     // Add the temporary row to the state

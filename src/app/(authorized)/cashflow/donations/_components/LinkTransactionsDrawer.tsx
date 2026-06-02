@@ -156,7 +156,7 @@ export default function LinkTransactionsDrawer({
       const result = await addRow({
         datePaid: new Date(selectedTransaction.date),
         amount: selectedTransaction.amount,
-        taxCategory: selectedTransaction.category,
+        // taxCategory is now derived from beneficiary DGR status, not from transaction category
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
         calendarYearId,

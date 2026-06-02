@@ -42,7 +42,7 @@ export type CleanseDonationDrawerProps = {
 // ---------- Schemas ----------
 
 const linkedModeSchema = z.object({
-  taxCategory: z.string().min(1, 'Tax category is required'),
+  // taxCategory is derived from beneficiary DGR status (removed from form)
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
   beneficiaryId: z.string().min(1, 'Please select a beneficiary'),
 });
@@ -50,7 +50,7 @@ const linkedModeSchema = z.object({
 const manualModeSchema = z.object({
   datePaid: z.string().min(1, 'Date is required'),
   amount: z.number({ required_error: 'Amount is required' }).positive('Must be greater than 0'),
-  taxCategory: z.string().min(1, 'Tax category is required'),
+  // taxCategory is derived from beneficiary DGR status (removed from form)
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
   beneficiaryId: z.string().min(1, 'Please select a beneficiary'),
 });
@@ -64,11 +64,9 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
 }
 
-const TAX_CATEGORY_FOR_CLEANSING = 'Interest Cleansing';
-
 function getDefaultLinkedValues(): LinkedFormValues {
   return {
-    taxCategory: TAX_CATEGORY_FOR_CLEANSING,
+    // taxCategory is no longer in the form (derived from beneficiary)
     beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
     beneficiaryId: '',
   };
@@ -78,7 +76,7 @@ function getDefaultManualValues(): ManualFormValues {
   return {
     datePaid: '',
     amount: 0,
-    taxCategory: TAX_CATEGORY_FOR_CLEANSING,
+    // taxCategory is no longer in the form (derived from beneficiary)
     beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
     beneficiaryId: '',
   };
@@ -215,15 +213,6 @@ export default function CleanseDonationDrawer({
     manualForm.reset(getDefaultManualValues());
   };
 
-  // Auto-populate tax category when mode changes or transaction is selected
-  useEffect(() => {
-    linkedForm.setValue('taxCategory', TAX_CATEGORY_FOR_CLEANSING, { shouldValidate: true });
-  }, [mode, linkedForm]);
-
-  useEffect(() => {
-    manualForm.setValue('taxCategory', TAX_CATEGORY_FOR_CLEANSING, { shouldValidate: true });
-  }, [mode, manualForm]);
-
   const handleLinkedSave = linkedForm.handleSubmit(async (values) => {
     if (!selectedTransaction) {
       toast.error('Please select a transaction to link.');
@@ -235,7 +224,7 @@ export default function CleanseDonationDrawer({
       const result = await addRow({
         datePaid: new Date(selectedTransaction.date),
         amount: selectedTransaction.amount,
-        taxCategory: values.taxCategory,
+        // taxCategory is derived from beneficiary DGR status (not from form)
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
         calendarYearId,
@@ -275,7 +264,7 @@ export default function CleanseDonationDrawer({
       const result = await addRow({
         datePaid: new Date(values.datePaid),
         amount: values.amount,
-        taxCategory: values.taxCategory,
+        // taxCategory is derived from beneficiary DGR status (not from form)
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
         calendarYearId,

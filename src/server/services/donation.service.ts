@@ -5,6 +5,7 @@ import type {
   DonationPaymentInput,
 } from '../models/donation';
 import type { Prisma } from '@prisma/client';
+import { deriveTaxCategory } from '../utils/charity-tax';
 
 export const addDonationCalendarYearDetails = async ({
   calendarId,
@@ -71,6 +72,12 @@ export const updateDonationPayment = async (
   model: DonationPaymentInput,
   donationPaymentId: string,
 ) => {
+  // Derive tax category from beneficiary's DGR status
+  const taxCategory = await deriveTaxCategory(
+    model.beneficiaryId!,
+    model.beneficiaryType
+  );
+
   const where: Prisma.DonationPaymentWhereUniqueInput = {
     id: donationPaymentId,
   };
@@ -81,7 +88,7 @@ export const updateDonationPayment = async (
       datePaid: model.datePaid,
       amount: model.amount,
       beneficiaryType: model.beneficiaryType,
-      taxCategory: model.taxCategory,
+      taxCategory,
       businessId:
         model.beneficiaryType === 'BUSINESS' ? model.beneficiaryId : null,
       individualId:
@@ -94,13 +101,19 @@ export const addDonationPaymentDetail = async (
   donationLedgerId: string,
   payment: Omit<DonationPaymentInput, 'id' | 'donationLedgerId'>,
 ) => {
+  // Derive tax category from beneficiary's DGR status instead of requiring user input
+  const taxCategory = await deriveTaxCategory(
+    payment.beneficiaryId!,
+    payment.beneficiaryType
+  );
+
   return await prisma.donationPayment.create({
     data: {
       donationLedgerId,
       datePaid: payment.datePaid,
       amount: payment.amount,
       beneficiaryType: payment.beneficiaryType,
-      taxCategory: payment.taxCategory,
+      taxCategory,
       businessId:
         payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
       individualId:
@@ -135,3 +148,74 @@ export const getTotalDonations = async (
 
   return result._sum.amount?.toNumber() ?? 0;
 };
+
+/**
+ * Gets donation totals broken down by purpose (VOLUNTARY, INTEREST_CLEANSING)
+ * and deductible status (DEDUCTIBLE, NON_DEDUCTIBLE) for a fiscal year.
+ */
+export const getDonationTotalsByCategory = async (
+  calendarYearId: string,
+): Promise<{
+  voluntaryTotal: number;
+  interestCleansingTotal: number;
+  deductibleTotal: number;
+  nonDeductibleTotal: number;
+}> => {
+  const baseWhere: Prisma.DonationPaymentWhereInput = {
+    donationLedger: {
+      calendarId: calendarYearId,
+    },
+  };
+
+  // Total voluntary donations
+  const voluntaryResult = await prisma.donationPayment.aggregate({
+    where: {
+      ...baseWhere,
+      donationPurpose: 'VOLUNTARY',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  // Total interest cleansing donations
+  const interestCleansingResult = await prisma.donationPayment.aggregate({
+    where: {
+      ...baseWhere,
+      donationPurpose: 'INTEREST_CLEANSING',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  // Total deductible donations
+  const deductibleResult = await prisma.donationPayment.aggregate({
+    where: {
+      ...baseWhere,
+      taxCategory: 'DEDUCTIBLE',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  // Total non-deductible donations
+  const nonDeductibleResult = await prisma.donationPayment.aggregate({
+    where: {
+      ...baseWhere,
+      taxCategory: 'NON_DEDUCTIBLE',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  return {
+    voluntaryTotal: voluntaryResult._sum.amount?.toNumber() ?? 0,
+    interestCleansingTotal: interestCleansingResult._sum.amount?.toNumber() ?? 0,
+    deductibleTotal: deductibleResult._sum.amount?.toNumber() ?? 0,
+    nonDeductibleTotal: nonDeductibleResult._sum.amount?.toNumber() ?? 0,
+  };
+};
+

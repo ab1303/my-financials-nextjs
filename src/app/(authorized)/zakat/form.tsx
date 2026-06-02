@@ -77,6 +77,10 @@ type ZakatFormProps = {
   initialData: {
     zakatYearData: Array<CalendarYearType>;
     amountDue: number;
+    zakatTotals: {
+      deductibleTotal: number;
+      nonDeductibleTotal: number;
+    };
   };
   yearIdParam: string;
   children?: React.ReactNode;
@@ -84,7 +88,7 @@ type ZakatFormProps = {
 };
 
 export default function ZakatForm({
-  initialData: { zakatYearData, amountDue },
+  initialData: { zakatYearData, amountDue, zakatTotals },
   yearIdParam,
   addZakatCalendarYear,
   children,
@@ -184,6 +188,40 @@ export default function ZakatForm({
           />
         </div>
       </div>
+
+      {/* Breakdown by Deductibility */}
+      <div className='mx-10'>
+        <div className='grid grid-cols-2 gap-4'>
+          <div>
+            <Label>Deductible (DGR)</Label>
+            <div className='mt-3'>
+              <NumericFormat
+                className='block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+                prefix='$'
+                displayType='text'
+                thousandSeparator
+                value={zakatTotals.deductibleTotal}
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>Non-Deductible</Label>
+            <div className='mt-3'>
+              <NumericFormat
+                className='block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+                prefix='$'
+                displayType='text'
+                thousandSeparator
+                value={zakatTotals.nonDeductibleTotal}
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className='mt-8'>
         <Card.Body>{children}</Card.Body>
       </div>

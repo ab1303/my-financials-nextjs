@@ -11,7 +11,12 @@ import type { CalendarYearType } from '@/types';
 
 type InitialDataType = {
   donationYearData: Array<CalendarYearType>;
-  totalDonations: number;
+  donationTotals: {
+    voluntaryTotal: number;
+    interestCleansingTotal: number;
+    deductibleTotal: number;
+    nonDeductibleTotal: number;
+  };
 };
 
 type Props = {
@@ -28,7 +33,8 @@ export default function DonationFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const totalDonations = initialData.totalDonations;
+  const { voluntaryTotal, interestCleansingTotal, deductibleTotal, nonDeductibleTotal } = initialData.donationTotals;
+  const totalDonations = deductibleTotal + nonDeductibleTotal;
 
   const handleYearChange = (yearId: string | null) => {
     const current = new URLSearchParams(searchParams || '');
@@ -51,6 +57,8 @@ export default function DonationFilters({
         onYearChange={handleYearChange}
         label='Year'
       />
+
+      {/* Total Donations */}
       <div>
         <Label>Total Donations</Label>
         <div className='mt-3'>
@@ -63,6 +71,72 @@ export default function DonationFilters({
             value={totalDonations}
             readOnly
           />
+        </div>
+      </div>
+
+      {/* Breakdown by Purpose */}
+      <div className='grid grid-cols-2 gap-4'>
+        <div>
+          <Label>Voluntary Donations</Label>
+          <div className='mt-3'>
+            <NumericFormat
+              id={`${id}-voluntary-total`}
+              className='block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+              prefix='$'
+              displayType='text'
+              thousandSeparator
+              value={voluntaryTotal}
+              readOnly
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label>Interest Cleansing</Label>
+          <div className='mt-3'>
+            <NumericFormat
+              id={`${id}-cleansing-total`}
+              className='block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+              prefix='$'
+              displayType='text'
+              thousandSeparator
+              value={interestCleansingTotal}
+              readOnly
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Breakdown by Deductibility */}
+      <div className='grid grid-cols-2 gap-4'>
+        <div>
+          <Label>Deductible (DGR)</Label>
+          <div className='mt-3'>
+            <NumericFormat
+              id={`${id}-deductible-total`}
+              className='block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+              prefix='$'
+              displayType='text'
+              thousandSeparator
+              value={deductibleTotal}
+              readOnly
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label>Non-Deductible</Label>
+          <div className='mt-3'>
+            <NumericFormat
+              id={`${id}-nondeductible-total`}
+              className='block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+              prefix='$'
+              displayType='text'
+              thousandSeparator
+              value={nonDeductibleTotal}
+              readOnly
+            />
+          </div>
         </div>
       </div>
     </div>

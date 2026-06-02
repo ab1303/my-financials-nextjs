@@ -11,6 +11,7 @@ export type ZakatModel = {
 // TODO:
 export type ZakatPaymentModel = PaymentModel & {
   beneficiaryType: BeneficiaryEnumType;
+  taxCategory: string;
   zakatObligationId: string | null;
 };
 
@@ -20,8 +21,11 @@ export type ZakatPaymentInput = {
   datePaid: Date;
   amount: number;
   beneficiaryType: BeneficiaryEnumType;
+  taxCategory?: string; // Optional - will be derived
   beneficiaryId?: string | null;
   businessId?: string | null;
   individualId?: string | null;
   zakatObligationId?: string | null;
+  transactionId?: string | null;
 };
+

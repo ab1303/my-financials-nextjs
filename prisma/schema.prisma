@@ -105,6 +105,11 @@ enum DonationPurposeEnum {
   ZAKAT
 }
 
+enum TaxCategoryEnumType {
+  DEDUCTIBLE
+  NON_DEDUCTIBLE
+}
+
 // IncomeSource — user-managed income source lookup (replaces IncomeSourceEnumType enum)
 model IncomeSource {
   id            String         @id @default(cuid())
@@ -160,6 +165,8 @@ model Business {
   postcode         Int?
   state            String?
   type             BusinessEnumType?
+  // DGR status for tax deductibility determination
+  isDgrRegistered  Boolean?             @default(false)
   zakatPayments    ZakatPayment[]
   donationPayments DonationPayment[]
   financialAccounts FinancialAccount[]
@@ -183,6 +190,7 @@ model ZakatPayment {
   datePaid        DateTime
   amount          Decimal             @db.Money
   beneficiaryType BeneficiaryEnumType
+  taxCategory     TaxCategoryEnumType  // DEDUCTIBLE or NON_DEDUCTIBLE, derived from beneficiary DGR status
   business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
   individual      Individual?         @relation(fields: [individualId], references: [id])
@@ -206,7 +214,7 @@ model DonationPayment {
   datePaid        DateTime
   amount          Decimal             @db.Money
   beneficiaryType BeneficiaryEnumType
-  taxCategory     String
+  taxCategory     TaxCategoryEnumType
   business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
   individual      Individual?         @relation(fields: [individualId], references: [id])

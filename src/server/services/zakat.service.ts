@@ -5,6 +5,7 @@ import type {
   ZakatPaymentInput,
 } from '../models/zakat';
 import type { Prisma } from '@prisma/client';
+import { deriveTaxCategory } from '../utils/charity-tax';
 
 export const addZakatCalendarYearDetails = async ({
   calendarId,
@@ -63,6 +64,7 @@ export const getZakatPayments = async (
     individualId: zp.individualId,
     zakatObligationId: zp.zakatObligationId,
     beneficiaryType: zp.beneficiaryType,
+    taxCategory: zp.taxCategory,
   }));
 };
 
@@ -70,6 +72,12 @@ export const updateZakatPayment = async (
   model: ZakatPaymentInput,
   zakatPaymentId: string,
 ) => {
+  // Derive tax category from beneficiary's DGR status
+  const taxCategory = await deriveTaxCategory(
+    model.beneficiaryId!,
+    model.beneficiaryType
+  );
+
   const where: Prisma.ZakatPaymentWhereUniqueInput = {
     id: zakatPaymentId,
   };
@@ -80,6 +88,7 @@ export const updateZakatPayment = async (
       datePaid: model.datePaid,
       amount: model.amount,
       beneficiaryType: model.beneficiaryType,
+      taxCategory,
       businessId:
         model.beneficiaryType === 'BUSINESS' ? model.beneficiaryId : null,
       individualId:
@@ -92,12 +101,19 @@ export const addZakatPaymentDetail = async (
   zakatId: string,
   payment: Omit<ZakatPaymentInput, 'id' | 'zakatObligationId'> & { transactionId?: string },
 ) => {
+  // Derive tax category from beneficiary's DGR status instead of requiring user input
+  const taxCategory = await deriveTaxCategory(
+    payment.beneficiaryId!,
+    payment.beneficiaryType
+  );
+
   return await prisma.zakatPayment.create({
     data: {
       zakatObligationId: zakatId,
       datePaid: payment.datePaid,
       amount: payment.amount,
       beneficiaryType: payment.beneficiaryType,
+      taxCategory,
       businessId:
         payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
       individualId:
@@ -113,6 +129,50 @@ export const deleteZakatPayment = async (zakatPaymentId: string) => {
       id: zakatPaymentId,
     },
   });
+};
+
+/**
+ * Gets zakat totals broken down by deductible status (DEDUCTIBLE, NON_DEDUCTIBLE)
+ * for a fiscal year.
+ */
+export const getZakatTotalsByCategory = async (
+  calendarYearId: string,
+): Promise<{
+  deductibleTotal: number;
+  nonDeductibleTotal: number;
+}> => {
+  const baseWhere: Prisma.ZakatPaymentWhereInput = {
+    zakatObligation: {
+      calendarId: calendarYearId,
+    },
+  };
+
+  // Total deductible zakat payments
+  const deductibleResult = await prisma.zakatPayment.aggregate({
+    where: {
+      ...baseWhere,
+      taxCategory: 'DEDUCTIBLE',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  // Total non-deductible zakat payments
+  const nonDeductibleResult = await prisma.zakatPayment.aggregate({
+    where: {
+      ...baseWhere,
+      taxCategory: 'NON_DEDUCTIBLE',
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  return {
+    deductibleTotal: deductibleResult._sum.amount?.toNumber() ?? 0,
+    nonDeductibleTotal: nonDeductibleResult._sum.amount?.toNumber() ?? 0,
+  };
 };
 
 export async function getUnlinkedZakatTransactions(
@@ -143,3 +203,4 @@ export async function getUnlinkedZakatTransactions(
     amount: Number(tx.amount),
   }));
 }
+

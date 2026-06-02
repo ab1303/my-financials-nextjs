@@ -2,6 +2,7 @@ import {
   addZakatCalendarYearDetails,
   getZakat,
   getZakatPayments,
+  getZakatTotalsByCategory,
 } from '../services/zakat.service';
 import { handleCaughtError } from '../utils/prisma';
 
@@ -43,3 +44,23 @@ export const zakatHandler = async (calendarYearId: string) => {
     handleCaughtError(e);
   }
 };
+
+/**
+ * Handler that returns zakat totals broken down by deductible status.
+ * Used for displaying comprehensive zakat reporting metrics.
+ */
+export const zakatTotalsByCategoryHandler = async (
+  calendarYearId: string,
+) => {
+  try {
+    const totals = await getZakatTotalsByCategory(calendarYearId);
+    return totals;
+  } catch (e) {
+    handleCaughtError(e);
+    return {
+      deductibleTotal: 0,
+      nonDeductibleTotal: 0,
+    };
+  }
+};
+

@@ -58,7 +58,7 @@ export async function addRow(input: CreateDonationPaymentInput) {
         datePaid: validatedInput.datePaid,
         amount: validatedInput.amount,
         beneficiaryType: validatedInput.beneficiaryType,
-        taxCategory: validatedInput.taxCategory,
+        // taxCategory is derived in the service layer from beneficiary DGR status
         beneficiaryId: validatedInput.beneficiaryId,
         transactionId: validatedInput.transactionId,
         donationPurpose: validatedInput.donationPurpose ?? 'VOLUNTARY',
@@ -117,7 +117,7 @@ export async function editRow(input: UpdateDonationPaymentInput) {
         datePaid: validatedInput.datePaid,
         amount: validatedInput.amount,
         beneficiaryType: validatedInput.beneficiaryType,
-        taxCategory: validatedInput.taxCategory,
+        // taxCategory is derived in the service layer from beneficiary DGR status
         beneficiaryId: validatedInput.beneficiaryId,
         donationLedgerId: '', // This will be ignored in the update
       },

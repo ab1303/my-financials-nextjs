@@ -19,6 +19,8 @@ export type ZakatPaymentType = {
   amount: number;
   beneficiaryId: string;
   beneficiaryType: BeneficiaryEnumType;
+  // Tax category is derived from beneficiary DGR status (DEDUCTIBLE or NON_DEDUCTIBLE)
+  taxCategory: string;
 };
 
 const BENEFICIARY_ENUM_KEYS = Object.entries(BeneficiaryEnumType).map(

@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { totalDonationsHandler } from '@/server/controllers/donation.controller';
+import { donationTotalsByCategoryHandler } from '@/server/controllers/donation.controller';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { prisma } from '@/server/utils/prisma';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
@@ -50,11 +50,11 @@ export default async function DonationPage({
 
   const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
 
-  const totalDonations = await totalDonationsHandler(selectedCalendarYearId);
+  const donationTotals = await donationTotalsByCategoryHandler(selectedCalendarYearId);
 
   const initialData = {
     donationYearData,
-    totalDonations,
+    donationTotals,
   };
 
   return (

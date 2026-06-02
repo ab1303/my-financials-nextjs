@@ -21,7 +21,7 @@ export type DonationPaymentInput = {
   datePaid: Date;
   amount: number;
   beneficiaryType: BeneficiaryEnumType;
-  taxCategory: string;
+  taxCategory?: string; // Optional - will be derived from beneficiary DGR status
   beneficiaryId?: string | null;
   businessId?: string | null;
   individualId?: string | null;

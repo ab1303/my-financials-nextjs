@@ -14,6 +14,12 @@ const beneficiaryOptions = Object.entries(BeneficiaryEnumType).map<OptionType>(
   }),
 );
 
+// Tax category display options (read-only, derived from beneficiary DGR status)
+const taxCategoryDisplayMap: Record<string, string> = {
+  'DEDUCTIBLE': 'Deductible (DGR)',
+  'NON_DEDUCTIBLE': 'Non-Deductible',
+};
+
 const columnHelper = createColumnHelper<ZakatPaymentType>();
 
 export function getTableColumns(
@@ -35,6 +41,17 @@ export function getTableColumns(
       header: () => <span>Amount Paid</span>,
       cell: TableCell,
       meta: { type: 'AMOUNT', propName: 'amount', align: 'right' },
+      footer: (props) => props.column.id,
+    }),
+    columnHelper.accessor('taxCategory', {
+      size: 150,
+      header: () => <span>Deductible Status</span>,
+      // Tax category is read-only (derived from beneficiary DGR status)
+      cell: ({ row }) => {
+        const taxStatus = row.original.taxCategory || 'NON_DEDUCTIBLE';
+        const label = taxCategoryDisplayMap[taxStatus] || taxStatus;
+        return <span className="text-sm">{label}</span>;
+      },
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('beneficiaryType', {

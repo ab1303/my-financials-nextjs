@@ -5,6 +5,7 @@ import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.cont
 import {
   createZakatYearHandler,
   zakatHandler,
+  zakatTotalsByCategoryHandler,
 } from '@/server/controllers/zakat.controller';
 
 import ZakatForm from './form';
@@ -56,10 +57,12 @@ export default async function ZakatPage({
     : '';
 
   const zakat = await zakatHandler(selectedCalendarYearId);
+  const zakatTotals = await zakatTotalsByCategoryHandler(selectedCalendarYearId);
 
   const initialData = {
     zakatYearData,
     amountDue: zakat?.amountDue || 0,
+    zakatTotals,
   };
 
   return (

@@ -30,6 +30,7 @@ export const CreateZakatPaymentSchema = z.object({
     required_error: 'Beneficiary type is required',
   }),
   beneficiaryId: z.string().optional(),
+  // taxCategory is derived from beneficiary DGR status (not user-entered, removed from form)
   calendarYearId: z.string().nonempty('Calendar year is required'),
   transactionId: z.string().optional(),
 });
@@ -48,6 +49,7 @@ export const UpdateZakatPaymentSchema = z.object({
     ),
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
   beneficiaryId: z.string().optional(),
+  // taxCategory is derived from beneficiary DGR status (not user-entered, removed from form)
 });
 
 export const DeleteZakatPaymentSchema = z.object({
