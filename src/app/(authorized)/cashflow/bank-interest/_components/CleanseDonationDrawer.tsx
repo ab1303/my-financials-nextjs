@@ -130,11 +130,11 @@ export default function CleanseDonationDrawer({
   );
 
   useEffect(() => {
-    if (unlinkedTxQuery.data) {
+    if (isOpen && unlinkedTxQuery.data) {
       setTransactions(unlinkedTxQuery.data);
       setSelectedTransactionId((current) => current || unlinkedTxQuery.data[0]?.id || '');
     }
-  }, [unlinkedTxQuery.data]);
+  }, [unlinkedTxQuery.data, isOpen]);
 
   useEffect(() => {
     if (!selectedTransactionId && transactions.length > 0) {
