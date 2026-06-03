@@ -18,7 +18,6 @@ model DonationPayment {
   datePaid         DateTime
   amount           Decimal             @db.Money
   beneficiaryType  BeneficiaryEnumType
-  taxCategory      String
   donationLedgerId String
   transaction      Transaction?        @relation(fields: [transactionId], references: [id], onDelete: SetNull)
   transactionId    String?             @unique
@@ -35,9 +34,9 @@ model DonationPayment {
 1. User selects a fiscal year on `/cashflow/donations`.
 2. Server counts `DEBIT` + `CONFIRMED` transactions categorized as `Gifts & donations` within that fiscal-year range.
 3. Banner appears when at least one transaction is still unlinked.
-4. Drawer fetches the candidate transactions and lets the user complete beneficiary and tax metadata, defaulting the beneficiary type to `Business`.
+4. Drawer fetches the candidate transactions and lets the user complete beneficiary and purpose metadata, defaulting the beneficiary type to `Business`.
 5. Save calls the existing donation create path with an added `transactionId`.
-6. The linked transaction disappears from the banner count and can display a linked badge in the ledger.
+6. The linked transaction is reclassified out of `Other` into a charitable reporting label, then disappears from the banner count and can display a linked badge in the ledger.
 
 ## File Inventory
 

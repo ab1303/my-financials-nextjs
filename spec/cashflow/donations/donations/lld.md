@@ -20,7 +20,6 @@ model DonationPayment {
   datePaid         DateTime
   amount           Decimal             @db.Money
   beneficiaryType  BeneficiaryEnumType
-  taxCategory      String
   businessId       String?
   individualId     String?
   donationLedgerId String
@@ -32,13 +31,12 @@ model DonationPayment {
 ### Key Enums
 - `BeneficiaryEnumType` - `INDIVIDUAL | BUSINESS`
 - `DonationPurposeEnum` - `VOLUNTARY | INTEREST_CLEANSING`
-- `taxCategory` is a derived value based on the selected beneficiary's DGR status. It is stored as a snapshot for reporting consistency, but it is not manually edited.
 
 ### Tax Logic
 - If the selected beneficiary is a registered DGR, the payment is deductible.
 - If the selected beneficiary is not DGR-registered, the payment is non-deductible.
 - Donation purpose does not change deductibility.
-- The UI should render tax category as a read-only badge or label derived from the beneficiary selection.
+- The UI should render DGR status as a read-only derived indicator.
 
 ## Server Contracts
 
@@ -59,7 +57,7 @@ model DonationPayment {
 - `UpdateDonationPaymentSchema`
 - `DeleteDonationPaymentSchema`
 - Form input requires valid date, positive amount, beneficiary selection, and donation purpose.
-- Tax category is not user-entered; it is derived after beneficiary selection and persisted as a snapshot.
+- DGR status is not user-entered on the payment; it is derived from the selected beneficiary.
 
 ## UI Composition
 1. `page.tsx` resolves the selected fiscal year and summary totals.
@@ -67,7 +65,7 @@ model DonationPayment {
 3. `DonationTableServer.tsx` fetches payment rows server-side.
 4. `DonationTableClient.tsx` renders TanStack Table rows with inline editing.
 5. `StateProvider.tsx` + `reducer.ts` hold edit-row and loading state.
-6. `_table/columns.tsx` must include a visible donation-purpose column and a tax-category display column.
+6. `_table/columns.tsx` must include a visible donation-purpose column and a deductible-status display column.
 7. `_components/` contain enrichment and beneficiary helpers such as `UnlinkedTransactionsBanner`, `LinkTransactionsDrawer`, and `CreateBeneficiaryModal`.
 
 ### Unified Classification Flow
@@ -75,7 +73,7 @@ model DonationPayment {
 - The chooser must route to Donation - Voluntary, Donation - Interest Cleansing, or Zakat.
 - Classification into Donation should open the donations enrichment flow with purpose preselected.
 - The donation enrichment drawer should default `beneficiaryType` to `Business`; `Individual` is a deliberate exception.
-- The tax-category display must update when the beneficiary changes, even if the transaction link already exists.
+- Linked transactions should be reclassified out of `Other` into purpose-specific reporting labels so expense breakdowns can separate Donation, Interest Cleansing, and Zakat.
 
 ## Reporting
 - Page totals must show at minimum:

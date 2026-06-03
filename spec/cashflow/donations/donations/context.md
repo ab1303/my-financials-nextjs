@@ -6,8 +6,7 @@ Users need a fiscal-year view of charitable outflows that records what was paid,
 ## Product Decisions
 - `DonationPayment` is the source of truth for charitable semantics, not `Transaction`.
 - Donation purpose is a first-class, editable field with two values: `VOLUNTARY` and `INTEREST_CLEANSING`.
-- Tax deductibility is derived from the beneficiary's DGR status, not from the donation purpose.
-- Tax category should be visible in the UI as a derived result so users can confirm deductibility before saving.
+- DGR status is derived from the linked `Business` record, not duplicated on the payment row.
 - The transaction-ledger entry point must support a unified classification choice that routes a payment into Donation or Zakat, rather than forcing users through donation-only linking.
 - Zakat and donations must both contribute to year-end deductible reporting.
 - When enriching a donation from the ledger, the beneficiary type should default to `Business` so the common charitable case is one click less friction; `Individual` remains an explicit exception.
@@ -17,7 +16,6 @@ Unlike income and expense, donations require rich charitable metadata that excee
 - Beneficiary (Business or Individual, with specific entity references)
 - Beneficiary type (INDIVIDUAL or BUSINESS)
 - Donation purpose (VOLUNTARY or INTEREST_CLEANSING)
-- Tax category (derived from beneficiary DGR status)
 
 These fields belong on `DonationPayment`, with an optional `transactionId` link for reconciliation against imported bank evidence. This follows the enrichment pattern: `Transaction` is immutable cash evidence; `DonationPayment` attaches charitable semantics through an optional one-to-one link.
 
@@ -32,7 +30,8 @@ These fields belong on `DonationPayment`, with an optional `transactionId` link 
 **In scope:**
 - Fiscal-year donation totals and payment history.
 - Inline create, edit, and delete of donation rows.
-- Beneficiary capture, purpose capture, and derived tax-category display.
+- Beneficiary capture, purpose capture, and derived deductible-status display.
+- Beneficiary capture, purpose capture, and DGR-derived reporting.
 - Server-validated mutations and user-scoped beneficiary selection.
 - Unified transaction classification entry from the ledger.
 - Optional bank account filter for linked transactions.
@@ -45,7 +44,7 @@ These fields belong on `DonationPayment`, with an optional `transactionId` link 
 
 ## Acceptance Criteria
 - Users can see and edit donation purpose on every donation row.
-- Tax category is derived from the selected beneficiary and cannot be manually overridden.
+- DGR status is derived from the selected beneficiary and cannot be manually overridden.
 - A donation row shows whether it is deductible before save and after edit.
 - The donations page shows totals by purpose and deductible status, not only one blended total.
 - The ledger classification entry can route a transaction into Donation or Zakat without ambiguity.

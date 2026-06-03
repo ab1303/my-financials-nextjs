@@ -20,6 +20,7 @@ Users need clear expense capture and analysis so they can understand where cash 
 - Creating manual expense entries as `Transaction(type=DEBIT, source=USER_MANUAL)` records.
 - Editing and deleting only USER_MANUAL expense entries; imported expenses are read-only.
 - Category and time-based (month + fiscal-year **and annual-year**) expense analysis.
+- Linked charitable transactions should not remain in `Other`; once reconciled they should carry a purpose-specific reporting label so the expense breakdown can distinguish Donations, Interest Cleansing, and Zakat.
 - Bank account filter using user's FinancialAccount records.
 - Monthly and fiscal-year views that contribute to net cashflow reporting.
 

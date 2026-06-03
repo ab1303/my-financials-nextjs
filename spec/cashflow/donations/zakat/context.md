@@ -6,9 +6,8 @@ Users need to record an annual Zakat obligation and the individual payments made
 ## Product Decisions
 - Zakat is tracked separately from voluntary donations, but both must be visible in a unified deductible summary.
 - Zakat payments can be linked back to imported bank transactions just like donations.
-- Tax deductibility is derived from the beneficiary's DGR status, not from the fact that the payment is Zakat.
+- DGR status is derived from the linked `Business` record, not duplicated on the payment row.
 - The unified ledger classification flow must route Zakat as its own destination, so users can classify a payment before they decide whether it belongs in Donations or Zakat.
-- Zakat payment rows should expose the same beneficiary-driven tax category snapshot used in Donations.
 - When linking a Zakat transaction, the beneficiary type should default to `Business` to match the common charitable recipient flow; `Individual` remains an explicit exception.
 
 ## Domain Dependencies
@@ -24,7 +23,6 @@ Users need to record an annual Zakat obligation and the individual payments made
 - Storing `amountDue` for that year.
 - Creating, editing, and deleting Zakat payment rows.
 - Capturing beneficiary type and beneficiary for each payment.
-- Capturing derived tax category for each payment row.
 - Showing Zakat totals in the year-end deductible summary.
 
 **Out of scope:**

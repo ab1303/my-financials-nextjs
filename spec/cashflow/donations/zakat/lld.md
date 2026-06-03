@@ -19,7 +19,6 @@ model ZakatPayment {
   datePaid          DateTime
   amount            Decimal             @db.Money
   beneficiaryType   BeneficiaryEnumType
-  taxCategory       String
   businessId        String?
   individualId      String?
   zakatObligationId String
@@ -28,7 +27,7 @@ model ZakatPayment {
 ```
 
 ### Key Rules
-- `taxCategory` is derived from the selected beneficiary's DGR status and stored as a snapshot.
+- DGR status is derived from the selected beneficiary's `Business` record, not duplicated on the payment row.
 - Zakat purpose does not itself determine deductibility.
 - A Zakat payment linked to a DGR beneficiary is deductible; otherwise it is non-deductible.
 - `transactionId` is optional so imported bank evidence can be reconciled without requiring a manual entry path first.
@@ -48,6 +47,7 @@ model ZakatPayment {
 - `DeleteZakatPaymentSchema`
 - `addRow()`, `editRow()`, and `deleteRow()` enforce auth, validate payloads, and mutate the selected obligation's payments.
 - Tax category is not user-entered; it is derived from beneficiary selection.
+- DGR status is not user-entered on the payment; it is derived from the selected beneficiary.
 
 ## UI Composition
 1. `page.tsx` loads Zakat years and selected obligation data.
@@ -56,13 +56,14 @@ model ZakatPayment {
 4. `ZakatTableClient.tsx` renders the interactive payment table.
 5. `StateProvider.tsx` + `reducer.ts` manage client-side payment state.
 6. `_table/columns.tsx` and `BeneficiarySelectionCell.tsx` implement inline editing.
-7. A tax-category display column should show the derived deductible status for each payment row.
+7. A deductible-status display column should show the derived result for each payment row.
 
 ### Unified Classification Flow
 - The ledger classification chooser must support a direct Zakat path.
 - When a user chooses Zakat, the flow should open the Zakat enrichment experience with beneficiary and tax derivation visible.
 - The Zakat enrichment drawer should default `beneficiaryType` to `Business`; `Individual` is an explicit exception.
 - Zakat and donations should share the same transaction-linking expectations so imported bank entries can be reconciled consistently.
+- Linked transactions should be reclassified out of `Other` into purpose-specific reporting labels so expense breakdowns can separate Donation, Interest Cleansing, and Zakat.
 
 ## Reporting
 - Zakat totals must feed into the same year-end deductible summary as donations.
@@ -96,5 +97,5 @@ This feature now lives under `spec/cashflow/donations/zakat/`; this file is the 
 - `amountDue` remains attached to the year-scoped obligation header, not duplicated on each payment row.
 - Payment mutations validate date, positive amount, beneficiary type, and session state.
 - Beneficiary selection remains compatible with both `BUSINESS` and `INDIVIDUAL` paths in the current service layer.
-- Zakat payment rows expose derived tax category and contribute to year-end deductible reporting.
+- Zakat payment rows expose derived deductible status and contribute to year-end deductible reporting.
 - The beneficiary type dropdown defaults to `Business`.

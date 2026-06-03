@@ -16,6 +16,7 @@ After a user completes a CSV import wizard, the confirmed transactions are writt
 - Paginated, filterable table of all transactions on `/cashflow/transactions`
 - Tab structure: All / Expenses / Income / Excluded / Voided
 - Inline category edit (re-rolls `MonthlyExpenseSummary` for debits, updates `IncomeRecord` source for credits)
+- Linked charitable transactions should use purpose-specific reporting labels instead of staying in `Other` so the Expenses and Donations views can distinguish Donations, Interest Cleansing, and Zakat.
 - Auto-refresh after CSV/AI import completes (`refreshKey` pattern)
 - Bank account, date range, and description search filters
 
@@ -28,7 +29,7 @@ After a user completes a CSV import wizard, the confirmed transactions are writt
 
 ## Known Constraints
 
-- `Transaction.category` is a free string — no FK to `ExpenseCategory`; UI must validate dropdown value against the correct set per transaction type
+- `Transaction.category` is a free string — no FK to `ExpenseCategory`; UI must validate dropdown value against the correct set per transaction type. Linked charitable rows should use reporting labels that distinguish Donations, Interest Cleansing, and Zakat instead of `Other`.
 - No direct FK from `Transaction` → `IncomeRecord` in baseline; credit category edit matches by `(userId, date, amount)` — fragile for duplicate amounts same day. Phase 2 of transaction-clearing adds the FK.
 - Page stays Server Component; ledger table is Client Component to keep page load fast
 

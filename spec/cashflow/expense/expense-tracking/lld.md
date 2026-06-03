@@ -156,6 +156,7 @@ export const getCategoryBreakdownForYear = async (
 - Excludes `TRANSFER_CATEGORY`
 - Respects `bankAccountId` filter: `OR: [{ bankAccountId }, { source: 'USER_MANUAL' }]`
 - Groups by `transaction.category`, sums amounts
+- Linked charitable transactions should use purpose-specific labels instead of `Other` so they appear as distinct expense breakdown rows.
 - Returns sorted by total descending with percentage
 
 > **Note:** Do NOT duplicate the date-window derivation logic — reuse the same pattern as `getMonthlyExpenseSummaries` (look up calendarYear, derive startDate/endDate).

@@ -39,13 +39,13 @@ A fiscal-year charitable-outflow aggregate.
 
 - Represents voluntary giving and related charitable adjustments such as interest cleansing.
 - Is implemented as `DonationLedger` plus `DonationPayment` rows.
-- Uses fiscal-year scoping, beneficiary metadata, tax categorization, and optional transaction attribution.
+- Uses fiscal-year scoping, beneficiary metadata, and optional transaction attribution.
 
 ### `CharitablePaymentRecord`
 A shared row-level contract for charitable cash outflows.
 
 - Common fields include `datePaid`, `amount`, `beneficiaryType`, beneficiary reference, parent year/obligation reference, and optional transaction attribution when the payment is derived from imported bank activity.
-- `DonationPayment` adds `taxCategory`, `donationPurpose`, and an optional `transactionId`.
+- `DonationPayment` adds `donationPurpose` and an optional `transactionId`.
 - `ZakatPayment` keeps the same beneficiary and amount structure while remaining tied to a `ZakatObligation`.
 
 ### `ZakatObligation`
@@ -120,12 +120,12 @@ A structured quality record for cashflow routes.
    matching. Cashflow views query `Transaction` live — no materialized projections.
 
 3. **Charitable outflows use enrichment tables, not Transaction duplication.**
-   Donations and Zakat have rich metadata (beneficiary, tax category, purpose, donation type) 
+   Donations and Zakat have rich metadata (beneficiary, purpose, donation type) 
    that exceeds `Transaction`'s schema. They use header + payment-row tables (`DonationLedger` → 
    `DonationPayment`, `ZakatObligation` → `ZakatPayment`) with an **optional** `transactionId` 
    link for reconciliation against imported bank evidence. This is enrichment, not duplication — 
    the DonationPayment IS the source of truth for charitable semantics; the Transaction merely 
-   confirms the cash movement.
+   confirms the cash movement and can be reclassified for reporting.
 
 4. **Transaction linking is enrichment, not source mutation.**
    Imported `Transaction` rows remain the immutable cash evidence; charitable pages attach metadata through optional one-to-one links.
@@ -178,6 +178,7 @@ A structured quality record for cashflow routes.
 - Income and expense together define the user's everyday cash position.
 - Categories provide the shared taxonomy that lets income, expense, donations, and interest-cleansing views aggregate, organize, and drill into the same cashflow language.
 - Voluntary donations and Zakat payments are cash outflows like expenses, but they retain beneficiary-aware charitable semantics.
+- Linked charitable transactions should not remain in `Other`; once reconciled they should be reclassified to purpose-specific reporting labels so expense breakdowns can separate Donation, Interest Cleansing, and Zakat.
 - Transaction-linked donations preserve reconciliation between cash-outflow summaries and imported bank evidence.
 - Interest received is still a cash inflow, but it must remain distinguishable from ordinary income because it carries a cleansing obligation.
 - Interest-cleansing donations reduce retained cashflow and should remain auditable against the original interest received.

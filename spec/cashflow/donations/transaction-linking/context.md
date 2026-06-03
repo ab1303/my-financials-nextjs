@@ -1,7 +1,7 @@
 # Transaction Linking — Context
 
 ## Problem
-Imported `DEBIT` transactions categorized as `Gifts & donations` land in the transactions pipeline without the beneficiary and tax metadata required by the donations workflow. Users are forced to double-enter the same charitable payment unless the imported transaction can be enriched and linked to a `DonationPayment` inside the cashflow donations subgroup.
+Imported `DEBIT` transactions categorized as `Gifts & donations` land in the transactions pipeline without the beneficiary and purpose metadata required by the donations workflow. Users are forced to double-enter the same charitable payment unless the imported transaction can be enriched and linked to a `DonationPayment` inside the cashflow donations subgroup.
 
 ## Domain Dependencies
 
@@ -17,6 +17,7 @@ Imported `DEBIT` transactions categorized as `Gifts & donations` land in the tra
 - Creating an optional one-to-one `DonationPayment.transactionId` link.
 - Preserving manual donations that have no transaction link.
 - Defaulting the enrichment flow to `Business` beneficiaries, since charitable recipients are typically organisations and `Individual` is the exception.
+- Reclassifying linked transactions out of `Other` into a purpose-specific charitable label so the expense breakdown can separate Donations, Interest Cleansing, and Zakat.
 
 **Out of scope:**
 - Changing the CSV import wizard.

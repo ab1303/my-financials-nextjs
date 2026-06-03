@@ -113,6 +113,8 @@ const { data, isLoading, refetch } = api.transactionLedger.getAll.useQuery({
 
 Table columns: Date | Description | Amount | Type | Category | Source | Status | Bank Account
 
+Linked charitable rows should render purpose-specific category labels instead of `Other` so the expense breakdown can show Donations, Interest Cleansing, and Zakat separately.
+
 ---
 
 ## Phase 1c — Integration into TransactionsClient
