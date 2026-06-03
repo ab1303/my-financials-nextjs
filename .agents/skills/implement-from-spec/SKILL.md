@@ -1,12 +1,13 @@
 ---
 name: implement-from-spec
 description: >
-  Read spec/{feature}/context.md and lld.md, parse the phase map, resolve
-  phase dependencies, and spawn the appropriate implementation subagent for
-  each independent phase. Use when the user says "implement this", "build from
-  spec", "implement the spec", "start implementation", or "get to work on
-  {feature}". Triggers on: "implement from spec", "build the feature", "start
-  coding", "implement phases", "delegate implementation".
+  Read the smallest relevant spec slice for a feature or sub-feature, parse the
+  phase map, resolve phase dependencies, and spawn the appropriate
+  implementation subagent for each independent phase. Use when the user says
+  "implement this", "build from spec", "implement the spec", "start
+  implementation", or "get to work on {feature}". Triggers on: "implement from
+  spec", "build the feature", "start coding", "implement phases", "delegate
+  implementation".
 metadata:
   author: local
   version: '1.2.0'
@@ -15,9 +16,14 @@ metadata:
 
 # Implement From Spec
 
-Read `spec/{feature}/context.md` and `spec/{feature}/lld.md`, analyse phase
-dependencies, then spawn the correct implementation subagent for each phase —
-running independent phases in parallel and sequential phases in order.
+Read the smallest relevant spec slice: `spec/{domain}/{feature}/context.md`
+plus either the feature `lld.md` or the exact sub-feature `lld.md` for the
+requested phase. Analyse phase dependencies, then spawn the correct
+implementation subagent for each phase — running independent phases in parallel
+and sequential phases in order.
+
+If that slice does not give a true picture of the work, stop and ask the user
+for the additional context needed instead of searching the broader codebase.
 
 ---
 
@@ -27,7 +33,7 @@ running independent phases in parallel and sequential phases in order.
 
 | ✅ Allowed | ❌ FORBIDDEN — hard stop |
 |---|---|
-| Read `context.md` and `lld.md` | Call `edit` or `create` on any source file |
+| Read the smallest relevant spec slice | Call `edit` or `create` on any source file |
 | Read source files to build context bundles | Run `prisma migrate` or `prisma generate` in main conversation |
 | Launch `Next.js Expert` background agents | Implement code "just for speed" or "just this once" |
 | Read agent results, surface errors to user | Fix agent errors by directly editing files yourself |
@@ -45,6 +51,8 @@ If you find yourself writing a code change in the main conversation — **STOP**
 
 **Cost contract**: haiku agents cost ~10× less than the orchestrator model. Direct implementation wastes budget AND bypasses scope enforcement. Agents get hard file constraints; the orchestrator does not.
 
+**Slice-first rule**: never load sibling sub-features or unrelated feature specs unless the current slice explicitly depends on them. If the slice is still insufficient after reading the spec and the listed files, ask the user for more context rather than expanding the search.
+
 ---
 
 ## Step 1 — Resolve the Feature and Spec Files
@@ -58,8 +66,8 @@ skip the dependency analysis.
 Read both files in parallel:
 
 ```
-spec/{feature}/context.md
-spec/{feature}/lld.md
+spec/{domain}/{feature}/context.md
+spec/{domain}/{feature}/lld.md
 ```
 
 If either file is missing, stop and tell the user to run the `spec-from-context`
@@ -86,7 +94,7 @@ State the chosen agent to the user before proceeding.
 
 ## Step 3 — Parse the Phase Map
 
-From `lld.md`, extract:
+From the relevant `lld.md`, extract:
 
 1. The **Phase Map** block (usually a fenced code block near the top)
 2. Each **Phase section** (heading + body)
@@ -140,7 +148,14 @@ the source files" — provide the content directly.
 
 For every phase, assemble:
 
-### a) Full `context.md` content (verbatim)
+### a) Only the relevant context excerpt
+
+Include the minimum `context.md` sections needed to orient the phase:
+
+- problem statement
+- domain dependencies
+- scope boundary
+- any explicit phase notes for this slice
 
 ### b) The specific LLD phase section (verbatim)
 
@@ -148,10 +163,10 @@ Extract only the relevant `## Phase N` section, not the entire LLD.
 
 ### c) Current file contents for files the phase will touch
 
-Read each file listed in the phase's "Files to modify/create" table.
-Paste the full content inline in the prompt. If a file exceeds 300 lines,
-include only the relevant section (the function/component to modify) with a
-comment `// ... rest of file unchanged` at the truncation point.
+Read only the files listed in the phase's "Files to modify/create" table.
+Paste only the relevant function/component section inline. If a file exceeds
+300 lines, include only the exact section the phase will touch with a comment
+`// ... rest of file unchanged` at the truncation point.
 
 ### d) Project-wide constraints (always include)
 
@@ -168,8 +183,8 @@ STACK CONSTRAINTS — must follow exactly:
 - Tests: Vitest + @testing-library/react in src/__tests__/unit/
 - Prisma mock: vitest-mock-extended at src/__tests__/mocks/prisma.mock.ts
 - TDD: write tests first, then implementation
-- All context needed is provided in this prompt. Do NOT explore the codebase
-  for additional files unless a compile error forces it.
+- All context needed for this slice is provided in this prompt. Do NOT explore
+  sibling sub-features or related feature specs unless a compile error forces it.
 
 ⚠️ CRITICAL SCOPE CONSTRAINTS (ENFORCE STRICTLY):
 - You may ONLY modify these exact files: [list from Files to modify/create table]
@@ -218,9 +233,8 @@ Wait for all Wave 1 agents to complete before starting Wave 2.
 Before starting each Wave 2+ phase:
 
 1. Update todo status: `UPDATE todos SET status = 'in_progress' WHERE id = 'phase-N'`
-2. Re-read any files that were modified by the previous wave's agents
-   (the agent may have changed them — your cached copy is stale)
-3. Include the **updated file contents** in the next agent's context bundle
+2. Re-read only the files that the next phase actually consumes.
+3. Include only the changed excerpts in the next agent's context bundle.
 4. Launch the next wave
 
 ### Single-phase override (`--phase N`)
@@ -278,7 +292,7 @@ Tests: ✅ All passing
 
 Next steps:
 - Run `pnpm run dev` to verify in browser
-- See spec/{feature}/hld.md §"Out of Scope" for Phase 2 items
+- See the domain HLD and the current slice's out-of-scope section for Phase 2 items
 ```
 
 ---
@@ -294,7 +308,7 @@ Next steps:
 
 ### Do NOT skip:
 
-- Reading updated file contents between waves
+- Reading updated file excerpts between waves
   (stale content causes agents to overwrite each other's work)
 - The `pnpm run build` final verification
 

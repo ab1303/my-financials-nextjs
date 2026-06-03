@@ -32,7 +32,8 @@ Rules for all AI agents working in this repository.
 ## Efficiency
 
 - Read files yourself before delegating — only launch sub-agents for work you haven't done.
-- Pass file content directly in sub-agent prompts; don't tell them to read the codebase.
+- Pass only the smallest complete slice in sub-agent prompts; don't tell them to read the codebase.
+- If the slice is insufficient to form a true picture, ask the user for more context instead of widening the search.
 - Batch all independent file reads into one parallel tool-call turn.
 
 ## Skill Delegation Mandate
@@ -43,7 +44,7 @@ Rules for all AI agents working in this repository.
 - ❌ Never run `prisma migrate` or `prisma generate` in the main conversation
 - ❌ Never rationalize "I'll just do this small change myself" — all code changes go through agents
 - ✅ Spawn `Next.js Expert` background agents with `model: "claude-haiku-4.5"` for every phase
-- ✅ Pass all file contents inline in the agent prompt — never say "read the codebase"
+- ✅ Pass only the exact spec slice and touched excerpts inline — never say "read the codebase"
 - ✅ Run `pnpm run build` AFTER all agents complete — this is the orchestrator's only code interaction
 
 **Enforcement**: The SKILL.md requires a public delegation declaration to the user before any source files are read for bundles. If that declaration was not posted, the orchestrator skipped the guardrail — stop and post it now.
