@@ -127,10 +127,21 @@ export const addDonationPaymentDetail = async (
 };
 
 export const deleteDonationPayment = async (donationPaymentId: string) => {
+  const existing = await prisma.donationPayment.findUnique({
+    where: { id: donationPaymentId },
+    select: { transactionId: true },
+  });
+
+  if (existing?.transactionId) {
+    await prisma.donationPayment.update({
+      where: { id: donationPaymentId },
+      data: { transactionId: null },
+    });
+    return;
+  }
+
   await prisma.donationPayment.delete({
-    where: {
-      id: donationPaymentId,
-    },
+    where: { id: donationPaymentId },
   });
 };
 

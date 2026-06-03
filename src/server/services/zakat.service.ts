@@ -62,6 +62,7 @@ export const getZakatPayments = async (
     businessId: zp.businessId,
     individualId: zp.individualId,
     zakatObligationId: zp.zakatObligationId,
+    transactionId: zp.transactionId ?? null,
     beneficiaryType: zp.beneficiaryType,
     isDeductible: zp.business?.isDgrRegistered === true,
   }));
@@ -118,16 +119,28 @@ export const addZakatPaymentDetail = async (
     businessId: created.businessId,
     individualId: created.individualId,
     zakatObligationId: created.zakatObligationId,
+    transactionId: created.transactionId ?? null,
     beneficiaryType: created.beneficiaryType,
     isDeductible: created.business?.isDgrRegistered === true,
   } satisfies ZakatPaymentModel;
 };
 
 export const deleteZakatPayment = async (zakatPaymentId: string) => {
+  const existing = await prisma.zakatPayment.findUnique({
+    where: { id: zakatPaymentId },
+    select: { transactionId: true },
+  });
+
+  if (existing?.transactionId) {
+    await prisma.zakatPayment.update({
+      where: { id: zakatPaymentId },
+      data: { transactionId: null },
+    });
+    return;
+  }
+
   await prisma.zakatPayment.delete({
-    where: {
-      id: zakatPaymentId,
-    },
+    where: { id: zakatPaymentId },
   });
 };
 

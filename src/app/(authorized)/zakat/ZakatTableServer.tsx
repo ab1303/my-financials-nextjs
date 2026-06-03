@@ -53,7 +53,8 @@ export default async function ZakatPaymentsTableServer({
             : zp.individualId) || '',
         beneficiaryType: zp.beneficiaryType,
         datePaid: zp.datePaid,
-            isDeductible: zp.isDeductible,
+        isDeductible: zp.isDeductible,
+        transactionId: zp.transactionId ?? undefined,
       })) || [];
 
     return (

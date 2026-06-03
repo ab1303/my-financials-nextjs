@@ -1,18 +1,15 @@
 import { createColumnHelper } from '@tanstack/react-table';
+import { Lock, Unlink } from 'lucide-react';
 
-import { TableCell, EditCell } from '@/components/react-table';
+import { TableCell } from '@/components/react-table';
 import { getTaxCategoryLabel } from '../../_utils/charity-tax';
 import type { DonationPaymentType } from '../_types';
 import type { OptionType } from '@/types';
 import { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
-import { castDraft, produce } from 'immer';
-import BeneficiarySelectionCell from './BeneficiarySelectionCell';
 
 const beneficiaryOptions = Object.entries(
   BeneficiaryEnumType,
 ).flatMap<OptionType>(([k, v]) => ({ id: k, label: v }));
-
-// Donation purpose options (user-editable)
 const donationPurposeOptions = Object.entries(DonationPurposeEnum).map(
   ([k, v]) => ({ id: v, label: k === 'VOLUNTARY' ? 'Voluntary' : k === 'INTEREST_CLEANSING' ? 'Interest Cleansing' : k })
 );
@@ -44,30 +41,7 @@ export function getTableColumns(
     columnHelper.accessor('donationPurpose', {
       size: 150,
       header: () => <span>Purpose</span>,
-      cell: ({ row, table, column, getValue }) => {
-        const tableMeta = table.options.meta;
-        const editedRecord = tableMeta?.editedRows.get(row.index);
-        const purpose = editedRecord?.donationPurpose || row.original.donationPurpose || 'VOLUNTARY';
-        
-        if (editedRecord) {
-          return (
-            <TableCell
-              table={table}
-              row={row}
-              column={column}
-              getValue={getValue}
-            />
-          );
-        }
-
-        const purposeLabel = {
-          'VOLUNTARY': 'Voluntary',
-          'INTEREST_CLEANSING': 'Interest Cleansing',
-          'ZAKAT': 'Zakat',
-        }[purpose] || purpose;
-
-        return <span>{purposeLabel}</span>;
-      },
+      cell: TableCell,
       meta: {
         type: 'SELECT',
         propName: 'donationPurpose',
@@ -100,57 +74,21 @@ export function getTableColumns(
     columnHelper.accessor('beneficiaryId', {
       size: 200,
       header: () => <span>Beneficiary</span>,
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const { original } = row;
-        const tableMeta = table.options.meta;
 
-        const updateRecord = (
-          editedRecord: DonationPaymentType,
-          beneficiaryId: string,
-        ) => {
-          const updatedRecord = {
-            ...editedRecord,
-            beneficiaryId,
-          };
-
-          tableMeta?.setEditedRows(
-            produce((draft) => {
-              draft.set(row.index, castDraft(updatedRecord));
-            }),
+        if (original.beneficiaryType === 'BUSINESS') {
+          const selectedOption = businessesOptions?.find(
+            (b) => b.id === original.beneficiaryId,
           );
-        };
-
-        const editedRecord = tableMeta?.editedRows.get(row.index);
-
-        // Display
-        if (!editedRecord) {
-          // Display business or individual name based on beneficiary type
-          if (original.beneficiaryType == 'BUSINESS') {
-            const selectedOption = businessesOptions?.find(
-              (b) => b.id === original.beneficiaryId,
-            );
-            return <span>{selectedOption?.label || 'Unknown Business'}</span>;
-          }
-
-          const selectedOption = individualsOptions.find(
-            (i) => i.id === original.beneficiaryId,
-          );
-
-          return <span>{selectedOption?.label}</span>;
+          return <span>{selectedOption?.label || 'Unknown Business'}</span>;
         }
 
-        // Edit mode - always show the BeneficiarySelectionCell for both INDIVIDUAL and BUSINESS
-        return (
-          <BeneficiarySelectionCell
-            defaultIndividualOptions={individualsOptions}
-            beneficiaryId={editedRecord.beneficiaryId}
-            beneficiaryType={editedRecord.beneficiaryType}
-            onSelectionChange={(beneficiaryId?: string) => {
-              updateRecord(editedRecord, beneficiaryId || '');
-              return;
-            }}
-          />
+        const selectedOption = individualsOptions.find(
+          (i) => i.id === original.beneficiaryId,
         );
+
+        return <span>{selectedOption?.label || 'Unknown Individual'}</span>;
       },
       footer: (props) => props.column.id,
     }),
@@ -158,7 +96,31 @@ export function getTableColumns(
       id: 'actions',
       size: 100,
       header: () => <span>Actions</span>,
-      cell: EditCell,
+      cell: ({ row, table }) => {
+        const hasLinkedTransaction = Boolean(row.original.transactionId);
+
+        return (
+          <div className='flex justify-center items-center gap-1'>
+            <span
+              title='Linked record — read only'
+              className='text-gray-400 dark:text-gray-500'
+            >
+              <Lock size={14} />
+            </span>
+            {hasLinkedTransaction ? (
+              <button
+                type='button'
+                title='Unlink transaction'
+                aria-label='Unlink transaction'
+                className='rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20'
+                onClick={() => table.options.meta?.removeRow?.(row.index)}
+              >
+                <Unlink size={14} />
+              </button>
+            ) : null}
+          </div>
+        );
+      },
     }),
   ];
 }

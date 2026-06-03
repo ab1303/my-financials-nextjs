@@ -254,15 +254,20 @@ export default function DonationTableClient({
           const deleteResult = await deleteRow({ id: row.id });
 
           if (deleteResult.success) {
-            dispatch({
-              type: 'DONATION/Payments/REMOVE_PAYMENT',
-              payload: {
-                donationPaymentId: row.id,
-              },
-            });
-            toast.success('Donation deleted successfully');
-            // Refresh to get updated server data (including totals)
-            router.refresh();
+            if (row.transactionId) {
+              toast.success('Transaction unlinked successfully');
+              router.refresh();
+            } else {
+              dispatch({
+                type: 'DONATION/Payments/REMOVE_PAYMENT',
+                payload: {
+                  donationPaymentId: row.id,
+                },
+              });
+              toast.success('Donation deleted successfully');
+              // Refresh to get updated server data (including totals)
+              router.refresh();
+            }
           } else {
             const errorMessage =
               deleteResult.error instanceof Error

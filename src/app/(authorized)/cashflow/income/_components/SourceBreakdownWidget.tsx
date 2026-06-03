@@ -10,10 +10,13 @@ import type { IncomeEntryType } from '../_types';
 export const SOURCE_COLOR_BAR_MAP: Record<string, string> = {
   employment: 'bg-blue-500',
   stocks: 'bg-green-500',
-  dividend: 'bg-yellow-500',
+  dividend: 'bg-amber-500',
   rental: 'bg-purple-500',
   business: 'bg-orange-500',
   interest: 'bg-cyan-500',
+  'credit interest': 'bg-sky-500',
+  'tax rebate': 'bg-fuchsia-500',
+  'medicare rebate': 'bg-rose-500',
   other: 'bg-gray-400',
 };
 

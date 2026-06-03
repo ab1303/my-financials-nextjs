@@ -4,10 +4,13 @@
 export const SOURCE_COLOR_MAP: Record<string, string> = {
   employment: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
   stocks: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  dividend: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+  dividend: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
   rental: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
   business: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
   interest: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300',
+  'credit interest': 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
+  'tax rebate': 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/40 dark:text-fuchsia-300',
+  'medicare rebate': 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
   other: 'bg-gray-100 text-gray-700 dark:bg-gray-600/60 dark:text-gray-100',
 };
 

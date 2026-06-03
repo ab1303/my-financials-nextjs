@@ -24,6 +24,17 @@ describe('SourceBadge', () => {
     );
   });
 
+  it('applies unique classes for "Credit Interest"', () => {
+    render(<SourceBadge sourceName='Credit Interest' />);
+
+    expect(screen.getByText('Credit Interest')).toHaveClass(
+      'bg-sky-100',
+      'text-sky-800',
+      'dark:bg-sky-900/40',
+      'dark:text-sky-300',
+    );
+  });
+
   it('falls back to gray for unknown source "Crypto"', () => {
     render(<SourceBadge sourceName='Crypto' />);
 

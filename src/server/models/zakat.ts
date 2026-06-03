@@ -13,6 +13,7 @@ export type ZakatPaymentModel = PaymentModel & {
   beneficiaryType: BeneficiaryEnumType;
   isDeductible: boolean;
   zakatObligationId: string | null;
+  transactionId?: string | null;
 };
 
 // More flexible type for service layer operations

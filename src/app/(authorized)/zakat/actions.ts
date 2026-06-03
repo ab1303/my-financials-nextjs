@@ -57,6 +57,7 @@ export async function addRow(input: CreateZakatPaymentInput) {
         beneficiaryType: newPayment.beneficiaryType,
         isDeductible: newPayment.isDeductible,
         beneficiaryId: validatedInput.beneficiaryId || '',
+        transactionId: validatedInput.transactionId,
       },
     };
   } catch (error) {

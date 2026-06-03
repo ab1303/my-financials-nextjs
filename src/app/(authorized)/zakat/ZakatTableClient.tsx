@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-table';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import clsx from 'clsx';
 import Table from '@/components/table';
@@ -51,6 +52,7 @@ export default function ZakatTableClient({
     new Map(),
   );
   const [validRows, setValidRows] = useState({});
+  const router = useRouter();
 
   const {
     state: { data },
@@ -202,13 +204,19 @@ export default function ZakatTableClient({
         // Handle real payment deletion
         const deleteResult = await deleteRow({ id: record.id });
         if (deleteResult.success) {
-          dispatch({
-            type: 'ZAKAT/Payments/REMOVE_PAYMENT',
-            payload: {
-              zakatPaymentId: record.id,
-            },
-          });
-          toast.success('Payment deleted successfully');
+          if (record.transactionId) {
+            toast.success('Transaction unlinked successfully');
+            router.refresh();
+          } else {
+            dispatch({
+              type: 'ZAKAT/Payments/REMOVE_PAYMENT',
+              payload: {
+                zakatPaymentId: record.id,
+              },
+            });
+            toast.success('Payment deleted successfully');
+            router.refresh();
+          }
         } else {
           toast.error(
             (deleteResult.error as string) || 'Failed to delete payment',

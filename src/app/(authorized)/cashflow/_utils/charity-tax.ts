@@ -10,6 +10,8 @@ type ZakatPaymentLike = {
   isDeductible?: boolean;
 };
 
+const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
 /**
  * Converts deductibility to a human-readable label for display.
  * Used throughout the UI to show tax deductibility status.
@@ -103,22 +105,32 @@ export function calculateBreakdownTotals(
 
       if (purpose === 'VOLUNTARY') {
         if (isDeductible) {
-          voluntaryDeductible += payment.amount;
+          voluntaryDeductible = roundMoney(voluntaryDeductible + payment.amount);
         } else {
-          voluntaryNonDeductible += payment.amount;
+          voluntaryNonDeductible = roundMoney(
+            voluntaryNonDeductible + payment.amount,
+          );
         }
       } else if (purpose === 'INTEREST_CLEANSING') {
         if (isDeductible) {
-          interestCleansingDeductible += payment.amount;
+          interestCleansingDeductible = roundMoney(
+            interestCleansingDeductible + payment.amount,
+          );
         } else {
-          interestCleansingNonDeductible += payment.amount;
+          interestCleansingNonDeductible = roundMoney(
+            interestCleansingNonDeductible + payment.amount,
+          );
         }
       }
     }
 
-    const totalDeductible = voluntaryDeductible + interestCleansingDeductible;
-    const totalNonDeductible = voluntaryNonDeductible + interestCleansingNonDeductible;
-    const total = totalDeductible + totalNonDeductible;
+    const totalDeductible = roundMoney(
+      voluntaryDeductible + interestCleansingDeductible,
+    );
+    const totalNonDeductible = roundMoney(
+      voluntaryNonDeductible + interestCleansingNonDeductible,
+    );
+    const total = roundMoney(totalDeductible + totalNonDeductible);
 
     return {
       voluntaryDeductible,
@@ -140,13 +152,13 @@ export function calculateBreakdownTotals(
       const isDeductible = payment.isDeductible === true;
 
       if (isDeductible) {
-        totalDeductible += payment.amount;
+        totalDeductible = roundMoney(totalDeductible + payment.amount);
       } else {
-        totalNonDeductible += payment.amount;
+        totalNonDeductible = roundMoney(totalNonDeductible + payment.amount);
       }
     }
 
-    const total = totalDeductible + totalNonDeductible;
+    const total = roundMoney(totalDeductible + totalNonDeductible);
 
     return {
       totalDeductible,
