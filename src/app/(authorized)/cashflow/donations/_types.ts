@@ -1,5 +1,5 @@
 import { BeneficiaryEnumType } from '@prisma/client';
-import type { DonationPurposeEnum, TaxCategoryEnumType } from '@prisma/client';
+import type { DonationPurposeEnum } from '@prisma/client';
 
 export type ServerActionType<T = unknown> = {
   success: boolean;
@@ -19,7 +19,7 @@ export type DonationPaymentType = {
   datePaid: Date;
   amount: number;
   beneficiaryType: BeneficiaryEnumType;
-  taxCategory: TaxCategoryEnumType;
+  isDeductible: boolean;
   donationPurpose?: DonationPurposeEnum;
   businessId?: string;
   individualId?: string;

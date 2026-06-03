@@ -71,6 +71,7 @@ export default function ZakatTableClient({
       amount: 0,
       beneficiaryType: 'INDIVIDUAL',
       beneficiaryId: '',
+      isDeductible: false,
     };
 
     // Add the temporary row to the state

@@ -1,6 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-// Mock prisma and charity-tax helper
 vi.mock('@/server/utils/prisma', () => ({
   prisma: {
     donationLedger: {
@@ -25,19 +24,11 @@ vi.mock('@/server/utils/prisma', () => ({
       findMany: vi.fn(),
       aggregate: vi.fn(),
     },
-    business: {
-      findUnique: vi.fn(),
-    },
   },
   handleCaughtError: vi.fn(),
 }));
 
-vi.mock('@/server/utils/charity-tax', () => ({
-  deriveTaxCategory: vi.fn(),
-}));
-
 import { prisma } from '@/server/utils/prisma';
-import { deriveTaxCategory } from '@/server/utils/charity-tax';
 import {
   addDonationPaymentDetail,
   updateDonationPayment,
@@ -58,262 +49,165 @@ describe('donation-zakat-core', () => {
     vi.clearAllMocks();
   });
 
-  describe('addDonationPaymentDetail', () => {
-    it('should create a donation payment with derived tax category', async () => {
-      // Arrange
-      const donationLedgerId = 'ledger-123';
-      const payment = {
-        datePaid: new Date('2025-01-15'),
-        amount: 1000,
-        beneficiaryType: 'BUSINESS' as const,
-        beneficiaryId: 'biz-123',
-        donationPurpose: 'VOLUNTARY' as const,
-      };
-
-      (deriveTaxCategory as any).mockResolvedValue('DEDUCTIBLE');
-      (prisma.donationPayment.create as any).mockResolvedValue({
-        id: 'donation-123',
-        datePaid: payment.datePaid,
-        amount: payment.amount,
-        beneficiaryType: payment.beneficiaryType,
-        taxCategory: 'DEDUCTIBLE',
-        donationPurpose: payment.donationPurpose,
-        businessId: 'biz-123',
-        individualId: null,
-        donationLedgerId,
-        transactionId: null,
-      });
-
-      // Act
-      const result = await addDonationPaymentDetail(donationLedgerId, payment);
-
-      // Assert
-      expect(deriveTaxCategory).toHaveBeenCalledWith(
-        'biz-123',
-        'BUSINESS'
-      );
-      expect(prisma.donationPayment.create).toHaveBeenCalledWith({
-        data: {
-          donationLedgerId,
-          datePaid: payment.datePaid,
-          amount: payment.amount,
-          beneficiaryType: payment.beneficiaryType,
-          taxCategory: 'DEDUCTIBLE',
-          businessId: 'biz-123',
-          individualId: null,
-          transactionId: null,
-          donationPurpose: 'VOLUNTARY',
-        },
-      });
-      expect(result.taxCategory).toBe('DEDUCTIBLE');
+  it('creates donation payments with derived deductibility', async () => {
+    (prisma.donationPayment.create as any).mockResolvedValue({
+      id: 'donation-1',
+      datePaid: new Date('2025-01-15'),
+      amount: { toNumber: () => 1000 },
+      beneficiaryType: 'BUSINESS',
+      businessId: 'biz-1',
+      individualId: null,
+      donationLedgerId: 'ledger-1',
+      transactionId: null,
+      donationPurpose: 'VOLUNTARY',
+      business: { isDgrRegistered: true },
+      individual: null,
     });
 
-    it('should handle INTEREST_CLEANSING purpose with individual beneficiary as non-deductible', async () => {
-      // Arrange
-      const donationLedgerId = 'ledger-123';
-      const payment = {
-        datePaid: new Date('2025-02-15'),
-        amount: 500,
-        beneficiaryType: 'INDIVIDUAL' as const,
-        beneficiaryId: 'ind-456',
-        donationPurpose: 'INTEREST_CLEANSING' as const,
-      };
+    const result = await addDonationPaymentDetail('ledger-1', {
+      datePaid: new Date('2025-01-15'),
+      amount: 1000,
+      beneficiaryType: 'BUSINESS' as const,
+      beneficiaryId: 'biz-1',
+      donationPurpose: 'VOLUNTARY',
+    });
 
-      // Individuals are always non-deductible
-      (deriveTaxCategory as any).mockResolvedValue('NON_DEDUCTIBLE');
-      (prisma.donationPayment.create as any).mockResolvedValue({
-        id: 'donation-456',
-        datePaid: payment.datePaid,
-        amount: payment.amount,
-        beneficiaryType: payment.beneficiaryType,
-        taxCategory: 'NON_DEDUCTIBLE',
-        donationPurpose: payment.donationPurpose,
-        businessId: null,
-        individualId: 'ind-456',
-        donationLedgerId,
-        transactionId: null,
-      });
-
-      // Act
-      const result = await addDonationPaymentDetail(donationLedgerId, payment);
-
-      // Assert
-      expect(result.donationPurpose).toBe('INTEREST_CLEANSING');
-      expect(result.taxCategory).toBe('NON_DEDUCTIBLE');
+    expect(result.isDeductible).toBe(true);
+    expect(prisma.donationPayment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        donationLedgerId: 'ledger-1',
+        businessId: 'biz-1',
+        donationPurpose: 'VOLUNTARY',
+      }),
+      include: {
+        business: true,
+        individual: true,
+      },
     });
   });
 
-  describe('updateDonationPayment', () => {
-    it('should update donation payment and re-derive tax category', async () => {
-      // Arrange
-      const paymentId = 'donation-123';
-      const update = {
-        id: paymentId,
-        datePaid: new Date('2025-03-15'),
+  it('updates donation payments without storing tax category', async () => {
+    await updateDonationPayment(
+      {
+        id: 'donation-1',
+        datePaid: new Date('2025-02-01'),
         amount: 2000,
         beneficiaryType: 'BUSINESS' as const,
-        beneficiaryId: 'biz-789',
-        taxCategory: 'will-be-overridden',
-      };
+        beneficiaryId: 'biz-2',
+      },
+      'donation-1',
+    );
 
-      (deriveTaxCategory as any).mockResolvedValue('DEDUCTIBLE');
-
-      // Act
-      await updateDonationPayment(update, paymentId);
-
-      // Assert
-      expect(deriveTaxCategory).toHaveBeenCalledWith(
-        'biz-789',
-        'BUSINESS'
-      );
-      expect(prisma.donationPayment.update).toHaveBeenCalledWith({
-        where: { id: paymentId },
-        data: {
-          datePaid: update.datePaid,
-          amount: update.amount,
-          beneficiaryType: update.beneficiaryType,
-          taxCategory: 'DEDUCTIBLE',
-          businessId: 'biz-789',
-          individualId: null,
-        },
-      });
-    });
-  });
-
-  describe('addZakatPaymentDetail', () => {
-    it('should create a zakat payment with derived tax category', async () => {
-      // Arrange
-      const zakatId = 'zakat-obligation-123';
-      const payment = {
-        datePaid: new Date('2025-01-20'),
-        amount: 750,
-        beneficiaryType: 'BUSINESS' as const,
-        beneficiaryId: 'biz-donor',
-      };
-
-      (deriveTaxCategory as any).mockResolvedValue('DEDUCTIBLE');
-      (prisma.zakatPayment.create as any).mockResolvedValue({
-        id: 'zakat-payment-123',
-        datePaid: payment.datePaid,
-        amount: payment.amount,
-        beneficiaryType: payment.beneficiaryType,
-        taxCategory: 'DEDUCTIBLE',
-        businessId: 'biz-donor',
+    expect(prisma.donationPayment.update).toHaveBeenCalledWith({
+      where: { id: 'donation-1' },
+      data: {
+        datePaid: new Date('2025-02-01'),
+        amount: 2000,
+        beneficiaryType: 'BUSINESS',
+        businessId: 'biz-2',
         individualId: null,
-        zakatObligationId: zakatId,
-        transactionId: null,
-      });
-
-      // Act
-      const result = await addZakatPaymentDetail(zakatId, payment);
-
-      // Assert
-      expect(deriveTaxCategory).toHaveBeenCalledWith(
-        'biz-donor',
-        'BUSINESS'
-      );
-      expect(prisma.zakatPayment.create).toHaveBeenCalledWith({
-        data: {
-          zakatObligationId: zakatId,
-          datePaid: payment.datePaid,
-          amount: payment.amount,
-          beneficiaryType: payment.beneficiaryType,
-          taxCategory: 'DEDUCTIBLE',
-          businessId: 'biz-donor',
-          individualId: null,
-          transactionId: null,
-        },
-      });
-      expect(result.taxCategory).toBe('DEDUCTIBLE');
+      },
     });
   });
 
-  describe('updateZakatPayment', () => {
-    it('should update zakat payment and re-derive tax category for individual (always non-deductible)', async () => {
-      // Arrange
-      const paymentId = 'zakat-payment-456';
-      const update = {
-        id: paymentId,
-        datePaid: new Date('2025-03-20'),
+  it('calculates donation totals from purpose and derived deductibility', async () => {
+    (prisma.donationPayment.findMany as any).mockResolvedValue([
+      {
+        amount: { toNumber: () => 1000 },
+        donationPurpose: 'VOLUNTARY',
+        business: { isDgrRegistered: true },
+      },
+      {
+        amount: { toNumber: () => 500 },
+        donationPurpose: 'INTEREST_CLEANSING',
+        business: { isDgrRegistered: false },
+      },
+    ]);
+
+    const result = await getDonationTotalsByCategory('year-1');
+
+    expect(result).toEqual({
+      voluntaryTotal: 1000,
+      interestCleansingTotal: 500,
+      deductibleTotal: 1000,
+      nonDeductibleTotal: 500,
+    });
+  });
+
+  it('creates zakat payments with derived deductibility', async () => {
+    (prisma.zakatPayment.create as any).mockResolvedValue({
+      id: 'zakat-1',
+      datePaid: new Date('2025-03-10'),
+      amount: { toNumber: () => 750 },
+      beneficiaryType: 'BUSINESS',
+      businessId: 'biz-3',
+      individualId: null,
+      zakatObligationId: 'zakat-ledger-1',
+      business: { isDgrRegistered: false },
+      individual: null,
+    });
+
+    const result = await addZakatPaymentDetail('zakat-ledger-1', {
+      datePaid: new Date('2025-03-10'),
+      amount: 750,
+      beneficiaryType: 'BUSINESS' as const,
+      beneficiaryId: 'biz-3',
+    });
+
+    expect(result.isDeductible).toBe(false);
+    expect(prisma.zakatPayment.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        zakatObligationId: 'zakat-ledger-1',
+        businessId: 'biz-3',
+      }),
+      include: {
+        business: true,
+        individual: true,
+      },
+    });
+  });
+
+  it('updates zakat payments without storing tax category', async () => {
+    await updateZakatPayment(
+      {
+        id: 'zakat-1',
+        datePaid: new Date('2025-04-01'),
         amount: 1500,
         beneficiaryType: 'INDIVIDUAL' as const,
-        beneficiaryId: 'ind-charity',
-      };
+        beneficiaryId: 'ind-3',
+      },
+      'zakat-1',
+    );
 
-      // Individuals are always non-deductible
-      (deriveTaxCategory as any).mockResolvedValue('NON_DEDUCTIBLE');
-
-      // Act
-      await updateZakatPayment(update, paymentId);
-
-      // Assert
-      expect(deriveTaxCategory).toHaveBeenCalledWith(
-        'ind-charity',
-        'INDIVIDUAL'
-      );
-      expect(prisma.zakatPayment.update).toHaveBeenCalledWith({
-        where: { id: paymentId },
-        data: {
-          datePaid: update.datePaid,
-          amount: update.amount,
-          beneficiaryType: update.beneficiaryType,
-          taxCategory: 'NON_DEDUCTIBLE',
-          businessId: null,
-          individualId: 'ind-charity',
-        },
-      });
+    expect(prisma.zakatPayment.update).toHaveBeenCalledWith({
+      where: { id: 'zakat-1' },
+      data: {
+        datePaid: new Date('2025-04-01'),
+        amount: 1500,
+        beneficiaryType: 'INDIVIDUAL',
+        businessId: null,
+        individualId: 'ind-3',
+      },
     });
   });
 
-  describe('getDonationTotalsByCategory', () => {
-    it('should return breakdown of donations by purpose and deductible status', async () => {
-      // Arrange
-      const calendarYearId = 'year-2025';
-      (prisma.donationPayment.aggregate as any).mockResolvedValueOnce({
-        _sum: { amount: { toNumber: () => 3000 } },
-      });
-      (prisma.donationPayment.aggregate as any).mockResolvedValueOnce({
-        _sum: { amount: { toNumber: () => 1500 } },
-      });
-      (prisma.donationPayment.aggregate as any).mockResolvedValueOnce({
-        _sum: { amount: { toNumber: () => 4000 } },
-      });
-      (prisma.donationPayment.aggregate as any).mockResolvedValueOnce({
-        _sum: { amount: { toNumber: () => 500 } },
-      });
+  it('calculates zakat totals from derived deductibility', async () => {
+    (prisma.zakatPayment.findMany as any).mockResolvedValue([
+      {
+        amount: { toNumber: () => 5000 },
+        business: { isDgrRegistered: true },
+      },
+      {
+        amount: { toNumber: () => 1000 },
+        business: { isDgrRegistered: false },
+      },
+    ]);
 
-      // Act
-      const result = await getDonationTotalsByCategory(calendarYearId);
+    const result = await getZakatTotalsByCategory('year-1');
 
-      // Assert
-      expect(result).toEqual({
-        voluntaryTotal: 3000,
-        interestCleansingTotal: 1500,
-        deductibleTotal: 4000,
-        nonDeductibleTotal: 500,
-      });
-    });
-  });
-
-  describe('getZakatTotalsByCategory', () => {
-    it('should return breakdown of zakat by deductible status', async () => {
-      // Arrange
-      const calendarYearId = 'year-2025';
-      (prisma.zakatPayment.aggregate as any).mockResolvedValueOnce({
-        _sum: { amount: { toNumber: () => 5000 } },
-      });
-      (prisma.zakatPayment.aggregate as any).mockResolvedValueOnce({
-        _sum: { amount: { toNumber: () => 1000 } },
-      });
-
-      // Act
-      const result = await getZakatTotalsByCategory(calendarYearId);
-
-      // Assert
-      expect(result).toEqual({
-        deductibleTotal: 5000,
-        nonDeductibleTotal: 1000,
-      });
+    expect(result).toEqual({
+      deductibleTotal: 5000,
+      nonDeductibleTotal: 1000,
     });
   });
 });

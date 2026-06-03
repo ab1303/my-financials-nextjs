@@ -1,6 +1,7 @@
 import { createColumnHelper } from '@tanstack/react-table';
 
 import { TableCell, EditCell } from '@/components/react-table';
+import { getTaxCategoryLabel } from '../../_utils/charity-tax';
 import type { DonationPaymentType } from '../_types';
 import type { OptionType } from '@/types';
 import { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
@@ -10,12 +11,6 @@ import BeneficiarySelectionCell from './BeneficiarySelectionCell';
 const beneficiaryOptions = Object.entries(
   BeneficiaryEnumType,
 ).flatMap<OptionType>(([k, v]) => ({ id: k, label: v }));
-
-// Tax category display options (read-only, derived from beneficiary DGR status)
-const taxCategoryDisplayMap: Record<string, string> = {
-  'DEDUCTIBLE': 'Deductible (DGR)',
-  'NON_DEDUCTIBLE': 'Non-Deductible',
-};
 
 // Donation purpose options (user-editable)
 const donationPurposeOptions = Object.entries(DonationPurposeEnum).map(
@@ -79,14 +74,15 @@ export function getTableColumns(
         selectOptions: donationPurposeOptions,
       },
     }),
-    columnHelper.accessor('taxCategory', {
+    columnHelper.accessor('isDeductible', {
       size: 150,
       header: () => <span>Deductible Status</span>,
-      // Tax category is read-only (derived from beneficiary DGR status)
       cell: ({ row }) => {
-        const taxStatus = row.original.taxCategory || 'NON_DEDUCTIBLE';
-        const label = taxCategoryDisplayMap[taxStatus] || taxStatus;
-        return <span className="text-sm">{label}</span>;
+        return (
+          <span className='text-sm'>
+            {getTaxCategoryLabel(row.original.isDeductible)}
+          </span>
+        );
       },
       footer: (props) => props.column.id,
     }),

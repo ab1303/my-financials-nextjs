@@ -49,7 +49,7 @@ export const donationPaymentReducer = produce<DonationPaymentsState, [Actions]>(
         editedPayment.amount = payment.amount;
         editedPayment.beneficiaryType = payment.beneficiaryType;
         editedPayment.beneficiaryId = payment.beneficiaryId;
-        editedPayment.taxCategory = payment.taxCategory;
+        editedPayment.isDeductible = payment.isDeductible;
         editedPayment.datePaid = payment.datePaid;
         break;
       }

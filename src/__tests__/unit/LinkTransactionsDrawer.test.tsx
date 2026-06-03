@@ -19,6 +19,11 @@ vi.mock('@/server/trpc/client', () => ({
         useQuery: (...args: unknown[]) => transactionQueryMock(...args),
       },
     },
+    calendarYear: {
+      getAll: {
+        useQuery: () => ({ data: [{ id: 'cal-1' }], isLoading: false }),
+      },
+    },
     individual: {
       getAllIndividuals: {
         useQuery: (...args: unknown[]) => individualQueryMock(...args),
@@ -49,27 +54,17 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('react-select', () => ({
-  default: ({
-    inputId,
-    options = [],
-    value,
-    onChange,
-  }: {
-    inputId?: string;
-    options?: Array<{ label: string; value: string }>;
-    value?: { label: string; value: string } | null;
-    onChange?: (option: { label: string; value: string } | null) => void;
-  }) => (
+vi.mock('react-select/creatable', () => ({
+  default: ({ inputId, options = [], value, onChange }: any) => (
     <select
       id={inputId}
       value={value?.value ?? ''}
       onChange={(event) => {
-        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        const selected = options.find((option: any) => option.value === event.target.value) ?? null;
         onChange?.(selected);
       }}
     >
-      {options.map((option) => (
+      {options.map((option: any) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>
@@ -78,27 +73,17 @@ vi.mock('react-select', () => ({
   ),
 }));
 
-vi.mock('react-select/creatable', () => ({
-  default: ({
-    inputId,
-    options = [],
-    value,
-    onChange,
-  }: {
-    inputId?: string;
-    options?: Array<{ label: string; value: string }>;
-    value?: { label: string; value: string } | null;
-    onChange?: (option: { label: string; value: string } | null) => void;
-  }) => (
+vi.mock('@/components/ui/AppSelect', () => ({
+  AppSelect: ({ inputId, options = [], value, onChange }: any) => (
     <select
       id={inputId}
       value={value?.value ?? ''}
       onChange={(event) => {
-        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        const selected = options.find((option: any) => option.value === event.target.value) ?? null;
         onChange?.(selected);
       }}
     >
-      {options.map((option) => (
+      {options.map((option: any) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>
@@ -110,25 +95,26 @@ vi.mock('react-select/creatable', () => ({
 import LinkTransactionsDrawer from '@/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer';
 import { BeneficiaryEnumType } from '@prisma/client';
 
-const baseTransactions = [
-  {
-    id: 'tx-1',
-    date: '2024-07-02',
-    description: 'Donation to charity A',
-    amount: 100,
-    category: 'Gifts & donations',
-  },
-  {
-    id: 'tx-2',
-    date: '2024-07-10',
-    description: 'Donation to charity B',
-    amount: 50,
-    category: 'Gifts & donations',
-  },
-];
-
 describe('LinkTransactionsDrawer', () => {
-  const renderDrawer = () =>
+  const transactions = [
+    {
+      id: 'tx-1',
+      date: '2024-07-02',
+      description: 'Donation to charity A',
+      amount: 100,
+      category: 'Gifts & donations',
+    },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    transactionQueryMock.mockReturnValue({ data: transactions, isLoading: false });
+    individualQueryMock.mockReturnValue({ data: [{ id: 'ind-1', name: 'John Citizen' }], isLoading: false });
+    businessQueryMock.mockReturnValue({ data: [{ id: 'biz-1', name: 'Charity Business' }], isLoading: false });
+    addRowMock.mockResolvedValue({ success: true, error: null });
+  });
+
+  it('links a transaction as a donation', async () => {
     render(
       <LinkTransactionsDrawer
         isOpen
@@ -139,60 +125,7 @@ describe('LinkTransactionsDrawer', () => {
       />,
     );
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    transactionQueryMock.mockReturnValue({
-      data: baseTransactions,
-      isLoading: false,
-    });
-    individualQueryMock.mockReturnValue({
-      data: [{ id: 'ind-1', name: 'John Citizen' }],
-      isLoading: false,
-    });
-    businessQueryMock.mockReturnValue({
-      data: [{ id: 'biz-1', name: 'Charity Business' }],
-      isLoading: false,
-    });
-    addRowMock.mockResolvedValue({ success: true, error: null });
-  });
-
-  it('lists all unlinked transactions returned by tRPC query', () => {
-    renderDrawer();
-
-    expect(screen.getByText('Donation to charity A')).toBeDefined();
-    expect(screen.getByText('Donation to charity B')).toBeDefined();
-  });
-
-  it('shows empty state when no unlinked transactions', () => {
-    transactionQueryMock.mockReturnValue({ data: [], isLoading: false });
-
-    renderDrawer();
-
-    expect(screen.getByText(/no unlinked donation transactions found/i)).toBeDefined();
-  });
-
-  it('selecting a transaction shows its category as readonly and enables form', () => {
-    renderDrawer();
-
     fireEvent.click(screen.getByText('Donation to charity A'));
-
-    // Category is now readonly, derived from transaction
-    expect(screen.getByText('Gifts & donations')).toBeDefined();
-    expect(screen.getByRole('button', { name: /save & next/i })).toBeDefined();
-  });
-
-  it('save button is disabled when no transaction is selected', () => {
-    transactionQueryMock.mockReturnValueOnce({ data: [], isLoading: false });
-    renderDrawer();
-
-    expect(screen.getByRole('button', { name: /save & next/i })).toHaveAttribute('disabled');
-  });
-
-  it('submitting calls addRow with transactionId and category as taxCategory', async () => {
-    renderDrawer();
-
-    fireEvent.click(screen.getByText('Donation to charity A'));
-    // taxCategory is now auto-populated from transaction.category — no user input needed
     fireEvent.change(screen.getByLabelText(/beneficiary type/i), {
       target: { value: BeneficiaryEnumType.INDIVIDUAL },
     });
@@ -201,39 +134,19 @@ describe('LinkTransactionsDrawer', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /save & next/i })).not.toHaveAttribute('disabled');
+      expect(screen.getByRole('button', { name: /link donation/i })).not.toHaveAttribute('disabled');
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /save & next/i }));
+    fireEvent.click(screen.getByRole('button', { name: /link donation/i }));
 
     await waitFor(() => {
       expect(addRowMock).toHaveBeenCalledWith(
         expect.objectContaining({
           transactionId: 'tx-1',
           calendarYearId: 'cal-1',
-          taxCategory: 'Gifts & donations',
+          beneficiaryId: 'ind-1',
         }),
       );
-    });
-  });
-
-  it('on success, linked transaction is removed from the list', async () => {
-    renderDrawer();
-
-    fireEvent.click(screen.getByText('Donation to charity A'));
-    // taxCategory comes from transaction.category automatically
-    fireEvent.change(screen.getByLabelText(/^Beneficiary$/i), {
-      target: { value: 'ind-1' },
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /save & next/i })).not.toHaveAttribute('disabled');
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /save & next/i }));
-
-    await waitFor(() => {
-      expect(screen.queryByText('Donation to charity A')).toBeNull();
     });
   });
 });

@@ -1,4 +1,4 @@
-import type { BeneficiaryEnumType, TaxCategoryEnumType } from '@prisma/client';
+import type { BeneficiaryEnumType } from '@prisma/client';
 
 import type { PaymentModel } from './payment';
 
@@ -11,7 +11,7 @@ export type ZakatModel = {
 // TODO:
 export type ZakatPaymentModel = PaymentModel & {
   beneficiaryType: BeneficiaryEnumType;
-  taxCategory: TaxCategoryEnumType;
+  isDeductible: boolean;
   zakatObligationId: string | null;
 };
 
@@ -21,7 +21,6 @@ export type ZakatPaymentInput = {
   datePaid: Date;
   amount: number;
   beneficiaryType: BeneficiaryEnumType;
-  taxCategory?: TaxCategoryEnumType | string; // Optional - will be derived
   beneficiaryId?: string | null;
   businessId?: string | null;
   individualId?: string | null;

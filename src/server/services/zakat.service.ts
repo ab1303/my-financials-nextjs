@@ -5,7 +5,6 @@ import type {
   ZakatPaymentInput,
 } from '../models/zakat';
 import type { Prisma } from '@prisma/client';
-import { deriveTaxCategory } from '../utils/charity-tax';
 
 export const addZakatCalendarYearDetails = async ({
   calendarId,
@@ -64,7 +63,7 @@ export const getZakatPayments = async (
     individualId: zp.individualId,
     zakatObligationId: zp.zakatObligationId,
     beneficiaryType: zp.beneficiaryType,
-    taxCategory: zp.taxCategory,
+    isDeductible: zp.business?.isDgrRegistered === true,
   }));
 };
 
@@ -72,12 +71,6 @@ export const updateZakatPayment = async (
   model: ZakatPaymentInput,
   zakatPaymentId: string,
 ) => {
-  // Derive tax category from beneficiary's DGR status
-  const taxCategory = await deriveTaxCategory(
-    model.beneficiaryId!,
-    model.beneficiaryType
-  );
-
   const where: Prisma.ZakatPaymentWhereUniqueInput = {
     id: zakatPaymentId,
   };
@@ -88,7 +81,6 @@ export const updateZakatPayment = async (
       datePaid: model.datePaid,
       amount: model.amount,
       beneficiaryType: model.beneficiaryType,
-      taxCategory,
       businessId:
         model.beneficiaryType === 'BUSINESS' ? model.beneficiaryId : null,
       individualId:
@@ -101,26 +93,34 @@ export const addZakatPaymentDetail = async (
   zakatId: string,
   payment: Omit<ZakatPaymentInput, 'id' | 'zakatObligationId'> & { transactionId?: string },
 ) => {
-  // Derive tax category from beneficiary's DGR status instead of requiring user input
-  const taxCategory = await deriveTaxCategory(
-    payment.beneficiaryId!,
-    payment.beneficiaryType
-  );
-
-  return await prisma.zakatPayment.create({
+  const created = await prisma.zakatPayment.create({
     data: {
       zakatObligationId: zakatId,
       datePaid: payment.datePaid,
       amount: payment.amount,
       beneficiaryType: payment.beneficiaryType,
-      taxCategory,
       businessId:
         payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
       individualId:
         payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
       transactionId: payment.transactionId || null,
     },
+    include: {
+      business: true,
+      individual: true,
+    },
   });
+
+  return {
+    id: created.id,
+    datePaid: created.datePaid,
+    amount: created.amount.toNumber(),
+    businessId: created.businessId,
+    individualId: created.individualId,
+    zakatObligationId: created.zakatObligationId,
+    beneficiaryType: created.beneficiaryType,
+    isDeductible: created.business?.isDgrRegistered === true,
+  } satisfies ZakatPaymentModel;
 };
 
 export const deleteZakatPayment = async (zakatPaymentId: string) => {
@@ -147,31 +147,26 @@ export const getZakatTotalsByCategory = async (
     },
   };
 
-  // Total deductible zakat payments
-  const deductibleResult = await prisma.zakatPayment.aggregate({
-    where: {
-      ...baseWhere,
-      taxCategory: 'DEDUCTIBLE',
-    },
-    _sum: {
+  const payments = await prisma.zakatPayment.findMany({
+    where: baseWhere,
+    select: {
       amount: true,
+      business: { select: { isDgrRegistered: true } },
     },
   });
 
-  // Total non-deductible zakat payments
-  const nonDeductibleResult = await prisma.zakatPayment.aggregate({
-    where: {
-      ...baseWhere,
-      taxCategory: 'NON_DEDUCTIBLE',
-    },
-    _sum: {
-      amount: true,
-    },
-  });
+  let deductibleTotal = 0;
+  let nonDeductibleTotal = 0;
+
+  for (const payment of payments) {
+    const amount = payment.amount.toNumber();
+    if (payment.business?.isDgrRegistered === true) deductibleTotal += amount;
+    else nonDeductibleTotal += amount;
+  }
 
   return {
-    deductibleTotal: deductibleResult._sum.amount?.toNumber() ?? 0,
-    nonDeductibleTotal: nonDeductibleResult._sum.amount?.toNumber() ?? 0,
+    deductibleTotal,
+    nonDeductibleTotal,
   };
 };
 
@@ -203,4 +198,3 @@ export async function getUnlinkedZakatTransactions(
     amount: Number(tx.amount),
   }));
 }
-

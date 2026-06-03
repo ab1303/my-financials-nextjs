@@ -42,7 +42,6 @@ export type CleanseDonationDrawerProps = {
 // ---------- Schemas ----------
 
 const linkedModeSchema = z.object({
-  // taxCategory is derived from beneficiary DGR status (removed from form)
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
   beneficiaryId: z.string().min(1, 'Please select a beneficiary'),
 });
@@ -50,7 +49,6 @@ const linkedModeSchema = z.object({
 const manualModeSchema = z.object({
   datePaid: z.string().min(1, 'Date is required'),
   amount: z.number({ required_error: 'Amount is required' }).positive('Must be greater than 0'),
-  // taxCategory is derived from beneficiary DGR status (removed from form)
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
   beneficiaryId: z.string().min(1, 'Please select a beneficiary'),
 });
@@ -66,7 +64,6 @@ function formatCurrency(amount: number) {
 
 function getDefaultLinkedValues(): LinkedFormValues {
   return {
-    // taxCategory is no longer in the form (derived from beneficiary)
     beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
     beneficiaryId: '',
   };
@@ -76,7 +73,6 @@ function getDefaultManualValues(): ManualFormValues {
   return {
     datePaid: '',
     amount: 0,
-    // taxCategory is no longer in the form (derived from beneficiary)
     beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
     beneficiaryId: '',
   };
@@ -224,7 +220,6 @@ export default function CleanseDonationDrawer({
       const result = await addRow({
         datePaid: new Date(selectedTransaction.date),
         amount: selectedTransaction.amount,
-        // taxCategory is derived from beneficiary DGR status (not from form)
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
         calendarYearId,
@@ -264,7 +259,6 @@ export default function CleanseDonationDrawer({
       const result = await addRow({
         datePaid: new Date(values.datePaid),
         amount: values.amount,
-        // taxCategory is derived from beneficiary DGR status (not from form)
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
         calendarYearId,
@@ -462,7 +456,7 @@ function LinkedModeBody({
           )}
         </aside>
 
-        <section className="col-span-3 flex flex-col overflow-y-auto p-4">
+        <section className="col-span-3 flex flex-col overflow-hidden">
           <div className="mb-4 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
             {selectedTransaction ? (
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -494,22 +488,24 @@ function LinkedModeBody({
             setPendingBeneficiaryName={setPendingBeneficiaryName}
           />
 
-          <div className="mt-auto flex items-center justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={onSave}
-              disabled={!selectedTransaction || !isValid || isSaving}
-              className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:hover:bg-amber-600"
-            >
-              {isSaving ? 'Saving...' : 'Save & Next →'}
-            </button>
+          <div className="shrink-0 border-t border-gray-200 bg-white/95 px-6 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={!selectedTransaction || !isValid || isSaving}
+                className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:hover:bg-amber-600"
+              >
+                {isSaving ? 'Saving...' : 'Save & Next →'}
+              </button>
+            </div>
           </div>
         </section>
       </div>
@@ -675,21 +671,8 @@ function BeneficiaryFormFields({
 }: BeneficiaryFormFieldsProps) {
   return (
     <div className="grid gap-4">
-      <div>
-        <label htmlFor="taxCategory" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-          Tax category (locked)
-        </label>
-        <Controller
-          control={control}
-          name="taxCategory"
-          render={({ field }) => (
-            <div className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-              {field.value || 'DEDUCTIBLE'}
-              <input {...field} type="hidden" />
-            </div>
-          )}
-        />
-        {errors.taxCategory && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{String(errors.taxCategory.message)}</p>}
+      <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        Deductibility is derived from the beneficiary and is no longer edited here.
       </div>
 
       <div>
@@ -752,6 +735,4 @@ function BeneficiaryFormFields({
     </div>
   );
 }
-
-
 

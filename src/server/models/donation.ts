@@ -1,7 +1,6 @@
 import type {
   BeneficiaryEnumType,
   DonationPurposeEnum,
-  TaxCategoryEnumType,
 } from '@prisma/client';
 
 import type { PaymentModel } from './payment';
@@ -13,7 +12,7 @@ export type DonationModel = {
 
 export type DonationPaymentModel = PaymentModel & {
   beneficiaryType: BeneficiaryEnumType;
-  taxCategory: TaxCategoryEnumType;
+  isDeductible: boolean;
   donationPurpose?: DonationPurposeEnum | null;
   donationLedgerId: string | null;
   transactionId?: string | null;
@@ -25,7 +24,6 @@ export type DonationPaymentInput = {
   datePaid: Date;
   amount: number;
   beneficiaryType: BeneficiaryEnumType;
-  taxCategory?: TaxCategoryEnumType | string; // Optional - will be derived from beneficiary DGR status
   beneficiaryId?: string | null;
   businessId?: string | null;
   individualId?: string | null;

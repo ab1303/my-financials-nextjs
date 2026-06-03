@@ -17,7 +17,6 @@ import type {
   UpdateZakatPaymentInput,
   DeleteZakatPaymentInput,
 } from './_schema';
-import type { ZakatPaymentType } from './_types';
 
 export async function addRow(input: CreateZakatPaymentInput) {
   try {
@@ -54,8 +53,9 @@ export async function addRow(input: CreateZakatPaymentInput) {
       data: {
         id: newPayment.id,
         datePaid: newPayment.datePaid,
-        amount: newPayment.amount.toNumber(),
+        amount: newPayment.amount,
         beneficiaryType: newPayment.beneficiaryType,
+        isDeductible: newPayment.isDeductible,
         beneficiaryId: validatedInput.beneficiaryId || '',
       },
     };

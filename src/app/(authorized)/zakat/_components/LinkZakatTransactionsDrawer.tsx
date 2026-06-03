@@ -268,7 +268,7 @@ export default function LinkZakatTransactionsDrawer({
                 )}
               </aside>
 
-              <section className="col-span-3 flex min-h-0 flex-col overflow-y-auto p-4">
+              <section className="col-span-3 flex min-h-0 flex-col overflow-hidden">
                 <div className="flex min-h-full flex-col gap-4">
                   <div className="rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
                     {selectedTransaction ? (
@@ -363,22 +363,24 @@ export default function LinkZakatTransactionsDrawer({
                     </div>
                   </div>
 
-                  <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-3 border-t border-gray-200 bg-white pt-4 dark:border-gray-800 dark:bg-gray-900">
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={onSubmit}
-                      disabled={!selectedTransaction || !isValid || isSaving}
-                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isSaving ? "Linking..." : "Link Zakat payment"}
-                    </button>
+                  <div className="shrink-0 border-t border-gray-200 bg-white/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+                    <div className="flex items-center justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onSubmit}
+                        disabled={!selectedTransaction || !isValid || isSaving}
+                        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isSaving ? "Linking..." : "Link Zakat payment"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>

@@ -1,8 +1,8 @@
 import { prisma } from './prisma';
-import type { BeneficiaryEnumType, TaxCategoryEnumType } from '@prisma/client';
+import type { BeneficiaryEnumType } from '@prisma/client';
 
 /**
- * Derives the tax category (DEDUCTIBLE or NON_DEDUCTIBLE) for a donation or zakat payment
+ * Derives whether a donation or zakat payment is deductible
  * based on the beneficiary's DGR (Deductible Gift Recipient) registration status.
  *
  * - If beneficiary is a BUSINESS and DGR-registered: returns "DEDUCTIBLE"
@@ -12,33 +12,34 @@ import type { BeneficiaryEnumType, TaxCategoryEnumType } from '@prisma/client';
  * @param beneficiaryId - The ID of the beneficiary (Business or Individual)
  * @param beneficiaryType - The type of beneficiary: "BUSINESS" or "INDIVIDUAL"
  * @param userId - Optional user ID (for potential future filtering)
- * @returns "DEDUCTIBLE" or "NON_DEDUCTIBLE"
+ * @returns true when deductible, false otherwise
  */
-export async function deriveTaxCategory(
+export async function deriveIsDeductible(
   beneficiaryId: string,
   beneficiaryType: BeneficiaryEnumType,
-  userId?: string
-): Promise<TaxCategoryEnumType> {
-  try {
-    // DGR status only applies to BUSINESS beneficiaries, not INDIVIDUAL
-    if (beneficiaryType === 'BUSINESS') {
-      const business = await prisma.business.findUnique({
-        where: { id: beneficiaryId },
-      });
-
-      if (business?.isDgrRegistered === true) {
-        return 'DEDUCTIBLE';
-      }
-    } else if (beneficiaryType === 'INDIVIDUAL') {
-      // Individuals are never DGR-registered; donations to individuals are always non-deductible
-      return 'NON_DEDUCTIBLE';
-    }
-
-    // If beneficiary not found, not DGR-registered, or any other case: non-deductible
-    return 'NON_DEDUCTIBLE';
-  } catch (error) {
-    // On error, default to non-deductible for safety
-    console.error('Error deriving tax category:', error);
-    return 'NON_DEDUCTIBLE';
+): Promise<boolean> {
+  // DGR status only applies to BUSINESS beneficiaries, not INDIVIDUAL
+  if (beneficiaryType === 'INDIVIDUAL') {
+    return false;
   }
+
+  const business = await prisma.business.findUnique({
+    where: { id: beneficiaryId },
+    select: { isDgrRegistered: true },
+  });
+
+  return business?.isDgrRegistered === true;
+}
+
+export function getDeductibilityLabel(isDeductible: boolean): string {
+  return isDeductible ? 'Deductible (DGR)' : 'Non-Deductible';
+}
+
+// Backwards-compatible alias for UI code migrating off taxCategory naming.
+export function getTaxCategoryLabel(taxCategoryOrFlag: string | boolean): string {
+  const isDeductible =
+    typeof taxCategoryOrFlag === 'boolean'
+      ? taxCategoryOrFlag
+      : taxCategoryOrFlag === 'DEDUCTIBLE';
+  return getDeductibilityLabel(isDeductible);
 }

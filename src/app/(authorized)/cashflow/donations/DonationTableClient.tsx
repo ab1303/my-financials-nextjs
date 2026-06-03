@@ -76,7 +76,7 @@ export default function DonationTableClient({
       amount: 0,
       beneficiaryType: 'INDIVIDUAL',
       beneficiaryId: '',
-      taxCategory: 'NON_DEDUCTIBLE', // Will be derived from beneficiary DGR status
+      isDeductible: false,
       donationPurpose: 'VOLUNTARY', // Default purpose
     };
 
@@ -136,10 +136,6 @@ export default function DonationTableClient({
             toast.error('Please select a beneficiary before saving');
             return;
           }
-          if (!updatedRecord.taxCategory) {
-            toast.error('Please select a tax category before saving');
-            return;
-          }
           if (updatedRecord.amount <= 0) {
             toast.error('Please enter a valid amount');
             return;
@@ -193,10 +189,6 @@ export default function DonationTableClient({
           // Validate required fields before updating
           if (!updatedRecord.beneficiaryId) {
             toast.error('Please select a beneficiary before saving');
-            return;
-          }
-          if (!updatedRecord.taxCategory) {
-            toast.error('Please select a tax category before saving');
             return;
           }
           if (updatedRecord.amount <= 0) {

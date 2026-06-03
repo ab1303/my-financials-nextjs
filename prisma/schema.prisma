@@ -190,7 +190,6 @@ model ZakatPayment {
   datePaid        DateTime
   amount          Decimal             @db.Money
   beneficiaryType BeneficiaryEnumType
-  taxCategory     TaxCategoryEnumType  // DEDUCTIBLE or NON_DEDUCTIBLE, derived from beneficiary DGR status
   business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
   individual      Individual?         @relation(fields: [individualId], references: [id])
@@ -214,7 +213,6 @@ model DonationPayment {
   datePaid        DateTime
   amount          Decimal             @db.Money
   beneficiaryType BeneficiaryEnumType
-  taxCategory     TaxCategoryEnumType
   business        Business?           @relation(fields: [businessId], references: [id])
   businessId      String?
   individual      Individual?         @relation(fields: [individualId], references: [id])

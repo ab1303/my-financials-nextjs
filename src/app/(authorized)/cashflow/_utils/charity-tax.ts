@@ -2,28 +2,23 @@ import type { DonationPurposeEnum } from '@prisma/client';
 type DonationPaymentLike = {
   amount: number;
   donationPurpose?: DonationPurposeEnum;
-  taxCategory?: string;
+  isDeductible?: boolean;
 };
 
 type ZakatPaymentLike = {
   amount: number;
-  taxCategory?: string;
+  isDeductible?: boolean;
 };
 
 /**
- * Converts a tax category code to a human-readable label for display.
+ * Converts deductibility to a human-readable label for display.
  * Used throughout the UI to show tax deductibility status.
  *
- * @param taxCategory - The tax category code: "DEDUCTIBLE" or "NON_DEDUCTIBLE"
- * @returns Display label for the tax category
+ * @param isDeductible - Whether the payment is deductible
+ * @returns Display label for deductibility
  */
-export function getTaxCategoryLabel(taxCategory: string): string {
-  const labelMap: Record<string, string> = {
-    DEDUCTIBLE: 'Deductible (DGR)',
-    NON_DEDUCTIBLE: 'Non-Deductible',
-  };
-
-  return labelMap[taxCategory] ?? taxCategory;
+export function getTaxCategoryLabel(isDeductible: boolean): string {
+  return isDeductible ? 'Deductible (DGR)' : 'Non-Deductible';
 }
 
 /**
@@ -104,7 +99,7 @@ export function calculateBreakdownTotals(
 
     for (const payment of donationPayments) {
       const purpose = payment.donationPurpose ?? 'VOLUNTARY';
-      const isDeductible = payment.taxCategory === 'DEDUCTIBLE';
+      const isDeductible = payment.isDeductible === true;
 
       if (purpose === 'VOLUNTARY') {
         if (isDeductible) {
@@ -142,7 +137,7 @@ export function calculateBreakdownTotals(
     let totalNonDeductible = 0;
 
     for (const payment of zakatPayments) {
-      const isDeductible = payment.taxCategory === 'DEDUCTIBLE';
+      const isDeductible = payment.isDeductible === true;
 
       if (isDeductible) {
         totalDeductible += payment.amount;
