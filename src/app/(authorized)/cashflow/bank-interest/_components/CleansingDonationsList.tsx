@@ -127,10 +127,7 @@ export default function CleansingDonationsList({
 
       <CleanseDonationDrawer
         isOpen={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          router.refresh();
-        }}
+        onClose={() => setDrawerOpen(false)}
         bankId={bankId}
         calendarYearId={calendarYearId}
         dateFrom={dateFrom}
