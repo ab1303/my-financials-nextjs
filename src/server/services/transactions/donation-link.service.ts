@@ -19,20 +19,31 @@ export async function getUnlinkedDonationTransactions(
 ): Promise<UnlinkedDonationTransaction[]> {
   const DONATION_CATEGORY = 'Gifts & donations';
 
-  const rows = await prisma.transaction.findMany({
+  // Find all donation category transactions
+  const allDonationTx = await prisma.transaction.findMany({
     where: {
       userId,
       type: 'DEBIT',
       status: 'CONFIRMED',
       category: { equals: DONATION_CATEGORY, mode: 'insensitive' },
       date: { gte: dateFrom, lte: dateTo },
-      donationPayment: null,
     },
     orderBy: { date: 'desc' },
     select: { id: true, date: true, description: true, amount: true, category: true },
   });
 
-  return rows.map((tx) => ({
+  // Find transactions already linked as evidence
+  const linkedTxIds = new Set(
+    (
+      await prisma.donationPaymentEvidence.findMany({
+        select: { transactionId: true },
+      })
+    ).map((e) => e.transactionId),
+  );
+
+  // Return unlinked transactions
+  const unlinked = allDonationTx.filter((tx) => !linkedTxIds.has(tx.id));
+  return unlinked.map((tx) => ({
     id: tx.id,
     date: tx.date.toISOString().slice(0, 10),
     description: tx.description,
@@ -53,14 +64,36 @@ export async function countUnlinkedDonationTransactions(
   const dateFrom = new Date(fromYear, 6, 1);
   const dateTo = new Date(toYear, 5, 30, 23, 59, 59);
 
-  return prisma.transaction.count({
-    where: {
-      userId,
-      type: 'DEBIT',
-      status: 'CONFIRMED',
-      category: { equals: 'Gifts & donations', mode: 'insensitive' },
-      date: { gte: dateFrom, lte: dateTo },
-      donationPayment: null,
-    },
+  // Find all donation category transactions
+  const allCount = new Set(
+    (
+      await prisma.transaction.findMany({
+        where: {
+          userId,
+          type: 'DEBIT',
+          status: 'CONFIRMED',
+          category: { equals: 'Gifts & donations', mode: 'insensitive' },
+          date: { gte: dateFrom, lte: dateTo },
+        },
+        select: { id: true },
+      })
+    ).map((t) => t.id),
+  );
+
+  // Find transactions already linked as evidence
+  const linkedTxIds = new Set(
+    (
+      await prisma.donationPaymentEvidence.findMany({
+        select: { transactionId: true },
+      })
+    ).map((e) => e.transactionId),
+  );
+
+  // Count unlinked transactions
+  let count = 0;
+  allCount.forEach((id) => {
+    if (!linkedTxIds.has(id)) count += 1;
   });
+
+  return count;
 }

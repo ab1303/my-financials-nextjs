@@ -60,7 +60,7 @@ export const getDonationPayments = async (
     businessId: dp.businessId,
     individualId: dp.individualId,
     donationLedgerId: dp.donationLedgerId,
-    transactionId: dp.transactionId ?? null,
+    transactionId: dp.interestTxId ?? null,
     beneficiaryType: dp.beneficiaryType,
     isDeductible: dp.business?.isDgrRegistered === true,
     donationPurpose: dp.donationPurpose,
@@ -103,7 +103,7 @@ export const addDonationPaymentDetail = async (
         payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
       individualId:
         payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
-      transactionId: payment.transactionId ?? null,
+      interestTxId: payment.transactionId ?? null,
       donationPurpose: payment.donationPurpose ?? 'VOLUNTARY',
     },
     include: {
@@ -119,7 +119,7 @@ export const addDonationPaymentDetail = async (
     businessId: created.businessId,
     individualId: created.individualId,
     donationLedgerId: created.donationLedgerId,
-    transactionId: created.transactionId ?? null,
+    transactionId: created.interestTxId ?? null,
     beneficiaryType: created.beneficiaryType,
     isDeductible: created.business?.isDgrRegistered === true,
     donationPurpose: created.donationPurpose,
@@ -129,13 +129,13 @@ export const addDonationPaymentDetail = async (
 export const deleteDonationPayment = async (donationPaymentId: string) => {
   const existing = await prisma.donationPayment.findUnique({
     where: { id: donationPaymentId },
-    select: { transactionId: true },
+    select: { interestTxId: true },
   });
 
-  if (existing?.transactionId) {
+  if (existing?.interestTxId) {
     await prisma.donationPayment.update({
       where: { id: donationPaymentId },
-      data: { transactionId: null },
+      data: { interestTxId: null },
     });
     return;
   }

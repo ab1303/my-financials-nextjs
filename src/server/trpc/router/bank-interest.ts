@@ -4,6 +4,9 @@ import {
   getYearlyCleansingData,
   getUnlinkedInterestTransactions,
   getUnlinkedCleansingDebitTransactions,
+  suggestAllocations,
+  applyAllocations,
+  removeAllocation,
 } from '@/server/services/bank-interest/interest-cleansing.service';
 
 export const bankInterestRouter = router({
@@ -34,5 +37,24 @@ export const bankInterestRouter = router({
         input.bankId,
       ),
     ),
-});
+  suggestAllocations: protectedProcedure
+    .input(z.object({ creditId: z.string(), limit: z.number().optional() }))
+    .query(({ ctx, input }) =>
+      suggestAllocations(input.creditId, input.limit ?? 10, ctx.session.user.id),
+    ),
 
+  applyAllocations: protectedProcedure
+    .input(z.object({
+      creditId: z.string(),
+      allocations: z.array(z.object({ donationPaymentId: z.string(), amount: z.number() })),
+    }))
+    .mutation(async ({ ctx, input }) =>
+      applyAllocations(input.creditId, input.allocations, ctx.session.user.id),
+    ),
+
+  removeAllocation: protectedProcedure
+    .input(z.object({ allocationId: z.string() }))
+    .mutation(async ({ ctx, input }) =>
+      removeAllocation(input.allocationId, ctx.session.user.id),
+    ),
+});

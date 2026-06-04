@@ -11,7 +11,7 @@ export async function voidSingleTransaction(
   ctx: VoidContext,
   transactionId: string,
 ): Promise<void> {
-  const tx = await (ctx.prisma.transaction as any).findUnique({
+  const tx = (await (ctx.prisma.transaction as any).findUnique({
     where: { id: transactionId },
     include: {
       donationPayment: { select: { id: true } },
@@ -19,22 +19,20 @@ export async function voidSingleTransaction(
       transferCounterpart: { select: { id: true } },
       reimbursements: { select: { id: true } },
     },
-  }) as
-    | {
-        id: string;
-        userId: string;
-        type: string;
-        status: string;
-        amount: Decimal;
-        date: Date;
-        category: string;
-        donationPayment: { id: string } | null;
-        transferLinkedTransactionId: string | null;
-        preLinkCategory: string | null;
-        preLinkStatus: string | null;
-        reimbursements: Array<{ id: string }>;
-      }
-    | null;
+  })) as {
+    id: string;
+    userId: string;
+    type: string;
+    status: string;
+    amount: Decimal;
+    date: Date;
+    category: string;
+    donationPayment: { id: string } | null;
+    transferLinkedTransactionId: string | null;
+    preLinkCategory: string | null;
+    preLinkStatus: string | null;
+    reimbursements: Array<{ id: string }>;
+  } | null;
 
   if (!tx || tx.userId !== ctx.userId) {
     throw new Error('Transaction not found');
@@ -60,7 +58,12 @@ export async function voidSingleTransaction(
         });
       }
 
-      await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, new Set([tx.id]));
+      await clearTransferLink(
+        db as unknown as PrismaClient,
+        ctx.userId,
+        tx as any,
+        new Set([tx.id]),
+      );
       await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
       await (db.transaction as any).update({
         where: { id: transactionId },
@@ -79,20 +82,18 @@ export async function restoreTransaction(
   ctx: VoidContext,
   transactionId: string,
 ): Promise<void> {
-  const tx = await (ctx.prisma.transaction as any).findUnique({
+  const tx = (await (ctx.prisma.transaction as any).findUnique({
     where: { id: transactionId },
-  }) as
-    | {
-        id: string;
-        userId: string;
-        type: string;
-        status: string;
-        amount: Decimal;
-        date: Date;
-        category: string;
-        preVoidStatus: string | null;
-      }
-    | null;
+  })) as {
+    id: string;
+    userId: string;
+    type: string;
+    status: string;
+    amount: Decimal;
+    date: Date;
+    category: string;
+    preVoidStatus: string | null;
+  } | null;
 
   if (!tx || tx.userId !== ctx.userId) {
     throw new Error('Transaction not found');
@@ -119,7 +120,13 @@ export async function restoreTransaction(
       // Re-apply downstream records for CONFIRMED transactions
       if (restoreStatus === 'CONFIRMED') {
         if (tx.type === 'DEBIT') {
-          await reapplyExpenseSummary(db as unknown as PrismaClient, ctx.userId, tx.amount, tx.date, tx.category);
+          await reapplyExpenseSummary(
+            db as unknown as PrismaClient,
+            ctx.userId,
+            tx.amount,
+            tx.date,
+            tx.category,
+          );
         }
         // CREDIT: no downstream sync needed — income view queries Transaction live
       }
@@ -128,12 +135,11 @@ export async function restoreTransaction(
   );
 }
 
-
 export async function undoImportSession(
   ctx: VoidContext,
   importSessionId: string,
 ): Promise<{ voided: number; yearWarning: boolean }> {
-  const session = await (ctx.prisma.importSession as any).findUnique({
+  const session = (await (ctx.prisma.importSession as any).findUnique({
     where: { id: importSessionId },
     include: {
       transactions: {
@@ -146,26 +152,24 @@ export async function undoImportSession(
         },
       },
     },
-  }) as
-    | {
-        id: string;
-        userId: string;
-        status: string;
-        transactions: Array<{
-          id: string;
-          type: string;
-          status: string;
-          amount: Decimal;
-          date: Date;
-          category: string;
-          donationPayment: { id: string } | null;
-          transferLinkedTransactionId: string | null;
-          preLinkCategory: string | null;
-          preLinkStatus: string | null;
-          reimbursements: Array<{ id: string }>;
-        }>;
-      }
-    | null;
+  })) as {
+    id: string;
+    userId: string;
+    status: string;
+    transactions: Array<{
+      id: string;
+      type: string;
+      status: string;
+      amount: Decimal;
+      date: Date;
+      category: string;
+      donationPayment: { id: string } | null;
+      transferLinkedTransactionId: string | null;
+      preLinkCategory: string | null;
+      preLinkStatus: string | null;
+      reimbursements: Array<{ id: string }>;
+    }>;
+  } | null;
 
   if (!session || session.userId !== ctx.userId) {
     throw new Error('Import session not found');
@@ -195,12 +199,21 @@ export async function undoImportSession(
           });
         }
 
-        await clearTransferLink(db as unknown as PrismaClient, ctx.userId, tx as any, sessionTxIds);
+        await clearTransferLink(
+          db as unknown as PrismaClient,
+          ctx.userId,
+          tx as any,
+          sessionTxIds,
+        );
         await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
       }
 
       await db.transaction.updateMany({
-        where: { importSessionId, userId: ctx.userId, status: { not: 'VOIDED' } },
+        where: {
+          importSessionId,
+          userId: ctx.userId,
+          status: { not: 'VOIDED' },
+        },
         data: { status: 'VOIDED', confirmedAt: null },
       });
 
@@ -233,7 +246,7 @@ async function reverseDownstream(
   if (tx.donationPayment) {
     await db.donationPayment.update({
       where: { id: tx.donationPayment.id },
-      data: { transactionId: null },
+      data: { interestTxId: null },
     });
   }
 
@@ -276,7 +289,11 @@ async function reverseExpenseSummary(
   if (!expenseCat) return;
 
   const summary = await db.monthlyExpenseSummary.findFirst({
-    where: { expenseLedgerId: ledger.id, categoryId: expenseCat.id, month: monthNum },
+    where: {
+      expenseLedgerId: ledger.id,
+      categoryId: expenseCat.id,
+      month: monthNum,
+    },
   });
   if (!summary) return;
 
@@ -324,7 +341,11 @@ async function reapplyExpenseSummary(
   if (!expenseCat) return;
 
   const existing = await db.monthlyExpenseSummary.findFirst({
-    where: { expenseLedgerId: ledger.id, categoryId: expenseCat.id, month: monthNum },
+    where: {
+      expenseLedgerId: ledger.id,
+      categoryId: expenseCat.id,
+      month: monthNum,
+    },
   });
 
   if (existing) {
@@ -334,7 +355,12 @@ async function reapplyExpenseSummary(
     });
   } else {
     await db.monthlyExpenseSummary.create({
-      data: { month: monthNum, amount, categoryId: expenseCat.id, expenseLedgerId: ledger.id },
+      data: {
+        month: monthNum,
+        amount,
+        categoryId: expenseCat.id,
+        expenseLedgerId: ledger.id,
+      },
     });
   }
 }
