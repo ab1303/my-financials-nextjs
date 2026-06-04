@@ -1,4 +1,6 @@
-Context: Interest Cleansing Feature
+Context: Interest Cleansing Feature (Canonical)
+
+This document is the canonical source of truth for interest-cleansing linkage UX, matching logic, allocation semantics, and acceptance criteria. Other interest sub-specs (UI fixes, debit-linking) must defer to this spec for core flow and API contracts.
 
 Problem statement
 
