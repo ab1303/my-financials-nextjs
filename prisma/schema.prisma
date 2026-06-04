@@ -219,12 +219,47 @@ model DonationPayment {
   individualId    String?
   donationLedger  DonationLedger      @relation(fields: [donationLedgerId], references: [id])
   donationLedgerId String
-  transaction     Transaction?        @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  transactionId   String?             @unique
+  
+  
+  // Phase A NEW: optional interest CREDIT transaction link (if user selects interest cleansing)
+  // This captures the optional interest transaction that offsets the donation
+  interestTx      Transaction?        @relation("DonationPaymentInterest", fields: [interestTxId], references: [id], onDelete: SetNull)
+  interestTxId    String?             @unique
+  
   donationPurpose DonationPurposeEnum @default(VOLUNTARY)
+  
+  // Phase A NEW: M:N linking to multiple debit/evidence transactions
+  // Each row in donationPaymentEvidence represents one transaction that serves as evidence
+  // for the donation (typically DEBIT transactions showing the outflow)
+  evidence        DonationPaymentEvidence[]
 }
 
-// SpecialCategory — system-managed categories (Transfer, Excluded, etc) with descriptions
+// DonationPaymentEvidence — Phase A: M:N join table linking DonationPayment to multiple Transaction evidences (DEBIT transactions)
+// Each row represents one transaction that serves as evidence for the donation.
+// Typically used for DEBIT (outflow) transactions that show the payment was made.
+// For INTEREST_CLEANSING donations, the optional interestTxId captures the interest CREDIT offset.
+model DonationPaymentEvidence {
+  id                  String          @id @default(cuid())
+  
+  // Foreign keys
+  donationPaymentId   String
+  donationPayment     DonationPayment @relation(fields: [donationPaymentId], references: [id], onDelete: NoAction)
+  
+  transactionId       String
+  transaction         Transaction     @relation(fields: [transactionId], references: [id], onDelete: NoAction)
+  
+  // Optional: amount linked (if less than full donation amount is evidenced by this transaction)
+  amountLinked        Decimal?        @db.Money
+  
+  createdAt           DateTime        @default(now())
+  
+  // Composite unique: one evidence record per (donationPayment, transaction) pair
+  @@unique([donationPaymentId, transactionId])
+  
+  // Indexes for fast lookup
+  @@index([donationPaymentId])
+  @@index([transactionId])
+}
 model SpecialCategory {
   id            String   @id @default(cuid())
   name          String   @unique
@@ -574,8 +609,16 @@ model Transaction {
 
   offsetTransaction Transaction?  @relation("ReimbursementLink", fields: [offsetTransactionId], references: [id])
   reimbursements    Transaction[] @relation("ReimbursementLink")
-  donationPayment   DonationPayment?
-  zakatPayment      ZakatPayment?
+  
+  
+  // Phase A NEW: Optional interest credit transaction link (user-selected offset for interest cleansing)
+  donationPaymentInterest DonationPayment? @relation("DonationPaymentInterest")
+  
+  // Phase A NEW: M:N linking to donation payments via evidence table (for debit/evidence transactions)
+  donationPaymentEvidence DonationPaymentEvidence[]
+  
+  // Zakat payment back-reference (one-to-one optional)
+  zakatPayment ZakatPayment?
 
   // Transfer reconciliation
   transferLinkedTransactionId  String?                @unique
