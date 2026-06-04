@@ -36,9 +36,9 @@ export async function getUnlinkedDonationTransactions(
   const linkedTxIds = new Set(
     (
       await prisma.donationPaymentEvidence.findMany({
-        select: { transactionId: true },
+        select: { evidenceTransactionId: true },
       })
-    ).map((e) => e.transactionId),
+    ).map((e) => e.evidenceTransactionId),
   );
 
   // Return unlinked transactions
@@ -84,9 +84,9 @@ export async function countUnlinkedDonationTransactions(
   const linkedTxIds = new Set(
     (
       await prisma.donationPaymentEvidence.findMany({
-        select: { transactionId: true },
+        select: { evidenceTransactionId: true },
       })
-    ).map((e) => e.transactionId),
+    ).map((e) => e.evidenceTransactionId),
   );
 
   // Count unlinked transactions

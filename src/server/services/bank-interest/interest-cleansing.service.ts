@@ -6,6 +6,7 @@ export type MonthlyCredit = {
   month: number;
   year: number;
   receivedFromLedger: number;
+  cleansedAmount: number;
 };
 
 export type CleansingDonation = {
@@ -15,7 +16,14 @@ export type CleansingDonation = {
   beneficiaryName: string;
   beneficiaryType: 'INDIVIDUAL' | 'BUSINESS';
   source: 'LINKED' | 'MANUAL';
-  transactionId: string | null;
+  interestTxId: string | null;
+  interestTxDescription?: string;
+  evidence: Array<{
+    id: string;
+    amountApplied: number;
+    description: string;
+    date: Date;
+  }>;
 };
 
 export type YearlySummary = {
@@ -80,20 +88,6 @@ export const getYearlyCleansingData = async (
     },
   });
 
-  // Build monthlyCredits from all 12 months
-  const monthlyCredits: MonthlyCredit[] = allMonths.map(({ month, year }) => {
-    const monthTx = interestTx.filter(
-      (tx) => tx.date.getMonth() + 1 === month && tx.date.getFullYear() === year,
-    );
-    const receivedFromLedger = monthTx.reduce((s, tx) => s + tx.amount.toNumber(), 0);
-
-    return {
-      month,
-      year,
-      receivedFromLedger,
-    };
-  });
-
   const rawDonations = await prisma.donationPayment.findMany({
     where: {
       donationPurpose: 'INTEREST_CLEANSING',
@@ -104,8 +98,35 @@ export const getYearlyCleansingData = async (
     include: {
       business: { select: { name: true } },
       individual: { select: { firstName: true, lastName: true } },
+      interestTx: { select: { description: true } },
+      evidence: {
+        include: {
+          evidenceTransaction: { select: { description: true, date: true } },
+        },
+      },
     },
     orderBy: { datePaid: 'desc' },
+  });
+
+  // Build monthlyCredits from all 12 months (after rawDonations is available)
+  const monthlyCredits: MonthlyCredit[] = allMonths.map(({ month, year }) => {
+    const monthTx = interestTx.filter(
+      (tx) => tx.date.getUTCMonth() + 1 === month && tx.date.getUTCFullYear() === year,
+    );
+    const receivedFromLedger = monthTx.reduce((s, tx) => s + tx.amount.toNumber(), 0);
+
+    // Sum up donations linked to transactions in this month
+    const monthTxIds = new Set(monthTx.map((tx) => tx.id));
+    const cleansedAmount = rawDonations
+      .filter((d) => d.interestTxId && monthTxIds.has(d.interestTxId))
+      .reduce((s, d) => s + d.amount.toNumber(), 0);
+
+    return {
+      month,
+      year,
+      receivedFromLedger,
+      cleansedAmount,
+    };
   });
 
   const cleansingDonations: CleansingDonation[] = rawDonations.map((dp) => ({
@@ -118,7 +139,14 @@ export const getYearlyCleansingData = async (
         : `${dp.individual?.firstName ?? ''} ${dp.individual?.lastName ?? ''}`.trim(),
     beneficiaryType: dp.beneficiaryType as 'INDIVIDUAL' | 'BUSINESS',
     source: dp.interestTxId ? 'LINKED' : 'MANUAL',
-    transactionId: dp.interestTxId,
+    interestTxId: dp.interestTxId,
+    interestTxDescription: dp.interestTx?.description,
+    evidence: dp.evidence.map((e) => ({
+      id: e.id,
+      amountApplied: e.amountApplied.toNumber(),
+      description: e.evidenceTransaction.description,
+      date: e.evidenceTransaction.date,
+    })),
   }));
 
   const linkedTxIds = new Set(
@@ -221,9 +249,9 @@ export const getUnlinkedCleansingDebitTransactions = async (
   const linkedTxIds = new Set(
     (
       await prisma.donationPaymentEvidence.findMany({
-        select: { transactionId: true },
+        select: { evidenceTransactionId: true },
       })
-    ).map((e) => e.transactionId),
+    ).map((e) => e.evidenceTransactionId),
   );
 
   // Return unlinked transactions
@@ -271,7 +299,7 @@ export const suggestAllocations = async (
     },
     include: {
       evidence: {
-        include: { transaction: true },
+        include: { evidenceTransaction: true },
       },
     },
   });
@@ -289,7 +317,7 @@ export const suggestAllocations = async (
     const daysBetween = Math.abs((new Date(c.datePaid).getTime() - center.getTime()) / (1000 * 60 * 60 * 24));
     const dateScore = Math.max(0, 1 - daysBetween / 90);
     // simple description/reference match using evidence transaction description
-    const txDesc = c.evidence?.[0]?.transaction?.description ?? '';
+    const txDesc = c.evidence?.[0]?.evidenceTransaction?.description ?? '';
     const creditDesc = credit.description ?? '';
     const tokenMatch = (() => {
       const a = new Set(txDesc.toLowerCase().split(/\W+/).filter(Boolean));
@@ -321,47 +349,72 @@ export const suggestAllocations = async (
 
 export const applyAllocations = async (
   creditId: string,
-  allocations: Array<{ donationPaymentId: string; amount: number }>,
+  allocations: Array<{ evidenceId: string; amount: number }>,
   userId: string,
 ): Promise<{ success: boolean; allocationsCreated: number }> => {
   if (!allocations || allocations.length === 0) return { success: false, allocationsCreated: 0 };
 
   const credit = await prisma.transaction.findUniqueOrThrow({ where: { id: creditId } });
-  const creditAmount = credit.amount.toNumber();
 
-  // compute already allocated for this credit
-  const existingLinked = await prisma.donationPayment.findMany({ where: { interestTxId: creditId } });
-  const alreadyAllocated = existingLinked.reduce((s, d) => s + d.amount.toNumber(), 0);
-  let remaining = Math.max(0, creditAmount - alreadyAllocated);
+  // 1. Find or create a DonationPayment for this credit
+  // For interest cleansing, we link 1 credit to 1 "cleansing donation" record, 
+  // but that record can be backed by M debit transactions as evidence.
 
-  const totalToApply = allocations.reduce((s, a) => s + a.amount, 0);
-  if (totalToApply > remaining) throw new Error('Allocations exceed credit remaining amount');
+  return await prisma.$transaction(async (tx) => {
+    let donation = await tx.donationPayment.findUnique({
+      where: { interestTxId: creditId },
+    });
 
-  // Validate each allocation against donationPayment amount and existing evidence
-  const ops = await Promise.all(
-    allocations.map(async (a) => {
-      const dp = await prisma.donationPayment.findUniqueOrThrow({ where: { id: a.donationPaymentId } });
-      const dpAmount = dp.amount.toNumber();
-      // If donation already linked to another interestTx, allow linking multiple credits? For now allow re-linking
-      if (a.amount > dpAmount) throw new Error('Allocation amount exceeds donation payment amount');
-      return { dp, amount: a.amount };
-    }),
-  );
+    if (!donation) {
+      // Find a ledger for this credit date
+      const year = credit.date.getFullYear();
+      let ledger = await tx.donationLedger.findFirst({
+        where: {
+          calendar: {
+            fromYear: { lte: year },
+            toYear: { gte: year },
+          }
+        }
+      });
 
-  // Apply in a transaction: update donationPayment.interestTxId
-  const results = await prisma.$transaction(async (tx) => {
-    let created = 0;
-    for (const op of ops) {
-       // set interestTxId to link donation to this credit
-       await tx.donationPayment.update({
-         where: { id: op.dp.id },
-         data: { interestTxId: creditId },
-       });
-       created += 1;
+      if (!ledger) throw new Error(`No DonationLedger found for year ${year}`);
+
+      donation = await tx.donationPayment.create({
+        data: {
+          datePaid: credit.date,
+          amount: credit.amount,
+          beneficiaryType: 'BUSINESS',
+          donationLedgerId: ledger.id,
+          interestTxId: creditId,
+          donationPurpose: 'INTEREST_CLEANSING',
+        },
+      });
     }
-    return created;
+
+    let createdCount = 0;
+    for (const alloc of allocations) {
+      await tx.donationPaymentEvidence.upsert({
+        where: {
+          donationPaymentId_evidenceTransactionId: {
+            donationPaymentId: donation.id,
+            evidenceTransactionId: alloc.evidenceId,
+          },
+        },
+        update: {
+          amountApplied: alloc.amount,
+        },
+        create: {
+          donationPaymentId: donation.id,
+          evidenceTransactionId: alloc.evidenceId,
+          amountApplied: alloc.amount,
+          confidence: 1.0, // Human confirmed
+        },
+      });
+      createdCount++;
+    }
+
+    return { success: true, allocationsCreated: createdCount };
   });
-  return { success: true, allocationsCreated: results };
 };
 
 export const removeAllocation = async (allocationId: string, userId: string): Promise<{ success: boolean }> => {

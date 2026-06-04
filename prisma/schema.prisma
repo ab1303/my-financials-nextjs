@@ -239,26 +239,30 @@ model DonationPayment {
 // Typically used for DEBIT (outflow) transactions that show the payment was made.
 // For INTEREST_CLEANSING donations, the optional interestTxId captures the interest CREDIT offset.
 model DonationPaymentEvidence {
-  id                  String          @id @default(cuid())
-  
+  id                    String          @id @default(cuid())
+
   // Foreign keys
-  donationPaymentId   String
-  donationPayment     DonationPayment @relation(fields: [donationPaymentId], references: [id], onDelete: NoAction)
-  
-  transactionId       String
-  transaction         Transaction     @relation(fields: [transactionId], references: [id], onDelete: NoAction)
-  
-  // Optional: amount linked (if less than full donation amount is evidenced by this transaction)
-  amountLinked        Decimal?        @db.Money
-  
-  createdAt           DateTime        @default(now())
-  
+  donationPaymentId     String
+  donationPayment       DonationPayment @relation(fields: [donationPaymentId], references: [id], onDelete: Cascade)
+
+  evidenceTransactionId String
+  evidenceTransaction   Transaction     @relation(fields: [evidenceTransactionId], references: [id], onDelete: Cascade)
+
+  // Amount applied — precise monetary allocation
+  amountApplied         Decimal         @db.Money
+
+  // Confidence score from fuzzy-match backfill (0.0 to 1.0)
+  confidence            Float?          @default(0.0)
+
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
   // Composite unique: one evidence record per (donationPayment, transaction) pair
-  @@unique([donationPaymentId, transactionId])
-  
+  @@unique([donationPaymentId, evidenceTransactionId])
+
   // Indexes for fast lookup
   @@index([donationPaymentId])
-  @@index([transactionId])
+  @@index([evidenceTransactionId])
 }
 model SpecialCategory {
   id            String   @id @default(cuid())

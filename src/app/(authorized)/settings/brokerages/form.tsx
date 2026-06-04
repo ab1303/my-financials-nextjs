@@ -87,7 +87,7 @@ export default function BrokeragesForm() {
     saveMutation.mutate({ name: trimmed });
   };
 
-  const columns: ColumnDef<BrokerageRow>[] = useMemo(
+  const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
         header: 'Institution',
@@ -201,7 +201,7 @@ export default function BrokeragesForm() {
             <div className='flex justify-end gap-1'>
               <button
                 type='button'
-                onClick={() => {
+                  onClick={() => {
                   setEditedRows(
                     produce((draft) => {
                       draft.set(row.index, castDraft(brokerage));
@@ -232,7 +232,7 @@ export default function BrokeragesForm() {
       }),
     ],
     [editedRows, updateMutation.isPending],
-  );
+  ) as ColumnDef<BrokerageRow, unknown>[];
 
   const table = useReactTable({
     data: getBrokeragesQuery.data ?? [],

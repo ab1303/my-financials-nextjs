@@ -9,12 +9,14 @@ import type { Control, FieldErrors, UseFormReturn } from 'react-hook-form';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { Check, Info, Trash2 } from 'lucide-react';
 
 import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { addRow } from '@/app/(authorized)/cashflow/donations/actions';
 import CreateBeneficiaryModal from '@/app/(authorized)/cashflow/donations/_components/CreateBeneficiaryModal';
 import { getSelectStyles } from '@/lib/select-styles';
 import { trpc } from '@/server/trpc/client';
+import { Badge } from '@/components/ui/badge';
 
 // ---------- Types ----------
 
@@ -96,6 +98,8 @@ export default function CleanseDonationDrawer({
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [pendingBeneficiaryName, setPendingBeneficiaryName] = useState('');
 
+  // M:N Allocations State
+  const [selectedEvidence, setSelectedEvidence] = useState<Array<{ id: string; amount: number; description: string; date?: Date; score: number }>>([]);
 
   const linkedForm = useForm<LinkedFormValues>({
     resolver: zodResolver(linkedModeSchema),
@@ -118,6 +122,14 @@ export default function CleanseDonationDrawer({
     { bankId, dateFrom, dateTo },
     { enabled: shouldFetchLinkedTransactions },
   );
+
+  const suggestQuery = trpc.bankInterest.suggestAllocations.useQuery(
+    { creditId: selectedTransactionId },
+    { enabled: !!selectedTransactionId && mode === 'linked' }
+  );
+
+  const applyMutation = trpc.bankInterest.applyAllocations.useMutation();
+
   const individualsQuery = trpc.individual.getAllIndividuals.useQuery(undefined, { enabled: isOpen });
   const businessesQuery = trpc.business.getBusinessesByType.useQuery(
     { type: 'PHILANTHROPY' },
@@ -132,23 +144,11 @@ export default function CleanseDonationDrawer({
   useEffect(() => {
     if (isOpen && unlinkedTxQuery.data) {
       setTransactions(unlinkedTxQuery.data);
-      setSelectedTransactionId((current) => current || unlinkedTxQuery.data[0]?.id || '');
+      if (!selectedTransactionId && unlinkedTxQuery.data[0]) {
+        setSelectedTransactionId(unlinkedTxQuery.data[0].id);
+      }
     }
-  }, [unlinkedTxQuery.data, isOpen]);
-
-  useEffect(() => {
-    if (!selectedTransactionId && transactions.length > 0) {
-      setSelectedTransactionId(transactions[0]?.id ?? "");
-    }
-  }, [transactions, selectedTransactionId]);
-
-  useEffect(() => {
-    if (transactions.length === 0) {
-      setSelectedTransactionId('');
-    } else if (!transactions.some((tx) => tx.id === selectedTransactionId)) {
-      setSelectedTransactionId(transactions[0]?.id ?? "");
-    }
-  }, [transactions, selectedTransactionId]);
+  }, [unlinkedTxQuery.data, isOpen, selectedTransactionId]);
 
   useEffect(() => {
     linkedForm.setValue('beneficiaryId', '', { shouldValidate: true });
@@ -163,6 +163,7 @@ export default function CleanseDonationDrawer({
       setMode('linked');
       setTransactions([]);
       setSelectedTransactionId('');
+      setSelectedEvidence([]);
       setIsSaving(false);
       setCreateModalOpen(false);
       setPendingBeneficiaryName('');
@@ -188,6 +189,7 @@ export default function CleanseDonationDrawer({
 
   const handleSelectTransaction = (txId: string) => {
     setSelectedTransactionId(txId);
+    setSelectedEvidence([]);
     linkedForm.reset({
       ...getDefaultLinkedValues(),
       beneficiaryType: linkedForm.getValues('beneficiaryType'),
@@ -197,6 +199,7 @@ export default function CleanseDonationDrawer({
   const handleClose = () => {
     setTransactions([]);
     setSelectedTransactionId('');
+    setSelectedEvidence([]);
     setMode('linked');
     linkedForm.reset(getDefaultLinkedValues());
     manualForm.reset(getDefaultManualValues());
@@ -209,14 +212,47 @@ export default function CleanseDonationDrawer({
     manualForm.reset(getDefaultManualValues());
   };
 
+  const toggleEvidence = (ev: { id: string; amount: number; description: string; date?: Date; score: number }) => {
+    setSelectedEvidence(prev => {
+      const exists = prev.find(p => p.id === ev.id);
+      if (exists) {
+        return prev.filter(p => p.id !== ev.id);
+      } else {
+        // Calculate auto-suggested amount based on remaining credit
+        const totalAllocated = prev.reduce((s, a) => s + a.amount, 0);
+        const creditRemaining = Math.max(0, (selectedTransaction?.amount ?? 0) - totalAllocated);
+        const amount = Math.min(ev.amount, creditRemaining);
+        return [...prev, { ...ev, amount }];
+      }
+    });
+  };
+
+  const updateEvidenceAmount = (id: string, amount: number) => {
+    setSelectedEvidence(prev => prev.map(ev => ev.id === id ? { ...ev, amount } : ev));
+  };
+
   const handleLinkedSave = linkedForm.handleSubmit(async (values) => {
     if (!selectedTransaction) {
       toast.error('Please select a transaction to link.');
       return;
     }
 
+    const totalAllocated = selectedEvidence.reduce((s, a) => s + a.amount, 0);
+    if (totalAllocated <= 0) {
+      toast.error('Please select at least one evidence transaction.');
+      return;
+    }
+
+    if (totalAllocated > selectedTransaction.amount + 0.01) {
+       toast.error(`Total allocated (${formatCurrency(totalAllocated)}) exceeds credit amount (${formatCurrency(selectedTransaction.amount)}).`);
+       return;
+    }
+
     setIsSaving(true);
     try {
+      // 1. Create/Link the donation payment
+      // The addRow action creates a DonationPayment linked 1:1 to the interestTxId
+      // Then we use the evidence table for the M:N evidence.
       const result = await addRow({
         datePaid: new Date(selectedTransaction.date),
         amount: selectedTransaction.amount,
@@ -232,7 +268,16 @@ export default function CleanseDonationDrawer({
         return;
       }
 
-      toast.success('Cleansing donation linked!');
+      // 2. Apply M:N Evidence allocations via tRPC
+      await applyMutation.mutateAsync({
+        creditId: selectedTransaction.id,
+        allocations: selectedEvidence.map(ev => ({
+          evidenceId: ev.id,
+          amount: ev.amount,
+        })),
+      });
+
+      toast.success('Cleansing donation and evidence linked!');
       onDonationSaved();
 
       setTransactions((current) => {
@@ -240,6 +285,7 @@ export default function CleanseDonationDrawer({
         setSelectedTransactionId(remaining[0]?.id ?? '');
         return remaining;
       });
+      setSelectedEvidence([]);
       linkedForm.reset({
         ...getDefaultLinkedValues(),
         beneficiaryType: values.beneficiaryType,
@@ -252,10 +298,8 @@ export default function CleanseDonationDrawer({
   });
 
   const handleManualSave = manualForm.handleSubmit(async (values) => {
-
     setIsSaving(true);
     try {
-
       const result = await addRow({
         datePaid: new Date(values.datePaid),
         amount: values.amount,
@@ -291,11 +335,11 @@ export default function CleanseDonationDrawer({
         }
       }}
     >
-      <div className="flex h-full w-full max-w-2xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900">
+      <div className="flex h-full w-full max-w-4xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Record Cleansing Donation</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Cleanse interest by recording the donation.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Cleanse interest by recording the donation and linking evidence.</p>
           </div>
           <button
             type="button"
@@ -316,7 +360,7 @@ export default function CleanseDonationDrawer({
                 : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
             }`}
           >
-            Linked
+            Linked (M:N)
           </button>
           <button
             type="button"
@@ -349,11 +393,15 @@ export default function CleanseDonationDrawer({
             pendingBeneficiaryName={pendingBeneficiaryName}
             setPendingBeneficiaryName={setPendingBeneficiaryName}
             onBeneficiaryCreated={(id) => linkedForm.setValue('beneficiaryId', id, { shouldValidate: true })}
+            suggestions={suggestQuery.data || []}
+            isSuggesting={suggestQuery.isLoading}
+            selectedEvidence={selectedEvidence}
+            onToggleEvidence={toggleEvidence}
+            onUpdateAmount={updateEvidenceAmount}
           />
         ) : (
           <ManualModeBody
             form={manualForm}
-            
             beneficiaryOptions={getBeneficiaryOptions(manualBeneficiaryType)}
             beneficiaryType={manualBeneficiaryType}
             isSaving={isSaving}
@@ -393,6 +441,11 @@ type LinkedModeBodyProps = {
   pendingBeneficiaryName: string;
   setPendingBeneficiaryName: (value: string) => void;
   onBeneficiaryCreated: (id: string) => void;
+  suggestions: Array<{ donationPaymentId: string; donationTransactionId: string | null; evidenceAmount: number; score: number; suggestedAmount: number }>;
+  isSuggesting: boolean;
+  selectedEvidence: Array<{ id: string; amount: number; description: string; date?: Date; score: number }>;
+  onToggleEvidence: (ev: { id: string; amount: number; description: string; date?: Date; score: number }) => void;
+  onUpdateAmount: (id: string, amount: number) => void;
 };
 
 function LinkedModeBody({
@@ -412,22 +465,32 @@ function LinkedModeBody({
   pendingBeneficiaryName,
   setPendingBeneficiaryName,
   onBeneficiaryCreated,
+  suggestions,
+  isSuggesting,
+  selectedEvidence,
+  onToggleEvidence,
+  onUpdateAmount,
 }: LinkedModeBodyProps) {
   const {
     control,
     formState: { errors, isValid },
   } = form;
 
+  const totalAllocated = selectedEvidence.reduce((s, a) => s + a.amount, 0);
+  const creditAmount = selectedTransaction?.amount ?? 0;
+  const remaining = Math.max(0, creditAmount - totalAllocated);
+
   return (
     <>
-      <div className="grid flex-1 grid-cols-5 overflow-hidden">
-        <aside className="col-span-2 overflow-y-auto border-r border-gray-200 p-4 dark:border-gray-800">
-          <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">Unlinked interest transactions</h3>
+      <div className="grid flex-1 grid-cols-12 overflow-hidden">
+        {/* Left: Unlinked Interest Credits */}
+        <aside className="col-span-3 overflow-y-auto border-r border-gray-200 p-4 dark:border-gray-800">
+          <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">Unlinked interest</h3>
           {isLoadingTx ? (
             <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>
           ) : transactions.length === 0 ? (
             <div className="rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              No unlinked interest transactions found.
+              No unlinked interest found.
             </div>
           ) : (
             <div className="space-y-2">
@@ -456,54 +519,141 @@ function LinkedModeBody({
           )}
         </aside>
 
-        <section className="col-span-3 flex flex-col overflow-hidden">
-          <div className="mb-4 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
-            {selectedTransaction ? (
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400">Date</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{selectedTransaction.date}</p>
+        {/* Middle: Evidence Picker */}
+        <section className="col-span-6 flex flex-col overflow-hidden border-r border-gray-200 dark:border-gray-800">
+          <div className="flex flex-1 flex-col overflow-hidden p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200">Select Evidence (DEBITs)</h3>
+              {selectedTransaction && (
+                <div className="flex gap-2">
+                  <Badge variant={remaining === 0 ? "default" : "secondary"}>
+                    Remaining: {formatCurrency(remaining)}
+                  </Badge>
                 </div>
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400">Amount (locked)</p>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(selectedTransaction.amount)}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-gray-500 dark:text-gray-400">Description</p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{selectedTransaction.description}</p>
-                </div>
+              )}
+            </div>
+
+            {!selectedTransaction ? (
+              <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-gray-300 dark:border-gray-700">
+                 <p className="text-sm text-gray-500 dark:text-gray-400">Select an interest credit to see suggestions.</p>
               </div>
+            ) : isSuggesting ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => <div key={i} className="h-16 w-full animate-pulse rounded-md bg-gray-100 dark:bg-gray-800" />)}
+              </div>
+            ) : suggestions.length === 0 ? (
+               <div className="rounded-md border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                 No candidate evidence transactions found within 90 days.
+               </div>
             ) : (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Select a transaction on the left to link it.</p>
+              <div className="flex-1 overflow-y-auto pr-2 space-y-2">
+                {suggestions.map((s) => {
+                  const isChecked = selectedEvidence.some(ev => ev.id === s.donationPaymentId);
+                  const confidenceColor = s.score >= 0.85 ? 'text-green-600 dark:text-green-400' : s.score >= 0.6 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-500';
+                  
+                  return (
+                    <div 
+                      key={s.donationPaymentId}
+                      className={`group flex items-start gap-3 rounded-md border p-3 transition-colors ${isChecked ? 'border-blue-500 bg-blue-50/50 dark:border-blue-400 dark:bg-blue-950/30' : 'border-gray-100 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700'}`}
+                    >
+                      <div className="pt-0.5">
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked}
+                          onChange={() => onToggleEvidence({ id: s.donationPaymentId, amount: s.suggestedAmount, description: 'Donation Payment', score: s.score })}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-[10px] font-bold ${confidenceColor}`}>{(s.score * 100).toFixed(0)}% match</span>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(s.evidenceAmount)}</p>
+                        
+                        {isChecked && (
+                          <div className="mt-2 flex items-center gap-2">
+                             <label className="text-[10px] font-medium text-gray-500">Allocation:</label>
+                             <input 
+                               type="number"
+                               step="0.01"
+                               max={s.evidenceAmount}
+                               className="h-7 w-24 rounded border border-gray-300 bg-white px-2 text-xs outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                               value={selectedEvidence.find(ev => ev.id === s.donationPaymentId)?.amount || 0}
+                               onChange={(e) => onUpdateAmount(s.donationPaymentId, parseFloat(e.target.value) || 0)}
+                             />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
+        </section>
 
-          <BeneficiaryFormFields
-            control={control}
-            errors={errors}
-            beneficiaryType={beneficiaryType}
-            beneficiaryOptions={beneficiaryOptions}
-            disabled={!selectedTransaction}
-            setCreateModalOpen={setCreateModalOpen}
-            setPendingBeneficiaryName={setPendingBeneficiaryName}
-          />
+        {/* Right: Confirmation & Beneficiary */}
+        <section className="col-span-3 flex flex-col overflow-hidden p-4">
+           <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">Allocation Summary</h3>
+           
+           <div className="mb-4 space-y-3">
+             <div className="rounded-md bg-gray-50 p-3 dark:bg-gray-950">
+               <div className="flex justify-between text-xs text-gray-500 mb-1">
+                 <span>Interest Credit</span>
+                 <span>{formatCurrency(creditAmount)}</span>
+               </div>
+               <div className="flex justify-between text-xs font-semibold text-blue-600 dark:text-blue-400">
+                 <span>Total Allocated</span>
+                 <span>{formatCurrency(totalAllocated)}</span>
+               </div>
+             </div>
 
-          <div className="shrink-0 border-t border-gray-200 bg-white/95 px-6 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-              >
-                Cancel
-              </button>
+             {selectedEvidence.length > 0 && (
+               <div className="max-h-40 overflow-y-auto rounded-md border border-gray-100 dark:border-gray-800">
+                 {selectedEvidence.map(ev => (
+                   <div key={ev.id} className="flex items-center justify-between border-b border-gray-50 p-2 last:border-0 dark:border-gray-900">
+                     <div className="min-w-0 flex-1">
+                       <p className="truncate text-[10px] text-gray-700 dark:text-gray-300">{ev.description}</p>
+                       <p className="text-[10px] text-gray-500">{formatCurrency(ev.amount)}</p>
+                     </div>
+                     <button 
+                       onClick={() => onToggleEvidence(ev)}
+                       className="text-gray-400 hover:text-red-500 transition-colors"
+                     >
+                       <Trash2 size={12} />
+                     </button>
+                   </div>
+                 ))}
+               </div>
+             )}
+           </div>
+
+           <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800">
+            <BeneficiaryFormFields
+              control={control}
+              errors={errors}
+              beneficiaryType={beneficiaryType}
+              beneficiaryOptions={beneficiaryOptions}
+              disabled={!selectedTransaction || selectedEvidence.length === 0}
+              setCreateModalOpen={setCreateModalOpen}
+              setPendingBeneficiaryName={setPendingBeneficiaryName}
+            />
+
+            <div className="mt-6 flex flex-col gap-2">
               <button
                 type="button"
                 onClick={onSave}
-                disabled={!selectedTransaction || !isValid || isSaving}
-                className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:hover:bg-amber-600"
+                disabled={!selectedTransaction || selectedEvidence.length === 0 || !isValid || isSaving}
+                className="w-full rounded-md bg-amber-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:hover:bg-amber-600"
               >
-                {isSaving ? 'Saving...' : 'Save & Next →'}
+                {isSaving ? 'Processing...' : 'Confirm Allocation'}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-md border border-gray-300 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -564,57 +714,68 @@ function ManualModeBody({
   return (
     <>
       <div className="flex flex-1 flex-col overflow-y-auto p-6">
-        <div className="grid gap-4">
-
-          <div>
-            <label htmlFor="manual-datePaid" className="mb-1 block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200">
-              Date paid
-            </label>
-            <input
-              id="manual-datePaid"
-              type="date"
-              {...register('datePaid')}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-amber-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-            />
-            {errors.datePaid && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.datePaid.message}</p>}
+        <div className="mx-auto w-full max-w-lg space-y-6">
+          <div className="rounded-md border border-blue-100 bg-blue-50 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
+            <div className="flex gap-3">
+              <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Manual Record</p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">Use this mode to record a cleansing donation that was made with cash or from an untracked bank account.</p>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="manual-amount" className="mb-1 block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200">
-              Donation amount (AUD)
-            </label>
-            <Controller
+          <div className="grid gap-4">
+            <div>
+              <label htmlFor="manual-datePaid" className="mb-1 block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200">
+                Date paid
+              </label>
+              <input
+                id="manual-datePaid"
+                type="date"
+                {...register('datePaid')}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-amber-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+              />
+              {errors.datePaid && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.datePaid.message}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="manual-amount" className="mb-1 block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200">
+                Donation amount (AUD)
+              </label>
+              <Controller
+                control={control}
+                name="amount"
+                render={({ field }) => (
+                  <input
+                    id="manual-amount"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={field.value || ''}
+                    onChange={(event) => field.onChange(parseFloat(event.target.value) || 0)}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-amber-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                    placeholder="0.00"
+                  />
+                )}
+              />
+              {errors.amount && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.amount.message}</p>}
+            </div>
+
+            <BeneficiaryFormFields
               control={control}
-              name="amount"
-              render={({ field }) => (
-                <input
-                  id="manual-amount"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={field.value || ''}
-                  onChange={(event) => field.onChange(parseFloat(event.target.value) || 0)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-amber-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-                  placeholder="0.00"
-                />
-              )}
+              errors={errors}
+              beneficiaryType={beneficiaryType}
+              beneficiaryOptions={beneficiaryOptions}
+              disabled={false}
+              setCreateModalOpen={setCreateModalOpen}
+              setPendingBeneficiaryName={setPendingBeneficiaryName}
             />
-            {errors.amount && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.amount.message}</p>}
           </div>
-
-          <BeneficiaryFormFields
-            control={control}
-            errors={errors}
-            beneficiaryType={beneficiaryType}
-            beneficiaryOptions={beneficiaryOptions}
-            disabled={false}
-            setCreateModalOpen={setCreateModalOpen}
-            setPendingBeneficiaryName={setPendingBeneficiaryName}
-          />
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-gray-800">
+      <div className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-950">
         <button
           type="button"
           onClick={onClose}
@@ -628,7 +789,7 @@ function ManualModeBody({
           disabled={!isValid || isSaving}
           className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
-          {isSaving ? 'Saving...' : 'Save'}
+          {isSaving ? 'Saving...' : 'Save Manual Record'}
         </button>
       </div>
 
@@ -671,10 +832,6 @@ function BeneficiaryFormFields({
 }: BeneficiaryFormFieldsProps) {
   return (
     <div className="grid gap-4">
-      <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-        Deductibility is derived from the beneficiary and is no longer edited here.
-      </div>
-
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Beneficiary type</label>
         <Controller
@@ -735,4 +892,3 @@ function BeneficiaryFormFields({
     </div>
   );
 }
-

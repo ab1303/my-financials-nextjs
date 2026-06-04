@@ -12,4 +12,10 @@ export type BankInterestType = {
   balance: number;
   status: 'CLEANSED' | 'PARTIAL' | 'PENDING' | 'MANUAL' | 'NONE';
   uncleansedTxCount: number;
+  evidence: Array<{
+    id: string;
+    amountApplied: number;
+    description: string;
+    date: Date;
+  }>;
 };
