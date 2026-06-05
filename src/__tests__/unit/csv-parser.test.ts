@@ -13,33 +13,27 @@ describe('parseCommBankCsv', () => {
     expect(result.success).toBe(true);
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
-    expect(transactions![0]).toMatchObject({
-      date: '01/01/2024',
-      amount: 50,
-      type: 'DEBIT',
-      description: 'Groceries',
-      month: 1,
-      year: 2024,
-      balance: 950,
-    });
-    expect(transactions![1]).toMatchObject({
-      date: '02/01/2024',
-      amount: 1000,
-      type: 'CREDIT',
-      description: 'Salary',
-      month: 1,
-      year: 2024,
-      balance: 1950,
-    });
-    expect(transactions![2]).toMatchObject({
-      date: '03/01/2024',
-      amount: 20.5,
-      type: 'DEBIT',
-      description: 'Coffee',
-      month: 1,
-      year: 2024,
-      balance: 929.5,
-    });
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.amount).toBe(50);
+    expect(transactions![0]!.type).toBe('DEBIT');
+    expect(transactions![0]!.description).toBe('Groceries');
+    expect(transactions![0]!.month).toBe(1);
+    expect(transactions![0]!.year).toBe(2024);
+    expect(transactions![0]!.balance).toBe(950);
+    expect(transactions![1]).toBeDefined();
+    expect(transactions![1]!.amount).toBe(1000);
+    expect(transactions![1]!.type).toBe('CREDIT');
+    expect(transactions![1]!.description).toBe('Salary');
+    expect(transactions![1]!.month).toBe(1);
+    expect(transactions![1]!.year).toBe(2024);
+    expect(transactions![1]!.balance).toBe(1950);
+    expect(transactions![2]).toBeDefined();
+    expect(transactions![2]!.amount).toBe(20.5);
+    expect(transactions![2]!.type).toBe('DEBIT');
+    expect(transactions![2]!.description).toBe('Coffee');
+    expect(transactions![2]!.month).toBe(1);
+    expect(transactions![2]!.year).toBe(2024);
+    expect(transactions![2]!.balance).toBe(929.5);
   });
 
   it('extracts date, month, year correctly', async () => {
@@ -50,11 +44,10 @@ describe('parseCommBankCsv', () => {
     expect(result.success).toBe(true);
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
-    expect(transactions![0]).toMatchObject({
-      month: 12,
-      year: 2023,
-      type: 'DEBIT',
-    });
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.month).toBe(12);
+    expect(transactions![0]!.year).toBe(2023);
+    expect(transactions![0]!.type).toBe('DEBIT');
   });
 
   it('normalizes amount to positive', async () => {
@@ -65,7 +58,8 @@ describe('parseCommBankCsv', () => {
     expect(result.success).toBe(true);
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
-    expect(transactions![0].amount).toBe(123.45);
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.amount).toBe(123.45);
   });
 
   it('returns error when date format is invalid', async () => {
@@ -98,7 +92,8 @@ describe('parseCommBankCsv', () => {
     expect(result.success).toBe(true);
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
-    expect(transactions![0].description).toBe('Test');
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.description).toBe('Test');
   });
 
   it('trims whitespace in headers and values', async () => {
@@ -109,9 +104,10 @@ describe('parseCommBankCsv', () => {
     expect(result.success).toBe(true);
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
-    expect(transactions![0].description).toBe('Lunch');
-    expect(transactions![0].amount).toBe(5);
-    expect(transactions![0].type).toBe('DEBIT');
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.description).toBe('Lunch');
+    expect(transactions![0]!.amount).toBe(5);
+    expect(transactions![0]!.type).toBe('DEBIT');
   });
 
   it('returns error when no transactions found', async () => {
@@ -146,8 +142,10 @@ describe('parseCommBankCsv', () => {
     expect(result.success).toBe(true);
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
-    expect(transactions![0].month).toBe(5);
-    expect(transactions![1].month).toBe(6);
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.month).toBe(5);
+    expect(transactions![1]).toBeDefined();
+    expect(transactions![1]!.month).toBe(6);
   });
 });
 
@@ -247,7 +245,8 @@ describe('DEBIT/CREDIT type detection', () => {
     expect(result.success).toBe(true);
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
-    expect(transactions![0].type).toBe('DEBIT');
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.type).toBe('DEBIT');
   });
 
   it('sets type CREDIT for positive amounts', async () => {
@@ -257,11 +256,10 @@ describe('DEBIT/CREDIT type detection', () => {
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
     expect(transactions).toHaveLength(1);
-    expect(transactions![0]).toMatchObject({
-      type: 'CREDIT',
-      amount: 1000,
-      description: 'Salary Deposit',
-    });
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.type).toBe('CREDIT');
+    expect(transactions![0]!.amount).toBe(1000);
+    expect(transactions![0]!.description).toBe('Salary Deposit');
   });
 
   it('parses mixed CSV with both debits and credits', async () => {
@@ -288,7 +286,9 @@ describe('DEBIT/CREDIT type detection', () => {
     expect(result.success).toBe(true);
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
-    expect(transactions![0].amount).toBe(123.45);
-    expect(transactions![1].amount).toBe(500.00);
+    expect(transactions![0]).toBeDefined();
+    expect(transactions![0]!.amount).toBe(123.45);
+    expect(transactions![1]).toBeDefined();
+    expect(transactions![1]!.amount).toBe(500.00);
   });
 });

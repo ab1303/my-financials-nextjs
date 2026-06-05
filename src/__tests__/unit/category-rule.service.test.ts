@@ -191,7 +191,9 @@ describe("category-rule service", () => {
       const calls = mockTransactionCount.mock.calls;
       expect(calls).toBeDefined();
       expect(calls.length).toBeGreaterThan(0);
-      const callArgs = calls[0][0];
+      const call = calls[0];
+      expect(call).toBeDefined();
+      const callArgs = call![0];
       expect(callArgs.where.userId).toBe("user-1");
       expect(callArgs.where.description).toBeDefined();
     });
@@ -209,7 +211,9 @@ describe("category-rule service", () => {
       const calls = mockTransactionCount.mock.calls;
       expect(calls).toBeDefined();
       expect(calls.length).toBeGreaterThan(0);
-      const callArgs = calls[0][0];
+      const call = calls[0];
+      expect(call).toBeDefined();
+      const callArgs = call![0];
       expect(callArgs.where.id.not).toBe("tx-exclude");
     });
   });

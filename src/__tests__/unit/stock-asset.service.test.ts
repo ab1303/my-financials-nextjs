@@ -27,7 +27,10 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
     return v as unknown as Prisma.Decimal;
   };
 
-  type HoldingOverrides = Omit<Partial<StockHoldingWithAccount>, 'quantity' | 'buyPrice' | 'currentPrice'> & {
+  type HoldingOverrides = Omit<
+    Partial<StockHoldingWithAccount>,
+    'quantity' | 'buyPrice' | 'currentPrice'
+  > & {
     quantity?: number | Prisma.Decimal | undefined;
     buyPrice?: number | Prisma.Decimal | undefined;
     currentPrice?: number | Prisma.Decimal | undefined;
@@ -69,7 +72,10 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       cleanedOverrides.buyPrice = toDecimal(overrides.buyPrice as any, 150);
     }
     if (overrides.currentPrice !== undefined) {
-      cleanedOverrides.currentPrice = toDecimal(overrides.currentPrice as any, 175);
+      cleanedOverrides.currentPrice = toDecimal(
+        overrides.currentPrice as any,
+        175,
+      );
     }
 
     const merged = {
@@ -332,9 +338,9 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
         quantity: 100,
         buyPrice: 50,
         currentPrice: 0, // No longer holding
-        salePrice: 75,
+        salePrice: new Decimal(75),
         saleDate: new Date('2024-01-30'),
-        soldQuantity: 100,
+        soldQuantity: new Decimal(100),
       });
 
       // Act
@@ -359,9 +365,9 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
         quantity: 100,
         buyPrice: 50,
         currentPrice: 60,
-        salePrice: 75,
+        salePrice: new Decimal(75),
         saleDate: new Date('2024-01-15'),
-        soldQuantity: 50,
+        soldQuantity: new Decimal(50),
       });
 
       // Act

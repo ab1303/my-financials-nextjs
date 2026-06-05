@@ -19,10 +19,10 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       const monthInput = '2023-06';
       
       // Act: Parse the month input
-      const parts = monthInput.split('-');
+      const parts = (monthInput as any)?.split('-') ?? [];
       if (parts.length !== 2) throw new Error('Invalid format');
       const [year, month] = parts;
-      if (year === undefined || month === undefined) throw new Error('Invalid format');
+      if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
       // Assert: Should be June 1, 2023
@@ -33,10 +33,10 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should handle January (month 1) correctly', () => {
       const monthInput = '2024-01';
-      const parts = monthInput.split('-');
+      const parts = (monthInput as any)?.split('-') ?? [];
       if (parts.length !== 2) throw new Error('Invalid format');
       const [year, month] = parts;
-      if (year === undefined || month === undefined) throw new Error('Invalid format');
+      if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
       expect(result.getMonth()).toBe(0); // January is 0
@@ -46,10 +46,10 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should handle December (month 12) correctly', () => {
       const monthInput = '2023-12';
-      const parts = monthInput.split('-');
+      const parts = (monthInput as any)?.split('-') ?? [];
       if (parts.length !== 2) throw new Error('Invalid format');
       const [year, month] = parts;
-      if (year === undefined || month === undefined) throw new Error('Invalid format');
+      if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
       expect(result.getMonth()).toBe(11); // December is 11
