@@ -168,6 +168,19 @@ export default function CleanseDonationDrawer({
     }
   }, [unlinkedTxQuery.data, isOpen, selectedTransactionId]);
 
+  // Temporary debug: log when transactions are set and which transaction is selected
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line no-console
+      console.debug(
+        '[CleanseDonationDrawer] selectedTransactionId=',
+        selectedTransactionId,
+      );
+    } catch (e) {
+      // ignore
+    }
+  }, [selectedTransactionId]);
+
   useEffect(() => {
     linkedForm.setValue('beneficiaryId', '', { shouldValidate: true });
   }, [linkedBeneficiaryType, linkedForm]);
@@ -621,7 +634,6 @@ function LinkedModeBody({
             ) : (
               <CleansingCandidatePicker
                 creditId={selectedTransactionId}
-                bankAccountId={bankId}
                 onSelect={(candidate) =>
                   onToggleEvidence({
                     id: candidate.transactionId,
