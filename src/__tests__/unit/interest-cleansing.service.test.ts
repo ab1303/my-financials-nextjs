@@ -288,6 +288,7 @@ describe('interest-cleansing.service', () => {
           business: { name: 'Charity A' },
           individual: null,
           transactionId: 'tx-1',
+          evidence: [],
         } as never,
         {
           id: 'dp-2',
@@ -298,6 +299,7 @@ describe('interest-cleansing.service', () => {
           business: null,
           individual: { firstName: 'John', lastName: 'Doe' },
           transactionId: null,
+          evidence: [],
         } as never,
       ]);
 
@@ -459,12 +461,14 @@ describe('interest-cleansing.service', () => {
 
       // Verify the correct months are generated
       const firstMonth = result.monthlyCredits[0];
-      expect(firstMonth.month).toBe(10); // October
-      expect(firstMonth.year).toBe(2022);
+      expect(firstMonth).toBeDefined();
+      expect(firstMonth!.month).toBe(10); // October
+      expect(firstMonth!.year).toBe(2022);
 
       const lastMonth = result.monthlyCredits[11];
-      expect(lastMonth.month).toBe(9); // September
-      expect(lastMonth.year).toBe(2023);
+      expect(lastMonth).toBeDefined();
+      expect(lastMonth!.month).toBe(9); // September
+      expect(lastMonth!.year).toBe(2023);
     });
 
     // TEST 10: Donations outside date window are excluded
@@ -519,7 +523,8 @@ describe('interest-cleansing.service', () => {
 
       // Verify only donations within window are included
       expect(result.cleansingDonations).toHaveLength(1);
-      expect(result.cleansingDonations[0].datePaid).toEqual(new Date('2024-06-20'));
+      expect(result.cleansingDonations[0]).toBeDefined();
+      expect(result.cleansingDonations[0]!.datePaid).toEqual(new Date('2024-06-20'));
       expect(result.yearlySummary.totalCleansed).toBe(50);
 
       // Verify the service queried with correct date range

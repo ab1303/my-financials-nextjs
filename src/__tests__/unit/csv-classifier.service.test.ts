@@ -390,6 +390,6 @@ describe('classifyCreditTransactions', () => {
     });
 
     const result = await classifyCreditTransactions([mockCredits[0]!]);
-    expect(result.classified[0].type).toBe('CREDIT');
+    expect(result.classified[0]?.type).toBe('CREDIT');
   });
 });

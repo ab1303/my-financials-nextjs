@@ -19,42 +19,42 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       const monthInput = '2023-06';
       
       // Act: Parse the month input
-      const parts = (monthInput as any)?.split('-') ?? [];
+      const parts = (monthInput as any).split('-') as string[];
       if (parts.length !== 2) throw new Error('Invalid format');
       const [year, month] = parts;
       if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
       // Assert: Should be June 1, 2023
-      expect(result.getFullYear()).toBe(2023);
-      expect(result.getMonth()).toBe(5); // 0-indexed (5 = June)
+      expect((result as any).getFullYear()).toBe(2023);
+      expect((result as any).getMonth()).toBe(5); // 0-indexed (5 = June)
       expect(result.getDate()).toBe(1);
     });
 
     it('should handle January (month 1) correctly', () => {
       const monthInput = '2024-01';
-      const parts = (monthInput as any)?.split('-') ?? [];
+      const parts = (monthInput as any).split('-') as string[];
       if (parts.length !== 2) throw new Error('Invalid format');
       const [year, month] = parts;
       if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
-      expect(result.getMonth()).toBe(0); // January is 0
+      expect((result as any).getMonth()).toBe(0); // January is 0
       expect(result.getDate()).toBe(1);
-      expect(result.getFullYear()).toBe(2024);
+      expect((result as any).getFullYear()).toBe(2024);
     });
 
     it('should handle December (month 12) correctly', () => {
       const monthInput = '2023-12';
-      const parts = (monthInput as any)?.split('-') ?? [];
+      const parts = (monthInput as any).split('-') as string[];
       if (parts.length !== 2) throw new Error('Invalid format');
       const [year, month] = parts;
       if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
-      expect(result.getMonth()).toBe(11); // December is 11
+      expect((result as any).getMonth()).toBe(11); // December is 11
       expect(result.getDate()).toBe(1);
-      expect(result.getFullYear()).toBe(2023);
+      expect((result as any).getFullYear()).toBe(2023);
     });
   });
 
@@ -199,7 +199,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
         const parts = formData.buyDate.split('-');
         if (parts.length === 2) {
           const [year, month] = parts;
-          formData.buyDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+          formData.buyDate = new Date(parseInt(year!), parseInt(month!) - 1, 1);
         }
       }
 
@@ -223,7 +223,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
         const parts = formData.buyDate.split('-');
         if (parts.length === 2) {
           const [year, month] = parts;
-          formData.buyDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+          formData.buyDate = new Date(parseInt(year!), parseInt(month!) - 1, 1);
         }
       }
 

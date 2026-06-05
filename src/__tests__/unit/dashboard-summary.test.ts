@@ -51,7 +51,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     vi.mocked(auth).mockResolvedValue(mockUnauthenticatedSession);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await GET(request);
+    const response = await (GET as any)(request);
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -76,7 +76,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     prismaMock.transaction.findMany.mockResolvedValue([]);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await GET(request);
+    const response = await (GET as any)(request);
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as DashboardSummaryResponse;
@@ -115,7 +115,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     prismaMock.transaction.findMany.mockResolvedValue([]);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await GET(request);
+    const response = await (GET as any)(request);
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as DashboardSummaryResponse;
@@ -147,7 +147,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     prismaMock.transaction.findMany.mockResolvedValue([]);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await GET(request);
+    const response = await (GET as any)(request);
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as DashboardSummaryResponse;
@@ -211,7 +211,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     prismaMock.transaction.findMany.mockResolvedValue(mockTransactions as any);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await GET(request);
+    const response = await (GET as any)(request);
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as DashboardSummaryResponse;

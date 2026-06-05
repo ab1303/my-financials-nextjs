@@ -319,12 +319,12 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       expect(result.monthlyCredits).toHaveLength(12);
 
       // Validate first month is October 2022
-      expect(result.monthlyCredits[0].month).toBe(10);
-      expect(result.monthlyCredits[0].year).toBe(2022);
+      expect(result.monthlyCredits[0]?.month).toBe(10);
+      expect(result.monthlyCredits[0]?.year).toBe(2022);
 
       // Validate last month is September 2023
-      expect(result.monthlyCredits[11].month).toBe(9);
-      expect(result.monthlyCredits[11].year).toBe(2023);
+      expect(result.monthlyCredits[11]?.month).toBe(9);
+      expect(result.monthlyCredits[11]?.year).toBe(2023);
 
       // Validate totals:  +  +  +  =  received
       expect(result.yearlySummary.totalReceived).toBe(90);
@@ -390,12 +390,12 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
 
       // Verify donation query was called with correct window
-      const donationCallArg = (prismaMock.donationPayment.findMany as any).mock.calls[0][0];
-      const dateFromQuery = donationCallArg.where.datePaid.gte;
-      const dateToQuery = donationCallArg.where.datePaid.lte;
+      const donationCallArg = (prismaMock.donationPayment.findMany as any)?.mock?.calls?.[0]?.[0];
+      const dateFromQuery = donationCallArg?.where?.datePaid?.gte;
+      const dateToQuery = donationCallArg?.where?.datePaid?.lte;
 
-      expect(dateFromQuery.toISOString().slice(0, 10)).toBe('2023-01-01');
-      expect(dateToQuery.toISOString().slice(0, 10)).toBe('2023-12-31');
+      expect(dateFromQuery?.toISOString().slice(0, 10)).toBe('2023-01-01');
+      expect(dateToQuery?.toISOString().slice(0, 10)).toBe('2023-12-31');
 
       // Verify only donations within window are included
       expect(result.cleansingDonations).toHaveLength(1);
@@ -455,8 +455,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
 
       // Verify monthly credits are generated from April to March
       expect(result.monthlyCredits).toHaveLength(12);
-      expect(result.monthlyCredits[0].month).toBe(4); // April
-      expect(result.monthlyCredits[11].month).toBe(3); // March
+      expect(result.monthlyCredits[0]?.month).toBe(4); // April
+      expect(result.monthlyCredits[11]?.month).toBe(3); // March
     });
 
     // PHASE 3 TEST 6: Monthly credits span full window with correct months
@@ -476,7 +476,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       } as never);
 
       // Mock one transaction per month to verify all 12 months are captured
-      const transactions = [];
+      const transactions: any[] = [];
       const startMonth = 10;
       const startYear = 2022;
       for (let i = 0; i < 12; i++) {

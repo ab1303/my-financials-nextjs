@@ -150,6 +150,15 @@ describe('Income Server Actions', () => {
         userId,
       } as any);
 
+      const input = {
+        id: 'txn-1',
+        dateEarned: new Date('2024-01-15'),
+        amount: 5000,
+        incomeSourceId: 'src-1',
+      };
+
+      const result = await editRow(input);
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('imported income entry');
     });

@@ -162,7 +162,7 @@ describe('Income Service (integration)', () => {
       prismaMock.transaction.findUnique.mockResolvedValue({
         source: 'USER_MANUAL',
         userId: 'other-user',
-      });
+      } as any);
       await expect(deleteIncomeEntry('txn-1', userId, prismaMock)).rejects.toThrow('Income entry not found');
     });
   });

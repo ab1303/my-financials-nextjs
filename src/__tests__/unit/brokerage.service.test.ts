@@ -86,11 +86,11 @@ describe('Brokerage Service', () => {
       // Assert
       expect(results).toHaveLength(3);
       expect(results[0]).toBeDefined();
-      expect(results[0].name).toBe('Fidelity');
+      expect(results[0]?.name).toBe('Fidelity');
       expect(results[1]).toBeDefined();
-      expect(results[1].name).toBe('Charles Schwab');
+      expect(results[1]?.name).toBe('Charles Schwab');
       expect(results[2]).toBeDefined();
-      expect(results[2].name).toBe('TD Ameritrade');
+      expect(results[2]?.name).toBe('TD Ameritrade');
       expect(prismaMock.business.create).toHaveBeenCalledTimes(3);
     });
   });

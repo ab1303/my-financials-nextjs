@@ -320,8 +320,8 @@ describe('bank-asset.service', () => {
       const out = await getSnapshotTotals('s1', 'u1');
       expect(out).toBeDefined();
       expect(out?.banks).toBeDefined();
-      expect(out?.banks[0].bankName).toBe('AlphaBank');
-      expect(out?.banks[1].bankName).toBe('ZetaBank');
+      expect(out?.banks?.[0]?.bankName).toBe('AlphaBank');
+      expect(out?.banks?.[1]?.bankName).toBe('ZetaBank');
     });
   });
 });
