@@ -290,6 +290,115 @@ export const getUnlinkedCleansingDebitTransactions = async (
 // Interest cleansing: tRPC service helpers (Phase D)
 // -------------------------
 
+export type Candidate = {
+  transactionId: string;
+  date: string;
+  amount: number;
+  accountId: string;
+  description: string;
+  score: number; // 0-100
+  scoreBreakdown: {
+    amountScore: number;
+    dateScore: number;
+    descScore: number;
+    accountScore?: number;
+  };
+  reasonShort: string;
+};
+
+export async function getCleansingDebitCandidates(params: {
+  userId: string;
+  creditId: string;
+  bankAccountId?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  minScore?: number;
+}): Promise<Candidate[]> {
+  const { userId, creditId, bankAccountId, search, dateFrom, dateTo, limit = 20, minScore = 0 } = params;
+
+  const credit = await prisma.transaction.findUniqueOrThrow({
+    where: { id: creditId },
+  });
+  const creditAmount = credit.amount.toNumber();
+  const creditDate = new Date(credit.date);
+
+  // 1. Fetch bounded superset of eligible DEBITs
+  const whereClause: any = {
+    userId,
+    type: 'DEBIT',
+    status: 'CONFIRMED',
+    donationPayment: null, // Unlinked
+    category: {
+      equals: CLEANSING_CATEGORY_NAME,
+      mode: 'insensitive',
+    },
+  };
+
+  if (bankAccountId) whereClause.bankAccountId = bankAccountId;
+  if (dateFrom) whereClause.date = { ...whereClause.date, gte: new Date(dateFrom) };
+  if (dateTo) whereClause.date = { ...whereClause.date, lte: new Date(dateTo) };
+  if (search) whereClause.description = { contains: search, mode: 'insensitive' };
+
+  const rawCandidates = await prisma.transaction.findMany({
+    where: whereClause,
+    take: 200, // maxCandidateFetch
+    orderBy: { date: 'desc' },
+  });
+
+  // 2. Score candidates
+  const candidates: Candidate[] = rawCandidates.map((tx) => {
+    const amount = Number(tx.amount);
+    const txDate = new Date(tx.date);
+
+    // amountScore (40%)
+    const amountScore =
+      1 -
+      Math.abs(creditAmount - amount) /
+        Math.max(creditAmount, amount, 1);
+    
+    // dateScore (20%)
+    const daysBetween = Math.abs((txDate.getTime() - creditDate.getTime()) / (1000 * 60 * 60 * 24));
+    const dateScore = Math.max(0, 1 - daysBetween / 90);
+    
+    // descScore (30%)
+    const creditTokens = new Set(credit.description.toLowerCase().split(/\W+/).filter(Boolean));
+    const txTokens = new Set(tx.description.toLowerCase().split(/\W+/).filter(Boolean));
+    let common = 0;
+    creditTokens.forEach(t => { if (txTokens.has(t)) common++; });
+    const descScore = creditTokens.size === 0 ? 0 : common / creditTokens.size;
+
+    // accountScore (10%)
+    const accountScore = bankAccountId && tx.bankAccountId === bankAccountId ? 1 : 0;
+
+    const combined = amountScore * 0.4 + dateScore * 0.2 + descScore * 0.3 + accountScore * 0.1;
+    const score = Math.round(100 * Math.min(1, Math.max(0, combined)));
+
+    return {
+      transactionId: tx.id,
+      date: tx.date.toISOString().slice(0, 10),
+      amount,
+      accountId: tx.bankAccountId ?? 'unknown',
+      description: tx.description,
+      score,
+      scoreBreakdown: {
+        amountScore: Math.round(amountScore * 100),
+        dateScore: Math.round(dateScore * 100),
+        descScore: Math.round(descScore * 100),
+        accountScore: Math.round(accountScore * 100),
+      },
+      reasonShort: `Amount ${amountScore > 0.8 ? 'match' : 'diff'} · Date ${daysBetween < 7 ? 'proximity' : 'dist'}`,
+    };
+  });
+
+  // 3. Sort and filter
+  return candidates
+    .filter(c => c.score >= minScore)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}
+
 export const suggestAllocations = async (
   creditId: string,
   limit: number,

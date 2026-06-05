@@ -4,6 +4,7 @@ import {
   getYearlyCleansingData,
   getUnlinkedInterestTransactions,
   getUnlinkedCleansingDebitTransactions,
+  getCleansingDebitCandidates,
   suggestAllocations,
   applyAllocations,
   removeAllocation,
@@ -36,6 +37,19 @@ export const bankInterestRouter = router({
         ctx.session.user.id,
         input.bankId,
       ),
+    ),
+  getCleansingDebitCandidates: protectedProcedure
+    .input(z.object({
+      creditId: z.string(),
+      bankAccountId: z.string().optional(),
+      search: z.string().optional(),
+      dateFrom: z.string().optional(),
+      dateTo: z.string().optional(),
+      limit: z.number().int().min(1).max(50).optional(),
+      minScore: z.number().min(0).max(100).optional(),
+    }))
+    .query(({ ctx, input }) =>
+      getCleansingDebitCandidates({ userId: ctx.session.user.id, ...input }),
     ),
   suggestAllocations: protectedProcedure
     .input(z.object({ creditId: z.string(), limit: z.number().optional() }))

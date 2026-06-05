@@ -17,6 +17,7 @@ import CreateBeneficiaryModal from '@/app/(authorized)/cashflow/donations/_compo
 import { getSelectStyles } from '@/lib/select-styles';
 import { trpc } from '@/server/trpc/client';
 import { Badge } from '@/components/ui/badge';
+import { CleansingCandidatePicker } from './CleansingCandidatePicker';
 
 // ---------- Types ----------
 
@@ -617,93 +618,20 @@ function LinkedModeBody({
                   Select an interest credit to see suggestions.
                 </p>
               </div>
-            ) : isSuggesting ? (
-              <div className='space-y-4'>
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className='h-16 w-full animate-pulse rounded-md bg-gray-100 dark:bg-gray-800'
-                  />
-                ))}
-              </div>
-            ) : suggestions.length === 0 ? (
-              <div className='rounded-md border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400'>
-                No candidate evidence transactions found within 90 days.
-              </div>
             ) : (
-              <div className='flex-1 overflow-y-auto pr-2 space-y-2'>
-                {suggestions.map((s) => {
-                  const isChecked = selectedEvidence.some(
-                    (ev) => ev.id === s.donationPaymentId,
-                  );
-                  const confidenceColor =
-                    s.score >= 0.85
-                      ? 'text-green-600 dark:text-green-400'
-                      : s.score >= 0.6
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-gray-500';
-
-                  return (
-                    <div
-                      key={s.donationPaymentId}
-                      className={`group flex items-start gap-3 rounded-md border p-3 transition-colors ${isChecked ? 'border-blue-500 bg-blue-50/50 dark:border-blue-400 dark:bg-blue-950/30' : 'border-gray-100 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700'}`}
-                    >
-                      <div className='pt-0.5'>
-                        <input
-                          type='checkbox'
-                          checked={isChecked}
-                          onChange={() =>
-                            onToggleEvidence({
-                              id: s.donationPaymentId,
-                              amount: s.suggestedAmount,
-                              description: 'Donation Payment',
-                              score: s.score,
-                            })
-                          }
-                          className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-950'
-                        />
-                      </div>
-                      <div className='flex-1 min-w-0'>
-                        <div className='flex items-center justify-between gap-2'>
-                          <span
-                            className={`text-[10px] font-bold ${confidenceColor}`}
-                          >
-                            {(s.score * 100).toFixed(0)}% match
-                          </span>
-                        </div>
-                        <p className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
-                          {formatCurrency(s.evidenceAmount)}
-                        </p>
-
-                        {isChecked && (
-                          <div className='mt-2 flex items-center gap-2'>
-                            <label className='text-[10px] font-medium text-gray-500'>
-                              Allocation:
-                            </label>
-                            <input
-                              type='number'
-                              step='0.01'
-                              max={s.evidenceAmount}
-                              className='h-7 w-24 rounded border border-gray-300 bg-white px-2 text-xs outline-none focus:border-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100'
-                              value={
-                                selectedEvidence.find(
-                                  (ev) => ev.id === s.donationPaymentId,
-                                )?.amount || 0
-                              }
-                              onChange={(e) =>
-                                onUpdateAmount(
-                                  s.donationPaymentId,
-                                  parseFloat(e.target.value) || 0,
-                                )
-                              }
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <CleansingCandidatePicker
+                creditId={selectedTransactionId}
+                bankAccountId={bankId}
+                onSelect={(candidate) =>
+                  onToggleEvidence({
+                    id: candidate.transactionId,
+                    amount: candidate.amount,
+                    description: candidate.description,
+                    date: new Date(candidate.date),
+                    score: candidate.score,
+                  })
+                }
+              />
             )}
           </div>
         </section>
