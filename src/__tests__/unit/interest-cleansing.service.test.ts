@@ -364,11 +364,19 @@ describe('interest-cleansing.service', () => {
           beneficiaryType: 'BUSINESS',
           business: { name: 'Charity B' },
           individual: null,
-          transactionId: 'tx-1',
+          interestTxId: 'tx-1',
+          evidence: [
+            {
+              id: 'ev-1',
+              amountApplied: new Decimal('80'),
+              evidenceTransaction: { description: 'Donation B', date: new Date('2024-07-20') },
+            },
+          ],
         } as never,
       ]);
 
       const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+
 
       // Verify totals
       expect(result.yearlySummary.totalReceived).toBe(200); // $80 + $120
@@ -441,11 +449,19 @@ describe('interest-cleansing.service', () => {
           beneficiaryType: 'BUSINESS',
           business: { name: 'Charity C' },
           individual: null,
-          transactionId: 'tx-1',
+          interestTxId: 'tx-1',
+          evidence: [
+            {
+              id: 'ev-1',
+              amountApplied: new Decimal('10'),
+              evidenceTransaction: { description: 'Donation C', date: new Date('2022-10-10') },
+            },
+          ],
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+        const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+
 
       // Verify 12-month fiscal window is generated (Oct-Sep)
       expect(result.monthlyCredits.length).toBe(12); // 12 months in fiscal window
@@ -514,6 +530,7 @@ describe('interest-cleansing.service', () => {
           business: { name: 'Inside Window' },
           individual: null,
           transactionId: null,
+          evidence: [],
         } as never,
         // NOTE: These would NOT be returned by Prisma because the query filters by datePaid
         // We're testing that the service correctly passes datePaid filters to the query

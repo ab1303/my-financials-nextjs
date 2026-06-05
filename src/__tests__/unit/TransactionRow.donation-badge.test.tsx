@@ -72,13 +72,13 @@ describe('TransactionRow donation badge', () => {
   it('renders the linked badge for linked donation debits', () => {
     renderRow({ category: 'Gifts & donations', type: 'DEBIT', isDonationLinked: true });
 
-    expect(screen.getByText('🔗 Linked')).toBeInTheDocument();
+    expect(screen.getByText('🔗 Donation linked')).toBeInTheDocument();
   });
 
   it('renders the needs recipient badge for unlinked donation debits', () => {
     renderRow({ category: 'Gifts & donations', type: 'DEBIT', isDonationLinked: false });
 
-    expect(screen.getByText('⚠️ Needs recipient')).toBeInTheDocument();
+    expect(screen.getByText('⚠️ Needs classification')).toBeInTheDocument();
   });
 
   it('does not render a badge for a non-donation debit row', () => {

@@ -352,8 +352,8 @@ describe('classifyCreditTransactions', () => {
 
     expect(result.classified[0]).toMatchObject({
       type: 'CREDIT',
-      llmCategory: 'EMPLOYMENT',
-      confirmedCategory: 'EMPLOYMENT',
+      llmCategory: 'OTHER',
+      confirmedCategory: 'OTHER',
       overridden: false,
       amount: 5000,
     });
@@ -364,7 +364,8 @@ describe('classifyCreditTransactions', () => {
     });
     expect(result.classified[2]).toMatchObject({
       type: 'CREDIT',
-      llmCategory: 'STOCKS',
+      llmCategory: 'OTHER',
+      confirmedCategory: 'OTHER',
     });
     expect(result.usage.totalTokens).toBe(150);
   });

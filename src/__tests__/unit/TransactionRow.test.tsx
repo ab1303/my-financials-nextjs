@@ -196,7 +196,7 @@ describe('TransactionRow', () => {
       target: { value: 'Transport' },
     });
 
-    expect(onCategoryChange).toHaveBeenCalledWith('tx-1', 'Transport');
+    expect(onCategoryChange).toHaveBeenCalledWith('tx-1', 'Transport', undefined, undefined, true);
   });
 
   it('lets the user exit the link picker with reset', () => {

@@ -73,7 +73,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'BUSINESS',
           business: { name: 'Charity A' },
           individual: null,
-          transactionId: 'tx-2022-001',
+          interestTxId: 'tx-2022-001',
+          evidence: [],
         } as never,
         {
           id: 'dp-2022-002',
@@ -83,7 +84,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'INDIVIDUAL',
           business: null,
           individual: { firstName: 'Jane', lastName: 'Smith' },
-          transactionId: 'tx-2022-002',
+          interestTxId: 'tx-2022-002',
+          evidence: [],
         } as never,
       ]);
 
@@ -182,7 +184,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'BUSINESS',
           business: { name: 'Charity FY1' },
           individual: null,
-          transactionId: 'tx-fy-001',
+          interestTxId: 'tx-fy-001',
+          evidence: [],
         } as never,
         {
           id: 'dp-fy-002',
@@ -192,7 +195,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'INDIVIDUAL',
           business: null,
           individual: { firstName: 'Donor', lastName: 'FY' },
-          transactionId: 'tx-fy-003',
+          interestTxId: 'tx-fy-003',
+          evidence: [],
         } as never,
       ]);
 
@@ -295,7 +299,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'BUSINESS',
           business: { name: 'Back-Dated Charity 1' },
           individual: null,
-          transactionId: 'tx-bd-001',
+          interestTxId: 'tx-bd-001',
+          evidence: [],
         } as never,
         {
           id: 'dp-bd-002',
@@ -305,7 +310,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'INDIVIDUAL',
           business: null,
           individual: { firstName: 'Back', lastName: 'Donor' },
-          transactionId: 'tx-bd-003',
+          interestTxId: 'tx-bd-003',
+          evidence: [],
         } as never,
       ]);
 
@@ -383,7 +389,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'BUSINESS',
           business: { name: 'Charity 2023' },
           individual: null,
-          transactionId: 'tx-2023-in-window',
+          interestTxId: 'tx-2023-in-window',
+          evidence: [],
         } as never,
       ]);
 
@@ -580,7 +587,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'BUSINESS',
           business: { name: 'Charity' },
           individual: null,
-          transactionId: 'tx-t1',
+          interestTxId: 'tx-t1',
+          evidence: [],
         } as never,
         {
           id: 'dp-t2',
@@ -590,7 +598,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           beneficiaryType: 'INDIVIDUAL',
           business: null,
           individual: { firstName: 'John', lastName: 'Doe' },
-          transactionId: null,
+          interestTxId: null,
+          evidence: [],
         } as never,
       ]);
 
