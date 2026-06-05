@@ -19,16 +19,26 @@ describe('Income Service (unit, with MockContext)', () => {
   });
 
   it('addIncomeEntry saves Transaction with correct fields', async () => {
-    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment' });
+    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({
+      id: 'src-1',
+      name: 'Employment',
+      description: null,
+      isActive: true,
+      createdAt: new Date(),
+    } as any);
     mockCtx.prisma.transaction.create.mockResolvedValue(
-      createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' })
+      createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' }),
     );
 
-    await addIncomeEntry(userId, {
-      dateEarned: new Date('2024-01-15'),
-      amount: 5000,
-      incomeSourceId: 'src-1',
-    }, mockCtx.prisma);
+    await addIncomeEntry(
+      userId,
+      {
+        dateEarned: new Date('2024-01-15'),
+        amount: 5000,
+        incomeSourceId: 'src-1',
+      },
+      mockCtx.prisma,
+    );
 
     expect(mockCtx.prisma.transaction.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -44,16 +54,26 @@ describe('Income Service (unit, with MockContext)', () => {
   });
 
   it('addIncomeEntry result includes incomeSource data', async () => {
-    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment' });
+    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({
+      id: 'src-1',
+      name: 'Employment',
+      description: null,
+      isActive: true,
+      createdAt: new Date(),
+    } as any);
     mockCtx.prisma.transaction.create.mockResolvedValue(
-      createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' })
+      createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' }),
     );
 
-    const result = await addIncomeEntry(userId, {
-      dateEarned: new Date('2024-01-15'),
-      amount: 5000,
-      incomeSourceId: 'src-1',
-    }, mockCtx.prisma);
+    const result = await addIncomeEntry(
+      userId,
+      {
+        dateEarned: new Date('2024-01-15'),
+        amount: 5000,
+        incomeSourceId: 'src-1',
+      },
+      mockCtx.prisma,
+    );
 
     expect(result.incomeSourceId).toBe('src-1');
     expect(result.source).toBe('USER_MANUAL');
@@ -80,35 +100,49 @@ describe('Income Service (unit, with MockContext)', () => {
       { id: 'src-1', name: 'Employment', isActive: true },
     ] as any);
 
-    const result = await getIncomeEntries(calendarYearId, userId, mockCtx.prisma);
+    const result = await getIncomeEntries(
+      calendarYearId,
+      userId,
+      mockCtx.prisma,
+    );
     expect(result).toHaveLength(1);
-    expect(result[0].incomeSourceName).toBe('Employment');
-    expect(result[0].amount).toBe(5000);
+    expect(result[0]!.incomeSourceName).toBe('Employment');
+    expect(result[0]!.amount).toBe(5000);
   });
 
   it('getIncomeEntries excludes Transfer-category credits from income', async () => {
     mockCtx.prisma.calendarYear.findUnique.mockResolvedValue({
-      fromYear: 2024, fromMonth: 1, toYear: 2024, toMonth: 12,
+      fromYear: 2024,
+      fromMonth: 1,
+      toYear: 2024,
+      toMonth: 12,
     } as any);
     mockCtx.prisma.transaction.findMany.mockResolvedValue([] as any);
     mockCtx.prisma.incomeSource.findMany.mockResolvedValue([] as any);
 
     await getIncomeEntries(calendarYearId, userId, mockCtx.prisma);
 
-    const whereArg = mockCtx.prisma.transaction.findMany.mock.calls[0]![0] as any;
-    expect(whereArg.where.category).toEqual({ notIn: ['Transfer', 'Reimbursement'] });
+    const whereArg = mockCtx.prisma.transaction.findMany.mock
+      .calls[0]![0] as any;
+    expect(whereArg.where.category).toEqual({
+      notIn: ['Transfer', 'Reimbursement'],
+    });
   });
 
   it('getIncomeEntries excludes Reimbursement-category credits from income', async () => {
     mockCtx.prisma.calendarYear.findUnique.mockResolvedValue({
-      fromYear: 2024, fromMonth: 1, toYear: 2024, toMonth: 12,
+      fromYear: 2024,
+      fromMonth: 1,
+      toYear: 2024,
+      toMonth: 12,
     } as any);
     mockCtx.prisma.transaction.findMany.mockResolvedValue([] as any);
     mockCtx.prisma.incomeSource.findMany.mockResolvedValue([] as any);
 
     await getIncomeEntries(calendarYearId, userId, mockCtx.prisma);
 
-    const whereArg = mockCtx.prisma.transaction.findMany.mock.calls[0]![0] as any;
+    const whereArg = mockCtx.prisma.transaction.findMany.mock
+      .calls[0]![0] as any;
     // Reimbursements are expense offsets (split payments), not earned income
     expect(whereArg.where.category.notIn).toContain('Reimbursement');
     expect(whereArg.where.category.notIn).toContain('Transfer');
@@ -118,15 +152,22 @@ describe('Income Service (unit, with MockContext)', () => {
     mockCtx.prisma.transaction.findUnique.mockResolvedValue({
       source: 'USER_MANUAL',
       userId,
-    });
-    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({ name: 'Employment' });
-    mockCtx.prisma.transaction.update.mockResolvedValue({});
+    } as any);
+    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({
+      name: 'Employment',
+    } as any);
+    mockCtx.prisma.transaction.update.mockResolvedValue({} as any);
 
-    await updateIncomeEntry('txn-1', userId, {
-      dateEarned: new Date('2024-01-15'),
-      amount: 1234,
-      incomeSourceId: 'src-1',
-    }, mockCtx.prisma);
+    await updateIncomeEntry(
+      'txn-1',
+      userId,
+      {
+        dateEarned: new Date('2024-01-15'),
+        amount: 1234,
+        incomeSourceId: 'src-1',
+      },
+      mockCtx.prisma,
+    );
 
     expect(mockCtx.prisma.transaction.update).toHaveBeenCalled();
   });
@@ -135,9 +176,11 @@ describe('Income Service (unit, with MockContext)', () => {
     mockCtx.prisma.transaction.findUnique.mockResolvedValue({
       source: 'USER_MANUAL',
       userId,
-    });
-    mockCtx.prisma.transaction.delete.mockResolvedValue({});
+    } as any);
+    mockCtx.prisma.transaction.delete.mockResolvedValue({} as any);
     await deleteIncomeEntry('txn-1', userId, mockCtx.prisma);
-    expect(mockCtx.prisma.transaction.delete).toHaveBeenCalledWith({ where: { id: 'txn-1' } });
+    expect(mockCtx.prisma.transaction.delete).toHaveBeenCalledWith({
+      where: { id: 'txn-1' },
+    });
   });
 });

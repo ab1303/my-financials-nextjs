@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { AITokenUsage } from '@/server/services/ai-import/_types';
+import { makeCategories } from '@/__tests__/helpers/test-helpers';
 
 /**
  * Unit Tests for Category Matcher Service
@@ -59,11 +60,11 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         '@/server/services/ai-import/category-matcher.service'
       );
 
-      const result = await matchCategoryWithEmbedding('Food', [
+      const result = await matchCategoryWithEmbedding('Food', makeCategories([
         'Food',
         'Transportation',
         'Housing',
-      ]);
+      ]));
 
       expect(result).toEqual({
         categoryName: 'Food',
@@ -84,10 +85,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         '@/server/services/ai-import/category-matcher.service'
       );
 
-      const result = await matchCategoryWithEmbedding('FOOD', [
+      const result = await matchCategoryWithEmbedding('FOOD', makeCategories([
         'Food',
         'Transportation',
-      ]);
+      ]));
 
       expect(result.categoryName).toBe('Food');
       expect(result.embeddingUsage.totalTokens).toBe(0);
@@ -99,10 +100,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         '@/server/services/ai-import/category-matcher.service'
       );
 
-      const result = await matchCategoryWithEmbedding('  Food  ', [
+      const result = await matchCategoryWithEmbedding('  Food  ', makeCategories([
         'Food',
         'Transportation',
-      ]);
+      ]));
 
       expect(result.categoryName).toBe('Food');
       expect(result.embeddingUsage.totalTokens).toBe(0);
@@ -124,10 +125,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       );
 
       // "Food" is a substring of "Food & Dining"
-      const result = await matchCategoryWithEmbedding('Food', [
+      const result = await matchCategoryWithEmbedding('Food', makeCategories([
         'Food & Dining',
         'Transportation',
-      ]);
+      ]));
 
       expect(result.categoryName).toBe('Food & Dining');
       expect(result.embeddingUsage.totalTokens).toBe(0);
@@ -140,10 +141,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       );
 
       // Category "Transport" is substring of extracted name "Public Transportation"
-      const result = await matchCategoryWithEmbedding('Public Transportation', [
+      const result = await matchCategoryWithEmbedding('Public Transportation', makeCategories([
         'Transport',
         'Housing',
-      ]);
+      ]));
 
       expect(result.categoryName).toBe('Transport');
       expect(result.embeddingUsage.totalTokens).toBe(0);
@@ -155,10 +156,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         '@/server/services/ai-import/category-matcher.service'
       );
 
-      const result = await matchCategoryWithEmbedding('FOOD', [
+      const result = await matchCategoryWithEmbedding('FOOD', makeCategories([
         'Food & Dining',
         'Transportation',
-      ]);
+      ]));
 
       expect(result.categoryName).toBe('Food & Dining');
       expect(result.embeddingUsage.totalTokens).toBe(0);
@@ -200,11 +201,11 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('taxi ride', [
+      const result = await matchCategoryWithEmbedding('taxi ride', makeCategories([
         'Food',
         'Transportation',
         'Housing',
-      ]);
+      ]));
 
       expect(result).toEqual({
         categoryName: 'Transportation',
@@ -216,11 +217,11 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       });
 
       // Verify embedding service was called
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).toHaveBeenCalledWith([
+      expect(mockEmbeddingService.ensureCategoryEmbeddings).toHaveBeenCalledWith(makeCategories([
         'Food',
         'Transportation',
         'Housing',
-      ]);
+      ]));
       expect(mockEmbeddingService.findBestEmbeddingMatch).toHaveBeenCalledWith(
         'taxi ride',
       );
@@ -251,10 +252,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('doctor visit', [
+      const result = await matchCategoryWithEmbedding('doctor visit', makeCategories([
         'Food',
         'Healthcare',
-      ]);
+      ]));
 
       expect(result.embeddingUsage).toEqual({
         promptTokens: 55, // 50 + 5
@@ -289,10 +290,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       });
 
       // First call
-      const result1 = await matchCategoryWithEmbedding('movie tickets', [
+      const result1 = await matchCategoryWithEmbedding('movie tickets', makeCategories([
         'Entertainment',
         'Food',
-      ]);
+      ]));
 
       expect(result1.embeddingUsage.totalTokens).toBe(108); // 100 + 8
 
@@ -318,10 +319,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       });
 
       // Second call
-      const result2 = await matchCategoryWithEmbedding('restaurant', [
+      const result2 = await matchCategoryWithEmbedding('restaurant', makeCategories([
         'Entertainment',
         'Food',
-      ]);
+      ]));
 
       expect(result2.embeddingUsage.totalTokens).toBe(107); // 100 + 7
     });
@@ -360,10 +361,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('random gibberish', [
+      const result = await matchCategoryWithEmbedding('random gibberish', makeCategories([
         'Food',
         'Transportation',
-      ]);
+      ]));
 
       expect(result).toEqual({
         categoryName: null,
@@ -400,10 +401,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('xyz123', [
+      const result = await matchCategoryWithEmbedding('xyz123', makeCategories([
         'Food',
         'Housing',
-      ]);
+      ]));
 
       expect(result.categoryName).toBeNull();
       expect(result.embeddingUsage.totalTokens).toBe(55); // Still accumulates tokens
@@ -434,9 +435,9 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('unrelated', [
+      const result = await matchCategoryWithEmbedding('unrelated', makeCategories([
         'Food',
-      ]);
+      ]));
 
       expect(result.categoryName).toBeNull();
       expect(result.embeddingUsage.totalTokens).toBe(13);
@@ -462,10 +463,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       );
 
       // When fallback to fuzzy matching happens, no embedding service should succeed
-      const result = await matchCategoryWithEmbedding('restarant', [
+      const result = await matchCategoryWithEmbedding('restarant', makeCategories([
         'Food',
         'Transportation',
-      ]);
+      ]));
 
       // Should match "Food" via fuzzy (Levenshtein similarity)
       // "restarant" is similar to "Food" via fuzzy matching rules
@@ -482,10 +483,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         new Error('Network error'),
       );
 
-      const result = await matchCategoryWithEmbedding('xyzabc123', [
+      const result = await matchCategoryWithEmbedding('xyzabc123', makeCategories([
         'Food',
         'Transportation',
-      ]);
+      ]));
 
       // "xyzabc123" has no fuzzy match with available categories
       expect(result.categoryName).toBeNull();
@@ -507,10 +508,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         new Error('Embedding service timeout'),
       );
 
-      const result = await matchCategoryWithEmbedding('pizza place', [
+      const result = await matchCategoryWithEmbedding('pizza place', makeCategories([
         'Food',
         'Transportation',
-      ]);
+      ]));
 
       // Should fall back to fuzzy; "pizza place" should match "Food"
       expect(result.categoryName).not.toBeNull();
@@ -524,10 +525,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       );
 
       // Exact match should succeed without calling embedding service at all
-      const result = await matchCategoryWithEmbedding('Food', [
+      const result = await matchCategoryWithEmbedding('Food', makeCategories([
         'Food',
         'Transportation',
-      ]);
+      ]));
 
       expect(result.categoryName).toBe('Food');
       expect(result.embeddingUsage.totalTokens).toBe(0);
@@ -543,10 +544,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         new Error('Failed to initialize category embeddings'),
       );
 
-      const result = await matchCategoryWithEmbedding('dining out', [
+      const result = await matchCategoryWithEmbedding('dining out', makeCategories([
         'Food',
         'Housing',
-      ]);
+      ]));
 
       // Should fall back to fuzzy matching
       // "dining out" should fuzzy-match to "Food"
@@ -580,10 +581,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         usage: { promptTokens: 3, completionTokens: 0, totalTokens: 3 },
       });
 
-      const result = await matchCategoryWithEmbedding('Food', [
+      const result = await matchCategoryWithEmbedding('Food', makeCategories([
         'Food',
         'Similar Category',
-      ]);
+      ]));
 
       // Should return exact match "Food" and zero tokens
       expect(result.categoryName).toBe('Food');
@@ -612,10 +613,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         usage: { promptTokens: 3, completionTokens: 0, totalTokens: 3 },
       });
 
-      const result = await matchCategoryWithEmbedding('Food', [
+      const result = await matchCategoryWithEmbedding('Food', makeCategories([
         'Food & Beverages',
         'Other',
-      ]);
+      ]));
 
       // Should return substring match "Food & Beverages" and zero tokens
       expect(result.categoryName).toBe('Food & Beverages');
@@ -671,10 +672,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         usage: { promptTokens: 3, completionTokens: 0, totalTokens: 3 },
       });
 
-      const result = await matchCategoryWithEmbedding('   Taxi   ', [
+      const result = await matchCategoryWithEmbedding('   Taxi   ', makeCategories([
         'Taxi Services',
         'Transportation',
-      ]);
+      ]));
 
       // "   Taxi   " should substring-match with "Taxi Services"
       expect(result.categoryName).toBe('Taxi Services');

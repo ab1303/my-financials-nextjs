@@ -8,6 +8,7 @@ export const mockSession: Session = {
     id: 'test-user-id',
     name: 'Test User',
     email: 'test@example.com',
+    role: 'USER',
   },
   expires: '2099-12-31T23:59:59.999Z',
 };

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
+import type { CalendarEnumType } from '@prisma/client';
 
 const mockRouter = {
   push: vi.fn(),
@@ -41,15 +42,23 @@ describe('IncomeForm decimal formatting', () => {
         id: 'year-1',
         description: 'FY 2024',
         fromYear: 2024,
+        fromMonth: 1,
+        toMonth: 12,
         toYear: 2025,
+        type: 'ANNUAL' as CalendarEnumType,
+        lockedAt: null,
       },
     ],
     defaultCalendarYearId: 'year-1',
+    defaultCalendarType: 'ANNUAL' as CalendarEnumType,
   };
 
   it('renders Total Earned as $15.80 for value 15.8', () => {
     render(
-      <IncomeForm initialData={{ ...baseInitialData, totalIncome: 15.8 }} yearIdParam='year-1'>
+      <IncomeForm
+        initialData={{ ...baseInitialData, totalIncome: 15.8 }}
+        yearIdParam='year-1'
+      >
         <div>Children</div>
       </IncomeForm>,
     );
@@ -59,7 +68,10 @@ describe('IncomeForm decimal formatting', () => {
 
   it('renders Total Earned with thousands separator and 2 decimals', () => {
     render(
-      <IncomeForm initialData={{ ...baseInitialData, totalIncome: 149210.26 }} yearIdParam='year-1'>
+      <IncomeForm
+        initialData={{ ...baseInitialData, totalIncome: 149210.26 }}
+        yearIdParam='year-1'
+      >
         <div>Children</div>
       </IncomeForm>,
     );

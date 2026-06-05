@@ -5,8 +5,8 @@ import CategoriesClient from '@/app/(authorized)/settings/categories/_components
 import IncomeSources from '@/app/(authorized)/settings/categories/_components/IncomeSources';
 
 const mocks = vi.hoisted(() => ({
-  incomeQueryState: { data: [], isLoading: false as boolean },
-  expenseQueryState: { data: [], isLoading: false as boolean },
+  incomeQueryState: { data: [] as any[], isLoading: false as boolean },
+  expenseQueryState: { data: [] as any[], isLoading: false as boolean },
   invalidateMock: vi.fn(),
   useMutationMock: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }));
@@ -78,15 +78,23 @@ describe('Categories settings', () => {
   it('CategoriesClient renders Income Sources section', () => {
     render(<CategoriesClient />);
 
-    expect(screen.getByRole('heading', { name: 'Income Sources' })).toBeInTheDocument();
-    expect(screen.getByLabelText(/search or add income source/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Income Sources' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/search or add income source/i),
+    ).toBeInTheDocument();
   });
 
   it('CategoriesClient renders Expense Categories section alongside Income Sources', () => {
     render(<CategoriesClient />);
 
-    expect(screen.getByRole('heading', { name: 'Expense Categories' })).toBeInTheDocument();
-    expect(screen.getByLabelText(/search or add expense category/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Expense Categories' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/search or add expense category/i),
+    ).toBeInTheDocument();
   });
 
   it('IncomeSources renders loading state while data is fetching', () => {
@@ -95,7 +103,9 @@ describe('Categories settings', () => {
     render(<IncomeSources />);
 
     // LoadingSkeleton renders animated placeholder divs, not text
-    expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(
+      0,
+    );
   });
 
   it('IncomeSources renders active sources list', () => {
@@ -118,7 +128,8 @@ describe('Categories settings', () => {
     render(<IncomeSources />);
 
     expect(screen.getByText('Inactive')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Restore Old Source' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Restore Old Source' }),
+    ).toBeInTheDocument();
   });
 });
-

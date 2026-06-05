@@ -188,7 +188,10 @@ describe("category-rule service", () => {
       expect(result).toBe(3);
       expect(mockTransactionCount).toHaveBeenCalled();
       // Verify the call was made with pattern matching
-      const callArgs = mockTransactionCount.mock.calls[0][0];
+      const calls = mockTransactionCount.mock.calls;
+      expect(calls).toBeDefined();
+      expect(calls.length).toBeGreaterThan(0);
+      const callArgs = calls[0][0];
       expect(callArgs.where.userId).toBe("user-1");
       expect(callArgs.where.description).toBeDefined();
     });
@@ -203,7 +206,10 @@ describe("category-rule service", () => {
         excludeTransactionId: "tx-exclude",
       });
 
-      const callArgs = mockTransactionCount.mock.calls[0][0];
+      const calls = mockTransactionCount.mock.calls;
+      expect(calls).toBeDefined();
+      expect(calls.length).toBeGreaterThan(0);
+      const callArgs = calls[0][0];
       expect(callArgs.where.id.not).toBe("tx-exclude");
     });
   });

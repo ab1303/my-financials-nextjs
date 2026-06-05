@@ -18,14 +18,26 @@ describe('incomeSource router', () => {
       { id: '2', name: 'Freelance', isActive: false },
     ] as any);
 
-    prismaMock.transaction.groupBy.mockResolvedValue([
+    (prismaMock.transaction.groupBy as any).mockResolvedValue([
       { category: 'Salary', _count: { category: 2 } },
       { category: 'Freelance', _count: { category: 0 } },
     ] as any);
 
     await expect(caller.incomeSource.getAll()).resolves.toEqual([
-      { id: '1', name: 'Salary', description: undefined, isActive: true, usageCount: 2 },
-      { id: '2', name: 'Freelance', description: undefined, isActive: false, usageCount: 0 },
+      {
+        id: '1',
+        name: 'Salary',
+        description: undefined,
+        isActive: true,
+        usageCount: 2,
+      },
+      {
+        id: '2',
+        name: 'Freelance',
+        description: undefined,
+        isActive: false,
+        usageCount: 0,
+      },
     ]);
   });
 
@@ -34,19 +46,32 @@ describe('incomeSource router', () => {
       { id: '1', name: 'Salary', isActive: true },
     ] as any);
 
-    prismaMock.transaction.groupBy.mockResolvedValue([] as any);
+    (prismaMock.transaction.groupBy as any).mockResolvedValue([] as any);
 
     await expect(caller.incomeSource.getAll()).resolves.toEqual([
-      { id: '1', name: 'Salary', description: undefined, isActive: true, usageCount: 0 },
+      {
+        id: '1',
+        name: 'Salary',
+        description: undefined,
+        isActive: true,
+        usageCount: 0,
+      },
     ]);
   });
 
   it('remove soft-deletes when transaction count > 0', async () => {
-    prismaMock.incomeSource.findUnique.mockResolvedValue({ name: 'Salary' });
+    prismaMock.incomeSource.findUnique.mockResolvedValue({
+      name: 'Salary',
+    } as any);
     prismaMock.transaction.count.mockResolvedValue(3);
-    prismaMock.incomeSource.update.mockResolvedValue({ id: '1', isActive: false } as any);
+    prismaMock.incomeSource.update.mockResolvedValue({
+      id: '1',
+      isActive: false,
+    } as any);
 
-    await expect(caller.incomeSource.remove({ id: '1' })).resolves.toEqual({ softDeleted: true });
+    await expect(caller.incomeSource.remove({ id: '1' })).resolves.toEqual({
+      softDeleted: true,
+    });
     expect(prismaMock.incomeSource.update).toHaveBeenCalledWith({
       where: { id: '1' },
       data: { isActive: false },
@@ -54,27 +79,40 @@ describe('incomeSource router', () => {
   });
 
   it('remove hard-deletes when transaction count === 0', async () => {
-    prismaMock.incomeSource.findUnique.mockResolvedValue({ name: 'Salary' });
+    prismaMock.incomeSource.findUnique.mockResolvedValue({
+      name: 'Salary',
+    } as any);
     prismaMock.transaction.count.mockResolvedValue(0);
     prismaMock.incomeSource.delete.mockResolvedValue({ id: '1' } as any);
 
-    await expect(caller.incomeSource.remove({ id: '1' })).resolves.toEqual({ softDeleted: false });
-    expect(prismaMock.incomeSource.delete).toHaveBeenCalledWith({ where: { id: '1' } });
+    await expect(caller.incomeSource.remove({ id: '1' })).resolves.toEqual({
+      softDeleted: false,
+    });
+    expect(prismaMock.incomeSource.delete).toHaveBeenCalledWith({
+      where: { id: '1' },
+    });
   });
 
   it('remove throws NOT_FOUND when source does not exist', async () => {
     prismaMock.incomeSource.findUnique.mockResolvedValue(null);
 
-    await expect(caller.incomeSource.remove({ id: 'bad-id' })).rejects.toMatchObject({
+    await expect(
+      caller.incomeSource.remove({ id: 'bad-id' }),
+    ).rejects.toMatchObject({
       code: 'NOT_FOUND',
       message: 'Income source not found',
     });
   });
 
   it('create rejects duplicate name', async () => {
-    prismaMock.incomeSource.findFirst.mockResolvedValue({ id: '1', name: 'Salary' } as any);
+    prismaMock.incomeSource.findFirst.mockResolvedValue({
+      id: '1',
+      name: 'Salary',
+    } as any);
 
-    await expect(caller.incomeSource.create({ name: 'Salary' })).rejects.toMatchObject({
+    await expect(
+      caller.incomeSource.create({ name: 'Salary' }),
+    ).rejects.toMatchObject({
       code: 'CONFLICT',
       message: 'An income source with this name already exists',
     });

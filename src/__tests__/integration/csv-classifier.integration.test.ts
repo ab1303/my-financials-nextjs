@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, skipIf } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { classifyTransactions } from '@/server/services/ai-import/csv-classifier.service';
 import type { CsvTransaction } from '@/server/services/ai-import/_types';
 import type { ExpenseCategory } from '@prisma/client';
@@ -6,11 +6,12 @@ import type { ExpenseCategory } from '@prisma/client';
 // Skip if AI_API_KEY is not set (integration tests require real API)
 const shouldRun = !!process.env.AI_API_KEY;
 
-describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
+(shouldRun ? describe : describe.skip)('csv-classifier.service (integration)', () => {
   const mockCategories: ExpenseCategory[] = [
     {
       id: '1',
       name: 'Groceries',
+      description: null,
       iconName: null,
       isActive: true,
       createdAt: new Date(),
@@ -18,6 +19,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       id: '2',
       name: 'Entertainment',
+      description: null,
       iconName: null,
       isActive: true,
       createdAt: new Date(),
@@ -25,6 +27,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       id: '3',
       name: 'Home',
+      description: null,
       iconName: null,
       isActive: true,
       createdAt: new Date(),
@@ -32,6 +35,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       id: '4',
       name: 'Health & Medical',
+      description: null,
       iconName: null,
       isActive: true,
       createdAt: new Date(),
@@ -39,6 +43,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       id: '5',
       name: 'Vehicle & Transport',
+      description: null,
       iconName: null,
       isActive: true,
       createdAt: new Date(),
@@ -46,6 +51,7 @@ describe.skipIf(!shouldRun)('csv-classifier.service (integration)', () => {
     {
       id: '6',
       name: 'Eating out & takeaway',
+      description: null,
       iconName: null,
       isActive: true,
       createdAt: new Date(),

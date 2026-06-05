@@ -23,14 +23,27 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
-vi.mock('@/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget', () => ({
-  default: () => <div>SourceBreakdownWidget</div>,
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget',
+  () => ({
+    default: () => <div>SourceBreakdownWidget</div>,
+  }),
+);
 
 // Mock server actions - use any to allow flexible mock behavior
 const mockServerActions = {
@@ -44,6 +57,7 @@ const mockServerActions = {
       incomeSourceId: '',
       incomeSourceName: '',
       incomeLedgerId: '',
+      source: 'USER_MANUAL',
     } as IncomeEntryType,
   })) as any,
   deleteRow: vi.fn(async () => ({ success: true })) as any,
@@ -58,6 +72,7 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
       incomeSourceId: 'source-1',
       incomeSourceName: 'Employment',
       incomeLedgerId: 'ledger-1',
+      source: 'USER_MANUAL',
     },
   ];
 
@@ -70,7 +85,7 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
           deleteRow={mockServerActions.deleteRow}
           calendarYearId='year-2024'
         />
-      </IncomeEntryStateProvider>
+      </IncomeEntryStateProvider>,
     );
 
     // Month label rendered inside accordion toggle button
@@ -92,7 +107,7 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
           deleteRow={mockServerActions.deleteRow}
           calendarYearId='year-2024'
         />
-      </IncomeEntryStateProvider>
+      </IncomeEntryStateProvider>,
     );
 
     const monthLabel = screen.getByText('January 2024');
@@ -106,8 +121,24 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
 
   it('accordion header shows subtotal amount', () => {
     const twoEntries: IncomeEntryType[] = [
-      { id: '1', dateEarned: new Date('2024-01-15'), amount: 1000, incomeSourceId: 'source-1', incomeSourceName: 'Employment', incomeLedgerId: 'ledger-1' },
-      { id: '2', dateEarned: new Date('2024-01-20'), amount: 500, incomeSourceId: 'source-1', incomeSourceName: 'Employment', incomeLedgerId: 'ledger-1' },
+      {
+        id: '1',
+        dateEarned: new Date('2024-01-15'),
+        amount: 1000,
+        incomeSourceId: 'source-1',
+        incomeSourceName: 'Employment',
+        incomeLedgerId: 'ledger-1',
+        source: 'USER_MANUAL',
+      },
+      {
+        id: '2',
+        dateEarned: new Date('2024-01-20'),
+        amount: 500,
+        incomeSourceId: 'source-1',
+        incomeSourceName: 'Employment',
+        incomeLedgerId: 'ledger-1',
+        source: 'USER_MANUAL',
+      },
     ];
 
     render(
@@ -118,7 +149,7 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
           deleteRow={mockServerActions.deleteRow}
           calendarYearId='year-2024'
         />
-      </IncomeEntryStateProvider>
+      </IncomeEntryStateProvider>,
     );
 
     expect(screen.getByText('January 2024')).toBeInTheDocument();
@@ -135,7 +166,7 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
           deleteRow={mockServerActions.deleteRow}
           calendarYearId='year-2024'
         />
-      </IncomeEntryStateProvider>
+      </IncomeEntryStateProvider>,
     );
 
     // Entry count badge showing number of entries in the month
@@ -152,12 +183,17 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
           deleteRow={mockServerActions.deleteRow}
           calendarYearId='year-2024'
         />
-      </IncomeEntryStateProvider>
+      </IncomeEntryStateProvider>,
     );
 
-    const link = screen.getByRole('link', { name: /View January 2024 transactions in ledger/i });
+    const link = screen.getByRole('link', {
+      name: /View January 2024 transactions in ledger/i,
+    });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', '/cashflow/transactions?month=1&year=2024&tab=income');
+    expect(link).toHaveAttribute(
+      'href',
+      '/cashflow/transactions?month=1&year=2024&tab=income',
+    );
   });
 
   it('ledger link href encodes month and year from monthKey correctly', () => {
@@ -169,6 +205,7 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
         incomeSourceId: 'source-1',
         incomeSourceName: 'Salary',
         incomeLedgerId: 'ledger-1',
+        source: 'USER_MANUAL',
       },
     ];
 
@@ -180,12 +217,15 @@ describe('IncomeTableClient — Month Header (Accordion)', () => {
           deleteRow={mockServerActions.deleteRow}
           calendarYearId='year-2024'
         />
-      </IncomeEntryStateProvider>
+      </IncomeEntryStateProvider>,
     );
 
-    const link = screen.getByRole('link', { name: /View July 2024 transactions in ledger/i });
-    expect(link).toHaveAttribute('href', '/cashflow/transactions?month=7&year=2024&tab=income');
+    const link = screen.getByRole('link', {
+      name: /View July 2024 transactions in ledger/i,
+    });
+    expect(link).toHaveAttribute(
+      'href',
+      '/cashflow/transactions?month=7&year=2024&tab=income',
+    );
   });
 });
-
-

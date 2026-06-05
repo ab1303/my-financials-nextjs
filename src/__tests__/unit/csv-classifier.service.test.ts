@@ -29,6 +29,7 @@ describe('csv-classifier.service', () => {
     {
       date: '01/07/2025',
       amount: 85.5,
+      type: 'DEBIT',
       description: 'WOOLWORTHS 1294 HORNSBY NS',
       month: 7,
       year: 2025,

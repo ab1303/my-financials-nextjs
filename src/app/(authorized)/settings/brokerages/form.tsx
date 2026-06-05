@@ -12,7 +12,15 @@ import {
   createColumnHelper,
   type ColumnDef,
 } from '@tanstack/react-table';
-import { Loader2, Trash2, TrendingUp, Plus, Pen, Save, Undo2 } from 'lucide-react';
+import {
+  Loader2,
+  Trash2,
+  TrendingUp,
+  Plus,
+  Pen,
+  Save,
+  Undo2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { produce, castDraft } from 'immer';
@@ -104,7 +112,10 @@ export default function BrokeragesForm() {
                 autoFocus
                 value={value}
                 onChange={(e) => {
-                  const updatedRecord = { ...editedRecord, name: e.target.value };
+                  const updatedRecord = {
+                    ...editedRecord,
+                    name: e.target.value,
+                  };
                   setEditedRows(
                     produce((draft) => {
                       draft.set(row.index, castDraft(updatedRecord));
@@ -188,7 +199,10 @@ export default function BrokeragesForm() {
                   className='rounded p-1 text-green-600 hover:bg-green-100 dark:hover:bg-green-950 disabled:opacity-50'
                 >
                   {updateMutation.isPending ? (
-                    <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+                    <Loader2
+                      className='h-4 w-4 animate-spin'
+                      aria-hidden='true'
+                    />
                   ) : (
                     <Save className='h-4 w-4' aria-hidden='true' />
                   )}
@@ -201,7 +215,7 @@ export default function BrokeragesForm() {
             <div className='flex justify-end gap-1'>
               <button
                 type='button'
-                  onClick={() => {
+                onClick={() => {
                   setEditedRows(
                     produce((draft) => {
                       draft.set(row.index, castDraft(brokerage));
@@ -348,10 +362,7 @@ export default function BrokeragesForm() {
                   {table.getRowModel().rows.map((row) => (
                     <tr key={row.id} className='hover:bg-muted/50'>
                       {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className='px-4 py-3 text-foreground'
-                        >
+                        <td key={cell.id} className='px-4 py-3 text-foreground'>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),
