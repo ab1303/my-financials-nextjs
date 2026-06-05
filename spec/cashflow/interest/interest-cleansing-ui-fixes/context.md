@@ -9,27 +9,10 @@ The Interest Cleansing page fails to display unlinked interest credits, creates 
 **In Scope:**
 
 - Fixing the drawer to show all unlinked interest credits and integrate with the canonical evidence/ allocation UX defined in `interest-cleansing`
-- Deleting and recreating fiscal year BankInterestLiability records with correct months
 - Refactoring the UI to always show 12 months, remove the init button, and support inline manual override
-
-**Out of Scope:**
-
-- Automated migration of broken records
-- Changes to payment/transaction models
-- Bulk import/edit of overrides
 
 ## Existing Patterns
 
 - `getYearlyCleansingData` merges 12-month calendar with optional liability data for display
 - `CalendarYearPicker` is used for filtering and selecting the fiscal/calendar year
   Note: This UI-fixes slice should avoid prescribing linkage semantics (credit-only or debit-only). Allocation and evidence selection behavior must defer to the canonical `interest-cleansing` spec.
-
-## Known Constraints
-
-- Fiscal year records created before the month calculation fix must be deleted before the new UI works correctly
-- User must manually re-initialize after cleanup
-
-## Dependencies
-
-- Drawer and month calculation fixes are already implemented
-- Cleanup must run before UI refactor is effective

@@ -41,6 +41,13 @@ export async function getUnlinkedDonationTransactions(
     ).map((e) => e.evidenceTransactionId),
   );
 
+  // Find transactions already linked as interest offset
+  const interestTxIds = await prisma.donationPayment.findMany({
+    where: { interestTxId: { not: null } },
+    select: { interestTxId: true },
+  });
+  interestTxIds.forEach((d) => linkedTxIds.add(d.interestTxId!));
+
   // Return unlinked transactions
   const unlinked = allDonationTx.filter((tx) => !linkedTxIds.has(tx.id));
   return unlinked.map((tx) => ({
@@ -88,6 +95,13 @@ export async function countUnlinkedDonationTransactions(
       })
     ).map((e) => e.evidenceTransactionId),
   );
+
+  // Find transactions already linked as interest offset
+  const interestTxIds = await prisma.donationPayment.findMany({
+    where: { interestTxId: { not: null } },
+    select: { interestTxId: true },
+  });
+  interestTxIds.forEach((d) => linkedTxIds.add(d.interestTxId!));
 
   // Count unlinked transactions
   let count = 0;

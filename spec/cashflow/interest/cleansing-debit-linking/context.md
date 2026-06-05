@@ -43,3 +43,14 @@ The current Interest Cleansing workflow did not surface candidate DEBIT transact
 - No schema changes allowed
 - Must not break CREDIT transaction logic; this is an evidence retrieval sub-phase only
 - Drawer must show correct date/amount from DEBIT evidence records
+
+## See also
+
+- The new fuzzy candidate picker spec expands this sub-phase with a credit-anchored, ranked candidate API and UI. See `../cleansing-debit-candidates/context.md` for the candidate-picker context and `../cleansing-debit-candidates/lld.md` for implementation details.
+
+## Next Steps (implementation)
+
+1. Consume `getCleansingDebitCandidates` in `CleanseDonationDrawer` for the evidence selection area, preserving the existing `addRow` + `applyAllocations` flow.
+2. Keep `suggestAllocations` unchanged to avoid breaking existing flows; use the new endpoint as a raw-DEBIT candidate source.
+3. Add integration tests that mock the new tRPC call and verify that selecting a candidate writes `DonationPayment.transactionId` and applies allocations.
+4. Feature-flag the picker UI and validate telemetry for suggestion acceptance before full rollout.

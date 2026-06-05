@@ -14,6 +14,7 @@ describe('donation-link.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.donationPaymentEvidence.findMany.mockResolvedValue([]);
+    prismaMock.donationPayment.findMany.mockResolvedValue([]);
   });
 
   it('getUnlinkedDonationTransactions returns only DEBIT CONFIRMED "Gifts & donations" transactions with no linked DonationPayment', async () => {
@@ -106,5 +107,16 @@ describe('donation-link.service', () => {
         }),
       }),
     );
+  });
+
+  it('countUnlinkedDonationTransactions returns 0 when donation is linked via interestTxId', async () => {
+    prismaMock.transaction.findMany.mockResolvedValue([{ id: 'tx_1' }] as any);
+    prismaMock.donationPayment.findMany.mockResolvedValue([
+      { interestTxId: 'tx_1' },
+    ] as any);
+
+    const result = await countUnlinkedDonationTransactions('user_1', 2024, 2025);
+
+    expect(result).toBe(0);
   });
 });

@@ -8,13 +8,14 @@ Rules for all AI agents working in this repository.
 
 **This section prevents conflicting/duplicate advice across instruction files.**
 
-| File | Audience | Content | When to Update |
-|------|----------|---------|-----------------|
-| **AGENTS.md** | All agents (universal rules) | Foundational mandates, safety, standards, persona, specs, interactions, DB safety, dev server safety, scope control | Any change affecting all agents |
-| **CLAUDE.md** | Copilot CLI sessions powered by Claude | Persona tweaks, MCP tools | Claude-specific behavior or MCP changes only |
-| **GEMINI.md** | Gemini CLI sessions | Persona tweaks | Gemini-specific behavior changes only |
+| File          | Audience                               | Content                                                                                                             | When to Update                               |
+| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| **AGENTS.md** | All agents (universal rules)           | Foundational mandates, safety, standards, persona, specs, interactions, DB safety, dev server safety, scope control | Any change affecting all agents              |
+| **CLAUDE.md** | Copilot CLI sessions powered by Claude | Persona tweaks, MCP tools                                                                                           | Claude-specific behavior or MCP changes only |
+| **GEMINI.md** | Gemini CLI sessions                    | Persona tweaks                                                                                                      | Gemini-specific behavior changes only        |
 
 **Golden Rule:**
+
 - **Universal rules** (database, form patterns, auth, pnpm, migrations, spec workflow, interaction logic) → `AGENTS.md` **ONLY**
 - **Agent-specific tweaks** → Their respective files (e.g., `CLAUDE.md` for MCP tools, `GEMINI.md` for Gemini-specific persona)
 - **Never duplicate** a rule across files — leads to agent confusion and maintenance drift
@@ -36,6 +37,12 @@ Rules for all AI agents working in this repository.
 - **CI/CD**: GitHub Actions → Render.com. See `.github/instructions/deployment.instructions.md`.
 - **Environment**: Document all required env vars in `.env-example`. Never expose secrets to the client.
 - **Testing**: Playwright e2e in `e2e/`. Vitest unit tests in `src/__tests__/`.
+
+## Windows 11 & Token Optimization
+
+- File Ops: NEVER use shell commands (`echo`, `Out-File`, `New-Item`, `mkdir`) to manage files. Use native workspace file tools exclusively.
+- Path Syntax: All shell execution paths must use Windows backslashes (`\`).
+- Suppress Noise: Always pass `--quiet` or `--silent` flags to terminal commands (`pnpm`, `prisma`) to minimize token-wasting stdout/stderr.
 
 ---
 
@@ -255,21 +262,21 @@ pnpm run dev
 
 All coding standards live in `.ai/instructions/`. Read the relevant file before implementing:
 
-| Topic                            | File                                             |
-| -------------------------------- | ------------------------------------------------ |
-| Auth / session                   | `.ai/instructions/auth.md`                       |
-| Database / Prisma safety         | `.ai/instructions/database-safety.md`            |
-| Forms (react-hook-form, zod)     | `.ai/instructions/form-patterns.md`              |
-| Middleware & icons               | `.ai/instructions/middleware-and-icons.md`       |
-| State management & notifications | `.ai/instructions/state-and-ui.md`               |
-| Dark mode & react-select         | `.ai/instructions/dark-mode-and-react-select.md` |
-| Cursor & text selection          | `.ai/instructions/cursor-and-text-selection.md`  |
-| Performance                      | `.ai/instructions/performance.md`                |
+| Topic                            | File                                              |
+| -------------------------------- | ------------------------------------------------- |
+| Auth / session                   | `.ai/instructions/auth.md`                        |
+| Database / Prisma safety         | `.ai/instructions/database-safety.md`             |
+| Forms (react-hook-form, zod)     | `.ai/instructions/form-patterns.md`               |
+| Middleware & icons               | `.ai/instructions/middleware-and-icons.md`        |
+| State management & notifications | `.ai/instructions/state-and-ui.md`                |
+| Dark mode & react-select         | `.ai/instructions/dark-mode-and-react-select.md`  |
+| Cursor & text selection          | `.ai/instructions/cursor-and-text-selection.md`   |
+| Performance                      | `.ai/instructions/performance.md`                 |
 | Transaction ledger patterns      | `.ai/instructions/transaction-ledger-patterns.md` |
-| Deployment                       | `.ai/instructions/deployment.md`                 |
-| Product / UX principles          | `.ai/instructions/product-owner-ux.md`           |
-| Testing & subagent orchestration | `.ai/instructions/testing-and-subagents.md`      |
-| Git worktree workflow            | `.ai/instructions/git-worktree.md`               |
+| Deployment                       | `.ai/instructions/deployment.md`                  |
+| Product / UX principles          | `.ai/instructions/product-owner-ux.md`            |
+| Testing & subagent orchestration | `.ai/instructions/testing-and-subagents.md`       |
+| Git worktree workflow            | `.ai/instructions/git-worktree.md`                |
 
 `.github/instructions/` contains GitHub Copilot **scoped** rules (file-pattern bound, `applyTo` frontmatter). Do not duplicate general rules there — add them to `.ai/instructions/` instead.
 
