@@ -2,49 +2,53 @@
 
 ## Purpose
 
-This HLD describes a focused sub-phase that implements DEBIT evidence candidate retrieval for the canonical interest-cleansing flow. It does not change the canonical linkage semantics (M:N credit-anchor + debit-evidence) and must align with `interest-cleansing/hld.md`.
+Upgrade the existing DEBIT-candidate endpoint and picker UI to a fuzzy candidate picker UX that returns a deterministic `matchPercent`, a multi-field `scoreBreakdown` expressed as percent contributions, `accountName` display, and `reasonLong` explanation text. The goal is to present ranked candidates to reviewers with clear rationale so they can confidently Confirm linking evidence.
 
-## Solution
+## High-level solution
 
-Provide a backend query that retrieves eligible DEBIT evidence transactions (configured interest category, CONFIRMED, unlinked) and surface them in the canonical evidence picker UI. This enables reviewers to select and allocate evidence as part of the M:N allocation workflow.
+- Service: extend `getCleansingDebitCandidates` to compute and return the DTO fields required by the UI (see LLD for exact DTO). Keep the candidate-selection data source unchanged (CONFIRMED, unlinked DEBITs filtered by configured category and optional `bankAccountId`).
+- tRPC: keep the same query but update returned typing and Zod documentation. Preserve inputs: `creditId`, `bankAccountId`, `search`, `dateFrom`, `dateTo`, `limit`, `minScore` (minScore is 0–100 percent).
+- UI: replace the simple list with the fuzzy-picker UX in `CleansingCandidatePicker.tsx`:
+  - Show an inline `matchPercent` badge next to each candidate.
+  - Show `accountName` in an inline account dropdown (if multiple accounts are present for the search scope).
+  - Show a short `reasonShort` inline and `reasonLong` in a hover tooltip or expandable row (reasonLong delivered by server).
+  - Support search with 300ms debounce; server `search` filters by description tokens and numeric amount match (LLD: tokenization behavior).
+  - Keyboard navigation: ArrowUp/ArrowDown to move focus; Enter selects candidate; Esc clears selection/ closes picker.
+  - A Confirm button must be present and enabled only when an explicit candidate is selected.
 
-## Architecture Decisions
+## DTO — canonical Candidate (summary)
 
-| Decision                                                                                                    | Rationale                                                            |
-| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| 1. Evidence retrieval is a sub-phase, not a separate one-to-one linkage model                               | Keeps the canonical M:N model intact and avoids conflicting UIs      |
-| 2. `DonationPayment.transactionId` may reference a DEBIT evidence row when mapped via allocations           | Ensures auditability while preserving allocation semantics           |
-| 3. Eligibility is determined by a configurable interest category name (rename-safe) and confirmation status | Prevents hardcoded category name breakage and supports admin renames |
-| 4. Drawer UI consumes canonical evidence retrieval query                                                    | Ensures consistent UX across credit-anchored allocation flows        |
-| 5. No schema changes required for this retrieval sub-phase                                                  | Minimizes migration risk                                             |
-
-## Data Model Changes
-
-- None. Reuse `DonationPayment` with `donationPurpose = INTEREST_CLEANSING` and `transactionId` referencing the DEBIT transaction.
-
-## Component/Service Changes
-
-- Service: Add `getUnlinkedCleansingDebitTransactions` to interest-cleansing service
-- tRPC: Add corresponding query
-- UI: Update CleanseDonationDrawer to use new query and correctly attribute date/amount from DEBIT transaction
+- The LLD contains the full TypeScript DTO; implementers must follow it precisely. Important highlights:
+  - `matchPercent: number` is the canonical 0–100 integer used by the UI badge.
+  - `scoreBreakdown` exposes both normalized raw scores (0..1) and integer contribution percents that sum to `matchPercent`.
+  - `accountName` must be returned so the frontend can render a human-friendly account label without additional lookups.
 
 ## Success Criteria
 
-- Users can link DEBIT transactions as evidence for cleansing donations
-- Linked donations show correct payment date/amount
-- Only eligible, unlinked DEBIT transactions are surfaced
-- No regression to CREDIT transaction logic
+- Users can link DEBIT transactions as evidence for cleansing donations using the fuzzy picker UX.
+- Each candidate shows a clear match percent and an explainable breakdown that aligns with the server's score computation.
+- The picker supports account-scoped and cross-account searches and is accessible via keyboard.
 
 ## Out of Scope
 
-| Area                      | Reason                                   |
-| ------------------------- | ---------------------------------------- |
-| Schema changes            | Existing models suffice                  |
-| Manual entry flow         | Already supported; not affected          |
-| Multi-transaction linking | Only one-to-one linkage supported        |
-| Non-interest categories   | Only "Bank Interest" DEBITs are eligible |
+- Database schema changes.
+- Rewriting existing allocation flows (`suggestAllocations` remains unchanged).
+
+## UI Layout & Placement
+
+The current drawer can appear cramped when the page contains many controls. Two supported options are:
+
+- Full main-area panel (recommended): render the picker as a full-width panel occupying the main content column (side nav preserved). This provides the most space for list, breakdown, filters, and allocation controls while keeping the user in the same navigation context.
+- Dedicated route/page: `/cashflow/bank-interest/cleanse/[creditId]` — navigates to a focused page for reviewing and confirming allocations. This is appropriate if the workflow requires deep context or additional related controls.
+
+Recommendation: prefer the Full main-area panel for faster iteration and minimal navigation changes, with the following adaptive behavior:
+
+- Desktop: main-area panel (default)
+- Mobile: full-screen modal/drawer
+
+Rationale: the main-area panel preserves context (user remains on the same feature page) and gives ample space to render match percentages, breakdown charts, and keyboard interactions without the cramped layout of a small drawer.
 
 ## References
 
-- [Domain HLD](../hld.md)
-- [Interest Cleansing Spec](../interest-cleansing/context.md)
+- Domain HLD: [../hld.md](../hld.md)
+- Interest cleansing LLD: [../interest-cleansing/lld.md](../interest-cleansing/lld.md)

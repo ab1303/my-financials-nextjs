@@ -412,33 +412,31 @@ export async function getCleansingDebitCandidates(params: {
     // Weights (canonical): amount 0.4, date 0.2, desc 0.3, account 0.1
     const weights = { amount: 0.4, date: 0.2, desc: 0.3, account: 0.1 };
 
-    // amountScore (40%)
-    const rawAmountScore =
-      1 - Math.abs(creditAmount - amount) / Math.max(creditAmount, amount, 1);
-    const amountScore = Math.max(0, isNaN(rawAmountScore) ? 0 : rawAmountScore);
+    // amountScore (40%) - Proximity score
+    const amountDiff = Math.abs(creditAmount - amount);
+    const maxAmount = Math.max(creditAmount, amount, 1);
+    const amountScore = Math.max(0, 1 - amountDiff / maxAmount);
 
-    // dateScore (20%)
+    // dateScore (20%) - 90-day window normalization
     const daysBetween = Math.abs(
       (txDate.getTime() - creditDate.getTime()) / (1000 * 60 * 60 * 24),
     );
     const dateScore = Math.max(0, 1 - daysBetween / 90);
 
-    // descScore (30%)
-    const creditTokens = new Set(
-      credit.description.toLowerCase().split(/\W+/).filter(Boolean),
-    );
-    const txTokens = new Set(
-      tx.description.toLowerCase().split(/\W+/).filter(Boolean),
-    );
+    // descScore (30%) - Token overlap
+    const tokenize = (s: string) =>
+      s.toLowerCase().split(/\W+/).filter((t) => t.length > 2);
+    const creditTokens = new Set(tokenize(credit.description));
+    const txTokens = new Set(tokenize(tx.description));
+    
     let common = 0;
     creditTokens.forEach((t) => {
       if (txTokens.has(t)) common++;
     });
     const descScore = creditTokens.size === 0 ? 0 : common / creditTokens.size;
 
-    // accountScore (10%)
-    const accountScore =
-      bankAccountId && tx.bankAccountId === bankAccountId ? 1 : 0;
+    // accountScore (10%) - Exact match if filter is provided, else 0.5 (neutral)
+    const accountScore = bankAccountId ? (tx.bankAccountId === bankAccountId ? 1 : 0) : 0.5;
 
     const combinedNormalized = Math.max(
       0,
@@ -488,7 +486,7 @@ export async function getCleansingDebitCandidates(params: {
       const diff = matchPercent - currentSum;
 
       if (diff !== 0) {
-        // Adjust the largest contributor
+        // Adjust the largest contributor to ensure sum equals matchPercent
         const keys: Array<keyof typeof contributions> = [
           'amount',
           'date',
@@ -502,8 +500,8 @@ export async function getCleansingDebitCandidates(params: {
       }
     }
 
-    const reasonShort = `Amount ${amountScore > 0.8 ? 'match' : 'diff'} · Date ${daysBetween < 7 ? 'proximity' : 'dist'}`;
-    const reasonLong = `Match breakdown: Amount proximity (${Math.round(amountScore * 100)}%), Date proximity (${Math.round(dateScore * 100)}%), Description overlap (${Math.round(descScore * 100)}%), Account match (${accountScore * 100}%).`;
+    const reasonShort = matchPercent >= 80 ? 'Strong match' : matchPercent >= 50 ? 'Partial match' : 'Weak match';
+    const reasonLong = `Match breakdown: Amount proximity (${Math.round(amountScore * 100)}% contribution weight), Date proximity (${Math.round(dateScore * 100)}% contribution weight), Description overlap (${Math.round(descScore * 100)}% contribution weight), Account match (${accountScore * 100}% contribution weight).`;
 
     return {
       transactionId: tx.id,

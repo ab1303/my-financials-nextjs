@@ -54,17 +54,17 @@ export const bankInterestRouter = router({
     ),
   /**
    * Retrieves candidate DEBIT transactions for interest cleansing evidence linking.
-   * Returns a ranked list of candidates with fuzzy match scoring.
-   *
-   * @param creditId - The ID of the CREDIT transaction (interest) to find evidence for.
-   * @param bankAccountId - Optional filter to only show candidates from a specific account.
-   * @param search - Optional search string to filter candidates by description.
-   * @param dateFrom - ISO date string for range start.
-   * @param dateTo - ISO date string for range end.
-   * @param limit - Max number of candidates to return (default: 20, max: 50).
-   * @param minScore - Minimum match percentage (0-100) to include in results.
-   *
-   * @returns Array of Candidate DTOs including matchPercent, accountName, and detailed scoreBreakdown.
+   * Returns a ranked list of candidates with fuzzy match scoring (0-100%).
+   * 
+   * @param creditId - The ID of the interest CREDIT transaction to link evidence for.
+   * @param bankAccountId - Optional filter to scope candidates to a specific account.
+   * @param search - Fuzzy search string for description/amount.
+   * @param dateFrom - ISO date string for candidate window start.
+   * @param dateTo - ISO date string for candidate window end.
+   * @param limit - Max results (default 20).
+   * @param minScore - Minimum match percent threshold (0-100).
+   * 
+   * @returns Array of Candidate DTOs with matchPercent, accountName, and contribution breakdowns.
    */
   getCleansingDebitCandidates: protectedProcedure
     .input(

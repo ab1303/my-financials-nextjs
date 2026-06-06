@@ -9,7 +9,7 @@ import type { Control, FieldErrors, UseFormReturn } from 'react-hook-form';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { Check, Info, Trash2 } from 'lucide-react';
+import { X, Info, Trash2 } from 'lucide-react';
 
 import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { addRow } from '@/app/(authorized)/cashflow/donations/actions';
@@ -106,6 +106,11 @@ export default function CleanseDonationDrawer({
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [pendingBeneficiaryName, setPendingBeneficiaryName] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // M:N Allocations State
   const [selectedEvidence, setSelectedEvidence] = useState<
@@ -381,44 +386,44 @@ export default function CleanseDonationDrawer({
     }
   });
 
-  if (!isOpen) return null;
+  if (!isOpen || !isMounted) return null;
 
   const drawerContent = (
     <div
-      className='fixed inset-0 z-50 flex justify-end bg-black/40 dark:bg-black/60'
+      className='fixed inset-0 z-50 flex justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm'
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           handleClose();
         }
       }}
     >
-      <div className='flex h-full w-full max-w-4xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900'>
-        <div className='flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800'>
+      <div className='flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900 animate-in slide-in-from-right duration-300'>
+        <div className='flex items-center justify-between border-b border-gray-200 px-8 py-6 dark:border-gray-800'>
           <div>
-            <h2 className='text-lg font-semibold text-gray-900 dark:text-gray-100'>
+            <h2 className='text-2xl font-bold text-gray-900 dark:text-gray-100'>
               Record Cleansing Donation
             </h2>
-            <p className='text-sm text-gray-500 dark:text-gray-400'>
+            <p className='text-sm text-gray-500 dark:text-gray-400 mt-1'>
               Cleanse interest by recording the donation and linking evidence.
             </p>
           </div>
           <button
             type='button'
             onClick={handleClose}
-            className='rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100'
+            className='rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300 transition-colors'
           >
-            Close
+            <X className='h-6 w-6' />
           </button>
         </div>
 
-        <div className='flex gap-2 border-b border-gray-200 px-6 py-3 dark:border-gray-800'>
+        <div className='flex gap-2 border-b border-gray-200 px-8 py-3 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-950/50'>
           <button
             type='button'
             onClick={() => handleSwitchMode('linked')}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-md px-4 py-2 text-sm font-semibold transition-all ${
               mode === 'linked'
-                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
-                : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800'
             }`}
           >
             Linked (M:N)
@@ -426,65 +431,65 @@ export default function CleanseDonationDrawer({
           <button
             type='button'
             onClick={() => handleSwitchMode('manual')}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-md px-4 py-2 text-sm font-semibold transition-all ${
               mode === 'manual'
-                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800'
             }`}
           >
             Manual
           </button>
         </div>
 
-        {mode === 'linked' ? (
-          <LinkedModeBody
-            transactions={transactions}
-            selectedTransactionId={selectedTransactionId}
-            isLoadingTx={unlinkedTxQuery.isLoading}
-            onSelectTransaction={handleSelectTransaction}
-            selectedTransaction={selectedTransaction}
-            form={linkedForm}
-            beneficiaryOptions={getBeneficiaryOptions(linkedBeneficiaryType)}
-            beneficiaryType={linkedBeneficiaryType}
-            isSaving={isSaving}
-            onSave={handleLinkedSave}
-            onClose={handleClose}
-            createModalOpen={createModalOpen}
-            setCreateModalOpen={setCreateModalOpen}
-            pendingBeneficiaryName={pendingBeneficiaryName}
-            setPendingBeneficiaryName={setPendingBeneficiaryName}
-            onBeneficiaryCreated={(id) =>
-              linkedForm.setValue('beneficiaryId', id, { shouldValidate: true })
-            }
-            suggestions={suggestQuery.data || []}
-            isSuggesting={suggestQuery.isLoading}
-            selectedEvidence={selectedEvidence}
-            onToggleEvidence={toggleEvidence}
-            onUpdateAmount={updateEvidenceAmount}
-          />
-        ) : (
-          <ManualModeBody
-            form={manualForm}
-            beneficiaryOptions={getBeneficiaryOptions(manualBeneficiaryType)}
-            beneficiaryType={manualBeneficiaryType}
-            isSaving={isSaving}
-            onSave={handleManualSave}
-            onClose={handleClose}
-            createModalOpen={createModalOpen}
-            setCreateModalOpen={setCreateModalOpen}
-            pendingBeneficiaryName={pendingBeneficiaryName}
-            setPendingBeneficiaryName={setPendingBeneficiaryName}
-            onBeneficiaryCreated={(id) =>
-              manualForm.setValue('beneficiaryId', id, { shouldValidate: true })
-            }
-          />
-        )}
+        <div className='flex-1 overflow-hidden'>
+          {mode === 'linked' ? (
+            <LinkedModeBody
+              transactions={transactions}
+              selectedTransactionId={selectedTransactionId}
+              isLoadingTx={unlinkedTxQuery.isLoading}
+              onSelectTransaction={handleSelectTransaction}
+              selectedTransaction={selectedTransaction}
+              form={linkedForm}
+              beneficiaryOptions={getBeneficiaryOptions(linkedBeneficiaryType)}
+              beneficiaryType={linkedBeneficiaryType}
+              isSaving={isSaving}
+              onSave={handleLinkedSave}
+              onClose={handleClose}
+              createModalOpen={createModalOpen}
+              setCreateModalOpen={setCreateModalOpen}
+              pendingBeneficiaryName={pendingBeneficiaryName}
+              setPendingBeneficiaryName={setPendingBeneficiaryName}
+              onBeneficiaryCreated={(id) =>
+                linkedForm.setValue('beneficiaryId', id, { shouldValidate: true })
+              }
+              suggestions={suggestQuery.data || []}
+              isSuggesting={suggestQuery.isLoading}
+              selectedEvidence={selectedEvidence}
+              onToggleEvidence={toggleEvidence}
+              onUpdateAmount={updateEvidenceAmount}
+              onOpenPicker={() => setIsPickerOpen(true)}
+            />
+          ) : (
+            <ManualModeBody
+              form={manualForm}
+              beneficiaryOptions={getBeneficiaryOptions(manualBeneficiaryType)}
+              beneficiaryType={manualBeneficiaryType}
+              isSaving={isSaving}
+              onSave={handleManualSave}
+              onClose={handleClose}
+              createModalOpen={createModalOpen}
+              setCreateModalOpen={setCreateModalOpen}
+              pendingBeneficiaryName={pendingBeneficiaryName}
+              setPendingBeneficiaryName={setPendingBeneficiaryName}
+              onBeneficiaryCreated={(id) =>
+                manualForm.setValue('beneficiaryId', id, { shouldValidate: true })
+              }
+            />
+          )}
+        </div>
       </div>
     </div>
   );
-
-  const portalTarget = typeof document !== 'undefined' ? document.body : null;
-  if (!portalTarget) return null;
 
   return createPortal(
     <>
@@ -502,14 +507,14 @@ export default function CleanseDonationDrawer({
               amount: candidate.amount,
               description: candidate.description,
               date: new Date(candidate.date),
-              score: candidate.score,
+              score: candidate.matchPercent,
             });
             setIsPickerOpen(false);
           }}
         />
       )}
     </>,
-    portalTarget,
+    document.body,
   );
 }
 
@@ -578,6 +583,7 @@ function LinkedModeBody({
   selectedEvidence,
   onToggleEvidence,
   onUpdateAmount,
+  onOpenPicker,
 }: LinkedModeBodyProps) {
   const {
     control,
@@ -971,6 +977,7 @@ function BeneficiaryFormFields({
           name='beneficiaryType'
           render={({ field }) => (
             <Select
+              instanceId='beneficiary-type-select'
               inputId='beneficiaryType'
               isDisabled={disabled}
               options={[
@@ -1006,6 +1013,7 @@ function BeneficiaryFormFields({
               null;
             return (
               <CreatableSelect
+                instanceId='beneficiary-id-select'
                 inputId='beneficiaryId'
                 isDisabled={disabled}
                 options={beneficiaryOptions}
