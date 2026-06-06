@@ -18,6 +18,8 @@ import { getSelectStyles } from '@/lib/select-styles';
 import { trpc } from '@/server/trpc/client';
 import { Badge } from '@/components/ui/badge';
 import { CleansingCandidatePicker } from './CleansingCandidatePicker';
+import { FullPageCleansingPanel } from './FullPageCleansingPanel';
+import { type Candidate } from '@/server/services/bank-interest/interest-cleansing.service';
 
 // ---------- Types ----------
 
@@ -103,6 +105,7 @@ export default function CleanseDonationDrawer({
   const [isSaving, setIsSaving] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [pendingBeneficiaryName, setPendingBeneficiaryName] = useState('');
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   // M:N Allocations State
   const [selectedEvidence, setSelectedEvidence] = useState<
@@ -483,7 +486,31 @@ export default function CleanseDonationDrawer({
   const portalTarget = typeof document !== 'undefined' ? document.body : null;
   if (!portalTarget) return null;
 
-  return createPortal(drawerContent, portalTarget);
+  return createPortal(
+    <>
+      {drawerContent}
+      {isPickerOpen && selectedTransaction && (
+        <FullPageCleansingPanel
+          creditId={selectedTransactionId}
+          creditAmount={selectedTransaction.amount}
+          creditDate={selectedTransaction.date}
+          creditDescription={selectedTransaction.description}
+          onClose={() => setIsPickerOpen(false)}
+          onSelect={(candidate) => {
+            toggleEvidence({
+              id: candidate.transactionId,
+              amount: candidate.amount,
+              description: candidate.description,
+              date: new Date(candidate.date),
+              score: candidate.score,
+            });
+            setIsPickerOpen(false);
+          }}
+        />
+      )}
+    </>,
+    portalTarget,
+  );
 }
 
 type LinkedModeBodyProps = {
@@ -526,6 +553,7 @@ type LinkedModeBodyProps = {
     score: number;
   }) => void;
   onUpdateAmount: (id: string, amount: number) => void;
+  onOpenPicker: () => void;
 };
 
 function LinkedModeBody({
@@ -613,9 +641,20 @@ function LinkedModeBody({
         <section className='col-span-6 flex flex-col overflow-hidden border-r border-gray-200 dark:border-gray-800'>
           <div className='flex flex-1 flex-col overflow-hidden p-4'>
             <div className='mb-4 flex items-center justify-between'>
-              <h3 className='text-sm font-medium text-gray-700 dark:text-gray-200'>
-                Select Evidence (DEBITs)
-              </h3>
+              <div className='flex flex-col'>
+                <h3 className='text-sm font-medium text-gray-700 dark:text-gray-200'>
+                  Select Evidence (DEBITs)
+                </h3>
+                {selectedTransaction && (
+                  <button
+                    type='button'
+                    onClick={onOpenPicker}
+                    className='text-[10px] text-blue-600 hover:underline text-left font-medium dark:text-blue-400'
+                  >
+                    Full screen / Fuzzy search
+                  </button>
+                )}
+              </div>
               {selectedTransaction && (
                 <div className='flex gap-2'>
                   <Badge variant={remaining === 0 ? 'default' : 'secondary'}>

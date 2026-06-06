@@ -239,6 +239,8 @@ export const getUnlinkedInterestTransactions = async (
 export const getUnlinkedCleansingDebitTransactions = async (
   userId: string,
   bankId: string,
+  categoryName: string = CLEANSING_CATEGORY_NAME,
+  options?: { includeAnyType?: boolean },
 ): Promise<
   Array<{ id: string; date: string; description: string; amount: number }>
 > => {
@@ -247,18 +249,25 @@ export const getUnlinkedCleansingDebitTransactions = async (
 
   if (bankAccountIds.length === 0) return [];
 
-  // Find all cleansing category transactions
+  // Build where clause. By default we filter to CONFIRMED DEBIT transactions
+  // in `categoryName` to follow the cleansing flow. When `options.includeAnyType`
+  // is true we relax the filter so any transaction type (DEBIT/CREDIT) is
+  // considered (still respecting CONFIRMED status and excluding already-linked evidence).
+  const where: any = {
+    userId,
+    bankAccountId: { in: bankAccountIds },
+    status: 'CONFIRMED',
+    // Ensure this transaction is NOT linked as evidence to any DonationPayment
+    donationPaymentEvidence: { none: {} },
+  };
+
+  if (!options?.includeAnyType) {
+    where.type = 'DEBIT';
+    where.category = { equals: categoryName, mode: 'insensitive' };
+  }
+
   const allCleansingTx = await prisma.transaction.findMany({
-    where: {
-      userId,
-      bankAccountId: { in: bankAccountIds },
-      type: 'DEBIT',
-      status: 'CONFIRMED',
-      category: {
-        equals: CLEANSING_CATEGORY_NAME,
-        mode: 'insensitive',
-      },
-    },
+    where,
     select: {
       id: true,
       date: true,
@@ -291,19 +300,39 @@ export const getUnlinkedCleansingDebitTransactions = async (
 // -------------------------
 
 export type Candidate = {
-  transactionId: string;
-  date: string;
-  amount: number;
-  accountId: string;
-  description: string;
-  score: number; // 0-100
+  transactionId: string; // transaction.id (DEBIT evidence)
+  date: string; // ISO date YYYY-MM-DD (transaction.date)
+  amount: number; // numeric amount (positive number)
+  accountId: string; // FinancialAccount.id where the transaction occurred
+  accountName: string; // Human-friendly account display name
+  description: string; // transaction.description
+
+  // Canonical match percent shown in UI badge. Integer 0..100
+  matchPercent: number;
+
+  // Short & long textual reasons for display
+  reasonShort: string; // one-line short summary (e.g. "amount + date match")
+  reasonLong: string; // longer explanation used in tooltip or expandable area
+
+  // Primary score used for server-side thresholding; equals matchPercent
+  score: number; // integer 0..100 (same as matchPercent, present for backward compatibility)
+
+  // Detailed breakdown: rawNormalized are [0..1] floats. contributionsPercent are integers
+  // representing each component's contribution to the total matchPercent and MUST sum to matchPercent
   scoreBreakdown: {
-    amountScore: number;
-    dateScore: number;
-    descScore: number;
-    accountScore?: number;
+    rawNormalized: {
+      amountScore: number; // 0..1
+      dateScore: number; // 0..1
+      descScore: number; // 0..1
+      accountScore: number; // 0..1
+    };
+    contributionsPercent: {
+      amount: number; // integer (e.g. 40)
+      date: number; // integer (e.g. 20)
+      desc: number; // integer (e.g. 30)
+      account: number; // integer (e.g. 10)
+    };
   };
-  reasonShort: string;
 };
 
 export async function getCleansingDebitCandidates(params: {
@@ -316,7 +345,16 @@ export async function getCleansingDebitCandidates(params: {
   limit?: number;
   minScore?: number;
 }): Promise<Candidate[]> {
-  const { userId, creditId, bankAccountId, search, dateFrom, dateTo, limit = 20, minScore = 0 } = params;
+  const {
+    userId,
+    creditId,
+    bankAccountId,
+    search,
+    dateFrom,
+    dateTo,
+    limit = 20,
+    minScore = 0,
+  } = params;
 
   const credit = await prisma.transaction.findUniqueOrThrow({
     where: { id: creditId },
@@ -329,7 +367,8 @@ export async function getCleansingDebitCandidates(params: {
     userId,
     type: 'DEBIT',
     status: 'CONFIRMED',
-    donationPayment: null, // Unlinked
+    // Ensure this transaction is NOT linked as evidence to any DonationPayment
+    donationPaymentEvidence: { none: {} },
     category: {
       equals: CLEANSING_CATEGORY_NAME,
       mode: 'insensitive',
@@ -337,12 +376,30 @@ export async function getCleansingDebitCandidates(params: {
   };
 
   if (bankAccountId) whereClause.bankAccountId = bankAccountId;
-  if (dateFrom) whereClause.date = { ...whereClause.date, gte: new Date(dateFrom) };
+  if (dateFrom)
+    whereClause.date = { ...whereClause.date, gte: new Date(dateFrom) };
   if (dateTo) whereClause.date = { ...whereClause.date, lte: new Date(dateTo) };
-  if (search) whereClause.description = { contains: search, mode: 'insensitive' };
+  if (search) {
+    const numericAmount = parseFloat(search);
+    const isNumeric = !isNaN(numericAmount);
+
+    whereClause.AND = [
+      {
+        OR: [
+          { description: { contains: search, mode: 'insensitive' } },
+          ...(isNumeric ? [{ amount: { equals: numericAmount } }] : []),
+        ],
+      },
+    ];
+  }
 
   const rawCandidates = await prisma.transaction.findMany({
     where: whereClause,
+    include: {
+      bankAccount: {
+        select: { name: true },
+      },
+    },
     take: 200, // maxCandidateFetch
     orderBy: { date: 'desc' },
   });
@@ -352,50 +409,129 @@ export async function getCleansingDebitCandidates(params: {
     const amount = Number(tx.amount);
     const txDate = new Date(tx.date);
 
+    // Weights (canonical): amount 0.4, date 0.2, desc 0.3, account 0.1
+    const weights = { amount: 0.4, date: 0.2, desc: 0.3, account: 0.1 };
+
     // amountScore (40%)
-    const amountScore =
-      1 -
-      Math.abs(creditAmount - amount) /
-        Math.max(creditAmount, amount, 1);
-    
+    const rawAmountScore =
+      1 - Math.abs(creditAmount - amount) / Math.max(creditAmount, amount, 1);
+    const amountScore = Math.max(0, isNaN(rawAmountScore) ? 0 : rawAmountScore);
+
     // dateScore (20%)
-    const daysBetween = Math.abs((txDate.getTime() - creditDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysBetween = Math.abs(
+      (txDate.getTime() - creditDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
     const dateScore = Math.max(0, 1 - daysBetween / 90);
-    
+
     // descScore (30%)
-    const creditTokens = new Set(credit.description.toLowerCase().split(/\W+/).filter(Boolean));
-    const txTokens = new Set(tx.description.toLowerCase().split(/\W+/).filter(Boolean));
+    const creditTokens = new Set(
+      credit.description.toLowerCase().split(/\W+/).filter(Boolean),
+    );
+    const txTokens = new Set(
+      tx.description.toLowerCase().split(/\W+/).filter(Boolean),
+    );
     let common = 0;
-    creditTokens.forEach(t => { if (txTokens.has(t)) common++; });
+    creditTokens.forEach((t) => {
+      if (txTokens.has(t)) common++;
+    });
     const descScore = creditTokens.size === 0 ? 0 : common / creditTokens.size;
 
     // accountScore (10%)
-    const accountScore = bankAccountId && tx.bankAccountId === bankAccountId ? 1 : 0;
+    const accountScore =
+      bankAccountId && tx.bankAccountId === bankAccountId ? 1 : 0;
 
-    const combined = amountScore * 0.4 + dateScore * 0.2 + descScore * 0.3 + accountScore * 0.1;
-    const score = Math.round(100 * Math.min(1, Math.max(0, combined)));
+    const combinedNormalized = Math.max(
+      0,
+      Math.min(
+        1,
+        amountScore * weights.amount +
+          dateScore * weights.date +
+          descScore * weights.desc +
+          accountScore * weights.account,
+      ),
+    );
+
+    const matchPercent = Math.round(100 * combinedNormalized);
+
+    const contributions: {
+      amount: number;
+      date: number;
+      desc: number;
+      account: number;
+    } = {
+      amount: 0,
+      date: 0,
+      desc: 0,
+      account: 0,
+    };
+
+    if (combinedNormalized > 0) {
+      contributions.amount = Math.round(
+        ((amountScore * weights.amount) / combinedNormalized) * matchPercent,
+      );
+      contributions.date = Math.round(
+        ((dateScore * weights.date) / combinedNormalized) * matchPercent,
+      );
+      contributions.desc = Math.round(
+        ((descScore * weights.desc) / combinedNormalized) * matchPercent,
+      );
+      contributions.account = Math.round(
+        ((accountScore * weights.account) / combinedNormalized) * matchPercent,
+      );
+
+      // Rounding drift correction
+      const currentSum =
+        contributions.amount +
+        contributions.date +
+        contributions.desc +
+        contributions.account;
+      const diff = matchPercent - currentSum;
+
+      if (diff !== 0) {
+        // Adjust the largest contributor
+        const keys: Array<keyof typeof contributions> = [
+          'amount',
+          'date',
+          'desc',
+          'account',
+        ];
+        const largestKey = keys.reduce((a, b) =>
+          contributions[a] > contributions[b] ? a : b,
+        );
+        contributions[largestKey] += diff;
+      }
+    }
+
+    const reasonShort = `Amount ${amountScore > 0.8 ? 'match' : 'diff'} · Date ${daysBetween < 7 ? 'proximity' : 'dist'}`;
+    const reasonLong = `Match breakdown: Amount proximity (${Math.round(amountScore * 100)}%), Date proximity (${Math.round(dateScore * 100)}%), Description overlap (${Math.round(descScore * 100)}%), Account match (${accountScore * 100}%).`;
 
     return {
       transactionId: tx.id,
       date: tx.date.toISOString().slice(0, 10),
       amount,
       accountId: tx.bankAccountId ?? 'unknown',
+      accountName: tx.bankAccount?.name ?? 'Unknown Account',
       description: tx.description,
-      score,
+      matchPercent,
+      score: matchPercent,
+      reasonShort,
+      reasonLong,
       scoreBreakdown: {
-        amountScore: Math.round(amountScore * 100),
-        dateScore: Math.round(dateScore * 100),
-        descScore: Math.round(descScore * 100),
-        accountScore: Math.round(accountScore * 100),
+        rawNormalized: {
+          amountScore,
+          dateScore,
+          descScore,
+          accountScore,
+        },
+        contributionsPercent: contributions,
       },
-      reasonShort: `Amount ${amountScore > 0.8 ? 'match' : 'diff'} · Date ${daysBetween < 7 ? 'proximity' : 'dist'}`,
     };
   });
 
   // 3. Sort and filter
   return candidates
-    .filter(c => c.score >= minScore)
-    .sort((a, b) => b.score - a.score)
+    .filter((c) => c.matchPercent >= minScore)
+    .sort((a, b) => b.matchPercent - a.matchPercent)
     .slice(0, limit);
 }
 

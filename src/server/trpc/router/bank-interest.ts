@@ -37,10 +37,35 @@ export const bankInterestRouter = router({
       ),
     ),
   getUnlinkedCleansingDebitTransactions: protectedProcedure
-    .input(z.object({ bankId: z.string() }))
+    .input(
+      z.object({
+        bankId: z.string(),
+        categoryName: z.string().optional(),
+        includeAnyType: z.boolean().optional(),
+      }),
+    )
     .query(({ ctx, input }) =>
-      getUnlinkedCleansingDebitTransactions(ctx.session.user.id, input.bankId),
+      getUnlinkedCleansingDebitTransactions(
+        ctx.session.user.id,
+        input.bankId,
+        input.categoryName,
+        { includeAnyType: input.includeAnyType },
+      ),
     ),
+  /**
+   * Retrieves candidate DEBIT transactions for interest cleansing evidence linking.
+   * Returns a ranked list of candidates with fuzzy match scoring.
+   *
+   * @param creditId - The ID of the CREDIT transaction (interest) to find evidence for.
+   * @param bankAccountId - Optional filter to only show candidates from a specific account.
+   * @param search - Optional search string to filter candidates by description.
+   * @param dateFrom - ISO date string for range start.
+   * @param dateTo - ISO date string for range end.
+   * @param limit - Max number of candidates to return (default: 20, max: 50).
+   * @param minScore - Minimum match percentage (0-100) to include in results.
+   *
+   * @returns Array of Candidate DTOs including matchPercent, accountName, and detailed scoreBreakdown.
+   */
   getCleansingDebitCandidates: protectedProcedure
     .input(
       z.object({
