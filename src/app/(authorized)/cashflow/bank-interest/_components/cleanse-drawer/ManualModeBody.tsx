@@ -1,43 +1,23 @@
 'use client';
 
 import { Info } from 'lucide-react';
-import { Controller, UseFormReturn } from 'react-hook-form';
-import { BeneficiaryEnumType } from '@prisma/client';
+import { Controller } from 'react-hook-form';
 import { BeneficiaryFormFields } from './BeneficiaryFormFields';
-import { BeneficiaryOption, ManualFormValues } from './types';
+import { useCleanseDonation } from './CleanseDonationContext';
 
-type ManualModeBodyProps = {
-  form: UseFormReturn<ManualFormValues>;
-  beneficiaryOptions: BeneficiaryOption[];
-  beneficiaryType: BeneficiaryEnumType;
-  isSaving: boolean;
-  onSave: () => void;
-  onClose: () => void;
-  createModalOpen: boolean;
-  setCreateModalOpen: (value: boolean) => void;
-  pendingBeneficiaryName: string;
-  setPendingBeneficiaryName: (value: string) => void;
-  onBeneficiaryCreated: (id: string) => void;
-};
+export function ManualModeBody() {
+  const {
+    manualForm,
+    isSaving,
+    handleManualSave,
+    handleClose,
+  } = useCleanseDonation();
 
-export function ManualModeBody({
-  form,
-  beneficiaryOptions,
-  beneficiaryType,
-  isSaving,
-  onSave,
-  onClose,
-  createModalOpen,
-  setCreateModalOpen,
-  pendingBeneficiaryName,
-  setPendingBeneficiaryName,
-  onBeneficiaryCreated,
-}: ManualModeBodyProps) {
   const {
     control,
     register,
     formState: { errors, isValid },
-  } = form;
+  } = manualForm;
 
   return (
     <div className='flex flex-1 flex-col overflow-y-auto h-full'>
@@ -111,15 +91,7 @@ export function ManualModeBody({
               )}
             </div>
 
-            <BeneficiaryFormFields
-              control={control}
-              errors={errors}
-              beneficiaryType={beneficiaryType}
-              beneficiaryOptions={beneficiaryOptions}
-              disabled={false}
-              setCreateModalOpen={setCreateModalOpen}
-              setPendingBeneficiaryName={setPendingBeneficiaryName}
-            />
+            <BeneficiaryFormFields disabled={false} />
           </div>
         </div>
       </div>
@@ -127,14 +99,14 @@ export function ManualModeBody({
       <div className='flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-950'>
         <button
           type='button'
-          onClick={onClose}
+          onClick={handleClose}
           className='rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800'
         >
           Cancel
         </button>
         <button
           type='button'
-          onClick={onSave}
+          onClick={handleManualSave}
           disabled={!isValid || isSaving}
           className='rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600'
         >

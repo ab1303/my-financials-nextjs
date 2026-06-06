@@ -1,6 +1,12 @@
 'use client';
 
-import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
+import {
+  useState,
+  useMemo,
+  useTransition,
+  useEffect,
+  useCallback,
+} from 'react';
 import { useDebounce } from 'use-debounce';
 import { ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
 import { trpc } from '@/server/trpc/client';
@@ -26,14 +32,16 @@ export function CleansingCandidatePicker({
   const [debouncedSearch] = useDebounce(searchTerm, 300);
   const [isPending, startTransition] = useTransition();
 
-  const [selectedBankAccountId, setSelectedBankAccountId] = useState<string | undefined>(
-    initialBankAccountId
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState<
+    string | undefined
+  >(initialBankAccountId);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(
+    null,
   );
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const { data: accounts } = trpc.bankAccount.getBankAccounts.useQuery();
+  const { data: accounts } = trpc.bankAccount.list.useQuery();
 
   const { data: candidates, isLoading } =
     trpc.bankInterest.getCleansingDebitCandidates.useQuery(
@@ -66,15 +74,22 @@ export function CleansingCandidatePicker({
     });
   };
 
-  const handleAccountChange = (option: { value: string; label: string } | null) => {
-    setSelectedBankAccountId(option?.value === 'all' ? undefined : option?.value);
+  const handleAccountChange = (
+    option: { value: string; label: string } | null,
+  ) => {
+    setSelectedBankAccountId(
+      option?.value === 'all' ? undefined : option?.value,
+    );
     setSelectedCandidateId(null);
     setFocusedIndex(-1);
   };
 
   const selectedCandidate = useMemo(
-    () => candidates?.find((c) => c.transactionId === selectedCandidateId),
-    [candidates, selectedCandidateId]
+    () =>
+      candidates?.find(
+        (c: Candidate) => c.transactionId === selectedCandidateId,
+      ),
+    [candidates, selectedCandidateId],
   );
 
   const handleKeyDown = useCallback(
@@ -83,7 +98,9 @@ export function CleansingCandidatePicker({
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setFocusedIndex((prev) => (prev < candidates.length - 1 ? prev + 1 : prev));
+        setFocusedIndex((prev) =>
+          prev < candidates.length - 1 ? prev + 1 : prev,
+        );
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
@@ -97,7 +114,7 @@ export function CleansingCandidatePicker({
         setFocusedIndex(-1);
       }
     },
-    [candidates, focusedIndex]
+    [candidates, focusedIndex],
   );
 
   useEffect(() => {
@@ -106,8 +123,10 @@ export function CleansingCandidatePicker({
   }, [handleKeyDown]);
 
   const getScoreColorClass = (score: number) => {
-    if (score >= 80) return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800';
-    if (score >= 50) return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+    if (score >= 80)
+      return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800';
+    if (score >= 50)
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800';
     return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700';
   };
 
@@ -137,7 +156,9 @@ export function CleansingCandidatePicker({
           <AppSelect
             instanceId='cleansing-account-filter'
             options={accountOptions}
-            value={accountOptions.find((o) => o.value === (selectedBankAccountId ?? 'all'))}
+            value={accountOptions.find(
+              (o) => o.value === (selectedBankAccountId ?? 'all'),
+            )}
             onChange={handleAccountChange as any}
           />
         </div>
@@ -147,7 +168,9 @@ export function CleansingCandidatePicker({
         {isLoading && (
           <div className='flex flex-col items-center justify-center p-12 space-y-3'>
             <div className='animate-spin rounded-full h-8 w-8 border-4 border-amber-500 border-t-transparent' />
-            <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>Scanning for candidates...</p>
+            <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>
+              Scanning for candidates...
+            </p>
           </div>
         )}
 
@@ -156,72 +179,110 @@ export function CleansingCandidatePicker({
             <div className='bg-gray-100 dark:bg-gray-800 p-4 rounded-full mb-4'>
               <CheckCircle2 className='h-8 w-8 text-gray-400' />
             </div>
-            <p className='text-base font-semibold text-gray-900 dark:text-gray-100'>No candidates found</p>
+            <p className='text-base font-semibold text-gray-900 dark:text-gray-100'>
+              No candidates found
+            </p>
             <p className='text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[280px]'>
-              We couldn't find any DEBIT transactions matching your criteria. Try adjusting your search or account filters.
+              We couldn't find any DEBIT transactions matching your criteria.
+              Try adjusting your search or account filters.
             </p>
           </div>
         )}
 
         {!isLoading && candidates && candidates.length > 0 && (
-          <ul role='listbox' className='divide-y divide-gray-100 dark:divide-gray-800'>
+          <ul
+            role='listbox'
+            className='divide-y divide-gray-100 dark:divide-gray-800'
+          >
             {candidates.map((candidate: Candidate, index: number) => {
-              const isSelected = selectedCandidateId === candidate.transactionId;
+              const isSelected =
+                selectedCandidateId === candidate.transactionId;
               const isFocused = focusedIndex === index;
               const isExpanded = expandedId === candidate.transactionId;
-              
+
               return (
                 <li
                   key={candidate.transactionId}
                   role='option'
                   aria-selected={isSelected}
-                  onClick={() => setSelectedCandidateId(candidate.transactionId)}
+                  onClick={() =>
+                    setSelectedCandidateId(candidate.transactionId)
+                  }
                   className={cn(
                     'group cursor-pointer transition-all duration-200',
-                    isSelected ? 'bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500' : 'hover:bg-white dark:hover:bg-gray-800/80 border-l-4 border-transparent',
-                    isFocused && !isSelected && 'bg-gray-100/50 dark:bg-gray-800/50'
+                    isSelected
+                      ? 'bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500'
+                      : 'hover:bg-white dark:hover:bg-gray-800/80 border-l-4 border-transparent',
+                    isFocused &&
+                      !isSelected &&
+                      'bg-gray-100/50 dark:bg-gray-800/50',
                   )}
                 >
                   <div className='p-4'>
                     <div className='flex items-start justify-between gap-4'>
                       <div className='flex flex-col min-w-0 flex-1'>
                         <div className='flex items-center gap-2 mb-1.5'>
-                          <Badge variant='outline' className='text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider text-green-600 border-green-200 bg-green-50 dark:text-green-400 dark:border-green-900/50 dark:bg-green-950/30'>
+                          <Badge
+                            variant='outline'
+                            className='text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider text-green-600 border-green-200 bg-green-50 dark:text-green-400 dark:border-green-900/50 dark:bg-green-950/30'
+                          >
                             DEBIT
                           </Badge>
                           <span className='text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-tight'>
                             {candidate.accountName}
                           </span>
                         </div>
-                        
-                        <p className={cn(
-                          'text-sm font-semibold truncate leading-tight',
-                          isSelected ? 'text-amber-900 dark:text-amber-100' : 'text-gray-900 dark:text-gray-100'
-                        )}>
+
+                        <p
+                          className={cn(
+                            'text-sm font-semibold truncate leading-tight',
+                            isSelected
+                              ? 'text-amber-900 dark:text-amber-100'
+                              : 'text-gray-900 dark:text-gray-100',
+                          )}
+                        >
                           {candidate.description}
                         </p>
-                        
+
                         <div className='flex items-center gap-2 mt-2 text-[11px] font-medium text-gray-500 dark:text-gray-400'>
-                          <span className='bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded'>{candidate.date}</span>
-                          <span className='text-gray-300 dark:text-gray-700'>•</span>
-                          <span className='text-gray-600 dark:text-gray-300'>{candidate.reasonShort}</span>
-                          <button 
-                            onClick={(e) => toggleExpand(candidate.transactionId, e)}
+                          <span className='bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded'>
+                            {candidate.date}
+                          </span>
+                          <span className='text-gray-300 dark:text-gray-700'>
+                            •
+                          </span>
+                          <span className='text-gray-600 dark:text-gray-300'>
+                            {candidate.reasonShort}
+                          </span>
+                          <button
+                            onClick={(e) =>
+                              toggleExpand(candidate.transactionId, e)
+                            }
                             className='ml-1 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors'
                           >
-                            {isExpanded ? <ChevronUp className='h-3 w-3' /> : <ChevronDown className='h-3 w-3' />}
+                            {isExpanded ? (
+                              <ChevronUp className='h-3 w-3' />
+                            ) : (
+                              <ChevronDown className='h-3 w-3' />
+                            )}
                           </button>
                         </div>
                       </div>
 
                       <div className='flex flex-col items-end shrink-0 pt-1'>
                         <span className='text-base font-bold text-gray-900 dark:text-gray-100 tabular-nums'>
-                          ${candidate.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          $
+                          {candidate.amount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </span>
-                        <div className={cn(
-                          'mt-2 flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold border shadow-sm',
-                          getScoreColorClass(candidate.matchPercent)
-                        )}>
+                        <div
+                          className={cn(
+                            'mt-2 flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold border shadow-sm',
+                            getScoreColorClass(candidate.matchPercent),
+                          )}
+                        >
                           {candidate.matchPercent}% Match
                         </div>
                       </div>
@@ -233,15 +294,26 @@ export function CleansingCandidatePicker({
                           {candidate.reasonLong}
                         </p>
                         <div className='grid grid-cols-4 gap-2'>
-                          {Object.entries(candidate.scoreBreakdown.contributionsPercent).map(([key, value]) => (
-                            <div key={key} className='flex flex-col p-2 rounded bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50'>
-                              <span className='text-[9px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold mb-1'>{key}</span>
+                          {Object.entries(
+                            candidate.scoreBreakdown.contributionsPercent,
+                          ).map(([key, value]) => (
+                            <div
+                              key={key}
+                              className='flex flex-col p-2 rounded bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50'
+                            >
+                              <span className='text-[9px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold mb-1'>
+                                {key}
+                              </span>
                               <div className='flex items-end gap-1'>
-                                <span className='text-xs font-bold text-gray-700 dark:text-gray-200'>{value}%</span>
+                                <span className='text-xs font-bold text-gray-700 dark:text-gray-200'>
+                                  {value}%
+                                </span>
                                 <div className='flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-1'>
-                                  <div 
-                                    className='h-full bg-amber-500 transition-all duration-500' 
-                                    style={{ width: `${(value / candidate.matchPercent) * 100}%` }}
+                                  <div
+                                    className='h-full bg-amber-500 transition-all duration-500'
+                                    style={{
+                                      width: `${(value / candidate.matchPercent) * 100}%`,
+                                    }}
                                   />
                                 </div>
                               </div>
@@ -261,11 +333,14 @@ export function CleansingCandidatePicker({
       <div className='flex items-center justify-between py-3 px-1 border-t border-gray-100 dark:border-gray-800'>
         <div className='flex flex-col'>
           <p className='text-xs font-semibold text-gray-700 dark:text-gray-300'>
-            {selectedCandidate ? '1 candidate selected' : 'No candidate selected'}
+            {selectedCandidate
+              ? '1 candidate selected'
+              : 'No candidate selected'}
           </p>
           {selectedCandidate && (
             <p className='text-[10px] text-gray-500 dark:text-gray-400 mt-0.5'>
-              Ready to confirm allocation for ${selectedCandidate.amount.toFixed(2)}
+              Ready to confirm allocation for $
+              {selectedCandidate.amount.toFixed(2)}
             </p>
           )}
         </div>
@@ -293,4 +368,3 @@ export function CleansingCandidatePicker({
     </div>
   );
 }
-

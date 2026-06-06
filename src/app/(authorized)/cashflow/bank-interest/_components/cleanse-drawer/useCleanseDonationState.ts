@@ -163,7 +163,7 @@ export function useCleanseDonationState({
     manualForm.reset(getDefaultManualValues());
   };
 
-  const toggleEvidence = (ev: EvidenceItem) => {
+  const handleToggleEvidence = (ev: EvidenceItem) => {
     setSelectedEvidence((prev) => {
       const exists = prev.find((p) => p.id === ev.id);
       if (exists) {
@@ -216,7 +216,7 @@ export function useCleanseDonationState({
       });
 
       if (!result.success) {
-        toast.error(result.error as string || 'Failed to save');
+        toast.error((result.error as string) || 'Failed to save');
         return;
       }
 
@@ -232,7 +232,9 @@ export function useCleanseDonationState({
       onDonationSaved();
 
       setTransactions((current) => {
-        const remaining = current.filter((item) => item.id !== selectedTransaction.id);
+        const remaining = current.filter(
+          (item) => item.id !== selectedTransaction.id,
+        );
         setSelectedTransactionId(remaining[0]?.id ?? '');
         return remaining;
       });
@@ -257,7 +259,7 @@ export function useCleanseDonationState({
       });
 
       if (!result.success) {
-        toast.error(result.error as string || 'Failed to save');
+        toast.error((result.error as string) || 'Failed to save');
         return;
       }
 
@@ -297,7 +299,7 @@ export function useCleanseDonationState({
     handleSelectTransaction,
     handleClose,
     handleSwitchMode,
-    toggleEvidence,
+    handleToggleEvidence,
     updateEvidenceAmount,
     handleLinkedSave,
     handleManualSave,

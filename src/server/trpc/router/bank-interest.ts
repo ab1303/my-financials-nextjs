@@ -8,6 +8,7 @@ import {
   suggestAllocations,
   applyAllocations,
   removeAllocation,
+  Candidate,
 } from '@/server/services/bank-interest/interest-cleansing.service';
 
 export const bankInterestRouter = router({
@@ -55,7 +56,7 @@ export const bankInterestRouter = router({
   /**
    * Retrieves candidate DEBIT transactions for interest cleansing evidence linking.
    * Returns a ranked list of candidates with fuzzy match scoring (0-100%).
-   * 
+   *
    * @param creditId - The ID of the interest CREDIT transaction to link evidence for.
    * @param bankAccountId - Optional filter to scope candidates to a specific account.
    * @param search - Fuzzy search string for description/amount.
@@ -63,7 +64,7 @@ export const bankInterestRouter = router({
    * @param dateTo - ISO date string for candidate window end.
    * @param limit - Max results (default 20).
    * @param minScore - Minimum match percent threshold (0-100).
-   * 
+   *
    * @returns Array of Candidate DTOs with matchPercent, accountName, and contribution breakdowns.
    */
   getCleansingDebitCandidates: protectedProcedure
@@ -79,25 +80,11 @@ export const bankInterestRouter = router({
       }),
     )
     .query(({ ctx, input }) => {
-      // Temporary debug: log incoming input and session user id to diagnose empty-call origin
-      // Remove this logging once the root cause is identified.
-      try {
-        // eslint-disable-next-line no-console
-        console.debug(
-          '[bankInterest.getCleansingDebitCandidates] input=',
-          input,
-          'user=',
-          ctx.session?.user?.id,
-        );
-      } catch (e) {
-        // ignore logging errors
-      }
-
       if (!ctx.session?.user?.id) {
-        return [] as any;
+        return [];
       }
 
-      if (!input.creditId) return [] as any;
+      if (!input.creditId) return [];
 
       const params = {
         userId: ctx.session.user.id,

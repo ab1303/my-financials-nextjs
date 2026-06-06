@@ -1,31 +1,34 @@
 'use client';
 
 import { BeneficiaryEnumType } from '@prisma/client';
-import { Control, Controller, FieldErrors } from 'react-hook-form';
+import { Controller } from 'react-hook-form';
 import CreatableSelect from 'react-select/creatable';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { getSelectStyles } from '@/lib/select-styles';
 import { BeneficiaryOption } from './types';
+import { useCleanseDonation } from './CleanseDonationContext';
 
 type BeneficiaryFormFieldsProps = {
-  control: Control<any>;
-  errors: FieldErrors<any>;
-  beneficiaryType: BeneficiaryEnumType;
-  beneficiaryOptions: BeneficiaryOption[];
   disabled: boolean;
-  setCreateModalOpen: (value: boolean) => void;
-  setPendingBeneficiaryName: (value: string) => void;
 };
 
-export function BeneficiaryFormFields({
-  control,
-  errors,
-  beneficiaryType,
-  beneficiaryOptions,
-  disabled,
-  setCreateModalOpen,
-  setPendingBeneficiaryName,
-}: BeneficiaryFormFieldsProps) {
+export function BeneficiaryFormFields({ disabled }: BeneficiaryFormFieldsProps) {
+  const {
+    linkedForm,
+    manualForm,
+    mode,
+    linkedBeneficiaryType,
+    manualBeneficiaryType,
+    getBeneficiaryOptions,
+    setCreateModalOpen,
+    setPendingBeneficiaryName,
+  } = useCleanseDonation();
+
+  const isLinked = mode === 'linked';
+  const form = isLinked ? linkedForm : manualForm;
+  const beneficiaryType = isLinked ? linkedBeneficiaryType : manualBeneficiaryType;
+  const beneficiaryOptions = getBeneficiaryOptions(beneficiaryType);
+
   return (
     <div className='grid gap-4'>
       <div>
@@ -33,7 +36,7 @@ export function BeneficiaryFormFields({
           Beneficiary type
         </label>
         <Controller
-          control={control}
+          control={form.control as any}
           name='beneficiaryType'
           render={({ field }) => (
             <Select
@@ -65,7 +68,7 @@ export function BeneficiaryFormFields({
           Beneficiary
         </label>
         <Controller
-          control={control}
+          control={form.control as any}
           name='beneficiaryId'
           render={({ field }) => {
             const selected =
@@ -97,9 +100,9 @@ export function BeneficiaryFormFields({
             );
           }}
         />
-        {errors.beneficiaryId && (
+        {(form.formState.errors as any).beneficiaryId && (
           <p className='mt-1 text-xs text-red-600 dark:text-red-400'>
-            {String(errors.beneficiaryId.message)}
+            {String((form.formState.errors as any).beneficiaryId.message)}
           </p>
         )}
       </div>

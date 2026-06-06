@@ -396,7 +396,7 @@ export async function getCleansingDebitCandidates(params: {
   const rawCandidates = await prisma.transaction.findMany({
     where: whereClause,
     include: {
-      bankAccount: {
+      financialAccount: {
         select: { name: true },
       },
     },
@@ -425,10 +425,13 @@ export async function getCleansingDebitCandidates(params: {
 
     // descScore (30%) - Token overlap
     const tokenize = (s: string) =>
-      s.toLowerCase().split(/\W+/).filter((t) => t.length > 2);
+      s
+        .toLowerCase()
+        .split(/\W+/)
+        .filter((t) => t.length > 2);
     const creditTokens = new Set(tokenize(credit.description));
     const txTokens = new Set(tokenize(tx.description));
-    
+
     let common = 0;
     creditTokens.forEach((t) => {
       if (txTokens.has(t)) common++;
@@ -436,7 +439,11 @@ export async function getCleansingDebitCandidates(params: {
     const descScore = creditTokens.size === 0 ? 0 : common / creditTokens.size;
 
     // accountScore (10%) - Exact match if filter is provided, else 0.5 (neutral)
-    const accountScore = bankAccountId ? (tx.bankAccountId === bankAccountId ? 1 : 0) : 0.5;
+    const accountScore = bankAccountId
+      ? tx.bankAccountId === bankAccountId
+        ? 1
+        : 0
+      : 0.5;
 
     const combinedNormalized = Math.max(
       0,
@@ -500,7 +507,12 @@ export async function getCleansingDebitCandidates(params: {
       }
     }
 
-    const reasonShort = matchPercent >= 80 ? 'Strong match' : matchPercent >= 50 ? 'Partial match' : 'Weak match';
+    const reasonShort =
+      matchPercent >= 80
+        ? 'Strong match'
+        : matchPercent >= 50
+          ? 'Partial match'
+          : 'Weak match';
     const reasonLong = `Match breakdown: Amount proximity (${Math.round(amountScore * 100)}% contribution weight), Date proximity (${Math.round(dateScore * 100)}% contribution weight), Description overlap (${Math.round(descScore * 100)}% contribution weight), Account match (${accountScore * 100}% contribution weight).`;
 
     return {
@@ -508,7 +520,7 @@ export async function getCleansingDebitCandidates(params: {
       date: tx.date.toISOString().slice(0, 10),
       amount,
       accountId: tx.bankAccountId ?? 'unknown',
-      accountName: tx.bankAccount?.name ?? 'Unknown Account',
+      accountName: tx.financialAccount?.name ?? 'Unknown Account',
       description: tx.description,
       matchPercent,
       score: matchPercent,
