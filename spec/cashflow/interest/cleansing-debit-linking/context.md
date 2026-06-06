@@ -6,7 +6,7 @@ This doc describes the DEBIT evidence retrieval sub-phase within the canonical i
 
 ## Current Implementation Summary
 
-- Backend: `getCleansingDebitCandidates(params)` in `src/server/services/bank-interest/interest-cleansing.service.ts` returns a candidate list with minimal scoring fields (`score`, `scoreBreakdown`) computed from amount/date/description/account signals.
+- Backend: `getCleansingDebitCandidates(params)` in `src/server/services/bank-interest/interest-cleansing.service.ts` returns a candidate list with minimal scoring fields (`score`, `scoreBreakdown`) computed from amount/date/description/account signals. The candidate selection fetch is now category-agnostic to improve recall.
 - tRPC: `bankInterest.getCleansingDebitCandidates` forwards inputs (`creditId`, `bankAccountId`, `search`, `dateFrom`, `dateTo`, `limit`, `minScore`) and returns the service output.
 - Frontend: `CleansingCandidatePicker.tsx` consumes the tRPC query and renders date/amount/description and a numeric `Score:`. It currently lacks a match badge, account display, detailed breakdown, keyboard interactions, and Confirm/selection UX.
 

@@ -33,6 +33,7 @@ export type CleanseDonationDrawerProps = {
   dateFrom: string;
   dateTo: string;
   onDonationSaved: () => void;
+  layoutMode?: 'full' | 'offset';
 };
 
 export type Suggestion = {

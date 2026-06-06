@@ -369,10 +369,6 @@ export async function getCleansingDebitCandidates(params: {
     status: 'CONFIRMED',
     // Ensure this transaction is NOT linked as evidence to any DonationPayment
     donationPaymentEvidence: { none: {} },
-    category: {
-      equals: CLEANSING_CATEGORY_NAME,
-      mode: 'insensitive',
-    },
   };
 
   if (bankAccountId) whereClause.bankAccountId = bankAccountId;
@@ -400,8 +396,7 @@ export async function getCleansingDebitCandidates(params: {
         select: { name: true },
       },
     },
-    take: 200, // maxCandidateFetch
-    orderBy: { date: 'desc' },
+    take: 1000, // Increase pool size to ensure best matches are captured
   });
 
   // 2. Score candidates

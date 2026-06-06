@@ -274,6 +274,7 @@ export function useCleanseDonationState({
   });
 
   return {
+    isOpen,
     mode,
     transactions,
     selectedTransactionId,

@@ -100,7 +100,7 @@ export default function CleansingDonationsList({
           <p className="text-xs text-muted-foreground">Click + to record your first cleansing donation for this year</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-white dark:bg-gray-900">
+        <div className="overflow-hidden rounded-lg border border-border bg-white dark:bg-gray-900 overflow-y-auto max-h-[400px]">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

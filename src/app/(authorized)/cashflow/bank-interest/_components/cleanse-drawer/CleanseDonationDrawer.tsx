@@ -2,6 +2,7 @@
 
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import CreateBeneficiaryModal from '@/app/(authorized)/cashflow/donations/_components/CreateBeneficiaryModal';
 import { FullPageCleansingPanel } from '../FullPageCleansingPanel';
 import { CleanseDonationDrawerProps } from './types';
@@ -28,19 +29,22 @@ export function CleanseDonationDrawer(props: CleanseDonationDrawerProps) {
  * Handles the "giant" layout composition and portal rendering.
  */
 function CleanseDonationPortalContent() {
-  const { isPickerOpen, isMounted, handleClose } = useCleanseDonation();
+  const { isOpen, isMounted, handleClose, layoutMode } = useCleanseDonation();
 
-  if (!isPickerOpen || !isMounted) return null;
+  if (!isOpen || !isMounted) return null;
 
   return createPortal(
     <>
       <div
-        className='fixed inset-0 z-50 flex justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm'
+        className={cn(
+          'fixed inset-0 z-50 flex justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm',
+          layoutMode === 'offset' && 'lg:ml-64'
+        )}
         onClick={(event) => {
           if (event.target === event.currentTarget) handleClose();
         }}
       >
-        <div className='flex h-full w-full flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900 animate-in slide-in-from-right duration-300'>
+        <div className='flex h-full w-full flex-col bg-white shadow-2xl dark:bg-gray-900 animate-in slide-in-from-right duration-300'>
           <DrawerHeader />
           <DrawerTabs />
           <div className='flex-1 overflow-hidden'>

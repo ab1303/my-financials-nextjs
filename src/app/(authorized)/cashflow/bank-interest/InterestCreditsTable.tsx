@@ -97,7 +97,7 @@ export default function InterestCreditsTable({ credits }: InterestCreditsTablePr
       </div>
 
       {!collapsed && (
-        <div className="mt-2">
+        <div className="mt-2 overflow-auto max-h-[400px]">
           {credits.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center rounded-lg border border-dashed border-border">
               <Plus className="mb-2 h-5 w-5 text-muted-foreground/50" aria-hidden="true" />
