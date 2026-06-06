@@ -40,6 +40,7 @@ Rules for all AI agents working in this repository.
 
 ## Windows 11 & Token Optimization
 
+- Use `bash` over powershell for file operations.
 - File Ops: NEVER use shell commands (`echo`, `Out-File`, `New-Item`, `mkdir`) to manage files. Use native workspace file tools exclusively.
 - Path Syntax: All shell execution paths must use Windows backslashes (`\`).
 - Suppress Noise: Always pass `--quiet` or `--silent` flags to terminal commands (`pnpm`, `prisma`) to minimize token-wasting stdout/stderr.
