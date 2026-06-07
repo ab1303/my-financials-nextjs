@@ -102,10 +102,12 @@ export function useCleanseDonationState({
   // Effect to load existing evidence when a transaction is selected
   useEffect(() => {
     if (selectedTransactionId && evidenceQuery.data) {
+      // Find the donation payment linked to the current interest transaction
       const donation = evidenceQuery.data.cleansingDonations.find(
         (d) => d.interestTxId === selectedTransactionId
       );
-      if (donation) {
+      
+      if (donation && donation.evidence) {
         setSelectedEvidence(donation.evidence.map(e => ({
           id: e.id,
           amount: e.amountApplied,
@@ -116,6 +118,9 @@ export function useCleanseDonationState({
       } else {
         setSelectedEvidence([]);
       }
+    } else if (selectedTransactionId) {
+        // Clear if no evidence found for selected
+        setSelectedEvidence([]);
     }
   }, [selectedTransactionId, evidenceQuery.data]);
 

@@ -112,6 +112,10 @@ export const getYearlyCleansingData = async (
     orderBy: { datePaid: 'desc' },
   });
 
+  rawDonations.forEach(d => {
+    console.log(`DEBUG: Donation ${d.id} evidence count: ${d.evidence.length}`);
+  });
+
   // Build monthlyCredits from all 12 months (after rawDonations is available)
   const monthlyCredits: MonthlyCredit[] = allMonths.map(({ month, year }) => {
     const monthTx = interestTx.filter(
@@ -303,38 +307,25 @@ export const getUnlinkedCleansingDebitTransactions = async (
 // -------------------------
 
 export type Candidate = {
-  transactionId: string; // transaction.id (DEBIT evidence)
-  date: string; // ISO date YYYY-MM-DD (transaction.date)
-  amount: number; // numeric amount (positive number)
-  accountId: string; // FinancialAccount.id where the transaction occurred
-  accountName: string; // Human-friendly account display name
-  description: string; // transaction.description
-
-  // Canonical match percent shown in UI badge. Integer 0..100
+  transactionId: string;
+  date: string;
+  amount: number;
+  remainingAmount: number; // Added
+  existingAllocations: Array<{ // Added
+    interestTxId: string;
+    description: string;
+    amountApplied: number;
+  }>;
+  accountId: string;
+  accountName: string;
+  description: string;
   matchPercent: number;
-
-  // Short & long textual reasons for display
-  reasonShort: string; // one-line short summary (e.g. "amount + date match")
-  reasonLong: string; // longer explanation used in tooltip or expandable area
-
-  // Primary score used for server-side thresholding; equals matchPercent
-  score: number; // integer 0..100 (same as matchPercent, present for backward compatibility)
-
-  // Detailed breakdown: rawNormalized are [0..1] floats. contributionsPercent are integers
-  // representing each component's contribution to the total matchPercent and MUST sum to matchPercent
+  reasonShort: string;
+  reasonLong: string;
+  score: number;
   scoreBreakdown: {
-    rawNormalized: {
-      amountScore: number; // 0..1
-      dateScore: number; // 0..1
-      descScore: number; // 0..1
-      accountScore: number; // 0..1
-    };
-    contributionsPercent: {
-      amount: number; // integer (e.g. 40)
-      date: number; // integer (e.g. 20)
-      desc: number; // integer (e.g. 30)
-      account: number; // integer (e.g. 10)
-    };
+    rawNormalized: { amountScore: number; dateScore: number; descScore: number; accountScore: number; };
+    contributionsPercent: { amount: number; date: number; desc: number; account: number; };
   };
 };
 
@@ -397,10 +388,16 @@ export async function getCleansingDebitCandidates(params: {
         select: { name: true },
       },
       donationPaymentEvidence: {
-        select: { amountApplied: true },
+        include: {
+          donationPayment: {
+            include: {
+              interestTx: { select: { id: true, description: true } },
+            },
+          },
+        },
       },
     },
-    take: 1000, // Increase pool size to ensure best matches are captured
+    take: 1000,
   });
 
   // 2. Score candidates
@@ -411,10 +408,20 @@ export async function getCleansingDebitCandidates(params: {
         (sum, e) => sum + e.amountApplied.toNumber(),
         0,
       );
-      return allocatedAmount < amount; // Only keep if not fully allocated
+      return allocatedAmount < amount;
     })
     .map((tx) => {
       const amount = Number(tx.amount);
+      const allocatedAmount = tx.donationPaymentEvidence.reduce(
+        (sum, e) => sum + e.amountApplied.toNumber(),
+        0,
+      );
+      const remainingAmount = amount - allocatedAmount;
+      const existingAllocations = tx.donationPaymentEvidence.map(e => ({
+        interestTxId: e.donationPayment.interestTx?.id ?? 'unknown',
+        description: e.donationPayment.interestTx?.description ?? 'Unknown credit',
+        amountApplied: e.amountApplied.toNumber(),
+      }));
       const txDate = new Date(tx.date);
 
     // Weights (canonical): amount 0.6, date 0.1, desc 0.2, account 0.1
@@ -527,6 +534,8 @@ export async function getCleansingDebitCandidates(params: {
       transactionId: tx.id,
       date: tx.date.toISOString().slice(0, 10),
       amount,
+      remainingAmount,
+      existingAllocations,
       accountId: tx.bankAccountId ?? 'unknown',
       accountName: tx.financialAccount?.name ?? 'Unknown Account',
       description: tx.description,
