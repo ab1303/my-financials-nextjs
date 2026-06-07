@@ -48,8 +48,8 @@ export type Candidate = {
 ## Server scoring math (norms & weights)
 
 - Normalization: compute rawNormalized component scores in [0..1] as currently implemented (amount proximity, date proximity, token overlap for description, account match as 0/1). Ensure no negative values. If any rawNormalized is NaN or undefined, treat it as 0.
-- Weights (canonical): amount 0.4, date 0.2, desc 0.3, account 0.1.
-- Compute combinedNormalized = clamp(0,1, amountScore*0.4 + dateScore*0.2 + descScore*0.3 + accountScore*0.1).
+- Weights (canonical): amount 0.6, date 0.1, desc 0.2, account 0.1.
+- Compute combinedNormalized = clamp(0,1, amountScore*0.6 + dateScore*0.1 + descScore*0.2 + accountScore*0.1).
 - `matchPercent = Math.round(100 * combinedNormalized)`.
 - To produce `contributionsPercent`: multiply each rawNormalized by its weight, then divide by combinedNormalized to get relative share, multiply by `matchPercent`. For deterministic integer results, compute each contribution as `Math.round(weight*rawNormalized/combinedNormalized * matchPercent)` and then correct for rounding drift by adjusting the largest contributor to ensure the sum equals `matchPercent` (when combinedNormalized > 0). If combinedNormalized === 0, all contributions are 0.
 

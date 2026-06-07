@@ -27,9 +27,9 @@ export type Candidate = {
 
 1.  **Normalization**: Raw scores `[0..1]` for `amount`, `date`, `description`, `account`.
 2.  **Weighting**:
-    - `amount`: 0.4
-    - `date`: 0.2
-    - `description`: 0.3
+    - `amount`: 0.6
+    - `date`: 0.1
+    - `description`: 0.2
     - `account`: 0.1
 3.  **Combination**: `weightedSum` clamped `[0,1]`. `matchPercent = Math.round(100 * combinedNormalized)`.
 

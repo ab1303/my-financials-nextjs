@@ -28,7 +28,7 @@ describe('interest-cleansing.service - scoring', () => {
       date: new Date('2026-06-01'),
       description: 'Interest Payment To Beneficiary',
       bankAccountId: 'acc-1',
-      bankAccount: { name: 'Savings Account' },
+      financialAccount: { name: 'Savings Account' },
     };
 
     (prisma.transaction.findUniqueOrThrow as any).mockResolvedValue(mockCredit);
@@ -49,13 +49,13 @@ describe('interest-cleansing.service - scoring', () => {
     // debit: ['interest', 'payment', 'beneficiary']
     // common: ['interest', 'payment'] (2/3 = 0.66)
     
-    // amountScore: 1.0 (40% weight -> 40)
-    // dateScore: 1.0 (20% weight -> 20)
-    // descScore: 0.66 (30% weight -> 20)
+    // amountScore: 1.0 (60% weight -> 60)
+    // dateScore: 1.0 (10% weight -> 10)
+    // descScore: 0.66 (20% weight -> 13)
     // accountScore: 1.0 (10% weight -> 10)
-    // combined: 40 + 20 + 20 + 10 = 90
+    // combined: 60 + 10 + 13 + 10 = 93
     
-    expect(c.matchPercent).toBeGreaterThanOrEqual(80);
+    expect(c.matchPercent).toBeGreaterThanOrEqual(90);
     const sum = Object.values(c.scoreBreakdown.contributionsPercent).reduce((a, b) => a + b, 0);
     expect(sum).toBe(c.matchPercent);
     expect(c.accountName).toBe('Savings Account');
@@ -76,7 +76,7 @@ describe('interest-cleansing.service - scoring', () => {
       date: new Date('2026-01-01'),
       description: 'Something Else',
       bankAccountId: 'acc-2',
-      bankAccount: { name: 'Other Account' },
+      financialAccount: { name: 'Other Account' },
     };
 
     (prisma.transaction.findUniqueOrThrow as any).mockResolvedValue(mockCredit);

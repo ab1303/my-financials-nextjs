@@ -404,8 +404,8 @@ export async function getCleansingDebitCandidates(params: {
     const amount = Number(tx.amount);
     const txDate = new Date(tx.date);
 
-    // Weights (canonical): amount 0.4, date 0.2, desc 0.3, account 0.1
-    const weights = { amount: 0.4, date: 0.2, desc: 0.3, account: 0.1 };
+    // Weights (canonical): amount 0.6, date 0.1, desc 0.2, account 0.1
+    const weights = { amount: 0.6, date: 0.1, desc: 0.2, account: 0.1 };
 
     // amountScore (40%) - Proximity score
     const amountDiff = Math.abs(creditAmount - amount);
