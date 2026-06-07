@@ -190,12 +190,16 @@ export const getUnlinkedInterestTransactions = async (
   dateTo: Date,
   userId: string,
 ): Promise<
-  Array<{ id: string; date: string; description: string; amount: number }>
+  Array<{
+    id: string;
+    date: string;
+    description: string;
+    amount: number;
+    cleansedAmount: number;
+  }>
 > => {
-  // bankId is a FinancialAccount.id — filter transactions directly by this account
   const bankAccountIds = [bankId];
 
-  // Find all interest transactions
   const allInterestTx = await prisma.transaction.findMany({
     where: {
       userId,
@@ -208,32 +212,31 @@ export const getUnlinkedInterestTransactions = async (
         { category: { equals: 'Bank Interest', mode: 'insensitive' } },
       ],
     },
+    include: {
+      donationPaymentInterest: {
+        include: {
+          evidence: {
+            select: { amountApplied: true },
+          },
+        },
+      },
+    },
     orderBy: { date: 'asc' },
   });
 
-  // Find transactions already linked to interest cleansing donations
-  const linkedInterestTxIds = new Set(
-    (
-      await prisma.donationPayment.findMany({
-        where: {
-          donationPurpose: 'INTEREST_CLEANSING',
-          interestTxId: { not: null },
-        },
-        select: { interestTxId: true },
-      })
-    ).map((dp) => dp.interestTxId!),
-  );
-
-  // Return unlinked transactions
-  const unlinked = allInterestTx.filter(
-    (tx) => !linkedInterestTxIds.has(tx.id),
-  );
-  return unlinked.map((tx) => ({
-    id: tx.id,
-    date: tx.date.toISOString().split('T')[0] ?? tx.date.toISOString(),
-    description: tx.description,
-    amount: tx.amount.toNumber(),
-  }));
+  return allInterestTx.map((tx) => {
+    const cleansedAmount = tx.donationPaymentInterest?.evidence.reduce(
+      (sum, e) => sum + e.amountApplied.toNumber(),
+      0,
+    ) ?? 0;
+    return {
+      id: tx.id,
+      date: tx.date.toISOString().split('T')[0] ?? tx.date.toISOString(),
+      description: tx.description,
+      amount: tx.amount.toNumber(),
+      cleansedAmount,
+    };
+  });
 };
 
 export const getUnlinkedCleansingDebitTransactions = async (
@@ -367,8 +370,6 @@ export async function getCleansingDebitCandidates(params: {
     userId,
     type: 'DEBIT',
     status: 'CONFIRMED',
-    // Ensure this transaction is NOT linked as evidence to any DonationPayment
-    donationPaymentEvidence: { none: {} },
   };
 
   if (bankAccountId) whereClause.bankAccountId = bankAccountId;
@@ -395,14 +396,26 @@ export async function getCleansingDebitCandidates(params: {
       financialAccount: {
         select: { name: true },
       },
+      donationPaymentEvidence: {
+        select: { amountApplied: true },
+      },
     },
     take: 1000, // Increase pool size to ensure best matches are captured
   });
 
   // 2. Score candidates
-  const candidates: Candidate[] = rawCandidates.map((tx) => {
-    const amount = Number(tx.amount);
-    const txDate = new Date(tx.date);
+  const candidates: Candidate[] = rawCandidates
+    .filter((tx) => {
+      const amount = Number(tx.amount);
+      const allocatedAmount = tx.donationPaymentEvidence.reduce(
+        (sum, e) => sum + e.amountApplied.toNumber(),
+        0,
+      );
+      return allocatedAmount < amount; // Only keep if not fully allocated
+    })
+    .map((tx) => {
+      const amount = Number(tx.amount);
+      const txDate = new Date(tx.date);
 
     // Weights (canonical): amount 0.6, date 0.1, desc 0.2, account 0.1
     const weights = { amount: 0.6, date: 0.1, desc: 0.2, account: 0.1 };

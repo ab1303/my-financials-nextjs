@@ -10,6 +10,7 @@ export type TransactionRow = {
   date: string;
   description: string;
   amount: number;
+  cleansedAmount: number;
 };
 
 export type BeneficiaryOption = { value: string; label: string };

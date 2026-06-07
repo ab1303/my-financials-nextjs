@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { CheckCircle, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { CleansingCandidatePicker } from '../CleansingCandidatePicker';
 import { BeneficiaryFormFields } from './BeneficiaryFormFields';
@@ -38,19 +38,22 @@ export function LinkedModeBody() {
       {/* Left: Unlinked Interest Credits */}
       <aside className='col-span-3 border-r border-gray-200 p-4 dark:border-gray-800 flex flex-col h-full overflow-hidden'>
         <h3 className='mb-3 text-sm font-medium text-gray-700 dark:text-gray-200'>
-          Unlinked interest
+          Interest Transactions
         </h3>
         <div className='flex-1 overflow-y-auto'>
           {unlinkedTxQuery.isLoading ? (
             <p className='text-sm text-gray-500 dark:text-gray-400'>Loading...</p>
           ) : transactions.length === 0 ? (
             <div className='rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400'>
-              No unlinked interest found.
+              No interest transactions found.
             </div>
           ) : (
             <div className='space-y-2'>
               {transactions.map((tx) => {
                 const selected = tx.id === selectedTransactionId;
+                const isFullyCleansed = tx.cleansedAmount >= tx.amount;
+                const isPartiallyCleansed = tx.cleansedAmount > 0 && tx.cleansedAmount < tx.amount;
+
                 return (
                   <button
                     key={tx.id}
@@ -59,6 +62,8 @@ export function LinkedModeBody() {
                     className={`w-full rounded-md border p-3 text-left transition ${
                       selected
                         ? 'border-amber-500 bg-amber-50 dark:border-amber-400 dark:bg-amber-950'
+                        : isFullyCleansed
+                        ? 'border-transparent bg-gray-50/50 dark:bg-gray-900/30 opacity-60 grayscale'
                         : 'border-gray-200 hover:border-amber-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-amber-700 dark:hover:bg-gray-800'
                     }`}
                   >
@@ -66,13 +71,23 @@ export function LinkedModeBody() {
                       <span className='text-xs text-gray-500 dark:text-gray-400'>
                         {tx.date}
                       </span>
-                      <span className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
+                      {isFullyCleansed && (
+                        <CheckCircle className='h-4 w-4 text-green-500' />
+                      )}
+                      {isPartiallyCleansed && (
+                        <span className='text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'>
+                          Partial
+                        </span>
+                      )}
+                    </div>
+                    <div className='flex items-center justify-between gap-2 mt-1'>
+                      <p className={`line-clamp-1 text-xs ${isFullyCleansed ? 'text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                        {tx.description}
+                      </p>
+                      <span className={`text-sm font-semibold ${isFullyCleansed ? 'text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
                         {formatCurrency(tx.amount)}
                       </span>
                     </div>
-                    <p className='mt-1 line-clamp-1 text-xs text-gray-600 dark:text-gray-400'>
-                      {tx.description}
-                    </p>
                   </button>
                 );
               })}
@@ -160,10 +175,10 @@ export function LinkedModeBody() {
                   className='flex items-center justify-between border-b border-gray-50 p-2 last:border-0 dark:border-gray-900'
                 >
                   <div className='min-w-0 flex-1'>
-                    <p className='truncate text-[10px] text-gray-700 dark:text-gray-300'>
+                    <p className='truncate text-xs text-gray-700 dark:text-gray-300'>
                       {ev.description}
                     </p>
-                    <p className='text-[10px] text-gray-500'>
+                    <p className='text-xs text-gray-500'>
                       {formatCurrency(ev.amount)}
                     </p>
                   </div>
@@ -171,7 +186,7 @@ export function LinkedModeBody() {
                     onClick={() => handleToggleEvidence(ev)}
                     className='text-gray-400 hover:text-red-500 transition-colors'
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               ))}

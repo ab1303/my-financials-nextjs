@@ -71,6 +71,12 @@ export function useCleanseDonationState({
       { enabled: shouldFetchLinkedTransactions },
     );
 
+  // Added: Query to fetch evidence for selected transaction
+  const evidenceQuery = trpc.bankInterest.getInterestCleansingData.useQuery(
+    { bankId, calendarYearId },
+    { enabled: shouldFetchLinkedTransactions },
+  );
+
   const suggestQuery = trpc.bankInterest.suggestAllocations.useQuery(
     { creditId: selectedTransactionId },
     { enabled: !!selectedTransactionId && mode === 'linked' },
@@ -87,10 +93,31 @@ export function useCleanseDonationState({
     { enabled: isOpen },
   );
 
+  // Updated selectedTransaction definition to include cleansedAmount
   const selectedTransaction = useMemo(
     () => transactions.find((t) => t.id === selectedTransactionId),
     [transactions, selectedTransactionId],
   );
+
+  // Effect to load existing evidence when a transaction is selected
+  useEffect(() => {
+    if (selectedTransactionId && evidenceQuery.data) {
+      const donation = evidenceQuery.data.cleansingDonations.find(
+        (d) => d.interestTxId === selectedTransactionId
+      );
+      if (donation) {
+        setSelectedEvidence(donation.evidence.map(e => ({
+          id: e.id,
+          amount: e.amountApplied,
+          description: e.description,
+          date: e.date,
+          score: 100 // Existing linked evidence is confirmed
+        })));
+      } else {
+        setSelectedEvidence([]);
+      }
+    }
+  }, [selectedTransactionId, evidenceQuery.data]);
 
   useEffect(() => {
     if (isOpen && unlinkedTxQuery.data) {
@@ -139,8 +166,8 @@ export function useCleanseDonationState({
     type === BeneficiaryEnumType.BUSINESS ? businessOptions : individualOptions;
 
   const handleSelectTransaction = (txId: string) => {
-    setSelectedTransactionId(txId);
-    setSelectedEvidence([]);
+    setSelectedEvidence([]); // Ensure evidence is cleared
+    setSelectedTransactionId(txId); // Then update ID
     linkedForm.reset({
       ...getDefaultLinkedValues(),
       beneficiaryType: linkedForm.getValues('beneficiaryType'),
@@ -185,6 +212,8 @@ export function useCleanseDonationState({
       prev.map((ev) => (ev.id === id ? { ...ev, amount } : ev)),
     );
   };
+
+  const utils = trpc.useUtils();
 
   const handleLinkedSave = linkedForm.handleSubmit(async (values) => {
     if (!selectedTransaction) {
@@ -231,13 +260,10 @@ export function useCleanseDonationState({
       toast.success('Cleansing donation linked!');
       onDonationSaved();
 
-      setTransactions((current) => {
-        const remaining = current.filter(
-          (item) => item.id !== selectedTransaction.id,
-        );
-        setSelectedTransactionId(remaining[0]?.id ?? '');
-        return remaining;
-      });
+      // Invalidate queries to refresh the UI
+      await utils.bankInterest.getUnlinkedInterestTransactions.invalidate();
+      await utils.bankInterest.getInterestCleansingData.invalidate();
+
       setSelectedEvidence([]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save');
