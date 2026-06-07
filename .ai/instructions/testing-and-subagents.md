@@ -168,7 +168,13 @@ When `parseCommBankCsv` delegates to the generic `parseBankCsv` with `hasHeaders
 
 ---
 
-## Vitest run commands
+## Validation & Vitest Run Commands
+
+**Preferred Validation Workflow:**
+1. **Run `pnpm run type-check` (tsc)**: Fast type validation.
+2. **Run `pnpm run lint`**: Fast style/convention validation.
+3. **Run Tests**: Use Vitest for focused unit/integration testing.
+4. **Prompt the user to run `pnpm run build`**: Final deployment verification only (perform locally).
 
 ```bash
 # Single file

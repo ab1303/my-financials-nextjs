@@ -7,7 +7,10 @@ All agents must strictly follow the foundational mandates defined in `AGENTS.md`
 ## Universal Standards
 
 - **Architecture**: T3 Stack (Next.js App Router, tRPC, Prisma, Tailwind).
-- **Process**: Tell user to run `pnpm run build` for validation. **DO NOT BUILD YOURSELF**
+- **Validation Workflow**:
+  1. **Run `pnpm run type-check` (tsc)**: Fast type validation.
+  2. **Run `pnpm run lint`**: Fast style/convention validation.
+  3. **Prompt the user to run `pnpm run build`**: Final deployment verification only (perform locally).
 - **Safety**: Stop dev server before Prisma operations. Never use `prisma db push`.
 
 ## Windows 11 & Token Optimization

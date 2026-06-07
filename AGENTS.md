@@ -180,7 +180,10 @@ Never pass all three docs at once for a single implementation task — context.m
 ## Code (Universal)
 
 - Use `pnpm` exclusively — never `npm` or `yarn`.
-- Always ask user to Run `pnpm run build` before declaring any feature complete.
+- **Validation Workflow**:
+  1. **Run `pnpm run type-check` (tsc)**: Fast type validation.
+  2. **Run `pnpm run lint`**: Fast style/convention validation.
+  3. **Prompt the user to run `pnpm run build`**: Final deployment verification only (perform locally).
 - Stop the dev server before any Prisma CLI operation (prevents EPERM on Windows).
 - Never run `prisma migrate reset` without explicit user consent and a confirmed backup.
 - **NEVER use `prisma db push` for schema changes** — it modifies the DB without creating a migration file, causing irreversible schema drift. Always use `pnpm prisma migrate dev --name <descriptive-name>`. See `.ai/instructions/database-safety.md`.
