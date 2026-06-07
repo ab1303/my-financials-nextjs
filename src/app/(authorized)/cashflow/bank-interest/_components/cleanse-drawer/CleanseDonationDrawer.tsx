@@ -29,7 +29,7 @@ export function CleanseDonationDrawer(props: CleanseDonationDrawerProps) {
  * Handles the "giant" layout composition and portal rendering.
  */
 function CleanseDonationPortalContent() {
-  const { isOpen, isMounted, handleClose, layoutMode } = useCleanseDonation();
+  const { isOpen, isMounted, handleClose } = useCleanseDonation();
 
   if (!isOpen || !isMounted) return null;
 
@@ -37,8 +37,7 @@ function CleanseDonationPortalContent() {
     <>
       <div
         className={cn(
-          'fixed inset-0 z-50 flex justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm',
-          layoutMode === 'offset' && 'lg:ml-64'
+          'fixed inset-0 z-50 flex justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm lg:ml-64'
         )}
         onClick={(event) => {
           if (event.target === event.currentTarget) handleClose();

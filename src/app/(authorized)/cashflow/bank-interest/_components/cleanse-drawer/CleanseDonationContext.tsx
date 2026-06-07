@@ -14,7 +14,7 @@ export function CleanseDonationProvider({
 }: CleanseDonationDrawerProps & { children: ReactNode }) {
   const state = useCleanseDonationState(props);
   return (
-    <CleanseDonationContext.Provider value={{ ...state, layoutMode: props.layoutMode ?? 'offset' }}>
+    <CleanseDonationContext.Provider value={state}>
       {children}
     </CleanseDonationContext.Provider>
   );

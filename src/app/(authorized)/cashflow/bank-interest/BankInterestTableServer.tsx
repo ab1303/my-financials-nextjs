@@ -34,8 +34,6 @@ export default async function BankInterestTableServer({
       />
       <InterestCreditsTable
         credits={data.monthlyCredits}
-        bankId={bankId}
-        calendarYearId={calendarYearId}
       />
     </div>
   );

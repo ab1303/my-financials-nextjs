@@ -14,7 +14,8 @@ import type { OptionType } from '@/types';
 import type { CalendarEnumType } from '@prisma/client';
 
 import BankInterestFilters from './BankInterestFilters';
-import BankInterestTableServer from './BankInterestTableServer';
+import CleansingDonationsList from './_components/CleansingDonationsList';
+import CreditsDialog from './_components/CreditsDialog';
 
 export const metadata: Metadata = {
   title: 'Bank Interest | My Financials',
@@ -74,7 +75,9 @@ export default async function BanksPage({
   );
   const selectedBankId = selectedBank ? selectedBank.id : '';
 
-  const selectedCalendarYearId = yearlyData.some(yd => yd.id === yearIdParam) ? yearIdParam : '';
+  const selectedCalendarYearId = yearlyData.some((yd) => yd.id === yearIdParam)
+    ? yearIdParam
+    : '';
 
   const initialData = {
     bankOptions,
@@ -95,85 +98,112 @@ export default async function BanksPage({
   const remaining = yearlyCleansingData?.yearlySummary.balance ?? 0;
 
   return (
-    <main className='px-4 sm:px-6 lg:px-8 py-6'>
-      <div className='mb-6'>
-        <h1 className='text-2xl font-bold tracking-tight text-foreground'>
-          Bank Interest Payout
-        </h1>
-        <p className='mt-1 text-sm text-muted-foreground'>
-          Track interest payments across bank accounts by year
-        </p>
+    <main className='flex flex-col h-[calc(100vh-3.5rem-3rem)] px-4 sm:px-6 lg:px-8 py-6'>
+      <div className='mb-6 shrink-0 flex items-center justify-between'>
+        <div>
+          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
+            Bank Interest Payout
+          </h1>
+          <p className='mt-1 text-sm text-muted-foreground'>
+            Track interest payments across bank accounts by year
+          </p>
+        </div>
+        {selectedBankId && selectedCalendarYearId && (
+          <CreditsDialog
+            bankName={selectedBank?.label ?? ''}
+            credits={yearlyCleansingData?.monthlyCredits ?? []}
+            bankId={selectedBankId}
+            calendarYearId={selectedCalendarYearId}
+          />
+        )}
       </div>
-      <div className='rounded-xl border border-border bg-card shadow p-6'>
-        <BankInterestFilters
-          initialData={initialData}
-          bankIdParam={selectedBankId}
-          yearIdParam={selectedCalendarYearId}
-          defaultType={(fiscalYearType ?? 'FISCAL') as CalendarEnumType}
-        />
-        <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
-          {selectedBankId && selectedCalendarYearId ? (
-            <>
-              <div className='mb-6 grid gap-4 md:grid-cols-3'>
-                <div className='rounded-lg border border-border bg-card p-4 shadow-sm dark:bg-card'>
-                  <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
-                    Interest Received
-                  </p>
-                  <p className='mt-1 text-2xl font-bold tabular-nums text-foreground'>
-                    {formatCurrency(totalReceived)}
-                  </p>
-                </div>
-                <div className='rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm dark:border-green-800 dark:bg-green-950'>
-                  <p className='text-xs font-medium uppercase tracking-wide text-green-700 dark:text-green-300'>
-                    Amount Cleansed
-                  </p>
-                  <p className='mt-1 text-2xl font-bold tabular-nums text-green-800 dark:text-green-200'>
-                    {formatCurrency(totalCleansed)}
-                  </p>
-                </div>
-                <div
-                  className={`rounded-lg border p-4 shadow-sm ${
+
+      <div className='flex flex-col flex-1 rounded-xl border border-border bg-card shadow p-6 overflow-hidden'>
+        <div className='shrink-0 mb-6'>
+          <BankInterestFilters
+            initialData={initialData}
+            bankIdParam={selectedBankId}
+            yearIdParam={selectedCalendarYearId}
+            defaultType={(fiscalYearType ?? 'FISCAL') as CalendarEnumType}
+          />
+
+          {selectedBankId && selectedCalendarYearId && (
+            <div className='grid gap-4 md:grid-cols-3'>
+              <div className='rounded-lg border border-border bg-card p-4 shadow-sm dark:bg-card'>
+                <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+                  Interest Received
+                </p>
+                <p className='mt-1 text-2xl font-bold tabular-nums text-foreground'>
+                  {formatCurrency(totalReceived)}
+                </p>
+              </div>
+              <div className='rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm dark:border-green-800 dark:bg-green-950'>
+                <p className='text-xs font-medium uppercase tracking-wide text-green-700 dark:text-green-300'>
+                  Amount Cleansed
+                </p>
+                <p className='mt-1 text-2xl font-bold tabular-nums text-green-800 dark:text-green-200'>
+                  {formatCurrency(totalCleansed)}
+                </p>
+              </div>
+              <div
+                className={`rounded-lg border p-4 shadow-sm ${
+                  remaining > 0
+                    ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'
+                    : 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
+                }`}
+              >
+                <p
+                  className={`text-xs font-medium uppercase tracking-wide ${
                     remaining > 0
-                      ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'
-                      : 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
+                      ? 'text-amber-700 dark:text-amber-300'
+                      : 'text-green-700 dark:text-green-300'
                   }`}
                 >
-                  <p
-                    className={`text-xs font-medium uppercase tracking-wide ${
-                      remaining > 0
-                        ? 'text-amber-700 dark:text-amber-300'
-                        : 'text-green-700 dark:text-green-300'
-                    }`}
-                  >
-                    Remaining to Cleanse
-                  </p>
-                  <p
-                    className={`mt-1 text-2xl font-bold tabular-nums ${
-                      remaining > 0
-                        ? 'text-amber-800 dark:text-amber-200'
-                        : 'text-green-800 dark:text-green-200'
-                    }`}
-                  >
-                    {formatCurrency(remaining)}
-                  </p>
-                </div>
+                  Remaining to Cleanse
+                </p>
+                <p
+                  className={`mt-1 text-2xl font-bold tabular-nums ${
+                    remaining > 0
+                      ? 'text-amber-800 dark:text-amber-200'
+                      : 'text-green-800 dark:text-green-200'
+                  }`}
+                >
+                  {formatCurrency(remaining)}
+                </p>
               </div>
-              <div className='mb-3 font-mono text-muted-foreground'>
-                {selectedBank?.label} Interest
-              </div>
-              {yearlyCleansingData ? (
-                <BankInterestTableServer
+            </div>
+          )}
+        </div>
+
+        <div className='flex-1 overflow-hidden'>
+          <Suspense fallback={<p className='font-medium'>Loading...</p>}>
+            {selectedBankId && selectedCalendarYearId ? (
+              <div className='h-full overflow-y-auto'>
+                <CleansingDonationsList
+                  donations={yearlyCleansingData?.cleansingDonations ?? []}
+                  yearlySummary={
+                    yearlyCleansingData?.yearlySummary ?? {
+                      totalReceived: 0,
+                      totalCleansed: 0,
+                      balance: 0,
+                    }
+                  }
                   bankId={selectedBankId}
                   calendarYearId={selectedCalendarYearId}
+                  dateFrom={yearlyCleansingData?.dateFrom ?? ''}
+                  dateTo={yearlyCleansingData?.dateTo ?? ''}
+                  unlinkedInterestCount={
+                    yearlyCleansingData?.unlinkedInterestCount ?? 0
+                  }
                 />
-              ) : null}
-            </>
-          ) : (
-            <p className='text-sm text-muted-foreground'>
-              Please select a bank and year to view interest details.
-            </p>
-          )}
-        </Suspense>
+              </div>
+            ) : (
+              <p className='text-sm text-muted-foreground'>
+                Please select a bank and year to view interest details.
+              </p>
+            )}
+          </Suspense>
+        </div>
       </div>
     </main>
   );
