@@ -17,7 +17,7 @@ export const manualModeSchema = z.object({
 
 export function getDefaultLinkedValues() {
   return {
-    beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+    beneficiaryType: BeneficiaryEnumType.BUSINESS,
     beneficiaryId: '',
   };
 }
@@ -26,7 +26,7 @@ export function getDefaultManualValues() {
   return {
     datePaid: '',
     amount: 0,
-    beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+    beneficiaryType: BeneficiaryEnumType.BUSINESS,
     beneficiaryId: '',
   };
 }

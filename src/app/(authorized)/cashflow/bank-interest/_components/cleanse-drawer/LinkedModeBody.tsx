@@ -118,6 +118,7 @@ export function LinkedModeBody() {
             ) : (
               <CleansingCandidatePicker
                 creditId={selectedTransactionId}
+                alreadySelectedEvidenceIds={selectedEvidence.map((ev) => ev.id)}
                 onSelect={(candidate) =>
                   handleToggleEvidence({
                     id: candidate.transactionId,

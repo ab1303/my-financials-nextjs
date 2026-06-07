@@ -21,12 +21,14 @@ interface CleansingCandidatePickerProps {
   creditId: string;
   bankAccountId?: string;
   onSelect: (candidate: Candidate) => void;
+  alreadySelectedEvidenceIds?: string[];
 }
 
 export function CleansingCandidatePicker({
   creditId,
   bankAccountId: initialBankAccountId,
   onSelect,
+  alreadySelectedEvidenceIds = [],
 }: CleansingCandidatePickerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch] = useDebounce(searchTerm, 300);
@@ -199,14 +201,16 @@ export function CleansingCandidatePicker({
                 selectedCandidateId === candidate.transactionId;
               const isFocused = focusedIndex === index;
               const isExpanded = expandedId === candidate.transactionId;
+              const isLinked = alreadySelectedEvidenceIds.includes(
+                candidate.transactionId,
+              );
 
               return (
                 <li
                   key={candidate.transactionId}
                   role='option'
                   aria-selected={isSelected}
-                  onClick={() =>
-                    setSelectedCandidateId(candidate.transactionId)
+                  onClick={() => !isLinked && setSelectedCandidateId(candidate.transactionId)
                   }
                   className={cn(
                     'group cursor-pointer transition-all duration-200',
@@ -216,6 +220,7 @@ export function CleansingCandidatePicker({
                     isFocused &&
                       !isSelected &&
                       'bg-gray-100/50 dark:bg-gray-800/50',
+                    isLinked && 'opacity-60 cursor-not-allowed',
                   )}
                 >
                   <div className='p-4'>
@@ -228,6 +233,14 @@ export function CleansingCandidatePicker({
                           >
                             DEBIT
                           </Badge>
+                          {isLinked && (
+                            <Badge
+                              variant='secondary'
+                              className='text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider bg-gray-200 text-gray-700'
+                            >
+                              Linked
+                            </Badge>
+                          )}
                           <span className='text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-tight'>
                             {candidate.accountName}
                           </span>

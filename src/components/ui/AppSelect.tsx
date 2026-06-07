@@ -12,13 +12,15 @@ type AppSelectProps<
   compact?: boolean;
   /** Override individual style parts; merged on top of the default theme styles. */
   styles?: SelectProps<Option, IsMulti, Group>['styles'];
+  /** Whether to render the menu in a portal to escape container overflow/z-index issues. */
+  usePortal?: boolean;
 };
 
 export function AppSelect<
   Option = unknown,
   IsMulti extends boolean = false,
   Group extends GroupBase<Option> = GroupBase<Option>,
->({ compact = false, styles: styleOverrides, ...props }: AppSelectProps<Option, IsMulti, Group>) {
+>({ compact = false, styles: styleOverrides, usePortal = false, ...props }: AppSelectProps<Option, IsMulti, Group>) {
   const baseStyles = compact
     ? getCompactSelectStyles<Option, IsMulti, Group>()
     : getSelectStyles<Option, IsMulti, Group>();
@@ -28,7 +30,8 @@ export function AppSelect<
       // menuPosition:'fixed' escapes overflow-y:auto clipping without needing
       // a React portal. Works because dialog.tsx uses transform-free centering
       // (inset-0 + margin:auto), so position:fixed is relative to the viewport.
-      menuPosition='fixed'
+      menuPosition={usePortal ? undefined : 'fixed'}
+      menuPortalTarget={usePortal && typeof document !== 'undefined' ? document.body : undefined}
       styles={styleOverrides ? { ...baseStyles, ...styleOverrides } : baseStyles}
       {...props}
     />

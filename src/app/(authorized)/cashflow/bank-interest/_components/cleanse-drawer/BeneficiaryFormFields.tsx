@@ -2,17 +2,19 @@
 
 import { BeneficiaryEnumType } from '@prisma/client';
 import { Controller } from 'react-hook-form';
-import CreatableSelect from 'react-select/creatable';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
+import CreatableSelect from 'react-select/creatable';
 import { getSelectStyles } from '@/lib/select-styles';
-import { BeneficiaryOption } from './types';
+import { type BeneficiaryOption } from './types';
 import { useCleanseDonation } from './CleanseDonationContext';
 
 type BeneficiaryFormFieldsProps = {
   disabled: boolean;
 };
 
-export function BeneficiaryFormFields({ disabled }: BeneficiaryFormFieldsProps) {
+export function BeneficiaryFormFields({
+  disabled,
+}: BeneficiaryFormFieldsProps) {
   const {
     linkedForm,
     manualForm,
@@ -26,7 +28,9 @@ export function BeneficiaryFormFields({ disabled }: BeneficiaryFormFieldsProps) 
 
   const isLinked = mode === 'linked';
   const form = isLinked ? linkedForm : manualForm;
-  const beneficiaryType = isLinked ? linkedBeneficiaryType : manualBeneficiaryType;
+  const beneficiaryType = isLinked
+    ? linkedBeneficiaryType
+    : manualBeneficiaryType;
   const beneficiaryOptions = getBeneficiaryOptions(beneficiaryType);
 
   return (
@@ -38,28 +42,34 @@ export function BeneficiaryFormFields({ disabled }: BeneficiaryFormFieldsProps) 
         <Controller
           control={form.control as any}
           name='beneficiaryType'
-          render={({ field }) => (
-            <Select
-              instanceId='beneficiary-type-select'
-              inputId='beneficiaryType'
-              isDisabled={disabled}
-              options={[
-                { value: BeneficiaryEnumType.INDIVIDUAL, label: 'Individual' },
-                { value: BeneficiaryEnumType.BUSINESS, label: 'Business' },
-              ]}
-              value={{
-                value: field.value,
-                label:
-                  field.value === BeneficiaryEnumType.BUSINESS
-                    ? 'Business'
-                    : 'Individual',
-              }}
-              onChange={(option) => field.onChange(option?.value)}
-            />
-          )}
+          render={({ field }) => {
+            const options = [
+              { value: BeneficiaryEnumType.INDIVIDUAL, label: 'Individual' },
+              { value: BeneficiaryEnumType.BUSINESS, label: 'Business' },
+            ];
+            const selected =
+              options.find((o) => o.value === field.value) ||
+              options.find((o) => o.value === BeneficiaryEnumType.BUSINESS);
+            return (
+              <Select
+                instanceId='beneficiary-type-select'
+                inputId='beneficiaryType'
+                isDisabled={disabled}
+                options={options}
+                value={selected}
+                onChange={(option) => field.onChange(option?.value)}
+                styles={
+                  {
+                    ...getSelectStyles(),
+                    menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+                  } as any
+                }
+                usePortal
+              />
+            );
+          }}
         />
       </div>
-
       <div>
         <label
           htmlFor='beneficiaryId'
@@ -90,7 +100,7 @@ export function BeneficiaryFormFields({ disabled }: BeneficiaryFormFieldsProps) 
                 formatCreateLabel={(value) => `+ Create "${value}"`}
                 styles={{
                   ...getSelectStyles<BeneficiaryOption>(),
-                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
                 }}
                 menuPortalTarget={
                   typeof document !== 'undefined' ? document.body : null
