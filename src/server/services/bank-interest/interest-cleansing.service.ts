@@ -739,7 +739,31 @@ export const removeAllocation = async (
   allocationId: string,
   userId: string,
 ): Promise<{ success: boolean }> => {
-  // Simple deletion for now — can be extended to soft-delete with audit table
-  await prisma.donationPaymentEvidence.delete({ where: { id: allocationId } });
-  return { success: true };
+  console.log(`DEBUG: Removing allocation ${allocationId} for user ${userId}`);
+  
+  return await prisma.$transaction(async (tx) => {
+    // 1. Get evidence to find the donationPaymentId
+    const evidence = await tx.donationPaymentEvidence.findUniqueOrThrow({
+      where: { id: allocationId },
+      select: { donationPaymentId: true },
+    });
+    
+    // 2. Delete the evidence
+    await tx.donationPaymentEvidence.delete({ where: { id: allocationId } });
+    
+    // 3. Check for remaining evidence
+    const remainingCount = await tx.donationPaymentEvidence.count({
+      where: { donationPaymentId: evidence.donationPaymentId },
+    });
+    
+    // 4. If none, clear the interestTxId
+    if (remainingCount === 0) {
+      await tx.donationPayment.update({
+        where: { id: evidence.donationPaymentId },
+        data: { interestTxId: null },
+      });
+    }
+    
+    return { success: true };
+  });
 };

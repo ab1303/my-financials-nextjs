@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useForm, UseFormReturn } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BeneficiaryEnumType } from '@prisma/client';
 import { toast } from 'sonner';
@@ -32,7 +32,7 @@ export function useCleanseDonationState({
   dateTo,
   onDonationSaved,
 }: CleanseDonationDrawerProps) {
-  const [mode, setMode] = useState<DrawerMode>('linked');
+  const [activeTab, setActiveTab] = useState<DrawerMode>('linked');
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [selectedTransactionId, setSelectedTransactionId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -45,7 +45,6 @@ export function useCleanseDonationState({
     setIsMounted(true);
   }, []);
 
-  // M:N Allocations State
   const [selectedEvidence, setSelectedEvidence] = useState<EvidenceItem[]>([]);
 
   const linkedForm = useForm<LinkedFormValues>({
@@ -63,7 +62,7 @@ export function useCleanseDonationState({
   const linkedBeneficiaryType = linkedForm.watch('beneficiaryType');
   const manualBeneficiaryType = manualForm.watch('beneficiaryType');
 
-  const shouldFetchLinkedTransactions = isOpen && mode === 'linked';
+  const shouldFetchLinkedTransactions = isOpen;
 
   const unlinkedTxQuery =
     trpc.bankInterest.getUnlinkedInterestTransactions.useQuery(
@@ -71,7 +70,6 @@ export function useCleanseDonationState({
       { enabled: shouldFetchLinkedTransactions },
     );
 
-  // Added: Query to fetch evidence for selected transaction
   const evidenceQuery = trpc.bankInterest.getInterestCleansingData.useQuery(
     { bankId, calendarYearId },
     { enabled: shouldFetchLinkedTransactions },
@@ -79,10 +77,12 @@ export function useCleanseDonationState({
 
   const suggestQuery = trpc.bankInterest.suggestAllocations.useQuery(
     { creditId: selectedTransactionId },
-    { enabled: !!selectedTransactionId && mode === 'linked' },
+    { enabled: !!selectedTransactionId },
   );
 
   const applyMutation = trpc.bankInterest.applyAllocations.useMutation();
+  const removeMutation = trpc.bankInterest.removeAllocation.useMutation();
+  const utils = trpc.useUtils();
 
   const individualsQuery = trpc.individual.getAllIndividuals.useQuery(
     undefined,
@@ -93,36 +93,25 @@ export function useCleanseDonationState({
     { enabled: isOpen },
   );
 
-  // Updated selectedTransaction definition to include cleansedAmount
   const selectedTransaction = useMemo(
     () => transactions.find((t) => t.id === selectedTransactionId),
     [transactions, selectedTransactionId],
   );
 
-  // Effect to load existing evidence when a transaction is selected
-  useEffect(() => {
-    if (selectedTransactionId && evidenceQuery.data) {
-      // Find the donation payment linked to the current interest transaction
-      const donation = evidenceQuery.data.cleansingDonations.find(
-        (d) => d.interestTxId === selectedTransactionId
-      );
-      
-      if (donation && donation.evidence) {
-        setSelectedEvidence(donation.evidence.map(e => ({
-          id: e.id,
-          amount: e.amountApplied,
-          description: e.description,
-          date: e.date,
-          score: 100 // Existing linked evidence is confirmed
-        })));
-      } else {
-        setSelectedEvidence([]);
-      }
-    } else if (selectedTransactionId) {
-        // Clear if no evidence found for selected
-        setSelectedEvidence([]);
-    }
-  }, [selectedTransactionId, evidenceQuery.data]);
+  // Separate tab mode from audit view state
+  const isAuditMode = useMemo(() => {
+    if (!selectedTransaction) return false;
+    return selectedTransaction.cleansedAmount >= selectedTransaction.amount;
+  }, [selectedTransaction]);
+
+  const handleSwitchMode = useCallback(
+    (newMode: DrawerMode) => {
+      setActiveTab(newMode);
+      linkedForm.reset(getDefaultLinkedValues());
+      manualForm.reset(getDefaultManualValues());
+    },
+    [linkedForm, manualForm],
+  );
 
   useEffect(() => {
     if (isOpen && unlinkedTxQuery.data) {
@@ -134,16 +123,31 @@ export function useCleanseDonationState({
   }, [unlinkedTxQuery.data, isOpen, selectedTransactionId]);
 
   useEffect(() => {
-    linkedForm.setValue('beneficiaryId', '', { shouldValidate: true });
-  }, [linkedBeneficiaryType, linkedForm]);
-
-  useEffect(() => {
-    manualForm.setValue('beneficiaryId', '', { shouldValidate: true });
-  }, [manualBeneficiaryType, manualForm]);
+    if (selectedTransactionId && evidenceQuery.data) {
+      const donation = evidenceQuery.data.cleansingDonations.find(
+        (d) => d.interestTxId === selectedTransactionId,
+      );
+      if (donation && donation.evidence) {
+        setSelectedEvidence(
+          donation.evidence.map((e) => ({
+            id: e.id, // This is the DonationPaymentEvidence ID
+            amount: e.amountApplied,
+            description: e.description,
+            date: new Date(e.date),
+            score: 100,
+          })),
+        );
+      } else {
+        setSelectedEvidence([]);
+      }
+    } else if (selectedTransactionId) {
+      setSelectedEvidence([]);
+    }
+  }, [selectedTransactionId, evidenceQuery.data]);
 
   useEffect(() => {
     if (!isOpen) {
-      setMode('linked');
+      setActiveTab('linked');
       setTransactions([]);
       setSelectedTransactionId('');
       setSelectedEvidence([]);
@@ -171,8 +175,8 @@ export function useCleanseDonationState({
     type === BeneficiaryEnumType.BUSINESS ? businessOptions : individualOptions;
 
   const handleSelectTransaction = (txId: string) => {
-    setSelectedEvidence([]); // Ensure evidence is cleared
-    setSelectedTransactionId(txId); // Then update ID
+    setSelectedEvidence([]);
+    setSelectedTransactionId(txId);
     linkedForm.reset({
       ...getDefaultLinkedValues(),
       beneficiaryType: linkedForm.getValues('beneficiaryType'),
@@ -183,16 +187,26 @@ export function useCleanseDonationState({
     setTransactions([]);
     setSelectedTransactionId('');
     setSelectedEvidence([]);
-    setMode('linked');
     linkedForm.reset(getDefaultLinkedValues());
     manualForm.reset(getDefaultManualValues());
     onClose();
   };
 
-  const handleSwitchMode = (newMode: DrawerMode) => {
-    setMode(newMode);
-    linkedForm.reset(getDefaultLinkedValues());
-    manualForm.reset(getDefaultManualValues());
+  const handleUnlink = async (allocationId: string) => {
+    setIsSaving(true);
+    try {
+      await removeMutation.mutateAsync({ allocationId });
+      toast.success('Allocation removed');
+      await utils.bankInterest.getUnlinkedInterestTransactions.invalidate();
+      await utils.bankInterest.getInterestCleansingData.invalidate();
+    } catch (e) {
+      console.error('Failed to unlink:', e);
+      toast.error(
+        e instanceof Error ? e.message : 'Failed to unlink allocation',
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleToggleEvidence = (ev: EvidenceItem) => {
@@ -218,25 +232,8 @@ export function useCleanseDonationState({
     );
   };
 
-  const utils = trpc.useUtils();
-
   const handleLinkedSave = linkedForm.handleSubmit(async (values) => {
-    if (!selectedTransaction) {
-      toast.error('Please select a transaction to link.');
-      return;
-    }
-
-    const totalAllocated = selectedEvidence.reduce((s, a) => s + a.amount, 0);
-    if (totalAllocated <= 0) {
-      toast.error('Please select at least one evidence transaction.');
-      return;
-    }
-
-    if (totalAllocated > selectedTransaction.amount + 0.01) {
-      toast.error(`Total allocated exceeds credit amount.`);
-      return;
-    }
-
+    if (!selectedTransaction) return;
     setIsSaving(true);
     try {
       const result = await addRow({
@@ -249,10 +246,7 @@ export function useCleanseDonationState({
         donationPurpose: 'INTEREST_CLEANSING',
       });
 
-      if (!result.success) {
-        toast.error((result.error as string) || 'Failed to save');
-        return;
-      }
+      if (!result.success) throw new Error(result.error as string);
 
       await applyMutation.mutateAsync({
         creditId: selectedTransaction.id,
@@ -264,11 +258,8 @@ export function useCleanseDonationState({
 
       toast.success('Cleansing donation linked!');
       onDonationSaved();
-
-      // Invalidate queries to refresh the UI
       await utils.bankInterest.getUnlinkedInterestTransactions.invalidate();
       await utils.bankInterest.getInterestCleansingData.invalidate();
-
       setSelectedEvidence([]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save');
@@ -288,12 +279,7 @@ export function useCleanseDonationState({
         calendarYearId,
         donationPurpose: 'INTEREST_CLEANSING',
       });
-
-      if (!result.success) {
-        toast.error((result.error as string) || 'Failed to save');
-        return;
-      }
-
+      if (!result.success) throw new Error(result.error as string);
       toast.success('Manual cleansing donation saved!');
       onDonationSaved();
       manualForm.reset(getDefaultManualValues());
@@ -303,10 +289,10 @@ export function useCleanseDonationState({
       setIsSaving(false);
     }
   });
-
   return {
     isOpen,
-    mode,
+    mode: activeTab,
+    isAuditMode,
     transactions,
     selectedTransactionId,
     isSaving,
@@ -335,5 +321,6 @@ export function useCleanseDonationState({
     updateEvidenceAmount,
     handleLinkedSave,
     handleManualSave,
+    handleUnlink, // Ensure handleUnlink is returned
   };
 }

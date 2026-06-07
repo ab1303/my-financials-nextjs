@@ -19,7 +19,8 @@ export type LinkedFormValues = z.infer<typeof linkedModeSchema>;
 export type ManualFormValues = z.infer<typeof manualModeSchema>;
 
 export type EvidenceItem = {
-  id: string;
+  id: string; // DEBIT transaction ID
+  allocationId?: string; // ID of the DonationPaymentEvidence record
   amount: number;
   description: string;
   date?: Date;

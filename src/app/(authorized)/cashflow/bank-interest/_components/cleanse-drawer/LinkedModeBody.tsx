@@ -1,7 +1,6 @@
 'use client';
 
 import { CheckCircle, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { CleansingCandidatePicker } from '../CleansingCandidatePicker';
 import { BeneficiaryFormFields } from './BeneficiaryFormFields';
 import { useCleanseDonation } from './CleanseDonationContext';
@@ -22,20 +21,20 @@ export function LinkedModeBody() {
     linkedForm,
     selectedEvidence,
     isSaving,
+    isAuditMode,
     handleSelectTransaction,
     handleToggleEvidence,
-    setIsPickerOpen,
+    handleUnlink, // Added handleUnlink here
     handleLinkedSave,
     handleClose,
   } = useCleanseDonation();
 
   const totalAllocated = selectedEvidence.reduce((s, a) => s + a.amount, 0);
   const creditAmount = selectedTransaction?.amount ?? 0;
-  const remaining = Math.max(0, creditAmount - totalAllocated);
 
   return (
     <div className='grid grid-cols-12 h-full overflow-hidden'>
-      {/* Left: Unlinked Interest Credits */}
+      {/* Left: Interest Credits */}
       <aside className='col-span-3 border-r border-gray-200 p-4 dark:border-gray-800 flex flex-col h-full overflow-hidden'>
         <h3 className='mb-3 text-sm font-medium text-gray-700 dark:text-gray-200'>
           Interest Transactions
@@ -96,31 +95,15 @@ export function LinkedModeBody() {
         </div>
       </aside>
 
-      {/* Middle: Evidence Picker */}
+      {/* Middle: Evidence Picker or Audit View */}
       <section className='col-span-6 flex flex-col border-r border-gray-200 dark:border-gray-800 h-full overflow-hidden'>
         <div className='flex flex-col p-4 flex-1 overflow-hidden'>
           <div className='mb-4 flex items-center justify-between shrink-0'>
             <div className='flex flex-col'>
               <h3 className='text-sm font-medium text-gray-700 dark:text-gray-200'>
-                Select Evidence (DEBITs)
+                {isAuditMode ? 'Audit: Existing Links' : 'Select Evidence (DEBITs)'}
               </h3>
-              {selectedTransaction && (
-                <button
-                  type='button'
-                  onClick={() => setIsPickerOpen(true)}
-                  className='text-[10px] text-blue-600 hover:underline text-left font-medium dark:text-blue-400'
-                >
-                  Full screen / Fuzzy search
-                </button>
-              )}
             </div>
-            {selectedTransaction && (
-              <div className='flex gap-2'>
-                <Badge variant={remaining === 0 ? 'default' : 'secondary'}>
-                  Remaining: {formatCurrency(remaining)}
-                </Badge>
-              </div>
-            )}
           </div>
 
           <div className='flex-1 overflow-hidden'>
@@ -130,6 +113,28 @@ export function LinkedModeBody() {
                   Select an interest credit to see suggestions.
                 </p>
               </div>
+            ) : isAuditMode ? (
+                <div className='rounded-lg border p-4 bg-gray-50 dark:bg-gray-900'>
+                    <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>
+                        This transaction is fully cleansed. Review existing evidence links below.
+                    </p>
+                    <div className='space-y-2'>
+                        {selectedEvidence.map(ev => (
+                             <div key={ev.id} className='flex items-center justify-between p-3 border rounded dark:border-gray-800'>
+                                 <div className='min-w-0 flex-1'>
+                                   <p className='text-sm text-gray-700 dark:text-gray-300'>{ev.description}</p>
+                                   <p className='text-xs text-gray-500'>{formatCurrency(ev.amount)}</p>
+                                 </div>
+                                 <button
+                                    onClick={() => handleUnlink(ev.id)}
+                                    className='text-gray-400 hover:text-red-500 transition-colors'
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                             </div>
+                        ))}
+                    </div>
+                </div>
             ) : (
               <CleansingCandidatePicker
                 creditId={selectedTransactionId}
@@ -137,7 +142,7 @@ export function LinkedModeBody() {
                 onSelect={(candidate) =>
                   handleToggleEvidence({
                     id: candidate.transactionId,
-                    amount: candidate.amount,
+                    amount: candidate.remainingAmount, 
                     description: candidate.description,
                     date: new Date(candidate.date),
                     score: candidate.matchPercent,
@@ -152,9 +157,9 @@ export function LinkedModeBody() {
       {/* Right: Confirmation & Beneficiary */}
       <section className='col-span-3 flex flex-col p-4 h-full overflow-hidden'>
         <h3 className='mb-3 text-sm font-medium text-gray-700 dark:text-gray-200 shrink-0'>
-          Allocation Summary
+          {isAuditMode ? 'Existing Evidence' : 'Allocation Summary'}
         </h3>
-
+        
         <div className='mb-4 space-y-3 flex-1 overflow-hidden flex flex-col'>
           <div className='rounded-md bg-gray-50 p-3 dark:bg-gray-950 shrink-0'>
             <div className='flex justify-between text-xs text-gray-500 mb-1'>
@@ -182,12 +187,14 @@ export function LinkedModeBody() {
                       {formatCurrency(ev.amount)}
                     </p>
                   </div>
-                  <button
-                    onClick={() => handleToggleEvidence(ev)}
-                    className='text-gray-400 hover:text-red-500 transition-colors'
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {!isAuditMode && (
+                    <button
+                      onClick={() => handleToggleEvidence(ev)}
+                      className='text-gray-400 hover:text-red-500 transition-colors'
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -195,30 +202,34 @@ export function LinkedModeBody() {
         </div>
 
         <div className='pt-4 border-t border-gray-100 dark:border-gray-800 shrink-0'>
-          <BeneficiaryFormFields
-            disabled={!selectedTransaction || selectedEvidence.length === 0}
-          />
+          {!isAuditMode && (
+            <BeneficiaryFormFields
+              disabled={!selectedTransaction || selectedEvidence.length === 0}
+            />
+          )}
 
           <div className='mt-6 flex flex-col gap-2'>
-            <button
-              type='button'
-              onClick={handleLinkedSave}
-              disabled={
-                !selectedTransaction ||
-                selectedEvidence.length === 0 ||
-                !linkedForm.formState.isValid ||
-                isSaving
-              }
-              className='w-full rounded-md bg-amber-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:hover:bg-amber-600'
-            >
-              {isSaving ? 'Processing...' : 'Confirm Allocation'}
-            </button>
+            {!isAuditMode ? (
+              <button
+                type='button'
+                onClick={handleLinkedSave}
+                disabled={
+                  !selectedTransaction ||
+                  selectedEvidence.length === 0 ||
+                  !linkedForm.formState.isValid ||
+                  isSaving
+                }
+                className='w-full rounded-md bg-amber-600 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:hover:bg-amber-600'
+              >
+                {isSaving ? 'Processing...' : 'Confirm Allocation'}
+              </button>
+            ) : null}
             <button
               type='button'
               onClick={handleClose}
               className='w-full rounded-md border border-gray-300 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800'
             >
-              Cancel
+              {isAuditMode ? 'Close' : 'Cancel'}
             </button>
           </div>
         </div>
