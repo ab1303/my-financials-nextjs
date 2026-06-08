@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach,describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/server/utils/prisma', () => ({
   prisma: {
@@ -8,8 +8,8 @@ vi.mock('@/server/utils/prisma', () => ({
   },
 }));
 
-import { prisma } from '@/server/utils/prisma';
 import { deriveIsDeductible, getTaxCategoryLabel } from '@/server/utils/charity-tax';
+import { prisma } from '@/server/utils/prisma';
 
 describe('charity-tax helper', () => {
   beforeEach(() => {

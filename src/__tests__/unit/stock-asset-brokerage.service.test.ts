@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
-import { getBrokerageAccounts, createBrokerageSubAccount } from '@/server/services/stock-asset.service';
+import { createBrokerageSubAccount,getBrokerageAccounts } from '@/server/services/stock-asset.service';
 
 const userId = 'user-123';
 

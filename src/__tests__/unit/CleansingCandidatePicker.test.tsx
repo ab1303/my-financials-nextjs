@@ -1,5 +1,6 @@
-import { expect, test, describe, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent,render, screen } from '@testing-library/react';
+import { afterEach,beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { CleansingCandidatePicker } from '@/app/(authorized)/cashflow/bank-interest/_components/CleansingCandidatePicker';
 // We'll need to mock trpc
 import { trpc } from '@/server/trpc/client';
@@ -12,7 +13,7 @@ vi.mock('@/server/trpc/client', () => ({
       },
     },
     bankAccount: {
-      getBankAccounts: {
+      list: {
         useQuery: vi.fn(),
       },
     },
@@ -30,6 +31,7 @@ describe('CleansingCandidatePicker', () => {
       description: 'Test Debit 1',
       matchPercent: 95,
       score: 95,
+      remainingAmount: 50.0,
       reasonShort: 'Perfect match',
       reasonLong: 'Detailed reason 1',
       scoreBreakdown: {
@@ -46,6 +48,7 @@ describe('CleansingCandidatePicker', () => {
       description: 'Test Debit 2',
       matchPercent: 45,
       score: 45,
+      remainingAmount: 50.0,
       reasonShort: 'Partial match',
       reasonLong: 'Detailed reason 2',
       scoreBreakdown: {
@@ -65,7 +68,7 @@ describe('CleansingCandidatePicker', () => {
       data: mockCandidates,
       isLoading: false,
     });
-    (trpc.bankAccount.getBankAccounts.useQuery as any).mockReturnValue({
+    (trpc.bankAccount.list.useQuery as any).mockReturnValue({
       data: mockAccounts,
       isLoading: false,
     });
@@ -74,8 +77,8 @@ describe('CleansingCandidatePicker', () => {
   test('renders candidate rows with match badges', () => {
     render(<CleansingCandidatePicker creditId="credit1" onSelect={() => {}} />);
     
-    expect(screen.getByText('95%')).toBeDefined();
-    expect(screen.getByText('45%')).toBeDefined();
+    expect(screen.getByText('95% Match')).toBeDefined();
+    expect(screen.getByText('45% Match')).toBeDefined();
     expect(screen.getByText('Main Account')).toBeDefined();
     expect(screen.getByText('Savings')).toBeDefined();
   });

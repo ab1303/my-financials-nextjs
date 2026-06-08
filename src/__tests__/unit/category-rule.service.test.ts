@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
+  applyRuleToPast,
   createRule,
   deleteRule,
-  listRules,
-  toggleRule,
   findSimilarTransactions,
+  listRules,
   runCategoryRules,
-  applyRuleToPast,
+  toggleRule,
 } from "@/server/services/transactions/category-rule.service";
 
 const mockRuleCreate = vi.fn();

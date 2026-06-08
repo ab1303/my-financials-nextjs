@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Decimal } from '@prisma/client/runtime/library';
-import { appRouter } from '@/server/trpc/router/_app';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
+import { appRouter } from '@/server/trpc/router/_app';
 
 const caller = appRouter.createCaller({
   prisma: prismaMock,
@@ -31,7 +32,8 @@ describe('bankInterest.getCleansingDebitCandidates', () => {
         date: new Date('2026-06-02'),
         description: 'Interest Cleansing Transfer',
         bankAccountId: 'acc-1',
-        bankAccount: { name: 'Main Account' },
+        financialAccount: { name: 'Main Account' },
+        interestCleansingEvidence: [],
       },
       {
         id: 'debit-2',
@@ -39,7 +41,8 @@ describe('bankInterest.getCleansingDebitCandidates', () => {
         date: new Date('2026-05-15'),
         description: 'Other Transfer',
         bankAccountId: 'acc-2',
-        bankAccount: { name: 'Savings' },
+        financialAccount: { name: 'Savings' },
+        interestCleansingEvidence: [],
       },
     ] as never);
 

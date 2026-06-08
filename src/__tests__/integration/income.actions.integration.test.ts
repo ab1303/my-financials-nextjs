@@ -1,14 +1,16 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { revalidatePath } from 'next/cache';
 import { Decimal } from '@prisma/client/runtime/library';
+import { revalidatePath } from 'next/cache';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   addRow,
-  editRow,
   deleteRow,
+  editRow,
 } from '@/app/(authorized)/cashflow/income/actions';
-import { prismaMock } from '../mocks/prisma.mock';
+
 import { mockSession } from '../mocks/auth.mock';
 import { createMockIncomeTransaction } from '../mocks/income.mock';
+import { prismaMock } from '../mocks/prisma.mock';
 
 // Mock auth function
 vi.mock('@/server/auth', () => ({

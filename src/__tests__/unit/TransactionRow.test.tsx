@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import TransactionRow from '@/components/transactions/TransactionRow';
+import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 
 const mockSearchDebitTransactionsFetch = vi.fn();
 

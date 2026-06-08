@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { CsvTransaction } from '@/server/services/ai-import/_types';
 
 /**
@@ -12,11 +13,12 @@ vi.mock('@ai-sdk/openai', () => ({
 }));
 
 // Now import the service and dependencies
-import {
-  classifyTransactions,
-  classifyCreditTransactions,
-} from '@/server/services/ai-import/csv-classifier.service';
 import { generateText } from 'ai';
+
+import {
+  classifyCreditTransactions,
+  classifyTransactions,
+} from '@/server/services/ai-import/csv-classifier.service';
 
 describe('csv-classifier.service', () => {
   const mockCategories = [

@@ -1,4 +1,4 @@
-import { expect, test, describe } from 'vitest';
+import { describe,expect, test } from 'vitest';
 // We'll need to export the scoring logic or test the service directly.
 // For now, let's assume we might extract the scoring logic into a helper if it gets complex,
 // but let's see how it looks in the service first.

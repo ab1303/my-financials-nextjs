@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { ZodError } from 'zod';
+
 import {
-  stockHoldingEntrySchema,
   createStockSnapshotSchema,
+  stockHoldingEntrySchema,
   updateStockHoldingSchema,
 } from '@/server/schema/stock-asset.schema';
-import { ZodError } from 'zod';
 
 describe('stock-asset.schema', () => {
   describe('stockHoldingEntrySchema - buyDate optional', () => {

@@ -1,5 +1,13 @@
-import { renderHook, act } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { act,renderHook } from '@testing-library/react';
+import { beforeEach,describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/server/auth', () => ({
+  auth: vi.fn(),
+  handlers: {},
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
+
 import { useCleanseDonationState } from '@/app/(authorized)/cashflow/bank-interest/_components/cleanse-drawer/useCleanseDonationState';
 import { trpc } from '@/server/trpc/client';
 
@@ -11,9 +19,11 @@ vi.mock('@/server/trpc/client', () => ({
       getInterestCleansingData: { useQuery: vi.fn() },
       suggestAllocations: { useQuery: vi.fn() },
       applyAllocations: { useMutation: vi.fn() },
+      removeAllocation: { useMutation: vi.fn() },
     },
     individual: { getAllIndividuals: { useQuery: vi.fn() } },
     business: { getBusinessesByType: { useQuery: vi.fn() } },
+    useUtils: vi.fn(),
   },
 }));
 
@@ -24,6 +34,8 @@ describe('useCleanseDonationState evidence loading bug', () => {
     (trpc.bankInterest.getInterestCleansingData.useQuery as any).mockReturnValue({ data: { cleansingDonations: [] }, isLoading: false });
     (trpc.bankInterest.suggestAllocations.useQuery as any).mockReturnValue({ data: [], isLoading: false });
     (trpc.bankInterest.applyAllocations.useMutation as any).mockReturnValue({ mutateAsync: vi.fn() });
+    (trpc.bankInterest.removeAllocation.useMutation as any).mockReturnValue({ mutateAsync: vi.fn() });
+    (trpc.useUtils as any).mockReturnValue({});
     (trpc.individual.getAllIndividuals.useQuery as any).mockReturnValue({ data: [] });
     (trpc.business.getBusinessesByType.useQuery as any).mockReturnValue({ data: [] });
   });

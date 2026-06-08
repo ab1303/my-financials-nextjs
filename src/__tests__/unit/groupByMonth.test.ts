@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { groupByMonth } from '../../app/(authorized)/cashflow/income/IncomeTableClient';
 import type { IncomeEntryType } from '../../app/(authorized)/cashflow/income/_types';
+import { groupByMonth } from '../../app/(authorized)/cashflow/income/IncomeTableClient';
 
 function makeEntry(
   overrides: Partial<IncomeEntryType> & { dateEarned: Date; amount: number },

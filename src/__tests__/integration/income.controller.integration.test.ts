@@ -1,13 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Decimal } from '@prisma/client/runtime/library';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   createIncomeYearHandler,
-  incomeHandler,
   incomeEntriesHandler,
+  incomeHandler,
   totalIncomeHandler,
 } from '@/server/controllers/income.controller';
-import { prismaMock } from '../mocks/prisma.mock';
+
 import { createMockIncomeTransaction } from '../mocks/income.mock';
+import { prismaMock } from '../mocks/prisma.mock';
 
 describe('Income Controller', () => {
   const userId = 'test-user-id';

@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import TransactionFilters, { type DatePreset } from '@/components/transactions/TransactionFilters';
 
 vi.mock('react-select', () => ({

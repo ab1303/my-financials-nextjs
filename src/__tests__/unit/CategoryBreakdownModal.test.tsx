@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-
+
 import { buildCategoryTransactionHref } from '@/app/(authorized)/cashflow/expense/_components/category-transaction-link';
 
 describe('CategoryBreakdownModal drill-down link', () => {

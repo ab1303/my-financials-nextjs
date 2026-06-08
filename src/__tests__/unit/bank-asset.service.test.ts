@@ -1,17 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Decimal } from '@prisma/client/runtime/library';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import {
+  addEntryToSnapshot,
   createBankAccount,
-  getBankAccounts,
-  getBankAccountById,
-  updateBankAccount,
   createBankAssetSnapshot,
+  getBankAccountById,
+  getBankAccounts,
   getBankAssetSnapshots,
   getSnapshotById,
-  updateBankAssetEntry,
-  addEntryToSnapshot,
   getSnapshotTotals,
+  updateBankAccount,
+  updateBankAssetEntry,
 } from '@/server/services/bank-asset.service';
 
 // Helper: reset all mocks before each test

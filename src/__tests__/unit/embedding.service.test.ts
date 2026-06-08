@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
 
 // --- Mock dependencies ---
 vi.mock('ai', () => ({
@@ -28,9 +28,10 @@ type AITokenUsage = {
 };
 
 // --- Import after mocks ---
-import * as embeddingService from '@/server/services/ai-import/embedding.service';
-import { prisma } from '@/server/db';
 import { embed, embedMany } from 'ai';
+
+import { prisma } from '@/server/db';
+import * as embeddingService from '@/server/services/ai-import/embedding.service';
 
 // --- Test Data ---
 const mockCategories: ExpenseCategory[] = [
@@ -261,7 +262,7 @@ describe('embedding.service', () => {
         return { embedding: [1, 0], usage: { tokens: 3 } };
       });
       const promise = embeddingService.findBestCategoryMatchWithRetry('food', mockCategories);
-      for (let delay of [1000, 2000, 4000]) {
+      for (const delay of [1000, 2000, 4000]) {
         await vi.advanceTimersByTimeAsync(delay);
       }
       const result = await promise;
@@ -276,7 +277,7 @@ describe('embedding.service', () => {
         throw Object.assign(new Error('timeout'), { code: 'ETIMEDOUT' });
       });
       const promise = embeddingService.findBestCategoryMatchWithRetry('food', mockCategories, 3);
-      for (let delay of [1000, 2000, 4000]) {
+      for (const delay of [1000, 2000, 4000]) {
         await vi.advanceTimersByTimeAsync(delay);
       }
       const result = await promise;

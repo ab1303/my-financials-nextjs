@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import {
   addBrokerageDetails,
-  getBrokerageDetails,
   deleteBrokerageDetails,
+  getBrokerageDetails,
 } from '@/server/services/brokerage.service';
 
 describe('Brokerage Service', () => {

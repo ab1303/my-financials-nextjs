@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Decimal } from '@prisma/client/runtime/library';
 import { TransactionTypeEnum } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { runTransferMatchRules } from '@/server/services/transactions/transfer-rule-job.service';
 
 const mockLinkTransferPair = vi.fn();

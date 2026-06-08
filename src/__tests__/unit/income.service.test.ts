@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, it } from 'vitest';
 import { Decimal } from '@prisma/client/runtime/library';
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import {
   addIncomeEntry,
+  deleteIncomeEntry,
   getIncomeEntries,
   updateIncomeEntry,
-  deleteIncomeEntry,
 } from '@/server/services/income.service';
+
 import { createMockContext, type MockContext } from '../helpers/mock-context';
 import { createMockIncomeTransaction } from '../mocks/income.mock';
 

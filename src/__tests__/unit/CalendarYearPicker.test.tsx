@@ -1,7 +1,8 @@
+import { CalendarEnumType } from '@prisma/client';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { CalendarEnumType } from '@prisma/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { CalendarYearType } from '@/types';
 
 // Mock the AppSelect component

@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { AITokenUsage } from '@/server/services/ai-import/_types';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { makeCategories } from '@/__tests__/helpers/test-helpers';
+import type { AITokenUsage } from '@/server/services/ai-import/_types';
 
 /**
  * Unit Tests for Category Matcher Service

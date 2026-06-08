@@ -1,5 +1,5 @@
-import type { Session } from 'next-auth';
 import type { RoleEnumType } from '@prisma/client';
+import type { Session } from 'next-auth';
 
 /**
  * Mock session for testing authenticated routes

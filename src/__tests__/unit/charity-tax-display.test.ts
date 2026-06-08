@@ -1,12 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { DonationPurposeEnum } from '@prisma/client';
+import { describe, expect,it } from 'vitest';
+
 import {
-  getTaxCategoryLabel,
-  getDonationPurposeLabel,
   calculateBreakdownTotals,
+  getDonationPurposeLabel,
+  getTaxCategoryLabel,
 } from '@/app/(authorized)/cashflow/_utils/charity-tax';
 import type { DonationPaymentType } from '@/app/(authorized)/cashflow/donations/_types';
 import type { ZakatPaymentType } from '@/app/(authorized)/zakat/_types';
-import { DonationPurposeEnum } from '@prisma/client';
 
 describe('charity-tax-display helpers', () => {
   describe('getTaxCategoryLabel', () => {

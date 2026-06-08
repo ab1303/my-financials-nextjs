@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
 import React from 'react';
+import { describe, expect, it, vi } from 'vitest';
 
+import type { IncomeEntryType } from '@/app/(authorized)/cashflow/income/_types';
 import IncomeTableClient from '@/app/(authorized)/cashflow/income/IncomeTableClient';
 import { IncomeEntryStateProvider } from '@/app/(authorized)/cashflow/income/StateProvider';
-import type { IncomeEntryType } from '@/app/(authorized)/cashflow/income/_types';
 
 // Mock the dependencies
 vi.mock('sonner', () => ({

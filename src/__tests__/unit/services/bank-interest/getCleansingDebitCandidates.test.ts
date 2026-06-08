@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach,describe, expect, it, vi } from 'vitest';
+
 import { getCleansingDebitCandidates } from '@/server/services/bank-interest/interest-cleansing.service';
 import { prisma } from '@/server/utils/prisma';
 
@@ -37,6 +38,7 @@ describe('getCleansingDebitCandidates', () => {
         date: new Date('2026-06-01'),
         description: 'Interest Payment',
         bankAccountId: 'acc-1',
+        interestCleansingEvidence: [],
       },
       {
         id: 'tx-2',
@@ -44,6 +46,7 @@ describe('getCleansingDebitCandidates', () => {
         date: new Date('2026-06-05'),
         description: 'Random Payment',
         bankAccountId: 'acc-1',
+        interestCleansingEvidence: [],
       },
     ];
 

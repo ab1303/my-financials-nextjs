@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const addRowMock = vi.hoisted(() => vi.fn());
 const transactionQueryMock = vi.hoisted(() => vi.fn());
@@ -92,8 +92,9 @@ vi.mock('@/components/ui/AppSelect', () => ({
   ),
 }));
 
-import LinkTransactionsDrawer from '@/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer';
 import { BeneficiaryEnumType } from '@prisma/client';
+
+import LinkTransactionsDrawer from '@/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer';
 
 describe('LinkTransactionsDrawer', () => {
   const transactions = [

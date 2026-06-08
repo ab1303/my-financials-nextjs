@@ -1,11 +1,12 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
-import { Decimal } from '@prisma/client/runtime/library';
 import type { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
 import {
   calculateHoldingMetrics,
   getCGTProjectionText,
 } from '@/utils/stock-asset-calculations';
-import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
 
 /**
  * Phase 3: Service Layer Null Handling Tests

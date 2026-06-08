@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { prismaMock } from '@/__tests__/mocks/prisma.mock';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { mockSession, mockUnauthenticatedSession } from '@/__tests__/mocks/auth.mock';
+import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import type { DashboardSummaryResponse } from '@/server/models/dashboard';
 
 // Mock the auth module before importing GET
@@ -31,12 +32,12 @@ vi.mock('@/server/services/dashboard.service', () => ({
 }));
 
 // Import after mocking
+import { GET } from '@/app/api/dashboard/summary/route';
 import { auth } from '@/server/auth';
 import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
 import { getCalendarYears } from '@/server/services/calendar-year.service';
-import { getTotalIncome } from '@/server/services/income.service';
 import { getTotalExpenses } from '@/server/services/expense.service';
-import { GET } from '@/app/api/dashboard/summary/route';
+import { getTotalIncome } from '@/server/services/income.service';
 
 describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
   beforeEach(() => {

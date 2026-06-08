@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { classifyTransactions } from '@/server/services/ai-import/csv-classifier.service';
-import type { CsvTransaction } from '@/server/services/ai-import/_types';
 import type { ExpenseCategory } from '@prisma/client';
+import { beforeAll,describe, expect, it } from 'vitest';
+
+import type { CsvTransaction } from '@/server/services/ai-import/_types';
+import { classifyTransactions } from '@/server/services/ai-import/csv-classifier.service';
 
 // Skip if AI_API_KEY is not set (integration tests require real API)
 const shouldRun = !!process.env.AI_API_KEY;

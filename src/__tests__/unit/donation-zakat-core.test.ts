@@ -1,7 +1,12 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/server/utils/prisma', () => ({
   prisma: {
+    $transaction: vi.fn((cb) => cb({
+      donationPayment: { create: vi.fn() },
+      voluntaryDonation: { create: vi.fn() },
+      interestCleansing: { create: vi.fn() },
+    })),
     donationLedger: {
       create: vi.fn(),
       findUnique: vi.fn(),
@@ -12,6 +17,12 @@ vi.mock('@/server/utils/prisma', () => ({
       delete: vi.fn(),
       findMany: vi.fn(),
       aggregate: vi.fn(),
+    },
+    voluntaryDonation: {
+      create: vi.fn(),
+    },
+    interestCleansing: {
+      create: vi.fn(),
     },
     zakatObligation: {
       create: vi.fn(),
@@ -28,17 +39,22 @@ vi.mock('@/server/utils/prisma', () => ({
   handleCaughtError: vi.fn(),
 }));
 
-import { prisma } from '@/server/utils/prisma';
 import {
   addDonationPaymentDetail,
-  updateDonationPayment,
   getDonationTotalsByCategory,
+  updateDonationPayment,
 } from '@/server/services/donation.service';
+vi.mock('@/env/server', () => ({
+  env: {
+    USE_NEW_DONATION_MODELS: true,
+  },
+}));
 import {
   addZakatPaymentDetail,
-  updateZakatPayment,
   getZakatTotalsByCategory,
+  updateZakatPayment,
 } from '@/server/services/zakat.service';
+import { prisma } from '@/server/utils/prisma';
 
 describe('donation-zakat-core', () => {
   beforeEach(() => {
@@ -49,8 +65,23 @@ describe('donation-zakat-core', () => {
     vi.clearAllMocks();
   });
 
-  it('creates donation payments with derived deductibility', async () => {
-    (prisma.donationPayment.create as any).mockResolvedValue({
+  it('performs dual-write when USE_NEW_DONATION_MODELS is true', async () => {
+    vi.stubEnv('USE_NEW_DONATION_MODELS', 'true');
+    
+    // Setup a mock transaction
+    const txMock = {
+      donationPayment: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+      voluntaryDonation: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+      interestCleansing: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+      zakatPayment: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    };
+
+    // Correctly spy on prisma.$transaction and mock its implementation
+    const transactionSpy = vi.spyOn(prisma, '$transaction').mockImplementation(
+      async (cb: any) => await cb(txMock)
+    );
+
+    (txMock.donationPayment.create as any).mockResolvedValue({
       id: 'donation-1',
       datePaid: new Date('2025-01-15'),
       amount: { toNumber: () => 1000 },
@@ -58,7 +89,48 @@ describe('donation-zakat-core', () => {
       businessId: 'biz-1',
       individualId: null,
       donationLedgerId: 'ledger-1',
-      transactionId: null,
+      interestTxId: null,
+      donationPurpose: 'VOLUNTARY',
+      business: { isDgrRegistered: true },
+      individual: null,
+    });
+
+    await addDonationPaymentDetail('ledger-1', {
+      datePaid: new Date('2025-01-15'),
+      amount: 1000,
+      beneficiaryType: 'BUSINESS' as const,
+      beneficiaryId: 'biz-1',
+      donationPurpose: 'VOLUNTARY',
+    });
+
+    console.log('voluntaryDonation.create called:', txMock.voluntaryDonation.create.mock.calls.length);
+    console.log('donationPayment.create called:', txMock.donationPayment.create.mock.calls.length);
+
+    // Verifying calls to the mock transaction object
+    expect(txMock.voluntaryDonation.create).toHaveBeenCalled();
+    expect(txMock.donationPayment.create).toHaveBeenCalled();
+    
+    transactionSpy.mockRestore();
+    vi.unstubAllEnvs();
+  });
+
+  it('creates donation payments with derived deductibility', async () => {
+    const txMock = {
+      donationPayment: { create: vi.fn() },
+      voluntaryDonation: { create: vi.fn() },
+      interestCleansing: { create: vi.fn() },
+    };
+    (prisma.$transaction as any).mockImplementation(async (cb: any) => await cb(txMock));
+
+    (txMock.donationPayment.create as any).mockResolvedValue({
+      id: 'donation-1',
+      datePaid: new Date('2025-01-15'),
+      amount: { toNumber: () => 1000 },
+      beneficiaryType: 'BUSINESS',
+      businessId: 'biz-1',
+      individualId: null,
+      donationLedgerId: 'ledger-1',
+      interestTxId: null,
       donationPurpose: 'VOLUNTARY',
       business: { isDgrRegistered: true },
       individual: null,
@@ -73,7 +145,7 @@ describe('donation-zakat-core', () => {
     });
 
     expect(result.isDeductible).toBe(true);
-    expect(prisma.donationPayment.create).toHaveBeenCalledWith({
+    expect(txMock.donationPayment.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         donationLedgerId: 'ledger-1',
         businessId: 'biz-1',
@@ -87,6 +159,19 @@ describe('donation-zakat-core', () => {
   });
 
   it('updates donation payments without storing tax category', async () => {
+    const txMock = {
+      donationPayment: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+      voluntaryDonation: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+      interestCleansing: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+      zakatPayment: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    };
+    (prisma.$transaction as any).mockImplementation(async (cb: any) => await cb(txMock));
+
+    (txMock.donationPayment.update as any).mockResolvedValue({
+      id: 'donation-1',
+      donationPurpose: 'VOLUNTARY',
+    });
+
     await updateDonationPayment(
       {
         id: 'donation-1',
@@ -98,7 +183,7 @@ describe('donation-zakat-core', () => {
       'donation-1',
     );
 
-    expect(prisma.donationPayment.update).toHaveBeenCalledWith({
+    expect(txMock.donationPayment.update).toHaveBeenCalledWith({
       where: { id: 'donation-1' },
       data: {
         datePaid: new Date('2025-02-01'),
@@ -107,6 +192,7 @@ describe('donation-zakat-core', () => {
         businessId: 'biz-2',
         individualId: null,
       },
+      include: expect.anything(),
     });
   });
 

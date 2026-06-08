@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import CategoriesClient from '@/app/(authorized)/settings/categories/_components/CategoriesClient';
 import IncomeSources from '@/app/(authorized)/settings/categories/_components/IncomeSources';
 

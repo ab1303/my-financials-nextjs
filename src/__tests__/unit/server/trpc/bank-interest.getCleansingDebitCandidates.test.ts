@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect,it } from 'vitest';
+
 import { getCleansingDebitCandidates } from '@/server/services/bank-interest/interest-cleansing.service';
 
 // Mock prisma
@@ -29,6 +30,7 @@ describe('bankInterest.getCleansingDebitCandidates integration-ish', () => {
       description: 'Cleansing Donation',
       bankAccountId: 'ba1',
       bankAccount: { name: 'Test Bank' },
+      interestCleansingEvidence: [],
     };
 
     (prisma.transaction.findUniqueOrThrow as any).mockResolvedValue(mockCredit);

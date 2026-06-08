@@ -33,9 +33,10 @@
  *   Total Spending              | $7887.48
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { beforeAll,describe, expect, it } from 'vitest';
+
 import { parseCommBankCsv } from '@/server/services/ai-import/csv-parser.service';
 
 /**
