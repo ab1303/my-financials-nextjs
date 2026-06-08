@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
+import { runCategoryRules } from '@/server/services/transactions/category-rule.service';
 import {
   confirmCreditTransactions,
   confirmDebitTransactions,
 } from '@/server/services/transactions/csv-confirm.service';
 import { runTransferMatchRules } from '@/server/services/transactions/transfer-rule-job.service';
-import { runCategoryRules } from '@/server/services/transactions/category-rule.service';
 
 const ConfirmRequestSchema = z.object({
   fileId: z.string().min(1),

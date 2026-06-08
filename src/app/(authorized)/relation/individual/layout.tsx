@@ -1,6 +1,6 @@
-/* eslint-disable @next/next/no-before-interactive-script-outside-document */
-import * as React from 'react';
+ 
 import Script from 'next/script';
+import * as React from 'react';
 
 export default function IndividualLayout({
   children,

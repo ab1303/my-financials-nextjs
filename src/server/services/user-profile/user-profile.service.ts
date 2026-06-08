@@ -1,11 +1,12 @@
-import bcrypt from 'bcryptjs';
-import { TRPCError } from '@trpc/server';
 import type {
   CalendarEnumType,
   CurrencyEnumType,
   PrismaClient,
   StorageProviderEnum,
 } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
+import bcrypt from 'bcryptjs';
+
 import type {
   UpdateProfileInput,
   UserProfileData,

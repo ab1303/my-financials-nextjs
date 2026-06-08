@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import {
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
 } from 'lucide-react';
+import { useCallback,useState } from 'react';
+
 import type {
   ClassifiedTransaction,
 } from '@/server/services/ai-import/_types';

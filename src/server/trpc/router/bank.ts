@@ -1,10 +1,10 @@
-import { router, protectedProcedure } from '@/server/trpc/trpc';
 import {
-  allBankDetailsHandler,
   addBankDetailsHandler,
+  allBankDetailsHandler,
   removeBankDetailsHandler,
 } from '@/server/controllers/bank.controller';
 import { createBankSchema, params } from '@/server/schema/bank.schema';
+import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 export const bankRouter = router({
   saveBankDetails: protectedProcedure

@@ -1,8 +1,9 @@
 'use client';
 
+import { Sparkles } from 'lucide-react';
 import { useMemo } from 'react';
 import { NumericFormat } from 'react-number-format';
-import { Sparkles } from 'lucide-react';
+
 import { trpc } from '@/server/trpc/client';
 
 type AIUsageCardProps = {

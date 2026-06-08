@@ -3,31 +3,30 @@ import { enableMapSet } from 'immer';
 
 enableMapSet();
 
-import { useMemo, useState } from 'react';
 import {
-  useReactTable,
-  getCoreRowModel,
   flexRender,
+  getCoreRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
-import { toast } from 'sonner';
+import clsx from 'clsx';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
-import clsx from 'clsx';
+import { Button } from '@/components';
 import Table from '@/components/table';
 import { tableCellStyles } from '@/styles/theme';
-import { Button } from '@/components';
-import { useZakatPaymentState } from './StateProvider';
+import type { OptionType } from '@/types';
 
-import { getTableColumns } from './_table/columns';
-
-import type { ServerActionType, ZakatPaymentType } from './_types';
 import type {
   CreateZakatPaymentInput,
-  UpdateZakatPaymentInput,
   DeleteZakatPaymentInput,
+  UpdateZakatPaymentInput,
 } from './_schema';
-import type { OptionType } from '@/types';
+import { getTableColumns } from './_table/columns';
+import type { ServerActionType, ZakatPaymentType } from './_types';
+import { useZakatPaymentState } from './StateProvider';
 
 type ZakatTableClientProps = {
   individualsOptions: OptionType[];

@@ -1,22 +1,21 @@
 'use client';
 
+import clsx from 'clsx';
 import * as React from 'react';
+import { useId } from 'react';
+import type { FieldError, FieldValues } from 'react-hook-form';
 import { Controller, useFormContext } from 'react-hook-form';
+import type { Options, SingleValue } from 'react-select';
 import AsyncSelect from 'react-select/async';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
-import { getSelectStyles } from '@/lib/select-styles';
 import { useDebouncedCallback } from 'use-debounce';
 import usePlacesAutocomplete, { getGeocode } from 'use-places-autocomplete';
-import clsx from 'clsx';
 
-import type { Options, SingleValue } from 'react-select';
-import type { FieldError, FieldValues } from 'react-hook-form';
-
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { Label } from '@/components/ui/Label';
 import { TextInput } from '@/components/ui/TextInput';
-import type { Address, FilteredKeys } from '@/types';
+import { getSelectStyles } from '@/lib/select-styles';
 import { inputStyles } from '@/styles/theme';
-import { useId } from 'react';
+import type { Address, FilteredKeys } from '@/types';
 
 const debounce = 300;
 const minLengthAutocomplete = 3;

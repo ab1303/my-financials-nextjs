@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+
 import type { ClassifiedCreditMonth } from '@/server/services/ai-import/_types';
-import type { CSVClassifyingStepProps, ClassifiedMonth } from './_types';
+
+import type { ClassifiedMonth,CSVClassifyingStepProps } from './_types';
 
 interface ProgressEntry {
   month: string;

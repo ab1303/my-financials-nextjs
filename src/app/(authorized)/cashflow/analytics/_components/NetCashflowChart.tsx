@@ -1,19 +1,20 @@
 'use client';
 
 import {
-  ComposedChart,
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Legend,
   Line,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  ReferenceLine,
-  Tooltip,
-  Legend,
-  Cell,
-  ResponsiveContainer,
 } from 'recharts';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MonthlyTrendPoint } from '@/server/models/cashflow-analytics';
 

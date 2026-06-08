@@ -1,4 +1,5 @@
-import { Prisma, RelationshipType } from '@prisma/client';
+import type { Prisma, RelationshipType } from '@prisma/client';
+
 import { prisma } from '../utils/prisma';
 
 export const addRelationship = async (

@@ -1,7 +1,7 @@
 'use client';
 
-import { createContext, useContext } from 'react';
 import type { AugmentedUser } from 'next-auth';
+import { createContext, useContext } from 'react';
 
 interface UserContextType {
   user: AugmentedUser;

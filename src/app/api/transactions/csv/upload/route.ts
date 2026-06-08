@@ -1,23 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
-import {
-  getBankFormatByName,
-  getSupportedBankNamesText,
-} from '@/server/services/transactions/bank-format-registry';
-import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
-import {
-  detectCsvFormat,
-  extractHeadersAndSamples,
-} from '@/server/services/transactions/csv-format-detector.service';
-import type { BankCsvFormat } from '@/server/services/transactions/csv-format.types';
 import type { CsvTransaction } from '@/server/services/ai-import/_types';
 import {
   ALLOWED_CSV_MIME_TYPES,
   MAX_CSV_FILE_SIZE,
   MAX_CSV_ROWS,
 } from '@/server/services/ai-import/validation';
+import {
+  getBankFormatByName,
+  getSupportedBankNamesText,
+} from '@/server/services/transactions/bank-format-registry';
+import type { BankCsvFormat } from '@/server/services/transactions/csv-format.types';
+import {
+  detectCsvFormat,
+  extractHeadersAndSamples,
+} from '@/server/services/transactions/csv-format-detector.service';
+import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
 
 export async function POST(req: NextRequest) {
   const session = await auth();

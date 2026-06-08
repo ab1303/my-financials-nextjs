@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { trpc } from '@/server/trpc/client';
+
 import type { CategoryRuleListItem } from '@/server/services/transactions/category-rule.service';
+import { trpc } from '@/server/trpc/client';
 
 interface CategoryRulesTableProps {
   initialRules: CategoryRuleListItem[];

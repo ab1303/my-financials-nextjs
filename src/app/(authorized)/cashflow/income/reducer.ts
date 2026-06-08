@@ -1,8 +1,8 @@
+import { produce } from 'immer';
+
 import type { ActionMapUnion } from '@/types';
 
 import type { IncomeEntryType } from './_types';
-
-import { produce } from 'immer';
 
 type IncomeMessages = {
   'INCOME/Entries/INITIAL_DATA': IncomeEntriesState;

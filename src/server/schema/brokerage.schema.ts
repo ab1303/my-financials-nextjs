@@ -1,5 +1,5 @@
-import { object, string } from 'zod';
 import type { TypeOf } from 'zod';
+import { object, string } from 'zod';
 
 export const createBrokerageSchema = object({
   name: string({ required_error: 'Brokerage name is required' })

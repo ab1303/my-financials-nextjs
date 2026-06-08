@@ -1,32 +1,33 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '@/server/trpc/trpc';
-import { getUSDtoAUDRate } from '@/server/services/exchange-rate.service';
+
 import {
-  createSnapshotHandler,
-  getSnapshotsHandler,
-  getMostRecentSnapshotHandler,
-  getSnapshotByIdHandler,
-  getSnapshotTotalsHandler,
+  createBrokerageSubAccountHandler,
   createHoldingHandler,
-  updateHoldingHandler,
+  createSnapshotHandler,
   deleteHoldingHandler,
   deleteSnapshotHandler,
   getBrokerageAccountsHandler,
-  createBrokerageSubAccountHandler,
+  getMostRecentSnapshotHandler,
+  getSnapshotByIdHandler,
+  getSnapshotsHandler,
+  getSnapshotTotalsHandler,
+  updateHoldingHandler,
   updateSnapshotFxRateHandler,
   updateSnapshotHandler,
 } from '@/server/controllers/stock-asset.controller';
 import {
-  createStockSnapshotSchema,
   createStockHoldingSchema,
-  updateStockHoldingSchema,
+  createStockSnapshotSchema,
   deleteHoldingSchema,
   deleteSnapshotSchema,
-  getSnapshotsSchema,
   getSnapshotByIdSchema,
+  getSnapshotsSchema,
   updateSnapshotFxRateSchema,
+  updateStockHoldingSchema,
   updateStockSnapshotSchema,
 } from '@/server/schema/stock-asset.schema';
+import { getUSDtoAUDRate } from '@/server/services/exchange-rate.service';
+import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 export const stockAssetRouter = router({
   // Snapshot routes

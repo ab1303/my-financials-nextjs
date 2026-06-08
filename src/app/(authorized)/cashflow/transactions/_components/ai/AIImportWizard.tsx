@@ -1,13 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
-import UploadStep from './UploadStep';
-import ProcessingStep from './ProcessingStep';
-import ReviewStep from './ReviewStep';
-import ResultsStep from './ResultsStep';
+import { useState } from 'react';
+
 import Portal from '@/components/Portal';
+
 import type {
   AIImportSessionResult,
   AIImportWizardProps,
@@ -15,6 +13,10 @@ import type {
   UploadedFile,
   WizardStep,
 } from './_types';
+import ProcessingStep from './ProcessingStep';
+import ResultsStep from './ResultsStep';
+import ReviewStep from './ReviewStep';
+import UploadStep from './UploadStep';
 
 export default function AIImportWizard({
   isOpen,

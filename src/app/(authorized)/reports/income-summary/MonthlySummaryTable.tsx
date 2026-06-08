@@ -1,12 +1,14 @@
 'use client';
 
-import { Fragment, useState, useMemo, useCallback } from 'react';
+import { ArrowDown,ArrowUp, ArrowUpDown, ChevronDown, ChevronRight } from 'lucide-react';
+import { Fragment, useCallback,useMemo, useState } from 'react';
+import { NumericFormat } from 'react-number-format';
+
 import type {
   MonthlyIncomeSummary,
   SourceBreakdown,
 } from '@/server/models/income';
-import { NumericFormat } from 'react-number-format';
-import { ChevronDown, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+
 import SourceBreakdownRow from './SourceBreakdownRow';
 
 type SortField = 'totalAmount' | 'entryCount';

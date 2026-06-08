@@ -1,9 +1,11 @@
 'use client';
 
+import { AlertCircle, CheckCircle,Upload, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+
 import type { CSVUploadStepProps, UploadedCSVFile } from './_types';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;

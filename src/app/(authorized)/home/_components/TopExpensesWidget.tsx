@@ -1,7 +1,9 @@
-import type { TopExpenseCategory } from "@/server/models/dashboard";
-import { TopExpensesChart } from "./TopExpensesChart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart } from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { TopExpenseCategory } from "@/server/models/dashboard";
+
+import { TopExpensesChart } from "./TopExpensesChart";
 
 interface TopExpensesWidgetProps {
   data: TopExpenseCategory[];

@@ -1,4 +1,5 @@
-import type { Prisma, Business } from '@prisma/client';
+import type { Business,Prisma } from '@prisma/client';
+
 import { prisma } from '../utils/prisma';
 
 export const addBankDetails = async (

@@ -1,11 +1,11 @@
 'use client';
 
 import { Disclosure } from '@headlessui/react';
-import { ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
+import { ChevronDown } from 'lucide-react';
 
-import CalendarTableClient from './CalendarTableClient';
 import type { CalendarYearType, YearRangeGroup } from './_types';
+import CalendarTableClient from './CalendarTableClient';
 
 type PastCalendarYearsProps = {
   groups: YearRangeGroup[];

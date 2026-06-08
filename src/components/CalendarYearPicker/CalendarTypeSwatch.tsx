@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarEnumType } from '@prisma/client';
+import type { CalendarEnumType } from '@prisma/client';
 
 export type CalendarTypeSwatchProps = {
   types: CalendarEnumType[];

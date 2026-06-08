@@ -1,6 +1,7 @@
 import { prisma } from '@/server/db/client';
+
+import type { AITokenUsage,ExpenseExtractionResult } from './_types';
 import { matchCategoryWithEmbedding } from './category-matcher.service';
-import type { ExpenseExtractionResult, AITokenUsage } from './_types';
 
 export interface ExpenseMapResult {
   success: boolean;

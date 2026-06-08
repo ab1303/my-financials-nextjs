@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useId, useMemo, useState } from 'react';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
 import type { GroupBase, SingleValue } from 'react-select';
+
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { Label } from '@/components/ui/Label';
 
 type CategoryOption = { label: string; value: string };

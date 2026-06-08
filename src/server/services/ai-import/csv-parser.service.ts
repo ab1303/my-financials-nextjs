@@ -1,6 +1,7 @@
-import { CsvTransaction, CsvParseResult } from './_types';
 import { getBankFormat } from '@/server/services/transactions/bank-format-registry';
 import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
+
+import type { CsvParseResult,CsvTransaction } from './_types';
 
 /**
  * @deprecated Use parseBankCsv(content, format) from csv-parser-generic.service.ts instead.

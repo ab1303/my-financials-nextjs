@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
+
 import { Modal } from '@/components/ui/Modal';
 import { trpc } from '@/server/trpc/client';
-import { toast } from 'sonner';
 
 export interface VoidedTransactionsModalProps {
   show: boolean;

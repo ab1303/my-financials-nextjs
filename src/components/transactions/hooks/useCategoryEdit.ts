@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { trpc } from '@/server/trpc/client';
+
 import {
   REIMBURSEMENT_CATEGORY,
   TRANSFER_CATEGORY,
 } from '@/server/services/transactions/constants';
+import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 
 interface UseCategoryEditArgs {

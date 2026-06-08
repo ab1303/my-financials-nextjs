@@ -3,6 +3,7 @@ import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
 import type { Session } from 'next-auth';
 
 import { auth } from '@/server/auth';
+
 import { prisma } from '../db/client';
 
 type CreateContextOptions = {

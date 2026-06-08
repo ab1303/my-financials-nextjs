@@ -1,16 +1,17 @@
 "use client";
 
-import type { MonthlyTrendPoint } from "@/server/models/dashboard";
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
+  BarChart,
+  Cell,
   Legend,
   ResponsiveContainer,
-  Cell,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
+
+import type { MonthlyTrendPoint } from "@/server/models/dashboard";
 
 interface MonthlyTrendChartProps {
   data: MonthlyTrendPoint[];

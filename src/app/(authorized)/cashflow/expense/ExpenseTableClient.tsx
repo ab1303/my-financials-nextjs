@@ -1,20 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { NumericFormat } from 'react-number-format';
 import {
-  useReactTable,
   createColumnHelper,
-  getCoreRowModel,
   flexRender,
+  getCoreRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
 import { List } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import { NumericFormat } from 'react-number-format';
 
+import AIUsageCard from '@/components/AIUsageCard';
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
 import type { CategoryBreakdown, MonthlyExpenseSummary } from '@/server/models/expense';
-import AIUsageCard from '@/components/AIUsageCard';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
 import ExpenseCategoryBreakdownWidget from './_components/ExpenseCategoryBreakdownWidget';

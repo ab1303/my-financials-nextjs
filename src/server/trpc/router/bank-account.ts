@@ -1,15 +1,16 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '@/server/trpc/trpc';
-import {
-  createBankAccountSchema,
-  deleteBankAccountSchema,
-} from '@/server/schema/bank-account.schema';
+
 import {
   createBankAccountHandler,
   deleteBankAccountHandler,
   listBankAccountsHandler,
   updateTrackingHandler,
 } from '@/server/controllers/bank-account.controller';
+import {
+  createBankAccountSchema,
+  deleteBankAccountSchema,
+} from '@/server/schema/bank-account.schema';
+import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 export const bankAccountRouter = router({
   list: protectedProcedure.query(({ ctx }) =>

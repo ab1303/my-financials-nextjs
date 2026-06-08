@@ -1,5 +1,6 @@
 import type { TypeOf } from 'zod';
-import z, { object, string, number, optional } from 'zod';
+import z, { number, object, optional,string } from 'zod';
+
 import { BusinessEnumType } from '@/types/enum';
 
 export const createBusinessSchema = object({

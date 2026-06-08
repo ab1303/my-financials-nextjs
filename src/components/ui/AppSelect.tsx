@@ -1,7 +1,8 @@
 'use client';
 
-import Select, { type Props as SelectProps, type GroupBase } from 'react-select';
-import { getSelectStyles, getCompactSelectStyles } from '@/lib/select-styles';
+import Select, { type GroupBase,type Props as SelectProps } from 'react-select';
+
+import { getCompactSelectStyles,getSelectStyles } from '@/lib/select-styles';
 
 type AppSelectProps<
   Option = unknown,

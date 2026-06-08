@@ -2,9 +2,9 @@ import {
   addIncomeCalendarYearDetails,
   getIncome,
   getIncomeEntries,
-  getTotalIncome,
   getMonthlyIncomeSummary,
   getSourceBreakdown,
+  getTotalIncome,
 } from '../services/income.service';
 import { handleCaughtError } from '../utils/prisma';
 

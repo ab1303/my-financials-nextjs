@@ -1,9 +1,10 @@
-import * as React from 'react';
 import { redirect } from 'next/navigation';
+import * as React from 'react';
 
-import { auth } from '@/server/auth';
-import PageLoading from '@/components/PageLoading';
 import AppShell from '@/components/AppShell';
+import PageLoading from '@/components/PageLoading';
+import { auth } from '@/server/auth';
+
 import { UserProvider } from './UserProvider';
 
 export default async function AuthorizedLayout({

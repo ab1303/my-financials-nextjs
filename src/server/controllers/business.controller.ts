@@ -1,4 +1,8 @@
-import { handleCaughtError } from '@/server/utils/prisma';
+import type {
+  CreateBusinessInput,
+  ParamsInput,
+  UpdateBusinessInput,
+} from '@/server/schema/business.schema';
 import {
   addBusinessDetails,
   deleteBusinessDetails,
@@ -7,13 +11,8 @@ import {
   updateBusinessDetails,
   validateBusinessNameUniqueness,
 } from '@/server/services/business.service';
-import { BusinessEnumType } from '@/types/enum';
-
-import type {
-  CreateBusinessInput,
-  UpdateBusinessInput,
-  ParamsInput,
-} from '@/server/schema/business.schema';
+import { handleCaughtError } from '@/server/utils/prisma';
+import type { BusinessEnumType } from '@/types/enum';
 
 export const addBusinessDetailsHandler = async ({
   input,

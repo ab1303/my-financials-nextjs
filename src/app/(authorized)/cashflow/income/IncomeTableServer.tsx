@@ -1,10 +1,10 @@
-import { incomeEntriesHandler } from '@/server/controllers/income.controller';
-import { IncomeEntryStateProvider } from './StateProvider';
-import IncomeTableClient from './IncomeTableClient';
 import { auth } from '@/server/auth';
+import { incomeEntriesHandler } from '@/server/controllers/income.controller';
 
 import type { IncomeEntryType } from './_types';
 import { addRow, deleteRow, editRow } from './actions';
+import IncomeTableClient from './IncomeTableClient';
+import { IncomeEntryStateProvider } from './StateProvider';
 
 export type IncomeTableServerProps = {
   calendarYearId: string;

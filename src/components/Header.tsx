@@ -1,14 +1,15 @@
 'use client';
 
+import { Menu } from 'lucide-react';
 import type { User } from 'next-auth';
 import * as React from 'react';
 import { useState } from 'react';
 
-import SideNav from '../layouts/SideNav';
 import { APP_NAME } from '@/constants';
-import { ThemeToggle } from './ui/theme-toggle';
+
+import SideNav from '../layouts/SideNav';
 import Breadcrumb from './Breadcrumb';
-import { Menu } from 'lucide-react';
+import { ThemeToggle } from './ui/theme-toggle';
 
 type HeaderProps = {
   user: User;

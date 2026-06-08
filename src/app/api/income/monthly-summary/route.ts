@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { auth } from '@/server/auth';
 import { monthlyIncomeSummaryHandler } from '@/server/controllers/income.controller';
 

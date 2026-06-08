@@ -1,9 +1,9 @@
+import type { ClassifiedMonth } from '@/components/csv-import/TransactionReviewTable';
 import type {
   ClassifiedCreditMonth,
   ClassifiedCreditTransaction,
   ClassifiedTransactionV2,
 } from '@/server/services/ai-import/_types';
-import type { ClassifiedMonth } from '@/components/csv-import/TransactionReviewTable';
 
 export interface UploadedCSVFile {
   id: string;
@@ -93,8 +93,8 @@ export interface CSVResultsStepProps {
 }
 
 export {
-  ClassifiedTransactionV2,
-  ClassifiedCreditTransaction,
   ClassifiedCreditMonth,
+  ClassifiedCreditTransaction,
   ClassifiedMonth,
+  ClassifiedTransactionV2,
 };

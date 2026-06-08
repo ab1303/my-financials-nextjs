@@ -20,9 +20,9 @@
  *                the same id reuse the same container element.
  */
 
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { ReactNode } from 'react';
 
 interface PortalProps {
   /** React subtree to render inside the portal container. */

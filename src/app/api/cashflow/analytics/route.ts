@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server';
+
 import { auth } from '@/server/auth';
-import { prisma } from '@/server/utils/prisma';
-import {
-  getTotalIncome,
-  getMonthlyIncomeSummaryFiltered,
-  getIncomeSourceBreakdownForYear,
-} from '@/server/services/income.service';
-import {
-  getTotalExpenses,
-  getMonthlyExpenseSummaries,
-  getExpenseCategoryBreakdownForYear,
-} from '@/server/services/expense.service';
 import type {
   CashflowAnalyticsData,
-  MonthlyTrendPoint,
   CashflowKPIs,
+  MonthlyTrendPoint,
 } from '@/server/models/cashflow-analytics';
+import {
+  getExpenseCategoryBreakdownForYear,
+  getMonthlyExpenseSummaries,
+  getTotalExpenses,
+} from '@/server/services/expense.service';
+import {
+  getIncomeSourceBreakdownForYear,
+  getMonthlyIncomeSummaryFiltered,
+  getTotalIncome,
+} from '@/server/services/income.service';
+import { prisma } from '@/server/utils/prisma';
 
 export async function GET(request: Request) {
   try {

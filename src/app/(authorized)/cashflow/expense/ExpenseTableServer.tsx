@@ -1,4 +1,5 @@
-import { getExpenseDataHandler, getExpenseCategoryBreakdownHandler } from '@/server/controllers/expense.controller';
+import { getExpenseCategoryBreakdownHandler,getExpenseDataHandler } from '@/server/controllers/expense.controller';
+
 import ExpenseTableClient from './ExpenseTableClient';
 
 export type ExpenseTableServerProps = {

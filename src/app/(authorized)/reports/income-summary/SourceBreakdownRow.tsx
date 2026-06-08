@@ -1,8 +1,9 @@
 'use client';
 
-import type { SourceBreakdown } from '@/server/models/income';
 import { NumericFormat } from 'react-number-format';
+
 import { INCOME_SOURCE_LABELS } from '@/app/(authorized)/cashflow/income/_types';
+import type { SourceBreakdown } from '@/server/models/income';
 
 type SourceBreakdownRowProps = {
   breakdown: SourceBreakdown[];

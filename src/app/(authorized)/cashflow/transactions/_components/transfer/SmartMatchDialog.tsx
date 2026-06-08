@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
-import { trpc } from '@/server/trpc/client';
+
 import type { SimilarPairSuggestion } from '@/server/services/transactions/transfer.service';
+import { trpc } from '@/server/trpc/client';
 
 interface SmartMatchDialogProps {
   open: boolean;

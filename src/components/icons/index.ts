@@ -1,6 +1,6 @@
 import AddIcon from './AddIcon';
 import CheckIcon from './CheckIcon';
-import TrashIcon from './TrashIcon';
 import PenIcon from './PenIcon';
+import TrashIcon from './TrashIcon';
 
-export { AddIcon, CheckIcon, TrashIcon, PenIcon };
+export { AddIcon, CheckIcon, PenIcon,TrashIcon };

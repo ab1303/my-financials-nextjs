@@ -1,8 +1,9 @@
-import { generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
-import { randomUUID } from 'crypto';
-import type { CsvTransaction, ClassifiedTransaction, ClassifiedCreditTransaction } from './_types';
 import type { ExpenseCategory } from '@prisma/client';
+import { generateText } from 'ai';
+import { randomUUID } from 'crypto';
+
+import type { ClassifiedCreditTransaction,ClassifiedTransaction, CsvTransaction } from './_types';
 
 /**
  * AI Classifier Service for CSV transactions

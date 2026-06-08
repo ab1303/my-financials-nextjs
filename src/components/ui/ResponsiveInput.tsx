@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
 import clsx from 'clsx';
-import { inputStyles } from '@/styles/theme';
+import React from 'react';
+
 import { stylingUtils } from '@/styles/styling';
+import { inputStyles } from '@/styles/theme';
 
 interface ResponsiveInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {

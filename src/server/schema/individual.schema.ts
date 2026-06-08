@@ -1,5 +1,5 @@
 import type { TypeOf } from 'zod';
-import z, { object, string, number, optional } from 'zod';
+import z, { number, object, optional,string } from 'zod';
 
 export const createIndividualSchema = object({
   name: string({ required_error: 'Individual Name is required' })

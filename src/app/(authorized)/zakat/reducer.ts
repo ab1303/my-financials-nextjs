@@ -1,8 +1,8 @@
+import { produce } from 'immer';
+
 import type { ActionMapUnion } from '@/types';
 
 import type { ZakatPaymentType } from './_types';
-
-import { produce } from 'immer';
 
 type ZakatMessages = {
   'ZAKAT/Payments/INITAL_DATA': ZakatPaymentsState;

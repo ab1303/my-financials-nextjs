@@ -1,5 +1,5 @@
-import { prisma } from '../utils/prisma';
 import type { MonthlyTrendPoint, TopExpenseCategory } from '../models/dashboard';
+import { prisma } from '../utils/prisma';
 import { TRANSFER_CATEGORY } from './transactions/constants';
 
 // Month names for label formatting

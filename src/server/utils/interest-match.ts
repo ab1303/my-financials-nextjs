@@ -1,4 +1,4 @@
-import { Decimal } from '@prisma/client/runtime/library';
+import type { Decimal } from '@prisma/client/runtime/library';
 import { differenceInDays } from 'date-fns';
 
 /**
@@ -72,7 +72,7 @@ export function scoreInterestMatch(
   
   const totalWeight = weights.amount + weights.date + weights.description + (weights.reference ?? 0);
   
-  let score = (amountScore * weights.amount) + (dateScore * weights.date) + (descScore * weights.description);
+  const score = (amountScore * weights.amount) + (dateScore * weights.date) + (descScore * weights.description);
   
   // Normalize if total weight < 1
   return score / (totalWeight || 1);

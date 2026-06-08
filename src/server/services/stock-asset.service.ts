@@ -1,11 +1,11 @@
 import type { Prisma } from '@prisma/client';
-import { prisma } from '@/server/utils/prisma';
 
 import type {
-  CreateStockSnapshotInput,
   CreateStockHoldingInput,
+  CreateStockSnapshotInput,
   UpdateStockHoldingInput,
 } from '@/server/schema/stock-asset.schema';
+import { prisma } from '@/server/utils/prisma';
 
 // Stock Snapshot Service
 

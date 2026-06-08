@@ -1,8 +1,9 @@
 import type { CellContext, RowData } from '@tanstack/react-table';
-import type { Dispatch, MouseEvent, SetStateAction } from 'react';
 import { castDraft, produce } from 'immer';
-import { Pen, Trash2, Save, Undo2 } from 'lucide-react';
+import { Pen, Save, Trash2, Undo2 } from 'lucide-react';
+import type { Dispatch, MouseEvent, SetStateAction } from 'react';
 import { useState } from 'react';
+
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { tableCellStyles } from '@/styles/theme';
 

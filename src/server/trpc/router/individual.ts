@@ -1,20 +1,21 @@
-import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { router, protectedProcedure } from '@/server/trpc/trpc';
+import { z } from 'zod';
+
 import {
-  allIndividualDetailsHandler,
   addIndividualDetailsHandler,
-  updateIndividualDetailsHandler,
+  allIndividualDetailsHandler,
   removeIndividualDetailsHandler,
+  updateIndividualDetailsHandler,
 } from '@/server/controllers/individual.controller';
 import {
   createIndividualSchema,
-  updateIndividualSchema,
-  params,
   createRelationshipSchema,
+  params,
   relationshipParams,
+  updateIndividualSchema,
 } from '@/server/schema/individual.schema';
 import { getRelationships } from '@/server/services/relationship.service';
+import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 export const individualRouter = router({
   // Quick-create: name only — used by CreateBeneficiaryModal in the donation linking drawer

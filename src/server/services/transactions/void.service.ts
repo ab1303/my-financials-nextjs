@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
+
 import { clearTransferLink } from './void-transfer.service';
 
 interface VoidContext {

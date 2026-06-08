@@ -1,16 +1,16 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
-import {
-  classifyCreditTransactions,
-  classifyTransactions,
-} from '@/server/services/ai-import/csv-classifier.service';
 import type {
   ClassifiedCreditTransaction,
   ClassifiedTransactionV2,
   CsvTransaction,
 } from '@/server/services/ai-import/_types';
+import {
+  classifyCreditTransactions,
+  classifyTransactions,
+} from '@/server/services/ai-import/csv-classifier.service';
 import { ClassifyRequestSchema } from '@/server/services/ai-import/validation';
 
 function groupTransactionsByMonth<T extends CsvTransaction>(transactions: T[]) {

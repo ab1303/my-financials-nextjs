@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import {
   useCallback,
   useEffect,
@@ -7,25 +8,26 @@ import {
   useMemo,
   useState,
 } from 'react';
-import clsx from 'clsx';
-import AsyncSelect from 'react-select/async';
-import Select from 'react-select';
 import type { SingleValue } from 'react-select';
+import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
+
+import { getCompactSelectStyles } from '@/lib/select-styles';
 import {
   REIMBURSEMENT_CATEGORY,
   TRANSFER_CATEGORY,
 } from '@/server/services/transactions/constants';
 import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
-import { getCompactSelectStyles } from '@/lib/select-styles';
-import { useCategoryEdit } from './hooks/useCategoryEdit';
-import TransactionSourceIndicator from './TransactionSourceIndicator';
-import ReimbursementSubRow from './ReimbursementSubRow';
-import VoidTransactionButton from './VoidTransactionButton';
-import RestoreTransactionButton from './RestoreTransactionButton';
-import { UnlinkTransferButton } from './UnlinkTransferButton';
-import CategoryRulePrompt from './CategoryRulePrompt';
+
 import CategoryRuleDrawer from './CategoryRuleDrawer';
+import CategoryRulePrompt from './CategoryRulePrompt';
+import { useCategoryEdit } from './hooks/useCategoryEdit';
+import ReimbursementSubRow from './ReimbursementSubRow';
+import RestoreTransactionButton from './RestoreTransactionButton';
+import TransactionSourceIndicator from './TransactionSourceIndicator';
+import { UnlinkTransferButton } from './UnlinkTransferButton';
+import VoidTransactionButton from './VoidTransactionButton';
 
 interface TransactionRowProps {
   transaction: LedgerTransactionRow;

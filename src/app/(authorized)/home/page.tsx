@@ -1,5 +1,16 @@
+import {
+  BarChart2,
+  CircleDollarSign,
+  DollarSign,
+  Receipt,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Suspense } from 'react';
+
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -7,34 +18,25 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  TrendingUp,
-  BarChart2,
-  DollarSign,
-  Receipt,
-  CircleDollarSign,
-  Sparkles,
-} from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { auth } from '@/server/auth';
+import type { DashboardSummaryResponse, MonthlyTrendPoint, TopExpenseCategory } from '@/server/models/dashboard';
+import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
+import { getCalendarYears } from '@/server/services/calendar-year.service';
+import { getMonthlyIncomeExpenseTrend, getMonthlyTrendForDateRange,getTopExpenseCategories } from '@/server/services/dashboard.service';
+import { getTotalExpenses } from '@/server/services/expense.service';
+import { getTotalIncome } from '@/server/services/income.service';
+import { prisma } from '@/server/utils/prisma';
+
 import {
   AIUsageDashboardCard,
   AIUsageDashboardCardSkeleton,
 } from './_components/AIUsageDashboardCard';
-import { NetWorthWidget } from './_components/NetWorthWidget';
 import { AssetBalanceCards } from './_components/AssetBalanceCards';
 import { CashflowPulseCard } from './_components/CashflowPulseCard';
-import { RecentTransactionsWidget } from './_components/RecentTransactionsWidget';
 import { MonthlyTrendWidget } from './_components/MonthlyTrendWidget';
+import { NetWorthWidget } from './_components/NetWorthWidget';
+import { RecentTransactionsWidget } from './_components/RecentTransactionsWidget';
 import { TopExpensesWidget } from './_components/TopExpensesWidget';
-import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
-import { getCalendarYears } from '@/server/services/calendar-year.service';
-import { getTotalIncome } from '@/server/services/income.service';
-import { getTotalExpenses } from '@/server/services/expense.service';
-import { getMonthlyIncomeExpenseTrend, getTopExpenseCategories, getMonthlyTrendForDateRange } from '@/server/services/dashboard.service';
-import { prisma } from '@/server/utils/prisma';
-import type { DashboardSummaryResponse, MonthlyTrendPoint, TopExpenseCategory } from '@/server/models/dashboard';
 
 export const metadata: Metadata = {
   title: 'Dashboard — My Financials',

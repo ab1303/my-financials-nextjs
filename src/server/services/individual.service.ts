@@ -1,4 +1,6 @@
-import { Prisma, Individual } from '@prisma/client';
+import type { Prisma} from '@prisma/client';
+import { Individual } from '@prisma/client';
+
 import { prisma } from '../utils/prisma';
 
 // Include relationship data in Individual queries

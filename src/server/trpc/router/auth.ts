@@ -1,10 +1,10 @@
-import {
-  router,
-  publicProcedure,
-  protectedProcedure,
-} from '@/server/trpc/trpc';
 import { registerHandler } from '@/server/controllers/auth.controller';
 import { createUserSchema } from '@/server/schema/user.schema';
+import {
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from '@/server/trpc/trpc';
 
 export const authRouter = router({
   getSession: publicProcedure.query(({ ctx }) => {

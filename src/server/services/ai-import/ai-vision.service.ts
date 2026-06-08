@@ -1,9 +1,10 @@
+import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 import { z } from 'zod';
-import { createOpenAI } from '@ai-sdk/openai';
+
 import type {
-  ExpenseExtractionResult,
   BankAssetExtractionResult,
+  ExpenseExtractionResult,
 } from './_types';
 
 /**

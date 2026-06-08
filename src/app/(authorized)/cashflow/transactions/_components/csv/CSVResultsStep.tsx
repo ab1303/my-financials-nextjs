@@ -1,8 +1,10 @@
 'use client';
 
-import { Check, AlertCircle, X } from 'lucide-react';
+import { AlertCircle, Check, X } from 'lucide-react';
 import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
+
 import PostImportMatchBanner from '../transfer/PostImportMatchBanner';
 import type { CSVResultsStepProps } from './_types';
 

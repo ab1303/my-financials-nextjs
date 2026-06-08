@@ -1,8 +1,10 @@
-import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { auth } from '@/server/auth';
-import { redirect } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
+
+import { auth } from '@/server/auth';
+
 import AdminDateRangeFilter from './_components/AdminDateRangeFilter';
 import AdminUsageData from './_components/AdminUsageData';
 

@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import { NumericFormat } from 'react-number-format';
 
-import SourceBadge from './SourceBadge';
 import type { IncomeEntryType } from '../_types';
+import SourceBadge from './SourceBadge';
 
 export const SOURCE_COLOR_BAR_MAP: Record<string, string> = {
   employment: 'bg-blue-500',

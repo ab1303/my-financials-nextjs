@@ -1,14 +1,15 @@
 "use client";
 
-import type { TopExpenseCategory } from "@/server/models/dashboard";
 import {
-  PieChart,
-  Pie,
   Cell,
-  Tooltip,
   Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
+  Tooltip,
 } from "recharts";
+
+import type { TopExpenseCategory } from "@/server/models/dashboard";
 
 interface TopExpensesChartProps {
   data: TopExpenseCategory[];

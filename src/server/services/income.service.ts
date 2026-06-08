@@ -1,12 +1,12 @@
 import { prisma } from '../utils/prisma';
-import { TRANSFER_CATEGORY, REIMBURSEMENT_CATEGORY } from './transactions/constants';
+import { REIMBURSEMENT_CATEGORY,TRANSFER_CATEGORY } from './transactions/constants';
 
 // Categories excluded from income totals — these are expense offsets, not earned income
 const INCOME_EXCLUDED_CATEGORIES = [TRANSFER_CATEGORY, REIMBURSEMENT_CATEGORY] as const;
 import type {
-  IncomeModel,
-  IncomeEntryModel,
   IncomeEntryInput,
+  IncomeEntryModel,
+  IncomeModel,
   MonthlyIncomeSummary,
   SourceBreakdown,
 } from '../models/income';

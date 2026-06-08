@@ -1,16 +1,17 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import InfoTooltip from '@/components/ui/InfoTooltip';
-import { NumericFormat } from 'react-number-format';
-import type { CashflowKPIs } from '@/server/models/cashflow-analytics';
 import {
-  TrendingUp,
-  Receipt,
   ArrowUpDown,
   PiggyBank,
+  Receipt,
+  TrendingUp,
 } from 'lucide-react';
+import { NumericFormat } from 'react-number-format';
+
+import { Card, CardContent } from '@/components/ui/card';
+import InfoTooltip from '@/components/ui/InfoTooltip';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { CashflowKPIs } from '@/server/models/cashflow-analytics';
 
 type KPISummaryCardsProps = {
   kpis: CashflowKPIs | null;

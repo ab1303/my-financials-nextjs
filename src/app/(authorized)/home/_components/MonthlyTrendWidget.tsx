@@ -1,7 +1,9 @@
-import type { MonthlyTrendPoint } from "@/server/models/dashboard";
-import { MonthlyTrendChart } from "./MonthlyTrendChart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart2 } from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { MonthlyTrendPoint } from "@/server/models/dashboard";
+
+import { MonthlyTrendChart } from "./MonthlyTrendChart";
 
 interface MonthlyTrendWidgetProps {
   data: MonthlyTrendPoint[];

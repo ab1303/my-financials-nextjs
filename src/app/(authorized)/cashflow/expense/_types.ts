@@ -1,7 +1,7 @@
 import type {
-  ExpenseModel,
   ExpenseEntryModel,
   ExpenseEntryWithCategory,
+  ExpenseModel,
   MonthlyExpenseSummary,
 } from '@/server/models/expense';
 

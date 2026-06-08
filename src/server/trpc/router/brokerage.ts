@@ -1,15 +1,15 @@
-import { router, protectedProcedure } from '@/server/trpc/trpc';
 import {
-  allBrokerageDetailsHandler,
   addBrokerageDetailsHandler,
+  allBrokerageDetailsHandler,
   removeBrokerageDetailsHandler,
   updateBrokerageDetailsHandler,
 } from '@/server/controllers/brokerage.controller';
 import {
   createBrokerageSchema,
-  updateBrokerageSchema,
   params,
+  updateBrokerageSchema,
 } from '@/server/schema/brokerage.schema';
+import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 export const brokerageRouter = router({
   saveBrokerageDetails: protectedProcedure

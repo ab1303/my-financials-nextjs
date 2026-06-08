@@ -1,12 +1,12 @@
 import type { Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 
+import { prisma } from '@/server/utils/prisma';
 import type {
   NetWorthDataPoint,
   NetWorthTrendFilters,
   NetWorthTrendResponse,
 } from '@/types/asset-dashboard.types';
-import { prisma } from '@/server/utils/prisma';
 
 const toIsoDate = (date: Date) => date.toISOString().split('T')[0] ?? '';
 

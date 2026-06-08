@@ -7,9 +7,9 @@ import {
 import { prisma } from '@/server/db/client';
 import type { ClassifiedCreditTransaction, ClassifiedTransactionV2 } from '@/server/services/ai-import/_types';
 
-import { buildDedupSet, getDateRangeFromMonthKeys, isDuplicate, makeDedupKey } from './dedup.service';
 import type { CreditMonth, DebitMonth, TransactionSaveResult } from './_types';
 import { EXCLUDED_CREDIT_LABELS, EXCLUDED_FROM_EXPENSE_AGGREGATION } from './constants';
+import { buildDedupSet, getDateRangeFromMonthKeys, isDuplicate, makeDedupKey } from './dedup.service';
 
 function createEmptyResult(): TransactionSaveResult {
   return {

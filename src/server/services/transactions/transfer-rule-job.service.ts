@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import { TransactionTypeEnum } from '@prisma/client';
+
 import { TRANSFER_CATEGORY } from './constants';
 import { linkTransferPair, scoreCandidate } from './transfer.service';
 

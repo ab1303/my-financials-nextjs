@@ -1,9 +1,10 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { Lock } from 'lucide-react';
 
-import { TableCell, EditCell } from '@/components/react-table';
-import type { IncomeEntryType } from '../_types';
+import { EditCell,TableCell } from '@/components/react-table';
+
 import SourceBadge from '../_components/SourceBadge';
+import type { IncomeEntryType } from '../_types';
 
 const columnHelper = createColumnHelper<IncomeEntryType>();
 

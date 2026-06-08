@@ -1,10 +1,10 @@
 import type {
+  Business,
+  CurrencyEnumType,
+  FinancialAccount,
+  InvestmentTermEnumType,
   PortfolioSnapshot,
   StockHolding,
-  Business,
-  FinancialAccount,
-  CurrencyEnumType,
-  InvestmentTermEnumType,
 } from '@prisma/client';
 
 // ── Extended Prisma Types (with relations) ───────────────────────

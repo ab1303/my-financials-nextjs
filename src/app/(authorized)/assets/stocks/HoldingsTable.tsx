@@ -1,21 +1,22 @@
 'use client';
 
-import { useMemo } from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
 import clsx from 'clsx';
+import { Pencil, Plus,Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
+
 import { Button } from '@/components';
+import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
 import {
   calculateHoldingMetrics,
   formatCurrency,
-  formatQuantity,
-  formatPrice,
-  formatPercentage,
   formatHoldingPeriod,
+  formatPercentage,
+  formatPrice,
+  formatQuantity,
   getPLColorClass,
   getTermStatusColorClass,
   getTermStatusLabel,
 } from '@/utils/stock-asset-calculations';
-import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
 
 interface HoldingsTableProps {
   holdings: StockHoldingWithAccount[];

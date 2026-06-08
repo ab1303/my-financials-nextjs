@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import {
@@ -8,10 +8,10 @@ import {
   zakatTotalsByCategoryHandler,
 } from '@/server/controllers/zakat.controller';
 
-import ZakatForm from './form';
-import type { FormInput } from './_schema';
-import ZakatPaymentsTableServer from './ZakatTableServer';
 import UnlinkedZakatTransactionsBanner from './_components/UnlinkedZakatTransactionsBanner';
+import type { FormInput } from './_schema';
+import ZakatForm from './form';
+import ZakatPaymentsTableServer from './ZakatTableServer';
 
 export const metadata: Metadata = {
   title: 'Zakat',

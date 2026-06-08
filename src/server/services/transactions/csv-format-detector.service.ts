@@ -1,8 +1,8 @@
-import type { BankCsvFormat, FormatDetectionResult } from './csv-format.types';
 import {
   BANK_FORMAT_REGISTRY,
   getFullySupportedBankKeys,
 } from './bank-format-registry';
+import type { BankCsvFormat, FormatDetectionResult } from './csv-format.types';
 import { parseCsvLine } from './csv-parser-generic.service';
 
 /**

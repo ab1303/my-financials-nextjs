@@ -1,4 +1,5 @@
 import { prisma } from '@/server/db/client';
+
 import type { BankAssetExtractionResult } from './_types';
 
 export interface BankAssetMapResult {

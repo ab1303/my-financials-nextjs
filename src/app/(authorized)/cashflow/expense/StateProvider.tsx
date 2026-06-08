@@ -1,11 +1,12 @@
 'use client';
 
-import { createContext, useContext, useEffect, useReducer } from 'react';
 import type { Dispatch } from 'react';
+import { createContext, useContext, useEffect, useReducer } from 'react';
 
-import { expenseEntryReducer } from './reducer';
-import type { Actions, ExpenseEntriesState } from './reducer';
 import type { ExpenseEntryWithCategory } from '@/server/models/expense';
+
+import type { Actions, ExpenseEntriesState } from './reducer';
+import { expenseEntryReducer } from './reducer';
 
 const ExpenseEntryStateContext = createContext<{
   state: ExpenseEntriesState;

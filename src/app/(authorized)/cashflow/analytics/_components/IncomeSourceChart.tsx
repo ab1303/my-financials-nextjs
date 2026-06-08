@@ -1,7 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { NumericFormat } from 'react-number-format';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { SourceBreakdown } from '@/server/models/income';
 
 type IncomeSourceChartProps = {

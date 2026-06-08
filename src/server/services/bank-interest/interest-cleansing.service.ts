@@ -112,10 +112,6 @@ export const getYearlyCleansingData = async (
     orderBy: { datePaid: 'desc' },
   });
 
-  rawDonations.forEach(d => {
-    console.log(`DEBUG: Donation ${d.id} evidence count: ${d.evidence.length}`);
-  });
-
   // Build monthlyCredits from all 12 months (after rawDonations is available)
   const monthlyCredits: MonthlyCredit[] = allMonths.map(({ month, year }) => {
     const monthTx = interestTx.filter(
@@ -361,6 +357,7 @@ export async function getCleansingDebitCandidates(params: {
     userId,
     type: 'DEBIT',
     status: 'CONFIRMED',
+    category: { equals: 'Interest Cleansing', mode: 'insensitive' },
   };
 
   if (bankAccountId) whereClause.bankAccountId = bankAccountId;
@@ -387,11 +384,11 @@ export async function getCleansingDebitCandidates(params: {
       financialAccount: {
         select: { name: true },
       },
-      donationPaymentEvidence: {
+      interestCleansingEvidence: {
         include: {
-          donationPayment: {
+          interestCleansing: {
             include: {
-              interestTx: { select: { id: true, description: true } },
+              creditTx: { select: { id: true, description: true } },
             },
           },
         },
@@ -404,23 +401,23 @@ export async function getCleansingDebitCandidates(params: {
   const candidates: Candidate[] = rawCandidates
     .filter((tx) => {
       const amount = Number(tx.amount);
-      const allocatedAmount = tx.donationPaymentEvidence.reduce(
-        (sum, e) => sum + e.amountApplied.toNumber(),
+      const allocatedAmount = tx.interestCleansingEvidence.reduce(
+        (sum, e) => sum + (e.amountLinked?.toNumber() ?? 0),
         0,
       );
       return allocatedAmount < amount;
     })
     .map((tx) => {
       const amount = Number(tx.amount);
-      const allocatedAmount = tx.donationPaymentEvidence.reduce(
-        (sum, e) => sum + e.amountApplied.toNumber(),
+      const allocatedAmount = tx.interestCleansingEvidence.reduce(
+        (sum, e) => sum + (e.amountLinked?.toNumber() ?? 0),
         0,
       );
       const remainingAmount = amount - allocatedAmount;
-      const existingAllocations = tx.donationPaymentEvidence.map(e => ({
-        interestTxId: e.donationPayment.interestTx?.id ?? 'unknown',
-        description: e.donationPayment.interestTx?.description ?? 'Unknown credit',
-        amountApplied: e.amountApplied.toNumber(),
+      const existingAllocations = tx.interestCleansingEvidence.map(e => ({
+        interestTxId: e.interestCleansing.creditTx?.id ?? 'unknown',
+        description: e.interestCleansing.creditTx?.description ?? 'Unknown credit',
+        amountApplied: e.amountLinked?.toNumber() ?? 0,
       }));
       const txDate = new Date(tx.date);
 
@@ -686,7 +683,7 @@ export const applyAllocations = async (
     if (!donation) {
       // Find a ledger for this credit date
       const year = credit.date.getFullYear();
-      let ledger = await tx.donationLedger.findFirst({
+      const ledger = await tx.donationLedger.findFirst({
         where: {
           calendar: {
             fromYear: { lte: year },
@@ -739,8 +736,6 @@ export const removeAllocation = async (
   allocationId: string,
   userId: string,
 ): Promise<{ success: boolean }> => {
-  console.log(`DEBUG: Removing allocation ${allocationId} for user ${userId}`);
-  
   return await prisma.$transaction(async (tx) => {
     // 1. Get evidence to find the donationPaymentId
     const evidence = await tx.donationPaymentEvidence.findUniqueOrThrow({

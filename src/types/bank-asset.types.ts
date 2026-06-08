@@ -2,10 +2,10 @@
 // These types extend Prisma generated types with computed fields for frontend use
 
 import type {
-  FinancialAccount,
-  BankBalanceSnapshot,
   BankBalanceRecord,
+  BankBalanceSnapshot,
   Business,
+  FinancialAccount,
 } from '@prisma/client';
 
 // Extended types with relations

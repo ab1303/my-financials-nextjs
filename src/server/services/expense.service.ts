@@ -1,14 +1,15 @@
+import type { Prisma } from '@prisma/client';
+
+import type {
+  CategoryBreakdown,
+  ExpenseEntryInput,
+  ExpenseEntryModel,
+  ExpenseEntryWithCategory,
+  ExpenseModel,
+  MonthlyExpenseSummary,
+} from '../models/expense';
 import { prisma } from '../utils/prisma';
 import { TRANSFER_CATEGORY } from './transactions/constants';
-import type {
-  ExpenseModel,
-  ExpenseEntryModel,
-  ExpenseEntryInput,
-  ExpenseEntryWithCategory,
-  MonthlyExpenseSummary,
-  CategoryBreakdown,
-} from '../models/expense';
-import type { Prisma } from '@prisma/client';
 
 /**
  * Create Expense record for a calendar year and user

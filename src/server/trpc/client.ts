@@ -1,9 +1,8 @@
-import superjson from 'superjson';
 import type { CreateTRPCClientOptions } from '@trpc/client';
-import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
-
 import { httpBatchLink, loggerLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+import superjson from 'superjson';
 
 import type { AppRouter } from './router/_app';
 import { getUrl } from './shared';

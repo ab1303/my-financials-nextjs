@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
+
 import { auth } from '@/server/auth';
-import { prisma } from '@/server/utils/prisma';
+import type { DashboardSummaryResponse } from '@/server/models/dashboard';
 import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
 import { getCalendarYears } from '@/server/services/calendar-year.service';
-import { getTotalIncome } from '@/server/services/income.service';
-import { getTotalExpenses } from '@/server/services/expense.service';
 import { getMonthlyIncomeExpenseTrend, getTopExpenseCategories } from '@/server/services/dashboard.service';
-import type { DashboardSummaryResponse } from '@/server/models/dashboard';
+import { getTotalExpenses } from '@/server/services/expense.service';
+import { getTotalIncome } from '@/server/services/income.service';
+import { prisma } from '@/server/utils/prisma';
 
 /**
  * GET /api/dashboard/summary

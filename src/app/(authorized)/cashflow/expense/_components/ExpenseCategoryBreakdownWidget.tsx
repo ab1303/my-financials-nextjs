@@ -1,12 +1,13 @@
 'use client';
 
+import { Dialog, Transition } from '@headlessui/react';
+import { ChevronDown, ChevronUp, ExternalLink, LayoutList, Search,X } from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, useState } from 'react';
-import { ExternalLink, ChevronDown, ChevronUp, LayoutList, X, Search } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
-import { Dialog, Transition } from '@headlessui/react';
-import type { CategoryBreakdown } from '@/server/models/expense';
+
 import Portal from '@/components/Portal';
+import type { CategoryBreakdown } from '@/server/models/expense';
 
 // Fixed ordered palette — assigned by rank (index 0 = highest spend)
 const BAR_COLORS = [

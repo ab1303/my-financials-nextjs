@@ -1,15 +1,16 @@
 import { z } from 'zod';
-import { router, protectedProcedure } from '@/server/trpc/trpc';
+
 import {
-  getYearlyCleansingData,
-  getUnlinkedInterestTransactions,
-  getUnlinkedCleansingDebitTransactions,
-  getCleansingDebitCandidates,
-  suggestAllocations,
   applyAllocations,
-  removeAllocation,
   Candidate,
+  getCleansingDebitCandidates,
+  getUnlinkedCleansingDebitTransactions,
+  getUnlinkedInterestTransactions,
+  getYearlyCleansingData,
+  removeAllocation,
+  suggestAllocations,
 } from '@/server/services/bank-interest/interest-cleansing.service';
+import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 export const bankInterestRouter = router({
   getInterestCleansingData: protectedProcedure

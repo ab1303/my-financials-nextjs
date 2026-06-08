@@ -1,6 +1,6 @@
-import {
-  ImportTypeEnum,
+import type {
   ImportStatusEnum,
+  ImportTypeEnum,
   StorageProviderEnum,
 } from '@prisma/client';
 

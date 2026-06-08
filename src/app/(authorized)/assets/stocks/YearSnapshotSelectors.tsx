@@ -1,11 +1,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { SingleValue } from 'react-select';
-import { Label } from '@/components/ui/Label';
 import { Suspense } from 'react';
-import type { OptionType } from '@/types';
+import type { SingleValue } from 'react-select';
+
 import AppSelect from '@/components/ui/AppSelect';
+import { Label } from '@/components/ui/Label';
+import type { OptionType } from '@/types';
 
 interface YearSnapshotSelectorsProps {
   yearOptions: OptionType[];

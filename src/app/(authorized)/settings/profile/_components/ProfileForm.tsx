@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
 import { trpc } from '@/server/trpc/client';
+
 import {
   type UpdateProfileFormValues,
   updateProfileSchema,

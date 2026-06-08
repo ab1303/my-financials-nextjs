@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
+
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { listRules } from '@/server/services/transactions/transfer-rule.service';
+
 import TransferRulesTable from './_components/TransferRulesTable';
 
 export default async function TransferRulesPage() {

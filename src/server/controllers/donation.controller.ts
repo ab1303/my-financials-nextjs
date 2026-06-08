@@ -2,8 +2,8 @@ import {
   addDonationCalendarYearDetails,
   getDonation,
   getDonationPayments,
-  getTotalDonations,
   getDonationTotalsByCategory,
+  getTotalDonations,
 } from '../services/donation.service';
 import { handleCaughtError } from '../utils/prisma';
 

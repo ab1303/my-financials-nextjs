@@ -1,14 +1,15 @@
 import { TRPCError } from '@trpc/server';
+
+import type {
+  CreateBankAccountInput,
+  DeleteBankAccountInput,
+} from '@/server/schema/bank-account.schema';
 import {
   createBankAccount,
   deleteBankAccount,
   getBankAccounts,
   updateTracking,
 } from '@/server/services/bank-account.service';
-import type {
-  CreateBankAccountInput,
-  DeleteBankAccountInput,
-} from '@/server/schema/bank-account.schema';
 
 export const listBankAccountsHandler = async (userId: string) => {
   return getBankAccounts(userId);

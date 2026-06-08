@@ -1,12 +1,14 @@
-import type { Metadata } from 'next';
-import { auth } from '@/server/auth';
-import { prisma } from '@/server/utils/prisma';
-import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
-import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
-import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
-import type { OptionType } from '@/types';
 import type { CalendarEnumType } from '@prisma/client';
+import type { Metadata } from 'next';
+
+import { auth } from '@/server/auth';
+import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
+import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
+import { prisma } from '@/server/utils/prisma';
+import type { OptionType } from '@/types';
+import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
+
 import CashflowAnalyticsClient from './_components/CashflowAnalyticsClient';
 
 export const metadata: Metadata = {

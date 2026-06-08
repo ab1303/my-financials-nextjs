@@ -1,7 +1,7 @@
 'use client';
 
-import * as React from 'react';
 import clsx from 'clsx';
+import * as React from 'react';
 
 export const Radio = React.forwardRef<
   HTMLInputElement,

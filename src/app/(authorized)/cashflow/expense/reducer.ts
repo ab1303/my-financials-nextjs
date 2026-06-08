@@ -1,6 +1,7 @@
-import type { ActionMapUnion } from '@/types';
-import type { ExpenseEntryWithCategory } from '@/server/models/expense';
 import { produce } from 'immer';
+
+import type { ExpenseEntryWithCategory } from '@/server/models/expense';
+import type { ActionMapUnion } from '@/types';
 
 type ExpenseMessages = {
   'EXPENSE/Entries/INITIAL_DATA': ExpenseEntriesState;

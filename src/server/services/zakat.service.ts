@@ -1,10 +1,11 @@
-import { prisma } from '../utils/prisma';
+import type { Prisma } from '@prisma/client';
+
 import type {
   ZakatModel,
-  ZakatPaymentModel,
   ZakatPaymentInput,
+  ZakatPaymentModel,
 } from '../models/zakat';
-import type { Prisma } from '@prisma/client';
+import { prisma } from '../utils/prisma';
 
 export const addZakatCalendarYearDetails = async ({
   calendarId,

@@ -1,6 +1,7 @@
 'use client';
 
-import { Check, AlertCircle } from 'lucide-react';
+import { AlertCircle,Check } from 'lucide-react';
+
 import type { AIImportSessionResult } from './_types';
 
 interface ResultsStepProps {

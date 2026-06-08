@@ -1,12 +1,14 @@
 'use client';
 
-import React, { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import type { ReactNode } from 'react';
+import React from 'react';
+
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 type ModalRootProps = {
   show: boolean;
