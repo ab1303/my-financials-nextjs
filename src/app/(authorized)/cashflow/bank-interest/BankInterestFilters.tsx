@@ -1,15 +1,14 @@
 'use client';
 
-import { useId, useState } from 'react';
+import type { CalendarEnumType } from '@prisma/client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useId, useState } from 'react';
 import type { SingleValue } from 'react-select';
 
-import { Label } from '@/components/ui/Label';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
 import CalendarYearPicker from '@/components/CalendarYearPicker';
-
-import type { OptionType, CalendarYearType } from '@/types';
-import type { CalendarEnumType } from '@prisma/client';
+import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { Label } from '@/components/ui/Label';
+import type { CalendarYearType,OptionType } from '@/types';
 
 type BankInterestFiltersProps = {
   initialData: {

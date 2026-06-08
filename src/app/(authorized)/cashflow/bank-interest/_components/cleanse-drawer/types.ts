@@ -1,7 +1,8 @@
 import { BeneficiaryEnumType } from '@prisma/client';
 import { UseFormReturn } from 'react-hook-form';
-import { z } from 'zod';
-import { linkedModeSchema, manualModeSchema } from './schemas';
+import type { z } from 'zod';
+
+import type { linkedModeSchema, manualModeSchema } from './schemas';
 
 export type DrawerMode = 'linked' | 'manual';
 

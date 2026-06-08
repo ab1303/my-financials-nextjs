@@ -1,8 +1,8 @@
+import { produce } from 'immer';
+
 import type { ActionMapUnion } from '@/types';
 
 import type { DonationPaymentType } from './_types';
-
-import { produce } from 'immer';
 
 type DonationMessages = {
   'DONATION/Payments/INITAL_DATA': DonationPaymentsState;

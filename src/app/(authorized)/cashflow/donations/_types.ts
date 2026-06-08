@@ -1,5 +1,5 @@
-import { BeneficiaryEnumType } from '@prisma/client';
 import type { DonationPurposeEnum } from '@prisma/client';
+import { BeneficiaryEnumType } from '@prisma/client';
 
 export type ServerActionType<T = unknown> = {
   success: boolean;

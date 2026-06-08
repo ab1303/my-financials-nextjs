@@ -1,17 +1,19 @@
 'use client';
 
-import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { createPortal } from 'react-dom';
+
 import CreateBeneficiaryModal from '@/app/(authorized)/cashflow/donations/_components/CreateBeneficiaryModal';
+import { cn } from '@/lib/utils';
+
 import { FullPageCleansingPanel } from '../FullPageCleansingPanel';
-import { CleanseDonationDrawerProps } from './types';
 import {
   CleanseDonationProvider,
   useCleanseDonation,
 } from './CleanseDonationContext';
 import { LinkedModeBody } from './LinkedModeBody';
 import { ManualModeBody } from './ManualModeBody';
+import type { CleanseDonationDrawerProps } from './types';
 
 /**
  * Main Drawer Component (Public Entry Point)

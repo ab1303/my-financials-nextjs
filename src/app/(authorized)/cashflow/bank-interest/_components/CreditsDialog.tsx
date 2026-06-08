@@ -1,9 +1,10 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import InterestCreditsTable from '../InterestCreditsTable';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+
 import type { MonthlyCredit } from '../_types';
+import InterestCreditsTable from '../InterestCreditsTable';
 
 type CreditsDialogProps = {
   bankName: string;

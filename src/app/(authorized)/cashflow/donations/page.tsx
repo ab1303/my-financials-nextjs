@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
@@ -10,9 +10,9 @@ import { getUserFiscalYearType } from '@/server/services/user-profile/user-profi
 import { prisma } from '@/server/utils/prisma';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
+import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
 import DonationFilters from './DonationFilters';
 import DonationPaymentsTableServer from './DonationTableServer';
-import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
 
 export const metadata: Metadata = {
   title: 'Donation Tracking | My Financials',

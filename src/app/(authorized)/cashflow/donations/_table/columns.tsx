@@ -1,11 +1,12 @@
+import { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Lock, Unlink } from 'lucide-react';
 
 import { TableCell } from '@/components/react-table';
+import type { OptionType } from '@/types';
+
 import { getTaxCategoryLabel } from '../../_utils/charity-tax';
 import type { DonationPaymentType } from '../_types';
-import type { OptionType } from '@/types';
-import { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
 
 const beneficiaryOptions = Object.entries(
   BeneficiaryEnumType,

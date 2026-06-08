@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle, Trash2 } from 'lucide-react';
+
 import { CleansingCandidatePicker } from '../CleansingCandidatePicker';
 import { BeneficiaryFormFields } from './BeneficiaryFormFields';
 import { useCleanseDonation } from './CleanseDonationContext';

@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
+import { z } from 'zod';
 
 export const FormDataSchema = z.object({
   calendarYearId: z.string().nonempty('Calendar year is required.'),

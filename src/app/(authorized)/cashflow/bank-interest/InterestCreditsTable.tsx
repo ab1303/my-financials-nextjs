@@ -3,8 +3,9 @@
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Plus } from 'lucide-react';
 
-import MONTHS_MAP from '@/constants/map';
 import Table from '@/components/table';
+import MONTHS_MAP from '@/constants/map';
+
 import type { MonthlyCredit } from './_types';
 
 const columnHelper = createColumnHelper<MonthlyCredit>();

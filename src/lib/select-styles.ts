@@ -2,7 +2,7 @@
  * Shared react-select styles that use CSS variables for theme consistency.
  * Supports dark mode and palette swaps automatically.
  */
-import type { StylesConfig, GroupBase } from 'react-select';
+import type { GroupBase,StylesConfig } from 'react-select';
 
 export function getSelectStyles<
   T = unknown,

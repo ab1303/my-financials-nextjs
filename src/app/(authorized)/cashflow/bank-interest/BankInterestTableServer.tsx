@@ -1,8 +1,8 @@
 import { auth } from '@/server/auth';
 import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
 
-import InterestCreditsTable from './InterestCreditsTable';
 import CleansingDonationsList from './_components/CleansingDonationsList';
+import InterestCreditsTable from './InterestCreditsTable';
 
 export type BankInterestTableServerProps = {
   bankId: string;

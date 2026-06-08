@@ -1,10 +1,12 @@
 'use client';
 
-import { X, ArrowLeft } from 'lucide-react';
-import { CleansingCandidatePicker } from './CleansingCandidatePicker';
-import { type Candidate } from '@/server/services/bank-interest/interest-cleansing.service';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft,X } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { type Candidate } from '@/server/services/bank-interest/interest-cleansing.service';
+
+import { CleansingCandidatePicker } from './CleansingCandidatePicker';
 
 interface FullPageCleansingPanelProps {
   creditId: string;

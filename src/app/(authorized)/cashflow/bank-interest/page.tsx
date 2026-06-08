@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import { Suspense } from 'react';
+import type { CalendarEnumType } from '@prisma/client';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 import { auth } from '@/server/auth';
 import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
@@ -9,13 +10,11 @@ import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.cont
 import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { prisma } from '@/server/utils/prisma';
-
 import type { OptionType } from '@/types';
-import type { CalendarEnumType } from '@prisma/client';
 
-import BankInterestFilters from './BankInterestFilters';
 import CleansingDonationsList from './_components/CleansingDonationsList';
 import CreditsDialog from './_components/CreditsDialog';
+import BankInterestFilters from './BankInterestFilters';
 
 export const metadata: Metadata = {
   title: 'Bank Interest | My Financials',

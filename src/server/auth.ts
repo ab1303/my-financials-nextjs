@@ -1,9 +1,9 @@
-import { type NextAuthConfig } from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import { type NextAuthConfig } from 'next-auth';
+import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
 
 import { findUser } from '@/server/services/user.service';
-import NextAuth from 'next-auth';
 
 const authConfig: NextAuthConfig = {
   providers: [

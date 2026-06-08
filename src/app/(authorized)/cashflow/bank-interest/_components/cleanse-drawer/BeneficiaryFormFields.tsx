@@ -2,11 +2,13 @@
 
 import { BeneficiaryEnumType } from '@prisma/client';
 import { Controller } from 'react-hook-form';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
 import CreatableSelect from 'react-select/creatable';
+
+import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { getSelectStyles } from '@/lib/select-styles';
-import { type BeneficiaryOption } from './types';
+
 import { useCleanseDonation } from './CleanseDonationContext';
+import { type BeneficiaryOption } from './types';
 
 type BeneficiaryFormFieldsProps = {
   disabled: boolean;

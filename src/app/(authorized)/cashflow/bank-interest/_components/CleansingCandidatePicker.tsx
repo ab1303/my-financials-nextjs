@@ -1,21 +1,22 @@
 'use client';
 
+import { CheckCircle2,ChevronDown, ChevronUp } from 'lucide-react';
 import {
-  useState,
-  useMemo,
-  useTransition,
-  useEffect,
   useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
 } from 'react';
 import { useDebounce } from 'use-debounce';
-import { ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
-import { trpc } from '@/server/trpc/client';
-import { type Candidate } from '@/server/services/bank-interest/interest-cleansing.service';
+
+import AppSelect from '@/components/ui/AppSelect';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import AppSelect from '@/components/ui/AppSelect';
 import InfoTooltip from '@/components/ui/InfoTooltip';
 import { cn } from '@/lib/utils';
+import { type Candidate } from '@/server/services/bank-interest/interest-cleansing.service';
+import { trpc } from '@/server/trpc/client';
 
 interface CleansingCandidatePickerProps {
   creditId: string;
