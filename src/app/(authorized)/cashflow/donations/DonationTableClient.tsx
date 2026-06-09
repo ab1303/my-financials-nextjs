@@ -23,7 +23,7 @@ import type {
   UpdateDonationPaymentInput,
 } from './_schema';
 import { getTableColumns } from './_table/columns';
-import type { DonationPaymentType,ServerActionType } from './_types';
+import type { DonationPaymentType, ServerActionType } from './_types';
 import { useDonationPaymentState } from './StateProvider';
 
 type DonationTableClientProps = {
@@ -119,7 +119,6 @@ export default function DonationTableClient({
           });
           toast.info('New donation cancelled');
         }
-        console.log('row reverted in client', rowIndex);
       },
       updateRow: async (rowIndex: number) => {
         const row = data[rowIndex];
@@ -285,7 +284,9 @@ export default function DonationTableClient({
         <h3 className='text-lg font-medium text-foreground'>
           Payment Records
           {isPending && (
-            <span className='ml-2 text-sm text-muted-foreground'>(Updating...)</span>
+            <span className='ml-2 text-sm text-muted-foreground'>
+              (Updating...)
+            </span>
           )}
         </h3>
         <div className='flex gap-2'>

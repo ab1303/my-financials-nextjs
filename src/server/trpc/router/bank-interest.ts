@@ -10,6 +10,7 @@ import {
   removeAllocation,
   suggestAllocations,
 } from '@/server/services/bank-interest/interest-cleansing.service';
+import { deleteDonationPayment } from '@/server/services/donation.service';
 import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 export const bankInterestRouter = router({
@@ -127,5 +128,11 @@ export const bankInterestRouter = router({
     .input(z.object({ allocationId: z.string() }))
     .mutation(async ({ ctx, input }) =>
       removeAllocation(input.allocationId, ctx.session.user.id),
+    ),
+
+  deleteCleansingDonation: protectedProcedure
+    .input(z.object({ donationId: z.string() }))
+    .mutation(async ({ ctx, input }) =>
+      deleteDonationPayment(input.donationId),
     ),
 });

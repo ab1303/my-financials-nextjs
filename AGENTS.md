@@ -38,6 +38,12 @@ Rules for all AI agents working in this repository.
 - **Environment**: Document all required env vars in `.env-example`. Never expose secrets to the client.
 - **Testing**: Playwright e2e in `e2e/`. Vitest unit tests in `src/__tests__/`.
 
+## Database Access Scope (Universal)
+
+- **Constraint:** Access is strictly limited to databases used by the `my-financials-nextjs` application and its integration tests.
+- **Prohibition:** Accessing, listing, or querying other databases (e.g., `CapacityDb`, `local`) is strictly prohibited.
+- **Action:** Any attempt to list or interact with databases outside this scope is a violation of protocol.
+
 ## Windows 11 & Token Optimization
 
 - Use `bash` over powershell for file operations.

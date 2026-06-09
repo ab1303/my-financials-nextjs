@@ -92,7 +92,7 @@ export const getYearlyCleansingData = async (
     },
   });
 
-  const rawDonations = await prisma.interestCleansing.findMany({
+  const cleansingPayments = await prisma.interestCleansing.findMany({
     where: {
       datePaid: { gte: dateFrom, lte: dateTo },
     },
@@ -108,7 +108,7 @@ export const getYearlyCleansingData = async (
     orderBy: { datePaid: 'desc' },
   });
 
-  // Build monthlyCredits from all 12 months (after rawDonations is available)
+  // Build monthlyCredits from all 12 months (after cleansingPayments is available)
   const monthlyCredits: MonthlyCredit[] = allMonths.map(({ month, year }) => {
     const monthTx = interestTx.filter(
       (tx) =>
@@ -122,7 +122,7 @@ export const getYearlyCleansingData = async (
 
     // Sum up donations linked to transactions in this month
     const monthTxIds = new Set(monthTx.map((tx) => tx.id));
-    const cleansedAmount = rawDonations
+    const cleansedAmount = cleansingPayments
       .filter((d) => d.creditTxId && monthTxIds.has(d.creditTxId))
       .reduce((s, d) => s + d.amount.toNumber(), 0);
 
@@ -134,26 +134,27 @@ export const getYearlyCleansingData = async (
     };
   });
 
-  const cleansingDonations: CleansingDonation[] = rawDonations.map((dp) => ({
-    id: dp.id,
-    datePaid: dp.datePaid,
-    amount: dp.amount.toNumber(),
-    beneficiaryName:
-      dp.sourceBusiness?.name ?? 'Unknown',
-    beneficiaryType: 'BUSINESS',
-    source: dp.creditTxId ? 'LINKED' : 'MANUAL',
-    interestTxId: dp.creditTxId,
-    interestTxDescription: dp.creditTx?.description,
-    evidence: dp.evidence.map((e) => ({
-      id: e.id,
-      amountApplied: e.amountLinked?.toNumber() ?? 0,
-      description: e.transaction.description,
-      date: e.transaction.date,
-    })),
-  }));
+  const cleansingDonations: CleansingDonation[] = cleansingPayments.map(
+    (dp) => ({
+      id: dp.id,
+      datePaid: dp.datePaid,
+      amount: dp.amount.toNumber(),
+      beneficiaryName: dp.sourceBusiness?.name ?? 'Unknown',
+      beneficiaryType: 'BUSINESS',
+      source: dp.creditTxId ? 'LINKED' : 'MANUAL',
+      interestTxId: dp.creditTxId,
+      interestTxDescription: dp.creditTx?.description,
+      evidence: dp.evidence.map((e) => ({
+        id: e.id,
+        amountApplied: e.amountLinked?.toNumber() ?? 0,
+        description: e.transaction.description,
+        date: e.transaction.date,
+      })),
+    }),
+  );
 
   const linkedTxIds = new Set(
-    rawDonations
+    cleansingPayments
       .filter((dp) => dp.creditTxId !== null)
       .map((dp) => dp.creditTxId!),
   );
@@ -207,18 +208,23 @@ export const getUnlinkedInterestTransactions = async (
       ],
     },
     include: {
-      interestCleansingEvidence: {
-        select: { amountLinked: true },
+      interestCleansingCredit: {
+        include: {
+          evidence: {
+            select: { amountLinked: true },
+          },
+        },
       },
     },
     orderBy: { date: 'asc' },
   });
 
   return allInterestTx.map((tx) => {
-    const cleansedAmount = tx.interestCleansingEvidence.reduce(
-      (sum, e) => sum + (e.amountLinked?.toNumber() ?? 0),
-      0,
-    );
+    const cleansedAmount =
+      tx.interestCleansingCredit?.evidence.reduce(
+        (sum, e) => sum + (e.amountLinked?.toNumber() ?? 0),
+        0,
+      ) ?? 0;
     return {
       id: tx.id,
       date: tx.date.toISOString().split('T')[0] ?? tx.date.toISOString(),
@@ -297,7 +303,8 @@ export type Candidate = {
   date: string;
   amount: number;
   remainingAmount: number; // Added
-  existingAllocations: Array<{ // Added
+  existingAllocations: Array<{
+    // Added
     interestTxId: string;
     description: string;
     amountApplied: number;
@@ -310,8 +317,18 @@ export type Candidate = {
   reasonLong: string;
   score: number;
   scoreBreakdown: {
-    rawNormalized: { amountScore: number; dateScore: number; descScore: number; accountScore: number; };
-    contributionsPercent: { amount: number; date: number; desc: number; account: number; };
+    rawNormalized: {
+      amountScore: number;
+      dateScore: number;
+      descScore: number;
+      accountScore: number;
+    };
+    contributionsPercent: {
+      amount: number;
+      date: number;
+      desc: number;
+      account: number;
+    };
   };
 };
 
@@ -347,7 +364,6 @@ export async function getCleansingDebitCandidates(params: {
     userId,
     type: 'DEBIT',
     status: 'CONFIRMED',
-    category: { equals: 'Interest Cleansing', mode: 'insensitive' },
   };
 
   if (bankAccountId) whereClause.bankAccountId = bankAccountId;
@@ -404,143 +420,146 @@ export async function getCleansingDebitCandidates(params: {
         0,
       );
       const remainingAmount = amount - allocatedAmount;
-      const existingAllocations = tx.interestCleansingEvidence.map(e => ({
+      const existingAllocations = tx.interestCleansingEvidence.map((e) => ({
         interestTxId: e.interestCleansing.creditTx?.id ?? 'unknown',
-        description: e.interestCleansing.creditTx?.description ?? 'Unknown credit',
+        description:
+          e.interestCleansing.creditTx?.description ?? 'Unknown credit',
         amountApplied: e.amountLinked?.toNumber() ?? 0,
       }));
       const txDate = new Date(tx.date);
 
-    // Weights (canonical): amount 0.6, date 0.1, desc 0.2, account 0.1
-    const weights = { amount: 0.6, date: 0.1, desc: 0.2, account: 0.1 };
+      // Weights (canonical): amount 0.6, date 0.1, desc 0.2, account 0.1
+      const weights = { amount: 0.6, date: 0.1, desc: 0.2, account: 0.1 };
 
-    // amountScore (40%) - Proximity score
-    const amountDiff = Math.abs(creditAmount - amount);
-    const maxAmount = Math.max(creditAmount, amount, 1);
-    const amountScore = Math.max(0, 1 - amountDiff / maxAmount);
+      // amountScore (40%) - Proximity score
+      const amountDiff = Math.abs(creditAmount - amount);
+      const maxAmount = Math.max(creditAmount, amount, 1);
+      const amountScore = Math.max(0, 1 - amountDiff / maxAmount);
 
-    // dateScore (20%) - 90-day window normalization
-    const daysBetween = Math.abs(
-      (txDate.getTime() - creditDate.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    const dateScore = Math.max(0, 1 - daysBetween / 90);
-
-    // descScore (30%) - Token overlap
-    const tokenize = (s: string) =>
-      s
-        .toLowerCase()
-        .split(/\W+/)
-        .filter((t) => t.length > 2);
-    const creditTokens = new Set(tokenize(credit.description));
-    const txTokens = new Set(tokenize(tx.description));
-
-    let common = 0;
-    creditTokens.forEach((t) => {
-      if (txTokens.has(t)) common++;
-    });
-    const descScore = creditTokens.size === 0 ? 0 : common / creditTokens.size;
-
-    // accountScore (10%) - Exact match if filter is provided, else 0.5 (neutral)
-    const accountScore = bankAccountId
-      ? tx.bankAccountId === bankAccountId
-        ? 1
-        : 0
-      : 0.5;
-
-    const combinedNormalized = Math.max(
-      0,
-      Math.min(
-        1,
-        amountScore * weights.amount +
-          dateScore * weights.date +
-          descScore * weights.desc +
-          accountScore * weights.account,
-      ),
-    );
-
-    const matchPercent = Math.round(100 * combinedNormalized);
-
-    const contributions: {
-      amount: number;
-      date: number;
-      desc: number;
-      account: number;
-    } = {
-      amount: 0,
-      date: 0,
-      desc: 0,
-      account: 0,
-    };
-
-    if (combinedNormalized > 0) {
-      contributions.amount = Math.round(
-        ((amountScore * weights.amount) / combinedNormalized) * matchPercent,
+      // dateScore (20%) - 90-day window normalization
+      const daysBetween = Math.abs(
+        (txDate.getTime() - creditDate.getTime()) / (1000 * 60 * 60 * 24),
       );
-      contributions.date = Math.round(
-        ((dateScore * weights.date) / combinedNormalized) * matchPercent,
-      );
-      contributions.desc = Math.round(
-        ((descScore * weights.desc) / combinedNormalized) * matchPercent,
-      );
-      contributions.account = Math.round(
-        ((accountScore * weights.account) / combinedNormalized) * matchPercent,
+      const dateScore = Math.max(0, 1 - daysBetween / 90);
+
+      // descScore (30%) - Token overlap
+      const tokenize = (s: string) =>
+        s
+          .toLowerCase()
+          .split(/\W+/)
+          .filter((t) => t.length > 2);
+      const creditTokens = new Set(tokenize(credit.description));
+      const txTokens = new Set(tokenize(tx.description));
+
+      let common = 0;
+      creditTokens.forEach((t) => {
+        if (txTokens.has(t)) common++;
+      });
+      const descScore =
+        creditTokens.size === 0 ? 0 : common / creditTokens.size;
+
+      // accountScore (10%) - Exact match if filter is provided, else 0.5 (neutral)
+      const accountScore = bankAccountId
+        ? tx.bankAccountId === bankAccountId
+          ? 1
+          : 0
+        : 0.5;
+
+      const combinedNormalized = Math.max(
+        0,
+        Math.min(
+          1,
+          amountScore * weights.amount +
+            dateScore * weights.date +
+            descScore * weights.desc +
+            accountScore * weights.account,
+        ),
       );
 
-      // Rounding drift correction
-      const currentSum =
-        contributions.amount +
-        contributions.date +
-        contributions.desc +
-        contributions.account;
-      const diff = matchPercent - currentSum;
+      const matchPercent = Math.round(100 * combinedNormalized);
 
-      if (diff !== 0) {
-        // Adjust the largest contributor to ensure sum equals matchPercent
-        const keys: Array<keyof typeof contributions> = [
-          'amount',
-          'date',
-          'desc',
-          'account',
-        ];
-        const largestKey = keys.reduce((a, b) =>
-          contributions[a] > contributions[b] ? a : b,
+      const contributions: {
+        amount: number;
+        date: number;
+        desc: number;
+        account: number;
+      } = {
+        amount: 0,
+        date: 0,
+        desc: 0,
+        account: 0,
+      };
+
+      if (combinedNormalized > 0) {
+        contributions.amount = Math.round(
+          ((amountScore * weights.amount) / combinedNormalized) * matchPercent,
         );
-        contributions[largestKey] += diff;
+        contributions.date = Math.round(
+          ((dateScore * weights.date) / combinedNormalized) * matchPercent,
+        );
+        contributions.desc = Math.round(
+          ((descScore * weights.desc) / combinedNormalized) * matchPercent,
+        );
+        contributions.account = Math.round(
+          ((accountScore * weights.account) / combinedNormalized) *
+            matchPercent,
+        );
+
+        // Rounding drift correction
+        const currentSum =
+          contributions.amount +
+          contributions.date +
+          contributions.desc +
+          contributions.account;
+        const diff = matchPercent - currentSum;
+
+        if (diff !== 0) {
+          // Adjust the largest contributor to ensure sum equals matchPercent
+          const keys: Array<keyof typeof contributions> = [
+            'amount',
+            'date',
+            'desc',
+            'account',
+          ];
+          const largestKey = keys.reduce((a, b) =>
+            contributions[a] > contributions[b] ? a : b,
+          );
+          contributions[largestKey] += diff;
+        }
       }
-    }
 
-    const reasonShort =
-      matchPercent >= 80
-        ? 'Strong match'
-        : matchPercent >= 50
-          ? 'Partial match'
-          : 'Weak match';
-    const reasonLong = `Match breakdown: Amount proximity (${Math.round(amountScore * 100)}% contribution weight), Date proximity (${Math.round(dateScore * 100)}% contribution weight), Description overlap (${Math.round(descScore * 100)}% contribution weight), Account match (${accountScore * 100}% contribution weight).`;
+      const reasonShort =
+        matchPercent >= 80
+          ? 'Strong match'
+          : matchPercent >= 50
+            ? 'Partial match'
+            : 'Weak match';
+      const reasonLong = `Match breakdown: Amount proximity (${Math.round(amountScore * 100)}% contribution weight), Date proximity (${Math.round(dateScore * 100)}% contribution weight), Description overlap (${Math.round(descScore * 100)}% contribution weight), Account match (${accountScore * 100}% contribution weight).`;
 
-    return {
-      transactionId: tx.id,
-      date: tx.date.toISOString().slice(0, 10),
-      amount,
-      remainingAmount,
-      existingAllocations,
-      accountId: tx.bankAccountId ?? 'unknown',
-      accountName: tx.financialAccount?.name ?? 'Unknown Account',
-      description: tx.description,
-      matchPercent,
-      score: matchPercent,
-      reasonShort,
-      reasonLong,
-      scoreBreakdown: {
-        rawNormalized: {
-          amountScore,
-          dateScore,
-          descScore,
-          accountScore,
+      return {
+        transactionId: tx.id,
+        date: tx.date.toISOString().slice(0, 10),
+        amount,
+        remainingAmount,
+        existingAllocations,
+        accountId: tx.bankAccountId ?? 'unknown',
+        accountName: tx.financialAccount?.name ?? 'Unknown Account',
+        description: tx.description,
+        matchPercent,
+        score: matchPercent,
+        reasonShort,
+        reasonLong,
+        scoreBreakdown: {
+          rawNormalized: {
+            amountScore,
+            dateScore,
+            descScore,
+            accountScore,
+          },
+          contributionsPercent: contributions,
         },
-        contributionsPercent: contributions,
-      },
-    };
-  });
+      };
+    });
 
   // 3. Sort and filter
   return candidates
@@ -725,23 +744,22 @@ export const removeAllocation = async (
       where: { id: allocationId },
       select: { interestCleansingId: true },
     });
-    
+
     // 2. Delete the evidence
     await tx.interestCleansingEvidence.delete({ where: { id: allocationId } });
-    
+
     // 3. Check for remaining evidence
     const remainingCount = await tx.interestCleansingEvidence.count({
       where: { interestCleansingId: evidence.interestCleansingId },
     });
-    
-    // 4. If none, clear the creditTxId
+
+    // 4. If none, delete the cleansing record
     if (remainingCount === 0) {
-      await tx.interestCleansing.update({
+      await tx.interestCleansing.delete({
         where: { id: evidence.interestCleansingId },
-        data: { creditTxId: null },
       });
     }
-    
+
     return { success: true };
   });
 };

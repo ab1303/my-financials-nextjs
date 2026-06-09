@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BeneficiaryEnumType } from '@prisma/client';
-import { useCallback,useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -126,12 +126,13 @@ export function useCleanseDonationState({
 
   useEffect(() => {
     if (selectedTransactionId && evidenceQuery.data) {
-      const donation = evidenceQuery.data.cleansingDonations.find(
+      console.log('Evidence Query Data:', evidenceQuery.data);
+      const cleansingPayment = evidenceQuery.data.cleansingDonations.find(
         (d) => d.interestTxId === selectedTransactionId,
       );
-      if (donation && donation.evidence) {
+      if (cleansingPayment && cleansingPayment.evidence) {
         setSelectedEvidence(
-          donation.evidence.map((e) => ({
+          cleansingPayment.evidence.map((e) => ({
             id: e.id, // This is the DonationPaymentEvidence ID
             amount: e.amountApplied,
             description: e.description,

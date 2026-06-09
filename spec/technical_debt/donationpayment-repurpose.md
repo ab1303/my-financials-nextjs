@@ -12,71 +12,18 @@ Adopted the **Split into Domain Models** approach: purpose-scoped models for `Vo
 ## Schema (Actual)
 
 ```prisma
+
+Look at @schema.prisma for
+
 enum DonationPurpose { VOLUNTARY INTEREST_CLEANSING ZAKAT }
 
-model VoluntaryDonation {
-  id               String              @id @default(cuid())
-  datePaid         DateTime
-  amount           Decimal             @db.Decimal(19, 4)
-  beneficiaryType  BeneficiaryEnumType
-  businessId       String?
-  individualId     String?
-  donationLedgerId String
-  purpose          DonationPurposeEnum @default(VOLUNTARY)
-  transactionId    String?             @unique
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  business         Business?           @relation(fields: [businessId], references: [id])
-  donationLedger   DonationLedger      @relation(fields: [donationLedgerId], references: [id])
-  individual       Individual?         @relation(fields: [individualId], references: [id])
-  transaction      Transaction?        @relation(fields: [transactionId], references: [id])
-}
+model VoluntaryDonation {...}
 
-model InterestCleansing {
-  id               String                      @id @default(cuid())
-  datePaid         DateTime
-  amount           Decimal                     @db.Decimal(19, 4)
-  sourceBusinessId String?
-  donationLedgerId String
-  creditTxId       String?                     @unique
-  createdAt        DateTime                    @default(now())
-  updatedAt        DateTime                    @updatedAt
-  creditTx         Transaction?                @relation("InterestCredit", fields: [creditTxId], references: [id])
-  donationLedger   DonationLedger              @relation(fields: [donationLedgerId], references: [id])
-  sourceBusiness   Business?                   @relation(fields: [sourceBusinessId], references: [id])
-  evidence         InterestCleansingEvidence[]
-}
+model InterestCleansing { ... }
 
-model InterestCleansingEvidence {
-  id                  String            @id @default(cuid())
-  interestCleansingId String
-  transactionId       String
-  amountApplied       Decimal?          @db.Decimal(12, 2)
-  confidence          Float?            @default(0)
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  interestCleansing   InterestCleansing @relation(fields: [interestCleansingId], references: [id], onDelete: Cascade)
-  transaction         Transaction       @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+model InterestCleansingEvidence { ... }
 
-  @@unique([interestCleansingId, transactionId])
-}
-
-model ZakatPayment {
-  id                String              @id @default(cuid())
-  datePaid          DateTime
-  amount            Decimal             @db.Decimal(19, 4)
-  beneficiaryType   BeneficiaryEnumType
-  businessId        String?
-  individualId      String?
-  zakatObligationId String
-  transactionId     String?             @unique
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  business          Business?           @relation(fields: [businessId], references: [id])
-  individual        Individual?         @relation(fields: [individualId], references: [id])
-  transaction       Transaction?        @relation(fields: [transactionId], references: [id])
-  zakatObligation   ZakatObligation     @relation(fields: [zakatObligationId], references: [id])
-}
+model ZakatPayment { ... }
 ```
 
 ## UX Flows

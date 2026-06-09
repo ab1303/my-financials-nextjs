@@ -115,7 +115,6 @@ export default function ZakatTableClient({
           });
           toast.info('New payment cancelled');
         }
-        console.log('row reverted in client', rowIndex);
       },
       updateRow: async (rowIndex: number) => {
         const row = data[rowIndex];
@@ -221,7 +220,6 @@ export default function ZakatTableClient({
             (deleteResult.error as string) || 'Failed to delete payment',
           );
         }
-        console.log('row deleted in client', deleteResult);
       },
     },
   });
