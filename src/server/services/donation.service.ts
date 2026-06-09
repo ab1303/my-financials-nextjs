@@ -40,32 +40,29 @@ export const getDonation = async (
 export const getDonationPayments = async (
   calendarYearId: string,
 ): Promise<Array<DonationPaymentModel>> => {
-  const where: Partial<Prisma.DonationPaymentWhereInput> = {
-    donationLedger: {
-      calendarId: calendarYearId,
+  const voluntaryDonations = await prisma.voluntaryDonation.findMany({
+    where: {
+      donationLedger: {
+        calendarId: calendarYearId,
+      },
     },
-  };
-
-  const donationPayments = await prisma.donationPayment.findMany({
-    where,
     include: {
       business: true,
       individual: true,
-      donationLedger: true,
     },
   });
 
-  return donationPayments.map<DonationPaymentModel>((dp) => ({
-    id: dp.id,
-    datePaid: dp.datePaid,
-    amount: dp.amount.toNumber(),
-    businessId: dp.businessId,
-    individualId: dp.individualId,
-    donationLedgerId: dp.donationLedgerId,
-    transactionId: dp.interestTxId ?? null,
-    beneficiaryType: dp.beneficiaryType,
-    isDeductible: dp.business?.isDgrRegistered === true,
-    donationPurpose: dp.donationPurpose,
+  return voluntaryDonations.map<DonationPaymentModel>((vd) => ({
+    id: vd.id,
+    datePaid: vd.datePaid,
+    amount: vd.amount.toNumber(),
+    businessId: vd.businessId,
+    individualId: vd.individualId,
+    donationLedgerId: vd.donationLedgerId,
+    transactionId: vd.transactionId,
+    beneficiaryType: vd.beneficiaryType,
+    isDeductible: vd.business?.isDgrRegistered === true,
+    donationPurpose: vd.purpose,
   }));
 };
 
@@ -74,203 +71,163 @@ export const updateDonationPayment = async (
   donationPaymentId: string,
 ) => {
   await prisma.$transaction(async (tx) => {
-    // Update legacy model
-    const updatedLegacy = await tx.donationPayment.update({
+    // Determine purpose based on existing record
+    const existing = await tx.donationPayment.findUnique({
       where: { id: donationPaymentId },
-      data: {
-        datePaid: model.datePaid,
-        amount: model.amount,
-        beneficiaryType: model.beneficiaryType,
-        businessId:
-          model.beneficiaryType === 'BUSINESS' ? model.beneficiaryId : null,
-        individualId:
-          model.beneficiaryType === 'INDIVIDUAL' ? model.beneficiaryId : null,
-      },
-      include: {
-        business: true,
-        individual: true,
-      },
+      select: { donationPurpose: true },
     });
+    if (!existing) throw new Error('Donation payment not found');
 
-    if (env.USE_NEW_DONATION_MODELS) {
-      const purpose = updatedLegacy.donationPurpose;
-      const updateData = {
-        datePaid: updatedLegacy.datePaid,
-        amount: updatedLegacy.amount,
-        beneficiaryType: updatedLegacy.beneficiaryType,
-        businessId: updatedLegacy.businessId,
-        individualId: updatedLegacy.individualId,
-      };
+    const updateData = {
+      datePaid: model.datePaid,
+      amount: model.amount,
+      beneficiaryType: model.beneficiaryType,
+      businessId:
+        model.beneficiaryType === 'BUSINESS' ? model.beneficiaryId : null,
+      individualId:
+        model.beneficiaryType === 'INDIVIDUAL' ? model.beneficiaryId : null,
+      updatedAt: new Date(),
+    };
 
-      if (purpose === 'VOLUNTARY') {
-        await tx.voluntaryDonation.update({
-          where: { id: donationPaymentId },
-          data: updateData,
-        });
-      } else if (purpose === 'INTEREST_CLEANSING') {
-        await tx.interestCleansing.update({
-          where: { id: donationPaymentId },
-          data: {
-            datePaid: updatedLegacy.datePaid,
-            amount: updatedLegacy.amount,
-            sourceBusinessId: updatedLegacy.businessId,
-          },
-        });
-      } else if (purpose === 'ZAKAT') {
-        await tx.zakatPayment.update({
-          where: { id: donationPaymentId },
-          data: updateData,
-        });
-      }
+    if (existing.donationPurpose === 'VOLUNTARY') {
+      await tx.voluntaryDonation.update({
+        where: { id: donationPaymentId },
+        data: updateData,
+      });
+    } else if (existing.donationPurpose === 'INTEREST_CLEANSING') {
+      await tx.interestCleansing.update({
+        where: { id: donationPaymentId },
+        data: {
+          datePaid: updateData.datePaid,
+          amount: updateData.amount,
+          sourceBusinessId: updateData.businessId,
+        },
+      });
+    } else if (existing.donationPurpose === 'ZAKAT') {
+      await tx.zakatPayment.update({
+        where: { id: donationPaymentId },
+        data: updateData,
+      });
     }
   });
 };
 
 export const addDonationPaymentDetail = async (
   donationLedgerId: string,
-  payment: Omit<DonationPaymentInput, 'id' | 'donationLedgerId'>,
+  payment: Omit<DonationPaymentInput, 'donationLedgerId'>,
 ) => {
-  console.log('DEBUG: USE_NEW_DONATION_MODELS is', env.USE_NEW_DONATION_MODELS);
-  const createLegacyPayment = async (tx: Prisma.TransactionClient) => {
-    return await tx.donationPayment.create({
-      data: {
-        donationLedgerId,
-        datePaid: payment.datePaid,
-        amount: payment.amount,
-        beneficiaryType: payment.beneficiaryType,
-        businessId:
-          payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
-        individualId:
-          payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
-        interestTxId: payment.transactionId ?? null,
-        donationPurpose: payment.donationPurpose ?? 'VOLUNTARY',
-      },
-      include: {
-        business: true,
-        individual: true,
-      },
-    });
-  };
-
   const created = await prisma.$transaction(async (tx) => {
-    const legacyPayment = await createLegacyPayment(tx);
+    const purpose = payment.donationPurpose ?? 'VOLUNTARY';
+    const id = payment.id; // Allow id to be passed
 
-    if (env.USE_NEW_DONATION_MODELS) {
-      try {
-        const purpose = legacyPayment.donationPurpose;
-        
-        if (purpose === 'VOLUNTARY') {
-          await tx.voluntaryDonation.create({
-            data: {
-              id: legacyPayment.id,
-              donationLedgerId,
-              datePaid: legacyPayment.datePaid,
-              amount: legacyPayment.amount,
-              beneficiaryType: legacyPayment.beneficiaryType,
-              businessId: legacyPayment.businessId,
-              individualId: legacyPayment.individualId,
-              purpose: 'VOLUNTARY',
-            },
-          });
-        } else if (purpose === 'INTEREST_CLEANSING') {
-          await tx.interestCleansing.create({
-            data: {
-              id: legacyPayment.id,
-              donationLedgerId,
-              datePaid: legacyPayment.datePaid,
-              amount: legacyPayment.amount,
-              sourceBusinessId: legacyPayment.businessId,
-              creditTxId: legacyPayment.interestTxId,
-            },
-          });
-        } else if (purpose === 'ZAKAT') {
-          await tx.zakatPayment.create({
-            data: {
-              id: legacyPayment.id,
-              datePaid: legacyPayment.datePaid,
-              amount: legacyPayment.amount,
-              beneficiaryType: legacyPayment.beneficiaryType,
-              businessId: legacyPayment.businessId,
-              individualId: legacyPayment.individualId,
-              zakatObligationId: donationLedgerId,
-            },
-          });
-        }
-      } catch (error) {
-        console.error(`Failed to dual-write new donation model for ${legacyPayment.id}:`, error);
-        // We throw here to rollback the entire transaction if the new domain model fails, ensuring data consistency
-        throw error;
-      }
+    if (purpose === 'VOLUNTARY') {
+      return await tx.voluntaryDonation.create({
+        data: {
+          id,
+          donationLedgerId,
+          datePaid: payment.datePaid,
+          amount: payment.amount,
+          beneficiaryType: payment.beneficiaryType,
+          businessId:
+            payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
+          individualId:
+            payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
+          purpose: 'VOLUNTARY',
+          transactionId: payment.transactionId,
+        },
+      });
+    } else if (purpose === 'INTEREST_CLEANSING') {
+      return await tx.interestCleansing.create({
+        data: {
+          id,
+          donationLedgerId,
+          datePaid: payment.datePaid,
+          amount: payment.amount,
+          sourceBusinessId:
+            payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
+          creditTxId: payment.transactionId,
+        },
+      });
+    } else if (purpose === 'ZAKAT') {
+      return await tx.zakatPayment.create({
+        data: {
+          id,
+          datePaid: payment.datePaid,
+          amount: payment.amount,
+          beneficiaryType: payment.beneficiaryType,
+          businessId:
+            payment.beneficiaryType === 'BUSINESS' ? payment.beneficiaryId : null,
+          individualId:
+            payment.beneficiaryType === 'INDIVIDUAL' ? payment.beneficiaryId : null,
+          zakatObligationId: donationLedgerId,
+          transactionId: payment.transactionId,
+        },
+      });
     }
-
-    return legacyPayment;
+    throw new Error('Unsupported donation purpose');
   });
 
+  // Re-fetch to return the expected DTO shape
+  const record = await prisma.voluntaryDonation.findUnique({
+    where: { id: created.id },
+    include: { business: true, individual: true },
+  }) ?? await prisma.zakatPayment.findUnique({
+    where: { id: created.id },
+    include: { business: true, individual: true },
+  }) ?? await prisma.interestCleansing.findUnique({
+    where: { id: created.id },
+    include: { sourceBusiness: true },
+  });
+
+  if (!record) throw new Error('Failed to retrieve created donation');
+  
+  // Mapping logic to reconstruct DonationPaymentModel
   return {
-    id: created.id,
-    datePaid: created.datePaid,
-    amount: created.amount.toNumber(),
-    businessId: created.businessId,
-    individualId: created.individualId,
-    donationLedgerId: created.donationLedgerId,
-    transactionId: created.interestTxId ?? null,
-    beneficiaryType: created.beneficiaryType,
-    isDeductible: created.business?.isDgrRegistered === true,
-    donationPurpose: created.donationPurpose,
+    id: record.id,
+    datePaid: record.datePaid,
+    amount: record.amount.toNumber(),
+    businessId: 'businessId' in record ? record.businessId : ('sourceBusinessId' in record ? record.sourceBusinessId : null),
+    individualId: 'individualId' in record ? record.individualId : undefined,
+    donationLedgerId: 'donationLedgerId' in record ? record.donationLedgerId : null,
+    transactionId: 'transactionId' in record ? record.transactionId : ('creditTxId' in record ? record.creditTxId : null),
+    beneficiaryType: 'beneficiaryType' in record ? record.beneficiaryType : 'BUSINESS',
+    isDeductible: ('business' in record && record.business?.isDgrRegistered === true) || ('sourceBusiness' in record && record.sourceBusiness?.isDgrRegistered === true),
+    donationPurpose: 'purpose' in record ? record.purpose : ('zakatObligationId' in record ? 'ZAKAT' : 'INTEREST_CLEANSING'),
   } satisfies DonationPaymentModel;
 };
 
 export const deleteDonationPayment = async (donationPaymentId: string) => {
   await prisma.$transaction(async (tx) => {
-    const existing = await tx.donationPayment.findUnique({
-      where: { id: donationPaymentId },
-      select: { interestTxId: true, donationPurpose: true },
-    });
-
-    if (!existing) return;
-
-    // Handle legacy interest link cleanup
-    if (existing.interestTxId) {
-      await tx.donationPayment.update({
-        where: { id: donationPaymentId },
-        data: { interestTxId: null },
-      });
-    }
-
-    // Delete legacy model
-    await tx.donationPayment.delete({
-      where: { id: donationPaymentId },
-    });
-
-    // Delete new domain model if enabled
-    if (env.USE_NEW_DONATION_MODELS) {
-      const purpose = existing.donationPurpose;
-      if (purpose === 'VOLUNTARY') {
-        await tx.voluntaryDonation.delete({ where: { id: donationPaymentId } });
-      } else if (purpose === 'INTEREST_CLEANSING') {
-        await tx.interestCleansing.delete({ where: { id: donationPaymentId } });
-      } else if (purpose === 'ZAKAT') {
-        await tx.zakatPayment.delete({ where: { id: donationPaymentId } });
-      }
-    }
+    // Attempt deletion from all potential models
+    await tx.voluntaryDonation.delete({ where: { id: donationPaymentId } }).catch(() => {});
+    await tx.interestCleansing.delete({ where: { id: donationPaymentId } }).catch(() => {});
+    await tx.zakatPayment.delete({ where: { id: donationPaymentId } }).catch(() => {});
   });
 };
 
 export const getTotalDonations = async (
   calendarYearId: string,
 ): Promise<number> => {
-  const result = await prisma.donationPayment.aggregate({
-    where: {
-      donationLedger: {
-        calendarId: calendarYearId,
-      },
-    },
-    _sum: {
-      amount: true,
-    },
-  });
+  const [voluntary, zakat, interest] = await Promise.all([
+    prisma.voluntaryDonation.aggregate({
+      where: { donationLedger: { calendarId: calendarYearId } },
+      _sum: { amount: true },
+    }),
+    prisma.zakatPayment.aggregate({
+      where: { zakatObligation: { calendarId: calendarYearId } },
+      _sum: { amount: true },
+    }),
+    prisma.interestCleansing.aggregate({
+      where: { donationLedger: { calendarId: calendarYearId } },
+      _sum: { amount: true },
+    }),
+  ]);
 
-  return result._sum.amount?.toNumber() ?? 0;
+  return (
+    (voluntary._sum.amount?.toNumber() ?? 0) +
+    (zakat._sum.amount?.toNumber() ?? 0) +
+    (interest._sum.amount?.toNumber() ?? 0)
+  );
 };
 
 /**
@@ -281,47 +238,36 @@ export const getDonationTotalsByCategory = async (
   calendarYearId: string,
 ): Promise<{
   voluntaryTotal: number;
-  interestCleansingTotal: number;
   deductibleTotal: number;
   nonDeductibleTotal: number;
 }> => {
-  const baseWhere: Prisma.DonationPaymentWhereInput = {
-    donationLedger: {
-      calendarId: calendarYearId,
+  const voluntaryDonations = await prisma.voluntaryDonation.findMany({
+    where: {
+      donationLedger: {
+        calendarId: calendarYearId,
+      },
     },
-  };
-
-  const payments = await prisma.donationPayment.findMany({
-    where: baseWhere,
     select: {
       amount: true,
-      donationPurpose: true,
       business: { select: { isDgrRegistered: true } },
     },
   });
 
   let voluntaryTotal = 0;
-  let interestCleansingTotal = 0;
   let deductibleTotal = 0;
   let nonDeductibleTotal = 0;
 
-  for (const payment of payments) {
+  for (const payment of voluntaryDonations) {
     const amount = payment.amount.toNumber();
     const isDeductible = payment.business?.isDgrRegistered === true;
 
-    if (payment.donationPurpose === 'VOLUNTARY') {
-      voluntaryTotal += amount;
-    } else if (payment.donationPurpose === 'INTEREST_CLEANSING') {
-      interestCleansingTotal += amount;
-    }
-
+    voluntaryTotal += amount;
     if (isDeductible) deductibleTotal += amount;
     else nonDeductibleTotal += amount;
   }
 
   return {
     voluntaryTotal,
-    interestCleansingTotal,
     deductibleTotal,
     nonDeductibleTotal,
   };

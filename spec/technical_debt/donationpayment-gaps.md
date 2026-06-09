@@ -4,8 +4,8 @@ This document lists gaps and required changes to ensure a no-regression migratio
 
 1. API DTO shape
 
-- Gap: frontend expects `transactionId` field for some donation rows (interest credits). New models use `creditTxId` or evidence arrays.
-- Mitigation: server DTOs must map: `transactionId` := `creditTxId` for `InterestCleansing`; for Voluntary/Zakat, if the UX expects a single `transactionId`, return the first evidence.transactionId or `null`.
+- Gap: frontend expects `transactionId` field for some donation rows.
+- Mitigation: server DTOs map: `transactionId` := `creditTxId` for `InterestCleansing`; for Voluntary/Zakat, use the new direct `transactionId` field.
 
 2. Beneficiary identity
 
@@ -32,7 +32,7 @@ This document lists gaps and required changes to ensure a no-regression migratio
 
 7. Evidence deletion behaviour
 
-- Gap: legacy code clears `interestTxId` on `DonationPayment` when all evidence removed. New behaviour should: when removing all `InterestCleansingEvidence` for a given `InterestCleansing`, clear `creditTxId`.
+- Gap: legacy code cleared `interestTxId` on `DonationPayment` when all evidence removed. New behaviour for `InterestCleansing`: when removing all `InterestCleansingEvidence` for a given `InterestCleansing`, clear `creditTxId`.
 
 8. Edge cases and ambiguous rows
 

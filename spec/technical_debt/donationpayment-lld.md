@@ -25,38 +25,25 @@ model VoluntaryDonation {
   donationLedger DonationLedger @relation(fields: [donationLedgerId], references: [id])
   donationLedgerId String
   purpose        DonationPurposeEnum @default(VOLUNTARY)
-  evidence       VoluntaryDonationEvidence[]
+  transactionId  String?
+  transaction    Transaction? @relation(fields: [transactionId], references: [id])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-}
-
-model VoluntaryDonationEvidence {
-  id                    String @id @default(cuid())
-  voluntaryDonationId   String
-  voluntaryDonation     VoluntaryDonation @relation(fields: [voluntaryDonationId], references: [id], onDelete: Cascade)
-  transactionId         String
-  transaction           Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  amountLinked          Decimal? @db.Money
-  confidence            Float? @default(0)
-  createdAt             DateTime @default(now())
-  @@unique([voluntaryDonationId, transactionId])
-  @@index([voluntaryDonationId])
-  @@index([transactionId])
 }
 
 model InterestCleansing {
-  id             String   @id @default(cuid())
-  datePaid       DateTime
-  amount         Decimal  @db.Money
-  sourceBusinessId String? // philanthropic business
-  sourceBusiness Business? @relation(fields: [sourceBusinessId], references: [id])
-  donationLedger DonationLedger @relation(fields: [donationLedgerId], references: [id])
+  id               String   @id @default(cuid())
+  datePaid         DateTime
+  amount           Decimal  @db.Money
+  businessId       String? // philanthropic business
+  business         Business? @relation(fields: [businessId], references: [id])
+  donationLedger   DonationLedger @relation(fields: [donationLedgerId], references: [id])
   donationLedgerId String
-  creditTx       Transaction? @relation("InterestCredit", fields: [creditTxId], references: [id], onDelete: SetNull)
-  creditTxId     String? @unique
-  evidence       InterestCleansingEvidence[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  creditTx         Transaction? @relation("InterestCredit", fields: [creditTxId], references: [id], onDelete: SetNull)
+  creditTxId       String? @unique
+  evidence         InterestCleansingEvidence[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model InterestCleansingEvidence {
@@ -74,33 +61,20 @@ model InterestCleansingEvidence {
 }
 
 model ZakatPayment {
-  id             String   @id @default(cuid())
-  datePaid       DateTime
-  amount         Decimal  @db.Money
+  id              String @id @default(cuid())
+  datePaid        DateTime
+  amount          Decimal  @db.Money
   beneficiaryType BeneficiaryEnumType
-  business       Business? @relation(fields: [businessId], references: [id])
-  businessId     String?
-  individual     Individual? @relation(fields: [individualId], references: [id])
-  individualId   String?
+  business        Business? @relation(fields: [businessId], references: [id])
+  businessId      String?
+  individual      Individual? @relation(fields: [individualId], references: [id])
+  individualId    String?
   zakatObligation ZakatObligation @relation(fields: [zakatObligationId], references: [id])
   zakatObligationId String
-  evidence       ZakatEvidence[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
-
-model ZakatEvidence {
-  id            String @id @default(cuid())
-  zakatPaymentId String
-  zakatPayment  ZakatPayment @relation(fields: [zakatPaymentId], references: [id], onDelete: Cascade)
-  transactionId String
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  amountLinked  Decimal? @db.Money
-  confidence    Float? @default(0)
-  createdAt     DateTime @default(now())
-  @@unique([zakatPaymentId, transactionId])
-  @@index([zakatPaymentId])
-  @@index([transactionId])
+  transactionId   String?
+  transaction     Transaction? @relation(fields: [transactionId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 ```
 

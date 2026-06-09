@@ -15,8 +15,8 @@ describe('suggestAllocations service', () => {
       date: new Date('2025-01-01'),
       description: 'Credit Interest',
     });
-    // donationPayment.findMany is called twice in the service (candidates, existingLinked)
-    prismaMock.donationPayment.findMany
+    // interestCleansing.findMany is called twice in the service (candidates, existingLinked)
+    prismaMock.interestCleansing.findMany
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
 
@@ -36,25 +36,35 @@ describe('suggestAllocations service', () => {
     // Candidate A: close amount and exact token in description
     const candidateA = {
       id: 'dp-a',
-      amount: { toNumber: () => 200 },
+      amount: 200,
       datePaid: new Date('2025-06-16'),
-      interestTxId: null,
-      evidence: [{ evidenceTransaction: { description: 'ACME Corp fee' } }],
+      creditTxId: null,
+      donationLedgerId: 'ledger-1',
+      beneficiaryType: 'BUSINESS' as const,
+      businessId: 'bus-1',
+      individualId: null,
+      donationPurpose: 'INTEREST_CLEANSING' as const,
+      evidence: [{ transaction: { description: 'ACME Corp fee' } }],
     };
 
     // Candidate B: different amount and date
     const candidateB = {
       id: 'dp-b',
-      amount: { toNumber: () => 50 },
+      amount: 50,
       datePaid: new Date('2025-03-01'),
-      interestTxId: null,
+      creditTxId: null,
+      donationLedgerId: 'ledger-1',
+      beneficiaryType: 'BUSINESS' as const,
+      businessId: 'bus-1',
+      individualId: null,
+      donationPurpose: 'INTEREST_CLEANSING' as const,
       evidence: [
-        { evidenceTransaction: { description: 'Some other payment' } },
+        { transaction: { description: 'Some other payment' } },
       ],
     };
 
-    // donationPayment.findMany called twice: first for candidates, then for existingLinked
-    prismaMock.donationPayment.findMany
+    // interestCleansing.findMany called twice: first for candidates, then for existingLinked
+    prismaMock.interestCleansing.findMany
       .mockResolvedValueOnce([candidateA, candidateB])
       .mockResolvedValueOnce([]);
 

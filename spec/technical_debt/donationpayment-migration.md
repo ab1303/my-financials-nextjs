@@ -25,18 +25,9 @@ CREATE TABLE IF NOT EXISTS "VoluntaryDonation" (
   individualId TEXT,
   donationLedgerId TEXT NOT NULL,
   purpose TEXT NOT NULL DEFAULT 'VOLUNTARY',
+  transactionId TEXT,
   createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS "VoluntaryDonationEvidence" (
-  id TEXT PRIMARY KEY,
-  voluntaryDonationId TEXT NOT NULL,
-  transactionId TEXT NOT NULL,
-  amountLinked MONEY,
-  confidence REAL DEFAULT 0,
-  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT voluntary_evidence_unique UNIQUE (voluntaryDonationId, transactionId)
 );
 
 -- InterestCleansing and evidence
@@ -44,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "InterestCleansing" (
   id TEXT PRIMARY KEY,
   datePaid TIMESTAMP NOT NULL,
   amount MONEY NOT NULL,
-  sourceBusinessId TEXT,
+  businessId TEXT,
   donationLedgerId TEXT NOT NULL,
   creditTxId TEXT UNIQUE,
   createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -70,18 +61,9 @@ CREATE TABLE IF NOT EXISTS "ZakatPayment" (
   businessId TEXT,
   individualId TEXT,
   zakatObligationId TEXT NOT NULL,
+  transactionId TEXT,
   createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS "ZakatEvidence" (
-  id TEXT PRIMARY KEY,
-  zakatPaymentId TEXT NOT NULL,
-  transactionId TEXT NOT NULL,
-  amountLinked MONEY,
-  confidence REAL DEFAULT 0,
-  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT zakat_evidence_unique UNIQUE (zakatPaymentId, transactionId)
 );
 ```
 
@@ -94,135 +76,14 @@ Overview of backfill rules:
     - Create or find `InterestCleansing` with `creditTxId = donation.interestTxId` (if interestTxId present) or create a new row using `datePaid` and `amount`.
     - For each `DonationPaymentEvidence` linked to this donationPayment, create `InterestCleansingEvidence` pointing to the matching transaction id and amountApplied.
   - If `donationPurpose = 'ZAKAT'`:
-    - Create `ZakatPayment`, mapping `donationLedgerId` -> `zakatObligationId` when possible (fallback: create obligation or log for manual review).
-    - Create `ZakatEvidence` rows for evidence.
+    - Create `ZakatPayment`, mapping `donationLedgerId` -> `zakatObligationId` when possible.
   - Else (VOLUNTARY):
-    - Create `VoluntaryDonation` and `VoluntaryDonationEvidence` rows.
+    - Create `VoluntaryDonation`.
 
 Idempotency rules:
 
 - Use natural unique keys when inserting (e.g., use `donationPayment.id` as the new record `id` to make insert idempotent).
 - Skip creation if target table already contains a row with same id.
-- Upsert evidence rows by unique constraint (donation/evidence pair).
-
-Backfill script sketch (Node + Prisma) — file: `scripts/backfill-donationpayment.ts`
-
-```ts
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
-
-async function run() {
-  const payments = await prisma.donationPayment.findMany({
-    include: { evidence: true },
-  });
-  for (const p of payments) {
-    if (p.donationPurpose === 'INTEREST_CLEANSING') {
-      // upsert InterestCleansing using original id to remain idempotent
-      await prisma.interestCleansing.upsert({
-        where: { id: p.id },
-        update: { amount: p.amount, datePaid: p.datePaid },
-        create: {
-          id: p.id,
-          amount: p.amount,
-          datePaid: p.datePaid,
-          donationLedgerId: p.donationLedgerId,
-          creditTxId: p.interestTxId,
-        },
-      });
-      for (const e of p.evidence) {
-        await prisma.interestCleansingEvidence.upsert({
-          where: {
-            interestCleansingId_transactionId: {
-              interestCleansingId: p.id,
-              transactionId: e.evidenceTransactionId,
-            },
-          },
-          update: { amountLinked: e.amountApplied },
-          create: {
-            id: e.id,
-            interestCleansingId: p.id,
-            transactionId: e.evidenceTransactionId,
-            amountLinked: e.amountApplied,
-            confidence: e.confidence ?? 0,
-          },
-        });
-      }
-    } else if (p.donationPurpose === 'ZAKAT') {
-      await prisma.zakatPayment.upsert({
-        where: { id: p.id },
-        update: { amount: p.amount, datePaid: p.datePaid },
-        create: {
-          id: p.id,
-          amount: p.amount,
-          datePaid: p.datePaid,
-          zakatObligationId: p.donationLedgerId,
-          beneficiaryType: p.beneficiaryType,
-          businessId: p.businessId,
-          individualId: p.individualId,
-        },
-      });
-      for (const e of p.evidence) {
-        await prisma.zakatEvidence.upsert({
-          where: {
-            zakatPaymentId_transactionId: {
-              zakatPaymentId: p.id,
-              transactionId: e.evidenceTransactionId,
-            },
-          },
-          update: { amountLinked: e.amountApplied },
-          create: {
-            id: e.id,
-            zakatPaymentId: p.id,
-            transactionId: e.evidenceTransactionId,
-            amountLinked: e.amountApplied,
-            confidence: e.confidence ?? 0,
-          },
-        });
-      }
-    } else {
-      // VOLUNTARY
-      await prisma.voluntaryDonation.upsert({
-        where: { id: p.id },
-        update: { amount: p.amount, datePaid: p.datePaid },
-        create: {
-          id: p.id,
-          amount: p.amount,
-          datePaid: p.datePaid,
-          donationLedgerId: p.donationLedgerId,
-          beneficiaryType: p.beneficiaryType,
-          businessId: p.businessId,
-          individualId: p.individualId,
-        },
-      });
-      for (const e of p.evidence) {
-        await prisma.voluntaryDonationEvidence.upsert({
-          where: {
-            voluntaryDonationId_transactionId: {
-              voluntaryDonationId: p.id,
-              transactionId: e.evidenceTransactionId,
-            },
-          },
-          update: { amountLinked: e.amountApplied },
-          create: {
-            id: e.id,
-            voluntaryDonationId: p.id,
-            transactionId: e.evidenceTransactionId,
-            amountLinked: e.amountApplied,
-            confidence: e.confidence ?? 0,
-          },
-        });
-      }
-    }
-  }
-}
-
-run()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
-```
 
 Phase 3 — Server feature flagging
 

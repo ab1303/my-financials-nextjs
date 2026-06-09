@@ -112,7 +112,6 @@ model Individual {
   suburb             String?
   updatedAt          DateTime            @updatedAt
   addressFormat      String?             @default("AU")
-  donationPayments   DonationPayment[]
   relationship       RelationshipType?   @relation(fields: [relationshipId], references: [id])
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   voluntaryDonations VoluntaryDonation[]
@@ -133,7 +132,6 @@ model Business {
   userId                   String?
   isDgrRegistered          Boolean?            @default(false)
   user                     User?               @relation(fields: [userId], references: [id])
-  donationPayments         DonationPayment[]
   financialAccounts        FinancialAccount[]
   interestCleansingRecords InterestCleansing[]
   voluntaryDonations       VoluntaryDonation[]
@@ -169,43 +167,11 @@ model DonationLedger {
   id                       String              @id @default(cuid())
   calendarId               String              @unique
   calendar                 CalendarYear        @relation(fields: [calendarId], references: [id])
-  payments                 DonationPayment[]
   interestCleansingRecords InterestCleansing[]
   voluntaryDonations       VoluntaryDonation[]
 }
 
-model DonationPayment {
-  id               String                    @id @default(cuid())
-  datePaid         DateTime
-  amount           Decimal                   @db.Decimal(19, 4)
-  beneficiaryType  BeneficiaryEnumType
-  businessId       String?
-  individualId     String?
-  donationLedgerId String
-  donationPurpose  DonationPurposeEnum       @default(VOLUNTARY)
-  interestTxId     String?                   @unique
-  business         Business?                 @relation(fields: [businessId], references: [id])
-  donationLedger   DonationLedger            @relation(fields: [donationLedgerId], references: [id])
-  individual       Individual?               @relation(fields: [individualId], references: [id])
-  interestTx       Transaction?              @relation("DonationPaymentInterest", fields: [interestTxId], references: [id])
-  evidence         DonationPaymentEvidence[]
-}
-
-model DonationPaymentEvidence {
-  id                    String          @id @default(cuid())
-  donationPaymentId     String
-  createdAt             DateTime        @default(now())
-  amountApplied         Decimal         @db.Decimal(12, 2)
-  confidence            Float?          @default(0.0)
-  evidenceTransactionId String
-  updatedAt             DateTime        @updatedAt
-  donationPayment       DonationPayment @relation(fields: [donationPaymentId], references: [id], onDelete: Cascade)
-  evidenceTransaction   Transaction     @relation(fields: [evidenceTransactionId], references: [id], onDelete: Cascade)
-
-  @@unique([donationPaymentId, evidenceTransactionId])
-  @@index([donationPaymentId])
-  @@index([evidenceTransactionId])
-}
+// Legacy models removed for final cutover
 
 model VoluntaryDonation {
   id               String                      @id @default(cuid())
@@ -538,8 +504,6 @@ model Transaction {
   preVoidStatus               TransactionStatusEnum?
   runningBalance              Decimal?                    @db.Decimal(12, 2)
   orphanResolution            TransferOrphanResolution?
-  donationPaymentInterest     DonationPayment?            @relation("DonationPaymentInterest")
-  donationPaymentEvidence     DonationPaymentEvidence[]
   interestCleansingCredit     InterestCleansing?          @relation("InterestCredit")
   interestCleansingEvidence   InterestCleansingEvidence[]
   financialAccount            FinancialAccount?           @relation(fields: [bankAccountId], references: [id])
