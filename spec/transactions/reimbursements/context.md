@@ -1,61 +1,14 @@
 # Reimbursement Tracking — Context
 
-## Definition
+## Purpose
+Enables tracking of inter-party payments (money paid on behalf of others or payback received) to prevent them from inflating expense reports.
 
-> **Reimbursement** — Transactions awaiting reimbursement or manual reconciliation.
-
-A Reimbursement is user-assignable (not system-managed) and applies to two symmetric cases:
-
-| Direction | Scenario | Example |
-|---|---|---|
-| **DEBIT** | You paid on behalf of someone else and are waiting to be paid back | Paid $100 dinner for group; owed $50 back |
-| **CREDIT** | Someone paid you back for an expense you fronted | Received $50 from colleague for that dinner |
-
-**Contrast with Transfer:** A Transfer is money moved between *your own* accounts — it nets to $0 and is excluded from all P&L. A Reimbursement involves a *third party* and should offset the relevant expense category in reports.
-
-## Problem
-
-Without a dedicated Reimbursement category:
-
-- **DEBIT side**: When you pay for something you'll be reimbursed for, the full amount hits expense roll-ups — overstating your personal costs.
-- **CREDIT side**: When someone pays you back, the credit is often classified as `Transfer` or `Excluded` (`status = EXCLUDED`), silently burying the offset. A $100 group dinner you split equally shows as $100 expense with no $50 reduction.
-
-Users need a way to mark transactions as Reimbursements and, optionally, link them to the specific expense they offset.
-
-## Domain Dependencies
-
-- Uses: `Transaction` model from [../hld.md](../hld.md) (added `offsetCategory` field)
-- Uses: Transaction categorization and status management from domain HLD
-- Uses: `MonthlyExpenseSummary` roll-up patterns from domain HLD
-- Related: `transfer-reconciliation` — Transfer = between your own accounts (excluded entirely); Reimbursement = third-party money (offsets an expense)
-- Related: `transaction-ledger` (UI entry point for assigning Reimbursement category)
+## Architecture
+- **Categorization**: Transactions marked as `Reimbursement` category.
+- **Service**: `src/server/services/transactions/ledger.service.ts` manages offsets.
+- **Ledger Integration**: `transaction-ledger` tRPC router handles category mutations and roll-ups.
 
 ## Scope
-
-**In scope**
-- Introduce first-class `Reimbursement` category assignable to both DEBIT and CREDIT transactions
-- DEBIT marked as Reimbursement = "I paid; awaiting payback" — excluded from expense roll-ups while pending
-- CREDIT marked as Reimbursement = "Received payback" — decrements `MonthlyExpenseSummary` for the offset category
-- Allow users to specify which expense category is being offset (e.g., "Food & Dining")
-- Make offset transparent: `MonthlyExpenseSummary` reflects net (gross − reimbursement)
-- Preserve audit trail: `Transaction.category = 'Reimbursement'`, `Transaction.offsetCategory = 'Food & Dining'`
-- Phase 2 (optional): Link reimbursement CREDIT to its originating DEBIT via `offsetTransactionId` FK; auto-derive `offsetCategory` from the linked debit's category
-- Phase 3 (optional): Partial reimbursements — allow multiple CREDIT reimbursements to link to the same DEBIT (e.g., a group dinner split 4 ways with 3 separate paybacks)
-
-**Out of scope**
-- Dashboard "Net Expense" visualization (gross / reimbursements / net breakdown)
-- LLM auto-detection of reimbursements (handled by EXCLUDED_CREDIT_LABELS constant)
-- Bulk reimbursement assignment
-- Reclassification of CONFIRMED income to Reimbursement (requires IncomeRecord voidance)
-- Loan / receivables tracking (round-trip household transfers → use Transfer category instead)
-
-## Known Limitations (current implementation)
-
-### Single reimbursement per DEBIT (Phase 3 gap)
-
-`searchDebitTransactions` filters with `reimbursements: { none: {} }`, which hides any DEBIT that already has at least one CREDIT linked to it. This correctly prevents duplicate linking in the 1:1 case (one monthly expense → one payback), but blocks **partial reimbursement workflows** where a single expense is split across multiple payees.
-
-**Example of blocked workflow:**  
-$90 group dinner; three friends each owe $30. First friend's $30 CREDIT links fine. After that, the dinner DEBIT disappears from search and the second/third CREDITs cannot find it.
-
-**Workaround:** The data model (`reimbursements Transaction[] @relation("ReimbursementLink")`) already supports N:1. Only the search filter needs to be relaxed in Phase 3. See Phase 3 in lld.md.
+- Tracking DEBIT/CREDIT transactions as reimbursements.
+- Offsetting expense categories for incoming reimbursement CREDITs.
+- Excluding pending reimbursement DEBITs from expense reports.
