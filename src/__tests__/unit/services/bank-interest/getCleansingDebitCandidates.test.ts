@@ -9,7 +9,7 @@ vi.mock('@/server/utils/prisma', () => ({
       findUniqueOrThrow: vi.fn(),
       findMany: vi.fn(),
     },
-    donationPaymentEvidence: {
+    interestCleansingEvidence: {
       findMany: vi.fn(),
     },
   },
@@ -56,7 +56,7 @@ describe('getCleansingDebitCandidates', () => {
     const candidates = await getCleansingDebitCandidates({ userId, creditId, bankAccountId: 'acc-1' });
 
     expect(candidates).toHaveLength(2);
-    expect(candidates[0].transactionId).toBe('tx-1'); // Exact amount and description match
-    expect(candidates[0].score).toBeGreaterThan(candidates[1].score);
+    expect(candidates[0]?.transactionId).toBe('tx-1'); // Exact amount and description match
+    expect(candidates[0]?.score).toBeGreaterThan(candidates[1]?.score ?? 0);
   });
 });

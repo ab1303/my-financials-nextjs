@@ -36,28 +36,26 @@ describe('suggestAllocations service', () => {
     // Candidate A: close amount and exact token in description
     const candidateA = {
       id: 'dp-a',
-      amount: 200,
+      amount: { toNumber: () => 200 },
       datePaid: new Date('2025-06-16'),
       creditTxId: null,
       donationLedgerId: 'ledger-1',
-      beneficiaryType: 'BUSINESS' as const,
-      businessId: 'bus-1',
-      individualId: null,
-      donationPurpose: 'INTEREST_CLEANSING' as const,
+      sourceBusinessId: 'bus-1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
       evidence: [{ transaction: { description: 'ACME Corp fee' } }],
     };
 
     // Candidate B: different amount and date
     const candidateB = {
       id: 'dp-b',
-      amount: 50,
+      amount: { toNumber: () => 50 },
       datePaid: new Date('2025-03-01'),
       creditTxId: null,
       donationLedgerId: 'ledger-1',
-      beneficiaryType: 'BUSINESS' as const,
-      businessId: 'bus-1',
-      individualId: null,
-      donationPurpose: 'INTEREST_CLEANSING' as const,
+      sourceBusinessId: 'bus-1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
       evidence: [
         { transaction: { description: 'Some other payment' } },
       ],
@@ -65,16 +63,16 @@ describe('suggestAllocations service', () => {
 
     // interestCleansing.findMany called twice: first for candidates, then for existingLinked
     prismaMock.interestCleansing.findMany
-      .mockResolvedValueOnce([candidateA, candidateB])
+      .mockResolvedValueOnce([candidateA, candidateB] as any)
       .mockResolvedValueOnce([]);
 
     const suggestions = await suggestAllocations('credit-2', 10, 'user-1');
 
     expect(suggestions.length).toBeGreaterThanOrEqual(1);
     // Top suggestion should be candidateA (closer amount + desc)
-    expect(suggestions[0].donationPaymentId).toBe('dp-a');
-    expect(suggestions[0].score).toBeGreaterThan(
-      suggestions[suggestions.length - 1].score,
+    expect(suggestions[0]?.donationPaymentId).toBe('dp-a');
+    expect(suggestions[0]?.score).toBeGreaterThan(
+      suggestions[suggestions.length - 1]?.score ?? 0,
     );
   });
 });

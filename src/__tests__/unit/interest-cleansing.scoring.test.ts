@@ -23,7 +23,7 @@ describe('Interest Cleansing Scoring Logic', () => {
 
     const matchPercent = Math.round(100 * combinedNormalized);
 
-    const contributions: Record<string, number> = {
+    const contributions = {
       amount: 0,
       date: 0,
       desc: 0,
@@ -42,8 +42,9 @@ describe('Interest Cleansing Scoring Logic', () => {
 
       if (diff !== 0) {
         // Adjust the largest contributor
-        const largestKey = Object.keys(contributions).reduce((a, b) => contributions[a]! > contributions[b]! ? a : b);
-        contributions[largestKey]! += diff;
+        const keys = Object.keys(contributions) as Array<keyof typeof contributions>;
+        const largestKey = keys.reduce((a, b) => contributions[a] > contributions[b] ? a : b);
+        contributions[largestKey] += diff;
       }
     }
 

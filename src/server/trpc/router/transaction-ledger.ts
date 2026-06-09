@@ -64,8 +64,8 @@ type PrismaTransaction = {
   createdAt: Date;
   updatedAt: Date;
   reimbursements: PrismaReimbursement[];
-  donationPaymentInterest: { id: string } | null;
   zakatPayment: { id: string } | null;
+  voluntaryDonations: { id: string }[];
   transferLinkedTransactionId: string | null;
   transferLinkedTransaction: {
     id: string;
@@ -323,8 +323,8 @@ export const transactionLedgerRouter = router({
                 },
               },
             },
-            donationPaymentInterest: { select: { id: true } },
             zakatPayment: { select: { id: true } },
+            voluntaryDonations: { select: { id: true } },
             transferLinkedTransaction: {
               select: {
                 id: true,
@@ -416,7 +416,7 @@ export const transactionLedgerRouter = router({
         isDonationLinked:
           tx.category.toLowerCase() === 'gifts & donations' &&
           tx.type === TransactionTypeEnum.DEBIT
-            ? tx.donationPaymentInterest !== null
+            ? tx.voluntaryDonations.length > 0
             : undefined,
         isZakatLinked:
           tx.category.toLowerCase() === 'gifts & donations' &&
