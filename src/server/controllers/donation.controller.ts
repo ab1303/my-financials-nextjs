@@ -27,9 +27,9 @@ export const createDonationYearHandler = async (
   }
 };
 
-export const donationPaymentsHandler = async (calendarYearId: string) => {
+export const donationPaymentsHandler = async (calendarYearId: string, beneficiaryId?: string) => {
   try {
-    const donationPayments = await getDonationPayments(calendarYearId);
+    const donationPayments = await getDonationPayments(calendarYearId, beneficiaryId);
     return donationPayments;
   } catch (e) {
     handleCaughtError(e);
@@ -86,7 +86,7 @@ export const donationTotalsByBeneficiaryHandler = async (
     return totals;
   } catch (e) {
     handleCaughtError(e);
-    return {};
+    return [];
   }
 };
 

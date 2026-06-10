@@ -39,13 +39,23 @@ export const getDonation = async (
 
 export const getDonationPayments = async (
   calendarYearId: string,
+  beneficiaryId?: string,
 ): Promise<Array<DonationPaymentModel>> => {
-  const voluntaryDonations = await prisma.voluntaryDonation.findMany({
-    where: {
-      donationLedger: {
-        calendarId: calendarYearId,
-      },
+  const where: Prisma.VoluntaryDonationWhereInput = {
+    donationLedger: {
+      calendarId: calendarYearId,
     },
+  };
+
+  if (beneficiaryId) {
+    where.OR = [
+      { businessId: beneficiaryId },
+      { individualId: beneficiaryId },
+    ];
+  }
+
+  const voluntaryDonations = await prisma.voluntaryDonation.findMany({
+    where,
     include: {
       business: true,
       individual: true,
@@ -274,37 +284,43 @@ export const getDonationTotalsByCategory = async (
 };
 
 /**
- * Gets donation totals broken down by beneficiary name.
+ * Gets donation totals broken down by beneficiary.
  */
 export const getDonationTotalsByBeneficiary = async (
   calendarYearId: string,
-): Promise<Record<string, number>> => {
+): Promise<Array<{ id: string; name: string; total: number }>> => {
   const [voluntary, zakat] = await Promise.all([
     prisma.voluntaryDonation.findMany({
       where: { donationLedger: { calendarId: calendarYearId } },
       select: {
         amount: true,
-        business: { select: { name: true } },
-        individual: { select: { name: true } },
+        business: { select: { id: true, name: true } },
+        individual: { select: { id: true, name: true } },
       },
     }),
     prisma.zakatPayment.findMany({
       where: { zakatObligation: { calendarId: calendarYearId } },
       select: {
         amount: true,
-        business: { select: { name: true } },
-        individual: { select: { name: true } },
+        business: { select: { id: true, name: true } },
+        individual: { select: { id: true, name: true } },
       },
     }),
   ]);
 
-  const beneficiaryTotals: Record<string, number> = {};
+  const beneficiaryTotals: Record<string, { id: string; name: string; total: number }> = {};
 
   [...voluntary, ...zakat].forEach((payment) => {
     const amount = payment.amount.toNumber();
-    const name = payment.business?.name ?? payment.individual?.name ?? 'Unknown';
-    beneficiaryTotals[name] = (beneficiaryTotals[name] ?? 0) + amount;
+    const entity = payment.business ?? payment.individual;
+    const id = entity?.id ?? 'unknown';
+    const name = entity?.name ?? 'Unknown';
+
+    if (!beneficiaryTotals[id]) {
+      beneficiaryTotals[id] = { id, name, total: 0 };
+    }
+    beneficiaryTotals[id].total += amount;
   });
 
-  return beneficiaryTotals;
+  return Object.values(beneficiaryTotals);
 };

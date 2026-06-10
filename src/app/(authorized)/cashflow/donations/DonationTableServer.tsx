@@ -11,12 +11,14 @@ import { DonationPaymentStateProvider } from './StateProvider';
 
 export type DonationTableServerProps = {
   calendarYearId: string;
+  beneficiaryId?: string;
   dateFrom?: string;
   dateTo?: string;
 };
 
 export default async function DonationPaymentsTableServer({
   calendarYearId,
+  beneficiaryId,
   dateFrom,
   dateTo,
 }: DonationTableServerProps) {
@@ -27,7 +29,7 @@ export default async function DonationPaymentsTableServer({
       throw new Error('User session not found');
     }
 
-    const donationPayments = await donationPaymentsHandler(calendarYearId);
+    const donationPayments = await donationPaymentsHandler(calendarYearId, beneficiaryId);
     const individuals = await allIndividualDetailsHandler(session.user.id);
     const businesses = await allBusinessDetailsHandler(session.user.id);
 

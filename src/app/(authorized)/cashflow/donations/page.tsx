@@ -53,6 +53,7 @@ export default async function DonationPage({
     getDefaultCalendarYear(donationYearData, fiscalYearType ?? 'FISCAL');
 
   const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
+  const beneficiaryId = getSelectedParam(params?.beneficiaryId) || undefined;
 
   const donationTotals = await donationTotalsByCategoryHandler(selectedCalendarYearId);
   const beneficiaryBreakdown = await donationTotalsByBeneficiaryHandler(selectedCalendarYearId);
@@ -90,8 +91,6 @@ export default async function DonationPage({
         )}
         <DonationBeneficiaryBreakdownWidget
           breakdown={beneficiaryBreakdown}
-          yearDateFrom={selectedCalendarYear ? `${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01` : ''}
-          yearDateTo={selectedCalendarYear ? `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}` : ''}
         />
         <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
           {selectedCalendarYear && (
@@ -102,6 +101,7 @@ export default async function DonationPage({
 
           <DonationPaymentsTableServer
             calendarYearId={selectedCalendarYearId}
+            beneficiaryId={beneficiaryId}
             dateFrom={selectedCalendarYear ? `${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01` : ''}
             dateTo={selectedCalendarYear ? `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}` : ''}
           />
