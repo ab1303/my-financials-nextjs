@@ -4,18 +4,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { TRPCError } from '@trpc/server';
 import clsx from 'clsx';
 import { Loader2 } from 'lucide-react';
-import type { MouseEventHandler } from 'react';
 import { useId, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import type { GroupBase,OptionProps, SingleValue } from 'react-select';
-import { components } from 'react-select';
-import CreatableSelect from 'react-select/creatable';
+import type { SingleValue } from 'react-select';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { AddressComponent, Button,Card } from '@/components';
 import { Label, TextInput } from '@/components/ui';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { DeletableOption } from '@/components/ui/DeletableOption';
 import { getSelectStyles } from '@/lib/select-styles';
 import { trpc } from '@/server/trpc/client';
 
@@ -51,39 +49,6 @@ const postCodeSchema = z.coerce.number({
   invalid_type_error: 'Postcode must be a number',
 });
 
-type DeleteIconProps = {
-  onClick: MouseEventHandler<HTMLDivElement>;
-};
-
-function DeleteIcon(props: DeleteIconProps) {
-  return (
-    <div
-      className='ml-2 cursor-pointer text-red-500 hover:text-red-700'
-      onClick={props.onClick}
-      aria-label='Delete individual'
-    >
-      <svg
-        className='h-4 w-4'
-        fill='none'
-        stroke='currentColor'
-        viewBox='0 0 24 24'
-      >
-        <path
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          strokeWidth={2}
-          d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
-        />
-      </svg>
-    </div>
-  );
-}
-
-// React 19 type compatibility wrapper for react-select Option
-const BaseOption = components.Option as React.ComponentType<
-  OptionProps<IndividualOptionType, false, GroupBase<IndividualOptionType>>
->;
-
 const Option = (
   props: OptionProps<IndividualOptionType, false>,
 ): React.JSX.Element => {
@@ -102,16 +67,11 @@ const Option = (
     });
 
   return (
-    <div className='flex justify-between'>
-      <BaseOption {...props} />
-      {isPending ? (
-        <Loader2 className='animate-spin' />
-      ) : (
-        <DeleteIcon
-          onClick={() => deleteIndividual({ individualId: props.data.id })}
-        />
-      )}
-    </div>
+    <DeletableOption
+      {...props}
+      isPending={isPending}
+      onDelete={() => deleteIndividual({ individualId: props.data.id })}
+    />
   );
 };
 

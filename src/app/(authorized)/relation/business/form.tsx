@@ -4,17 +4,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { TRPCError } from '@trpc/server';
 import clsx from 'clsx';
 import { Loader2 } from 'lucide-react';
-import type { MouseEventHandler } from 'react';
 import { useId, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import type { GroupBase,OptionProps, SingleValue } from 'react-select';
-import { components } from 'react-select';
+import type { SingleValue } from 'react-select';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { AddressComponent, Button,Card } from '@/components';
 import { Label, TextInput } from '@/components/ui';
 import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { DeletableOption } from '@/components/ui/DeletableOption';
 import { trpc } from '@/server/trpc/client';
 import { BusinessEnumType } from '@/types/enum';
 
@@ -44,37 +43,6 @@ const postCodeSchema = z.coerce.number({
   invalid_type_error: 'Postcode must be a number',
 });
 
-type DeleteIconProps = {
-  onClick: MouseEventHandler<HTMLDivElement>;
-};
-
-function DeleteIcon(props: DeleteIconProps) {
-  return (
-    <div
-      className='flex items-center hover:cursor-pointer hover:text-orange-700'
-      onClick={props.onClick}
-    >
-      <svg
-        className='mx-2 h-4 w-4 border-b-2 border-b-orange-700'
-        fill='currentColor'
-        viewBox='0 0 20 20'
-        xmlns='http://www.w3.org/2000/svg'
-      >
-        <path
-          fillRule='evenodd'
-          d='M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z'
-          clipRule='evenodd'
-        ></path>
-      </svg>
-    </div>
-  );
-}
-
-// React 19 type compatibility wrapper for react-select Option
-const BaseOption = components.Option as React.ComponentType<
-  OptionProps<BusinessOptionType, false, GroupBase<BusinessOptionType>>
->;
-
 const Option = (
   props: OptionProps<BusinessOptionType, false>,
 ): React.JSX.Element => {
@@ -93,16 +61,11 @@ const Option = (
     });
 
   return (
-    <div className='flex justify-between'>
-      <BaseOption {...props} />
-      {isPending ? (
-        <Loader2 className='animate-spin' />
-      ) : (
-        <DeleteIcon
-          onClick={() => deleteBusiness({ businessId: props.data.id })}
-        />
-      )}
-    </div>
+    <DeletableOption
+      {...props}
+      isPending={isPending}
+      onDelete={() => deleteBusiness({ businessId: props.data.id })}
+    />
   );
 };
 

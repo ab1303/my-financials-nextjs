@@ -8,6 +8,23 @@
 | CRUD Relationship Types      | ✅ BUILT     |
 | Form Validation (Zod)        | ✅ BUILT     |
 
+## Functional Flow: Save Individual
+
+```mermaid
+sequenceDiagram
+    participant UI as Client Form
+    participant TRPC as Individual Router
+    participant CTRL as Controller
+    participant DB as Prisma
+
+    UI->>TRPC: saveIndividualDetails(data)
+    TRPC->>CTRL: addIndividualDetailsHandler(input, userId)
+    CTRL->>DB: prisma.individual.create({ data })
+    DB-->>CTRL: Individual
+    CTRL-->>TRPC: Success/Error
+    TRPC-->>UI: Response
+```
+
 ## Key TypeScript Interfaces
 
 ```typescript
@@ -22,7 +39,7 @@ export interface Individual {
   suburb?: string;
   postcode?: number;
   state?: string;
-  addressFormat?: string; // "AU"
+  addressFormat?: string;
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -37,25 +54,20 @@ export interface RelationshipType {
 }
 ```
 
-## Key Zod Schemas
+## Key Zod Schemas (Production)
 
 ```typescript
-import { z } from 'zod';
-
-export const individualSchema = z.object({
-  name: z.string().min(1),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  relationshipId: z.string().optional(),
-  addressLine: z.string().optional(),
-  streetAddress: z.string().optional(),
-  suburb: z.string().optional(),
-  postcode: z.coerce.number().int().optional(),
-  state: z.string().optional(),
-});
-
-export const relationshipTypeSchema = z.object({
-  name: z.string().min(1),
+export const createIndividualSchema = object({
+  name: string().min(1).max(100).trim(),
+  firstName: optional(string().max(50)),
+  lastName: optional(string().max(50)),
+  relationshipName: optional(string().max(150).trim()),
+  addressFormat: optional(string().refine((val) => val === 'AU' || val === 'GLOBAL')).default('AU'),
+  addressLine: optional(string().max(500)),
+  streetAddress: optional(string().max(200)),
+  suburb: optional(string().max(100)),
+  postcode: optional(number().min(1000).max(9999)),
+  state: optional(string().max(20)),
 });
 ```
 
@@ -75,3 +87,4 @@ export const relationshipTypeSchema = z.object({
 | src/app/(authorized)/relation/individual/form.tsx           | ✅ BUILT | Client form for add/edit individual         |
 | src/app/(authorized)/relation/individual/layout.tsx         | ✅ BUILT | Layout for individual contacts route        |
 | src/server/trpc/router/individual.ts                        | ✅ BUILT | tRPC router for individuals & relationships |
+| src/server/schema/individual.schema.ts                      | ✅ BUILT | Zod validation schemas                      |
