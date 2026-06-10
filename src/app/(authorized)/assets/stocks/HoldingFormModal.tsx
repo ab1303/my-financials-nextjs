@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 import { Controller,useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
-import { CreatableAppSelect } from '@/components/ui/CreatableAppSelect';
+import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
 
 type SelectOption = { value: string; label: string };
 
@@ -344,7 +344,7 @@ export default function HoldingFormModal({
             {/* Institution Selection */}
             <div className='sm:col-span-2'>
             <Label htmlFor='institutionId'>Brokerage Institution *</Label>
-            <CreatableAppSelect<SelectOption>
+            <CreatableSelect<SelectOption>
               options={institutionOptions}
               value={
                 selectedInstitution
@@ -379,7 +379,7 @@ export default function HoldingFormModal({
               name='accountId'
               control={control}
               render={({ field }) => (
-                <CreatableAppSelect<SelectOption>
+                <CreatableSelect<SelectOption>
                   {...field}
                   options={accountOptions}
                   value={

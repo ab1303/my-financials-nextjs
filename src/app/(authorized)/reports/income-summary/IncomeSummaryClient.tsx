@@ -6,7 +6,7 @@ import { useEffect, useMemo,useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import type { ActionMeta } from 'react-select';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import type { MonthlyIncomeSummary } from '@/server/models/income';
 

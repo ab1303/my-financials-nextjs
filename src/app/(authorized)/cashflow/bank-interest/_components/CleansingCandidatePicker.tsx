@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useDebounce } from 'use-debounce';
 
-import AppSelect from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import InfoTooltip from '@/components/ui/InfoTooltip';
@@ -156,7 +156,7 @@ export function CleansingCandidatePicker({
           )}
         </div>
         <div className='w-64'>
-          <AppSelect
+          <Select
             instanceId='cleansing-account-filter'
             options={accountOptions}
             value={accountOptions.find(

@@ -7,7 +7,7 @@ import { NumericFormat } from 'react-number-format';
 import type { SingleValue } from 'react-select';
 
 import { Card } from '@/components';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import { stylingUtils } from '@/styles/styling';
 import { inputStyles } from '@/styles/theme';

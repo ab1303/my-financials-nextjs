@@ -11,8 +11,8 @@ import { toast } from 'sonner';
 
 import AIUsageCard from '@/components/AIUsageCard';
 import ImportAuditIcon from '@/components/ImportAuditIcon';
-import { AppCreatableSelect } from '@/components/ui/AppCreatableSelect';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/Label';
 import { Modal } from '@/components/ui/Modal';
@@ -857,7 +857,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                   <label className='block text-xs font-medium text-muted-foreground mb-1'>
                                     Account
                                   </label>
-                                  <AppCreatableSelect
+                                  <CreatableSelect
                                     inputId={`add-entry-account-${bank.id}`}
                                     options={getAddableAccountsForBank(bank.id)}
                                     value={
@@ -949,7 +949,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                               <label className='block text-xs font-medium text-muted-foreground mb-1'>
                                 Account
                               </label>
-                              <AppCreatableSelect
+                              <CreatableSelect
                                 inputId={`add-entry-account-${bank.id}`}
                                 options={getAddableAccountsForBank(bank.id)}
                                 value={

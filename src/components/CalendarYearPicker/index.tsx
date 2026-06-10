@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { useId,useMemo, useState } from 'react';
 import type { SingleValue } from 'react-select';
 
-import { AppSelect } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import type { CalendarYearType,OptionType } from '@/types';
 
@@ -132,7 +132,7 @@ function YearSelect({ className }: { className?: string }) {
       <Label htmlFor={labelId} className="sr-only">
         {displayLabel}
       </Label>
-      <AppSelect<OptionType>
+      <Select<OptionType>
         instanceId={labelId}
         inputId={labelId}
         options={yearOptions}

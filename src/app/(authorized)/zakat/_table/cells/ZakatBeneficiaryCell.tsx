@@ -1,7 +1,7 @@
 import type { BeneficiaryEnumType } from '@prisma/client';
 import type { CellContext } from '@tanstack/react-table';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import type { OptionType } from '@/types';
 import type { ZakatPaymentType } from '../../_types';
 

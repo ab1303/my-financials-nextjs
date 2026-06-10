@@ -5,7 +5,7 @@ import { useCallback,useEffect, useState } from 'react';
 import type { SingleValue } from 'react-select';
 
 import { CalendarYearPicker } from '@/components/CalendarYearPicker';
-import { AppSelect } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import type { CashflowAnalyticsData, MonthlyTrendPoint } from '@/server/models/cashflow-analytics';
 import type { CalendarYearType,OptionType } from '@/types';
@@ -121,7 +121,7 @@ export default function CashflowAnalyticsClient({
           {bankOptions.length > 0 && (
             <div className="space-y-1.5">
               <Label htmlFor="bank-filter">Bank Account</Label>
-              <AppSelect<OptionType>
+              <Select<OptionType>
                 instanceId="bank-filter"
                 inputId="bank-filter"
                 options={bankOptions}

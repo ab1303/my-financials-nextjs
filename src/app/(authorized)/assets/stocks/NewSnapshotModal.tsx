@@ -6,9 +6,9 @@ import { useEffect,useState } from 'react';
 import { Controller,useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
-import { CreatableAppSelect } from '@/components/ui/CreatableAppSelect';
+import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
 
 type SelectOption = { value: string; label: string };
 
@@ -549,7 +549,7 @@ export default function NewSnapshotModal({
                       <Label htmlFor={`holdings.${index}.institutionId`}>
                         Brokerage Institution *
                       </Label>
-                      <CreatableAppSelect<SelectOption>
+                      <CreatableSelect<SelectOption>
                         options={institutionOptions}
                         value={
                           selectedInstitution
@@ -597,7 +597,7 @@ export default function NewSnapshotModal({
                         name={`holdings.${index}.accountId`}
                         control={control}
                         render={({ field }) => (
-                          <CreatableAppSelect<SelectOption>
+                          <CreatableSelect<SelectOption>
                             {...field}
                             options={accountOptions}
                             value={

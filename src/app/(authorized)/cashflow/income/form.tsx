@@ -8,7 +8,7 @@ import type { SingleValue } from 'react-select';
 
 import { Card } from '@/components';
 import CalendarYearPicker from '@/components/CalendarYearPicker';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import type { CalendarYearType,OptionType } from '@/types';
 

@@ -20,7 +20,7 @@ import { AddIcon, CheckIcon, PenIcon, TrashIcon } from '@/components/icons';
 import ImportAuditIcon from '@/components/ImportAuditIcon';
 import Portal from '@/components/Portal';
 import { Label } from '@/components/ui';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { cn } from '@/lib/utils';
 import type { ExpenseEntryWithCategory } from '@/server/models/expense';
 import { cardStyles } from '@/styles/theme';

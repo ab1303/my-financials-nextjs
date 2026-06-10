@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useId,useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { tableCellStyles } from '@/styles/theme';
 import type { OptionType } from '@/types';
 

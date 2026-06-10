@@ -10,7 +10,7 @@ import AsyncSelect from 'react-select/async';
 import { useDebouncedCallback } from 'use-debounce';
 import usePlacesAutocomplete, { getGeocode } from 'use-places-autocomplete';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import { TextInput } from '@/components/ui/TextInput';
 import { getSelectStyles } from '@/lib/select-styles';

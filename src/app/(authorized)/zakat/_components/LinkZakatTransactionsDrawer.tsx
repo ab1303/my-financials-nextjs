@@ -9,7 +9,7 @@ import CreatableSelect from "react-select/creatable";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { AppSelect as Select } from "@/components/ui/AppSelect";
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { getSelectStyles } from "@/lib/select-styles";
 import { trpc } from "@/server/trpc/client";
 

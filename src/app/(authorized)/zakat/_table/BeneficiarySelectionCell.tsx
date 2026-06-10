@@ -1,7 +1,7 @@
 import type { BeneficiaryEnumType, Business } from '@prisma/client';
 import { toast } from 'sonner';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { trpc } from '@/server/trpc/client';
 import type { OptionType } from '@/types';
 

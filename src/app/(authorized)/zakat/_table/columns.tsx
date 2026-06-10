@@ -34,7 +34,6 @@ export function getTableColumns(
             row={row}
             table={table}
             column={row.getAllCells().find(c => c.column.id === 'datePaid')!.column}
-            getValue={() => new Date(row.original.datePaid) as unknown as Date}
           />
         );
       },

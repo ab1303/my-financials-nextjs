@@ -4,7 +4,7 @@ import { BeneficiaryEnumType } from '@prisma/client';
 import { Controller } from 'react-hook-form';
 import CreatableSelect from 'react-select/creatable';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { getSelectStyles } from '@/lib/select-styles';
 
 import { useCleanseDonation } from './CleanseDonationContext';

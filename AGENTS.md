@@ -250,6 +250,12 @@ pnpm run dev
 - Before deleting a feature directory, grep `src/` for all imports of its files. Extract anything imported outside the feature to `src/components/` first.
 - A file at `feature-a/_components/foo.tsx` is owned by `feature-a`. Cross-feature imports are hidden dependencies — they break silently on cleanup.
 
+## Shared UI Components
+
+- **Prioritize `src/components/ui/`**: New UI components that are domain-agnostic and reusable MUST be developed in `src/components/ui/`.
+- **Prefer Composition**: When building complex UI components, use composition patterns to ensure flexibility and avoid boolean prop anti-patterns.
+- **Refactor Early**: If you identify UI logic duplicated across multiple domains, factor it out into `src/components/ui/` immediately to maintain structural consistency.
+
 ## UI Rules (Recurring Issues)
 
 ### Dark Mode

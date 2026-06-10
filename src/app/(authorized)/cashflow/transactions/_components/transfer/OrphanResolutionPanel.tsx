@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { SingleValue } from 'react-select';
 import { toast } from 'sonner';
 
-import { AppSelect } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { trpc } from '@/server/trpc/client';
 
 import TransferLinkDrawer from './TransferLinkDrawer';
@@ -275,7 +275,7 @@ export default function OrphanResolutionPanel({ onResolved }: OrphanResolutionPa
                             <p className='text-xs font-medium text-gray-700 dark:text-gray-300'>
                               {mode === 'expense' ? 'Select expense category:' : 'Select income source:'}
                             </p>
-                            <AppSelect<CategoryOption>
+                            <Select<CategoryOption>
                               options={options}
                               value={pickedCategory}
                               onChange={(v: SingleValue<CategoryOption>) =>

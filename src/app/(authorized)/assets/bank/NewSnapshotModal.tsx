@@ -6,7 +6,7 @@ import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
 
 import { Button } from '@/components';
-import { AppCreatableSelect } from '@/components/ui/AppCreatableSelect';
+import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import { Modal } from '@/components/ui/Modal';
 import { trpc } from '@/server/trpc/client';
@@ -265,7 +265,7 @@ export default function NewSnapshotModal({
                         {/* Account Selector (AppCreatableSelect) */}
                         <div>
                           <Label htmlFor={`account-${index}`}>Account</Label>
-                          <AppCreatableSelect
+                          <CreatableSelect
                             inputId={`account-${index}`}
                             options={accountOptions}
                             value={
