@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { BeneficiaryEnumType } from "@prisma/client";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from 'next/navigation';
 import { Controller, useForm } from "react-hook-form";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "sonner";
@@ -62,6 +63,7 @@ export default function LinkZakatTransactionsDrawer({
   const [selectedTransactionId, setSelectedTransactionId] = useState(initialSelectedTransactionId ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [effectiveCalendarYearId, setEffectiveCalendarYearId] = useState(initialCalendarYearId ?? "");
+  const router = useRouter();
 
   const unlinkedTransactionsQuery = trpc.transactionLedger.getUnlinkedZakatTransactions.useQuery(
     { dateFrom, dateTo },
@@ -183,6 +185,7 @@ export default function LinkZakatTransactionsDrawer({
       }
 
       toast.success("Zakat payment linked!");
+      router.refresh();
       setTransactions((current) => {
         const remaining = current.filter((transaction) => transaction.id !== selectedTransaction.id);
         setSelectedTransactionId(remaining[0]?.id ?? "");

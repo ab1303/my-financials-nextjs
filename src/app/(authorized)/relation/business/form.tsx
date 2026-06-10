@@ -237,85 +237,87 @@ export default function BusinessForm() {
             className='mb-0 space-y-6'
             onSubmit={handleSubmit(submitHandler)}
           >
-            <div>
-              <Label htmlFor='business'>Business</Label>
-              <div className='mt-1'>
-                <Select<BusinessOptionType>
-                  isClearable
-                  className='w-full max-w-md'
-                  components={{ Option }}
-                  value={selectedBusiness}
-                  options={businessOptions}
-                  instanceId={uniqSelectBusinessId}
-                  getOptionValue={(option) => option.id}
-                  onChange={(option) => handleOptionChange(option)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor='businessName' error={!!errors.businessName}>
-                Business Name
-              </Label>
-              <div className='mt-1'>
-                <TextInput
-                  id='businessName'
-                  type='text'
-                  error={!!errors.businessName}
-                  {...register('businessName', { required: true })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor='type' error={!!errors.type}>
-                Business Type
-              </Label>
-              <div className='mt-1'>
-                <select
-                  id='type'
-                  className={clsx(
-                    'block w-full max-w-md px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-800 dark:text-white dark:border-gray-600',
-                    {
-                      'border-red-500 focus:ring-red-500 focus:border-red-500':
-                        errors.type,
-                    },
-                  )}
-                  {...register('type', { required: true })}
-                >
-                  {Object.values(BusinessEnumType).map((val) => (
-                    <option key={val} value={val}>
-                      {val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {formMethods.watch('type') === BusinessEnumType.PHILANTHROPY ? (
-              <div className='rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/60'>
-                <div className='flex items-start gap-3'>
-                  <input
-                    id='isDgrRegistered'
-                    type='checkbox'
-                    className='mt-1 h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-teal-400'
-                    {...register('isDgrRegistered')}
+            <div className='grid grid-cols-1 gap-6'>
+              <div>
+                <Label htmlFor='business'>Business</Label>
+                <div className='mt-2'>
+                  <Select<BusinessOptionType>
+                    isClearable
+                    className='w-full'
+                    components={{ Option }}
+                    value={selectedBusiness}
+                    options={businessOptions}
+                    instanceId={uniqSelectBusinessId}
+                    getOptionValue={(option) => option.id}
+                    onChange={(option) => handleOptionChange(option)}
                   />
-                  <div>
-                    <Label htmlFor='isDgrRegistered' className='cursor-pointer'>
-                      Tax deductible (DGR registered)
-                    </Label>
-                    <p className='mt-1 text-sm text-muted-foreground'>
-                      Payments to this business will be marked deductible when this is enabled.
-                    </p>
-                  </div>
                 </div>
               </div>
-            ) : (
-              <p className='text-sm text-muted-foreground'>
-                Tax deductibility only applies to philanthropic businesses.
-              </p>
-            )}
+
+              <div>
+                <Label htmlFor='businessName' error={!!errors.businessName}>
+                  Business Name
+                </Label>
+                <div className='mt-2'>
+                  <TextInput
+                    id='businessName'
+                    type='text'
+                    error={!!errors.businessName}
+                    {...register('businessName', { required: true })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor='type' error={!!errors.type}>
+                  Business Type
+                </Label>
+                <div className='mt-2'>
+                  <select
+                    id='type'
+                    className={clsx(
+                      'block w-full px-3 py-2 text-sm border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary',
+                      {
+                        'border-destructive focus:ring-destructive focus:border-destructive':
+                          errors.type,
+                      },
+                    )}
+                    {...register('type', { required: true })}
+                  >
+                    {Object.values(BusinessEnumType).map((val) => (
+                      <option key={val} value={val}>
+                        {val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {formMethods.watch('type') === BusinessEnumType.PHILANTHROPY ? (
+                <div className='rounded-lg border border-border bg-muted/40 px-4 py-3'>
+                  <div className='flex items-start gap-3'>
+                    <input
+                      id='isDgrRegistered'
+                      type='checkbox'
+                      className='mt-1 h-4 w-4 rounded border-input text-primary focus:ring-primary'
+                      {...register('isDgrRegistered')}
+                    />
+                    <div>
+                      <Label htmlFor='isDgrRegistered' className='cursor-pointer'>
+                        Tax deductible (DGR registered)
+                      </Label>
+                      <p className='mt-1 text-sm text-muted-foreground'>
+                        Payments to this business will be marked deductible when this is enabled.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className='text-sm text-muted-foreground'>
+                  Tax deductibility only applies to philanthropic businesses.
+                </p>
+              )}
+            </div>
 
             <AddressComponent<BusinessType>
               basePropertyName='address'

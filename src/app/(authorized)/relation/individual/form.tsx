@@ -336,99 +336,101 @@ export default function IndividualForm() {
             className='mb-0 space-y-6'
             onSubmit={handleSubmit(submitHandler)}
           >
-            <div>
-              <Label htmlFor='individual'>Individual</Label>
-              <div className='mt-1'>
-                <Select<IndividualOptionType>
-                  isClearable
-                  className='w-full max-w-md'
-                  components={{ Option }}
-                  value={selectedIndividual}
-                  options={individualOptions}
-                  instanceId={uniqSelectIndividualId}
-                  getOptionValue={(option) => option.id}
-                  onChange={(option) => handleOptionChange(option)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor='individualName' error={!!errors.individualName}>
-                Individual Name
-              </Label>
-              <div className='mt-1'>
-                <TextInput
-                  id='individualName'
-                  type='text'
-                  error={!!errors.individualName}
-                  {...register('individualName', { required: true })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label
-                htmlFor='relationshipName'
-                error={!!errors.relationshipName}
-              >
-                Relationship
-              </Label>
-              <div className='mt-1'>
-                <CreatableSelect
-                  isClearable
-                  className='w-full max-w-md'
-                  options={relationshipOptions}
-                  value={selectedRelationship}
-                  instanceId={uniqSelectRelationshipId}
-                  getOptionValue={(option) => option.id}
-                  placeholder='Select or type a relationship...'
-                  styles={getSelectStyles<RelationshipOptionType>()}
-                  onInputChange={(inputValue, { action }) => {
-                    if (action === 'input-change') {
-                      formFieldSetValue('relationshipName', inputValue);
-                    }
-                  }}
-                  onChange={(option) => {
-                    setSelectedRelationship(option);
-                    formFieldSetValue('relationshipName', option?.value || '');
-                  }}
-                  formatCreateLabel={(inputValue: string) =>
-                    `Create "${inputValue}"`
-                  }
-                />
-              </div>
-              <p className='mt-1 text-xs text-gray-500'>
-                Select from existing relationships or type a new one (e.g.,
-                Mother, Father, Friend, Spouse)
-              </p>
-            </div>
-
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+            <div className='grid grid-cols-1 gap-6'>
               <div>
-                <Label htmlFor='firstName' error={!!errors.firstName}>
-                  First Name (Optional)
-                </Label>
-                <div className='mt-1'>
-                  <TextInput
-                    id='firstName'
-                    type='text'
-                    error={!!errors.firstName}
-                    {...register('firstName')}
+                <Label htmlFor='individual'>Individual</Label>
+                <div className='mt-2'>
+                  <Select<IndividualOptionType>
+                    isClearable
+                    className='w-full'
+                    components={{ Option }}
+                    value={selectedIndividual}
+                    options={individualOptions}
+                    instanceId={uniqSelectIndividualId}
+                    getOptionValue={(option) => option.id}
+                    onChange={(option) => handleOptionChange(option)}
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor='lastName' error={!!errors.lastName}>
-                  Last Name (Optional)
+                <Label htmlFor='individualName' error={!!errors.individualName}>
+                  Individual Name
                 </Label>
-                <div className='mt-1'>
+                <div className='mt-2'>
                   <TextInput
-                    id='lastName'
+                    id='individualName'
                     type='text'
-                    error={!!errors.lastName}
-                    {...register('lastName')}
+                    error={!!errors.individualName}
+                    {...register('individualName', { required: true })}
                   />
+                </div>
+              </div>
+
+              <div>
+                <Label
+                  htmlFor='relationshipName'
+                  error={!!errors.relationshipName}
+                >
+                  Relationship
+                </Label>
+                <div className='mt-2'>
+                  <CreatableSelect
+                    isClearable
+                    className='w-full'
+                    options={relationshipOptions}
+                    value={selectedRelationship}
+                    instanceId={uniqSelectRelationshipId}
+                    getOptionValue={(option) => option.id}
+                    placeholder='Select or type a relationship...'
+                    styles={getSelectStyles<RelationshipOptionType>()}
+                    onInputChange={(inputValue, { action }) => {
+                      if (action === 'input-change') {
+                        formFieldSetValue('relationshipName', inputValue);
+                      }
+                    }}
+                    onChange={(option) => {
+                      setSelectedRelationship(option);
+                      formFieldSetValue('relationshipName', option?.value || '');
+                    }}
+                    formatCreateLabel={(inputValue: string) =>
+                      `Create "${inputValue}"`
+                    }
+                  />
+                </div>
+                <p className='mt-2 text-sm text-muted-foreground'>
+                  Select from existing relationships or type a new one (e.g.,
+                  Mother, Father, Friend, Spouse)
+                </p>
+              </div>
+
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                <div>
+                  <Label htmlFor='firstName' error={!!errors.firstName}>
+                    First Name (Optional)
+                  </Label>
+                  <div className='mt-2'>
+                    <TextInput
+                      id='firstName'
+                      type='text'
+                      error={!!errors.firstName}
+                      {...register('firstName')}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor='lastName' error={!!errors.lastName}>
+                    Last Name (Optional)
+                  </Label>
+                  <div className='mt-2'>
+                    <TextInput
+                      id='lastName'
+                      type='text'
+                      error={!!errors.lastName}
+                      {...register('lastName')}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
