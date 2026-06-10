@@ -7,6 +7,7 @@ import { Fragment, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 
 import Portal from '@/components/Portal';
+import { DistributionWidget, type DistributionItem } from '@/components/ui/DistributionWidget';
 import type { CategoryBreakdown } from '@/server/models/expense';
 
 // Fixed ordered palette — assigned by rank (index 0 = highest spend)
@@ -50,44 +51,46 @@ type Props = {
   calendarLabel?: string;
 };
 
+type ExpenseDistributionItem = DistributionItem & CategoryBreakdown;
+
 export default function ExpenseCategoryBreakdownWidget({ breakdown, yearDateFrom, yearDateTo, calendarLabel }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   if (breakdown.length === 0) return null;
 
-  const topItems = breakdown.slice(0, TOP_N);
-  const hiddenItems = breakdown.slice(TOP_N);
-  const hiddenCount = hiddenItems.length;
+  const distributionItems: ExpenseDistributionItem[] = breakdown.map((item, i) => ({
+    name: item.categoryName,
+    total: item.amount,
+    percentage: item.percentage,
+    color: BAR_COLORS[i % BAR_COLORS.length] ?? 'bg-gray-400',
+    categoryId: item.categoryId,
+    categoryName: item.categoryName,
+    amount: item.amount,
+  }));
+
+  const visibleItems = expanded ? distributionItems : distributionItems.slice(0, TOP_N);
+  const hiddenCount = distributionItems.length - TOP_N;
 
   return (
     <>
       <div className='mb-4 rounded-lg border border-border bg-card/50 p-3'>
-        {/* Proportional stacked bar — all categories */}
-        <div className='flex h-2 w-full overflow-hidden rounded-full bg-muted'>
-          {breakdown.map((item, i) => (
-            <div
-              key={item.categoryName}
-              style={{ width: `${item.percentage}%` }}
-              className={BAR_COLORS[i % BAR_COLORS.length]}
-              title={`${item.categoryName}: ${item.percentage.toFixed(1)}%`}
-            />
-          ))}
-        </div>
-
-        {/* Legend + View All button */}
-        <div className='mt-2 flex flex-wrap items-center gap-2'>
-          {topItems.map((item, i) => (
+        <DistributionWidget
+          items={visibleItems}
+          renderItem={(item) => (
             <CategoryBadgeLink
               key={item.categoryName}
               item={item}
-              colorIndex={i}
+              colorIndex={distributionItems.indexOf(item)}
               yearDateFrom={yearDateFrom}
               yearDateTo={yearDateTo}
             />
-          ))}
-
-          {hiddenCount > 0 && (
+          )}
+        />
+        
+        {/* Toggle + View All */}
+        <div className='mt-2 flex flex-wrap items-center gap-2'>
+           {hiddenCount > 0 && (
             <button
               type='button'
               onClick={() => setExpanded((prev) => !prev)}
@@ -102,17 +105,6 @@ export default function ExpenseCategoryBreakdownWidget({ breakdown, yearDateFrom
             </button>
           )}
 
-          {expanded && hiddenItems.map((item, i) => (
-            <CategoryBadgeLink
-              key={item.categoryName}
-              item={item}
-              colorIndex={TOP_N + i}
-              yearDateFrom={yearDateFrom}
-              yearDateTo={yearDateTo}
-            />
-          ))}
-
-          {/* Separator + View All */}
           <div className='ml-auto'>
             <button
               type='button'
@@ -317,7 +309,10 @@ function CategorySummaryDialog({ isOpen, onClose, breakdown, yearDateFrom, yearD
   );
 }
 
-// ─── Badge Link (used by inline widget) ───────────────────────────────────────
+// ─── Summary Dialog (omitted for brevity, assume original remains) ────────────────
+// ... (omitted) ...
+
+// ─── Badge Link ──────────────────────────────────────────────────────────────
 
 function CategoryBadgeLink({
   item,
@@ -325,7 +320,7 @@ function CategoryBadgeLink({
   yearDateFrom,
   yearDateTo,
 }: {
-  item: CategoryBreakdown;
+  item: ExpenseDistributionItem;
   colorIndex: number;
   yearDateFrom: string;
   yearDateTo: string;

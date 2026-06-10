@@ -4,6 +4,7 @@ import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { NumericFormat } from 'react-number-format';
 
+import { DistributionWidget, type DistributionItem } from '@/components/ui/DistributionWidget';
 import type { IncomeEntryType } from '../_types';
 import SourceBadge from './SourceBadge';
 
@@ -32,6 +33,8 @@ type SourceSummary = {
   percentage: number;
 };
 
+type IncomeDistributionItem = DistributionItem & SourceSummary;
+
 export function computeBreakdown(entries: IncomeEntryType[]): SourceSummary[] {
   const totals: Record<string, number> = {};
   for (const entry of entries) {
@@ -51,44 +54,40 @@ export default function SourceBreakdownWidget({ entries, yearDateFrom, yearDateT
   if (entries.length === 0) return null;
 
   const breakdown = computeBreakdown(entries);
+  const distributionItems: IncomeDistributionItem[] = breakdown.map((item) => ({
+    name: item.sourceName,
+    total: item.total,
+    percentage: item.percentage,
+    color: SOURCE_COLOR_BAR_MAP[item.sourceName.toLowerCase()] ?? 'bg-gray-400',
+    sourceName: item.sourceName,
+  }));
 
   return (
-    <div className='mb-4 rounded-lg border border-border bg-card/50 p-3'>
-      <div className='flex h-2 w-full overflow-hidden rounded-full bg-muted'>
-        {breakdown.map((summary) => (
-          <div
-            key={summary.sourceName}
-            style={{ width: `${summary.percentage}%` }}
-            className={SOURCE_COLOR_BAR_MAP[summary.sourceName.toLowerCase()] ?? 'bg-gray-400'}
-            title={`${summary.sourceName}: ${summary.percentage.toFixed(1)}%`}
-          />
-        ))}
-      </div>
-      <div className='mt-2 flex flex-wrap gap-3'>
-        {breakdown.map((summary) => {
-          const url = `/cashflow/transactions?tab=income&categoryName=${encodeURIComponent(summary.sourceName)}${yearDateFrom ? `&dateFrom=${yearDateFrom}` : ''}${yearDateTo ? `&dateTo=${yearDateTo}` : ''}`;
-          return (
-            <Link
-              key={summary.sourceName}
-              href={url}
-              className='flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted/50 rounded-md px-1.5 py-0.5 transition-colors'
-              title={`View ${summary.sourceName} transactions`}
-            >
-              <SourceBadge sourceName={summary.sourceName} />
-              <NumericFormat
-                value={summary.total}
-                displayType='text'
-                thousandSeparator
-                prefix='$'
-                decimalScale={2}
-                fixedDecimalScale
-              />
-              <span>({summary.percentage.toFixed(1)}%)</span>
-              <ExternalLink size={13} className='ml-0.5 opacity-70' />
-            </Link>
-          );
-        })}
-      </div>
-    </div>
+    <DistributionWidget
+      items={distributionItems}
+      renderItem={(item) => {
+        const url = `/cashflow/transactions?tab=income&categoryName=${encodeURIComponent(item.name)}${yearDateFrom ? `&dateFrom=${yearDateFrom}` : ''}${yearDateTo ? `&dateTo=${yearDateTo}` : ''}`;
+        return (
+          <Link
+            key={item.name}
+            href={url}
+            className='flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted/50 rounded-md px-1.5 py-0.5 transition-colors'
+            title={`View ${item.name} transactions`}
+          >
+            <SourceBadge sourceName={item.name} />
+            <NumericFormat
+              value={item.total}
+              displayType='text'
+              thousandSeparator
+              prefix='$'
+              decimalScale={2}
+              fixedDecimalScale
+            />
+            <span>({item.percentage.toFixed(1)}%)</span>
+            <ExternalLink size={13} className='ml-0.5 opacity-70' />
+          </Link>
+        );
+      }}
+    />
   );
 }
