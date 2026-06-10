@@ -2,6 +2,7 @@
 
 import { auth } from '@/server/auth';
 import {
+  addZakatCalendarYearDetails,
   addZakatPaymentDetail,
   deleteZakatPayment,
   getZakat,
@@ -31,16 +32,22 @@ export async function addRow(input: CreateZakatPaymentInput) {
     const validatedInput = CreateZakatPaymentSchema.parse(input);
 
     // Get or create Zakat record for the calendar year
-    const zakat = await getZakat(validatedInput.calendarYearId);
-    if (!zakat.id) {
-      return {
-        success: false,
-        error: 'Zakat year not found. Please set up the Zakat year first.',
-      };
+    let zakatRecord = await getZakat(validatedInput.calendarYearId);
+    let zakatId = zakatRecord.id;
+    let zakatAmountDue = zakatRecord.amountDue;
+
+    if (!zakatId) {
+      // Auto-initialize obligation if missing
+      const newZakat = await addZakatCalendarYearDetails({
+        calendarId: validatedInput.calendarYearId,
+        amountDue: 0,
+      });
+      zakatId = newZakat.id;
+      zakatAmountDue = newZakat.amountDue.toNumber();
     }
 
     // Create payment record
-    const newPayment = await addZakatPaymentDetail(zakat.id, {
+    const newPayment = await addZakatPaymentDetail(zakatId, {
       datePaid: validatedInput.datePaid,
       amount: validatedInput.amount,
       beneficiaryType: validatedInput.beneficiaryType,

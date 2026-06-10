@@ -28,17 +28,18 @@ function NumericFormatWithIndicator<BaseType = InputAttributes>({
   value,
   indicatorText,
   isWorking,
+  isSaved,
   onValueChange,
   onBlur,
   className,
   ...props
-}: NumericFormatWithIndicatorProps<BaseType>) {
+}: NumericFormatWithIndicatorProps<BaseType> & { isSaved: boolean }) {
   return (
     <div className='flex items-center gap-2'>
       <NumericFormat
         className={stylingUtils.overrideClasses(
           inputStyles.base,
-          { w: 'w-3/5' }, // Override any w-* classes with w-3/5
+          { w: 'w-3/5' },
           className,
         )}
         prefix='$'
@@ -68,6 +69,11 @@ function NumericFormatWithIndicator<BaseType = InputAttributes>({
           </svg>
           <span className='sr-only'>{indicatorText}</span>
         </div>
+      )}
+      {isSaved && (
+        <span className='text-sm text-green-600 font-medium' role='status'>
+          Saved
+        </span>
       )}
     </div>
   );
@@ -101,6 +107,7 @@ export default function ZakatForm({
 
   const [totalAmountDue, setTotalAmountDue] = useState<number>(amountDue);
   const [isSavingAmount, setIsSavingAmount] = useState<boolean>(false);
+  const [isSavedAmount, setIsSavedAmount] = useState<boolean>(false);
 
   useEffect(() => {
     setTotalAmountDue(amountDue);
@@ -149,6 +156,9 @@ export default function ZakatForm({
       totalAmount: totalAmountDue,
     });
     setIsSavingAmount(false);
+    
+    setIsSavedAmount(true);
+    setTimeout(() => setIsSavedAmount(false), 2000);
   };
 
   return (
@@ -180,6 +190,7 @@ export default function ZakatForm({
           <NumericFormatWithIndicator
             indicatorText='Saving...'
             isWorking={isSavingAmount}
+            isSaved={isSavedAmount}
             value={totalAmountDue}
             onValueChange={(values) => {
               setTotalAmountDue(values.floatValue || 0);

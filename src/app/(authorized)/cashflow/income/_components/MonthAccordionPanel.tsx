@@ -49,7 +49,7 @@ export default function MonthAccordionPanel({
   defaultOpen = false,
 }: MonthAccordionPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const [editedRows, setEditedRows] = useState<Map<number, IncomeEntryType>>(
+  const [editedRows, setEditedRows] = useState<Map<string | number, IncomeEntryType>>(
     new Map(),
   );
   const [isPending, startTransition] = useTransition();

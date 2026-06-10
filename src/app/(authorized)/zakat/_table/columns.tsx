@@ -29,10 +29,14 @@ export function getTableColumns(
       size: 140,
       header: () => <span>Date Paid</span>,
       cell: ({ row, table }) => {
-        // Keeping DateCell generic or using existing TableCell if DatePicker is complex
-        // For now, retaining TableCell usage as it's already functional for Date
-        // but importing it locally is safer.
-        return <TableCell row={row} table={table} column={row.getAllCells().find(c => c.column.id === 'datePaid')!.column} getValue={() => row.original.datePaid} />;
+        return (
+          <TableCell
+            row={row}
+            table={table}
+            column={row.getAllCells().find(c => c.column.id === 'datePaid')!.column}
+            getValue={() => new Date(row.original.datePaid) as unknown as Date}
+          />
+        );
       },
       meta: {
         type: 'DATE',
@@ -42,7 +46,7 @@ export function getTableColumns(
     columnHelper.accessor('amount', {
       size: 130,
       header: () => <span>Amount Paid</span>,
-      cell: ZakatAmountCell,
+      cell: ({ row, table }) => <ZakatAmountCell row={row} table={table} />,
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('isDeductible', {

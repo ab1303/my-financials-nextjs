@@ -1,7 +1,6 @@
 import type { CellContext } from '@tanstack/react-table';
-import { NumericFormat } from 'react-number-format';
-import { tableCellStyles } from '@/styles/theme';
 import type { ZakatPaymentType } from '../../_types';
+import { AmountCell } from '@/components/table/cells/AmountCell';
 
 type ZakatAmountCellProps = {
   row: CellContext<ZakatPaymentType, unknown>['row'];
@@ -11,37 +10,25 @@ type ZakatAmountCellProps = {
 export default function ZakatAmountCell({ row, table }: ZakatAmountCellProps) {
   const meta = table.options.meta;
   const editedRecord = meta?.editedRows?.get(row.original.id);
-  const initialValue = row.original.amount;
-  const value = editedRecord ? editedRecord.amount : initialValue;
+  const isEditing = !!editedRecord;
+  const value = editedRecord ? editedRecord.amount : row.original.amount;
 
-  if (editedRecord) {
-    return (
-      <NumericFormat
-        className={tableCellStyles.input.amount}
-        prefix='$'
-        displayType='input'
-        thousandSeparator
-        value={value}
-        onValueChange={(values) => {
+  return (
+    <AmountCell
+      value={value}
+      isEditing={isEditing}
+      onChange={(newValue) => {
+        if (editedRecord) {
           meta?.setEditedRows((prev) => {
             const next = new Map(prev);
             next.set(row.original.id, {
               ...editedRecord,
-              amount: values.floatValue || 0,
+              amount: newValue,
             });
             return next;
           });
-        }}
-      />
-    );
-  }
-
-  return (
-    <div className='text-right'>
-      {new Intl.NumberFormat('en-AU', {
-        style: 'currency',
-        currency: 'AUD',
-      }).format(value)}
-    </div>
+        }
+      }}
+    />
   );
 }
