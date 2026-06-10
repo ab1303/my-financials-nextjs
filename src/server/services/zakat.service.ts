@@ -51,12 +51,20 @@ export const getZakat = async (calendarYearId: string): Promise<ZakatModel> => {
 
 export const getZakatPayments = async (
   calendarYearId: string,
+  beneficiaryId?: string,
 ): Promise<Array<ZakatPaymentModel>> => {
-  const where: Partial<Prisma.ZakatPaymentWhereInput> = {
+  const where: Prisma.ZakatPaymentWhereInput = {
     zakatObligation: {
       calendarId: calendarYearId,
     },
   };
+
+  if (beneficiaryId) {
+    where.OR = [
+      { businessId: beneficiaryId },
+      { individualId: beneficiaryId },
+    ];
+  }
 
   const zakatPayments = await prisma.zakatPayment.findMany({
     where,
@@ -156,6 +164,18 @@ export const deleteZakatPayment = async (zakatPaymentId: string) => {
   });
 };
 
+
+export const getZakatTotalPaid = async (
+  calendarYearId: string,
+): Promise<number> => {
+  const payments = await prisma.zakatPayment.findMany({
+    where: { zakatObligation: { calendarId: calendarYearId } },
+    select: { amount: true },
+  });
+
+  return payments.reduce((sum, p) => sum + p.amount.toNumber(), 0);
+};
+
 /**
  * Gets zakat totals broken down by deductible status (DEDUCTIBLE, NON_DEDUCTIBLE)
  * for a fiscal year.
@@ -193,6 +213,38 @@ export const getZakatTotalsByCategory = async (
     deductibleTotal,
     nonDeductibleTotal,
   };
+};
+
+/**
+ * Gets zakat totals broken down by beneficiary.
+ */
+export const getZakatTotalsByBeneficiary = async (
+  calendarYearId: string,
+): Promise<Array<{ id: string; name: string; total: number }>> => {
+  const zakatPayments = await prisma.zakatPayment.findMany({
+    where: { zakatObligation: { calendarId: calendarYearId } },
+    select: {
+      amount: true,
+      business: { select: { id: true, name: true } },
+      individual: { select: { id: true, name: true } },
+    },
+  });
+
+  const beneficiaryTotals: Record<string, { id: string; name: string; total: number }> = {};
+
+  zakatPayments.forEach((payment) => {
+    const amount = payment.amount.toNumber();
+    const entity = payment.business ?? payment.individual;
+    const id = entity?.id ?? 'unknown';
+    const name = entity?.name ?? 'Unknown';
+
+    if (!beneficiaryTotals[id]) {
+      beneficiaryTotals[id] = { id, name, total: 0 };
+    }
+    beneficiaryTotals[id].total += amount;
+  });
+
+  return Object.values(beneficiaryTotals);
 };
 
 export async function getUnlinkedZakatTransactions(

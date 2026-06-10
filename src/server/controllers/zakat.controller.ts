@@ -3,10 +3,22 @@ import {
   getZakat,
   getZakatPayments,
   getZakatTotalsByCategory,
+  getZakatTotalsByBeneficiary,
+  getZakatTotalPaid,
   updateZakatObligation,
 } from '../services/zakat.service';
 import { handleCaughtError } from '../utils/prisma';
-// ...
+// ... (rest of imports)
+
+export const zakatTotalPaidHandler = async (calendarYearId: string) => {
+  try {
+    return await getZakatTotalPaid(calendarYearId);
+  } catch (e) {
+    handleCaughtError(e);
+    return 0;
+  }
+};
+
 export const createZakatYearHandler = async (
   zakatCalendarYearId: string,
   totalAmount: number
@@ -31,9 +43,9 @@ export const createZakatYearHandler = async (
   }
 };
 
-export const zakatPaymentsHandler = async (calendarYearId: string) => {
+export const zakatPaymentsHandler = async (calendarYearId: string, beneficiaryId?: string) => {
   try {
-    const zakatPayments = await getZakatPayments(calendarYearId);
+    const zakatPayments = await getZakatPayments(calendarYearId, beneficiaryId);
     return zakatPayments;
   } catch (e) {
     handleCaughtError(e);
@@ -68,3 +80,17 @@ export const zakatTotalsByCategoryHandler = async (
   }
 };
 
+/**
+ * Handler that returns zakat totals broken down by beneficiary.
+ */
+export const zakatTotalsByBeneficiaryHandler = async (
+  calendarYearId: string,
+) => {
+  try {
+    const totals = await getZakatTotalsByBeneficiary(calendarYearId);
+    return totals;
+  } catch (e) {
+    handleCaughtError(e);
+    return [];
+  }
+};

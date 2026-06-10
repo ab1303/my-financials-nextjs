@@ -11,10 +11,12 @@ import ZakatTableClient from './ZakatTableClient';
 
 export type ZakatTableServerProps = {
   calendarYearId: string;
+  beneficiaryId?: string;
 };
 
 export default async function ZakatPaymentsTableServer({
   calendarYearId,
+  beneficiaryId,
 }: ZakatTableServerProps) {
   try {
     // Get user session for user-specific data
@@ -23,7 +25,7 @@ export default async function ZakatPaymentsTableServer({
       throw new Error('User session not found');
     }
 
-    const zakatPayments = await zakatPaymentsHandler(calendarYearId);
+    const zakatPayments = await zakatPaymentsHandler(calendarYearId, beneficiaryId);
     const individuals = await allIndividualDetailsHandler(session.user.id);
     const businesses = await allBusinessDetailsHandler(session.user.id);
 

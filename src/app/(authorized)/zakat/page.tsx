@@ -6,8 +6,11 @@ import {
   createZakatYearHandler,
   zakatHandler,
   zakatTotalsByCategoryHandler,
+  zakatTotalsByBeneficiaryHandler,
+  zakatTotalPaidHandler,
 } from '@/server/controllers/zakat.controller';
 
+import ZakatBeneficiaryBreakdownWidget from './_components/ZakatBeneficiaryBreakdownWidget';
 import UnlinkedZakatTransactionsBanner from './_components/UnlinkedZakatTransactionsBanner';
 import type { FormInput } from './_schema';
 import ZakatForm from './form';
@@ -55,13 +58,18 @@ export default async function ZakatPage({
   const selectedCalendarYearId = selectedCalendarYear
     ? selectedCalendarYear.id
     : '';
+  
+  const beneficiaryId = getSelectedParam(params?.beneficiaryId) || undefined;
 
   const zakat = await zakatHandler(selectedCalendarYearId);
   const zakatTotals = await zakatTotalsByCategoryHandler(selectedCalendarYearId);
+  const beneficiaryBreakdown = await zakatTotalsByBeneficiaryHandler(selectedCalendarYearId);
+  const totalPaid = await zakatTotalPaidHandler(selectedCalendarYearId);
 
   const initialData = {
     zakatYearData,
     amountDue: zakat?.amountDue || 0,
+    totalPaid,
     zakatTotals,
   };
 
@@ -92,12 +100,18 @@ export default async function ZakatPage({
               />
             </Suspense>
           )}
+          <ZakatBeneficiaryBreakdownWidget
+            breakdown={beneficiaryBreakdown}
+          />
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             <p className='text-sm font-semibold text-foreground mb-4'>
               {selectedCalendarYear?.description} Payments
             </p>
 
-            <ZakatPaymentsTableServer calendarYearId={selectedCalendarYearId} />
+            <ZakatPaymentsTableServer
+              calendarYearId={selectedCalendarYearId}
+              beneficiaryId={beneficiaryId}
+            />
           </Suspense>
         </ZakatForm>
       </div>

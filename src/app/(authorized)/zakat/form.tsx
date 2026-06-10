@@ -83,6 +83,7 @@ type ZakatFormProps = {
   initialData: {
     zakatYearData: Array<CalendarYearType>;
     amountDue: number;
+    totalPaid: number;
     zakatTotals: {
       deductibleTotal: number;
       nonDeductibleTotal: number;
@@ -94,7 +95,7 @@ type ZakatFormProps = {
 };
 
 export default function ZakatForm({
-  initialData: { zakatYearData, amountDue, zakatTotals },
+  initialData: { zakatYearData, amountDue, totalPaid, zakatTotals },
   yearIdParam,
   addZakatCalendarYear,
   children,
@@ -184,19 +185,34 @@ export default function ZakatForm({
           />
         </div>
       </div>
-      <div className='mx-10'>
-        <Label>Total Amount Due</Label>
-        <div className='mt-3'>
-          <NumericFormatWithIndicator
-            indicatorText='Saving...'
-            isWorking={isSavingAmount}
-            isSaved={isSavedAmount}
-            value={totalAmountDue}
-            onValueChange={(values) => {
-              setTotalAmountDue(values.floatValue || 0);
-            }}
-            onBlur={updateTotalZakatAmount}
-          />
+      <div className='mx-10 grid grid-cols-2 gap-4'>
+        <div>
+          <Label>Total Amount Due</Label>
+          <div className='mt-3'>
+            <NumericFormatWithIndicator
+              indicatorText='Saving...'
+              isWorking={isSavingAmount}
+              isSaved={isSavedAmount}
+              value={totalAmountDue}
+              onValueChange={(values) => {
+                setTotalAmountDue(values.floatValue || 0);
+              }}
+              onBlur={updateTotalZakatAmount}
+            />
+          </div>
+        </div>
+        <div>
+          <Label>Total Paid</Label>
+          <div className='mt-3'>
+            <NumericFormat
+              className='w-3/5 block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+              prefix='$'
+              displayType='text'
+              thousandSeparator
+              value={totalPaid}
+              readOnly
+            />
+          </div>
         </div>
       </div>
 

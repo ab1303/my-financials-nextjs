@@ -47,6 +47,9 @@ export function getTableColumns(
       header: () => <span>Amount Paid</span>,
       cell: ({ row, table }) => <ZakatAmountCell row={row} table={table} />,
       footer: (props) => props.column.id,
+      meta: {
+        align: 'right',
+      },
     }),
     columnHelper.accessor('isDeductible', {
       size: 150,
