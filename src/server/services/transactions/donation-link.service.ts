@@ -1,4 +1,5 @@
 import { prisma } from '@/server/db/client';
+import { getAllLinkedTransactionIds, DONATION_PURPOSES } from './donation-utils.service';
 
 export interface UnlinkedDonationTransaction {
   id: string;
@@ -28,33 +29,29 @@ async function getPotentialDonationTransactions(
   });
 }
 
-async function getLinkedVoluntaryTransactionIds(): Promise<Set<string>> {
-  const linked = await prisma.voluntaryDonation.findMany({
-    where: { transactionId: { not: null } },
-    select: { transactionId: true },
-  });
-  return new Set(linked.map((d) => d.transactionId!));
-}
-
 /**
  * Returns DEBIT CONFIRMED transactions with category "Gifts & donations"
- * that have no linked VoluntaryDonation.
+ * that have no linked VoluntaryDonation, InterestCleansing, or ZakatPayment.
  */
 export async function getUnlinkedDonationTransactions(
   userId: string,
   dateFrom: Date,
   dateTo: Date,
 ): Promise<UnlinkedDonationTransaction[]> {
-  const [allDonationTx, linkedVoluntaryTxIds] = await Promise.all([
+  const [allDonationTx, allLinkedTxIds] = await Promise.all([
     getPotentialDonationTransactions(userId, dateFrom, dateTo, {
       orderBy: { date: 'desc' },
       select: { id: true, date: true, description: true, amount: true, category: true },
     }),
-    getLinkedVoluntaryTransactionIds(),
+    getAllLinkedTransactionIds([
+      DONATION_PURPOSES.VOLUNTARY,
+      DONATION_PURPOSES.INTEREST_CLEANSING,
+      DONATION_PURPOSES.ZAKAT,
+    ]),
   ]);
 
   return allDonationTx
-    .filter((tx) => !linkedVoluntaryTxIds.has(tx.id))
+    .filter((tx) => !allLinkedTxIds.has(tx.id))
     .map((tx) => ({
       id: tx.id,
       date: tx.date.toISOString().slice(0, 10),
@@ -75,12 +72,16 @@ export async function countUnlinkedDonationTransactions(
   const dateFrom = new Date(fromYear, 6, 1);
   const dateTo = new Date(toYear, 5, 30, 23, 59, 59);
 
-  const [allDonationTx, linkedVoluntaryTxIds] = await Promise.all([
+  const [allDonationTx, allLinkedTxIds] = await Promise.all([
     getPotentialDonationTransactions(userId, dateFrom, dateTo, {
       select: { id: true },
     }),
-    getLinkedVoluntaryTransactionIds(),
+    getAllLinkedTransactionIds([
+      DONATION_PURPOSES.VOLUNTARY,
+      DONATION_PURPOSES.INTEREST_CLEANSING,
+      DONATION_PURPOSES.ZAKAT,
+    ]),
   ]);
 
-  return allDonationTx.filter((t) => !linkedVoluntaryTxIds.has(t.id)).length;
+  return allDonationTx.filter((t) => !allLinkedTxIds.has(t.id)).length;
 }

@@ -1,11 +1,12 @@
 import type { Prisma } from '@prisma/client';
+import { prisma } from '../utils/prisma';
+import { getAllLinkedTransactionIds, DONATION_PURPOSES } from './transactions/donation-utils.service';
 
 import type {
   ZakatModel,
   ZakatPaymentInput,
   ZakatPaymentModel,
 } from '../models/zakat';
-import { prisma } from '../utils/prisma';
 
 export const addZakatCalendarYearDetails = async ({
   calendarId,
@@ -192,23 +193,31 @@ export async function getUnlinkedZakatTransactions(
   const dateFrom = new Date(fromYear, 6, 1);
   const dateTo = new Date(toYear, 5, 30, 23, 59, 59);
 
-  const rows = await prisma.transaction.findMany({
-    where: {
-      userId,
-      type: 'DEBIT',
-      status: 'CONFIRMED',
-      category: { equals: 'Gifts & donations', mode: 'insensitive' },
-      date: { gte: dateFrom, lte: dateTo },
-      zakatPayment: null,
-    },
-    orderBy: { date: 'desc' },
-    select: { id: true, date: true, description: true, amount: true },
-  });
+  const [rows, allLinkedTxIds] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        userId,
+        type: 'DEBIT',
+        status: 'CONFIRMED',
+        category: { equals: 'Gifts & donations', mode: 'insensitive' },
+        date: { gte: dateFrom, lte: dateTo },
+      },
+      orderBy: { date: 'desc' },
+      select: { id: true, date: true, description: true, amount: true },
+    }),
+    getAllLinkedTransactionIds([
+      DONATION_PURPOSES.VOLUNTARY,
+      DONATION_PURPOSES.INTEREST_CLEANSING,
+      DONATION_PURPOSES.ZAKAT,
+    ]),
+  ]);
 
-  return rows.map((tx) => ({
-    id: tx.id,
-    date: tx.date.toISOString().slice(0, 10),
-    description: tx.description,
-    amount: Number(tx.amount),
-  }));
+  return rows
+    .filter((tx) => !allLinkedTxIds.has(tx.id))
+    .map((tx) => ({
+      id: tx.id,
+      date: tx.date.toISOString().slice(0, 10),
+      description: tx.description,
+      amount: Number(tx.amount),
+    }));
 }
