@@ -47,7 +47,7 @@ export default function ZakatTableClient({
   deleteRow,
   calendarYearId,
 }: ZakatTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<number, ZakatPaymentType>>(
+  const [editedRows, setEditedRows] = useState<Map<string | number, ZakatPaymentType>>(
     new Map(),
   );
   const [validRows, setValidRows] = useState({});
@@ -85,7 +85,7 @@ export default function ZakatTableClient({
     });
 
     // Immediately put the row into edit mode
-    setEditedRows(new Map([[data.length, newRow]]));
+    setEditedRows((prev) => new Map(prev).set(tempId, newRow));
 
     toast.info('New payment row added. Fill in the details and save.');
   };
@@ -105,22 +105,29 @@ export default function ZakatTableClient({
       setEditedRows,
       revertData: (rowIndex: number) => {
         const row = data[rowIndex];
-        if (row && row.id.startsWith('temp-')) {
-          // Remove temporary row if user cancels editing
-          dispatch({
-            type: 'ZAKAT/Payments/REMOVE_PAYMENT',
-            payload: {
-              zakatPaymentId: row.id,
-            },
+        if (row) {
+          setEditedRows((prev) => {
+            const next = new Map(prev);
+            next.delete(row.id);
+            return next;
           });
-          toast.info('New payment cancelled');
+          if (row.id.startsWith('temp-')) {
+            // Remove temporary row if user cancels editing
+            dispatch({
+              type: 'ZAKAT/Payments/REMOVE_PAYMENT',
+              payload: {
+                zakatPaymentId: row.id,
+              },
+            });
+            toast.info('New payment cancelled');
+          }
         }
       },
       updateRow: async (rowIndex: number) => {
         const row = data[rowIndex];
         if (!row) return;
 
-        const updatedRecord = editedRows.get(rowIndex);
+        const updatedRecord = editedRows.get(row.id);
         if (!updatedRecord) return;
 
         // Check if this is a temporary row (new payment)

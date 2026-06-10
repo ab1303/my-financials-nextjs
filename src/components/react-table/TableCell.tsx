@@ -23,20 +23,20 @@ declare module '@tanstack/react-table' {
   }
 }
 
-type TableCellProps<TData, TValue> = {
+type TableCellProps<TData extends { id: string }, TValue> = {
   table: CellContext<TData, TValue>['table'];
   row: CellContext<TData, TValue>['row'];
   column: CellContext<TData, TValue>['column'];
-  getValue: CellContext<TData, TValue>['getValue'];
+  getValue?: CellContext<TData, TValue>['getValue'];
 };
 
-export const TableCell = <TData, TValue>({
+export const TableCell = <TData extends { id: string }, TValue>({
   getValue,
   row,
   column,
   table,
 }: TableCellProps<TData, TValue>) => {
-  const initialValue = getValue();
+  const initialValue = getValue ? getValue() : row.getValue(column.id);
   const columnMeta = column.columnDef.meta;
   const tableMeta = table.options.meta;
   const uniqSelectId = useId();
@@ -61,12 +61,12 @@ export const TableCell = <TData, TValue>({
 
     tableMeta?.setEditedRows(
       produce((draft) => {
-        draft.set(row.index, castDraft(updatedRecord));
+        draft.set(row.original.id, castDraft(updatedRecord));
       }),
     );
   };
 
-  const editedRecord = tableMeta?.editedRows.get(row.index);
+  const editedRecord = tableMeta?.editedRows.get(row.original.id);
   const value = editedRecord ? editedRecord[columnMeta.propName] : initialValue;
   let controlRenderer: Record<ControlType, () => React.JSX.Element | null>;
   if (editedRecord) {

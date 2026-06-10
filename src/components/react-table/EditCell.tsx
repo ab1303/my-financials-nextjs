@@ -10,13 +10,14 @@ import { tableCellStyles } from '@/styles/theme';
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     validRows: Record<string, TData>;
-    editedRows: Map<number, TData>;
+    editedRows: Map<string | number, TData>;
     updateRow: (rowIndex: number) => void;
     removeRow: (rowIndex: number) => void;
     revertData: (rowIndex: number) => void;
-    setEditedRows: Dispatch<SetStateAction<Map<number, TData>>>;
+    setEditedRows: Dispatch<SetStateAction<Map<string | number, TData>>>;
   }
 }
+
 
 type EditCellProps<TData, TValue> = {
   table: CellContext<TData, TValue>['table'];
