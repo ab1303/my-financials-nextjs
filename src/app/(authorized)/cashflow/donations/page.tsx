@@ -5,12 +5,16 @@ import { Suspense } from 'react';
 
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { donationTotalsByCategoryHandler } from '@/server/controllers/donation.controller';
+import {
+  donationTotalsByCategoryHandler,
+  donationTotalsByBeneficiaryHandler,
+} from '@/server/controllers/donation.controller';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { prisma } from '@/server/utils/prisma';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
 import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
+import DonationBeneficiaryBreakdownWidget from './_components/DonationBeneficiaryBreakdownWidget';
 import DonationFilters from './DonationFilters';
 import DonationPaymentsTableServer from './DonationTableServer';
 
@@ -51,6 +55,7 @@ export default async function DonationPage({
   const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
 
   const donationTotals = await donationTotalsByCategoryHandler(selectedCalendarYearId);
+  const beneficiaryBreakdown = await donationTotalsByBeneficiaryHandler(selectedCalendarYearId);
 
   const initialData = {
     donationYearData,
@@ -83,6 +88,11 @@ export default async function DonationPage({
             />
           </Suspense>
         )}
+        <DonationBeneficiaryBreakdownWidget
+          breakdown={beneficiaryBreakdown}
+          yearDateFrom={selectedCalendarYear ? `${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01` : ''}
+          yearDateTo={selectedCalendarYear ? `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}` : ''}
+        />
         <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
           {selectedCalendarYear && (
             <div className='font-mono text-muted-foreground mb-3'>

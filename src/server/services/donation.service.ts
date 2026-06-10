@@ -272,3 +272,39 @@ export const getDonationTotalsByCategory = async (
     nonDeductibleTotal,
   };
 };
+
+/**
+ * Gets donation totals broken down by beneficiary name.
+ */
+export const getDonationTotalsByBeneficiary = async (
+  calendarYearId: string,
+): Promise<Record<string, number>> => {
+  const [voluntary, zakat] = await Promise.all([
+    prisma.voluntaryDonation.findMany({
+      where: { donationLedger: { calendarId: calendarYearId } },
+      select: {
+        amount: true,
+        business: { select: { name: true } },
+        individual: { select: { name: true } },
+      },
+    }),
+    prisma.zakatPayment.findMany({
+      where: { zakatObligation: { calendarId: calendarYearId } },
+      select: {
+        amount: true,
+        business: { select: { name: true } },
+        individual: { select: { name: true } },
+      },
+    }),
+  ]);
+
+  const beneficiaryTotals: Record<string, number> = {};
+
+  [...voluntary, ...zakat].forEach((payment) => {
+    const amount = payment.amount.toNumber();
+    const name = payment.business?.name ?? payment.individual?.name ?? 'Unknown';
+    beneficiaryTotals[name] = (beneficiaryTotals[name] ?? 0) + amount;
+  });
+
+  return beneficiaryTotals;
+};

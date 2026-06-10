@@ -3,6 +3,7 @@ import {
   getDonation,
   getDonationPayments,
   getDonationTotalsByCategory,
+  getDonationTotalsByBeneficiary,
   getTotalDonations,
 } from '../services/donation.service';
 import { handleCaughtError } from '../utils/prisma';
@@ -68,10 +69,24 @@ export const donationTotalsByCategoryHandler = async (
     handleCaughtError(e);
     return {
       voluntaryTotal: 0,
-      interestCleansingTotal: 0,
       deductibleTotal: 0,
       nonDeductibleTotal: 0,
     };
+  }
+};
+
+/**
+ * Handler that returns donation totals broken down by beneficiary.
+ */
+export const donationTotalsByBeneficiaryHandler = async (
+  calendarYearId: string,
+) => {
+  try {
+    const totals = await getDonationTotalsByBeneficiary(calendarYearId);
+    return totals;
+  } catch (e) {
+    handleCaughtError(e);
+    return {};
   }
 };
 
