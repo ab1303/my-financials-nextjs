@@ -6,14 +6,14 @@ import clsx from 'clsx';
 import { Loader2 } from 'lucide-react';
 import { useId, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import type { SingleValue } from 'react-select';
+import type { GroupBase, OptionProps, SingleValue } from 'react-select';
+import { components } from 'react-select';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { AddressComponent, Button,Card } from '@/components';
 import { Label, TextInput } from '@/components/ui';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
-import { DeletableOption } from '@/components/ui/DeletableOption';
+import { DeletableOption, SelectWrapper as Select } from '@/components/ui/Select';
 import { trpc } from '@/server/trpc/client';
 import { BusinessEnumType } from '@/types/enum';
 

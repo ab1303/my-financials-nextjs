@@ -3,7 +3,7 @@
 import type { GroupBase } from 'react-select';
 import CreatableSelect, { type CreatableProps } from 'react-select/creatable';
 
-import { getCompactSelectStyles,getSelectStyles } from '@/lib/select-styles';
+import { getCompactSelectStyles, getSelectStyles } from '@/lib/select-styles';
 
 type CreatableAppSelectProps<
   Option = unknown,
@@ -14,7 +14,7 @@ type CreatableAppSelectProps<
   styles?: CreatableProps<Option, IsMulti, Group>['styles'];
 };
 
-export function CreatableAppSelect<
+export function CreatableSelectWrapper<
   Option = unknown,
   IsMulti extends boolean = false,
   Group extends GroupBase<Option> = GroupBase<Option>,
@@ -31,5 +31,3 @@ export function CreatableAppSelect<
     />
   );
 }
-
-export default CreatableAppSelect;
