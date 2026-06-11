@@ -65,7 +65,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       ]);
 
       // Mock cleansing donations for 2022
-      prismaMock.donationPayment.findMany.mockResolvedValue([
+      prismaMock.interestCleansing.findMany.mockResolvedValue([
         {
           id: 'dp-2022-001',
           datePaid: new Date('2022-01-20'),
@@ -176,7 +176,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       ]);
 
       // Mock cleansing donations for fiscal year
-      prismaMock.donationPayment.findMany.mockResolvedValue([
+      prismaMock.interestCleansing.findMany.mockResolvedValue([
         {
           id: 'dp-fy-001',
           datePaid: new Date('2021-07-15'),
@@ -291,7 +291,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       ]);
 
       // Mock cleansing donations across the back-dated window
-      prismaMock.donationPayment.findMany.mockResolvedValue([
+      prismaMock.interestCleansing.findMany.mockResolvedValue([
         {
           id: 'dp-bd-001',
           datePaid: new Date('2022-10-10'),
@@ -381,7 +381,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
 
       // Mock donations: only one inside the 2023 window
       // The service filters by datePaid range, so outside donations would never be returned by Prisma
-      prismaMock.donationPayment.findMany.mockResolvedValue([
+      prismaMock.interestCleansing.findMany.mockResolvedValue([
         {
           id: 'dp-2023-inside',
           datePaid: new Date('2023-06-20'),
@@ -398,7 +398,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
 
       // Verify donation query was called with correct window
-      const donationCallArg = (prismaMock.donationPayment.findMany as any)?.mock?.calls?.[0]?.[0];
+      const donationCallArg = (prismaMock.interestCleansing.findMany as any)?.mock?.calls?.[0]?.[0];
       const dateFromQuery = donationCallArg?.where?.datePaid?.gte;
       const dateToQuery = donationCallArg?.where?.datePaid?.lte;
 
@@ -453,7 +453,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      prismaMock.donationPayment.findMany.mockResolvedValue([]);
+      prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
       const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
 
@@ -504,7 +504,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never);
       }
       prismaMock.transaction.findMany.mockResolvedValue(transactions);
-      prismaMock.donationPayment.findMany.mockResolvedValue([]);
+      prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
       const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
 
@@ -579,7 +579,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       ]);
 
       // Mock donations with partial cleansing
-      prismaMock.donationPayment.findMany.mockResolvedValue([
+      prismaMock.interestCleansing.findMany.mockResolvedValue([
         {
           id: 'dp-t1',
           datePaid: new Date('2023-01-15'),
@@ -647,7 +647,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           bankAccountId: bankId,
         } as never,
       ]);
-      prismaMock.donationPayment.findMany.mockResolvedValueOnce([]);
+      prismaMock.interestCleansing.findMany.mockResolvedValueOnce([]);
 
       const result2021 = await getYearlyCleansingData(bankId, calendarYear2021, userId);
       expect(result2021.dateFrom).toBe('2021-01-01');
@@ -681,7 +681,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           bankAccountId: bankId,
         } as never,
       ]);
-      prismaMock.donationPayment.findMany.mockResolvedValueOnce([]);
+      prismaMock.interestCleansing.findMany.mockResolvedValueOnce([]);
 
       const result2022 = await getYearlyCleansingData(bankId, calendarYear2022, userId);
       expect(result2022.dateFrom).toBe('2022-01-01');

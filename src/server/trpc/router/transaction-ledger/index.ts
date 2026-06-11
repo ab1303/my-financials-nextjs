@@ -8,6 +8,8 @@ import { getVoidedTransactionsQuery } from './queries/getVoidedTransactions';
 import { updateCategoryMutation } from './mutations/updateCategory';
 import { restoreVoidedTransactionMutation } from './mutations/restoreVoidedTransaction';
 
+export * from './shared';
+
 export const transactionLedgerRouter = router({
   getAll: getAllQuery,
   getFilterOptions: getFilterOptionsQuery,

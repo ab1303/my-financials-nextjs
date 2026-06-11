@@ -49,6 +49,7 @@ export function getTableColumns(
       footer: (props) => props.column.id,
       meta: {
         align: 'right',
+        propName: 'amount',
       },
     }),
     columnHelper.accessor('isDeductible', {

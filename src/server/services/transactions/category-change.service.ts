@@ -1,4 +1,4 @@
-import { TransactionTypeEnum, TransactionStatusEnum } from '@prisma/client';
+import { TransactionTypeEnum, TransactionStatusEnum, TransactionSourceEnum } from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
 import { TRPCError } from '@trpc/server';
 import { 
@@ -42,7 +42,7 @@ export async function validateCategoryChange(ctx: {
   if (input.offsetTransactionId) {
     const linked = await prismaClient.transaction.findUnique({
       where: { id: input.offsetTransactionId },
-      select: { userId: true, type: true, status: true, category: true },
+      select: { userId: true, type: true, status: true, category: true, description: true },
     });
     if (!linked || linked.userId !== userId) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Linked transaction not found' });

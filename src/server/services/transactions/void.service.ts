@@ -239,18 +239,8 @@ async function reverseDownstream(
     amount: Decimal;
     date: Date;
     category: string;
-    donationPayment: { id: string } | null;
   },
 ): Promise<void> {
-  // Unlink donation payment regardless of transaction status (onDelete:SetNull only fires
-  // on hard delete; voiding leaves a stale FK without this explicit clear).
-  if (tx.donationPayment) {
-    await db.donationPayment.update({
-      where: { id: tx.donationPayment.id },
-      data: { interestTxId: null },
-    });
-  }
-
   if (tx.status !== 'CONFIRMED') return;
 
   if (tx.type === 'DEBIT') {

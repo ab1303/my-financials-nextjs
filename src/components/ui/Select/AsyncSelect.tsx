@@ -1,0 +1,35 @@
+'use client';
+
+import AsyncSelect, { type AsyncProps } from 'react-select/async';
+import { type GroupBase } from 'react-select';
+
+import { getCompactSelectStyles, getSelectStyles } from '@/lib/select-styles';
+
+type AsyncAppSelectProps<
+  Option = unknown,
+  IsMulti extends boolean = false,
+  Group extends GroupBase<Option> = GroupBase<Option>,
+> = Omit<AsyncProps<Option, IsMulti, Group>, 'styles'> & {
+  compact?: boolean;
+  styles?: AsyncProps<Option, IsMulti, Group>['styles'];
+  usePortal?: boolean;
+};
+
+export function AsyncSelectWrapper<
+  Option = unknown,
+  IsMulti extends boolean = false,
+  Group extends GroupBase<Option> = GroupBase<Option>,
+>({ compact = false, styles: styleOverrides, usePortal = false, ...props }: AsyncAppSelectProps<Option, IsMulti, Group>) {
+  const baseStyles = compact
+    ? getCompactSelectStyles<Option, IsMulti, Group>()
+    : getSelectStyles<Option, IsMulti, Group>();
+
+  return (
+    <AsyncSelect
+      menuPosition={usePortal ? undefined : 'fixed'}
+      menuPortalTarget={usePortal && typeof document !== 'undefined' ? document.body : undefined}
+      styles={styleOverrides ? { ...baseStyles, ...styleOverrides } : baseStyles}
+      {...props}
+    />
+  );
+}

@@ -1,16 +1,12 @@
 'use client';
 
 import clsx from 'clsx';
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import type { SingleValue } from 'react-select';
-import Select from 'react-select';
-import AsyncSelect from 'react-select/async';
+import {
+  AsyncSelectWrapper as AsyncSelect,
+  SelectWrapper as Select,
+} from '@/components/ui/Select';
 
 import { getCompactSelectStyles } from '@/lib/select-styles';
 import {
@@ -186,7 +182,8 @@ export default function TransactionRow({
     transaction.category === REIMBURSEMENT_CATEGORY ||
     localCategory === REIMBURSEMENT_CATEGORY ||
     (transaction.type === 'CREDIT' &&
-      (transaction.status === 'CONFIRMED' || transaction.status === 'EXCLUDED')) ||
+      (transaction.status === 'CONFIRMED' ||
+        transaction.status === 'EXCLUDED')) ||
     (transaction.type === 'DEBIT' && transaction.status === 'CONFIRMED');
 
   // Transfer is a special system category valid for any transaction;
@@ -265,9 +262,9 @@ export default function TransactionRow({
 
         return matches.map((match) => ({
           value: match.id,
-          label: match.description,
+          label: `${match.date} - ${match.description} (${formatCurrency(match.amount)})`,
           category: match.category,
-          meta: `${match.date} · ${formatCurrency(match.amount)} · ${match.category}`,
+          meta: match.category,
         }));
       } catch (error) {
         console.error(
@@ -304,7 +301,8 @@ export default function TransactionRow({
     const linkedId = linkedOption?.value ?? null;
     // Auto-derive offsetCategory from the linked DEBIT's category if not already chosen.
     const derivedOffsetCategory = linkedOption?.category ?? '';
-    const effectiveOffsetCategory = localOffsetCategory || derivedOffsetCategory;
+    const effectiveOffsetCategory =
+      localOffsetCategory || derivedOffsetCategory;
     setSelectedLinkOption(linkedOption);
     setLocalOffsetTxId(linkedId);
     if (!localOffsetCategory && derivedOffsetCategory) {
@@ -408,16 +406,14 @@ export default function TransactionRow({
               isClearable={false}
               value={selectedCategory}
               options={categoryOptions}
-              onChange={(option: SingleValue<CategoryOption>) =>
-                handleChange(option?.value ?? '')
+              onChange={(option) =>
+                handleChange((option as CategoryOption)?.value ?? '')
               }
               styles={{
                 ...compactSelectStyles,
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               }}
               className='w-full'
-              menuPortalTarget={document.body}
-              menuPosition='fixed'
+              usePortal
             />
 
             {localCategory === REIMBURSEMENT_CATEGORY && (
@@ -427,7 +423,12 @@ export default function TransactionRow({
                     {localOffsetTxId ? (
                       /* LINKED STATE: single compound chip — link + derived category as one unit */
                       <div className='mt-1 flex items-center gap-1.5 overflow-hidden rounded-md border border-teal-300 bg-teal-50 px-2 py-1.5 text-xs dark:border-teal-700 dark:bg-teal-950/30'>
-                        <span className='shrink-0 text-teal-500' aria-hidden='true'>🔗</span>
+                        <span
+                          className='shrink-0 text-teal-500'
+                          aria-hidden='true'
+                        >
+                          🔗
+                        </span>
                         <span className='min-w-0 flex-1 truncate text-teal-700 dark:text-teal-300'>
                           {selectedLinkOption?.label ?? 'Linked expense'}
                         </span>
@@ -442,7 +443,15 @@ export default function TransactionRow({
                           onClick={() => handleLinkTransaction(null)}
                           className='ml-0.5 shrink-0 rounded-full p-0.5 text-gray-400 transition-colors hover:bg-red-100 hover:text-red-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 dark:hover:bg-red-900/30'
                         >
-                          <svg className='h-3 w-3' viewBox='0 0 12 12' fill='none' stroke='currentColor' strokeWidth={1.8} strokeLinecap='round' aria-hidden='true'>
+                          <svg
+                            className='h-3 w-3'
+                            viewBox='0 0 12 12'
+                            fill='none'
+                            stroke='currentColor'
+                            strokeWidth={1.8}
+                            strokeLinecap='round'
+                            aria-hidden='true'
+                          >
                             <path d='M1 1l10 10M11 1L1 11' />
                           </svg>
                         </button>
@@ -482,7 +491,15 @@ export default function TransactionRow({
                               }
                               styles={{
                                 ...linkSelectStyles,
-                                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                menuPortal: (base) => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                  width: '400px', // Explicitly wider
+                                }),
+                                control: (base) => ({
+                                  ...base,
+                                  width: '400px', // Also wider
+                                }),
                               }}
                               className='w-full'
                               noOptionsMessage={({ inputValue }) =>
@@ -510,16 +527,16 @@ export default function TransactionRow({
                           placeholder='Offsets category…'
                           value={selectedOffsetCategory}
                           options={offsetCategoryOptions}
-                          onChange={(option: SingleValue<CategoryOption>) =>
-                            handleOffsetChange(option?.value ?? '')
+                          onChange={(option) =>
+                            handleOffsetChange(
+                              (option as CategoryOption)?.value ?? '',
+                            )
                           }
                           styles={{
                             ...compactSelectStyles,
-                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                           }}
                           className='w-full'
-                          menuPortalTarget={document.body}
-                          menuPosition='fixed'
+                          usePortal
                         />
                       </div>
                     )}
@@ -572,16 +589,17 @@ export default function TransactionRow({
                       🔗 Zakat linked
                     </span>
                   )}
-                  {!transaction.isDonationLinked && !transaction.isZakatLinked && (
-                    <span
-                      className={clsx(
-                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                        'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-                      )}
-                    >
-                      ⚠️ Needs classification
-                    </span>
-                  )}
+                  {!transaction.isDonationLinked &&
+                    !transaction.isZakatLinked && (
+                      <span
+                        className={clsx(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                          'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+                        )}
+                      >
+                        ⚠️ Needs classification
+                      </span>
+                    )}
                 </>
               )}
             {transaction.transferCounterpart && (

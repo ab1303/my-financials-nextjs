@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import { DonationPurposeEnum, type Prisma } from '@prisma/client';
 
 import { env } from '../../env/server.mjs';
 import type {
@@ -41,39 +41,68 @@ export const getDonationPayments = async (
   calendarYearId: string,
   beneficiaryId?: string,
 ): Promise<Array<DonationPaymentModel>> => {
-  const where: Prisma.VoluntaryDonationWhereInput = {
-    donationLedger: {
-      calendarId: calendarYearId,
-    },
-  };
+  const [voluntary, zakat, interest] = await Promise.all([
+    prisma.voluntaryDonation.findMany({
+      where: {
+        donationLedger: { calendarId: calendarYearId },
+        ...(beneficiaryId ? { OR: [{ businessId: beneficiaryId }, { individualId: beneficiaryId }] } : {}),
+      },
+      include: { business: true, individual: true },
+    }),
+    prisma.zakatPayment.findMany({
+      where: {
+        zakatObligation: { calendarId: calendarYearId },
+        ...(beneficiaryId ? { OR: [{ businessId: beneficiaryId }, { individualId: beneficiaryId }] } : {}),
+      },
+      include: { business: true, individual: true },
+    }),
+    prisma.interestCleansing.findMany({
+      where: {
+        donationLedger: { calendarId: calendarYearId },
+        ...(beneficiaryId ? { sourceBusinessId: beneficiaryId } : {}),
+      },
+      include: { sourceBusiness: true },
+    }),
+  ]);
 
-  if (beneficiaryId) {
-    where.OR = [
-      { businessId: beneficiaryId },
-      { individualId: beneficiaryId },
-    ];
-  }
-
-  const voluntaryDonations = await prisma.voluntaryDonation.findMany({
-    where,
-    include: {
-      business: true,
-      individual: true,
-    },
-  });
-
-  return voluntaryDonations.map<DonationPaymentModel>((vd) => ({
-    id: vd.id,
-    datePaid: vd.datePaid,
-    amount: vd.amount.toNumber(),
-    businessId: vd.businessId,
-    individualId: vd.individualId,
-    donationLedgerId: vd.donationLedgerId,
-    transactionId: vd.transactionId,
-    beneficiaryType: vd.beneficiaryType,
-    isDeductible: vd.business?.isDgrRegistered === true,
-    donationPurpose: vd.purpose,
-  }));
+  return [
+    ...voluntary.map((vd): DonationPaymentModel => ({
+      id: vd.id,
+      datePaid: vd.datePaid,
+      amount: vd.amount.toNumber(),
+      businessId: vd.businessId,
+      individualId: vd.individualId,
+      donationLedgerId: vd.donationLedgerId,
+      transactionId: vd.transactionId,
+      beneficiaryType: vd.beneficiaryType,
+      isDeductible: vd.business?.isDgrRegistered === true,
+      donationPurpose: vd.purpose as DonationPurposeEnum,
+    })),
+    ...zakat.map((zp): DonationPaymentModel => ({
+      id: zp.id,
+      datePaid: zp.datePaid,
+      amount: zp.amount.toNumber(),
+      businessId: zp.businessId,
+      individualId: zp.individualId,
+      donationLedgerId: zp.zakatObligationId,
+      transactionId: zp.transactionId,
+      beneficiaryType: zp.beneficiaryType,
+      isDeductible: false,
+      donationPurpose: 'ZAKAT',
+    })),
+    ...interest.map((ic): DonationPaymentModel => ({
+      id: ic.id,
+      datePaid: ic.datePaid,
+      amount: ic.amount.toNumber(),
+      businessId: ic.sourceBusinessId,
+      individualId: null,
+      donationLedgerId: ic.donationLedgerId,
+      transactionId: ic.creditTxId,
+      beneficiaryType: 'BUSINESS',
+      isDeductible: ic.sourceBusiness?.isDgrRegistered === true,
+      donationPurpose: 'INTEREST_CLEANSING',
+    })),
+  ];
 };
 
 export const updateDonationPayment = async (
@@ -81,12 +110,19 @@ export const updateDonationPayment = async (
   donationPaymentId: string,
 ) => {
   await prisma.$transaction(async (tx) => {
-    // Determine purpose based on existing record
-    const existing = await tx.donationPayment.findUnique({
+    // Attempt to find the record in one of the payment tables
+    const voluntary = await tx.voluntaryDonation.findUnique({
       where: { id: donationPaymentId },
-      select: { donationPurpose: true },
+      select: { id: true },
     });
-    if (!existing) throw new Error('Donation payment not found');
+    const cleansing = await tx.interestCleansing.findUnique({
+      where: { id: donationPaymentId },
+      select: { id: true },
+    });
+    const zakat = await tx.zakatPayment.findUnique({
+      where: { id: donationPaymentId },
+      select: { id: true },
+    });
 
     const updateData = {
       datePaid: model.datePaid,
@@ -99,12 +135,12 @@ export const updateDonationPayment = async (
       updatedAt: new Date(),
     };
 
-    if (existing.donationPurpose === 'VOLUNTARY') {
+    if (voluntary) {
       await tx.voluntaryDonation.update({
         where: { id: donationPaymentId },
         data: updateData,
       });
-    } else if (existing.donationPurpose === 'INTEREST_CLEANSING') {
+    } else if (cleansing) {
       await tx.interestCleansing.update({
         where: { id: donationPaymentId },
         data: {
@@ -113,11 +149,13 @@ export const updateDonationPayment = async (
           sourceBusinessId: updateData.businessId,
         },
       });
-    } else if (existing.donationPurpose === 'ZAKAT') {
+    } else if (zakat) {
       await tx.zakatPayment.update({
         where: { id: donationPaymentId },
         data: updateData,
       });
+    } else {
+      throw new Error('Donation payment not found');
     }
   });
 };
