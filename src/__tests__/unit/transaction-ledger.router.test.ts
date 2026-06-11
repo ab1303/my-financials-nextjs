@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import { appRouter } from '@/server/trpc/router/_app';
-import { buildTransactionWhere } from '@/server/trpc/router/transaction-ledger';
+import { buildTransactionWhere } from '@/server/trpc/router/transaction-ledger/shared';
 
 
 describe('buildTransactionWhere', () => {
@@ -165,3 +166,46 @@ describe('transactionLedgerRouter.getAll — cursor pagination', () => {
     expect(prismaMock.transaction.count).not.toHaveBeenCalled();
   });
 });
+
+describe('transactionLedgerRouter.updateCategory — EXCLUDED promotion', () => {
+  const caller = appRouter.createCaller({
+    prisma: prismaMock,
+    session: { user: { id: 'user-1' } },
+  } as any);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('promotes an EXCLUDED transaction to CONFIRMED when reclassified to a standard category', async () => {
+    const txId = 'tx-1';
+    const initialTx = {
+      id: txId,
+      userId: 'user-1',
+      type: TransactionTypeEnum.DEBIT,
+      status: TransactionStatusEnum.EXCLUDED,
+      category: 'Excluded',
+      description: 'Some excluded payment',
+      amount: 100,
+      date: new Date(),
+    };
+    prismaMock.transaction.findUnique.mockResolvedValue(initialTx as never);
+    prismaMock.transaction.findMany.mockResolvedValue([] as never);
+    prismaMock.transaction.update.mockResolvedValue({} as never);
+
+    await caller.transactionLedger.updateCategory({
+      id: txId,
+      newCategory: 'Groceries',
+    });
+
+    expect(prismaMock.transaction.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: TransactionStatusEnum.CONFIRMED,
+          category: 'Groceries',
+        }),
+      }),
+    );
+  });
+});
+
