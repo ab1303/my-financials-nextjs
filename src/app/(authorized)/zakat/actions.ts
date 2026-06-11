@@ -7,7 +7,7 @@ import {
   deleteZakatPayment,
   getZakat,
   updateZakatPayment,
-} from '@/server/services/zakat.service';
+} from '@/server/services/zakat/zakat.service';
 
 import type {
   CreateZakatPaymentInput,
@@ -90,6 +90,7 @@ export async function editRow(input: UpdateZakatPaymentInput) {
 
     // Update payment record
     await updateZakatPayment(
+      validatedInput.id,
       {
         id: validatedInput.id,
         datePaid: validatedInput.datePaid,
@@ -98,7 +99,6 @@ export async function editRow(input: UpdateZakatPaymentInput) {
         beneficiaryId: validatedInput.beneficiaryId,
         zakatObligationId: '', // This will be ignored in the update
       },
-      validatedInput.id,
     );
 
     return { success: true, error: null };

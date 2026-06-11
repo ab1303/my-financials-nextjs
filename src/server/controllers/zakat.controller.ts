@@ -6,7 +6,7 @@ import {
   getZakatTotalsByBeneficiary,
   getZakatTotalPaid,
   updateZakatObligation,
-} from '../services/zakat.service';
+} from '../services/zakat/zakat.service';
 import { handleCaughtError } from '../utils/prisma';
 // ... (rest of imports)
 

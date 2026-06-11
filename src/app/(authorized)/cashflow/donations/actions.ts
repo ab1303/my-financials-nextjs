@@ -4,12 +4,12 @@ import { revalidatePath } from 'next/cache';
 
 import { auth } from '@/server/auth';
 import { createDonationYearHandler } from '@/server/controllers/donation.controller';
+import { getDonation } from '@/server/services/donation-ledger.service';
 import {
-  addDonationPaymentDetail,
-  deleteDonationPayment,
-  getDonation,
-  updateDonationPayment,
-} from '@/server/services/donation.service';
+  addVoluntaryDonation,
+  deleteVoluntaryDonation,
+  updateVoluntaryDonation,
+} from '@/server/services/voluntary-donations/voluntary-donation.service';
 
 import type {
   CreateDonationPaymentInput,
@@ -53,17 +53,17 @@ export async function addRow(input: CreateDonationPaymentInput) {
     }
 
     // Create payment record
-    const newPayment = await addDonationPaymentDetail(
-      donationResult.donationCalendarId,
-      {
-        datePaid: validatedInput.datePaid,
-        amount: validatedInput.amount,
-        beneficiaryType: validatedInput.beneficiaryType,
-        beneficiaryId: validatedInput.beneficiaryId,
-        transactionId: validatedInput.transactionId,
-        donationPurpose: validatedInput.donationPurpose ?? 'VOLUNTARY',
-      },
-    );
+    const newPayment = await addVoluntaryDonation({
+      donationLedgerId: donationResult.donationCalendarId,
+      datePaid: validatedInput.datePaid,
+      amount: validatedInput.amount,
+      beneficiaryType: validatedInput.beneficiaryType,
+      beneficiaryId: validatedInput.beneficiaryId,
+      transactionId: validatedInput.transactionId,
+      donationPurpose: validatedInput.donationPurpose ?? 'VOLUNTARY',
+    });
+
+    const paymentData = newPayment as any;
 
     return {
       success: true,
@@ -72,9 +72,9 @@ export async function addRow(input: CreateDonationPaymentInput) {
         id: newPayment.id,
         datePaid: newPayment.datePaid,
         amount: newPayment.amount,
-        beneficiaryType: newPayment.beneficiaryType,
-        isDeductible: newPayment.isDeductible,
-        donationPurpose: newPayment.donationPurpose,
+        beneficiaryType: paymentData.beneficiaryType ?? 'BUSINESS',
+        isDeductible: paymentData.isDeductible ?? false,
+        donationPurpose: paymentData.donationPurpose,
         beneficiaryId: validatedInput.beneficiaryId || '',
         transactionId: validatedInput.transactionId,
       },
@@ -111,17 +111,14 @@ export async function editRow(input: UpdateDonationPaymentInput) {
     }
 
     // Update payment record
-    await updateDonationPayment(
-      {
-        id: validatedInput.id,
-        datePaid: validatedInput.datePaid,
-        amount: validatedInput.amount,
-        beneficiaryType: validatedInput.beneficiaryType,
-        beneficiaryId: validatedInput.beneficiaryId,
-        donationLedgerId: '', // This will be ignored in the update
-      },
-      validatedInput.id,
-    );
+    await updateVoluntaryDonation(validatedInput.id, {
+      id: validatedInput.id,
+      datePaid: validatedInput.datePaid,
+      amount: validatedInput.amount,
+      beneficiaryType: validatedInput.beneficiaryType,
+      beneficiaryId: validatedInput.beneficiaryId,
+      donationLedgerId: '', // placeholder
+    });
 
     return { success: true, error: null };
   } catch (error) {
@@ -149,7 +146,7 @@ export async function deleteRow(input: DeleteDonationPaymentInput) {
     const validatedInput = DeleteDonationPaymentSchema.parse(input);
 
     // Delete payment record
-    await deleteDonationPayment(validatedInput.id);
+    await deleteVoluntaryDonation(validatedInput.id);
 
     return { success: true, error: null };
   } catch (error) {

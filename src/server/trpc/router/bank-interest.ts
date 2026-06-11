@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 import {
   applyAllocations,
-  Candidate,
   getCleansingDebitCandidates,
   getUnlinkedCleansingDebitTransactions,
   getUnlinkedInterestTransactions,
@@ -10,8 +9,8 @@ import {
   removeAllocation,
   suggestAllocations,
 } from '@/server/services/bank-interest/interest-cleansing.service';
-import { deleteDonationPayment } from '@/server/services/donation.service';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { deleteInterestCleansingPayment } from '@/server/services/interest-cleansing/interest-cleansing.service';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const bankInterestRouter = router({
   getInterestCleansingData: protectedProcedure
@@ -132,7 +131,7 @@ export const bankInterestRouter = router({
 
   deleteCleansingDonation: protectedProcedure
     .input(z.object({ donationId: z.string() }))
-    .mutation(async ({ ctx, input }) =>
-      deleteDonationPayment(input.donationId),
+    .mutation(async ({ input }) =>
+      deleteInterestCleansingPayment(input.donationId),
     ),
 });

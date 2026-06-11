@@ -1,11 +1,13 @@
 import {
   addDonationCalendarYearDetails,
   getDonation,
-  getDonationPayments,
-  getDonationTotalsByCategory,
-  getDonationTotalsByBeneficiary,
-  getTotalDonations,
-} from '../services/donation.service';
+} from '../services/donation-ledger.service';
+import {
+  getDonationPaymentsAggregated,
+  getDonationTotalsByCategoryAggregated,
+  getDonationTotalsByBeneficiaryAggregated,
+  getTotalDonationsAggregated,
+} from '../services/reporting/donation-aggregator.service';
 import { handleCaughtError } from '../utils/prisma';
 
 export const createDonationYearHandler = async (
@@ -29,7 +31,7 @@ export const createDonationYearHandler = async (
 
 export const donationPaymentsHandler = async (calendarYearId: string, beneficiaryId?: string) => {
   try {
-    const donationPayments = await getDonationPayments(calendarYearId, beneficiaryId);
+    const donationPayments = await getDonationPaymentsAggregated(calendarYearId, beneficiaryId);
     return donationPayments;
   } catch (e) {
     handleCaughtError(e);
@@ -47,7 +49,7 @@ export const donationHandler = async (calendarYearId: string) => {
 
 export const totalDonationsHandler = async (calendarYearId: string) => {
   try {
-    const totalDonations = await getTotalDonations(calendarYearId);
+    const totalDonations = await getTotalDonationsAggregated(calendarYearId);
     return totalDonations;
   } catch (e) {
     handleCaughtError(e);
@@ -63,7 +65,7 @@ export const donationTotalsByCategoryHandler = async (
   calendarYearId: string,
 ) => {
   try {
-    const totals = await getDonationTotalsByCategory(calendarYearId);
+    const totals = await getDonationTotalsByCategoryAggregated(calendarYearId);
     return totals;
   } catch (e) {
     handleCaughtError(e);
@@ -82,7 +84,7 @@ export const donationTotalsByBeneficiaryHandler = async (
   calendarYearId: string,
 ) => {
   try {
-    const totals = await getDonationTotalsByBeneficiary(calendarYearId);
+    const totals = await getDonationTotalsByBeneficiaryAggregated(calendarYearId);
     return totals;
   } catch (e) {
     handleCaughtError(e);

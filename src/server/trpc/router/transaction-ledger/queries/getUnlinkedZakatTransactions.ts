@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { protectedProcedure } from '@/server/trpc/trpc';
-import { getUnlinkedZakatTransactions } from '@/server/services/zakat.service';
+import { getUnlinkedZakatTransactions } from '@/server/services/zakat/zakat.service';
 
 export const getUnlinkedZakatTransactionsQuery = protectedProcedure
   .input(

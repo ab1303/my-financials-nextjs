@@ -3,6 +3,7 @@ import { allBusinessDetailsHandler } from '@/server/controllers/business.control
 import { donationPaymentsHandler } from '@/server/controllers/donation.controller';
 import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
 import type { OptionType } from '@/types';
+import { BeneficiaryEnumType } from '@prisma/client';
 
 import type { DonationPaymentType } from './_types';
 import { addRow, deleteRow, editRow } from './actions';
@@ -50,25 +51,44 @@ export default async function DonationPaymentsTableServer({
     }
 
     const data =
-      donationPayments?.map<DonationPaymentType>((dp) => ({
-        id: dp.id,
-        amount: dp.amount,
-        beneficiaryId:
-          (dp.beneficiaryType === 'BUSINESS'
-            ? dp.businessId
-            : dp.individualId) || '',
-        beneficiaryType: dp.beneficiaryType,
-        isDeductible: dp.isDeductible,
-        datePaid: dp.datePaid,
-        transactionId: dp.transactionId ?? undefined,
-      })) || [];
+      donationPayments?.map<DonationPaymentType>((dp) => {
+        // Need to narrow type to extract specific fields
+        const isVoluntary = 'beneficiaryType' in dp && dp.beneficiaryType !== undefined;
+        const isZakat = 'beneficiaryType' in dp && dp.donationPurpose === 'ZAKAT';
+        
+        let beneficiaryId = '';
+        let beneficiaryType: BeneficiaryEnumType = BeneficiaryEnumType.BUSINESS;
+        let isDeductible = false;
+
+        if ('beneficiaryType' in dp) {
+           beneficiaryType = dp.beneficiaryType;
+           beneficiaryId = (dp.beneficiaryType === 'BUSINESS' ? (dp as any).businessId : (dp as any).individualId) || '';
+           isDeductible = dp.isDeductible;
+        } else {
+           // Interest Cleansing
+           beneficiaryType = BeneficiaryEnumType.BUSINESS;
+           beneficiaryId = (dp as any).sourceBusinessId || '';
+           isDeductible = dp.isDeductible;
+        }
+
+        return {
+          id: dp.id,
+          amount: dp.amount,
+          beneficiaryId,
+          beneficiaryType,
+          isDeductible,
+          datePaid: dp.datePaid,
+          transactionId: dp.transactionId ?? undefined,
+          donationPurpose: dp.donationPurpose,
+        };
+      }) || [];
 
     return (
       <DonationPaymentStateProvider data={data}>
         <DonationTableClient
           individualsOptions={individualsOptions}
           businessesOptions={businessesOptions}
-          addRow={addRow}
+          addRow={addRow as any}
           editRow={editRow}
           deleteRow={deleteRow}
           calendarYearId={calendarYearId}

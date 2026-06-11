@@ -1,3 +1,5 @@
+import { getLinkedTransactionIds as getVoluntaryLinkedTransactionIds } from '@/server/services/voluntary-donations/voluntary-donation.service';
+import { getLinkedTransactionIds as getZakatLinkedTransactionIds } from '@/server/services/zakat/zakat.service';
 import { prisma } from '@/server/db/client';
 
 export const DONATION_PURPOSES = {
@@ -11,11 +13,7 @@ export type DonationPurpose = typeof DONATION_PURPOSES[keyof typeof DONATION_PUR
 export async function getLinkedTransactionIds(purpose: DonationPurpose): Promise<Set<string>> {
   switch (purpose) {
     case DONATION_PURPOSES.VOLUNTARY: {
-      const linked = await prisma.voluntaryDonation.findMany({
-        where: { transactionId: { not: null } },
-        select: { transactionId: true },
-      });
-      return new Set(linked.map((d) => d.transactionId!));
+      return new Set(await getVoluntaryLinkedTransactionIds());
     }
     case DONATION_PURPOSES.INTEREST_CLEANSING: {
       const linked = await prisma.interestCleansingEvidence.findMany({
@@ -24,11 +22,7 @@ export async function getLinkedTransactionIds(purpose: DonationPurpose): Promise
       return new Set(linked.map((d) => d.transactionId));
     }
     case DONATION_PURPOSES.ZAKAT: {
-      const linked = await prisma.zakatPayment.findMany({
-        where: { transactionId: { not: null } },
-        select: { transactionId: true },
-      });
-      return new Set(linked.map((d) => d.transactionId!));
+      return new Set(await getZakatLinkedTransactionIds());
     }
     default:
       throw new Error(`Unknown donation purpose: ${purpose}`);
