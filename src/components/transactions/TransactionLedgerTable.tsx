@@ -266,6 +266,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     onSuccess: (result) => {
       setSavingId(null);
       void utils.transactionLedger.searchDebitTransactions.invalidate();
+      void utils.transactionLedger.getAll.invalidate();
       if (result.matchedIds.length > 0) {
         cancelPendingCategoryRefresh();
         setPreReviewCategory(category); // save so we can restore on exit

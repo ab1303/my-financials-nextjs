@@ -117,6 +117,7 @@ export default function TransactionRow({
   );
   const [isExpanded, setIsExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+
   const [localOffsetTxId, setLocalOffsetTxId] = useState<string | null>(
     transaction.offsetTransactionId ?? null,
   );
@@ -311,8 +312,8 @@ export default function TransactionRow({
     setPickerOpen(false);
     onCategoryChange(
       transaction.id,
-      REIMBURSEMENT_CATEGORY,
-      effectiveOffsetCategory || undefined,
+      linkedId ? REIMBURSEMENT_CATEGORY : '',
+      linkedId ? effectiveOffsetCategory || undefined : undefined,
       linkedId,
       false, // never auto-apply Reimbursement changes
     );
@@ -469,45 +470,36 @@ export default function TransactionRow({
                           </button>
                         ) : (
                           <div className='flex flex-col gap-1'>
-                            <AsyncSelect<LinkOption, false>
-                              instanceId={linkSelectId}
-                              inputId={linkSelectId}
-                              aria-label={`Link original expense for ${transaction.description}`}
-                              autoFocus
-                              cacheOptions
-                              defaultOptions
-                              isClearable
-                              isDisabled={isSaving}
-                              menuIsOpen
-                              menuPortalTarget={document.body}
-                              menuPosition='fixed'
-                              placeholder='Search expenses…'
-                              loadOptions={loadLinkOptions}
-                              value={selectedLinkOption}
-                              getOptionValue={(option) => option.value}
-                              formatOptionLabel={formatLinkOptionLabel}
-                              onChange={(option: SingleValue<LinkOption>) =>
-                                handleLinkTransaction(option ?? null)
-                              }
-                              styles={{
-                                ...linkSelectStyles,
-                                menuPortal: (base) => ({
-                                  ...base,
-                                  zIndex: 9999,
-                                  width: '400px', // Explicitly wider
-                                }),
-                                control: (base) => ({
-                                  ...base,
-                                  width: '400px', // Also wider
-                                }),
-                              }}
-                              className='w-full'
-                              noOptionsMessage={({ inputValue }) =>
-                                inputValue.trim()
-                                  ? 'No matching expenses found'
-                                  : 'No recent expenses — type to search all time'
-                              }
-                            />
+                            <div className='w-full'>
+                              <AsyncSelect<LinkOption, false>
+                                instanceId={linkSelectId}
+                                inputId={linkSelectId}
+                                aria-label={`Link original expense for ${transaction.description}`}
+                                autoFocus
+                                cacheOptions
+                                defaultOptions
+                                isClearable
+                                isDisabled={isSaving}
+                                menuIsOpen
+                                placeholder='Search expenses…'
+                                loadOptions={loadLinkOptions}
+                                value={selectedLinkOption}
+                                getOptionValue={(option) => option.value}
+                                formatOptionLabel={formatLinkOptionLabel}
+                                onChange={(option: SingleValue<LinkOption>) =>
+                                  handleLinkTransaction(option ?? null)
+                                }
+                                styles={{ ...linkSelectStyles }}
+                                className='w-full'
+                                usePortal
+                                menuWidth={400}
+                                noOptionsMessage={({ inputValue }) =>
+                                  inputValue.trim()
+                                    ? 'No matching expenses found'
+                                    : 'No recent expenses — type to search all time'
+                                }
+                              />
+                            </div>
                             <button
                               type='button'
                               onClick={handleResetLinkPicker}
