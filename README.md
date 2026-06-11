@@ -140,15 +140,15 @@ docker exec -i postgres-financials-db pg_restore -U postgres -d financials < bac
 If you want to restore the backup to a different database name (useful for testing or staging):
 
 ```bash
-# Using the backup script (restore to database named 'my-new-db')
-./scripts/backup_postgres.sh restore postgres-financials-db my-new-db postgres
+# Using the backup script (restore to database named 'financials-bkup')
+./scripts/backup_postgres.sh restore postgres-financials-db financials-bkup postgres
 
 # Manual restore to a different database
-cat backup.sql | docker exec -i postgres-financials-db psql -U postgres -d my-new-db
+cat backup.sql | docker exec -i postgres-financials-db psql -U postgres -d financials-bkup
 
 # If the target database doesn't exist, create it first
-docker exec postgres-financials-db createdb -U postgres my-new-db
-cat backup.sql | docker exec -i postgres-financials-db psql -U postgres -d my-new-db
+docker exec postgres-financials-db createdb -U postgres financials-bkup
+cat backup.sql | docker exec -i postgres-financials-db psql -U postgres -d financials-bkup
 ```
 
 **Database Details:**

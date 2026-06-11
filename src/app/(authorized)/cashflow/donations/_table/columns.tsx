@@ -36,7 +36,7 @@ export function getTableColumns(
       maxSize: 200,
       header: () => <span>Amount Donated</span>,
       cell: TableCell,
-      meta: { type: 'AMOUNT', propName: 'amount' },
+      meta: { type: 'AMOUNT', propName: 'amount', align: 'right' },
       footer: (props) => props.column.id,
     }),
     columnHelper.accessor('donationPurpose', {

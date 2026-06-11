@@ -317,7 +317,14 @@ export default function DonationTableClient({
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.THead.TR key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <Table.THead.TH key={header.id}>
+                  <Table.THead.TH
+                    key={header.id}
+                    className={
+                      header.column.columnDef.meta?.align === 'right'
+                        ? 'text-right'
+                        : ''
+                    }
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -362,7 +369,11 @@ export default function DonationTableClient({
                         <Table.TBody.TD
                           key={cell.id}
                           style={{ width: cell.column.getSize() }}
-                          className='min-w-0'
+                          className={
+                            cell.column.columnDef.meta?.align === 'right'
+                              ? 'text-right min-w-0'
+                              : 'min-w-0'
+                          }
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
