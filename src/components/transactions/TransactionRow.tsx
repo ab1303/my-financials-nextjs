@@ -588,8 +588,19 @@ export default function TransactionRow({
                       🔗 Zakat linked
                     </span>
                   )}
+                  {transaction.isInterestLinked && (
+                    <span
+                      className={clsx(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                      )}
+                    >
+                      🔗 Cleansed interest linked
+                    </span>
+                  )}
                   {!transaction.isDonationLinked &&
-                    !transaction.isZakatLinked && (
+                    !transaction.isZakatLinked &&
+                    !transaction.isInterestLinked && (
                       <span
                         className={clsx(
                           'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
@@ -662,7 +673,8 @@ export default function TransactionRow({
             {transaction.category.toLowerCase() === 'gifts & donations' &&
               transaction.type === 'DEBIT' &&
               !transaction.isDonationLinked &&
-              !transaction.isZakatLinked && (
+              !transaction.isZakatLinked &&
+              !transaction.isInterestLinked && (
                 <>
                   {onClassifyAsDonation && (
                     <button

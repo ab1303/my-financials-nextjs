@@ -44,6 +44,7 @@ export const getAllQuery = protectedProcedure
           },
           zakatPayment: { select: { id: true } },
           voluntaryDonations: { select: { id: true } },
+          interestCleansingEvidence: { select: { id: true } },
           transferLinkedTransaction: {
             select: {
               id: true,
@@ -140,6 +141,11 @@ export const getAllQuery = protectedProcedure
         tx.category.toLowerCase() === 'gifts & donations' &&
         tx.type === TransactionTypeEnum.DEBIT
           ? tx.zakatPayment !== null
+          : undefined,
+      isInterestLinked:
+        tx.category.toLowerCase() === 'gifts & donations' &&
+        tx.type === TransactionTypeEnum.DEBIT
+          ? tx.interestCleansingEvidence.length > 0
           : undefined,
       transferLinkedTransactionId: tx.transferLinkedTransactionId ?? null,
       transferCounterpartId: tx.transferCounterpart?.id ?? null,

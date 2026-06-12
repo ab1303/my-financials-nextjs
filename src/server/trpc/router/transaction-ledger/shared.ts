@@ -20,6 +20,7 @@ export interface TransactionRow {
   reimbursements: TransactionRow[];
   isDonationLinked?: boolean;
   isZakatLinked?: boolean;
+  isInterestLinked?: boolean;
   transferLinkedTransactionId: string | null;
   transferCounterpartId: string | null;
   transferCounterpart: {
