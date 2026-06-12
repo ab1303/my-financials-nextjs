@@ -256,16 +256,18 @@ export default function TransactionRow({
         const matches =
           await utils.transactionLedger.searchDebitTransactions.fetch({
             search: trimmed || undefined,
-            limit: 50,
+            // Request a larger page to help users find linkable expenses quickly.
+            limit: 100,
             ...(dateFrom ? { dateFrom } : {}),
             ...(dateTo ? { dateTo } : {}),
           });
 
         return matches.map((match) => ({
           value: match.id,
-          label: `${match.date} - ${match.description} (${formatCurrency(match.amount)})`,
+          // Keep description only in label; amount will be shown as a left badge to avoid truncation hiding it
+          label: `${match.date} - ${match.description}`,
           category: match.category,
-          meta: match.category,
+          meta: formatCurrency(match.amount),
         }));
       } catch (error) {
         console.error(
@@ -325,9 +327,14 @@ export default function TransactionRow({
 
   const formatLinkOptionLabel = (option: LinkOption) => (
     <div className='flex w-full items-center justify-between gap-3'>
-      <span className='truncate'>{option.label}</span>
-      <span className='shrink-0 tabular-nums text-xs text-gray-500 dark:text-gray-400'>
-        {option.meta}
+      <div className='min-w-0 flex items-center gap-2'>
+        <span className='shrink-0 rounded px-2 py-0.5 text-xs font-medium tabular-nums text-emerald-600 dark:text-emerald-300'>
+          {option.meta}
+        </span>
+        <span className='truncate text-sm'>{option.label}</span>
+      </div>
+      <span className='shrink-0 text-sm text-gray-500 dark:text-gray-400'>
+        {option.category}
       </span>
     </div>
   );
@@ -480,7 +487,6 @@ export default function TransactionRow({
                                 defaultOptions
                                 isClearable
                                 isDisabled={isSaving}
-                                menuIsOpen
                                 placeholder='Search expenses…'
                                 loadOptions={loadLinkOptions}
                                 value={selectedLinkOption}
@@ -529,6 +535,7 @@ export default function TransactionRow({
                           }}
                           className='w-full'
                           usePortal
+                          menuPlacement='auto'
                         />
                       </div>
                     )}

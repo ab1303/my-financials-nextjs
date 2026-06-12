@@ -38,7 +38,7 @@ export function getSelectStyles<
       borderRadius: 'var(--radius)',
       boxShadow:
         '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-      zIndex: 50,
+      zIndex: 9999,
       // Allow callers to pass a menuWidth prop (number) to match the control width
       boxSizing: 'border-box',
       minWidth: (() => {
@@ -51,6 +51,8 @@ export function getSelectStyles<
     menuList: (base) => ({
       ...base,
       padding: '4px',
+      maxHeight: '280px',
+      overflowY: 'auto',
     }),
     option: (base, state) => ({
       ...base,

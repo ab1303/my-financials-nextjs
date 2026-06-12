@@ -7,7 +7,8 @@ export const searchDebitTransactionsQuery = protectedProcedure
   .input(
     z.object({
       search: z.string().optional(),
-      limit: z.number().int().min(1).max(50).default(50),
+      // Allow larger fetches for bulk linking workflows — server hard cap increased.
+      limit: z.number().int().min(1).max(200).default(100),
       dateFrom: z.string().optional(),
       dateTo: z.string().optional(),
     }),
