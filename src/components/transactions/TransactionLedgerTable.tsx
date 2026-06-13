@@ -550,12 +550,6 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                   onCategoryChange={handleCategoryChange}
                   isSaving={savingId === transaction.id}
                   colCount={10}
-                  isInReviewBatch={reviewBatch !== null && reviewBatch.includes(transaction.id)}
-                  showRulePrompt={activeRulePrompt?.transactionId === transaction.id}
-                  rulePromptCount={activeRulePrompt?.transactionId === transaction.id ? activeRulePrompt.count : 0}
-                  onRulePromptDismiss={() => setActiveRulePrompt(null)}
-                  onSuggestRule={(count, cat) => setActiveRulePrompt({ transactionId: transaction.id, count, category: cat })}
-                  onClearRulePrompt={() => setActiveRulePrompt((prev) => prev?.transactionId === transaction.id ? null : prev)}
                   onPausePendingRefresh={cancelPendingCategoryRefresh}
                   onResolvePendingRefresh={flushPendingCategoryRefresh}
                   onVoided={() => void refetch()}
@@ -612,11 +606,6 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                     onCategoryChange={handleCategoryChange}
                     isSaving={savingId === tx.id}
                     colCount={10}
-                    showRulePrompt={activeRulePrompt?.transactionId === tx.id}
-                    rulePromptCount={activeRulePrompt?.transactionId === tx.id ? activeRulePrompt.count : 0}
-                    onRulePromptDismiss={() => setActiveRulePrompt(null)}
-                    onSuggestRule={(count, cat) => setActiveRulePrompt({ transactionId: tx.id, count, category: cat })}
-                    onClearRulePrompt={() => setActiveRulePrompt((prev) => prev?.transactionId === tx.id ? null : prev)}
                     onPausePendingRefresh={cancelPendingCategoryRefresh}
                     onResolvePendingRefresh={flushPendingCategoryRefresh}
                     onVoided={() => { handleDismissRetained(tx.id); void refetch(); }}

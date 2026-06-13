@@ -144,13 +144,24 @@ export async function applyMatchingCategoryChanges(ctx: {
   transaction: any;
   newCategory: string;
   applyToMatching?: boolean;
+  matchScope?: { type: 'recent' | 'all'; days?: number };
 }): Promise<string[]> {
-  const { prismaClient, userId, transaction, newCategory, applyToMatching } = ctx;
+  const { prismaClient, userId, transaction, newCategory, applyToMatching, matchScope } = ctx;
   const matchedIds: string[] = [];
   const isSpecialCategory = newCategory === REIMBURSEMENT_CATEGORY || newCategory === TRANSFER_CATEGORY;
 
-  if (applyToMatching === false || isSpecialCategory) {
+  // New Safety: Explicitly require flag to run, and skip for special categories
+  if (applyToMatching !== true || isSpecialCategory) {
     return matchedIds;
+  }
+
+  // Define date scope
+  const dateFilter: any = {};
+  if (matchScope?.type === 'recent') {
+    const days = matchScope.days ?? 90;
+    const dateLimit = new Date();
+    dateLimit.setDate(dateLimit.getDate() - days);
+    dateFilter.gte = dateLimit.toISOString();
   }
 
   const matches = await prismaClient.transaction.findMany({
@@ -160,6 +171,7 @@ export async function applyMatchingCategoryChanges(ctx: {
       id: { not: transaction.id },
       category: { not: newCategory },
       status: { not: TransactionStatusEnum.VOIDED },
+      ...(Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {}),
     },
     select: { id: true, type: true, status: true, category: true, amount: true, date: true },
   });

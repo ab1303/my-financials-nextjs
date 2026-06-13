@@ -17,7 +17,6 @@ import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 
 import CategoryRuleDrawer from './CategoryRuleDrawer';
-import CategoryRulePrompt from './CategoryRulePrompt';
 import { useCategoryEdit } from './hooks/useCategoryEdit';
 import ReimbursementSubRow from './ReimbursementSubRow';
 import RestoreTransactionButton from './RestoreTransactionButton';
@@ -44,17 +43,6 @@ interface TransactionRowProps {
   onUnlinked?: () => void;
   onClassifyAsDonation?: (transactionId: string) => void;
   onClassifyAsZakat?: (transactionId: string) => void;
-  isInReviewBatch?: boolean;
-  /** Whether this row's rule prompt is currently active (parent-owned) */
-  showRulePrompt?: boolean;
-  /** Count to display in the rule prompt */
-  rulePromptCount?: number;
-  /** Dismiss the active rule prompt */
-  onRulePromptDismiss?: () => void;
-  /** Notify parent that this row has found similar transactions */
-  onSuggestRule?: (count: number, category: string) => void;
-  /** Notify parent to clear the rule prompt for this row */
-  onClearRulePrompt?: () => void;
   /** Pause the delayed refetch while the rule drawer is open */
   onPausePendingRefresh?: () => void;
   /** Flush the delayed refetch after the rule prompt is resolved */
@@ -93,12 +81,6 @@ export default function TransactionRow({
   onUnlinked,
   onClassifyAsDonation,
   onClassifyAsZakat,
-  isInReviewBatch = false,
-  showRulePrompt = false,
-  rulePromptCount = 0,
-  onRulePromptDismiss,
-  onSuggestRule,
-  onClearRulePrompt,
   onPausePendingRefresh,
   onResolvePendingRefresh,
 }: TransactionRowProps) {
@@ -135,12 +117,10 @@ export default function TransactionRow({
     setShowRuleDrawer,
     ruleCategory,
     handleChange: hookHandleChange,
+    matchCount,
   } = useCategoryEdit({
     transaction,
-    isInReviewBatch,
     onCategoryChange,
-    onSuggestRule,
-    onClearRulePrompt,
   });
 
   // Keep localCategory synced with hook value
@@ -363,6 +343,24 @@ export default function TransactionRow({
       .slice(0, 3)
       .join(' ');
   }
+
+  // Explicitly handle the new 3-button actions
+  const handleApplyBulk = () => {
+    onCategoryChange(
+      transaction.id,
+      localCategory,
+      localOffsetCategory,
+      localOffsetTxId,
+      true, // applyToMatching = true
+    );
+  };
+
+  const handlePreviewBulk = () => {
+    // Future scoped: acts as Apply for now
+    handleApplyBulk();
+  };
+
+  const showSuggestionUI = matchCount >= 2;
 
   return (
     <>
@@ -702,20 +700,17 @@ export default function TransactionRow({
         </td>
       </tr>
 
-      {showRulePrompt && (
-        <CategoryRulePrompt
-          count={rulePromptCount}
-          colCount={colCount}
-          onCreateRule={() => {
-            onPausePendingRefresh?.();
-            onRulePromptDismiss?.();
-            setShowRuleDrawer(true);
-          }}
-          onDismiss={() => {
-            onRulePromptDismiss?.();
-            onResolvePendingRefresh?.();
-          }}
-        />
+      {showSuggestionUI && (
+        <tr className='bg-teal-50 dark:bg-teal-900/10'>
+          <td colSpan={colCount} className='px-4 py-2 text-sm'>
+            <div className='flex items-center gap-2'>
+              <span className='text-teal-700 dark:text-teal-300'>Similar transactions found ({matchCount}):</span>
+              <button onClick={handlePreviewBulk} className='text-xs text-teal-600 underline'>Preview matches</button>
+              <button onClick={handleApplyBulk} className='text-xs font-medium text-teal-700'>Apply to these</button>
+              <button onClick={() => setShowRuleDrawer(true)} className='text-xs text-gray-500'>Create rule</button>
+            </div>
+          </td>
+        </tr>
       )}
 
       {showRuleDrawer && (

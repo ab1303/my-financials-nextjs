@@ -11,7 +11,7 @@ import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/route
 
 interface UseCategoryEditArgs {
   transaction: LedgerTransactionRow;
-  isInReviewBatch: boolean;
+  isInReviewBatch?: boolean;
   onCategoryChange: (
     id: string,
     newCategory: string,
@@ -36,44 +36,34 @@ interface UseCategoryEditReturn {
     offsetCategory?: string,
     offsetTransactionId?: string | null,
   ) => void;
+  findMatches: () => Promise<number>;
+  matchCount: number;
 }
 
 export function useCategoryEdit({
   transaction,
-  isInReviewBatch,
   onCategoryChange,
-  onSuggestRule,
   onClearRulePrompt,
 }: UseCategoryEditArgs): UseCategoryEditReturn {
   const utils = trpc.useUtils();
   const [localCategory, setLocalCategory] = useState(transaction.category);
   const [showRuleDrawer, setShowRuleDrawer] = useState(false);
   const [ruleCategory, setRuleCategory] = useState('');
-  const similarCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const isInReviewBatchRef = useRef(isInReviewBatch);
-
-  // Keep ref in sync with prop
-  useEffect(() => {
-    isInReviewBatchRef.current = isInReviewBatch;
-    if (isInReviewBatch && similarCheckTimerRef.current) {
-      clearTimeout(similarCheckTimerRef.current);
-      similarCheckTimerRef.current = null;
-    }
-  }, [isInReviewBatch]);
+  const [matchCount, setMatchCount] = useState(0);
 
   // Sync local category when transaction changes from server
   useEffect(() => {
     setLocalCategory(transaction.category);
   }, [transaction.category]);
 
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (similarCheckTimerRef.current) clearTimeout(similarCheckTimerRef.current);
-    };
-  }, []);
+  async function findMatches() {
+    const result = await utils.categoryRule.findSimilar.fetch({
+      description: transaction.description,
+      excludeTransactionId: transaction.id,
+    });
+    setMatchCount(result.count);
+    return result.count;
+  }
 
   function handleChange(
     newCategory: string,
@@ -82,39 +72,20 @@ export function useCategoryEdit({
   ) {
     setLocalCategory(newCategory);
     onClearRulePrompt?.();
-    if (newCategory !== REIMBURSEMENT_CATEGORY) {
-      onCategoryChange(
-        transaction.id,
-        newCategory,
-        offsetCategory,
-        offsetTransactionId,
-        !isInReviewBatch,
-      );
-      if (
-        newCategory !== TRANSFER_CATEGORY &&
-        newCategory !== transaction.category &&
-        !isInReviewBatch
-      ) {
-        setRuleCategory(newCategory);
-        if (similarCheckTimerRef.current) clearTimeout(similarCheckTimerRef.current);
-        similarCheckTimerRef.current = setTimeout(() => {
-          if (isInReviewBatchRef.current) return;
-          utils.categoryRule.findSimilar
-            .fetch({
-              description: transaction.description,
-              excludeTransactionId: transaction.id,
-            })
-            .then((result) => {
-              if (result.count >= 2 && !isInReviewBatchRef.current) {
-                onSuggestRule?.(result.count, newCategory);
-              }
-            })
-            .catch(() => {
-              // non-critical
-            });
-        }, 400);
-      }
-    }
+    
+    // Explicitly set applyToMatching: false here.
+    // The UI will now use a separate call to onCategoryChange for bulk actions.
+    onCategoryChange(
+      transaction.id,
+      newCategory,
+      offsetCategory,
+      offsetTransactionId,
+      false,
+    );
+    
+    setRuleCategory(newCategory);
+    // Trigger match check eagerly but silently
+    findMatches();
   }
 
   return {
@@ -124,5 +95,7 @@ export function useCategoryEdit({
     setShowRuleDrawer,
     ruleCategory,
     handleChange,
+    findMatches,
+    matchCount,
   };
 }
