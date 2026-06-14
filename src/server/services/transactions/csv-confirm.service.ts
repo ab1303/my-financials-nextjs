@@ -195,33 +195,66 @@ export async function confirmDebitTransactions(
       const ledger = await getOrCreateExpenseLedger(calendarYear.id, userId);
 
       for (const tx of transactions as ClassifiedTransactionV2[]) {
-        const dedupKey = makeDedupKey({
-          date: tx.date,
-          description: tx.description,
-          amount: tx.amount,
-          type: 'DEBIT',
-          runningBalance: tx.balance ?? null,
-        });
-        if (isDuplicate(dedupKey, dedupSet)) {
-          result.duplicatesSkipped += 1;
-          continue;
-        }
+        try {
+          const dedupKey = makeDedupKey({
+            date: tx.date,
+            description: tx.description,
+            amount: tx.amount,
+            type: 'DEBIT',
+            runningBalance: tx.balance ?? null,
+          });
+          if (isDuplicate(dedupKey, dedupSet)) {
+            result.duplicatesSkipped += 1;
+            continue;
+          }
 
-        // Guard: categories in EXCLUDED_FROM_EXPENSE_AGGREGATION are saved as EXCLUDED — no expense rollup
-        const isTransferDebit = (
-          EXCLUDED_FROM_EXPENSE_AGGREGATION as readonly string[]
-        ).includes(tx.confirmedCategory);
+          // Guard: categories in EXCLUDED_FROM_EXPENSE_AGGREGATION are saved as EXCLUDED — no expense rollup
+          const isTransferDebit = (
+            EXCLUDED_FROM_EXPENSE_AGGREGATION as readonly string[]
+          ).includes(tx.confirmedCategory);
 
-        // Determine source and provenance
-        const source =
-          tx.sourceHint === 'RULE_MATCH'
-            ? TransactionSourceEnum.USER_OVERRIDE
-            : tx.overridden
+          // Determine source and provenance
+          const source =
+            tx.sourceHint === 'RULE_MATCH'
               ? TransactionSourceEnum.USER_OVERRIDE
-              : TransactionSourceEnum.LLM_CLASSIFIED;
-        const appliedRuleId = tx.preMatch?.ruleId;
+              : tx.overridden
+                ? TransactionSourceEnum.USER_OVERRIDE
+                : TransactionSourceEnum.LLM_CLASSIFIED;
+          const appliedRuleId = tx.preMatch?.ruleId;
 
-        if (isTransferDebit) {
+          if (isTransferDebit) {
+            await createTransactionRecord({
+              date: tx.date,
+              description: tx.description,
+              amount: tx.amount,
+              type: TransactionTypeEnum.DEBIT,
+              category: tx.confirmedCategory,
+              source,
+              status: TransactionStatusEnum.EXCLUDED,
+              userId,
+              bankAccountId,
+              importSessionId,
+              runningBalance: tx.balance,
+              appliedRuleId,
+            });
+            result.totalEntries += 1;
+            dedupSet.add(dedupKey);
+            continue;
+          }
+
+          // Try to find category; fallback to "Other" if not found (instead of silently skipping)
+          let categoryId = categoryMap.get(tx.confirmedCategory.toLowerCase());
+          if (!categoryId) {
+            categoryId = otherCategoryId;
+          }
+
+          await upsertMonthlyExpenseSummary({
+            ledgerId: ledger.id,
+            categoryId,
+            monthNum,
+            amount: tx.amount,
+          });
+
           await createTransactionRecord({
             date: tx.date,
             description: tx.description,
@@ -229,73 +262,50 @@ export async function confirmDebitTransactions(
             type: TransactionTypeEnum.DEBIT,
             category: tx.confirmedCategory,
             source,
-            status: TransactionStatusEnum.EXCLUDED,
+            status: TransactionStatusEnum.CONFIRMED,
             userId,
             bankAccountId,
             importSessionId,
             runningBalance: tx.balance,
             appliedRuleId,
           });
-          result.totalEntries += 1;
-          dedupSet.add(dedupKey);
-          continue;
-        }
 
-        // Try to find category; fallback to "Other" if not found (instead of silently skipping)
-        let categoryId = categoryMap.get(tx.confirmedCategory.toLowerCase());
-        if (!categoryId) {
-          categoryId = otherCategoryId;
-        }
-
-        await upsertMonthlyExpenseSummary({
-          ledgerId: ledger.id,
-          categoryId,
-          monthNum,
-          amount: tx.amount,
-        });
-
-        await createTransactionRecord({
-          date: tx.date,
-          description: tx.description,
-          amount: tx.amount,
-          type: TransactionTypeEnum.DEBIT,
-          category: tx.confirmedCategory,
-          source,
-          status: TransactionStatusEnum.CONFIRMED,
-          userId,
-          bankAccountId,
-          importSessionId,
-          runningBalance: tx.balance,
-          appliedRuleId,
-        });
-
-        await prisma.merchantCategoryMap.upsert({
-          where: {
-            userId_description: {
+          await prisma.merchantCategoryMap.upsert({
+            where: {
+              userId_description: {
+                userId,
+                description: tx.description.toLowerCase().trim(),
+              },
+            },
+            update: {
+              category: tx.confirmedCategory,
+              source:
+                source === TransactionSourceEnum.USER_OVERRIDE
+                  ? 'user_override'
+                  : 'llm_confirmed',
+            },
+            create: {
               userId,
               description: tx.description.toLowerCase().trim(),
+              category: tx.confirmedCategory,
+              source:
+                source === TransactionSourceEnum.USER_OVERRIDE
+                  ? 'user_override'
+                  : 'llm_confirmed',
             },
-          },
-          update: {
-            category: tx.confirmedCategory,
-            source:
-              source === TransactionSourceEnum.USER_OVERRIDE
-                ? 'user_override'
-                : 'llm_confirmed',
-          },
-          create: {
-            userId,
-            description: tx.description.toLowerCase().trim(),
-            category: tx.confirmedCategory,
-            source:
-              source === TransactionSourceEnum.USER_OVERRIDE
-                ? 'user_override'
-                : 'llm_confirmed',
-          },
-        });
+          });
 
-        result.totalEntries += 1;
-        dedupSet.add(dedupKey);
+          result.totalEntries += 1;
+          dedupSet.add(dedupKey);
+        } catch (txErr: unknown) {
+          const msg = txErr instanceof Error ? txErr.message : String(txErr);
+          console.error('[csv-confirm] tx error (debit)', {
+            month: monthKey,
+            error: msg,
+          });
+          result.errors.push({ month: monthKey, message: msg });
+          continue;
+        }
       }
 
       result.savedMonths += 1;
@@ -346,66 +356,76 @@ export async function confirmCreditTransactions(
       }
 
       for (const tx of transactions as ClassifiedCreditTransaction[]) {
-        const dedupKey = makeDedupKey({
-          date: tx.date,
-          description: tx.description,
-          amount: tx.amount,
-          type: 'CREDIT',
-          runningBalance: tx.balance ?? null,
-        });
-        if (isDuplicate(dedupKey, dedupSet)) {
-          result.duplicatesSkipped += 1;
+        try {
+          const dedupKey = makeDedupKey({
+            date: tx.date,
+            description: tx.description,
+            amount: tx.amount,
+            type: 'CREDIT',
+            runningBalance: tx.balance ?? null,
+          });
+          if (isDuplicate(dedupKey, dedupSet)) {
+            result.duplicatesSkipped += 1;
+            continue;
+          }
+
+          const isExcluded = (
+            EXCLUDED_CREDIT_LABELS as readonly string[]
+          ).includes(tx.confirmedCategory);
+
+          // Determine source and provenance
+          const source =
+            tx.sourceHint === 'RULE_MATCH'
+              ? TransactionSourceEnum.USER_OVERRIDE
+              : tx.overridden
+                ? TransactionSourceEnum.USER_OVERRIDE
+                : TransactionSourceEnum.LLM_CLASSIFIED;
+          const appliedRuleId = tx.preMatch?.ruleId;
+
+          if (isExcluded) {
+            await createTransactionRecord({
+              date: tx.date,
+              description: tx.description,
+              amount: tx.amount,
+              type: TransactionTypeEnum.CREDIT,
+              category: tx.confirmedCategory,
+              source,
+              status: TransactionStatusEnum.EXCLUDED,
+              userId,
+              bankAccountId,
+              importSessionId,
+              runningBalance: tx.balance,
+              appliedRuleId,
+            });
+          } else {
+            // Create Transaction record — income view queries Transaction directly (source of truth).
+            await createTransactionRecord({
+              date: tx.date,
+              description: tx.description,
+              amount: tx.amount,
+              type: TransactionTypeEnum.CREDIT,
+              category: tx.confirmedCategory,
+              source,
+              status: TransactionStatusEnum.CONFIRMED,
+              userId,
+              bankAccountId,
+              importSessionId,
+              runningBalance: tx.balance,
+              appliedRuleId,
+            });
+          }
+
+          result.totalEntries += 1;
+          dedupSet.add(dedupKey);
+        } catch (txErr: unknown) {
+          const msg = txErr instanceof Error ? txErr.message : String(txErr);
+          console.error('[csv-confirm] tx error (credit)', {
+            month: monthKey,
+            error: msg,
+          });
+          result.errors.push({ month: monthKey, message: msg });
           continue;
         }
-
-        const isExcluded = (
-          EXCLUDED_CREDIT_LABELS as readonly string[]
-        ).includes(tx.confirmedCategory);
-
-        // Determine source and provenance
-        const source =
-          tx.sourceHint === 'RULE_MATCH'
-            ? TransactionSourceEnum.USER_OVERRIDE
-            : tx.overridden
-              ? TransactionSourceEnum.USER_OVERRIDE
-              : TransactionSourceEnum.LLM_CLASSIFIED;
-        const appliedRuleId = tx.preMatch?.ruleId;
-
-        if (isExcluded) {
-          await createTransactionRecord({
-            date: tx.date,
-            description: tx.description,
-            amount: tx.amount,
-            type: TransactionTypeEnum.CREDIT,
-            category: tx.confirmedCategory,
-            source,
-            status: TransactionStatusEnum.EXCLUDED,
-            userId,
-            bankAccountId,
-            importSessionId,
-            runningBalance: tx.balance,
-            appliedRuleId,
-          });
-        } else {
-          // Create Transaction record — income view queries Transaction directly (source of truth).
-          await createTransactionRecord({
-            date: tx.date,
-            description: tx.description,
-            amount: tx.amount,
-            type: TransactionTypeEnum.CREDIT,
-            category: tx.confirmedCategory,
-            source,
-            status: TransactionStatusEnum.CONFIRMED,
-            userId,
-            bankAccountId,
-            importSessionId,
-            runningBalance: tx.balance,
-            appliedRuleId,
-          });
-        }
-
-        result.totalEntries += 1;
-        dedupSet.add(dedupKey);
       }
 
       result.savedMonths += 1;

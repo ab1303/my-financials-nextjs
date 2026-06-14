@@ -83,12 +83,13 @@ export default function CSVClassifyingStep({
       month: string,
       updater: (entry?: ProgressEntry) => ProgressEntry,
     ) {
+      // Replace any existing entry for the same month to avoid duplicate keys
+      // in the rendered list when events arrive concurrently.
       setProgress((prev) => {
         const existing = prev.find((p) => p.month === month);
-        if (existing) {
-          return prev.map((p) => (p.month === month ? updater(p) : p));
-        }
-        return [...prev, updater(undefined)];
+        const without = prev.filter((p) => p.month !== month);
+        const nextEntry = updater(existing);
+        return [...without, nextEntry];
       });
     }
 
@@ -120,10 +121,45 @@ export default function CSVClassifyingStep({
           transactions,
           totalUsage: usage,
         };
-        classifiedMonthsRef.current = [
-          ...classifiedMonthsRef.current,
-          classified,
-        ];
+        // Merge with existing month if present so pre-matched (rule-match)
+        // transactions are not overwritten by subsequent LLM results.
+        const existingDebit = classifiedMonthsRef.current.find(
+          (c) => c.month === month,
+        );
+        if (existingDebit) {
+          // merge by id, preferring existing transaction object when ids collide
+          const existingById = new Map(
+            existingDebit.transactions.map((t) => [t.id, t]),
+          );
+          for (const tx of transactions) {
+            if (!existingById.has(tx.id)) existingById.set(tx.id, tx);
+          }
+          const mergedTxs = Array.from(existingById.values());
+          const mergedUsage = {
+            promptTokens:
+              (existingDebit.totalUsage.promptTokens ?? 0) +
+              (usage.promptTokens ?? 0),
+            completionTokens:
+              (existingDebit.totalUsage.completionTokens ?? 0) +
+              (usage.completionTokens ?? 0),
+            totalTokens:
+              (existingDebit.totalUsage.totalTokens ?? 0) +
+              (usage.totalTokens ?? 0),
+          };
+          const merged: ClassifiedMonth = {
+            month,
+            transactions: mergedTxs,
+            totalUsage: mergedUsage,
+          };
+          classifiedMonthsRef.current = classifiedMonthsRef.current.map((c) =>
+            c.month === month ? merged : c,
+          );
+        } else {
+          classifiedMonthsRef.current = [
+            ...classifiedMonthsRef.current,
+            classified,
+          ];
+        }
         upsertProgress(month, () => ({
           month,
           status: 'done',
@@ -141,10 +177,45 @@ export default function CSVClassifyingStep({
           completionTokens: number;
           totalTokens: number;
         };
-        classifiedCreditMonthsRef.current = [
-          ...classifiedCreditMonthsRef.current,
-          { month, transactions, totalUsage: usage },
-        ];
+        // Upsert the classified credit month to avoid duplicate month entries
+        const creditClassified = { month, transactions, totalUsage: usage };
+        const existingCredit = classifiedCreditMonthsRef.current.find(
+          (c) => c.month === month,
+        );
+        if (existingCredit) {
+          const existingById = new Map(
+            existingCredit.transactions.map((t) => [t.id, t]),
+          );
+          for (const tx of transactions) {
+            if (!existingById.has(tx.id)) existingById.set(tx.id, tx);
+          }
+          const mergedTxs = Array.from(existingById.values());
+          const mergedUsage = {
+            promptTokens:
+              (existingCredit.totalUsage.promptTokens ?? 0) +
+              (usage.promptTokens ?? 0),
+            completionTokens:
+              (existingCredit.totalUsage.completionTokens ?? 0) +
+              (usage.completionTokens ?? 0),
+            totalTokens:
+              (existingCredit.totalUsage.totalTokens ?? 0) +
+              (usage.totalTokens ?? 0),
+          };
+          const merged = {
+            month,
+            transactions: mergedTxs,
+            totalUsage: mergedUsage,
+          } as ClassifiedCreditMonth;
+          classifiedCreditMonthsRef.current =
+            classifiedCreditMonthsRef.current.map((c) =>
+              c.month === month ? merged : c,
+            );
+        } else {
+          classifiedCreditMonthsRef.current = [
+            ...classifiedCreditMonthsRef.current,
+            creditClassified,
+          ];
+        }
         upsertProgress(month, () => ({
           month,
           status: 'done',

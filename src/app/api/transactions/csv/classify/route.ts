@@ -139,37 +139,92 @@ export async function POST(req: NextRequest) {
           for (const [month, monthTransactions] of groupTransactionsByMonth(
             matched.map((m) => m.tx),
           )) {
-            const classified = monthTransactions.map((tx) => {
-              const ann = annotations.get(tx.id)!;
-              const matchedRule = rules.find((r) => r.id === ann.appliedRuleId);
-              return {
-                id: tx.id,
-                date: tx.date,
-                description: tx.description,
-                amount: tx.amount,
-                // Client expects `llmCategory` + `confirmedCategory` fields
-                llmCategory: ann.matchedCategory,
-                confirmedCategory: ann.matchedCategory,
-                overridden: false,
-                // preserve provenance for later DB persistence
-                preMatch: {
-                  ruleId: ann.appliedRuleId,
-                  category: ann.matchedCategory,
-                  ruleName: matchedRule?.name ?? null,
-                  matchType: ann.matchType,
-                },
-                sourceHint: 'RULE_MATCH' as const,
-                type: 'DEBIT' as const,
-              };
-            });
-            controller.enqueue(
-              sseEvent(encoder, {
-                type: 'debit_classified',
-                month,
-                transactions: classified as ClassifiedTransactionV2[],
-                usage: { totalTokens: 0, promptTokens: 0, completionTokens: 0 },
-              }),
+            // Partition pre-matched transactions by type so we emit the correct
+            // SSE event type the client expects (`debit_classified` vs `credit_classified`).
+            const debitTx = monthTransactions.filter((t) => t.type === 'DEBIT');
+            const creditTx = monthTransactions.filter(
+              (t) => t.type === 'CREDIT',
             );
+
+            if (debitTx.length > 0) {
+              const classified = debitTx.map((tx) => {
+                const ann = annotations.get(tx.id)!;
+                const matchedRule = rules.find(
+                  (r) => r.id === ann.appliedRuleId,
+                );
+                return {
+                  id: tx.id,
+                  date: tx.date,
+                  description: tx.description,
+                  amount: tx.amount,
+                  // Client expects `llmCategory` + `confirmedCategory` fields
+                  llmCategory: ann.matchedCategory,
+                  confirmedCategory: ann.matchedCategory,
+                  overridden: false,
+                  // preserve provenance for later DB persistence
+                  preMatch: {
+                    ruleId: ann.appliedRuleId,
+                    category: ann.matchedCategory,
+                    ruleName: matchedRule?.name ?? null,
+                    matchType: ann.matchType,
+                  },
+                  sourceHint: 'RULE_MATCH' as const,
+                  type: 'DEBIT' as const,
+                };
+              });
+              controller.enqueue(
+                sseEvent(encoder, {
+                  type: 'debit_classified',
+                  month,
+                  transactions: classified as ClassifiedTransactionV2[],
+                  usage: {
+                    totalTokens: 0,
+                    promptTokens: 0,
+                    completionTokens: 0,
+                  },
+                }),
+              );
+            }
+
+            if (creditTx.length > 0) {
+              const classified = creditTx.map((tx) => {
+                const ann = annotations.get(tx.id)!;
+                const matchedRule = rules.find(
+                  (r) => r.id === ann.appliedRuleId,
+                );
+                return {
+                  id: tx.id,
+                  date: tx.date,
+                  description: tx.description,
+                  amount: tx.amount,
+                  // Client expects `llmCategory` + `confirmedCategory` fields
+                  llmCategory: ann.matchedCategory,
+                  confirmedCategory: ann.matchedCategory,
+                  overridden: false,
+                  // preserve provenance for later DB persistence
+                  preMatch: {
+                    ruleId: ann.appliedRuleId,
+                    category: ann.matchedCategory,
+                    ruleName: matchedRule?.name ?? null,
+                    matchType: ann.matchType,
+                  },
+                  sourceHint: 'RULE_MATCH' as const,
+                  type: 'CREDIT' as const,
+                };
+              });
+              controller.enqueue(
+                sseEvent(encoder, {
+                  type: 'credit_classified',
+                  month,
+                  transactions: classified as any,
+                  usage: {
+                    totalTokens: 0,
+                    promptTokens: 0,
+                    completionTokens: 0,
+                  },
+                }),
+              );
+            }
           }
 
           for (const [month, monthTransactions] of debitMonths) {
