@@ -22,8 +22,8 @@ beforeEach(() => {
 
 describe('bank-asset.service', () => {
   describe('createBankAccount', () => {
-    it('creates with correct data (institutionId mapped from bankId)', async () => {
-      const input = { name: 'Checking', bankId: 'b1', userId: 'u1' };
+    it('creates with correct data (institutionId mapped from institutionId)', async () => {
+      const input = { name: 'Checking', institutionId: 'b1', userId: 'u1' };
       const result = {
         id: 'a1',
         name: 'Checking',
@@ -42,7 +42,7 @@ describe('bank-asset.service', () => {
   });
 
   describe('getBankAccounts', () => {
-    it('returns all accounts for user when no bankId filter', async () => {
+    it('returns all accounts for user when no institutionId filter', async () => {
       const accounts = [
         { id: 'a1', name: 'Checking', institution: { id: 'b1', name: 'Bank' } },
       ];
@@ -55,7 +55,7 @@ describe('bank-asset.service', () => {
       });
       expect(out).toBe(accounts);
     });
-    it('filters by institutionId when bankId provided', async () => {
+    it('filters by institutionId when institutionId provided', async () => {
       prismaMock.financialAccount.findMany.mockResolvedValue([] as never);
       await getBankAccounts('u1', 'b2');
       expect(prismaMock.financialAccount.findMany).toHaveBeenCalledWith({

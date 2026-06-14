@@ -14,7 +14,7 @@ describe('interest-cleansing.service', () => {
     it('should use calendarYear.fromMonth for dateFrom (not hardcoded January)', async () => {
       const calendarYearId = 'fy-2024';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Setup: Fiscal year starting July (month 7)
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
@@ -30,7 +30,7 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify dateFrom is July 1, 2024 (not Jan 1)
       expect(result.dateFrom).toBe('2024-07-01');
@@ -55,7 +55,7 @@ describe('interest-cleansing.service', () => {
     it('should use calendarYear.toYear/toMonth for dateTo (not hardcoded December)', async () => {
       const calendarYearId = 'fy-2024';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Setup: Fiscal year Jul-Jun
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
@@ -71,7 +71,7 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify dateTo is June 30, 2025 (not Dec 31)
       expect(result.dateTo).toBe('2025-06-30');
@@ -85,7 +85,7 @@ describe('interest-cleansing.service', () => {
     it('should produce correct date window for fiscal year (Jul-Jun)', async () => {
       const calendarYearId = 'fy-2024-2025';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -100,7 +100,7 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       expect(result.dateFrom).toBe('2024-07-01');
       expect(result.dateTo).toBe('2025-06-30');
@@ -117,7 +117,7 @@ describe('interest-cleansing.service', () => {
     it('should use datePaid date range in donation query (not calendarId FK)', async () => {
       const calendarYearId = 'fy-2024';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -132,7 +132,7 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      await getYearlyCleansingData(bankId, calendarYearId, userId);
+      await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify donation query uses datePaid, NOT donationLedger.calendarId
       expect(prismaMock.interestCleansing.findMany).toHaveBeenCalledWith(
@@ -158,7 +158,7 @@ describe('interest-cleansing.service', () => {
     it('should include dateFrom and dateTo as ISO date strings in return type', async () => {
       const calendarYearId = 'annual-2024';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -175,7 +175,7 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify return type includes dateFrom and dateTo as ISO date strings
       expect(result).toHaveProperty('dateFrom');
@@ -196,7 +196,7 @@ describe('interest-cleansing.service', () => {
     it('should query transactions by category Credit Interest and Bank Interest (not description)', async () => {
       const calendarYearId = 'annual-2024';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -211,7 +211,7 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      await getYearlyCleansingData(bankId, calendarYearId, userId);
+      await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       const callArg = (prismaMock.transaction.findMany as any).mock.calls[0][0];
       const orClauses = callArg.where.OR as Array<Record<string, unknown>>;
@@ -229,7 +229,7 @@ describe('interest-cleansing.service', () => {
     it('should return correct totals for ANNUAL year (Jan-Dec)', async () => {
       const calendarYearId = 'annual-2024';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -252,7 +252,7 @@ describe('interest-cleansing.service', () => {
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-2',
@@ -263,7 +263,7 @@ describe('interest-cleansing.service', () => {
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-3',
@@ -274,7 +274,7 @@ describe('interest-cleansing.service', () => {
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -304,7 +304,7 @@ describe('interest-cleansing.service', () => {
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify totals
       expect(result.yearlySummary.totalReceived).toBe(225); // $100 + $50 + $75
@@ -317,7 +317,7 @@ describe('interest-cleansing.service', () => {
     it('should return correct totals for FISCAL year (Jul-Jun)', async () => {
       const calendarYearId = 'fy-2024-2025';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -340,7 +340,7 @@ describe('interest-cleansing.service', () => {
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-2',
@@ -351,7 +351,7 @@ describe('interest-cleansing.service', () => {
           category: 'Bank Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -376,7 +376,7 @@ describe('interest-cleansing.service', () => {
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
 
       // Verify totals
@@ -390,7 +390,7 @@ describe('interest-cleansing.service', () => {
     it('should include all interest and donation records within window for back-dated calendar', async () => {
       const calendarYearId = 'backdated-2023';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Back-dated calendar: Oct 2022 - Sep 2023 (12-month fiscal year)
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
@@ -414,7 +414,7 @@ describe('interest-cleansing.service', () => {
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-2',
@@ -425,7 +425,7 @@ describe('interest-cleansing.service', () => {
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-3',
@@ -436,7 +436,7 @@ describe('interest-cleansing.service', () => {
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -461,7 +461,7 @@ describe('interest-cleansing.service', () => {
         } as never,
       ]);
 
-        const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+        const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
 
       // Verify 12-month fiscal window is generated (Oct-Sep)
@@ -492,7 +492,7 @@ describe('interest-cleansing.service', () => {
     it('should exclude donations outside the calendar window', async () => {
       const calendarYearId = 'annual-2024';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -515,7 +515,7 @@ describe('interest-cleansing.service', () => {
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -537,7 +537,7 @@ describe('interest-cleansing.service', () => {
         // We're testing that the service correctly passes datePaid filters to the query
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify only donations within window are included
       expect(result.cleansingDonations).toHaveLength(1);

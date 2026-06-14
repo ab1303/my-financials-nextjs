@@ -111,7 +111,7 @@ export default async function BanksPage({
           <CreditsDialog
             bankName={selectedBank?.label ?? ''}
             credits={yearlyCleansingData?.monthlyCredits ?? []}
-            bankId={selectedBankId}
+            institutionId={selectedBankId}
             calendarYearId={selectedCalendarYearId}
           />
         )}
@@ -121,7 +121,7 @@ export default async function BanksPage({
         <div className='shrink-0 mb-6'>
           <BankInterestFilters
             initialData={initialData}
-            bankIdParam={selectedBankId}
+            institutionIdParam={selectedBankId}
             yearIdParam={selectedCalendarYearId}
             defaultType={(fiscalYearType ?? 'FISCAL') as CalendarEnumType}
           />
@@ -179,21 +179,21 @@ export default async function BanksPage({
             {selectedBankId && selectedCalendarYearId ? (
               <div className='h-full overflow-y-auto'>
                 <CleansingDonationsList
-                  donations={yearlyCleansingData?.cleansingDonations ?? []}
-                  yearlySummary={
-                    yearlyCleansingData?.yearlySummary ?? {
-                      totalReceived: 0,
-                      totalCleansed: 0,
-                      balance: 0,
-                    }
+                donations={yearlyCleansingData?.cleansingDonations ?? []}
+                yearlySummary={
+                  yearlyCleansingData?.yearlySummary ?? {
+                    totalReceived: 0,
+                    totalCleansed: 0,
+                    balance: 0,
                   }
-                  bankId={selectedBankId}
-                  calendarYearId={selectedCalendarYearId}
-                  dateFrom={yearlyCleansingData?.dateFrom ?? ''}
-                  dateTo={yearlyCleansingData?.dateTo ?? ''}
-                  unlinkedInterestCount={
-                    yearlyCleansingData?.unlinkedInterestCount ?? 0
-                  }
+                }
+                institutionId={selectedBankId}
+                calendarYearId={selectedCalendarYearId}
+                dateFrom={yearlyCleansingData?.dateFrom ?? ''}
+                dateTo={yearlyCleansingData?.dateTo ?? ''}
+                unlinkedInterestCount={
+                  yearlyCleansingData?.unlinkedInterestCount ?? 0
+                }
                 />
               </div>
             ) : (

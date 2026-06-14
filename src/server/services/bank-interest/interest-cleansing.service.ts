@@ -42,7 +42,7 @@ export type YearlyCleansingData = {
 };
 
 export const getYearlyCleansingData = async (
-  bankId: string,
+  institutionId: string,
   calendarYearId: string,
   userId: string,
 ): Promise<YearlyCleansingData> => {
@@ -60,8 +60,8 @@ export const getYearlyCleansingData = async (
     Date.UTC(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59),
   );
 
-  // bankId is a FinancialAccount.id — filter transactions directly by this account
-  const bankAccountIds = [bankId];
+  // institutionId is a FinancialAccount.id — filter transactions directly by this account
+  const bankAccountIds = [institutionId];
 
   // Generate all 12 months for this calendar window (Jan-Dec for Annual, Jul-Jun for Fiscal, etc.)
   const allMonths: Array<{ month: number; year: number }> = [];
@@ -180,7 +180,7 @@ export const getYearlyCleansingData = async (
 };
 
 export const getUnlinkedInterestTransactions = async (
-  bankId: string,
+  institutionId: string,
   dateFrom: Date,
   dateTo: Date,
   userId: string,
@@ -193,7 +193,7 @@ export const getUnlinkedInterestTransactions = async (
     cleansedAmount: number;
   }>
 > => {
-  const bankAccountIds = [bankId];
+  const bankAccountIds = [institutionId];
 
   const allInterestTx = await prisma.transaction.findMany({
     where: {
@@ -237,14 +237,14 @@ export const getUnlinkedInterestTransactions = async (
 
 export const getUnlinkedCleansingDebitTransactions = async (
   userId: string,
-  bankId: string,
+  institutionId: string,
   categoryName: string = CLEANSING_CATEGORY_NAME,
   options?: { includeAnyType?: boolean },
 ): Promise<
   Array<{ id: string; date: string; description: string; amount: number }>
 > => {
-  // bankId is a FinancialAccount.id — filter transactions directly by this account
-  const bankAccountIds = [bankId];
+  // institutionId is a FinancialAccount.id — filter transactions directly by this account
+  const bankAccountIds = [institutionId];
 
   if (bankAccountIds.length === 0) return [];
 

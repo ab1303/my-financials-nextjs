@@ -35,7 +35,7 @@ type NewSnapshotModalProps = {
 };
 
 type EntryType = {
-  bankId: string;
+  institutionId: string;
   accountId: string;
   balance: number;
 };
@@ -98,7 +98,7 @@ export default function NewSnapshotModal({
     if (mostRecentSnapshot?.entries && entries.length === 0) {
       const snapshotEntries = mostRecentSnapshot.balanceRecords.map(
         (entry: any) => ({
-          bankId: entry.account.institutionId || entry.account.bankId,
+          institutionId: entry.account.institutionId || entry.account.institutionId,
           accountId: entry.account.id,
           balance: Number(entry.balance),
         }),
@@ -115,8 +115,8 @@ export default function NewSnapshotModal({
       return;
     }
 
-    // Validate all entries have bankId and accountId
-    const validEntries = entries.every((e) => e.bankId && e.accountId);
+    // Validate all entries have institutionId and accountId
+    const validEntries = entries.every((e) => e.institutionId && e.accountId);
     if (!validEntries) {
       toast.error('Please select a bank and account for all entries');
       return;
@@ -132,7 +132,7 @@ export default function NewSnapshotModal({
   };
 
   const handleAddEntry = () => {
-    setEntries([...entries, { bankId: '', accountId: '', balance: 0 }]);
+    setEntries([...entries, { institutionId: '', accountId: '', balance: 0 }]);
   };
 
   const handleRemoveEntry = (index: number) => {
@@ -141,12 +141,12 @@ export default function NewSnapshotModal({
 
   const handleEntryChange = (
     index: number,
-    field: 'bankId' | 'accountId' | 'balance',
+    field: 'institutionId' | 'accountId' | 'balance',
     value: string | number,
   ) => {
     const newEntries = [...entries];
-    if (field === 'bankId') {
-      newEntries[index]!.bankId = value as string;
+    if (field === 'institutionId') {
+      newEntries[index]!.institutionId = value as string;
       // Reset account when bank changes
       newEntries[index]!.accountId = '';
     } else if (field === 'accountId') {
@@ -159,13 +159,13 @@ export default function NewSnapshotModal({
 
   // Handle creating a new account
   const handleCreateAccount = async (
-    bankId: string,
+    institutionId: string,
     accountName: string,
   ): Promise<string> => {
     try {
       const result = await createAccountMutation.mutateAsync({
         name: accountName,
-        bankId,
+        institutionId,
       });
       if (!result?.data?.account?.id) {
         throw new Error('Failed to create account');
@@ -178,8 +178,8 @@ export default function NewSnapshotModal({
   };
 
   // Get accounts for selected bank
-  const getAccountsForBank = (bankId: string) => {
-    return userAccounts.filter((acc) => acc.institutionId === bankId);
+  const getAccountsForBank = (institutionId: string) => {
+    return userAccounts.filter((acc) => acc.institutionId === institutionId);
   };
 
   return (
@@ -231,7 +231,7 @@ export default function NewSnapshotModal({
                 <div className='space-y-3'>
                   {entries.map((entry, index) => {
                     const selectedBankAccounts = getAccountsForBank(
-                      entry.bankId,
+                      entry.institutionId,
                     );
                     const accountOptions = selectedBankAccounts.map((acc) => ({
                       value: acc.id,
@@ -248,9 +248,9 @@ export default function NewSnapshotModal({
                           <Label htmlFor={`bank-${index}`}>Bank</Label>
                           <select
                             id={`bank-${index}`}
-                            value={entry.bankId}
+                            value={entry.institutionId}
                             onChange={(e) =>
-                              handleEntryChange(index, 'bankId', e.target.value)
+                              handleEntryChange(index, 'institutionId', e.target.value)
                             }
                             required
                             className='mt-1 block w-full px-3 py-2 border border-input rounded-lg shadow-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
@@ -293,13 +293,13 @@ export default function NewSnapshotModal({
                               }
                             }}
                             onCreateOption={(inputValue) => {
-                              if (!entry.bankId) {
+                              if (!entry.institutionId) {
                                 toast.error('Please select a bank first');
                                 return;
                               }
 
                               // Call async function without awaiting in callback
-                              handleCreateAccount(entry.bankId, inputValue)
+                              handleCreateAccount(entry.institutionId, inputValue)
                                 .then((newAccountId) => {
                                   // Update entry with new account
                                   handleEntryChange(
@@ -315,13 +315,13 @@ export default function NewSnapshotModal({
                                   // Error already toasted in mutation handler
                                 });
                             }}
-                            isDisabled={!entry.bankId}
+                            isDisabled={!entry.institutionId}
                             isClearable
                             placeholder='Select or type to create account...'
                             className='mt-1'
                             isLoading={createAccountMutation.isPending}
                           />
-                          {!entry.bankId && (
+                          {!entry.institutionId && (
                             <p className='mt-1 text-xs text-muted-foreground'>
                               Select a bank first to add accounts
                             </p>

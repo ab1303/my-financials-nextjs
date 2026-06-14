@@ -87,7 +87,7 @@ export default function BankAssetsClient({ initialData }: Props) {
   const [editingEntry, setEditingEntry] = useState<{
     entryId: string;
     accountId: string;
-    bankId: string;
+    institutionId: string;
     accountName: string;
     balance: number;
   } | null>(null);
@@ -105,7 +105,7 @@ export default function BankAssetsClient({ initialData }: Props) {
   // Edit account name state
   const [editingAccountName, setEditingAccountName] = useState<{
     accountId: string;
-    bankId: string;
+    institutionId: string;
     currentName: string;
   } | null>(null);
   const [newAccountName, setNewAccountName] = useState('');
@@ -217,18 +217,18 @@ export default function BankAssetsClient({ initialData }: Props) {
     [snapshot],
   );
 
-  // Map bankId → BankTotalSummary for O(1) lookup during render
+  // Map institutionId → BankTotalSummary for O(1) lookup during render
   const totalsMap = useMemo(
     () =>
       new Map(
-        (totals as SnapshotTotals | undefined)?.banks.map((b) => [b.bankId, b]) ?? [],
+        (totals as SnapshotTotals | undefined)?.banks.map((b) => [b.institutionId, b]) ?? [],
       ),
     [totals],
   );
 
-  const getAddableAccountsForBank = (bankId: string) =>
+  const getAddableAccountsForBank = (institutionId: string) =>
     allBankAccounts
-      .filter((acc) => acc.institutionId === bankId && !accountsAlreadyInSnapshot.has(acc.id))
+      .filter((acc) => acc.institutionId === institutionId && !accountsAlreadyInSnapshot.has(acc.id))
       .map((acc) => ({ value: acc.id, label: acc.name }));
 
   // Update entry mutation
@@ -335,11 +335,11 @@ export default function BankAssetsClient({ initialData }: Props) {
   const handleEditEntry = (
     entryId: string,
     accountId: string,
-    bankId: string,
+    institutionId: string,
     accountName: string,
     balance: number,
   ) => {
-    setEditingEntry({ entryId, accountId, bankId, accountName, balance });
+    setEditingEntry({ entryId, accountId, institutionId, accountName, balance });
     setEditBalance(balance);
     setEditAccountName(accountName);
     setIsEditingModalName(false);
@@ -402,10 +402,10 @@ export default function BankAssetsClient({ initialData }: Props) {
 
   const handleStartEditAccountName = (
     accountId: string,
-    bankId: string,
+    institutionId: string,
     currentName: string,
   ) => {
-    setEditingAccountName({ accountId, bankId, currentName });
+    setEditingAccountName({ accountId, institutionId, currentName });
     setNewAccountName(currentName);
     setAccountNameError('');
   };
@@ -451,8 +451,8 @@ export default function BankAssetsClient({ initialData }: Props) {
     setAccountNameError('');
   };
 
-  const handleOpenAddEntry = (bankId: string) => {
-    setAddingEntryForBankId(bankId);
+  const handleOpenAddEntry = (institutionId: string) => {
+    setAddingEntryForBankId(institutionId);
     setNewEntryAccountId('');
     setNewEntryBalance(0);
     setNewEntryError('');
@@ -480,12 +480,12 @@ export default function BankAssetsClient({ initialData }: Props) {
   };
 
   const handleCreateAccountForEntry = async (
-    bankId: string,
+    institutionId: string,
     accountName: string,
   ): Promise<string> => {
     const result = await createAccountForEntryMutation.mutateAsync({
       name: accountName,
-      bankId,
+      institutionId,
     });
     if (!result?.data?.account?.id) throw new Error('Failed to create account');
     return result.data.account.id;
@@ -774,7 +774,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                               onClick={() =>
                                                 handleStartEditAccountName(
                                                   account.accountId,
-                                                  bankTotals.bankId,
+                                                  bankTotals.institutionId,
                                                   account.accountName,
                                                 )
                                               }
@@ -811,7 +811,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                               handleEditEntry(
                                                 snapshotEntry?.id || '',
                                                 account.accountId,
-                                                bankTotals.bankId,
+                                                bankTotals.institutionId,
                                                 account.accountName,
                                                 Number(account.balance),
                                               )

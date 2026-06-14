@@ -9,11 +9,11 @@ import InterestCreditsTable from '../InterestCreditsTable';
 type CreditsDialogProps = {
   bankName: string;
   credits: MonthlyCredit[];
-  bankId: string;
+  institutionId: string;
   calendarYearId: string;
 };
 
-export default function CreditsDialog({ bankName, credits, bankId, calendarYearId }: CreditsDialogProps) {
+export default function CreditsDialog({ bankName, credits, institutionId, calendarYearId }: CreditsDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>

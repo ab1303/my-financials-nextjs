@@ -15,14 +15,14 @@ type BankInterestFiltersProps = {
     bankOptions: OptionType[];
     yearlyData: Array<CalendarYearType>;
   };
-  bankIdParam: string;
+  institutionIdParam: string;
   yearIdParam: string;
   defaultType?: CalendarEnumType;
 };
 
 export default function BankInterestFilters({
   initialData: { bankOptions, yearlyData },
-  bankIdParam,
+  institutionIdParam,
   yearIdParam,
   defaultType,
 }: BankInterestFiltersProps) {
@@ -32,7 +32,7 @@ export default function BankInterestFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const currentBank = bankOptions.find((b) => b.id === bankIdParam);
+  const currentBank = bankOptions.find((b) => b.id === institutionIdParam);
 
   const [selectedBank, setSelectedBank] = useState<
     SingleValue<OptionType> | undefined

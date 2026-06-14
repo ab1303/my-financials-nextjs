@@ -8,8 +8,8 @@ export const createBankSchema = object({
 });
 
 export const params = object({
-  bankId: string({
-    required_error: 'bank id is required',
+  institutionId: string({
+    required_error: 'institution id is required',
   }),
 });
 

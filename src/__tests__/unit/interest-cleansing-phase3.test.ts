@@ -14,7 +14,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
     it('should return correct interest/donation totals for historical ANNUAL year (Jan-Dec 2022)', async () => {
       const calendarYearId = 'annual-2022';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Setup: Historical annual year 2022
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
@@ -38,7 +38,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-2022-002',
@@ -49,7 +49,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-2022-003',
@@ -60,7 +60,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -90,7 +90,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Validate ANNUAL year window
       expect(result.dateFrom).toBe('2022-01-01');
@@ -114,7 +114,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
     it('should return correct interest/donation totals for historical FISCAL year (Jul 2021 - Jun 2022)', async () => {
       const calendarYearId = 'fiscal-2021-2022';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Setup: Historical fiscal year from Jul 2021 to Jun 2022
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
@@ -138,7 +138,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-fy-002',
@@ -149,7 +149,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Bank Interest', // Legacy category
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-fy-003',
@@ -160,7 +160,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-fy-004',
@@ -171,7 +171,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -201,7 +201,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Validate FISCAL year window (Jul 2021 - Jun 2022)
       expect(result.dateFrom).toBe('2021-07-01');
@@ -225,7 +225,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
     it('should include all transactions and donations within back-dated window (Oct 2022 - Sep 2023)', async () => {
       const calendarYearId = 'backdated-fy-2022-2023';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Setup: Back-dated fiscal year Oct 2022 - Sep 2023
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
@@ -250,7 +250,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         // December 2022
         {
@@ -262,7 +262,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         // March 2023
         {
@@ -274,7 +274,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         // September 2023 (end of window)
         {
@@ -286,7 +286,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -316,7 +316,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Validate back-dated fiscal window (Oct 2022 - Sep 2023)
       expect(result.dateFrom).toBe('2022-10-01');
@@ -351,7 +351,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
     it('should exclude donations outside the back-dated calendar window', async () => {
       const calendarYearId = 'back-dated-2023';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Setup: Back-dated calendar for 2023 only
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
@@ -375,7 +375,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -395,7 +395,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify donation query was called with correct window
       const donationCallArg = (prismaMock.interestCleansing.findMany as any)?.mock?.calls?.[0]?.[0];
@@ -415,7 +415,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
     it('should respect custom fromMonth/toMonth, not use hardcoded January-December', async () => {
       const calendarYearId = 'custom-window';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Setup: Custom fiscal window Apr 2022 - Mar 2023 (not Jan-Dec)
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
@@ -438,7 +438,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-custom-002',
@@ -449,13 +449,13 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify custom window is used (Apr 2022 - Mar 2023), NOT Jan-Dec
       expect(result.dateFrom).toBe('2022-04-01');
@@ -471,7 +471,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
     it('should generate 12 monthly credits for full fiscal window (Oct 2022 - Sep 2023)', async () => {
       const calendarYearId = 'monthly-test';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -500,13 +500,13 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never);
       }
       prismaMock.transaction.findMany.mockResolvedValue(transactions);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Verify exactly 12 monthly credits
       expect(result.monthlyCredits).toHaveLength(12);
@@ -529,7 +529,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
     it('should compute correct totals: totalReceived - totalCleansed = balance', async () => {
       const calendarYearId = 'totals-test';
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       prismaMock.calendarYear.findUniqueOrThrow.mockResolvedValue({
         id: calendarYearId,
@@ -552,7 +552,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-t2',
@@ -563,7 +563,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
         {
           id: 'tx-t3',
@@ -574,7 +574,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
 
@@ -604,7 +604,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(bankId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
 
       // Calculate expected values
       // totalReceived = 100.50 + 250.75 + 300.25 = 651.50
@@ -620,7 +620,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
     // PHASE 3 TEST 8: Multiple back-dated years can be queried independently
     it('should support multiple independent back-dated queries (2021, 2022, 2023)', async () => {
       const userId = 'user-1';
-      const bankId = 'bank-1';
+      const institutionId = 'bank-1';
 
       // Test 2021
       const calendarYear2021 = 'annual-2021';
@@ -644,12 +644,12 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
       prismaMock.interestCleansing.findMany.mockResolvedValueOnce([]);
 
-      const result2021 = await getYearlyCleansingData(bankId, calendarYear2021, userId);
+      const result2021 = await getYearlyCleansingData(institutionId, calendarYear2021, userId);
       expect(result2021.dateFrom).toBe('2021-01-01');
       expect(result2021.dateTo).toBe('2021-12-31');
       expect(result2021.yearlySummary.totalReceived).toBe(50);
@@ -678,12 +678,12 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           category: 'Credit Interest',
           status: 'CONFIRMED',
           userId,
-          bankAccountId: bankId,
+          bankAccountId: institutionId,
         } as never,
       ]);
       prismaMock.interestCleansing.findMany.mockResolvedValueOnce([]);
 
-      const result2022 = await getYearlyCleansingData(bankId, calendarYear2022, userId);
+      const result2022 = await getYearlyCleansingData(institutionId, calendarYear2022, userId);
       expect(result2022.dateFrom).toBe('2022-01-01');
       expect(result2022.dateTo).toBe('2022-12-31');
       expect(result2022.yearlySummary.totalReceived).toBe(100);

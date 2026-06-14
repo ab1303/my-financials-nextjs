@@ -44,7 +44,7 @@ describe('useCleanseDonationState evidence loading bug', () => {
     const props = {
       isOpen: true,
       onClose: vi.fn(),
-      bankId: 'b1',
+      institutionId: 'b1',
       calendarYearId: 'y1',
       dateFrom: '2026-01-01',
       dateTo: '2026-12-31',

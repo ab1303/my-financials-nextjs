@@ -14,10 +14,10 @@ import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const bankInterestRouter = router({
   getInterestCleansingData: protectedProcedure
-    .input(z.object({ bankId: z.string(), calendarYearId: z.string() }))
+    .input(z.object({ institutionId: z.string(), calendarYearId: z.string() }))
     .query(({ ctx, input }) =>
       getYearlyCleansingData(
-        input.bankId,
+        input.institutionId,
         input.calendarYearId,
         ctx.session.user.id,
       ),
@@ -25,14 +25,14 @@ export const bankInterestRouter = router({
   getUnlinkedInterestTransactions: protectedProcedure
     .input(
       z.object({
-        bankId: z.string(),
+        institutionId: z.string(),
         dateFrom: z.string(),
         dateTo: z.string(),
       }),
     )
     .query(({ ctx, input }) =>
       getUnlinkedInterestTransactions(
-        input.bankId,
+        input.institutionId,
         new Date(input.dateFrom),
         new Date(input.dateTo),
         ctx.session.user.id,
@@ -41,7 +41,7 @@ export const bankInterestRouter = router({
   getUnlinkedCleansingDebitTransactions: protectedProcedure
     .input(
       z.object({
-        bankId: z.string(),
+        institutionId: z.string(),
         categoryName: z.string().optional(),
         includeAnyType: z.boolean().optional(),
       }),
@@ -49,7 +49,7 @@ export const bankInterestRouter = router({
     .query(({ ctx, input }) =>
       getUnlinkedCleansingDebitTransactions(
         ctx.session.user.id,
-        input.bankId,
+        input.institutionId,
         input.categoryName,
         { includeAnyType: input.includeAnyType },
       ),

@@ -30,7 +30,7 @@ function formatDate(date: Date | string) {
 type CleansingDonationsListProps = {
   donations: CleansingDonation[];
   yearlySummary: YearlySummary;
-  bankId: string;
+  institutionId: string;
   calendarYearId: string;
   dateFrom: string;
   dateTo: string;
@@ -40,7 +40,7 @@ type CleansingDonationsListProps = {
 export default function CleansingDonationsList({
   donations,
   yearlySummary,
-  bankId,
+  institutionId,
   calendarYearId,
   dateFrom,
   dateTo,
@@ -259,11 +259,11 @@ export default function CleansingDonationsList({
           </div>
         </div>
       )}
-
+// ...
       <CleanseDonationDrawer
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        bankId={bankId}
+        institutionId={institutionId}
         calendarYearId={calendarYearId}
         dateFrom={dateFrom}
         dateTo={dateTo}

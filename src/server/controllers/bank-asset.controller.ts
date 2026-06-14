@@ -36,7 +36,7 @@ export const createBankAccountHandler = async ({
   try {
     const account = await createBankAccount({
       name: input.name,
-      bankId: input.bankId,
+      institutionId: input.institutionId,
       userId,
     });
     return {
@@ -58,7 +58,7 @@ export const getBankAccountsHandler = async ({
   userId: string;
 }) => {
   try {
-    const accounts = await getBankAccounts(userId, input.bankId);
+    const accounts = await getBankAccounts(userId, input.institutionId);
     return accounts;
   } catch (e) {
     handleCaughtError(e);

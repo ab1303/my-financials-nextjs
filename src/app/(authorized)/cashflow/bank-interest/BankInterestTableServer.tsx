@@ -5,18 +5,18 @@ import CleansingDonationsList from './_components/CleansingDonationsList';
 import InterestCreditsTable from './InterestCreditsTable';
 
 export type BankInterestTableServerProps = {
-  bankId: string;
+  institutionId: string;
   calendarYearId: string;
 };
 
 export default async function BankInterestTableServer({
-  bankId,
+  institutionId,
   calendarYearId,
 }: BankInterestTableServerProps) {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const data = await getYearlyCleansingData(bankId, calendarYearId, session.user.id);
+  const data = await getYearlyCleansingData(institutionId, calendarYearId, session.user.id);
 
   // FIX: Use dateFrom/dateTo from service (respects fromMonth/toMonth from calendarYear)
   const { dateFrom, dateTo } = data;
@@ -26,7 +26,7 @@ export default async function BankInterestTableServer({
       <CleansingDonationsList
         donations={data.cleansingDonations}
         yearlySummary={data.yearlySummary}
-        bankId={bankId}
+        institutionId={institutionId}
         calendarYearId={calendarYearId}
         dateFrom={dateFrom}
         dateTo={dateTo}

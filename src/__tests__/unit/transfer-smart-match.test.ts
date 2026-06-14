@@ -66,14 +66,14 @@ describe('transfer smart match helpers', () => {
         amount: new Decimal(50),
         date: new Date('2024-01-01'),
         bankAccountId: 'a',
-        financialAccount: { institutionId: 'b' },
+        bankId: 'b',
       },
       credit: {
         description: 'From the app transfer',
         amount: new Decimal(50),
         date: new Date('2024-01-02'),
         bankAccountId: 'c',
-        financialAccount: { institutionId: 'd' },
+        bankId: 'd',
       },
     });
 
@@ -89,14 +89,14 @@ describe('transfer smart match helpers', () => {
         amount: new Decimal(50),
         date: new Date('2024-01-01'),
         bankAccountId: 'a',
-        financialAccount: { institutionId: 'b' },
+        bankId: 'b',
       },
       credit: {
         description: 'From Checking',
         amount: new Decimal(50),
         date: new Date('2024-01-03'),
         bankAccountId: 'c',
-        financialAccount: { institutionId: 'd' },
+        bankId: 'd',
       },
     });
 

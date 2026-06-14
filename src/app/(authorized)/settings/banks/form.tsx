@@ -114,13 +114,13 @@ export default function BanksForm() {
                     </td>
                     <td className='px-4 py-3 text-right'>
                       {deleteMutation.isPending &&
-                      deleteMutation.variables?.bankId === bank.id ? (
+                      deleteMutation.variables?.institutionId === bank.id ? (
                         <Loader2 className='ml-auto h-4 w-4 animate-spin text-muted-foreground' />
                       ) : (
                         <button
                           type='button'
                           onClick={() =>
-                            deleteMutation.mutate({ bankId: bank.id })
+                            deleteMutation.mutate({ institutionId: bank.id })
                           }
                           aria-label={`Remove ${bank.name}`}
                           className='rounded p-1 text-destructive hover:bg-destructive/10'

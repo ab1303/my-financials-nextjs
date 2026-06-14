@@ -43,7 +43,7 @@ export const removeBankDetailsHandler = async ({
   params: ParamsInput;
 }) => {
   try {
-    await deleteBankDetails(params.bankId);
+    await deleteBankDetails(params.institutionId);
   } catch (e) {
     handleCaughtError(e);
   }

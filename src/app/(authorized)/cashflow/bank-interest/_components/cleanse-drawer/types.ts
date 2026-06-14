@@ -31,7 +31,7 @@ export type EvidenceItem = {
 export type CleanseDonationDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
-  bankId: string;
+  institutionId: string;
   calendarYearId: string;
   dateFrom: string;
   dateTo: string;

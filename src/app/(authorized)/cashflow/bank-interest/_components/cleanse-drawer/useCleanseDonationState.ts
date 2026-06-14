@@ -28,7 +28,7 @@ import type {
 export function useCleanseDonationState({
   isOpen,
   onClose,
-  bankId,
+  institutionId,
   calendarYearId,
   dateFrom,
   dateTo,
@@ -68,12 +68,12 @@ export function useCleanseDonationState({
 
   const unlinkedTxQuery =
     trpc.bankInterest.getUnlinkedInterestTransactions.useQuery(
-      { bankId, dateFrom, dateTo },
+      { institutionId, dateFrom, dateTo },
       { enabled: shouldFetchLinkedTransactions },
     );
 
   const evidenceQuery = trpc.bankInterest.getInterestCleansingData.useQuery(
-    { bankId, calendarYearId },
+    { institutionId, calendarYearId },
     { enabled: shouldFetchLinkedTransactions },
   );
 

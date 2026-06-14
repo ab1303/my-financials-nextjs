@@ -6,13 +6,13 @@ import { prisma } from '../utils/prisma';
 
 export const createBankAccount = async (input: {
   name: string;
-  bankId: string;
+  institutionId: string;
   userId: string;
 }) => {
   return await prisma.financialAccount.create({
     data: {
       name: input.name,
-      institutionId: input.bankId,
+      institutionId: input.institutionId,
       userId: input.userId,
     },
     include: {
@@ -21,11 +21,11 @@ export const createBankAccount = async (input: {
   });
 };
 
-export const getBankAccounts = async (userId: string, bankId?: string) => {
+export const getBankAccounts = async (userId: string, institutionId?: string) => {
   return await prisma.financialAccount.findMany({
     where: {
       userId,
-      ...(bankId && { institutionId: bankId }),
+      ...(institutionId && { institutionId: institutionId }),
     },
     include: {
       institution: {
