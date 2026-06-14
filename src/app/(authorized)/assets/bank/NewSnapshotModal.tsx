@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
 
@@ -17,7 +17,7 @@ type BankAssetEntry = {
   account: {
     id: string;
     name: string;
-    bankId: string;
+    institutionId: string;
   };
 };
 
@@ -96,11 +96,13 @@ export default function NewSnapshotModal({
   // Pre-fill form with most recent snapshot data
   useEffect(() => {
     if (mostRecentSnapshot?.entries && entries.length === 0) {
-      const snapshotEntries = mostRecentSnapshot.balanceRecords.map((entry: any) => ({
-        bankId: entry.account.bankId,
-        accountId: entry.account.id,
-        balance: Number(entry.balance),
-      }));
+      const snapshotEntries = mostRecentSnapshot.balanceRecords.map(
+        (entry: any) => ({
+          bankId: entry.account.institutionId || entry.account.bankId,
+          accountId: entry.account.id,
+          balance: Number(entry.balance),
+        }),
+      );
       setEntries(snapshotEntries);
     }
   }, [mostRecentSnapshot, entries.length]);

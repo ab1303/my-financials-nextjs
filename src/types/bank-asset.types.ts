@@ -26,7 +26,7 @@ export type BankAssetSnapshotWithEntries = BankBalanceSnapshot & {
 // Aggregated types for display
 
 export type BankTotalSummary = {
-  bankId: string;
+  institutionId: string;
   bankName: string;
   total: number;
   accounts: AccountBalance[];
@@ -50,7 +50,7 @@ export type SnapshotTotals = {
 export type SnapshotEntryForm = {
   accountId: string;
   accountName?: string;
-  bankId: string;
+  institutionId: string;
   bankName?: string;
   balance: number;
   isNewAccount?: boolean;
@@ -66,7 +66,7 @@ export type SnapshotFormData = {
 export type BankAccountOption = {
   value: string;
   label: string;
-  bankId: string;
+  institutionId: string;
   isNew?: boolean;
 };
 
@@ -92,7 +92,7 @@ export type CalendarYearFilter = {
 // Accordion state types
 
 export type BankAccordionItem = {
-  bankId: string;
+  institutionId: string;
   bankName: string;
   total: number;
   accounts: AccountBalance[];

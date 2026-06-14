@@ -24,7 +24,13 @@ describe('bank-asset.service', () => {
   describe('createBankAccount', () => {
     it('creates with correct data (institutionId mapped from bankId)', async () => {
       const input = { name: 'Checking', bankId: 'b1', userId: 'u1' };
-      const result = { id: 'a1', name: 'Checking', institutionId: 'b1', userId: 'u1', institution: { id: 'b1', name: 'Bank' } };
+      const result = {
+        id: 'a1',
+        name: 'Checking',
+        institutionId: 'b1',
+        userId: 'u1',
+        institution: { id: 'b1', name: 'Bank' },
+      };
       prismaMock.financialAccount.create.mockResolvedValue(result as never);
       const out = await createBankAccount(input);
       expect(prismaMock.financialAccount.create).toHaveBeenCalledWith({
@@ -37,7 +43,9 @@ describe('bank-asset.service', () => {
 
   describe('getBankAccounts', () => {
     it('returns all accounts for user when no bankId filter', async () => {
-      const accounts = [{ id: 'a1', name: 'Checking', institution: { id: 'b1', name: 'Bank' } }];
+      const accounts = [
+        { id: 'a1', name: 'Checking', institution: { id: 'b1', name: 'Bank' } },
+      ];
       prismaMock.financialAccount.findMany.mockResolvedValue(accounts as never);
       const out = await getBankAccounts('u1');
       expect(prismaMock.financialAccount.findMany).toHaveBeenCalledWith({
@@ -60,7 +68,11 @@ describe('bank-asset.service', () => {
 
   describe('getBankAccountById', () => {
     it('returns account when found', async () => {
-      const account = { id: 'a1', name: 'Checking', institution: { id: 'b1', name: 'Bank' } };
+      const account = {
+        id: 'a1',
+        name: 'Checking',
+        institution: { id: 'b1', name: 'Bank' },
+      };
       prismaMock.financialAccount.findFirst.mockResolvedValue(account as never);
       const out = await getBankAccountById('a1', 'u1');
       expect(prismaMock.financialAccount.findFirst).toHaveBeenCalledWith({
@@ -80,7 +92,7 @@ describe('bank-asset.service', () => {
     it('throws "Account not found" when account does not exist', async () => {
       prismaMock.financialAccount.findFirst.mockResolvedValueOnce(null);
       await expect(
-        updateBankAccount({ accountId: 'a1', name: 'New', userId: 'u1' })
+        updateBankAccount({ accountId: 'a1', name: 'New', userId: 'u1' }),
       ).rejects.toThrow('Account not found');
     });
     it('throws duplicate name error when name already taken for same institution', async () => {
@@ -89,17 +101,25 @@ describe('bank-asset.service', () => {
         .mockResolvedValueOnce(account as never) // account exists
         .mockResolvedValueOnce({ id: 'a2' } as never); // duplicate exists
       await expect(
-        updateBankAccount({ accountId: 'a1', name: 'Dup', userId: 'u1' })
+        updateBankAccount({ accountId: 'a1', name: 'Dup', userId: 'u1' }),
       ).rejects.toThrow('Account name "Dup" already exists for this bank');
     });
     it('updates and returns account when valid', async () => {
       const account = { id: 'a1', institutionId: 'b1', userId: 'u1' };
-      const updated = { id: 'a1', name: 'New', institution: { id: 'b1', name: 'Bank' } };
+      const updated = {
+        id: 'a1',
+        name: 'New',
+        institution: { id: 'b1', name: 'Bank' },
+      };
       prismaMock.financialAccount.findFirst
         .mockResolvedValueOnce(account as never) // account exists
         .mockResolvedValueOnce(null); // no duplicate
       prismaMock.financialAccount.update.mockResolvedValue(updated as never);
-      const out = await updateBankAccount({ accountId: 'a1', name: 'New', userId: 'u1' });
+      const out = await updateBankAccount({
+        accountId: 'a1',
+        name: 'New',
+        userId: 'u1',
+      });
       expect(prismaMock.financialAccount.update).toHaveBeenCalledWith({
         where: { id: 'a1' },
         data: { name: 'New' },
@@ -118,14 +138,21 @@ describe('bank-asset.service', () => {
       await expect(
         createBankAssetSnapshot('u1', new Date(), [
           { accountId: 'a1', balance: 100 },
-        ])
-      ).rejects.toThrow('One or more accounts not found or do not belong to user');
+        ]),
+      ).rejects.toThrow(
+        'One or more accounts not found or do not belong to user',
+      );
     });
     it('creates snapshot with entries when all accounts found', async () => {
       const accounts = [{ id: 'a1', userId: 'u1' }];
-      const snapshot = { id: 's1', balanceRecords: [{ accountId: 'a1', balance: 100 }] };
+      const snapshot = {
+        id: 's1',
+        balanceRecords: [{ accountId: 'a1', balance: 100 }],
+      };
       prismaMock.financialAccount.findMany.mockResolvedValue(accounts as never);
-      prismaMock.bankBalanceSnapshot.create.mockResolvedValue(snapshot as never);
+      prismaMock.bankBalanceSnapshot.create.mockResolvedValue(
+        snapshot as never,
+      );
       const out = await createBankAssetSnapshot('u1', new Date(), [
         { accountId: 'a1', balance: 100 },
       ]);
@@ -137,7 +164,9 @@ describe('bank-asset.service', () => {
   describe('getBankAssetSnapshots', () => {
     it('returns snapshots without date filter', async () => {
       const snapshots = [{ id: 's1', snapshotDate: new Date() }];
-      prismaMock.bankBalanceSnapshot.findMany.mockResolvedValue(snapshots as never);
+      prismaMock.bankBalanceSnapshot.findMany.mockResolvedValue(
+        snapshots as never,
+      );
       const out = await getBankAssetSnapshots('u1');
       expect(prismaMock.bankBalanceSnapshot.findMany).toHaveBeenCalledWith({
         where: { userId: 'u1' },
@@ -181,7 +210,9 @@ describe('bank-asset.service', () => {
   describe('getSnapshotById', () => {
     it('returns snapshot when found', async () => {
       const snapshot = { id: 's1', balanceRecords: [] };
-      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue(snapshot as never);
+      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue(
+        snapshot as never,
+      );
       const out = await getSnapshotById('s1', 'u1');
       expect(prismaMock.bankBalanceSnapshot.findFirst).toHaveBeenCalledWith({
         where: { id: 's1', userId: 'u1' },
@@ -204,11 +235,17 @@ describe('bank-asset.service', () => {
   describe('updateBankAssetEntry', () => {
     it('throws when entry not found', async () => {
       prismaMock.bankBalanceRecord.findFirst.mockResolvedValue(null);
-      await expect(updateBankAssetEntry('e1', 200, 'u1')).rejects.toThrow('Entry not found');
+      await expect(updateBankAssetEntry('e1', 200, 'u1')).rejects.toThrow(
+        'Entry not found',
+      );
     });
     it('updates balance and returns entry with institution', async () => {
       const entry = { id: 'e1', snapshot: { userId: 'u1' } };
-      const updated = { id: 'e1', balance: 200, account: { institution: { id: 'b1', name: 'Bank' } } };
+      const updated = {
+        id: 'e1',
+        balance: 200,
+        account: { institution: { id: 'b1', name: 'Bank' } },
+      };
       prismaMock.bankBalanceRecord.findFirst.mockResolvedValue(entry as never);
       prismaMock.bankBalanceRecord.update.mockResolvedValue(updated as never);
       const out = await updateBankAssetEntry('e1', 200, 'u1');
@@ -224,17 +261,31 @@ describe('bank-asset.service', () => {
   describe('addEntryToSnapshot', () => {
     it('throws when snapshot not found', async () => {
       prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue(null);
-      await expect(addEntryToSnapshot('s1', 'a1', 100, 'u1')).rejects.toThrow('Snapshot not found');
+      await expect(addEntryToSnapshot('s1', 'a1', 100, 'u1')).rejects.toThrow(
+        'Snapshot not found',
+      );
     });
     it('throws when account not found', async () => {
-      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue({ id: 's1' } as never);
+      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue({
+        id: 's1',
+      } as never);
       prismaMock.financialAccount.findFirst.mockResolvedValue(null);
-      await expect(addEntryToSnapshot('s1', 'a1', 100, 'u1')).rejects.toThrow('Account not found');
+      await expect(addEntryToSnapshot('s1', 'a1', 100, 'u1')).rejects.toThrow(
+        'Account not found',
+      );
     });
     it('creates entry when both exist', async () => {
-      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue({ id: 's1' } as never);
-      prismaMock.financialAccount.findFirst.mockResolvedValue({ id: 'a1' } as never);
-      const created = { id: 'e1', balance: 100, account: { institution: { id: 'b1', name: 'Bank' } } };
+      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue({
+        id: 's1',
+      } as never);
+      prismaMock.financialAccount.findFirst.mockResolvedValue({
+        id: 'a1',
+      } as never);
+      const created = {
+        id: 'e1',
+        balance: 100,
+        account: { institution: { id: 'b1', name: 'Bank' } },
+      };
       prismaMock.bankBalanceRecord.create.mockResolvedValue(created as never);
       const out = await addEntryToSnapshot('s1', 'a1', 100, 'u1');
       expect(prismaMock.bankBalanceRecord.create).toHaveBeenCalledWith({
@@ -259,21 +310,38 @@ describe('bank-asset.service', () => {
           {
             accountId: 'a1',
             balance: new Decimal(100),
-            account: { id: 'a1', name: 'A', institutionId: 'b1', institution: { id: 'b1', name: 'BankA' } },
+            account: {
+              id: 'a1',
+              name: 'A',
+              institutionId: 'b1',
+              institution: { id: 'b1', name: 'BankA' },
+            },
           },
           {
             accountId: 'a2',
             balance: new Decimal(200),
-            account: { id: 'a2', name: 'B', institutionId: 'b2', institution: { id: 'b2', name: 'BankB' } },
+            account: {
+              id: 'a2',
+              name: 'B',
+              institutionId: 'b2',
+              institution: { id: 'b2', name: 'BankB' },
+            },
           },
           {
             accountId: 'a3',
             balance: new Decimal(50),
-            account: { id: 'a3', name: 'C', institutionId: 'b1', institution: { id: 'b1', name: 'BankA' } },
+            account: {
+              id: 'a3',
+              name: 'C',
+              institutionId: 'b1',
+              institution: { id: 'b1', name: 'BankA' },
+            },
           },
         ],
       };
-      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue(snapshot as never);
+      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue(
+        snapshot as never,
+      );
       const out = await getSnapshotTotals('s1', 'u1');
       expect(out).toMatchObject({
         snapshotId: 's1',
@@ -281,7 +349,7 @@ describe('bank-asset.service', () => {
         grandTotal: 350,
         banks: [
           {
-            bankId: 'b1',
+            institutionId: 'b1',
             bankName: 'BankA',
             total: 150,
             accounts: [
@@ -290,12 +358,10 @@ describe('bank-asset.service', () => {
             ],
           },
           {
-            bankId: 'b2',
+            institutionId: 'b2',
             bankName: 'BankB',
             total: 200,
-            accounts: [
-              { accountId: 'a2', accountName: 'B', balance: 200 },
-            ],
+            accounts: [{ accountId: 'a2', accountName: 'B', balance: 200 }],
           },
         ],
       });
@@ -308,16 +374,28 @@ describe('bank-asset.service', () => {
           {
             accountId: 'a1',
             balance: new Decimal(100),
-            account: { id: 'a1', name: 'A', institutionId: 'b2', institution: { id: 'b2', name: 'ZetaBank' } },
+            account: {
+              id: 'a1',
+              name: 'A',
+              institutionId: 'b2',
+              institution: { id: 'b2', name: 'ZetaBank' },
+            },
           },
           {
             accountId: 'a2',
             balance: new Decimal(200),
-            account: { id: 'a2', name: 'B', institutionId: 'b1', institution: { id: 'b1', name: 'AlphaBank' } },
+            account: {
+              id: 'a2',
+              name: 'B',
+              institutionId: 'b1',
+              institution: { id: 'b1', name: 'AlphaBank' },
+            },
           },
         ],
       };
-      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue(snapshot as never);
+      prismaMock.bankBalanceSnapshot.findFirst.mockResolvedValue(
+        snapshot as never,
+      );
       const out = await getSnapshotTotals('s1', 'u1');
       expect(out).toBeDefined();
       expect(out?.banks).toBeDefined();
@@ -326,4 +404,3 @@ describe('bank-asset.service', () => {
     });
   });
 });
-

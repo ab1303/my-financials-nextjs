@@ -46,7 +46,9 @@ function createMockPrisma(options?: { failDebitId?: string }) {
     incomeRecord: {
       deleteMany: vi.fn(async () => ({ count: 0 })),
     },
-    $transaction: vi.fn(async (cb: (tx: any) => Promise<void>) => cb(mockPrisma)),
+    $transaction: vi.fn(async (cb: (tx: any) => Promise<void>) =>
+      cb(mockPrisma),
+    ),
   } as any;
 
   return { mockPrisma, updates };
@@ -64,14 +66,14 @@ describe('transfer smart match helpers', () => {
         amount: new Decimal(50),
         date: new Date('2024-01-01'),
         bankAccountId: 'a',
-        bankId: 'b',
+        financialAccount: { institutionId: 'b' },
       },
       credit: {
         description: 'From the app transfer',
         amount: new Decimal(50),
         date: new Date('2024-01-02'),
         bankAccountId: 'c',
-        bankId: 'd',
+        financialAccount: { institutionId: 'd' },
       },
     });
 
@@ -87,14 +89,14 @@ describe('transfer smart match helpers', () => {
         amount: new Decimal(50),
         date: new Date('2024-01-01'),
         bankAccountId: 'a',
-        bankId: 'b',
+        financialAccount: { institutionId: 'b' },
       },
       credit: {
         description: 'From Checking',
         amount: new Decimal(50),
         date: new Date('2024-01-03'),
         bankAccountId: 'c',
-        bankId: 'd',
+        financialAccount: { institutionId: 'd' },
       },
     });
 

@@ -1,8 +1,20 @@
-import { type PrismaClient, TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
+import {
+  type PrismaClient,
+  TransactionStatusEnum,
+  TransactionTypeEnum,
+} from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
 
-import type { TransferCandidateScore, TransferLinkResult, TransferUnlinkResult } from './_types';
-import { TRANSFER_CATEGORY, TRANSFER_DATE_TOLERANCE_DAYS, TRANSFER_DATE_TOLERANCE_DAYS_CROSS } from './constants';
+import type {
+  TransferCandidateScore,
+  TransferLinkResult,
+  TransferUnlinkResult,
+} from './_types';
+import {
+  TRANSFER_CATEGORY,
+  TRANSFER_DATE_TOLERANCE_DAYS,
+  TRANSFER_DATE_TOLERANCE_DAYS_CROSS,
+} from './constants';
 import { rerollupExpenseSummary } from './ledger.service';
 
 const TRANSFER_AMOUNT_FEE_TOLERANCE = 10;
@@ -24,34 +36,67 @@ export function scoreCandidate(params: {
   };
   sourceDescription: string;
   dateTolerance?: number; // NEW: optional override; defaults to TRANSFER_DATE_TOLERANCE_DAYS
-}): { score: number; breakdown: TransferCandidateScore['scoreBreakdown']; amountDiffWarning: string | null } {
+}): {
+  score: number;
+  breakdown: TransferCandidateScore['scoreBreakdown'];
+  amountDiffWarning: string | null;
+} {
   const tolerance = params.dateTolerance ?? TRANSFER_DATE_TOLERANCE_DAYS;
   // Amount match (0–40)
-  const amountDiff = Math.abs(Number(params.sourceAmount) - Number(params.candidate.amount));
-  const amountMatch = amountDiff === 0 ? 40 : amountDiff <= TRANSFER_AMOUNT_FEE_TOLERANCE ? 20 : 0;
+  const amountDiff = Math.abs(
+    Number(params.sourceAmount) - Number(params.candidate.amount),
+  );
+  const amountMatch =
+    amountDiff === 0
+      ? 40
+      : amountDiff <= TRANSFER_AMOUNT_FEE_TOLERANCE
+        ? 20
+        : 0;
   const amountDiffWarning =
     amountDiff > 0 && amountDiff <= TRANSFER_AMOUNT_FEE_TOLERANCE
       ? `Amounts differ by $${amountDiff.toFixed(2)} (possible transfer fee)`
       : null;
 
   // Date proximity (0–30): full score ≤1 day, scaled to 0 at tolerance days
-  const daysDiff = Math.abs((params.sourceDate.getTime() - params.candidate.date.getTime()) / 86_400_000);
-  const dateProximity = daysDiff === 0 ? 30 : Math.max(0, Math.round(30 * (1 - daysDiff / tolerance)));
+  const daysDiff = Math.abs(
+    (params.sourceDate.getTime() - params.candidate.date.getTime()) /
+      86_400_000,
+  );
+  const dateProximity =
+    daysDiff === 0
+      ? 30
+      : Math.max(0, Math.round(30 * (1 - daysDiff / tolerance)));
 
   // Description similarity (0–20): keyword overlap heuristic
-  const sourceWords = new Set(params.sourceDescription.toLowerCase().split(/\W+/).filter(Boolean));
-  const candidateWords = params.candidate.description.toLowerCase().split(/\W+/).filter(Boolean);
+  const sourceWords = new Set(
+    params.sourceDescription.toLowerCase().split(/\W+/).filter(Boolean),
+  );
+  const candidateWords = params.candidate.description
+    .toLowerCase()
+    .split(/\W+/)
+    .filter(Boolean);
   const overlap = candidateWords.filter((w) => sourceWords.has(w)).length;
-  const descriptionSimilarity = Math.min(20, Math.round((overlap / Math.max(sourceWords.size, 1)) * 20));
+  const descriptionSimilarity = Math.min(
+    20,
+    Math.round((overlap / Math.max(sourceWords.size, 1)) * 20),
+  );
 
   // Same bank bonus (0–10)
   const sameBankBonus =
-    params.sourceBankId && params.sourceBankId === params.candidate.bankId ? 10 : 0;
+    params.sourceBankId && params.sourceBankId === params.candidate.bankId
+      ? 10
+      : 0;
 
-  const score = amountMatch + dateProximity + descriptionSimilarity + sameBankBonus;
+  const score =
+    amountMatch + dateProximity + descriptionSimilarity + sameBankBonus;
   return {
     score,
-    breakdown: { amountMatch, dateProximity, descriptionSimilarity, sameBankBonus },
+    breakdown: {
+      amountMatch,
+      dateProximity,
+      descriptionSimilarity,
+      sameBankBonus,
+    },
     amountDiffWarning,
   };
 }
@@ -86,7 +131,7 @@ export async function getCandidates(params: {
   const dateTo = new Date(source.date);
   dateTo.setDate(dateTo.getDate() + TRANSFER_DATE_TOLERANCE_DAYS_CROSS);
 
-  const candidates = await (params.prisma.transaction as any).findMany({
+  const candidates = (await (params.prisma.transaction as any).findMany({
     where: {
       userId: params.userId,
       type: counterType,
@@ -97,7 +142,7 @@ export async function getCandidates(params: {
       date: { gte: dateFrom, lte: dateTo },
     },
     include: { financialAccount: { include: { institution: true } } },
-  }) as Array<{
+  })) as Array<{
     id: string;
     amount: Decimal;
     date: Date;
@@ -105,24 +150,33 @@ export async function getCandidates(params: {
     type: TransactionTypeEnum;
     status: TransactionStatusEnum;
     bankAccountId: string | null;
-    financialAccount: { name: string; institutionId: string; isTracked: boolean; institution: { name: string | null } | null } | null;
+    financialAccount: {
+      name: string;
+      institutionId: string;
+      isTracked: boolean;
+      institution: { name: string | null } | null;
+    } | null;
   }>;
 
   // @ts-ignore — bankId on bankAccount available after migration
-  const sourceBankId: string | null = (source as any).financialAccount?.institutionId ?? null;
-  const sourceIsTracked: boolean = (source as any).financialAccount?.isTracked !== false;
+  const sourceBankId: string | null =
+    (source as any).financialAccount?.institutionId ?? null;
+  const sourceIsTracked: boolean =
+    (source as any).financialAccount?.isTracked !== false;
 
   return candidates
     .filter((candidate) => {
       // Skip candidates where either account is untracked (budget boundary crossing)
-      const candidateIsTracked = candidate.financialAccount?.isTracked !== false;
+      const candidateIsTracked =
+        candidate.financialAccount?.isTracked !== false;
       if (!sourceIsTracked || !candidateIsTracked) return false;
       return true;
     })
     .map((candidate) => {
       // Determine if cross-institution for dynamic date tolerance
       const candidateBankId = candidate.financialAccount?.institutionId ?? null;
-      const isCrossInstitution = !sourceBankId || !candidateBankId || sourceBankId !== candidateBankId;
+      const isCrossInstitution =
+        !sourceBankId || !candidateBankId || sourceBankId !== candidateBankId;
       const dateTolerance = isCrossInstitution
         ? TRANSFER_DATE_TOLERANCE_DAYS_CROSS
         : TRANSFER_DATE_TOLERANCE_DAYS;
@@ -189,18 +243,17 @@ export async function searchTransferCandidates(params: {
       : TransactionTypeEnum.DEBIT;
 
   // When no search term: center a ±60-day window around source date for relevance
-  const dateFilter =
-    !params.search?.trim()
-      ? (() => {
-          const from = new Date(source.date);
-          from.setDate(from.getDate() - 60);
-          const to = new Date(source.date);
-          to.setDate(to.getDate() + 60);
-          return { gte: from, lte: to };
-        })()
-      : undefined;
+  const dateFilter = !params.search?.trim()
+    ? (() => {
+        const from = new Date(source.date);
+        from.setDate(from.getDate() - 60);
+        const to = new Date(source.date);
+        to.setDate(to.getDate() + 60);
+        return { gte: from, lte: to };
+      })()
+    : undefined;
 
-  const candidates = await (params.prisma.transaction as any).findMany({
+  const candidates = (await (params.prisma.transaction as any).findMany({
     where: {
       userId: params.userId,
       type: counterType,
@@ -210,14 +263,19 @@ export async function searchTransferCandidates(params: {
       id: { not: source.id },
       ...(dateFilter ? { date: dateFilter } : {}),
       ...(params.search?.trim()
-        ? { description: { contains: params.search.trim(), mode: 'insensitive' } }
+        ? {
+            description: {
+              contains: params.search.trim(),
+              mode: 'insensitive',
+            },
+          }
         : {}),
       ...(params.bankAccountId ? { bankAccountId: params.bankAccountId } : {}),
     },
     include: { financialAccount: { include: { institution: true } } },
     orderBy: { date: 'desc' },
     take: 50,
-  }) as Array<{
+  })) as Array<{
     id: string;
     amount: import('@prisma/client/runtime/library').Decimal;
     date: Date;
@@ -225,11 +283,16 @@ export async function searchTransferCandidates(params: {
     type: TransactionTypeEnum;
     status: TransactionStatusEnum;
     bankAccountId: string | null;
-    financialAccount: { name: string; institutionId: string; institution: { name: string | null } | null } | null;
+    financialAccount: {
+      name: string;
+      institutionId: string;
+      institution: { name: string | null } | null;
+    } | null;
   }>;
 
   // @ts-ignore
-  const sourceBankId: string | null = (source as any).financialAccount?.institutionId ?? null;
+  const sourceBankId: string | null =
+    (source as any).financialAccount?.institutionId ?? null;
 
   return candidates
     .map((candidate) => {
@@ -260,7 +323,9 @@ export async function searchTransferCandidates(params: {
         scoreBreakdown: breakdown,
         amountDiffWarning,
         // JS sort by proximity: closer to source date ranks first
-        _daysDiff: Math.abs((candidate.date.getTime() - source.date.getTime()) / 86_400_000),
+        _daysDiff: Math.abs(
+          (candidate.date.getTime() - source.date.getTime()) / 86_400_000,
+        ),
       };
     })
     .sort((a, b) => a._daysDiff - b._daysDiff) // nearest date first
@@ -290,14 +355,20 @@ export async function linkTransferPair(params: {
   ]);
 
   if (!debit || !credit) throw new Error('Transaction not found');
-  if (debit.type !== TransactionTypeEnum.DEBIT) throw new Error('First transaction must be DEBIT');
+  if (debit.type !== TransactionTypeEnum.DEBIT)
+    throw new Error('First transaction must be DEBIT');
   if (credit.type !== TransactionTypeEnum.CREDIT)
     throw new Error('Second transaction must be CREDIT');
   // Same-account transfers are valid (e.g. loan sent out and returned via the same bank account)
 
   // @ts-ignore — new fields not in generated client yet
-  if ((debit as any).transferLinkedTransactionId ?? (credit as any).transferLinkedTransactionId) {
-    throw new Error('One or both transactions are already linked to a transfer pair');
+  if (
+    (debit as any).transferLinkedTransactionId ??
+    (credit as any).transferLinkedTransactionId
+  ) {
+    throw new Error(
+      'One or both transactions are already linked to a transfer pair',
+    );
   }
 
   let rollupReversed = false;
@@ -361,10 +432,10 @@ export async function unlinkTransferPair(params: {
   transactionId: string; // either side of the pair
   userId: string;
 }): Promise<TransferUnlinkResult> {
-  const txRecord = await (params.prisma.transaction as any).findUnique({
+  const txRecord = (await (params.prisma.transaction as any).findUnique({
     where: { id: params.transactionId, userId: params.userId },
     include: { transferLinkedTransaction: true, transferCounterpart: true },
-  }) as {
+  })) as {
     id: string;
     type: TransactionTypeEnum;
     status: TransactionStatusEnum;
@@ -404,11 +475,18 @@ export async function unlinkTransferPair(params: {
   }
 
   const debit =
-    txRecord.type === TransactionTypeEnum.DEBIT ? txRecord : txRecord.transferCounterpart;
+    txRecord.type === TransactionTypeEnum.DEBIT
+      ? txRecord
+      : txRecord.transferCounterpart;
   const credit =
-    txRecord.type === TransactionTypeEnum.CREDIT ? txRecord : txRecord.transferLinkedTransaction;
+    txRecord.type === TransactionTypeEnum.CREDIT
+      ? txRecord
+      : txRecord.transferLinkedTransaction;
 
-  if (!debit || !credit) throw new Error('Transfer pair is incomplete — one side may have been deleted');
+  if (!debit || !credit)
+    throw new Error(
+      'Transfer pair is incomplete — one side may have been deleted',
+    );
 
   let rollupRestored = false;
 
@@ -437,7 +515,10 @@ export async function unlinkTransferPair(params: {
     });
 
     // Re-add to expense rollup if debit was previously CONFIRMED
-    if (debit.preLinkStatus === TransactionStatusEnum.CONFIRMED && debit.preLinkCategory) {
+    if (
+      debit.preLinkStatus === TransactionStatusEnum.CONFIRMED &&
+      debit.preLinkCategory
+    ) {
       await rerollupExpenseSummary({
         prismaClient: prismaClient as unknown as PrismaClient,
         userId: params.userId,
@@ -521,7 +602,6 @@ export interface SimilarPairSuggestion {
   amountDiffWarning: string | null;
 }
 
-
 /**
  * Retroactively auto-detect and resolve orphaned transfers and apply category rules.
  * Returns: { pairedCount, categorisedCount, remainingCount }
@@ -532,7 +612,11 @@ export async function runRetroactiveDetection({
 }: {
   prisma: PrismaClient;
   userId: string;
-}): Promise<{ pairedCount: number; categorisedCount: number; remainingCount: number }> {
+}): Promise<{
+  pairedCount: number;
+  categorisedCount: number;
+  remainingCount: number;
+}> {
   // --- Pass 1: Score-based pairing ---
   // Fetch unresolved DEBIT and CREDIT orphans
   const [debitOrphans, creditOrphans] = await Promise.all([
@@ -567,7 +651,10 @@ export async function runRetroactiveDetection({
     date: Date;
     description: string;
     bankAccountId: string;
-    financialAccount: { institutionId: string | null; institution: { name: string | null } | null } | null;
+    financialAccount: {
+      institutionId: string | null;
+      institution: { name: string | null } | null;
+    } | null;
   };
   const debitList: Orphan[] = debitOrphans;
   const creditList: Orphan[] = creditOrphans;
@@ -674,11 +761,21 @@ export async function runRetroactiveDetection({
     appliedCount: number;
   }> = await (prisma.categoryRule as any).findMany({
     where: { userId, isActive: true },
-    select: { id: true, pattern: true, matchType: true, category: true, appliedCount: true },
+    select: {
+      id: true,
+      pattern: true,
+      matchType: true,
+      category: true,
+      appliedCount: true,
+    },
   });
 
   // Inline matcher
-  function matchesRule(description: string, pattern: string, matchType: string): boolean {
+  function matchesRule(
+    description: string,
+    pattern: string,
+    matchType: string,
+  ): boolean {
     const d = description.toLowerCase();
     const p = pattern.toLowerCase();
     if (matchType === 'EXACT') return d === p;
@@ -698,7 +795,10 @@ export async function runRetroactiveDetection({
           data: { category: rule.category, source: 'USER_OVERRIDE' },
         });
         categorisedCount++;
-        ruleIdToApplyCount.set(rule.id, (ruleIdToApplyCount.get(rule.id) ?? 0) + 1);
+        ruleIdToApplyCount.set(
+          rule.id,
+          (ruleIdToApplyCount.get(rule.id) ?? 0) + 1,
+        );
         break; // Only apply first matching rule
       }
     }
@@ -732,8 +832,20 @@ export interface BatchLinkResult {
 }
 
 export function extractPatternFromPair(params: {
-  debit: { description: string; amount: Decimal; date: Date; bankAccountId: string | null; bankId: string | null };
-  credit: { description: string; amount: Decimal; date: Date; bankAccountId: string | null; bankId: string | null };
+  debit: {
+    description: string;
+    amount: Decimal;
+    date: Date;
+    bankAccountId: string | null;
+    bankId: string | null;
+  };
+  credit: {
+    description: string;
+    amount: Decimal;
+    date: Date;
+    bankAccountId: string | null;
+    bankId: string | null;
+  };
 }): {
   amountExact: Decimal;
   debitKeywords: string[];
@@ -750,7 +862,9 @@ export function extractPatternFromPair(params: {
       .filter((w) => !STOP_WORDS.has(w) && w.length > 1);
 
   const dayGap = Math.abs(
-    Math.round((params.debit.date.getTime() - params.credit.date.getTime()) / 86_400_000),
+    Math.round(
+      (params.debit.date.getTime() - params.credit.date.getTime()) / 86_400_000,
+    ),
   );
 
   return {
@@ -867,7 +981,9 @@ export async function findSimilarUnmatchedPairs(params: {
     if (!bestCredit || bestScore < 20) continue;
 
     const dayGap = Math.abs(
-      Math.round((debit.date.getTime() - bestCredit.date.getTime()) / 86_400_000),
+      Math.round(
+        (debit.date.getTime() - bestCredit.date.getTime()) / 86_400_000,
+      ),
     );
 
     results.push({
@@ -925,4 +1041,3 @@ export async function batchLinkTransferPairs(params: {
 
   return { linkedCount, errors };
 }
-

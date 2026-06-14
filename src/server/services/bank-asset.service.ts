@@ -276,7 +276,7 @@ export const updateBankAssetEntry = async (
   });
 };
 
-export const deleteBankAssetEntry= async (entryId: string, userId: string) => {
+export const deleteBankAssetEntry = async (entryId: string, userId: string) => {
   // Verify the entry belongs to the user's snapshot
   const entry = await prisma.bankBalanceRecord.findFirst({
     where: {
@@ -307,7 +307,8 @@ export const addEntryToSnapshot = async (
   const snapshot = await prisma.bankBalanceSnapshot.findFirst({
     where: { id: snapshotId, userId },
   });
-  if (!snapshot) throw new Error('Snapshot not found or does not belong to user');
+  if (!snapshot)
+    throw new Error('Snapshot not found or does not belong to user');
 
   const account = await prisma.financialAccount.findFirst({
     where: { id: accountId, userId },
@@ -355,20 +356,20 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
   // Calculate totals by bank
   const bankTotals = snapshot.balanceRecords.reduce(
     (acc, entry) => {
-      const bankId = entry.account.institutionId;
+      const instId = entry.account.institutionId;
       const bankName = entry.account.institution.name;
 
-      if (!acc[bankId]) {
-        acc[bankId] = {
-          bankId,
+      if (!acc[instId]) {
+        acc[instId] = {
+          institutionId: instId,
           bankName,
           total: 0,
           accounts: [],
         };
       }
 
-      acc[bankId].total += Number(entry.balance);
-      acc[bankId].accounts.push({
+      acc[instId].total += Number(entry.balance);
+      acc[instId].accounts.push({
         accountId: entry.accountId,
         accountName: entry.account.name,
         balance: Number(entry.balance),
@@ -379,7 +380,7 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
     {} as Record<
       string,
       {
-        bankId: string;
+        institutionId: string;
         bankName: string;
         total: number;
         accounts: Array<{
