@@ -32,6 +32,7 @@ describe('csv-classifier.service', () => {
 
   const mockTransactions: CsvTransaction[] = [
     {
+      id: 'tx-1',
       date: '01/07/2025',
       amount: 85.5,
       type: 'DEBIT',
@@ -40,6 +41,7 @@ describe('csv-classifier.service', () => {
       year: 2025,
     },
     {
+      id: 'tx-2',
       date: '02/07/2025',
       amount: 15.99,
       type: 'DEBIT',
@@ -48,6 +50,7 @@ describe('csv-classifier.service', () => {
       year: 2025,
     },
     {
+      id: 'tx-3',
       date: '03/07/2025',
       amount: 1200.0,
       type: 'DEBIT',
@@ -298,6 +301,7 @@ describe('csv-classifier.service', () => {
 describe('classifyCreditTransactions', () => {
   const mockCredits: CsvTransaction[] = [
     {
+      id: 'tx-c1',
       date: '01/01/2024',
       amount: 5000,
       type: 'CREDIT',
@@ -306,6 +310,7 @@ describe('classifyCreditTransactions', () => {
       year: 2024,
     },
     {
+      id: 'tx-c2',
       date: '15/01/2024',
       amount: 250,
       type: 'CREDIT',
@@ -314,6 +319,7 @@ describe('classifyCreditTransactions', () => {
       year: 2024,
     },
     {
+      id: 'tx-c3',
       date: '20/01/2024',
       amount: 100,
       type: 'CREDIT',

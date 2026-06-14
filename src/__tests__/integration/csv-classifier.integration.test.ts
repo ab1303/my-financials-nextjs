@@ -61,6 +61,7 @@ const shouldRun = !!process.env.AI_API_KEY;
 
   const australianTransactions: CsvTransaction[] = [
     {
+      id: 'tx-1',
       date: '01/07/2025',
       amount: 85.5,
       type: 'DEBIT',
@@ -69,6 +70,7 @@ const shouldRun = !!process.env.AI_API_KEY;
       year: 2025,
     },
     {
+      id: 'tx-2',
       date: '02/07/2025',
       amount: 15.99,
       type: 'DEBIT',
@@ -77,6 +79,7 @@ const shouldRun = !!process.env.AI_API_KEY;
       year: 2025,
     },
     {
+      id: 'tx-3',
       date: '03/07/2025',
       amount: 1200.0,
       type: 'DEBIT',
@@ -85,6 +88,7 @@ const shouldRun = !!process.env.AI_API_KEY;
       year: 2025,
     },
     {
+      id: 'tx-4',
       date: '04/07/2025',
       amount: 45.0,
       type: 'DEBIT',
@@ -93,6 +97,7 @@ const shouldRun = !!process.env.AI_API_KEY;
       year: 2025,
     },
     {
+      id: 'tx-5',
       date: '05/07/2025',
       amount: 25.5,
       type: 'DEBIT',
@@ -101,6 +106,7 @@ const shouldRun = !!process.env.AI_API_KEY;
       year: 2025,
     },
     {
+      id: 'tx-6',
       date: '06/07/2025',
       amount: 35.0,
       type: 'DEBIT',

@@ -16,7 +16,7 @@ describe("category-rule-applier service", () => {
 
   it("applies EXACT match correctly", () => {
     const rules: Rule[] = [
-      { id: "1", pattern: "amazon", matchType: "EXACT" as CategoryRuleMatchType, category: "Shopping", updatedAt: new Date() },
+      { id: "1", name: "Rule", pattern: "amazon", matchType: "EXACT" as CategoryRuleMatchType, category: "Shopping", updatedAt: new Date() },
     ];
     // Changed "Amazon" to "amazon" so it matches the case-insensitive normalized check
     const transactions = [mockTx("tx1", "SomethingElse"), mockTx("tx2", "amazon")];
@@ -31,23 +31,9 @@ describe("category-rule-applier service", () => {
 
   it("applies CONTAINS match correctly", () => {
     const rules: Rule[] = [
-      { id: "1", pattern: "amazon", matchType: "CONTAINS" as CategoryRuleMatchType, category: "Shopping", updatedAt: new Date() },
+      { id: "1", name: "Rule", pattern: "amazon", matchType: "CONTAINS" as CategoryRuleMatchType, category: "Shopping", updatedAt: new Date() },
     ];
     const transactions = [mockTx("tx1", "Amazon store"), mockTx("tx2", "other")];
-
-    const { matched, unmatched } = applyCategoryRulesToTransactions(transactions, rules);
-
-    expect(matched).toHaveLength(1);
-    expect(matched[0]?.tx.id).toBe("tx1");
-    expect(unmatched).toHaveLength(1);
-    expect(unmatched[0]?.id).toBe("tx2");
-  });
-
-  it("applies REGEX match correctly", () => {
-    const rules: Rule[] = [
-      { id: "1", pattern: "^coffee.*", matchType: "REGEX" as CategoryRuleMatchType, category: "Food", updatedAt: new Date() },
-    ];
-    const transactions = [mockTx("tx1", "coffee shop"), mockTx("tx2", "shop coffee")];
 
     const { matched, unmatched } = applyCategoryRulesToTransactions(transactions, rules);
 
@@ -60,8 +46,8 @@ describe("category-rule-applier service", () => {
   it("applies deterministic precedence (lastUpdatedAt desc, id asc)", () => {
     const now = new Date();
     const rules: Rule[] = [
-      { id: "rule-1", pattern: "amazon", matchType: "CONTAINS" as CategoryRuleMatchType, category: "A", updatedAt: new Date(now.getTime() - 1000) },
-      { id: "rule-2", pattern: "amazon", matchType: "CONTAINS" as CategoryRuleMatchType, category: "B", updatedAt: now },
+      { id: "rule-1", name: "Rule 1", pattern: "amazon", matchType: "CONTAINS" as CategoryRuleMatchType, category: "A", updatedAt: new Date(now.getTime() - 1000) },
+      { id: "rule-2", name: "Rule 2", pattern: "amazon", matchType: "CONTAINS" as CategoryRuleMatchType, category: "B", updatedAt: now },
     ];
     const transactions = [mockTx("tx1", "amazon")];
 

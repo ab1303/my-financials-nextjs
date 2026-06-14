@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { getBankFormat } from '@/server/services/transactions/bank-format-registry';
 import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
 
@@ -112,6 +113,7 @@ export function parseCsvRow(
       : undefined;
 
   return {
+    id: randomUUID(),
     date: dateStr,
     amount,
     type,

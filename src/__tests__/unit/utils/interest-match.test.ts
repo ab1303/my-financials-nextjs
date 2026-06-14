@@ -23,6 +23,7 @@ describe('tokenSetRatio', () => {
 
 describe('scoreInterestMatch', () => {
   const credit = {
+    id: 'c1',
     amount: 100,
     date: new Date('2025-01-01'),
     description: 'Credit Interest',

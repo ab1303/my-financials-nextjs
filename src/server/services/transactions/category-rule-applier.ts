@@ -51,10 +51,7 @@ export async function loadActiveRules(
 export function applyCategoryRulesToTransactions(
   transactions: CsvTransaction[],
   rules: Rule[],
-  opts: { maxRegexLength?: number; skipUnsafeRegex?: boolean } = {},
 ): ApplyResult {
-  const { maxRegexLength = 2000, skipUnsafeRegex = true } = opts;
-
   const matched: {
     tx: CsvTransaction;
     ruleId: string;
@@ -71,27 +68,12 @@ export function applyCategoryRulesToTransactions(
     return a.id.localeCompare(b.id);
   });
 
-  // Precompile regex rules
-  const compiledRules = sortedRules
-    .map((rule) => {
-      if (rule.matchType === 'REGEX') {
-        try {
-          if (rule.pattern.length > maxRegexLength) return null;
-          return { ...rule, regex: new RegExp(rule.pattern, 'iu') };
-        } catch {
-          return null; // Skip invalid regex
-        }
-      }
-      return { ...rule, regex: null };
-    })
-    .filter(Boolean) as (Rule & { regex: RegExp | null })[];
-
   for (const tx of transactions) {
     const description = (tx.description ?? '').trim().toLowerCase();
     let matchedRule = null;
 
-    // matching in-memory (no debug logs)
-    for (const rule of compiledRules) {
+    // matching in-memory
+    for (const rule of sortedRules) {
       const pattern = rule.pattern.toLowerCase();
       let isMatch = false;
 
@@ -99,8 +81,6 @@ export function applyCategoryRulesToTransactions(
         isMatch = description === pattern;
       } else if (rule.matchType === 'CONTAINS') {
         isMatch = description.includes(pattern);
-      } else if (rule.matchType === 'REGEX' && rule.regex) {
-        isMatch = rule.regex.test(description);
       }
 
       if (isMatch) {

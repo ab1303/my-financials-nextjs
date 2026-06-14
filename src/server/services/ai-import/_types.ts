@@ -137,7 +137,7 @@ export interface EmbeddingMatchResult {
  * CSV Transaction from CommBank CSV format
  */
 export interface CsvTransaction {
-  id?: string;
+  id: string;
   date: string; // 'DD/MM/YYYY'
   amount: number; // always positive absolute value
   type: 'DEBIT' | 'CREDIT';  // derived from raw CSV amount sign
@@ -194,6 +194,8 @@ export interface ClassifiedTransaction {
   // NEW: Transfer likelihood indicators (optional, client-side derived)
   transferLikelihood?: 'HIGH' | 'MEDIUM' | 'LOW' | null;
   transferLikelihoodReason?: string | null;
+  sourceHint?: string;
+  preMatch?: { ruleId: string; ruleName: string };
 }
 
 /**
@@ -220,6 +222,8 @@ export interface ClassifiedCreditTransaction {
   // NEW: Transfer likelihood indicators (optional, client-side derived)
   transferLikelihood?: 'HIGH' | 'MEDIUM' | 'LOW' | null;
   transferLikelihoodReason?: string | null;
+  sourceHint?: string;
+  preMatch?: { ruleId: string; ruleName: string };
 }
 
 /**

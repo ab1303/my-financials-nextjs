@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import type {
   CsvParseResult,
   CsvTransaction,
@@ -145,7 +146,16 @@ function parseRow(
 
   const { month, year } = parseDateComponents(dateStr, format.dateFormat);
 
-  return { date: dateStr, amount, type, description, month, year, balance };
+  return {
+    id: randomUUID(),
+    date: dateStr,
+    amount,
+    type,
+    description,
+    month,
+    year,
+    balance,
+  };
 }
 
 function extractAmount(
