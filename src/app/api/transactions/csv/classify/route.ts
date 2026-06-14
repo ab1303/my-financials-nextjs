@@ -12,6 +12,10 @@ import {
   classifyTransactions,
 } from '@/server/services/ai-import/csv-classifier.service';
 import { ClassifyRequestSchema } from '@/server/services/ai-import/validation';
+import {
+  applyCategoryRulesToTransactions,
+  loadActiveRules,
+} from '@/server/services/transactions/category-rule-applier';
 
 function groupTransactionsByMonth<T extends CsvTransaction>(transactions: T[]) {
   const monthMap = new Map<string, T[]>();
@@ -33,15 +37,33 @@ function sseEvent(encoder: TextEncoder, payload: Record<string, unknown>) {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+    });
   }
 
   try {
-    const body = await req.json();
+    const raw = await req.text();
+    let body: unknown;
+    try {
+      body = raw.length ? JSON.parse(raw) : {};
+    } catch (parseErr) {
+      console.error(
+        'CSV classify parse error:',
+        parseErr,
+        'rawLength:',
+        raw.length,
+      );
+      return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+        status: 400,
+      });
+    }
     const parse = ClassifyRequestSchema.safeParse(body);
 
     if (!parse.success) {
-      return new Response(JSON.stringify({ error: 'Invalid request body' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400,
+      });
     }
 
     const { fileId } = parse.data;
@@ -51,21 +73,34 @@ export async function POST(req: NextRequest) {
     });
 
     if (!importSession) {
-      return new Response(JSON.stringify({ error: 'Session not found' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Session not found' }), {
+        status: 404,
+      });
     }
 
     if (importSession.userId !== session.user.id) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+      });
     }
 
-    const transactions = ((importSession.metadata as Record<string, unknown> | null)?.transactions ?? []) as CsvTransaction[];
+    const transactions = ((
+      importSession.metadata as Record<string, unknown> | null
+    )?.transactions ?? []) as CsvTransaction[];
 
     if (!transactions.length) {
-      return new Response(JSON.stringify({ error: 'No transactions in session' }), { status: 400 });
+      return new Response(
+        JSON.stringify({ error: 'No transactions in session' }),
+        { status: 400 },
+      );
     }
 
-    const debits = transactions.filter((tx) => tx.type === 'DEBIT');
-    const credits = transactions.filter((tx) => tx.type === 'CREDIT');
+    const rules = await loadActiveRules(prisma, session.user.id);
+    const { matched, unmatched, annotations } =
+      applyCategoryRulesToTransactions(transactions, rules);
+
+    const debits = unmatched.filter((tx) => tx.type === 'DEBIT');
+    const credits = unmatched.filter((tx) => tx.type === 'CREDIT');
 
     const debitMonths = groupTransactionsByMonth(debits);
     const creditMonths = groupTransactionsByMonth(credits);
@@ -83,7 +118,10 @@ export async function POST(req: NextRequest) {
     ]);
 
     if (!categories.length) {
-      return new Response(JSON.stringify({ error: 'No expense categories configured' }), { status: 400 });
+      return new Response(
+        JSON.stringify({ error: 'No expense categories configured' }),
+        { status: 400 },
+      );
     }
 
     const encoder = new TextEncoder();
@@ -95,6 +133,45 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // Pre-emitted matched rules — convert rule matches into the same
+          // ClassifiedTransaction shape the client expects so pre-matches appear
+          // correctly in the review UI (llmCategory & confirmedCategory).
+          for (const [month, monthTransactions] of groupTransactionsByMonth(
+            matched.map((m) => m.tx),
+          )) {
+            const classified = monthTransactions.map((tx) => {
+              const ann = annotations.get(tx.id)!;
+              const matchedRule = rules.find((r) => r.id === ann.appliedRuleId);
+              return {
+                id: tx.id,
+                date: tx.date,
+                description: tx.description,
+                amount: tx.amount,
+                // Client expects `llmCategory` + `confirmedCategory` fields
+                llmCategory: ann.matchedCategory,
+                confirmedCategory: ann.matchedCategory,
+                overridden: false,
+                // preserve provenance for later DB persistence
+                preMatch: {
+                  ruleId: ann.appliedRuleId,
+                  category: ann.matchedCategory,
+                  ruleName: matchedRule?.name ?? null,
+                  matchType: ann.matchType,
+                },
+                sourceHint: 'RULE_MATCH' as const,
+                type: 'DEBIT' as const,
+              };
+            });
+            controller.enqueue(
+              sseEvent(encoder, {
+                type: 'debit_classified',
+                month,
+                transactions: classified as ClassifiedTransactionV2[],
+                usage: { totalTokens: 0, promptTokens: 0, completionTokens: 0 },
+              }),
+            );
+          }
+
           for (const [month, monthTransactions] of debitMonths) {
             try {
               controller.enqueue(
@@ -106,7 +183,10 @@ export async function POST(req: NextRequest) {
                 }),
               );
 
-              const result = await classifyTransactions(monthTransactions, categories);
+              const result = await classifyTransactions(
+                monthTransactions,
+                categories,
+              );
               totalLlmTokens += result.usage.totalTokens;
               totalPromptTokens += result.usage.promptTokens;
               totalCompletionTokens += result.usage.completionTokens;
@@ -118,6 +198,7 @@ export async function POST(req: NextRequest) {
                   transactions: result.classified.map((transaction) => ({
                     ...transaction,
                     type: 'DEBIT' as const,
+                    sourceHint: 'LLM_SUGGESTED' as const,
                   })) as ClassifiedTransactionV2[],
                   usage: result.usage,
                 }),
@@ -127,7 +208,10 @@ export async function POST(req: NextRequest) {
                 sseEvent(encoder, {
                   type: 'warning',
                   month,
-                  message: monthError instanceof Error ? monthError.message : `Error classifying month ${month}`,
+                  message:
+                    monthError instanceof Error
+                      ? monthError.message
+                      : `Error classifying month ${month}`,
                 }),
               );
             }
@@ -144,7 +228,10 @@ export async function POST(req: NextRequest) {
                 }),
               );
 
-              const result = await classifyCreditTransactions(monthTransactions, incomeSources.map((s) => s.name));
+              const result = await classifyCreditTransactions(
+                monthTransactions,
+                incomeSources.map((s) => s.name),
+              );
               totalLlmTokens += result.usage.totalTokens;
               totalPromptTokens += result.usage.promptTokens;
               totalCompletionTokens += result.usage.completionTokens;
@@ -153,7 +240,10 @@ export async function POST(req: NextRequest) {
                 sseEvent(encoder, {
                   type: 'credit_classified',
                   month,
-                  transactions: result.classified as ClassifiedCreditTransaction[],
+                  transactions: result.classified.map((tx) => ({
+                    ...tx,
+                    sourceHint: 'LLM_SUGGESTED' as const,
+                  })) as ClassifiedCreditTransaction[],
                   usage: result.usage,
                 }),
               );
@@ -162,7 +252,10 @@ export async function POST(req: NextRequest) {
                 sseEvent(encoder, {
                   type: 'warning',
                   month,
-                  message: monthError instanceof Error ? monthError.message : `Error classifying month ${month}`,
+                  message:
+                    monthError instanceof Error
+                      ? monthError.message
+                      : `Error classifying month ${month}`,
                 }),
               );
             }
@@ -191,8 +284,15 @@ export async function POST(req: NextRequest) {
               type: 'done',
               totalLlmTokens,
               model: process.env.AI_CLASSIFIER_MODEL ?? 'gpt-4o-mini',
-              categories: categories.map((category) => ({ id: category.id, name: category.name })),
-              incomeSourceLabels: [...incomeSources.map((s) => s.name), 'Transfer', 'Excluded'],
+              categories: categories.map((category) => ({
+                id: category.id,
+                name: category.name,
+              })),
+              incomeSourceLabels: [
+                ...incomeSources.map((s) => s.name),
+                'Transfer',
+                'Excluded',
+              ],
             }),
           );
 
@@ -219,7 +319,8 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('CSV classify error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+    });
   }
 }
-

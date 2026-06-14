@@ -116,14 +116,14 @@ async function globalSetup() {
       where: { userId: testUser.id, name: 'E2E Test Checking' },
     });
 
-    // E2E Test Bank as a BANK-type Business (appears in bank filter dropdown)
+    // NAB Bank as a BANK-type Business (appears in bank filter dropdown)
     let e2eTestBank = await prisma.business.findFirst({
-      where: { name: 'E2E Test Bank', type: BusinessEnumType.BANK },
+      where: { name: 'NAB', type: BusinessEnumType.BANK },
     });
     if (!e2eTestBank) {
       e2eTestBank = await prisma.business.create({
         data: {
-          name: 'E2E Test Bank',
+          name: 'NAB',
           type: BusinessEnumType.BANK,
           // userId is null for global BANK institutions
         },
@@ -137,6 +137,14 @@ async function globalSetup() {
           institutionId: e2eTestBank.id,
           userId: testUser.id,
         },
+      });
+    } else if (bankAccount.institutionId !== e2eTestBank.id) {
+      // Ensure existing test account is linked to the expected test bank (NAB).
+      // This prevents stale/preseeded accounts from pointing at a different
+      // institution (e.g. "E2E Test Bank") which breaks CSV format validation.
+      bankAccount = await prisma.financialAccount.update({
+        where: { id: bankAccount.id },
+        data: { institutionId: e2eTestBank.id },
       });
     }
 
@@ -179,7 +187,11 @@ async function globalSetup() {
     // Reset orphanResolution to null each run so Wave 3 resolution tests start clean
     await prisma.transaction.upsert({
       where: { id: 'e2e-transfer-orphan-fy26' },
-      update: { category: 'Transfer', transferLinkedTransactionId: null, bankAccountId: bankAccount.id },
+      update: {
+        category: 'Transfer',
+        transferLinkedTransactionId: null,
+        bankAccountId: bankAccount.id,
+      },
       create: {
         id: 'e2e-transfer-orphan-fy26',
         date: new Date('2025-08-01'),
@@ -199,7 +211,11 @@ async function globalSetup() {
     // Reset orphanResolution each run so Wave 3 tests can resolve it fresh
     await prisma.transaction.upsert({
       where: { id: 'e2e-transfer-midyear-fy26' },
-      update: { category: 'Transfer', transferLinkedTransactionId: null, bankAccountId: bankAccount.id },
+      update: {
+        category: 'Transfer',
+        transferLinkedTransactionId: null,
+        bankAccountId: bankAccount.id,
+      },
       create: {
         id: 'e2e-transfer-midyear-fy26',
         date: new Date('2025-10-01'),
@@ -226,7 +242,9 @@ async function globalSetup() {
     // (Prisma upsert update block silently ignores unrecognised typed fields)
     // Also resets category in case orphan-resolution tests reclassified them (EXPENSE/INCOME)
     await (prisma.transaction as any).updateMany({
-      where: { id: { in: ['e2e-transfer-orphan-fy26', 'e2e-transfer-midyear-fy26'] } },
+      where: {
+        id: { in: ['e2e-transfer-orphan-fy26', 'e2e-transfer-midyear-fy26'] },
+      },
       data: { orphanResolution: null, category: 'Transfer' },
     });
     console.log('✅ Orphan resolutions reset to null for Wave 3 tests');
@@ -253,7 +271,9 @@ async function globalSetup() {
         data: { isTracked: true },
       });
     }
-    console.log(`✅ Second bank account seeded/reset: ${secondBankAccount.id} (isTracked=true)`);
+    console.log(
+      `✅ Second bank account seeded/reset: ${secondBankAccount.id} (isTracked=true)`,
+    );
   } catch (error) {
     console.error('❌ Global setup failed:', error);
     process.exit(1);

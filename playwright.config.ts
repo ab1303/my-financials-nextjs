@@ -1,10 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// require('dotenv').config();
+// Load .env.test before any other configuration
+dotenv.config({ path: '.env.test' });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -31,6 +29,9 @@ export default defineConfig({
     command: 'pnpm dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
+    // Ensure the child process inherits the test env loaded above (.env.test)
+    // so that Playwright-spawned `pnpm dev` uses the correct test variables.
+    env: { ...process.env },
     timeout: 120 * 1000,
   },
   globalSetup: require.resolve('./e2e/global-setup.ts'),

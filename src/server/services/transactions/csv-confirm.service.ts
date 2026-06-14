@@ -5,11 +5,22 @@ import {
 } from '@prisma/client';
 
 import { prisma } from '@/server/db/client';
-import type { ClassifiedCreditTransaction, ClassifiedTransactionV2 } from '@/server/services/ai-import/_types';
+import type {
+  ClassifiedCreditTransaction,
+  ClassifiedTransactionV2,
+} from '@/server/services/ai-import/_types';
 
 import type { CreditMonth, DebitMonth, TransactionSaveResult } from './_types';
-import { EXCLUDED_CREDIT_LABELS, EXCLUDED_FROM_EXPENSE_AGGREGATION } from './constants';
-import { buildDedupSet, getDateRangeFromMonthKeys, isDuplicate, makeDedupKey } from './dedup.service';
+import {
+  EXCLUDED_CREDIT_LABELS,
+  EXCLUDED_FROM_EXPENSE_AGGREGATION,
+} from './constants';
+import {
+  buildDedupSet,
+  getDateRangeFromMonthKeys,
+  isDuplicate,
+  makeDedupKey,
+} from './dedup.service';
 
 function createEmptyResult(): TransactionSaveResult {
   return {
@@ -34,7 +45,10 @@ async function getFiscalCalendarYear(_year: number, _monthNum: number) {
   });
 }
 
-async function getOrCreateExpenseLedger(calendarYearId: string, userId: string) {
+async function getOrCreateExpenseLedger(
+  calendarYearId: string,
+  userId: string,
+) {
   let ledger = await prisma.expenseLedger.findUnique({
     where: { calendarId_userId: { calendarId: calendarYearId, userId } },
   });
@@ -92,6 +106,7 @@ async function createTransactionRecord(params: {
   importSessionId: string;
   source: TransactionSourceEnum;
   runningBalance?: number;
+  appliedRuleId?: string;
 }): Promise<string> {
   const tx = await prisma.transaction.create({
     data: {
@@ -107,6 +122,10 @@ async function createTransactionRecord(params: {
       bankAccountId: params.bankAccountId,
       importSessionId: params.importSessionId,
       runningBalance: params.runningBalance ?? null,
+      // NOTE: provenance persistence (appliedRuleId) is Phase 2. Do not write
+      // `metadata` to the `transaction` table in Phase 1 — schema currently
+      // lacks a JSON `metadata` column. Keep `appliedRuleId` in the signature
+      // for future Phase 2 migration, but do not persist it here.
     },
     select: { id: true },
   });
@@ -127,15 +146,26 @@ export async function confirmDebitTransactions(
   const monthKeys = debitMonths.map((m) => m.month);
   if (monthKeys.length === 0) return result;
   const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
-  const dedupSet = await buildDedupSet({ userId, bankAccountId, startDate, endDate });
+  const dedupSet = await buildDedupSet({
+    userId,
+    bankAccountId,
+    startDate,
+    endDate,
+  });
 
-  const categories = await prisma.expenseCategory.findMany({ where: { isActive: true } });
-  const categoryMap = new Map(categories.map((category) => [category.name.toLowerCase(), category.id]));
+  const categories = await prisma.expenseCategory.findMany({
+    where: { isActive: true },
+  });
+  const categoryMap = new Map(
+    categories.map((category) => [category.name.toLowerCase(), category.id]),
+  );
 
   // Get or create "Other" category for unmapped transactions
   let otherCategoryId = categoryMap.get('other');
   if (!otherCategoryId) {
-    const otherCategory = categories.find((c) => c.name.toLowerCase() === 'other');
+    const otherCategory = categories.find(
+      (c) => c.name.toLowerCase() === 'other',
+    );
     if (otherCategory) {
       otherCategoryId = otherCategory.id;
       categoryMap.set('other', otherCategoryId);
@@ -155,7 +185,10 @@ export async function confirmDebitTransactions(
       const calendarYear = await getFiscalCalendarYear(year, monthNum);
 
       if (!calendarYear) {
-        result.errors.push({ month: monthKey, message: `No fiscal year found for ${monthKey}` });
+        result.errors.push({
+          month: monthKey,
+          message: `No fiscal year found for ${monthKey}`,
+        });
         continue;
       }
 
@@ -175,7 +208,18 @@ export async function confirmDebitTransactions(
         }
 
         // Guard: categories in EXCLUDED_FROM_EXPENSE_AGGREGATION are saved as EXCLUDED — no expense rollup
-        const isTransferDebit = (EXCLUDED_FROM_EXPENSE_AGGREGATION as readonly string[]).includes(tx.confirmedCategory);
+        const isTransferDebit = (
+          EXCLUDED_FROM_EXPENSE_AGGREGATION as readonly string[]
+        ).includes(tx.confirmedCategory);
+
+        // Determine source and provenance
+        const source =
+          tx.sourceHint === 'RULE_MATCH'
+            ? TransactionSourceEnum.USER_OVERRIDE
+            : tx.overridden
+              ? TransactionSourceEnum.USER_OVERRIDE
+              : TransactionSourceEnum.LLM_CLASSIFIED;
+        const appliedRuleId = tx.preMatch?.ruleId;
 
         if (isTransferDebit) {
           await createTransactionRecord({
@@ -184,12 +228,13 @@ export async function confirmDebitTransactions(
             amount: tx.amount,
             type: TransactionTypeEnum.DEBIT,
             category: tx.confirmedCategory,
-            source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
+            source,
             status: TransactionStatusEnum.EXCLUDED,
             userId,
             bankAccountId,
             importSessionId,
             runningBalance: tx.balance,
+            appliedRuleId,
           });
           result.totalEntries += 1;
           dedupSet.add(dedupKey);
@@ -215,12 +260,13 @@ export async function confirmDebitTransactions(
           amount: tx.amount,
           type: TransactionTypeEnum.DEBIT,
           category: tx.confirmedCategory,
-          source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
+          source,
           status: TransactionStatusEnum.CONFIRMED,
           userId,
           bankAccountId,
           importSessionId,
           runningBalance: tx.balance,
+          appliedRuleId,
         });
 
         await prisma.merchantCategoryMap.upsert({
@@ -232,13 +278,19 @@ export async function confirmDebitTransactions(
           },
           update: {
             category: tx.confirmedCategory,
-            source: tx.overridden ? 'user_override' : 'llm_confirmed',
+            source:
+              source === TransactionSourceEnum.USER_OVERRIDE
+                ? 'user_override'
+                : 'llm_confirmed',
           },
           create: {
             userId,
             description: tx.description.toLowerCase().trim(),
             category: tx.confirmedCategory,
-            source: tx.overridden ? 'user_override' : 'llm_confirmed',
+            source:
+              source === TransactionSourceEnum.USER_OVERRIDE
+                ? 'user_override'
+                : 'llm_confirmed',
           },
         });
 
@@ -273,7 +325,12 @@ export async function confirmCreditTransactions(
   const monthKeys = creditMonths.map((m) => m.month);
   if (monthKeys.length === 0) return result;
   const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
-  const dedupSet = await buildDedupSet({ userId, bankAccountId, startDate, endDate });
+  const dedupSet = await buildDedupSet({
+    userId,
+    bankAccountId,
+    startDate,
+    endDate,
+  });
 
   for (const { month: monthKey, transactions } of creditMonths) {
     try {
@@ -281,7 +338,10 @@ export async function confirmCreditTransactions(
       const calendarYear = await getFiscalCalendarYear(year, monthNum);
 
       if (!calendarYear) {
-        result.errors.push({ month: monthKey, message: `No fiscal year found for ${monthKey}` });
+        result.errors.push({
+          month: monthKey,
+          message: `No fiscal year found for ${monthKey}`,
+        });
         continue;
       }
 
@@ -298,7 +358,18 @@ export async function confirmCreditTransactions(
           continue;
         }
 
-        const isExcluded = (EXCLUDED_CREDIT_LABELS as readonly string[]).includes(tx.confirmedCategory);
+        const isExcluded = (
+          EXCLUDED_CREDIT_LABELS as readonly string[]
+        ).includes(tx.confirmedCategory);
+
+        // Determine source and provenance
+        const source =
+          tx.sourceHint === 'RULE_MATCH'
+            ? TransactionSourceEnum.USER_OVERRIDE
+            : tx.overridden
+              ? TransactionSourceEnum.USER_OVERRIDE
+              : TransactionSourceEnum.LLM_CLASSIFIED;
+        const appliedRuleId = tx.preMatch?.ruleId;
 
         if (isExcluded) {
           await createTransactionRecord({
@@ -307,12 +378,13 @@ export async function confirmCreditTransactions(
             amount: tx.amount,
             type: TransactionTypeEnum.CREDIT,
             category: tx.confirmedCategory,
-            source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
+            source,
             status: TransactionStatusEnum.EXCLUDED,
             userId,
             bankAccountId,
             importSessionId,
             runningBalance: tx.balance,
+            appliedRuleId,
           });
         } else {
           // Create Transaction record — income view queries Transaction directly (source of truth).
@@ -322,12 +394,13 @@ export async function confirmCreditTransactions(
             amount: tx.amount,
             type: TransactionTypeEnum.CREDIT,
             category: tx.confirmedCategory,
-            source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
+            source,
             status: TransactionStatusEnum.CONFIRMED,
             userId,
             bankAccountId,
             importSessionId,
             runningBalance: tx.balance,
+            appliedRuleId,
           });
         }
 

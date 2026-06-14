@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { ClassifiedCreditMonth } from '@/server/services/ai-import/_types';
 
-import type { ClassifiedMonth,CSVClassifyingStepProps } from './_types';
+import type { ClassifiedMonth, CSVClassifyingStepProps } from './_types';
 
 interface ProgressEntry {
   month: string;
@@ -31,17 +31,18 @@ export default function CSVClassifyingStep({
 
     async function startClassification() {
       try {
+        const body = JSON.stringify({ fileId: file.id });
         const response = await fetch('/api/transactions/csv/classify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileId: file.id,
-          }),
+          body: body,
           signal: abortController.signal,
         });
 
         if (!response.ok) {
-          const err = await response.json().catch(() => ({ error: 'Unknown error' }));
+          const err = await response
+            .json()
+            .catch(() => ({ error: 'Unknown error' }));
           onError(err.error ?? 'Classification failed');
           return;
         }
@@ -78,7 +79,10 @@ export default function CSVClassifyingStep({
       }
     }
 
-    function upsertProgress(month: string, updater: (entry?: ProgressEntry) => ProgressEntry) {
+    function upsertProgress(
+      month: string,
+      updater: (entry?: ProgressEntry) => ProgressEntry,
+    ) {
       setProgress((prev) => {
         const existing = prev.find((p) => p.month === month);
         if (existing) {
@@ -106,9 +110,20 @@ export default function CSVClassifyingStep({
           promptTokens: 0,
           completionTokens: 0,
           totalTokens: 0,
-        }) as { promptTokens: number; completionTokens: number; totalTokens: number };
-        const classified: ClassifiedMonth = { month, transactions, totalUsage: usage };
-        classifiedMonthsRef.current = [...classifiedMonthsRef.current, classified];
+        }) as {
+          promptTokens: number;
+          completionTokens: number;
+          totalTokens: number;
+        };
+        const classified: ClassifiedMonth = {
+          month,
+          transactions,
+          totalUsage: usage,
+        };
+        classifiedMonthsRef.current = [
+          ...classifiedMonthsRef.current,
+          classified,
+        ];
         upsertProgress(month, () => ({
           month,
           status: 'done',
@@ -121,7 +136,11 @@ export default function CSVClassifyingStep({
           promptTokens: 0,
           completionTokens: 0,
           totalTokens: 0,
-        }) as { promptTokens: number; completionTokens: number; totalTokens: number };
+        }) as {
+          promptTokens: number;
+          completionTokens: number;
+          totalTokens: number;
+        };
         classifiedCreditMonthsRef.current = [
           ...classifiedCreditMonthsRef.current,
           { month, transactions, totalUsage: usage },
@@ -140,7 +159,10 @@ export default function CSVClassifyingStep({
         }));
       } else if (type === 'done') {
         hasCompletedRef.current = true;
-        const cats = (event.categories ?? []) as Array<{ id: string; name: string }>;
+        const cats = (event.categories ?? []) as Array<{
+          id: string;
+          name: string;
+        }>;
         const incomeSrcLabels = (event.incomeSourceLabels ?? []) as string[];
         const model = (event.model as string) ?? 'gpt-4o-mini';
         setStatusMessage('Classification complete');
@@ -172,12 +194,17 @@ export default function CSVClassifyingStep({
     <div className='flex flex-col items-center justify-center py-8 text-center'>
       <div className='mb-4 h-12 w-12 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600 dark:border-teal-800 dark:border-t-teal-400' />
 
-      <p className='mb-6 text-sm font-medium text-gray-700 dark:text-gray-300'>{statusMessage}</p>
+      <p className='mb-6 text-sm font-medium text-gray-700 dark:text-gray-300'>
+        {statusMessage}
+      </p>
 
       {total > 0 && (
         <div className='w-full max-w-sm space-y-3'>
           <div className='h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700'>
-            <div className='h-2 rounded-full bg-teal-500 transition-all duration-300' style={{ width: `${pct}%` }} />
+            <div
+              className='h-2 rounded-full bg-teal-500 transition-all duration-300'
+              style={{ width: `${pct}%` }}
+            />
           </div>
           <p className='text-xs text-gray-500 dark:text-gray-400'>
             {done} / {total} months classified
@@ -185,7 +212,10 @@ export default function CSVClassifyingStep({
 
           <ul className='mt-3 space-y-1 text-left'>
             {progress.map((p) => (
-              <li key={p.month} className='flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400'>
+              <li
+                key={p.month}
+                className='flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400'
+              >
                 {p.status === 'done' ? (
                   <span className='text-teal-500'>✓</span>
                 ) : p.status === 'classifying' ? (
@@ -195,7 +225,9 @@ export default function CSVClassifyingStep({
                 )}
                 <span>{p.month}</span>
                 {p.transactionCount !== undefined && (
-                  <span className='ml-auto text-gray-400 dark:text-gray-500'>{p.transactionCount} txns</span>
+                  <span className='ml-auto text-gray-400 dark:text-gray-500'>
+                    {p.transactionCount} txns
+                  </span>
                 )}
               </li>
             ))}
@@ -209,4 +241,3 @@ export default function CSVClassifyingStep({
     </div>
   );
 }
-
