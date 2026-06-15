@@ -407,7 +407,9 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
 
       // Verify only donations within window are included
       expect(result.cleansingDonations).toHaveLength(1);
-      expect(result.cleansingDonations[0].datePaid).toEqual(new Date('2023-06-20'));
+      const donation = result.cleansingDonations[0];
+      expect(donation).toBeDefined();
+      expect(donation!.datePaid).toEqual(new Date('2023-06-20'));
       expect(result.yearlySummary.totalCleansed).toBe(100);
     });
 

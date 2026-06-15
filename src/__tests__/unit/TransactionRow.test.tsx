@@ -95,6 +95,11 @@ describe('TransactionRow', () => {
     transferLinkedTransactionId: null,
     transferCounterpartId: null,
     isTransferClassified: false,
+    confirmedAt: null,
+    bankAccountId: 'bank-1',
+    offsetCategory: null,
+    offsetTransactionId: null,
+    transferCounterpart: null,
   };
 
   const creditTransaction: LedgerTransactionRow = {

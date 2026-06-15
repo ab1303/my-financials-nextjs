@@ -65,15 +65,15 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
      */
     it('should handle empty month input as null buyDate', () => {
       // Arrange
-      const monthInput = '';
+      let monthInput: string | undefined = '';
       
       // Act: Parse empty input
       let result = null;
-      if (monthInput) {
-        const parts = monthInput.split('-');
+      if (monthInput !== undefined && monthInput !== '') {
+        const parts = (monthInput as any).split('-');
         if (parts.length === 2) {
           const [year, month] = parts;
-          result = new Date(parseInt(year), parseInt(month) - 1, 1);
+          result = new Date(parseInt(year!), parseInt(month!) - 1, 1);
         }
       }
       
@@ -83,15 +83,15 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should handle undefined month input as null buyDate', () => {
       // Arrange
-      const monthInput = undefined;
+      let monthInput: string | undefined = undefined;
       
       // Act: Parse undefined input
       let result = null;
-      if (monthInput) {
-        const parts = monthInput.split('-');
+      if (monthInput !== undefined && monthInput !== '') {
+        const parts = (monthInput as any).split('-');
         if (parts.length === 2) {
           const [year, month] = parts;
-          result = new Date(parseInt(year), parseInt(month) - 1, 1);
+          result = new Date(parseInt(year!), parseInt(month!) - 1, 1);
         }
       }
       
@@ -169,13 +169,13 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should handle null buyDate on edit (leave blank)', () => {
       // Arrange
-      const existingBuyDate = null;
+      let existingBuyDate: Date | null = null;
       
       // Act: Handle null
       let monthInputValue = '';
       if (existingBuyDate) {
-        const year = existingBuyDate.getFullYear();
-        const month = String(existingBuyDate.getMonth() + 1).padStart(2, '0');
+        const year = (existingBuyDate as any).getFullYear();
+        const month = String((existingBuyDate as any).getMonth() + 1).padStart(2, '0');
         monthInputValue = `${year}-${month}`;
       }
       
@@ -214,7 +214,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should submit with null buyDate when month field is empty', () => {
       // Arrange
-      const monthInput = '';
+      const monthInput: string | undefined = '';
       const buyDateMode: 'exact' | 'month' = 'month';
       const formData: { buyDate: string | Date | null } = { buyDate: monthInput || null };
 

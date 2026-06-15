@@ -1,4 +1,4 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { getCleansingDebitCandidates } from '@/server/services/bank-interest/interest-cleansing.service';
 

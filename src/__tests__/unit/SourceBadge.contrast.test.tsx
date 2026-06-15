@@ -57,7 +57,7 @@ describe('TableCell AMOUNT right-alignment', () => {
   });
 
   it('AMOUNT read-only cell has text-right in className', () => {
-    const { container } = render(<TableCell {...(buildProps(74.25) as never)} />);
+    const { container } = render(<TableCell {...(buildProps(74.25) as any)} />);
 
     // Find the NumericFormat component's rendered element (span or similar)
     const numericFormatElement = container.querySelector('.tabular-nums');

@@ -234,8 +234,8 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       });
 
       // Verify null buyDate results in expected state
-      expect(allMetrics[1].holdingPeriodMonths).toBe(0);
-      expect(allMetrics[1].isCGTEligible).toBe(false);
+      expect(allMetrics[1]!.holdingPeriodMonths).toBe(0);
+      expect(allMetrics[1]!.isCGTEligible).toBe(false);
     });
   });
 

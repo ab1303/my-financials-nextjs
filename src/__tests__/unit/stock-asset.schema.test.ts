@@ -215,9 +215,10 @@ describe('stock-asset.schema', () => {
       // Assert
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.holdings).toHaveLength(2);
+        const data = (result as any).data;
+        expect(data.holdings).toHaveLength(2);
         // buyDate is optional, so it can be undefined or null
-        expect(result.data.holdings[1].buyDate ?? null).toBeNull();
+        expect(data.holdings[1].buyDate ?? null).toBeNull();
       }
     });
   });
