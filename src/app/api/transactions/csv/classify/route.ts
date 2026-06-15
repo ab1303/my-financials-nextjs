@@ -85,6 +85,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const metadata = importSession.metadata as Record<string, unknown> | null;
+    const bankAccountId =
+      typeof metadata?.bankAccountId === 'string' ? metadata.bankAccountId : '';
+
+    if (!bankAccountId) {
+      return new Response(
+        JSON.stringify({ error: 'Bank account not found in import session' }),
+        { status: 400 },
+      );
+    }
+
     const transactions = ((
       importSession.metadata as Record<string, unknown> | null
     )?.transactions ?? []) as CsvTransaction[];
@@ -250,6 +261,7 @@ export async function POST(req: NextRequest) {
               const duplicates = await findDuplicatesForClassifiedMonths({
                 prisma,
                 userId: session.user.id,
+                bankAccountId,
                 classifiedMonths: [{ month, transactions: result.classified }],
               });
 

@@ -65,10 +65,12 @@ export async function buildDedupSet(params: BuildDedupSetParams): Promise<Set<st
 export async function findDuplicatesForClassifiedMonths({
   prisma,
   userId,
+  bankAccountId,
   classifiedMonths,
 }: {
   prisma: any;
   userId: string;
+  bankAccountId: string;
   classifiedMonths: any[];
 }): Promise<any[]> {
   if (classifiedMonths.length === 0) {
@@ -80,7 +82,7 @@ export async function findDuplicatesForClassifiedMonths({
 
     const dedupSet = await buildDedupSet({
       userId,
-      bankAccountId: 'placeholder-bank-id', 
+      bankAccountId,
       startDate,
       endDate,
     });
