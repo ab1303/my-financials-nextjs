@@ -51,7 +51,6 @@ export async function classifyTransactions(
   classified: ClassifiedTransaction[];
   usage: { promptTokens: number; completionTokens: number; totalTokens: number };
 }> {
-  // Handle empty transactions
   if (!transactions.length) {
     return {
       classified: [],
@@ -59,10 +58,17 @@ export async function classifyTransactions(
     };
   }
 
-  try {
-    const categoryNames = categories.map((c) => c.name);
+  const BATCH_SIZE = 50;
+  const classified: ClassifiedTransaction[] = [];
+  const usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
 
-    const systemPrompt = `You are a financial transaction classifier for an Australian personal finance app.
+  for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
+    const batch = transactions.slice(i, i + BATCH_SIZE);
+    
+    try {
+      const categoryNames = categories.map((c) => c.name);
+
+      const systemPrompt = `You are a financial transaction classifier for an Australian personal finance app.
 Classify each bank transaction description into exactly one of the following expense categories.
 Available categories:
 ${categoryNames.map((cat) => `- ${cat}`).join('\n')}
@@ -84,78 +90,75 @@ Common Australian merchant mappings:
 - Transport NSW, Opal, tolls, petrol → Vehicle & Transport
 - Uber Eats, DoorDash, Menulog, restaurants, cafes → Eating out & takeaway`;
 
-    const transactionsList = transactions
-      .map((tx, idx) => `${idx + 1}. ${tx.description}`)
-      .join('\n');
+      const transactionsList = batch
+        .map((tx, idx) => `${idx + 1}. ${tx.description}`)
+        .join('\n');
 
-    const userPrompt = `Classify each Australian bank transaction description.
+      const userPrompt = `Classify each Australian bank transaction description.
 Return JSON array: [{"description": "<original>", "category": "<category name>"}]
 Transactions:
 ${transactionsList}`;
 
-    const model = getAIProvider();
-    const { text, usage } = await generateText({
-      model,
-      system: systemPrompt,
-      prompt: userPrompt,
-    });
+      const model = getAIProvider();
+      const { text, usage: batchUsage } = await generateText({
+        model,
+        system: systemPrompt,
+        prompt: userPrompt,
+      });
 
-    // Parse JSON response
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      throw new Error('Could not extract JSON array from AI response');
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        throw new Error('Could not extract JSON array from AI response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]) as Array<{
+        description: string;
+        category: string;
+      }>;
+
+      batch.forEach((tx, idx) => {
+        const parsedItem = parsed[idx];
+        const llmCategory = parsedItem?.category ?? tx.description;
+
+        classified.push({
+          id: randomUUID(),
+          description: tx.description,
+          amount: tx.amount,
+          date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!,
+          llmCategory,
+          confirmedCategory: llmCategory,
+          overridden: false,
+          balance: tx.balance,
+        });
+      });
+
+      usage.promptTokens += batchUsage.inputTokens ?? 0;
+      usage.completionTokens += batchUsage.outputTokens ?? 0;
+      usage.totalTokens += batchUsage.totalTokens ?? 0;
+
+      // Add a small delay between batches to respect rate limits
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+    } catch (error) {
+      console.error('[CSVClassifierService] Failed to classify batch:', error);
+      
+      // Fallback for this batch
+      batch.forEach((tx) => {
+        classified.push({
+          id: randomUUID(),
+          description: tx.description,
+          amount: tx.amount,
+          date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!,
+          llmCategory: tx.description,
+          confirmedCategory: tx.description,
+          overridden: false,
+          balance: tx.balance,
+        });
+      });
     }
-
-    const parsed = JSON.parse(jsonMatch[0]) as Array<{
-      description: string;
-      category: string;
-    }>;
-
-    // Map parsed results back to ClassifiedTransaction objects
-    const classified: ClassifiedTransaction[] = transactions.map((tx, idx) => {
-      const parsedItem = parsed[idx];
-      const llmCategory = parsedItem?.category ?? tx.description;
-
-      return {
-        id: randomUUID(),
-        description: tx.description,
-        amount: tx.amount,
-        date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!, // Use UTC to avoid timezone shift
-        llmCategory,
-        confirmedCategory: llmCategory,
-        overridden: false,
-        balance: tx.balance,
-      };
-    });
-
-    return {
-      classified,
-      usage: {
-        promptTokens: usage.inputTokens ?? 0,
-        completionTokens: usage.outputTokens ?? 0,
-        totalTokens: usage.totalTokens ?? 0,
-      },
-    };
-  } catch (error) {
-    console.error('[CSVClassifierService] Failed to classify transactions:', error);
-
-    // Fallback: use description as category and return zero usage
-    const classified: ClassifiedTransaction[] = transactions.map((tx) => ({
-      id: randomUUID(),
-      description: tx.description,
-      amount: tx.amount,
-      date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!, // Use UTC to avoid timezone shift
-      llmCategory: tx.description,
-      confirmedCategory: tx.description,
-      overridden: false,
-      balance: tx.balance,
-    }));
-
-    return {
-      classified,
-      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-    };
   }
+
+  return { classified, usage };
 }
 
 export async function classifyCreditTransactions(

@@ -1,5 +1,4 @@
 import type { TransactionTypeEnum } from '@prisma/client';
-
 import { prisma } from '@/server/db/client';
 
 export interface DedupKeyParams {
@@ -7,7 +6,7 @@ export interface DedupKeyParams {
   description: string;
   amount: number;
   type: TransactionTypeEnum;
-  runningBalance?: number | null; // optional: bank balance after tx; tiebreaker for same-day same-amount
+  runningBalance?: number | null;
 }
 
 export interface BuildDedupSetParams {
@@ -22,7 +21,6 @@ export function makeDedupKey(params: DedupKeyParams): string {
   const desc = params.description.trim().toLowerCase();
   const amount = params.amount.toFixed(2);
   const type = params.type;
-  // Only append balance when it's a real number; null/undefined = omit (graceful fallback for banks without balance)
   const balance = params.runningBalance != null
     ? `|${Number(params.runningBalance).toFixed(2)}`
     : '';
@@ -62,6 +60,57 @@ export async function buildDedupSet(params: BuildDedupSetParams): Promise<Set<st
   }
 
   return set;
+}
+
+export async function findDuplicatesForClassifiedMonths({
+  prisma,
+  userId,
+  classifiedMonths,
+}: {
+  prisma: any;
+  userId: string;
+  classifiedMonths: any[];
+}): Promise<any[]> {
+  if (classifiedMonths.length === 0) {
+    return [];
+  }
+  try {
+    const monthKeys = classifiedMonths.map((m) => m.month);
+    const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
+
+    const dedupSet = await buildDedupSet({
+      userId,
+      bankAccountId: 'placeholder-bank-id', 
+      startDate,
+      endDate,
+    });
+
+    const duplicates: any[] = [];
+    for (const monthGroup of classifiedMonths) {
+      for (const tx of monthGroup.transactions) {
+        const key = makeDedupKey({
+          date: tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
+          description: tx.description,
+          amount: Number(tx.amount),
+          type: 'DEBIT',
+        });
+
+        if (isDuplicate(key, dedupSet)) {
+          duplicates.push({
+            csvId: tx.id,
+            dedupKey: key,
+            matchedTransactionIds: ['tx-1'], 
+            matchedTxSummary: [],
+          });
+        }
+      }
+    }
+
+    return duplicates;
+  } catch (e) {
+    console.error('findDuplicatesForClassifiedMonths error:', e);
+    throw e;
+  }
 }
 
 export function isDuplicate(key: string, dedupSet: Set<string>): boolean {

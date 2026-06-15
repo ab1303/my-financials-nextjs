@@ -140,6 +140,7 @@ export async function confirmDebitTransactions(
   userId: string,
   bankAccountId: string,
   importSessionId: string,
+  forceCreateIds?: string[],
 ): Promise<TransactionSaveResult> {
   const result = createEmptyResult();
 
@@ -203,7 +204,8 @@ export async function confirmDebitTransactions(
             type: 'DEBIT',
             runningBalance: tx.balance ?? null,
           });
-          if (isDuplicate(dedupKey, dedupSet)) {
+          const isForced = forceCreateIds?.includes(tx.id);
+          if (isDuplicate(dedupKey, dedupSet) && !isForced) {
             result.duplicatesSkipped += 1;
             continue;
           }

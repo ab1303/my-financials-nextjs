@@ -16,6 +16,7 @@ import {
   applyCategoryRulesToTransactions,
   loadActiveRules,
 } from '@/server/services/transactions/category-rule-applier';
+import { findDuplicatesForClassifiedMonths } from '@/server/services/transactions/dedup.service';
 
 function groupTransactionsByMonth<T extends CsvTransaction>(transactions: T[]) {
   const monthMap = new Map<string, T[]>();
@@ -246,6 +247,12 @@ export async function POST(req: NextRequest) {
               totalPromptTokens += result.usage.promptTokens;
               totalCompletionTokens += result.usage.completionTokens;
 
+              const duplicates = await findDuplicatesForClassifiedMonths({
+                prisma,
+                userId: session.user.id,
+                classifiedMonths: [{ month, transactions: result.classified }],
+              });
+
               controller.enqueue(
                 sseEvent(encoder, {
                   type: 'debit_classified',
@@ -255,6 +262,7 @@ export async function POST(req: NextRequest) {
                     type: 'DEBIT' as const,
                     sourceHint: 'LLM_SUGGESTED' as const,
                   })) as ClassifiedTransactionV2[],
+                  duplicates,
                   usage: result.usage,
                 }),
               );

@@ -13,7 +13,7 @@ interface CSVTransactionReviewTableProps {
   categories: Array<{ id: string; name: string }>;
   incomeSourceLabels: string[];
   llmModel: string;
-  onConfirm: (debitMonths: ClassifiedMonth[], creditMonths: ClassifiedCreditMonth[]) => Promise<void>;
+  onConfirm: (debitMonths: ClassifiedMonth[], creditMonths: ClassifiedCreditMonth[], forceCreateIds: string[]) => Promise<void>;
   isConfirming: boolean;
 }
 
@@ -128,6 +128,9 @@ function CreditReviewPanel({
   );
 }
 
+import DuplicatesTab from './DuplicatesTab';
+// ... (imports)
+
 export default function CSVTransactionReviewTable({
   debitMonths,
   creditMonths,
@@ -137,9 +140,16 @@ export default function CSVTransactionReviewTable({
   onConfirm,
   isConfirming,
 }: CSVTransactionReviewTableProps) {
-  const [activeTab, setActiveTab] = useState<'debits' | 'credits' | 'excluded'>('debits');
+  const [activeTab, setActiveTab] = useState<'debits' | 'credits' | 'excluded' | 'duplicates'>('debits');
   const [localDebitMonths, setLocalDebitMonths] = useState(debitMonths);
   const [localCreditMonths, setLocalCreditMonths] = useState(creditMonths);
+  const [forceCreateIds, setForceCreateIds] = useState<string[]>([]);
+
+  const toggleForceCreateId = (id: string) => {
+    setForceCreateIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
 
   const totalDebitCount = useMemo(
     () => localDebitMonths.reduce((sum, month) => sum + month.transactions.length, 0),
@@ -234,6 +244,16 @@ export default function CSVTransactionReviewTable({
             Excluded ({excludedCount})
           </button>
         )}
+        <button
+          onClick={() => setActiveTab('duplicates')}
+          className={`pb-2 text-sm font-medium transition-colors ${
+            activeTab === 'duplicates'
+              ? 'border-b-2 border-teal-500 text-teal-700'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Duplicates
+        </button>
       </div>
 
       <div className='min-h-0 flex-1 overflow-y-auto'>
@@ -261,12 +281,15 @@ export default function CSVTransactionReviewTable({
             filterMode="excluded"
           />
         )}
+        {activeTab === 'duplicates' && (
+          <DuplicatesTab debitMonths={localDebitMonths} forceCreateIds={forceCreateIds} onToggleForceCreateId={toggleForceCreateId} />
+        )}
       </div>
 
       <div className='flex flex-shrink-0 justify-end border-t pt-4'>
         <button
           data-testid="csv-confirm-import"
-          onClick={() => void onConfirm(localDebitMonths, localCreditMonths)}
+          onClick={() => void onConfirm(localDebitMonths, localCreditMonths, forceCreateIds)}
           disabled={isConfirming}
           className='rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50'
         >

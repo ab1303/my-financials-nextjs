@@ -12,6 +12,7 @@ import { runTransferMatchRules } from '@/server/services/transactions/transfer-r
 
 const ConfirmRequestSchema = z.object({
   fileId: z.string().min(1),
+  forceCreateIds: z.array(z.string()).optional(),
   llmUsage: z.object({
     promptTokens: z.number().int().min(0),
     completionTokens: z.number().int().min(0),
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { fileId, llmUsage, debitMonths, creditMonths } = parse.data;
+    const { fileId, llmUsage, debitMonths, creditMonths, forceCreateIds } = parse.data;
 
     // request parsed successfully
 
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
         session.user.id,
         bankAccountId,
         fileId,
+        forceCreateIds,
       ),
       confirmCreditTransactions(
         creditMonths,

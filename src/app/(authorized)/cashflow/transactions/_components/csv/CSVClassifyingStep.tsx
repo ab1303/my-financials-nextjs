@@ -107,6 +107,7 @@ export default function CSVClassifyingStep({
       } else if (type === 'debit_classified' || type === 'classified') {
         const month = event.month as string;
         const transactions = (event.transactions ?? []) as any[];
+        const duplicates = (event.duplicates ?? []) as any[]; // Capture duplicates
         const usage = (event.usage ?? {
           promptTokens: 0,
           completionTokens: 0,
@@ -119,6 +120,7 @@ export default function CSVClassifyingStep({
         const classified: ClassifiedMonth = {
           month,
           transactions,
+          duplicates, // Store duplicates
           totalUsage: usage,
         };
         // Merge with existing month if present so pre-matched (rule-match)
@@ -135,6 +137,8 @@ export default function CSVClassifyingStep({
             if (!existingById.has(tx.id)) existingById.set(tx.id, tx);
           }
           const mergedTxs = Array.from(existingById.values());
+          // Merge duplicates as well
+          const mergedDuplicates = [...(existingDebit.duplicates ?? []), ...duplicates];
           const mergedUsage = {
             promptTokens:
               (existingDebit.totalUsage.promptTokens ?? 0) +
@@ -149,6 +153,7 @@ export default function CSVClassifyingStep({
           const merged: ClassifiedMonth = {
             month,
             transactions: mergedTxs,
+            duplicates: mergedDuplicates, // Merge duplicates
             totalUsage: mergedUsage,
           };
           classifiedMonthsRef.current = classifiedMonthsRef.current.map((c) =>

@@ -161,6 +161,7 @@ export default function CSVImportWizard({
   const doConfirm = async (
     confirmedDebitMonths: ClassifiedMonth[],
     confirmedCreditMonths: ClassifiedCreditMonth[],
+    forceCreateIds: string[],
   ) => {
     if (!file || !bankAccountId) return;
 
@@ -183,6 +184,7 @@ export default function CSVImportWizard({
           llmUsage: totalLlmUsage,
           debitMonths: confirmedDebitMonths,
           creditMonths: confirmedCreditMonths,
+          forceCreateIds,
         }),
       });
 
@@ -254,7 +256,7 @@ export default function CSVImportWizard({
 
     // Proceed with confirmation
     setIsConfirming(true);
-    await doConfirm(confirmedDebitMonths, confirmedCreditMonths);
+    await doConfirm(confirmedDebitMonths, confirmedCreditMonths, []);
   };
 
   const handleContinueAnyway = async () => {
@@ -264,7 +266,7 @@ export default function CSVImportWizard({
     // Trigger confirm with current months
     if (!file || !bankAccountId) return;
     setIsConfirming(true);
-    await doConfirm(classifiedMonths, classifiedCreditMonths);
+    await doConfirm(classifiedMonths, classifiedCreditMonths, []);
   };
 
   const handleClose = () => {
