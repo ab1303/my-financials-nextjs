@@ -8,7 +8,7 @@ import {
   deleteIncomeEntry,
   updateIncomeEntry,
 } from '@/server/services/income.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 import type {
   CreateIncomeEntryInput,

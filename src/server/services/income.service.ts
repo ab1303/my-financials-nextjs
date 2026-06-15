@@ -1,8 +1,14 @@
-import { prisma } from '../utils/prisma';
-import { REIMBURSEMENT_CATEGORY,TRANSFER_CATEGORY } from './transactions/constants';
+import { prisma } from '@/server/db/client';
+import {
+  REIMBURSEMENT_CATEGORY,
+  TRANSFER_CATEGORY,
+} from './transactions/constants';
 
 // Categories excluded from income totals — these are expense offsets, not earned income
-const INCOME_EXCLUDED_CATEGORIES = [TRANSFER_CATEGORY, REIMBURSEMENT_CATEGORY] as const;
+const INCOME_EXCLUDED_CATEGORIES = [
+  TRANSFER_CATEGORY,
+  REIMBURSEMENT_CATEGORY,
+] as const;
 import type {
   IncomeEntryInput,
   IncomeEntryModel,
@@ -53,8 +59,20 @@ export const getIncomeEntries = async (
   });
   if (!calendarYear) return [];
 
-  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
-  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const transactions = await prismaClient.transaction.findMany({
     where: {
@@ -65,7 +83,13 @@ export const getIncomeEntries = async (
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId ? { bankAccountId } : {}),
     },
-    select: { id: true, date: true, amount: true, category: true, source: true },
+    select: {
+      id: true,
+      date: true,
+      amount: true,
+      category: true,
+      source: true,
+    },
     orderBy: { date: 'desc' },
   });
 
@@ -74,7 +98,9 @@ export const getIncomeEntries = async (
     where: { isActive: true },
     select: { id: true, name: true },
   });
-  const sourceByName = new Map(allSources.map((s) => [s.name.toLowerCase(), s]));
+  const sourceByName = new Map(
+    allSources.map((s) => [s.name.toLowerCase(), s]),
+  );
 
   return transactions.map<IncomeEntryModel>((tx) => {
     const incomeSource = sourceByName.get(tx.category.toLowerCase());
@@ -209,8 +235,20 @@ export const getTotalIncome = async (
   });
   if (!calendarYear) return 0;
 
-  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
-  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const result = await prismaClient.transaction.aggregate({
     where: {
@@ -241,8 +279,20 @@ export const getMonthlyIncomeSummary = async (
   });
   if (!calendarYear) return [];
 
-  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
-  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -365,8 +415,20 @@ export const getMonthlyIncomeSummaryFiltered = async (
   });
   if (!calendarYear) return [];
 
-  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
-  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -429,8 +491,20 @@ export const getIncomeSourceBreakdownForYear = async (
   });
   if (!calendarYear) return [];
 
-  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
-  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -454,7 +528,10 @@ export const getIncomeSourceBreakdownForYear = async (
     const amount = tx.amount.toNumber();
     totalAmount += amount;
     const existing = sourceMap.get(sourceName) ?? { amount: 0, count: 0 };
-    sourceMap.set(sourceName, { amount: existing.amount + amount, count: existing.count + 1 });
+    sourceMap.set(sourceName, {
+      amount: existing.amount + amount,
+      count: existing.count + 1,
+    });
   }
 
   const breakdowns: SourceBreakdown[] = [];
@@ -470,4 +547,3 @@ export const getIncomeSourceBreakdownForYear = async (
   breakdowns.sort((a, b) => b.amount - a.amount);
   return breakdowns;
 };
-

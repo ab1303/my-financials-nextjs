@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/server/utils/prisma', () => ({
+vi.mock('@/server/db/client', () => ({
   prisma: {
     voluntaryDonation: {
       create: vi.fn(),
@@ -24,7 +24,7 @@ import {
   getZakatTotalsByCategory,
   updateZakatPayment,
 } from '@/server/services/zakat/zakat.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 describe('donation-zakat-core', () => {
   beforeEach(() => {

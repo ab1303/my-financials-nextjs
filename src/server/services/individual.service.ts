@@ -1,7 +1,7 @@
-import type { Prisma} from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { Individual } from '@prisma/client';
 
-import { prisma } from '../utils/prisma';
+import { prisma } from '@/server/db/client';
 
 // Include relationship data in Individual queries
 const individualInclude = {

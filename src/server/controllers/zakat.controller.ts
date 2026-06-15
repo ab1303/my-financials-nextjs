@@ -7,7 +7,7 @@ import {
   getZakatTotalPaid,
   updateZakatObligation,
 } from '../services/zakat/zakat.service';
-import { handleCaughtError } from '../utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 // ... (rest of imports)
 
 export const zakatTotalPaidHandler = async (calendarYearId: string) => {
@@ -21,7 +21,7 @@ export const zakatTotalPaidHandler = async (calendarYearId: string) => {
 
 export const createZakatYearHandler = async (
   zakatCalendarYearId: string,
-  totalAmount: number
+  totalAmount: number,
 ) => {
   try {
     const zakat = await getZakat(zakatCalendarYearId);
@@ -43,7 +43,10 @@ export const createZakatYearHandler = async (
   }
 };
 
-export const zakatPaymentsHandler = async (calendarYearId: string, beneficiaryId?: string) => {
+export const zakatPaymentsHandler = async (
+  calendarYearId: string,
+  beneficiaryId?: string,
+) => {
   try {
     const zakatPayments = await getZakatPayments(calendarYearId, beneficiaryId);
     return zakatPayments;
@@ -65,9 +68,7 @@ export const zakatHandler = async (calendarYearId: string) => {
  * Handler that returns zakat totals broken down by deductible status.
  * Used for displaying comprehensive zakat reporting metrics.
  */
-export const zakatTotalsByCategoryHandler = async (
-  calendarYearId: string,
-) => {
+export const zakatTotalsByCategoryHandler = async (calendarYearId: string) => {
   try {
     const totals = await getZakatTotalsByCategory(calendarYearId);
     return totals;

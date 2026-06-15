@@ -3,7 +3,7 @@ import {
   getNetWorthTrend,
   resolveDateRangeFromCalendarYear,
 } from '@/server/services/asset-dashboard.service';
-import { handleCaughtError } from '@/server/utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 import type { NetWorthTrendFilters } from '@/types/asset-dashboard.types';
 
 export const getNetWorthTrendHandler = async ({

@@ -11,7 +11,7 @@ import {
   validateIndividualNameUniqueness,
 } from '@/server/services/individual.service';
 import { getOrCreateRelationship } from '@/server/services/relationship.service';
-import { handleCaughtError } from '@/server/utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 
 export const addIndividualDetailsHandler = async ({
   input,

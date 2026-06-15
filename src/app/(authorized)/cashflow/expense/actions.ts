@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { auth } from '@/server/auth';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 import type {
   CreateExpenseEntryInput,

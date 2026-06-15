@@ -6,7 +6,7 @@ import {
   getSourceBreakdown,
   getTotalIncome,
 } from '../services/income.service';
-import { handleCaughtError } from '../utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 
 /**
  * Create or retrieve Income record for a calendar year and user
@@ -62,7 +62,12 @@ export const incomeEntriesHandler = async (
   bankAccountId?: string,
 ) => {
   try {
-    const incomeEntries = await getIncomeEntries(calendarYearId, userId, undefined, bankAccountId);
+    const incomeEntries = await getIncomeEntries(
+      calendarYearId,
+      userId,
+      undefined,
+      bankAccountId,
+    );
     return incomeEntries;
   } catch (e) {
     handleCaughtError(e);
@@ -81,7 +86,12 @@ export const totalIncomeHandler = async (
   bankAccountId?: string,
 ) => {
   try {
-    const totalIncome = await getTotalIncome(calendarYearId, userId, undefined, bankAccountId);
+    const totalIncome = await getTotalIncome(
+      calendarYearId,
+      userId,
+      undefined,
+      bankAccountId,
+    );
     return totalIncome;
   } catch (e) {
     handleCaughtError(e);

@@ -11,7 +11,7 @@ import {
   updateBusinessDetails,
   validateBusinessNameUniqueness,
 } from '@/server/services/business.service';
-import { handleCaughtError } from '@/server/utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 import type { BusinessEnumType } from '@/types/enum';
 
 export const addBusinessDetailsHandler = async ({

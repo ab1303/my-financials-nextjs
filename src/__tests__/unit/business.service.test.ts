@@ -1,7 +1,7 @@
 import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the prisma module before importing the service
-vi.mock('@/server/utils/prisma', () => ({
+vi.mock('@/server/db/client', () => ({
   prisma: {
     business: {
       create: vi.fn(),
@@ -18,7 +18,7 @@ import {
   updateBusinessDetails,
   validateBusinessNameUniqueness,
 } from '@/server/services/business.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 import { BusinessEnumType } from '@/types/enum';
 
 describe('business.service', () => {

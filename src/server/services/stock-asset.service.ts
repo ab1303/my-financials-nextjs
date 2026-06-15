@@ -5,7 +5,7 @@ import type {
   CreateStockSnapshotInput,
   UpdateStockHoldingInput,
 } from '@/server/schema/stock-asset.schema';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 // Stock Snapshot Service
 

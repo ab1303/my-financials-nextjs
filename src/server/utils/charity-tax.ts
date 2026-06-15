@@ -1,6 +1,6 @@
 import type { BeneficiaryEnumType } from '@prisma/client';
 
-import { prisma } from './prisma';
+import { prisma } from '@/server/db/client';
 
 /**
  * Derives whether a donation or zakat payment is deductible

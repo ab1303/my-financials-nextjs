@@ -1,4 +1,5 @@
-import { prisma } from '../../utils/prisma';
+import { prisma } from '@/server/db/client';
+
 import { getInterestCleansingPayments } from '../interest-cleansing/interest-cleansing.service';
 import { getVoluntaryDonations } from '../voluntary-donations/voluntary-donation.service';
 import { getZakatPayments } from '../zakat/zakat.service';
@@ -71,7 +72,10 @@ export const getDonationTotalsByBeneficiaryAggregated = async (
     }),
   ]);
 
-  const beneficiaryTotals: Record<string, { id: string; name: string; total: number }> = {};
+  const beneficiaryTotals: Record<
+    string,
+    { id: string; name: string; total: number }
+  > = {};
 
   [...voluntary, ...zakat].forEach((payment) => {
     const amount = payment.amount.toNumber();

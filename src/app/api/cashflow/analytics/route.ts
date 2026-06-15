@@ -16,7 +16,7 @@ import {
   getMonthlyIncomeSummaryFiltered,
   getTotalIncome,
 } from '@/server/services/income.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 export async function GET(request: Request) {
   try {

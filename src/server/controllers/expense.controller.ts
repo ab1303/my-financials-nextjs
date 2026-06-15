@@ -9,7 +9,7 @@ import {
   getMonthlyExpenseSummaries,
   getTotalExpenses,
 } from '../services/expense.service';
-import { handleCaughtError } from '../utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 
 /**
  * Create or retrieve Expense record for a calendar year and user
@@ -255,7 +255,11 @@ export const getExpenseCategoryBreakdownHandler = async (
   bankAccountId?: string,
 ) => {
   try {
-    return await getExpenseCategoryBreakdownForYear(calendarYearId, userId, bankAccountId);
+    return await getExpenseCategoryBreakdownForYear(
+      calendarYearId,
+      userId,
+      bankAccountId,
+    );
   } catch (e) {
     handleCaughtError(e);
     return [];

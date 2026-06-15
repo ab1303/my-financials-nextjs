@@ -8,7 +8,7 @@ import {
   getDonationTotalsByBeneficiaryAggregated,
   getTotalDonationsAggregated,
 } from '../services/reporting/donation-aggregator.service';
-import { handleCaughtError } from '../utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 
 export const createDonationYearHandler = async (
   donationCalendarYearId: string,
@@ -29,9 +29,15 @@ export const createDonationYearHandler = async (
   }
 };
 
-export const donationPaymentsHandler = async (calendarYearId: string, beneficiaryId?: string) => {
+export const donationPaymentsHandler = async (
+  calendarYearId: string,
+  beneficiaryId?: string,
+) => {
   try {
-    const donationPayments = await getDonationPaymentsAggregated(calendarYearId, beneficiaryId);
+    const donationPayments = await getDonationPaymentsAggregated(
+      calendarYearId,
+      beneficiaryId,
+    );
     return donationPayments;
   } catch (e) {
     handleCaughtError(e);
@@ -84,11 +90,11 @@ export const donationTotalsByBeneficiaryHandler = async (
   calendarYearId: string,
 ) => {
   try {
-    const totals = await getDonationTotalsByBeneficiaryAggregated(calendarYearId);
+    const totals =
+      await getDonationTotalsByBeneficiaryAggregated(calendarYearId);
     return totals;
   } catch (e) {
     handleCaughtError(e);
     return [];
   }
 };
-

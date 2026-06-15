@@ -1,11 +1,24 @@
-import type { MonthlyTrendPoint, TopExpenseCategory } from '../models/dashboard';
-import { prisma } from '../utils/prisma';
+import type {
+  MonthlyTrendPoint,
+  TopExpenseCategory,
+} from '../models/dashboard';
+import { prisma } from '@/server/db/client';
 import { TRANSFER_CATEGORY } from './transactions/constants';
 
 // Month names for label formatting
 const MONTH_NAMES = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ] as const;
 
 /**
@@ -25,7 +38,15 @@ export const getMonthlyIncomeExpenseTrend = async (
 
   // Start from (current month - months + 1) and go to end of current month
   const startMonthOffset = months - 1;
-  const fromDate = new Date(currentYear, currentMonth - startMonthOffset - 1, 1, 0, 0, 0, 0);
+  const fromDate = new Date(
+    currentYear,
+    currentMonth - startMonthOffset - 1,
+    1,
+    0,
+    0,
+    0,
+    0,
+  );
   const toDate = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
 
   // Pre-populate map for all months to ensure zero-data months appear
@@ -81,9 +102,9 @@ export const getMonthlyIncomeExpenseTrend = async (
     const parts = key.split('-');
     const yearStr = parts[0];
     const monthStr = parts[1];
-    
+
     if (!yearStr || !monthStr) continue;
-    
+
     const year = parseInt(yearStr, 10);
     const month = parseInt(monthStr, 10);
 
@@ -206,7 +227,8 @@ export const getMonthlyTrendForDateRange = async (
     const month = parseInt(parts[1]!, 10);
     const data = trendMap.get(key)!;
     result.push({
-      month, year,
+      month,
+      year,
       label: `${MONTH_NAMES[month - 1]} ${String(year).slice(2)}`,
       income: data.income,
       expenses: data.expenses,

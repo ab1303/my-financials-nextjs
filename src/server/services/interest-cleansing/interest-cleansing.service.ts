@@ -1,5 +1,8 @@
-import { prisma } from '../../utils/prisma';
-import { type InterestCleansingInput, type InterestCleansingModel } from './types';
+import { prisma } from '@/server/db/client';
+import {
+  type InterestCleansingInput,
+  type InterestCleansingModel,
+} from './types';
 
 export const getInterestCleansingPayments = async (
   calendarYearId: string,
@@ -13,16 +16,18 @@ export const getInterestCleansingPayments = async (
     include: { sourceBusiness: true },
   });
 
-  return payments.map((ic): InterestCleansingModel => ({
-    id: ic.id,
-    datePaid: ic.datePaid,
-    amount: ic.amount.toNumber(),
-    sourceBusinessId: ic.sourceBusinessId,
-    donationLedgerId: ic.donationLedgerId,
-    transactionId: ic.creditTxId,
-    isDeductible: ic.sourceBusiness?.isDgrRegistered === true,
-    donationPurpose: 'INTEREST_CLEANSING',
-  }));
+  return payments.map(
+    (ic): InterestCleansingModel => ({
+      id: ic.id,
+      datePaid: ic.datePaid,
+      amount: ic.amount.toNumber(),
+      sourceBusinessId: ic.sourceBusinessId,
+      donationLedgerId: ic.donationLedgerId,
+      transactionId: ic.creditTxId,
+      isDeductible: ic.sourceBusiness?.isDgrRegistered === true,
+      donationPurpose: 'INTEREST_CLEANSING',
+    }),
+  );
 };
 
 export const addInterestCleansingPayment = async (

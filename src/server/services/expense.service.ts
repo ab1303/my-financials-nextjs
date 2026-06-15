@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client';
+import { prisma } from '@/server/db/client';
 
 import type {
   CategoryBreakdown,
@@ -8,7 +9,6 @@ import type {
   ExpenseModel,
   MonthlyExpenseSummary,
 } from '../models/expense';
-import { prisma } from '../utils/prisma';
 import { TRANSFER_CATEGORY } from './transactions/constants';
 
 /**
@@ -123,7 +123,10 @@ export const getExpenseEntriesForMonth = async (
 
   // Determine the calendar year for this month within the fiscal year.
   // Months >= fromMonth are in fromYear; months < fromMonth are in toYear.
-  const year = month >= calendarYear.fromMonth ? calendarYear.fromYear : calendarYear.toYear;
+  const year =
+    month >= calendarYear.fromMonth
+      ? calendarYear.fromYear
+      : calendarYear.toYear;
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
@@ -140,20 +143,27 @@ export const getExpenseEntriesForMonth = async (
   });
 
   // Separate USER_MANUAL from bank-imported transactions
-  const userManualTxs = transactions.filter((tx) => tx.source === 'USER_MANUAL');
+  const userManualTxs = transactions.filter(
+    (tx) => tx.source === 'USER_MANUAL',
+  );
   const bankTxs = transactions.filter((tx) => tx.source !== 'USER_MANUAL');
 
   // Aggregate bank transactions by category name
   const bankCategoryMap = new Map<string, number>();
   for (const tx of bankTxs) {
     if (!tx.category) continue;
-    bankCategoryMap.set(tx.category, (bankCategoryMap.get(tx.category) ?? 0) + Number(tx.amount));
+    bankCategoryMap.set(
+      tx.category,
+      (bankCategoryMap.get(tx.category) ?? 0) + Number(tx.amount),
+    );
   }
 
   // Resolve category IDs by name for all entries
   const allCategoryNames = [
     ...Array.from(bankCategoryMap.keys()),
-    ...userManualTxs.filter((tx) => tx.category).map((tx) => tx.category as string),
+    ...userManualTxs
+      .filter((tx) => tx.category)
+      .map((tx) => tx.category as string),
   ];
   const expenseCategories = await prisma.expenseCategory.findMany({
     where: { name: { in: allCategoryNames } },
@@ -220,8 +230,20 @@ export const getMonthlyExpenseSummaries = async (
     }));
   }
 
-  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
-  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -238,7 +260,10 @@ export const getMonthlyExpenseSummaries = async (
   });
 
   // Aggregate by calendar month
-  const monthMap = new Map<number, { totalAmount: number; entryCount: number }>();
+  const monthMap = new Map<
+    number,
+    { totalAmount: number; entryCount: number }
+  >();
   for (const tx of transactions) {
     const month = tx.date.getMonth() + 1;
     const existing = monthMap.get(month) ?? { totalAmount: 0, entryCount: 0 };
@@ -281,8 +306,20 @@ export const getTotalExpenses = async (
 
   if (!calendarYear) return 0;
 
-  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
-  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const result = await prisma.transaction.aggregate({
     where: {
@@ -412,7 +449,10 @@ export const getCategoryBreakdownForMonth = async (
 
   if (!calendarYear) return [];
 
-  const year = month >= calendarYear.fromMonth ? calendarYear.fromYear : calendarYear.toYear;
+  const year =
+    month >= calendarYear.fromMonth
+      ? calendarYear.fromYear
+      : calendarYear.toYear;
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
@@ -443,14 +483,19 @@ export const getCategoryBreakdownForMonth = async (
   });
   const catNameToId = new Map(expenseCategories.map((c) => [c.name, c.id]));
 
-  const total = Array.from(categoryAmountMap.values()).reduce((sum, amt) => sum + amt, 0);
+  const total = Array.from(categoryAmountMap.values()).reduce(
+    (sum, amt) => sum + amt,
+    0,
+  );
 
-  return Array.from(categoryAmountMap.entries()).map(([categoryName, amount]) => ({
-    categoryId: catNameToId.get(categoryName) ?? '',
-    categoryName,
-    amount,
-    percentage: total > 0 ? (amount / total) * 100 : 0,
-  }));
+  return Array.from(categoryAmountMap.entries()).map(
+    ([categoryName, amount]) => ({
+      categoryId: catNameToId.get(categoryName) ?? '',
+      categoryName,
+      amount,
+      percentage: total > 0 ? (amount / total) * 100 : 0,
+    }),
+  );
 };
 
 /**
@@ -469,8 +514,20 @@ export const getExpenseCategoryBreakdownForYear = async (
   });
   if (!calendarYear) return [];
 
-  const startDate = new Date(calendarYear.fromYear, calendarYear.fromMonth - 1, 1);
-  const endDate = new Date(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59, 999);
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const transactions = await prisma.transaction.findMany({
     where: {
@@ -489,7 +546,10 @@ export const getExpenseCategoryBreakdownForYear = async (
   const categoryAmountMap = new Map<string, number>();
   for (const tx of transactions) {
     if (!tx.category) continue;
-    categoryAmountMap.set(tx.category, (categoryAmountMap.get(tx.category) ?? 0) + Number(tx.amount));
+    categoryAmountMap.set(
+      tx.category,
+      (categoryAmountMap.get(tx.category) ?? 0) + Number(tx.amount),
+    );
   }
 
   const categoryNames = Array.from(categoryAmountMap.keys());
@@ -499,16 +559,20 @@ export const getExpenseCategoryBreakdownForYear = async (
   });
   const catNameToId = new Map(expenseCategories.map((c) => [c.name, c.id]));
 
-  const total = Array.from(categoryAmountMap.values()).reduce((sum, amt) => sum + amt, 0);
+  const total = Array.from(categoryAmountMap.values()).reduce(
+    (sum, amt) => sum + amt,
+    0,
+  );
 
-  const results = Array.from(categoryAmountMap.entries()).map(([categoryName, amount]) => ({
-    categoryId: catNameToId.get(categoryName) ?? '',
-    categoryName,
-    amount,
-    percentage: total > 0 ? (amount / total) * 100 : 0,
-  }));
+  const results = Array.from(categoryAmountMap.entries()).map(
+    ([categoryName, amount]) => ({
+      categoryId: catNameToId.get(categoryName) ?? '',
+      categoryName,
+      amount,
+      percentage: total > 0 ? (amount / total) * 100 : 0,
+    }),
+  );
 
   results.sort((a, b) => b.amount - a.amount);
   return results;
 };
-

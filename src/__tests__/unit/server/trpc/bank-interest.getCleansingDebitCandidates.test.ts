@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { getCleansingDebitCandidates } from '@/server/services/bank-interest/interest-cleansing.service';
 
 // Mock prisma
-vi.mock('@/server/utils/prisma', () => ({
+vi.mock('@/server/db/client', () => ({
   prisma: {
     transaction: {
       findUniqueOrThrow: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('@/server/utils/prisma', () => ({
   },
 }));
 
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 describe('bankInterest.getCleansingDebitCandidates integration-ish', () => {
   it('should return Candidate DTO with all required fields', async () => {

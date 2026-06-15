@@ -1,6 +1,6 @@
-import type { Business,Prisma } from '@prisma/client';
+import type { Business, Prisma } from '@prisma/client';
 
-import { prisma } from '../utils/prisma';
+import { prisma } from '@/server/db/client';
 
 export const addBusinessDetails = async (
   input: Prisma.BusinessUncheckedCreateInput,
@@ -39,10 +39,10 @@ export const updateBusinessDetails = async (
   id: string,
   input: Prisma.BusinessUncheckedUpdateInput,
 ) => {
-  return await prisma.business.update({
+  return (await prisma.business.update({
     where: { id },
     data: { ...input },
-  }) as Business;
+  })) as Business;
 };
 
 export const deleteBusinessDetails = async (id: string) => {

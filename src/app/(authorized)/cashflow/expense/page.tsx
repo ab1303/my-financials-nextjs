@@ -13,7 +13,7 @@ import {
   TRANSFER_CATEGORY,
 } from '@/server/services/transactions/constants';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 import type { OptionType } from '@/types';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 

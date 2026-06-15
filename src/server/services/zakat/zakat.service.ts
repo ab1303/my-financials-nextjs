@@ -1,9 +1,16 @@
 import type { Prisma } from '@prisma/client';
+import { prisma } from '@/server/db/client';
 
-import { DONATION_PURPOSES, getAllLinkedTransactionIds } from '@/server/services/transactions/donation-utils.service';
+import {
+  DONATION_PURPOSES,
+  getAllLinkedTransactionIds,
+} from '@/server/services/transactions/donation-utils.service';
 
-import { prisma } from '../../utils/prisma';
-import { type ZakatModel, type ZakatPaymentInput, type ZakatPaymentModel } from './types';
+import {
+  type ZakatModel,
+  type ZakatPaymentInput,
+  type ZakatPaymentModel,
+} from './types';
 
 export const getZakatPayments = async (
   calendarYearId: string,
@@ -12,36 +19,45 @@ export const getZakatPayments = async (
   const payments = await prisma.zakatPayment.findMany({
     where: {
       zakatObligation: { calendarId: calendarYearId },
-      ...(beneficiaryId ? { OR: [{ businessId: beneficiaryId }, { individualId: beneficiaryId }] } : {}),
+      ...(beneficiaryId
+        ? {
+            OR: [
+              { businessId: beneficiaryId },
+              { individualId: beneficiaryId },
+            ],
+          }
+        : {}),
     },
     include: { business: true, individual: true },
   });
 
-  return payments.map((zp): ZakatPaymentModel => ({
-    id: zp.id,
-    datePaid: zp.datePaid,
-    amount: zp.amount.toNumber(),
-    businessId: zp.businessId,
-    individualId: zp.individualId,
-    zakatObligationId: zp.zakatObligationId,
-    transactionId: zp.transactionId,
-    beneficiaryType: zp.beneficiaryType,
-    isDeductible: zp.business?.isDgrRegistered === true,
-    donationPurpose: 'ZAKAT',
-  }));
+  return payments.map(
+    (zp): ZakatPaymentModel => ({
+      id: zp.id,
+      datePaid: zp.datePaid,
+      amount: zp.amount.toNumber(),
+      businessId: zp.businessId,
+      individualId: zp.individualId,
+      zakatObligationId: zp.zakatObligationId,
+      transactionId: zp.transactionId,
+      beneficiaryType: zp.beneficiaryType,
+      isDeductible: zp.business?.isDgrRegistered === true,
+      donationPurpose: 'ZAKAT',
+    }),
+  );
 };
 
-export const addZakatPayment = async (
-  input: ZakatPaymentInput,
-) => {
+export const addZakatPayment = async (input: ZakatPaymentInput) => {
   return await prisma.zakatPayment.create({
     data: {
       id: input.id,
       datePaid: input.datePaid,
       amount: input.amount,
       beneficiaryType: input.beneficiaryType,
-      businessId: input.beneficiaryType === 'BUSINESS' ? input.beneficiaryId : null,
-      individualId: input.beneficiaryType === 'INDIVIDUAL' ? input.beneficiaryId : null,
+      businessId:
+        input.beneficiaryType === 'BUSINESS' ? input.beneficiaryId : null,
+      individualId:
+        input.beneficiaryType === 'INDIVIDUAL' ? input.beneficiaryId : null,
       zakatObligationId: input.zakatObligationId,
       transactionId: input.transactionId,
     },
@@ -58,8 +74,10 @@ export const updateZakatPayment = async (
       datePaid: input.datePaid,
       amount: input.amount,
       beneficiaryType: input.beneficiaryType,
-      businessId: input.beneficiaryType === 'BUSINESS' ? input.beneficiaryId : null,
-      individualId: input.beneficiaryType === 'INDIVIDUAL' ? input.beneficiaryId : null,
+      businessId:
+        input.beneficiaryType === 'BUSINESS' ? input.beneficiaryId : null,
+      individualId:
+        input.beneficiaryType === 'INDIVIDUAL' ? input.beneficiaryId : null,
       updatedAt: new Date(),
     },
   });
@@ -176,7 +194,10 @@ export const getZakatTotalsByBeneficiary = async (
     },
   });
 
-  const beneficiaryTotals: Record<string, { id: string; name: string; total: number }> = {};
+  const beneficiaryTotals: Record<
+    string,
+    { id: string; name: string; total: number }
+  > = {};
 
   zakatPayments.forEach((payment) => {
     const amount = payment.amount.toNumber();
@@ -197,7 +218,9 @@ export async function getUnlinkedZakatTransactions(
   userId: string,
   fromYear: number,
   toYear: number,
-): Promise<Array<{ id: string; date: string; description: string; amount: number }>> {
+): Promise<
+  Array<{ id: string; date: string; description: string; amount: number }>
+> {
   const dateFrom = new Date(fromYear, 6, 1);
   const dateTo = new Date(toYear, 5, 30, 23, 59, 59);
 
@@ -232,7 +255,9 @@ export async function getUnlinkedZakatTransactions(
 
 export const addZakatPaymentDetail = async (
   zakatId: string,
-  payment: Omit<ZakatPaymentInput, 'id' | 'zakatObligationId'> & { transactionId?: string },
+  payment: Omit<ZakatPaymentInput, 'id' | 'zakatObligationId'> & {
+    transactionId?: string;
+  },
 ): Promise<ZakatPaymentModel> => {
   const created = await prisma.zakatPayment.create({
     data: {
@@ -265,5 +290,3 @@ export const addZakatPaymentDetail = async (
     donationPurpose: 'ZAKAT',
   } satisfies ZakatPaymentModel;
 };
-
-

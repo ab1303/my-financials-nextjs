@@ -1,9 +1,9 @@
-import type { Business,Prisma } from '@prisma/client';
+import type { Business, Prisma } from '@prisma/client';
 
-import { prisma } from '../utils/prisma';
+import { prisma } from '@/server/db/client';
 
 export const addBrokerageDetails = async (
-  input: Omit<Prisma.BusinessUncheckedCreateInput, 'userId'>
+  input: Omit<Prisma.BusinessUncheckedCreateInput, 'userId'>,
 ) => {
   const result = await prisma.business.create({
     data: { ...input, userId: null, type: 'BROKERAGE' },
@@ -13,7 +13,7 @@ export const addBrokerageDetails = async (
 
 export const getBrokerageDetails = async (
   where?: Partial<Prisma.BusinessWhereUniqueInput>,
-  select?: Prisma.BusinessSelect
+  select?: Prisma.BusinessSelect,
 ) => {
   const finalWhere: Partial<Prisma.BusinessWhereUniqueInput> = {
     ...where,
@@ -47,7 +47,7 @@ export const deleteBrokerageDetails = async (id: string) => {
   });
   if (accountCount > 0) {
     throw new Error(
-      `Cannot delete brokerage: ${accountCount} account(s) depend on this institution`
+      `Cannot delete brokerage: ${accountCount} account(s) depend on this institution`,
     );
   }
   return await prisma.business.delete({

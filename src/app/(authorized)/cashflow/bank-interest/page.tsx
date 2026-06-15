@@ -9,7 +9,7 @@ import { listBankAccountsHandler } from '@/server/controllers/bank-account.contr
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 import type { OptionType } from '@/types';
 
 import CleansingDonationsList from './_components/CleansingDonationsList';

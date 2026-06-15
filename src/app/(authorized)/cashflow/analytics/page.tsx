@@ -5,7 +5,7 @@ import { auth } from '@/server/auth';
 import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 import type { OptionType } from '@/types';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 

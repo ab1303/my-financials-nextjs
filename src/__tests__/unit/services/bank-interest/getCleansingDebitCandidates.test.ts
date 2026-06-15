@@ -1,9 +1,9 @@
 import { beforeEach,describe, expect, it, vi } from 'vitest';
 
 import { getCleansingDebitCandidates } from '@/server/services/bank-interest/interest-cleansing.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
-vi.mock('@/server/utils/prisma', () => ({
+vi.mock('@/server/db/client', () => ({
   prisma: {
     transaction: {
       findUniqueOrThrow: vi.fn(),

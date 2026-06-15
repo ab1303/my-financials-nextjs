@@ -22,7 +22,7 @@ import {
   getSnapshotTotals,
   updateBankAssetEntry,
 } from '@/server/services/bank-asset.service';
-import { handleCaughtError } from '@/server/utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 
 // Bank Account Controllers
 
@@ -105,7 +105,7 @@ export const getSnapshotsHandler = async ({
 
     if (input.calendarYearId) {
       // Import calendar year service to get date range
-      const { prisma } = await import('../utils/prisma');
+      const { prisma } = await import('@/server/db/client');
       const calendarYear = await prisma.calendarYear.findUnique({
         where: { id: input.calendarYearId },
       });
@@ -145,7 +145,7 @@ export const getMostRecentSnapshotHandler = async ({
     let toDate: Date | undefined;
 
     if (input.calendarYearId) {
-      const { prisma } = await import('../utils/prisma');
+      const { prisma } = await import('@/server/db/client');
       const calendarYear = await prisma.calendarYear.findUnique({
         where: { id: input.calendarYearId },
       });

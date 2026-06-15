@@ -10,7 +10,7 @@ import {
   donationTotalsByBeneficiaryHandler,
 } from '@/server/controllers/donation.controller';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
 import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';

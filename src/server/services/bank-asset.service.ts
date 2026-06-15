@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 
-import { prisma } from '../utils/prisma';
+import { prisma } from '@/server/db/client';
 
 // Bank Account Service
 
@@ -21,7 +21,10 @@ export const createBankAccount = async (input: {
   });
 };
 
-export const getBankAccounts = async (userId: string, institutionId?: string) => {
+export const getBankAccounts = async (
+  userId: string,
+  institutionId?: string,
+) => {
   return await prisma.financialAccount.findMany({
     where: {
       userId,

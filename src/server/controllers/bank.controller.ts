@@ -4,7 +4,7 @@ import {
   deleteBankDetails,
   getBankDetails,
 } from '@/server/services/bank.service';
-import { handleCaughtError } from '@/server/utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 
 export const addBankDetailsHandler = async ({
   input,

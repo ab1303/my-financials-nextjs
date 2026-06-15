@@ -7,7 +7,7 @@ import { getCalendarYears } from '@/server/services/calendar-year.service';
 import { getMonthlyIncomeExpenseTrend, getTopExpenseCategories } from '@/server/services/dashboard.service';
 import { getTotalExpenses } from '@/server/services/expense.service';
 import { getTotalIncome } from '@/server/services/income.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 /**
  * GET /api/dashboard/summary

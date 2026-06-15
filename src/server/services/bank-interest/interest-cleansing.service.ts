@@ -1,4 +1,4 @@
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 const CLEANSING_CATEGORY_NAME = 'Interest Cleansing';
 
