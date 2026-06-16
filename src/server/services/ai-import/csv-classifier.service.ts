@@ -2,6 +2,8 @@ import { createOpenAI } from '@ai-sdk/openai';
 import type { ExpenseCategory } from '@prisma/client';
 import { generateText } from 'ai';
 import { randomUUID } from 'crypto';
+import { normalizeDateToISO } from '@/lib/date-utils';
+import type { BankCsvFormat } from '@/server/services/transactions/csv-format.types';
 
 import type { ClassifiedCreditTransaction,ClassifiedTransaction, CsvTransaction } from './_types';
 
@@ -43,10 +45,10 @@ function getAIProvider() {
 
   return openai.chat(modelId);
 }
-
 export async function classifyTransactions(
   transactions: CsvTransaction[],
   categories: ExpenseCategory[],
+  dateFormat: BankCsvFormat['dateFormat'],
 ): Promise<{
   classified: ClassifiedTransaction[];
   usage: { promptTokens: number; completionTokens: number; totalTokens: number };
@@ -124,7 +126,7 @@ ${transactionsList}`;
           id: randomUUID(),
           description: tx.description,
           amount: tx.amount,
-          date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!,
+          date: normalizeDateToISO(tx.date, dateFormat),
           llmCategory,
           confirmedCategory: llmCategory,
           overridden: false,
@@ -148,7 +150,7 @@ ${transactionsList}`;
           id: randomUUID(),
           description: tx.description,
           amount: tx.amount,
-          date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!,
+          date: normalizeDateToISO(tx.date, dateFormat),
           llmCategory: tx.description,
           confirmedCategory: tx.description,
           overridden: false,
@@ -163,6 +165,7 @@ ${transactionsList}`;
 
 export async function classifyCreditTransactions(
   transactions: CsvTransaction[],
+  dateFormat: BankCsvFormat['dateFormat'],
   incomeSourceNames: string[] = DEFAULT_INCOME_SOURCE_NAMES,
 ): Promise<{
   classified: ClassifiedCreditTransaction[];
@@ -234,7 +237,7 @@ ${transactionsList}`;
         id: randomUUID(),
         description: tx.description,
         amount: tx.amount,
-        date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!, // Use UTC to avoid timezone shift
+        date: normalizeDateToISO(tx.date, dateFormat),
         llmCategory,
         confirmedCategory: llmCategory,
         overridden: false,
@@ -258,7 +261,7 @@ ${transactionsList}`;
       id: randomUUID(),
       description: tx.description,
       amount: tx.amount,
-      date: new Date(Date.UTC(tx.year, tx.month - 1, parseInt(tx.date.split('/')[0]!, 10))).toISOString().split('T')[0]!, // Use UTC to avoid timezone shift
+      date: normalizeDateToISO(tx.date, dateFormat),
       llmCategory: 'OTHER',
       confirmedCategory: 'OTHER',
       overridden: false,

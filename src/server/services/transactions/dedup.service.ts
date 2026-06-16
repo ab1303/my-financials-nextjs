@@ -94,7 +94,8 @@ export async function findDuplicatesForClassifiedMonths({
           date: tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
           description: tx.description,
           amount: Number(tx.amount),
-          type: 'DEBIT',
+          type: tx.type ?? 'DEBIT',
+          runningBalance: tx.balance ?? null,
         });
 
         if (isDuplicate(key, dedupSet)) {

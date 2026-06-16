@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
+import { normalizeDateToISO } from '@/lib/date-utils';
 import type {
   ClassifiedCreditTransaction,
   ClassifiedTransactionV2,
@@ -17,6 +18,7 @@ import {
   loadActiveRules,
 } from '@/server/services/transactions/category-rule-applier';
 import { findDuplicatesForClassifiedMonths } from '@/server/services/transactions/dedup.service';
+import { getBankFormat } from '@/server/services/transactions/bank-format-registry';
 
 function groupTransactionsByMonth<T extends CsvTransaction>(transactions: T[]) {
   const monthMap = new Map<string, T[]>();
@@ -96,6 +98,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const financialAccount = await prisma.financialAccount.findUnique({
+      where: { id: bankAccountId },
+      include: { institution: true },
+    });
+
+    const bankFormat = financialAccount?.institution?.name
+      ? getBankFormat(financialAccount.institution.name.toLowerCase())
+      : undefined;
+    const dateFormat = bankFormat?.dateFormat ?? 'DD/MM/YYYY';
+
     const transactions = ((
       importSession.metadata as Record<string, unknown> | null
     )?.transactions ?? []) as CsvTransaction[];
@@ -166,9 +178,10 @@ export async function POST(req: NextRequest) {
                 );
                 return {
                   id: tx.id,
-                  date: tx.date,
+                  date: normalizeDateToISO(tx.date, dateFormat),
                   description: tx.description,
                   amount: tx.amount,
+                  balance: tx.balance,
                   // Client expects `llmCategory` + `confirmedCategory` fields
                   llmCategory: ann.matchedCategory,
                   confirmedCategory: ann.matchedCategory,
@@ -206,9 +219,10 @@ export async function POST(req: NextRequest) {
                 );
                 return {
                   id: tx.id,
-                  date: tx.date,
+                  date: normalizeDateToISO(tx.date, dateFormat),
                   description: tx.description,
                   amount: tx.amount,
+                  balance: tx.balance,
                   // Client expects `llmCategory` + `confirmedCategory` fields
                   llmCategory: ann.matchedCategory,
                   confirmedCategory: ann.matchedCategory,
@@ -253,6 +267,7 @@ export async function POST(req: NextRequest) {
               const result = await classifyTransactions(
                 monthTransactions,
                 categories,
+                dateFormat,
               );
               totalLlmTokens += result.usage.totalTokens;
               totalPromptTokens += result.usage.promptTokens;
@@ -305,6 +320,7 @@ export async function POST(req: NextRequest) {
 
               const result = await classifyCreditTransactions(
                 monthTransactions,
+                dateFormat,
                 incomeSources.map((s) => s.name),
               );
               totalLlmTokens += result.usage.totalTokens;

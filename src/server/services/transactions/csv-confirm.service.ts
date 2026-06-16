@@ -4,6 +4,7 @@ import {
   TransactionTypeEnum,
 } from '@prisma/client';
 
+import { robustParseDate } from '@/lib/date-utils';
 import { prisma } from '@/server/db/client';
 import type {
   ClassifiedCreditTransaction,
@@ -110,7 +111,7 @@ async function createTransactionRecord(params: {
 }): Promise<string> {
   const tx = await prisma.transaction.create({
     data: {
-      date: new Date(params.date),
+      date: robustParseDate(params.date, 'DD/MM/YYYY'),
       description: params.description,
       amount: params.amount,
       type: params.type,
@@ -193,6 +194,7 @@ export async function confirmDebitTransactions(
         continue;
       }
 
+      // Review, could be a Tech Debt
       const ledger = await getOrCreateExpenseLedger(calendarYear.id, userId);
 
       for (const tx of transactions as ClassifiedTransactionV2[]) {
@@ -206,6 +208,15 @@ export async function confirmDebitTransactions(
           });
           const isForced = forceCreateIds?.includes(tx.id);
           if (isDuplicate(dedupKey, dedupSet) && !isForced) {
+            console.error('[csv-confirm] dedup check', {
+              csvId: tx.id,
+              dedupKey,
+              txDate: tx.date,
+              txAmount: tx.amount,
+              txBalance: tx.balance,
+              isForced,
+              dedupSetSize: dedupSet.size,
+            });
             result.duplicatesSkipped += 1;
             continue;
           }
