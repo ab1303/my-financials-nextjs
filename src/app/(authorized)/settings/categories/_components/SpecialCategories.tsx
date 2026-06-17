@@ -1,7 +1,7 @@
 'use client';
 
-import { trpc } from '@/server/trpc/client';
 import { Badge } from '@/components/ui/badge';
+import { trpc } from '@/server/trpc/client';
 
 export default function SpecialCategories() {
   const { data: categories = [] } = trpc.specialCategory.getAll.useQuery();

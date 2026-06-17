@@ -135,12 +135,12 @@ export function matchCategories(
  * Replaces the static SEMANTIC_MAPPINGS with dynamic embedding-based matching
  */
 
+import type { AITokenUsage } from './_types';
 import {
   ensureCategoryEmbeddings,
   findBestCategoryMatch,
   findBestCategoryMatchWithRetry,
 } from './embedding.service';
-import type { AITokenUsage } from './_types';
 
 /**
  * Enhanced matching with AI embeddings.

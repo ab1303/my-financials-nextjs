@@ -5,7 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 const authMock = vi.hoisted(() => vi.fn());
 
-const prismaFindManyMock = vi.hoisted(() => vi.fn());
+const prismaFindManyMock = vi.hoisted(() => vi.fn());
+const prismaFindUniqueMock = vi.hoisted(() => vi.fn());
 
 
 
@@ -18,18 +19,24 @@ vi.mock('@/server/auth', () => ({
 
 
 vi.mock('@/server/db/client', () => ({
-
+
   prisma: {
-
-    bankAccount: {
-
+
+    financialAccount: {
+
       findMany: (...args: unknown[]) => prismaFindManyMock(...args),
-
+
     },
-
-  },
-
-}));
+
+    expenseCategory: {
+
+      findUnique: (...args: unknown[]) => prismaFindUniqueMock(...args),
+
+    },
+
+  },
+
+}));
 
 
 
@@ -46,20 +53,22 @@ describe('TransactionsPage', () => {
   it('parses initial filter params from searchParams', async () => {
 
     authMock.mockResolvedValue({ user: { id: 'user-1' } });
-
+
     prismaFindManyMock.mockResolvedValue([
-
+
       {
-
+
         id: 'acc-1',
-
+
         name: 'Everyday Account',
-
-        bank: { name: 'CommBank' },
-
+
+        institution: { name: 'CommBank' },
+
       },
-
+
     ]);
+
+    prismaFindUniqueMock.mockResolvedValue({ name: 'Groceries' });
 
 
 

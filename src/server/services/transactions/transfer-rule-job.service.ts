@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import { TransactionTypeEnum } from '@prisma/client';
+
 import { TRANSFER_CATEGORY } from './constants';
 import { linkTransferPair, scoreCandidate } from './transfer.service';
 
@@ -40,7 +41,7 @@ export async function runTransferMatchRules(params: {
       transferLinkedTransactionId: null,
       transferCounterpart: { is: null },
     },
-    include: { financialAccount: { include: { bank: true } } },
+    include: { financialAccount: { include: { institution: true } } },
   });
 
   let totalAutoLinked = 0;
@@ -56,16 +57,25 @@ export async function runTransferMatchRules(params: {
     const debits = newTransactions.filter(
       (tx: any) =>
         tx.type === TransactionTypeEnum.DEBIT &&
-        (!rule.debitBankAccountId || tx.bankAccountId === rule.debitBankAccountId) &&
-        (rule.amountExact ? Math.abs(Number(tx.amount) - Number(rule.amountExact)) < 0.01 : true),
+        (!rule.debitBankAccountId ||
+          tx.bankAccountId === rule.debitBankAccountId) &&
+        (rule.amountExact
+          ? Math.abs(Number(tx.amount) - Number(rule.amountExact)) < 0.01
+          : true),
     );
 
     for (const debit of debits) {
       const freshDebit = await (prisma.transaction as any).findUnique({
         where: { id: debit.id },
-        select: { transferLinkedTransactionId: true, transferCounterpart: true },
+        select: {
+          transferLinkedTransactionId: true,
+          transferCounterpart: true,
+        },
       });
-      if (freshDebit?.transferLinkedTransactionId || freshDebit?.transferCounterpart) {
+      if (
+        freshDebit?.transferLinkedTransactionId ||
+        freshDebit?.transferCounterpart
+      ) {
         ruleSkipped++;
         continue;
       }
@@ -82,12 +92,14 @@ export async function runTransferMatchRules(params: {
           category: TRANSFER_CATEGORY,
           transferLinkedTransactionId: null,
           transferCounterpart: { is: null },
-          ...(rule.creditBankAccountId && { bankAccountId: rule.creditBankAccountId }),
+          ...(rule.creditBankAccountId && {
+            bankAccountId: rule.creditBankAccountId,
+          }),
           ...(rule.amountExact && { amount: rule.amountExact }),
           bankAccountId: { not: debit.bankAccountId },
           date: { gte: dateFrom, lte: dateTo },
         },
-        include: { financialAccount: { include: { bank: true } } },
+        include: { financialAccount: { include: { institution: true } } },
       });
 
       let bestCredit: any = null;
@@ -97,22 +109,27 @@ export async function runTransferMatchRules(params: {
         const { score } = scoreCandidate({
           sourceAmount: debit.amount,
           sourceDate: debit.date,
-          sourceBankId: debit.financialAccount?.bankId ?? null,
+          sourceBankId: debit.financialAccount?.institutionId ?? null,
           sourceDescription: debit.description,
           candidate: {
             amount: credit.amount,
             date: credit.date,
             description: credit.description,
             bankAccountId: credit.bankAccountId!,
-            bankId: credit.financialAccount?.bankId ?? null,
+            bankId: credit.financialAccount?.institutionId ?? null,
           },
         });
 
-        const debitWords = new Set(debit.description.toLowerCase().split(/\W+/).filter(Boolean));
+        const debitWords = new Set(
+          debit.description.toLowerCase().split(/\W+/).filter(Boolean),
+        );
         const keywordIntersection = rule.debitKeywords.filter((kw: string) =>
           debitWords.has(kw),
         ).length;
-        const boostedScore = Math.min(100, score + Math.min(10, keywordIntersection * 2));
+        const boostedScore = Math.min(
+          100,
+          score + Math.min(10, keywordIntersection * 2),
+        );
 
         if (boostedScore > bestScore) {
           bestScore = boostedScore;

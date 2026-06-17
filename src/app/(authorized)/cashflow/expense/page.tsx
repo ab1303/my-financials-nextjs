@@ -1,15 +1,24 @@
-import { Suspense } from 'react';
+import type { CalendarEnumType } from '@prisma/client';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
+import { TransferExclusionSummary } from '@/components/TransferExclusionSummary';
+import { UnresolvedTransfersBanner } from '@/components/UnresolvedTransfersBanner';
+import { auth } from '@/server/auth';
+import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalExpensesHandler } from '@/server/controllers/expense.controller';
+import {
+  ORPHAN_RESOLUTION_DAYS,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
-import { auth } from '@/server/auth';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
+import type { OptionType } from '@/types';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
-import ExpenseForm from './form';
 import ExpenseTableServer from './ExpenseTableServer';
+import ExpenseForm from './form';
 
 export const metadata: Metadata = {
   title: 'Expense Tracking | My Financials',
@@ -46,27 +55,85 @@ export default async function ExpensePage({
     );
   }
 
-  const fromYearParam = +getSelectedParam(params?.fromYear);
-  const toYearParam = +getSelectedParam(params?.toYear);
+  const yearIdParam = getSelectedParam(params?.year);
+  const bankIdParam = getSelectedParam(params?.bank);
   const fiscalYearType = await getUserFiscalYearType(prisma, session.user.id);
-  const calendarYears = await getCalendarYearsHandler([fiscalYearType ?? 'FISCAL']);
+
+  const [calendarYears, bankAccounts] = await Promise.all([
+    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
+    listBankAccountsHandler(session.user.id),
+  ]);
 
   const expenseYearData = calendarYears;
 
   const selectedCalendarYear =
-    expenseYearData.find(
-      (yd) => yd.fromYear === fromYearParam && yd.toYear === toYearParam,
-    ) ||
-    getDefaultCalendarYear(expenseYearData, fiscalYearType) ||
-    expenseYearData[0];
+    expenseYearData.find((yd) => yd.id === yearIdParam) ??
+    getDefaultCalendarYear(expenseYearData, fiscalYearType);
 
   const selectedCalendarYearId = selectedCalendarYear
     ? selectedCalendarYear.id
     : '';
 
+  // Derive selected bank account (user-scoped FinancialAccount, not global banks)
+  const bankOptions: OptionType[] = bankAccounts.map((a) => ({
+    id: a.id,
+    label: `${a.name} (${a.institution.name})`,
+  }));
+  const selectedBankId =
+    bankOptions.find((b) => b.id === bankIdParam)?.id ?? '';
+
   const totalExpense = selectedCalendarYearId
-    ? await totalExpensesHandler(selectedCalendarYearId, session.user.id)
+    ? await totalExpensesHandler(
+        selectedCalendarYearId,
+        session.user.id,
+        selectedBankId || undefined,
+      )
     : 0;
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - ORPHAN_RESOLUTION_DAYS);
+
+  const [orphanedCount, transferSummary] = await Promise.all([
+    prisma.transaction.count({
+      where: {
+        userId: session.user.id,
+        type: 'DEBIT',
+        category: TRANSFER_CATEGORY,
+        transferLinkedTransactionId: null,
+        date: { lt: cutoffDate },
+      },
+    }),
+    (async () => {
+      const where = {
+        userId: session.user.id,
+        category: TRANSFER_CATEGORY,
+        ...(selectedCalendarYear
+          ? {
+              date: {
+                gte: new Date(
+                  selectedCalendarYear.fromYear,
+                  selectedCalendarYear.fromMonth - 1,
+                  1,
+                ),
+                lte: new Date(
+                  selectedCalendarYear.toYear,
+                  selectedCalendarYear.toMonth,
+                  0,
+                  23,
+                  59,
+                  59,
+                ),
+              },
+            }
+          : {}),
+      };
+      const [count, agg] = await Promise.all([
+        prisma.transaction.count({ where }),
+        prisma.transaction.aggregate({ where, _sum: { amount: true } }),
+      ]);
+      return { count, totalAmount: Number(agg._sum.amount ?? 0) };
+    })(),
+  ]);
 
   return (
     <main className='px-4 sm:px-6 lg:px-8 py-6'>
@@ -81,10 +148,26 @@ export default async function ExpensePage({
       <div className='rounded-xl border border-border bg-card shadow p-6'>
         {/* Fiscal Year Selection Form */}
         <div className='mb-6 pt-6'>
-          <ExpenseForm
-            expenseYearData={expenseYearData}
-            selectedCalendarYear={selectedCalendarYear}
+          <UnresolvedTransfersBanner
+            count={orphanedCount}
+            href='/cashflow/transactions?tab=transfers'
           />
+          <TransferExclusionSummary
+            count={transferSummary.count}
+            totalAmount={transferSummary.totalAmount}
+            href='/cashflow/transactions?tab=transfers'
+          />
+          <div className='mt-6'>
+            <ExpenseForm
+              expenseYearData={expenseYearData}
+              yearIdParam={selectedCalendarYearId}
+              bankOptions={bankOptions}
+              selectedBankId={selectedBankId}
+              defaultCalendarType={
+                (fiscalYearType ?? 'FISCAL') as CalendarEnumType
+              }
+            />
+          </div>
         </div>
 
         {/* Total Expense Display */}
@@ -127,6 +210,7 @@ export default async function ExpensePage({
               calendarLabel={selectedCalendarYear.description}
               fromMonth={selectedCalendarYear.fromMonth}
               fromYear={selectedCalendarYear.fromYear}
+              bankAccountId={selectedBankId || undefined}
             />
           </Suspense>
         ) : (

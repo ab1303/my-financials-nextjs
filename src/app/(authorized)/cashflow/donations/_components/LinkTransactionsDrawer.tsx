@@ -1,17 +1,18 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { BeneficiaryEnumType } from '@prisma/client';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { BeneficiaryEnumType } from '@prisma/client';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
 import CreatableSelect from 'react-select/creatable';
-import { getSelectStyles } from '@/lib/select-styles';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { getSelectStyles } from '@/lib/select-styles';
 import { trpc } from '@/server/trpc/client';
+
 import { addRow } from '../actions';
 import CreateBeneficiaryModal from './CreateBeneficiaryModal';
 
@@ -22,7 +23,8 @@ type LinkTransactionsDrawerProps = {
   onClose: () => void;
   dateFrom: string;
   dateTo: string;
-  calendarYearId: string;
+  calendarYearId?: string;
+  selectedTransactionId?: string;
 };
 
 const linkFormSchema = z.object({
@@ -57,13 +59,15 @@ export default function LinkTransactionsDrawer({
   onClose,
   dateFrom,
   dateTo,
-  calendarYearId,
+  calendarYearId: initialCalendarYearId,
+  selectedTransactionId: initialSelectedTransactionId,
 }: LinkTransactionsDrawerProps) {
   const [transactions, setTransactions] = useState<Array<TransactionRow>>([]);
-  const [selectedTransactionId, setSelectedTransactionId] = useState('');
+  const [selectedTransactionId, setSelectedTransactionId] = useState(initialSelectedTransactionId ?? '');
   const [isSaving, setIsSaving] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [pendingBeneficiaryName, setPendingBeneficiaryName] = useState('');
+  const [effectiveCalendarYearId, setEffectiveCalendarYearId] = useState(initialCalendarYearId ?? '');
 
   const unlinkedTransactionsQuery = trpc.transactionLedger.getUnlinkedDonationTransactions.useQuery(
     { dateFrom, dateTo },
@@ -75,6 +79,10 @@ export default function LinkTransactionsDrawer({
   const businessesQuery = trpc.business.getBusinessesByType.useQuery(
     { type: 'PHILANTHROPY' },
     { enabled: isOpen },
+  );
+  const calendarYearsQuery = trpc.calendarYear.getAll.useQuery(
+    { types: ['FISCAL', 'ANNUAL'] },
+    { enabled: isOpen && !initialCalendarYearId },
   );
 
   const {
@@ -88,7 +96,7 @@ export default function LinkTransactionsDrawer({
     resolver: zodResolver(linkFormSchema),
     mode: 'onChange',
     defaultValues: {
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: '',
     },
   });
@@ -100,10 +108,23 @@ export default function LinkTransactionsDrawer({
   );
 
   useEffect(() => {
+    if (initialCalendarYearId) {
+      setEffectiveCalendarYearId(initialCalendarYearId);
+    } else if (calendarYearsQuery.data && calendarYearsQuery.data.length > 0) {
+      // Use the first calendar year (most recent) as default if none provided
+      setEffectiveCalendarYearId(calendarYearsQuery.data[0]?.id ?? '');
+    }
+  }, [initialCalendarYearId, calendarYearsQuery.data]);
+
+  useEffect(() => {
     if (unlinkedTransactionsQuery.data) {
       setTransactions(unlinkedTransactionsQuery.data);
+      // If an initial transaction ID was provided and it exists in the list, don't override it
+      if (!initialSelectedTransactionId && unlinkedTransactionsQuery.data.length > 0) {
+        setSelectedTransactionId(unlinkedTransactionsQuery.data[0]?.id ?? '');
+      }
     }
-  }, [unlinkedTransactionsQuery.data]);
+  }, [unlinkedTransactionsQuery.data, initialSelectedTransactionId]);
 
   useEffect(() => {
     setValue('beneficiaryId', '');
@@ -130,7 +151,7 @@ export default function LinkTransactionsDrawer({
   const handleSelectTransaction = (transactionId: string) => {
     setSelectedTransactionId(transactionId);
     reset({
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: '',
     });
   };
@@ -139,7 +160,7 @@ export default function LinkTransactionsDrawer({
     setTransactions([]);
     setSelectedTransactionId('');
     reset({
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: '',
     });
     onClose();
@@ -151,15 +172,19 @@ export default function LinkTransactionsDrawer({
       return;
     }
 
+    if (!effectiveCalendarYearId) {
+      toast.error('Unable to determine fiscal year for this transaction.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await addRow({
         datePaid: new Date(selectedTransaction.date),
         amount: selectedTransaction.amount,
-        taxCategory: selectedTransaction.category,
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
-        calendarYearId,
+        calendarYearId: effectiveCalendarYearId,
         transactionId: selectedTransaction.id,
         donationPurpose: 'VOLUNTARY',
       });
@@ -178,7 +203,7 @@ export default function LinkTransactionsDrawer({
         return remaining;
       });
       reset({
-        beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+        beneficiaryType: BeneficiaryEnumType.BUSINESS,
         beneficiaryId: '',
       });
     } catch (error) {
@@ -215,8 +240,8 @@ export default function LinkTransactionsDrawer({
               </button>
             </div>
 
-            <div className="grid flex-1 grid-cols-5 gap-0 overflow-hidden">
-          <aside className="col-span-2 border-r border-gray-200 p-4 dark:border-gray-800">
+           <div className="grid min-h-0 flex-1 grid-cols-5 gap-0 overflow-hidden">
+             <aside className="col-span-2 min-h-0 border-r border-gray-200 p-4 dark:border-gray-800">
             <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
               Unlinked transactions
             </h3>
@@ -258,8 +283,8 @@ export default function LinkTransactionsDrawer({
             )}
           </aside>
 
-          <section className="col-span-3 flex flex-col p-4">
-            <div className="flex flex-1 flex-col gap-4">
+          <section className="col-span-3 flex min-h-0 flex-col overflow-hidden">
+            <div className="flex min-h-full flex-col gap-4">
               <div className="rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
                 {selectedTransaction ? (
                   <>
@@ -313,8 +338,8 @@ export default function LinkTransactionsDrawer({
                         inputId="beneficiaryType"
                         isDisabled={!selectedTransaction}
                         options={[
-                          { value: BeneficiaryEnumType.INDIVIDUAL, label: 'Individual' },
                           { value: BeneficiaryEnumType.BUSINESS, label: 'Business' },
+                          { value: BeneficiaryEnumType.INDIVIDUAL, label: 'Individual' },
                         ]}
                         value={{
                           value: field.value,
@@ -369,22 +394,24 @@ export default function LinkTransactionsDrawer({
                 </div>
               </div>
 
-              <div className="mt-auto flex items-center justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-800">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={onSubmit}
-                  disabled={!selectedTransaction || !isValid || isSaving}
-                  className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isSaving ? 'Saving...' : 'Save & Next'}
-                </button>
+              <div className="shrink-0 border-t border-gray-200 bg-white/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onSubmit}
+                    disabled={!selectedTransaction || !isValid || isSaving}
+                    className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSaving ? 'Linking...' : 'Link donation'}
+                  </button>
+                </div>
               </div>
             </div>
           </section>

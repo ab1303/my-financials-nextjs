@@ -1,13 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { ImportStatusEnum, ImportTypeEnum } from '@prisma/client';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
+
+import {
+  calculateEmbeddingCost,
+  EMBEDDING_MODEL_NAME,
+} from '@/constants/ai-pricing';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { matchCategoryWithEmbedding } from '@/server/services/ai-import/category-matcher.service';
-import {
-  EMBEDDING_MODEL_NAME,
-  calculateEmbeddingCost,
-} from '@/constants/ai-pricing';
 
 const AIConfirmRequestSchema = z.object({
   sessionId: z.string().cuid(),
@@ -93,7 +95,7 @@ export async function POST(req: NextRequest) {
 
   try {
     for (const image of images) {
-      let imageEmbeddingUsage = {
+      const imageEmbeddingUsage = {
         promptTokens: 0,
         completionTokens: 0,
         totalTokens: 0,

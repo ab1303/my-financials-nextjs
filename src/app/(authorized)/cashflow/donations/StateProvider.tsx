@@ -1,11 +1,11 @@
 'use client';
 
-import { createContext, useContext, useEffect, useReducer } from 'react';
 import type { Dispatch } from 'react';
+import { createContext, useContext, useEffect, useReducer } from 'react';
 
-import { donationPaymentReducer } from './reducer';
-import type { Actions, DonationPaymentsState } from './reducer';
 import type { DonationPaymentType } from './_types';
+import type { Actions, DonationPaymentsState } from './reducer';
+import { donationPaymentReducer } from './reducer';
 
 const DonationPaymentStateContext = createContext<{
   state: DonationPaymentsState;

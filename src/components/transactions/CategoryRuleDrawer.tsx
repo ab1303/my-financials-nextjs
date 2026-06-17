@@ -1,12 +1,13 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { trpc } from '@/server/trpc/client';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+import { trpc } from '@/server/trpc/client';
 
 const schema = z.object({
   name: z.string().min(1, 'Name required'),

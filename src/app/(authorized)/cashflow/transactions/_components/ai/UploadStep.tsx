@@ -1,12 +1,14 @@
 'use client';
 
+import { Shield,UploadCloud, X } from 'lucide-react';
+import Image from 'next/image';
 import { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, X, Shield } from 'lucide-react';
-import Image from 'next/image';
+
 import { sanitizeImages } from '@/utils/image-sanitization';
-import ImageRedactor from './ImageRedactor';
+
 import type { UploadedFile } from './_types';
+import ImageRedactor from './ImageRedactor';
 
 interface UploadStepProps {
   files: UploadedFile[];

@@ -1,31 +1,39 @@
 'use client';
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
-import AsyncSelect from 'react-select/async';
-import Select from 'react-select';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import type { SingleValue } from 'react-select';
-import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
+import {
+  AsyncSelectWrapper as AsyncSelect,
+  SelectWrapper as Select,
+} from '@/components/ui/Select';
+
+import { getCompactSelectStyles } from '@/lib/select-styles';
+import {
+  REIMBURSEMENT_CATEGORY,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
 import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
-import { getCompactSelectStyles } from '@/lib/select-styles';
-import TransactionSourceIndicator from './TransactionSourceIndicator';
-import ReimbursementSubRow from './ReimbursementSubRow';
-import VoidTransactionButton from './VoidTransactionButton';
-import RestoreTransactionButton from './RestoreTransactionButton';
-import { UnlinkTransferButton } from './UnlinkTransferButton';
-import CategoryRulePrompt from './CategoryRulePrompt';
+
 import CategoryRuleDrawer from './CategoryRuleDrawer';
+import { useCategoryEdit } from './hooks/useCategoryEdit';
+import ReimbursementSubRow from './ReimbursementSubRow';
+import RestoreTransactionButton from './RestoreTransactionButton';
+import TransactionSourceIndicator from './TransactionSourceIndicator';
+import { UnlinkTransferButton } from './UnlinkTransferButton';
+import VoidTransactionButton from './VoidTransactionButton';
 
 interface TransactionRowProps {
   transaction: LedgerTransactionRow;
   expenseCategories: Array<{ id: string; name: string }>;
-  incomeSourceLabels: string[];
+  incomeSourceLabels: Array<{ id: string; name: string }>;
   onCategoryChange: (
     id: string,
     newCategory: string,
     offsetCategory?: string,
     offsetTransactionId?: string | null,
+    applyToMatching?: boolean,
   ) => void;
   isSaving?: boolean;
   colCount?: number;
@@ -33,10 +41,19 @@ interface TransactionRowProps {
   onRestored?: () => void;
   onLinkTransfer?: () => void;
   onUnlinked?: () => void;
+  onClassifyAsDonation?: (transactionId: string) => void;
+  onClassifyAsZakat?: (transactionId: string) => void;
+  /** Pause the delayed refetch while the rule drawer is open */
+  onPausePendingRefresh?: () => void;
+  /** Flush the delayed refetch after the rule prompt is resolved */
+  onResolvePendingRefresh?: () => void;
 }
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+  }).format(value);
 }
 
 type CategoryOption = {
@@ -48,6 +65,7 @@ type LinkOption = {
   label: string;
   value: string;
   meta: string;
+  category: string;
 };
 
 export default function TransactionRow({
@@ -61,33 +79,54 @@ export default function TransactionRow({
   onRestored,
   onLinkTransfer,
   onUnlinked,
+  onClassifyAsDonation,
+  onClassifyAsZakat,
+  onPausePendingRefresh,
+  onResolvePendingRefresh,
 }: TransactionRowProps) {
   const statusClasses: Record<string, string> = {
-    CONFIRMED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+    CONFIRMED:
+      'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    PENDING:
+      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
     EXCLUDED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
     VOIDED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   };
 
   const [localCategory, setLocalCategory] = useState(transaction.category);
-  const [localOffsetCategory, setLocalOffsetCategory] = useState(transaction.offsetCategory ?? '');
+  const [localOffsetCategory, setLocalOffsetCategory] = useState(
+    transaction.offsetCategory ?? '',
+  );
   const [isExpanded, setIsExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [localOffsetTxId, setLocalOffsetTxId] = useState<string | null>(transaction.offsetTransactionId ?? null);
-  const [selectedLinkOption, setSelectedLinkOption] = useState<LinkOption | null>(null);
-  const [showRulePrompt, setShowRulePrompt] = useState(false);
-  const [showRuleDrawer, setShowRuleDrawer] = useState(false);
-  const [ruleCategory, setRuleCategory] = useState('');
-  const [similarCount, setSimilarCount] = useState(0);
+
+  const [localOffsetTxId, setLocalOffsetTxId] = useState<string | null>(
+    transaction.offsetTransactionId ?? null,
+  );
+  const [selectedLinkOption, setSelectedLinkOption] =
+    useState<LinkOption | null>(null);
   const categorySelectId = useId();
   const offsetCategorySelectId = useId();
   const linkSelectId = useId();
   const utils = trpc.useUtils();
-  const similarCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Use the extracted category edit hook
+  const {
+    localCategory: hookLocalCategory,
+    showRuleDrawer,
+    setShowRuleDrawer,
+    ruleCategory,
+    handleChange: hookHandleChange,
+    matchCount,
+  } = useCategoryEdit({
+    transaction,
+    onCategoryChange,
+  });
+
+  // Keep localCategory synced with hook value
   useEffect(() => {
-    setLocalCategory(transaction.category);
-  }, [transaction.category]);
+    setLocalCategory(hookLocalCategory);
+  }, [hookLocalCategory]);
 
   useEffect(() => {
     setLocalOffsetCategory(transaction.offsetCategory ?? '');
@@ -110,18 +149,23 @@ export default function TransactionRow({
             label: 'Linked expense',
             value: transaction.offsetTransactionId ?? '',
             meta: '',
+            category: transaction.offsetCategory ?? '',
           },
     );
   }, [transaction.offsetTransactionId]);
 
-  const amountClass = transaction.type === 'DEBIT' ? 'text-red-600' : 'text-green-600';
-  const options = transaction.type === 'DEBIT' ? expenseCategories : incomeSourceLabels;
+  const amountClass =
+    transaction.type === 'DEBIT' ? 'text-red-600' : 'text-green-600';
+  const options =
+    transaction.type === 'DEBIT' ? expenseCategories : incomeSourceLabels;
 
   const showReimbursementOption =
-    transaction.type === 'CREDIT' &&
-    (transaction.status === 'EXCLUDED' ||
-      transaction.category === REIMBURSEMENT_CATEGORY ||
-      localCategory === REIMBURSEMENT_CATEGORY);
+    transaction.category === REIMBURSEMENT_CATEGORY ||
+    localCategory === REIMBURSEMENT_CATEGORY ||
+    (transaction.type === 'CREDIT' &&
+      (transaction.status === 'CONFIRMED' ||
+        transaction.status === 'EXCLUDED')) ||
+    (transaction.type === 'DEBIT' && transaction.status === 'CONFIRMED');
 
   // Transfer is a special system category valid for any transaction;
   // show it when the row is currently Transfer, or when it's EXCLUDED (so the user can restore it).
@@ -132,11 +176,10 @@ export default function TransactionRow({
 
   const categoryOptions = useMemo<CategoryOption[]>(
     () => [
-      ...options.map((option) =>
-        typeof option === 'string'
-          ? { label: option, value: option }
-          : { label: option.name, value: option.name },
-      ),
+      ...options.map((option) => ({
+        label: option.name,
+        value: option.name,
+      })),
       ...(showReimbursementOption
         ? [{ label: REIMBURSEMENT_CATEGORY, value: REIMBURSEMENT_CATEGORY }]
         : []),
@@ -148,7 +191,11 @@ export default function TransactionRow({
   );
 
   const offsetCategoryOptions = useMemo<CategoryOption[]>(
-    () => expenseCategories.map((category) => ({ label: category.name, value: category.name })),
+    () =>
+      expenseCategories.map((category) => ({
+        label: category.name,
+        value: category.name,
+      })),
     [expenseCategories],
   );
 
@@ -156,77 +203,102 @@ export default function TransactionRow({
     categoryOptions.find((option) => option.value === localCategory) ?? null;
 
   const selectedOffsetCategory =
-    offsetCategoryOptions.find((option) => option.value === localOffsetCategory) ?? null;
+    offsetCategoryOptions.find(
+      (option) => option.value === localOffsetCategory,
+    ) ?? null;
   const compactSelectStyles = getCompactSelectStyles<CategoryOption>();
   const linkSelectStyles = getCompactSelectStyles<LinkOption>();
 
-  const totalReimbursed = transaction.reimbursements.reduce((sum, reimbursement) => sum + reimbursement.amount, 0);
+  const totalReimbursed = transaction.reimbursements.reduce(
+    (sum, reimbursement) => sum + reimbursement.amount,
+    0,
+  );
   const netAmount = transaction.amount - totalReimbursed;
   const hasReimbursements = transaction.reimbursements.length > 0;
 
   const loadLinkOptions = useCallback(
     async (inputValue: string): Promise<LinkOption[]> => {
-      // Default to last 120 days to show recent expenses; user can search further back if needed
-      const dateTo = new Date();
-      const dateFrom = new Date(dateTo);
-      dateFrom.setDate(dateFrom.getDate() - 120);
+      const trimmed = inputValue.trim();
 
-      const matches = await utils.transactionLedger.searchDebitTransactions.fetch({
-        search: inputValue.trim() || undefined,
-        limit: 50,
-        dateFrom: dateFrom.toISOString().slice(0, 10),
-        dateTo: dateTo.toISOString().slice(0, 10),
-      });
+      // For default options (no search term), limit to last 120 days to keep the list manageable.
+      // When the user types a search term, search all time so older expenses are discoverable.
+      let dateFrom: string | undefined;
+      let dateTo: string | undefined;
+      if (!trimmed) {
+        const to = new Date();
+        const from = new Date(to);
+        from.setDate(from.getDate() - 120);
+        dateFrom = from.toISOString().slice(0, 10);
+        dateTo = to.toISOString().slice(0, 10);
+      }
 
-      return matches.map((match) => ({
-        value: match.id,
-        label: match.description,
-        meta: `${match.date} · ${formatCurrency(match.amount)}`,
-      }));
+      try {
+        const matches =
+          await utils.transactionLedger.searchDebitTransactions.fetch({
+            search: trimmed || undefined,
+            // Request a larger page to help users find linkable expenses quickly.
+            limit: 100,
+            ...(dateFrom ? { dateFrom } : {}),
+            ...(dateTo ? { dateTo } : {}),
+          });
+
+        return matches.map((match) => ({
+          value: match.id,
+          // Keep description only in label; amount will be shown as a left badge to avoid truncation hiding it
+          label: `${match.date} - ${match.description}`,
+          category: match.category,
+          meta: formatCurrency(match.amount),
+        }));
+      } catch (error) {
+        console.error(
+          '[ReimbursementLinkage] Failed to load expense options:',
+          error,
+        );
+        return [];
+      }
     },
     [utils],
   );
 
   function handleChange(newCategory: string) {
-    setLocalCategory(newCategory);
-    setShowRulePrompt(false); // reset any previous prompt
+    // Keep the local offset category reset logic in the component
     if (newCategory !== REIMBURSEMENT_CATEGORY) {
       setLocalOffsetCategory('');
-      onCategoryChange(transaction.id, newCategory);
-      // Only suggest a rule for real category changes (not Transfer/Reimbursement),
-      // and only when the category actually differs from the original.
-      if (newCategory !== TRANSFER_CATEGORY && newCategory !== transaction.category) {
-        setRuleCategory(newCategory);
-        // Debounce: cancel any in-flight timer before starting a new one.
-        if (similarCheckTimerRef.current) clearTimeout(similarCheckTimerRef.current);
-        similarCheckTimerRef.current = setTimeout(() => {
-          utils.categoryRule.findSimilar
-            .fetch({ description: transaction.description, excludeTransactionId: transaction.id })
-            .then((result) => {
-              if (result.count >= 2) {
-                setSimilarCount(result.count);
-                setShowRulePrompt(true);
-              }
-            })
-            .catch(() => {
-              // silently ignore — rule prompt is non-critical
-            });
-        }, 400);
-      }
     }
+    // Delegate to hook for all category change logic
+    hookHandleChange(newCategory);
   }
 
   function handleOffsetChange(newOffsetCategory: string) {
     setLocalOffsetCategory(newOffsetCategory);
-    onCategoryChange(transaction.id, REIMBURSEMENT_CATEGORY, newOffsetCategory, localOffsetTxId);
+    onCategoryChange(
+      transaction.id,
+      REIMBURSEMENT_CATEGORY,
+      newOffsetCategory,
+      localOffsetTxId,
+      false, // never auto-apply Reimbursement changes
+    );
   }
 
   function handleLinkTransaction(linkedOption: LinkOption | null) {
     const linkedId = linkedOption?.value ?? null;
+    // Auto-derive offsetCategory from the linked DEBIT's category if not already chosen.
+    const derivedOffsetCategory = linkedOption?.category ?? '';
+    const effectiveOffsetCategory =
+      localOffsetCategory || derivedOffsetCategory;
     setSelectedLinkOption(linkedOption);
     setLocalOffsetTxId(linkedId);
+    if (!localOffsetCategory && derivedOffsetCategory) {
+      setLocalOffsetCategory(derivedOffsetCategory);
+    }
     setPickerOpen(false);
-    onCategoryChange(transaction.id, REIMBURSEMENT_CATEGORY, localOffsetCategory || undefined, linkedId);
+    onCategoryChange(
+      transaction.id,
+      linkedId ? REIMBURSEMENT_CATEGORY : '',
+      linkedId ? effectiveOffsetCategory || undefined : undefined,
+      linkedId,
+      false, // never auto-apply Reimbursement changes
+    );
   }
 
   function handleResetLinkPicker() {
@@ -234,14 +306,35 @@ export default function TransactionRow({
   }
 
   const formatLinkOptionLabel = (option: LinkOption) => (
-    <div className="flex w-full items-center justify-between gap-3">
-      <span className="truncate">{option.label}</span>
-      <span className="shrink-0 tabular-nums text-xs text-gray-500 dark:text-gray-400">{option.meta}</span>
+    <div className='flex w-full items-center justify-between gap-3'>
+      <div className='min-w-0 flex items-center gap-2'>
+        <span className='shrink-0 rounded px-2 py-0.5 text-xs font-medium tabular-nums text-emerald-600 dark:text-emerald-300'>
+          {option.meta}
+        </span>
+        <span className='truncate text-sm'>{option.label}</span>
+      </div>
+      <span className='shrink-0 text-sm text-gray-500 dark:text-gray-400'>
+        {option.category}
+      </span>
     </div>
   );
 
   function extractPattern(description: string): string {
-    const STOP_WORDS = new Set(['to', 'from', 'the', 'a', 'an', 'and', 'or', 'of', 'in', 'at', 'on', 'for', 'by']);
+    const STOP_WORDS = new Set([
+      'to',
+      'from',
+      'the',
+      'a',
+      'an',
+      'and',
+      'or',
+      'of',
+      'in',
+      'at',
+      'on',
+      'for',
+      'by',
+    ]);
     return description
       .toLowerCase()
       .split(/\W+/)
@@ -251,36 +344,66 @@ export default function TransactionRow({
       .join(' ');
   }
 
+  // Explicitly handle the new 3-button actions
+  const handleApplyBulk = () => {
+    onCategoryChange(
+      transaction.id,
+      localCategory,
+      localOffsetCategory,
+      localOffsetTxId,
+      true, // applyToMatching = true
+    );
+  };
+
+  const handlePreviewBulk = () => {
+    // Future scoped: acts as Apply for now
+    handleApplyBulk();
+  };
+
+  const showSuggestionUI = matchCount >= 2;
+
   return (
     <>
-      <tr className="border-b border-gray-200 dark:border-gray-700">
-        <td className="overflow-hidden px-1 py-3 text-center">
+      <tr className='border-b border-gray-200 dark:border-gray-700'>
+        <td className='overflow-hidden px-1 py-3 text-center'>
           {hasReimbursements && (
             <button
-              type="button"
-              aria-label={isExpanded ? 'Collapse reimbursements' : 'Expand reimbursements'}
+              type='button'
+              aria-label={
+                isExpanded ? 'Collapse reimbursements' : 'Expand reimbursements'
+              }
               onClick={() => setIsExpanded((v) => !v)}
-              className="text-gray-400 transition-colors hover:text-teal-500"
+              className='text-gray-400 transition-colors hover:text-teal-500'
             >
               {isExpanded ? '▾' : '▸'}
             </button>
           )}
         </td>
-        <td className="overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.date.slice(0, 10)}</td>
-        <td className="overflow-hidden px-4 py-3 text-sm text-gray-900 dark:text-white">
-          <span className="block truncate" title={transaction.description}>
+        <td className='overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300'>
+          {transaction.date.slice(0, 10)}
+        </td>
+        <td className='overflow-hidden px-4 py-3 text-sm text-gray-900 dark:text-white'>
+          <span className='block truncate' title={transaction.description}>
             {transaction.description}
           </span>
         </td>
-        <td className={`overflow-hidden px-4 py-3 text-sm font-medium tabular-nums ${amountClass}`}>
-          <div className="flex flex-col">
+        <td
+          className={`overflow-hidden px-4 py-3 text-sm font-medium tabular-nums ${amountClass}`}
+        >
+          <div className='flex flex-col'>
             <span>{formatCurrency(transaction.amount)}</span>
-            {hasReimbursements && <span className="text-xs text-teal-600 dark:text-teal-400">net {formatCurrency(netAmount)}</span>}
+            {hasReimbursements && (
+              <span className='text-xs text-teal-600 dark:text-teal-400'>
+                net {formatCurrency(netAmount)}
+              </span>
+            )}
           </div>
         </td>
-        <td className="overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{transaction.type}</td>
-        <td className="overflow-hidden px-4 py-3">
-          <div className="flex flex-col gap-1">
+        <td className='overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300'>
+          {transaction.type}
+        </td>
+        <td className='overflow-hidden px-4 py-3'>
+          <div className='flex flex-col gap-1'>
             <Select
               instanceId={categorySelectId}
               inputId={categorySelectId}
@@ -289,160 +412,242 @@ export default function TransactionRow({
               isClearable={false}
               value={selectedCategory}
               options={categoryOptions}
-              onChange={(option: SingleValue<CategoryOption>) => handleChange(option?.value ?? '')}
+              onChange={(option) =>
+                handleChange((option as CategoryOption)?.value ?? '')
+              }
               styles={{
                 ...compactSelectStyles,
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               }}
-              className="w-full"
-              menuPortalTarget={document.body}
-              menuPosition="fixed"
+              className='w-full'
+              usePortal
             />
 
             {localCategory === REIMBURSEMENT_CATEGORY && (
               <>
-                <Select
-                  instanceId={offsetCategorySelectId}
-                  inputId={offsetCategorySelectId}
-                  aria-label={`Offsets expense category for ${transaction.description}`}
-                  isDisabled={isSaving}
-                  isClearable={false}
-                  placeholder="Offsets category…"
-                  value={selectedOffsetCategory}
-                  options={offsetCategoryOptions}
-                  onChange={(option: SingleValue<CategoryOption>) => handleOffsetChange(option?.value ?? '')}
-                  styles={{
-                    ...compactSelectStyles,
-                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  }}
-                  className="w-full"
-                  menuPortalTarget={document.body}
-                  menuPosition="fixed"
-                />
-
-                <div className="mt-1">
-                  {localOffsetTxId ? (
-                    <div className="flex items-center gap-1 rounded border border-teal-300 bg-teal-50 px-2 py-1 text-xs dark:border-teal-700 dark:bg-teal-950/30">
-                      <span className="text-teal-500">🔗</span>
-                      <span className="truncate text-teal-700 dark:text-teal-300">
-                        {selectedLinkOption?.label ?? 'Linked expense'}
-                      </span>
-                      <button
-                        type="button"
-                        aria-label="Unlink expense"
-                        onClick={() => handleLinkTransaction(null)}
-                        className="ml-auto text-gray-400 hover:text-red-500"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : !pickerOpen ? (
-                    <button
-                      type="button"
-                      onClick={() => setPickerOpen(true)}
-                      className="text-xs text-teal-600 hover:underline dark:text-teal-400"
-                    >
-                      ＋ Link to original expense
-                    </button>
-                  ) : (
-                    <div className="flex flex-col gap-1">
-                      <AsyncSelect<LinkOption, false>
-                        instanceId={linkSelectId}
-                        inputId={linkSelectId}
-                        aria-label={`Link original expense for ${transaction.description}`}
-                        autoFocus
-                        cacheOptions
-                        defaultOptions
-                        isClearable
-                        isDisabled={isSaving}
-                        menuIsOpen
-                        menuPortalTarget={document.body}
-                        menuPosition="fixed"
-                        placeholder="Search expenses…"
-                        loadOptions={loadLinkOptions}
-                        value={selectedLinkOption}
-                        getOptionValue={(option) => option.value}
-                        formatOptionLabel={formatLinkOptionLabel}
-                        onChange={(option: SingleValue<LinkOption>) => handleLinkTransaction(option ?? null)}
-                        styles={{
-                          ...linkSelectStyles,
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                        }}
-                        className="w-full min-w-[280px]"
-                        noOptionsMessage={({ inputValue }) =>
-                          inputValue.trim() ? 'No matching expenses' : 'Type to search expenses'
-                        }
-                      />
-                      <button
-                        type="button"
-                        onClick={handleResetLinkPicker}
-                        className="mt-1 text-xs text-gray-400 hover:text-gray-600"
-                      >
-                        Reset
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {transaction.type === 'CREDIT' ? (
+                  <>
+                    {localOffsetTxId ? (
+                      /* LINKED STATE: single compound chip — link + derived category as one unit */
+                      <div className='mt-1 flex items-center gap-1.5 overflow-hidden rounded-md border border-teal-300 bg-teal-50 px-2 py-1.5 text-xs dark:border-teal-700 dark:bg-teal-950/30'>
+                        <span
+                          className='shrink-0 text-teal-500'
+                          aria-hidden='true'
+                        >
+                          🔗
+                        </span>
+                        <span className='min-w-0 flex-1 truncate text-teal-700 dark:text-teal-300'>
+                          {selectedLinkOption?.label ?? 'Linked expense'}
+                        </span>
+                        {localOffsetCategory && (
+                          <span className='shrink-0 rounded bg-teal-100 px-1.5 py-0.5 font-medium text-teal-600 dark:bg-teal-900/60 dark:text-teal-400'>
+                            {localOffsetCategory}
+                          </span>
+                        )}
+                        <button
+                          type='button'
+                          aria-label='Unlink expense'
+                          onClick={() => handleLinkTransaction(null)}
+                          className='ml-0.5 shrink-0 rounded-full p-0.5 text-gray-400 transition-colors hover:bg-red-100 hover:text-red-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 dark:hover:bg-red-900/30'
+                        >
+                          <svg
+                            className='h-3 w-3'
+                            viewBox='0 0 12 12'
+                            fill='none'
+                            stroke='currentColor'
+                            strokeWidth={1.8}
+                            strokeLinecap='round'
+                            aria-hidden='true'
+                          >
+                            <path d='M1 1l10 10M11 1L1 11' />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      /* UNLINKED STATE: link action + offset category side by side */
+                      <div className='mt-1 flex flex-col gap-1'>
+                        {!pickerOpen ? (
+                          <button
+                            type='button'
+                            onClick={() => setPickerOpen(true)}
+                            className='self-start text-xs text-teal-600 hover:underline dark:text-teal-400'
+                          >
+                            ＋ Link to original expense
+                          </button>
+                        ) : (
+                          <div className='flex flex-col gap-1'>
+                            <div className='w-full'>
+                              <AsyncSelect<LinkOption, false>
+                                instanceId={linkSelectId}
+                                inputId={linkSelectId}
+                                aria-label={`Link original expense for ${transaction.description}`}
+                                autoFocus
+                                cacheOptions
+                                defaultOptions
+                                isClearable
+                                isDisabled={isSaving}
+                                placeholder='Search expenses…'
+                                loadOptions={loadLinkOptions}
+                                value={selectedLinkOption}
+                                getOptionValue={(option) => option.value}
+                                formatOptionLabel={formatLinkOptionLabel}
+                                onChange={(option: SingleValue<LinkOption>) =>
+                                  handleLinkTransaction(option ?? null)
+                                }
+                                styles={{ ...linkSelectStyles }}
+                                className='w-full'
+                                usePortal
+                                menuWidth={400}
+                                noOptionsMessage={({ inputValue }) =>
+                                  inputValue.trim()
+                                    ? 'No matching expenses found'
+                                    : 'No recent expenses — type to search all time'
+                                }
+                              />
+                            </div>
+                            <button
+                              type='button'
+                              onClick={handleResetLinkPicker}
+                              className='mt-1 text-xs text-gray-400 hover:text-gray-600'
+                            >
+                              Reset
+                            </button>
+                          </div>
+                        )}
+                        {/* offset category — only visible when not linked; allows category-only reimbursement */}
+                        <Select
+                          instanceId={offsetCategorySelectId}
+                          inputId={offsetCategorySelectId}
+                          aria-label={`Offsets expense category for ${transaction.description}`}
+                          isDisabled={isSaving}
+                          isClearable={false}
+                          placeholder='Offsets category…'
+                          value={selectedOffsetCategory}
+                          options={offsetCategoryOptions}
+                          onChange={(option) =>
+                            handleOffsetChange(
+                              (option as CategoryOption)?.value ?? '',
+                            )
+                          }
+                          styles={{
+                            ...compactSelectStyles,
+                          }}
+                          className='w-full'
+                          usePortal
+                          menuPlacement='auto'
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  /* DEBIT Reimbursement: simple "awaiting payback" badge, no offsetCategory needed */
+                  <span className='mt-1 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'>
+                    ⏳ Awaiting payback
+                  </span>
+                )}
               </>
             )}
           </div>
         </td>
-        <td className="overflow-hidden px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300">
+        <td className='overflow-hidden px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300'>
           <TransactionSourceIndicator source={transaction.source} />
         </td>
-        <td className="overflow-hidden px-4 py-3">
-          <div className="flex flex-col gap-1">
-            <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClasses[transaction.status] ?? statusClasses.EXCLUDED}`}>
+        <td className='overflow-hidden px-4 py-3'>
+          <div className='flex flex-col gap-1'>
+            <span
+              className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClasses[transaction.status] ?? statusClasses.EXCLUDED}`}
+            >
               {transaction.status}
             </span>
             {transaction.category === REIMBURSEMENT_CATEGORY && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-900/30 dark:text-teal-300">
+              <span className='inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-900/30 dark:text-teal-300'>
                 ↩ {transaction.offsetCategory ?? 'Reimbursement'}
               </span>
             )}
-            {transaction.category.toLowerCase() === 'gifts & donations' && transaction.type === 'DEBIT' && (
-              <span
-                className={clsx(
-                  'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                  transaction.isDonationLinked
-                    ? 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200'
-                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-                )}
-              >
-                {transaction.isDonationLinked ? '🔗 Linked' : '⚠️ Needs recipient'}
-              </span>
-            )}
+            {transaction.category.toLowerCase() === 'gifts & donations' &&
+              transaction.type === 'DEBIT' && (
+                <>
+                  {transaction.isDonationLinked && (
+                    <span
+                      className={clsx(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                        'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+                      )}
+                    >
+                      🔗 Donation linked
+                    </span>
+                  )}
+                  {transaction.isZakatLinked && (
+                    <span
+                      className={clsx(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                      )}
+                    >
+                      🔗 Zakat linked
+                    </span>
+                  )}
+                  {transaction.isInterestLinked && (
+                    <span
+                      className={clsx(
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                      )}
+                    >
+                      🔗 Cleansed interest linked
+                    </span>
+                  )}
+                  {!transaction.isDonationLinked &&
+                    !transaction.isZakatLinked &&
+                    !transaction.isInterestLinked && (
+                      <span
+                        className={clsx(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                          'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+                        )}
+                      >
+                        ⚠️ Needs classification
+                      </span>
+                    )}
+                </>
+              )}
             {transaction.transferCounterpart && (
-              <div className="mt-1 flex items-center gap-1.5 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-xs dark:border-blue-800 dark:bg-blue-950/30">
-                <span className="shrink-0 text-blue-500">⇄</span>
-                <div className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-blue-800 dark:text-blue-300">
+              <div className='mt-1 flex items-center gap-1.5 rounded border border-blue-200 bg-blue-50 px-2 py-1 text-xs dark:border-blue-800 dark:bg-blue-950/30'>
+                <span className='shrink-0 text-blue-500'>⇄</span>
+                <div className='min-w-0 flex-1'>
+                  <span className='block truncate font-medium text-blue-800 dark:text-blue-300'>
                     {transaction.transferCounterpart.description}
                   </span>
-                  <span className="block text-blue-600 dark:text-blue-400">
+                  <span className='block text-blue-600 dark:text-blue-400'>
                     {transaction.transferCounterpart.date.slice(0, 10)}
                     {' · '}
-                    {transaction.transferCounterpart.bankAccountName ?? 'Unknown account'}
-                    {' · '}
-                    ${transaction.transferCounterpart.amount.toFixed(2)}
+                    {transaction.transferCounterpart.bankAccountName ??
+                      'Unknown account'}
+                    {' · '}${transaction.transferCounterpart.amount.toFixed(2)}
                   </span>
                 </div>
               </div>
             )}
           </div>
         </td>
-        <td className="overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+        <td className='overflow-hidden px-4 py-3 text-sm text-gray-700 dark:text-gray-300'>
           {transaction.bankAccountName
             ? `${transaction.bankAccountName}${transaction.bankName ? ` (${transaction.bankName})` : ''}`
-            : transaction.bankName ?? '-'}
+            : (transaction.bankName ?? '-')}
         </td>
-        <td className="overflow-hidden px-4 py-3">
-          <div className="flex flex-wrap items-center gap-2">
+        <td className='overflow-hidden px-4 py-3'>
+          <div className='flex flex-wrap items-center gap-2'>
             {transaction.status !== 'VOIDED' && onVoided && (
-              <VoidTransactionButton transactionId={transaction.id} onVoided={onVoided} status={transaction.status} />
+              <VoidTransactionButton
+                transactionId={transaction.id}
+                onVoided={onVoided}
+                status={transaction.status}
+              />
             )}
             {transaction.status === 'VOIDED' && onRestored && (
-              <RestoreTransactionButton transactionId={transaction.id} onRestored={onRestored} />
+              <RestoreTransactionButton
+                transactionId={transaction.id}
+                onRestored={onRestored}
+              />
             )}
             {(transaction.transferLinkedTransactionId != null ||
               transaction.transferCounterpartId != null) && (
@@ -454,29 +659,58 @@ export default function TransactionRow({
             {onLinkTransfer &&
               transaction.transferLinkedTransactionId == null &&
               transaction.transferCounterpartId == null && (
-              <button
-                type="button"
-                onClick={onLinkTransfer}
-                className="rounded px-2 py-1 text-xs font-medium text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20"
-                title="Link as Transfer"
-              >
-                Link
-              </button>
+                <button
+                  type='button'
+                  onClick={onLinkTransfer}
+                  className='rounded px-2 py-1 text-xs font-medium text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20'
+                  title='Link as Transfer'
+                >
+                  Link
+                </button>
+              )}
+            {transaction.category.toLowerCase() === 'gifts & donations' &&
+              transaction.type === 'DEBIT' &&
+              !transaction.isDonationLinked &&
+              !transaction.isZakatLinked &&
+              !transaction.isInterestLinked && (
+                <>
+                  {onClassifyAsDonation && (
+                    <button
+                      type='button'
+                      onClick={() => onClassifyAsDonation(transaction.id)}
+                      className='rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20'
+                      title='Classify as Donation'
+                    >
+                      🎁 Donation
+                    </button>
+                  )}
+                  {onClassifyAsZakat && (
+                    <button
+                      type='button'
+                      onClick={() => onClassifyAsZakat(transaction.id)}
+                      className='rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20'
+                      title='Classify as Zakat'
+                    >
+                      🕌 Zakat
+                    </button>
+                  )}
+                </>
               )}
           </div>
         </td>
       </tr>
 
-      {showRulePrompt && (
-        <CategoryRulePrompt
-          count={similarCount}
-          colCount={colCount}
-          onCreateRule={() => {
-            setShowRulePrompt(false);
-            setShowRuleDrawer(true);
-          }}
-          onDismiss={() => setShowRulePrompt(false)}
-        />
+      {showSuggestionUI && (
+        <tr className='bg-teal-50 dark:bg-teal-900/10'>
+          <td colSpan={colCount} className='px-4 py-2 text-sm'>
+            <div className='flex items-center gap-2'>
+              <span className='text-teal-700 dark:text-teal-300'>Similar transactions found ({matchCount}):</span>
+              <button onClick={handlePreviewBulk} className='text-xs text-teal-600 underline'>Preview matches</button>
+              <button onClick={handleApplyBulk} className='text-xs font-medium text-teal-700'>Apply to these</button>
+              <button onClick={() => setShowRuleDrawer(true)} className='text-xs text-gray-500'>Create rule</button>
+            </div>
+          </td>
+        </tr>
       )}
 
       {showRuleDrawer && (
@@ -485,12 +719,25 @@ export default function TransactionRow({
           initialPattern={extractPattern(transaction.description)}
           initialCategory={ruleCategory}
           transactionDescription={transaction.description}
-          onClose={() => setShowRuleDrawer(false)}
-          onSaved={() => setShowRuleDrawer(false)}
+          onClose={() => {
+            setShowRuleDrawer(false);
+            onResolvePendingRefresh?.();
+          }}
+          onSaved={() => {
+            setShowRuleDrawer(false);
+            onResolvePendingRefresh?.();
+          }}
         />
       )}
 
-      {isExpanded && transaction.reimbursements.map((r) => <ReimbursementSubRow key={r.id} reimbursement={r} colCount={colCount} />)}
+      {isExpanded &&
+        transaction.reimbursements.map((r) => (
+          <ReimbursementSubRow
+            key={r.id}
+            reimbursement={r}
+            colCount={colCount}
+          />
+        ))}
     </>
   );
 }

@@ -119,9 +119,9 @@ New-Item -ItemType Directory -Path "spec\{domain}\{feature}" -Force | Out-Null
 ```
 
 Then launch a **single background `general-purpose` subagent** with `model: "gpt-4.1"`,
-passing the full context bundle inline. The agent writes all three files using the `create` 
-tool. **Do not read any additional files from the codebase** — all required information 
-must be in the prompt.
+passing the smallest complete context bundle inline. The agent writes all three
+files using the `create` tool. **Do not read any additional files from the
+codebase** — all required information must be in the prompt.
 
 ### Subagent prompt template
 

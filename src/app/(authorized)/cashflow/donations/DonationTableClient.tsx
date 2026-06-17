@@ -3,29 +3,28 @@ import { enableMapSet } from 'immer';
 
 enableMapSet();
 
-import { useMemo, useState, useTransition } from 'react';
 import {
-  useReactTable,
-  getCoreRowModel,
   flexRender,
+  getCoreRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
-import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useMemo, useState, useTransition } from 'react';
+import { toast } from 'sonner';
 
 import Table from '@/components/table';
-import { useDonationPaymentState } from './StateProvider';
+import type { OptionType } from '@/types';
+
 import LinkTransactionsDrawerTrigger from './_components/LinkTransactionsDrawerTrigger';
-
-import { getTableColumns } from './_table/columns';
-
-import type { ServerActionType, DonationPaymentType } from './_types';
 import type {
   CreateDonationPaymentInput,
-  UpdateDonationPaymentInput,
   DeleteDonationPaymentInput,
+  UpdateDonationPaymentInput,
 } from './_schema';
-import type { OptionType } from '@/types';
+import { getTableColumns } from './_table/columns';
+import type { DonationPaymentType, ServerActionType } from './_types';
+import { useDonationPaymentState } from './StateProvider';
 
 type DonationTableClientProps = {
   individualsOptions: OptionType[];
@@ -50,9 +49,10 @@ export default function DonationTableClient({
   dateFrom,
   dateTo,
 }: DonationTableClientProps) {
-  const [editedRows, setEditedRows] = useState<
-    Map<number, DonationPaymentType>
-  >(new Map());
+  const [editedRows, setEditedRows] = useState<Map<string | number, DonationPaymentType>>(
+    new Map(),
+  );
+
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const validRows = {};
@@ -76,7 +76,8 @@ export default function DonationTableClient({
       amount: 0,
       beneficiaryType: 'INDIVIDUAL',
       beneficiaryId: '',
-      taxCategory: '',
+      isDeductible: false,
+      donationPurpose: 'VOLUNTARY', // Default purpose
     };
 
     // Add the temporary row to the state
@@ -119,7 +120,6 @@ export default function DonationTableClient({
           });
           toast.info('New donation cancelled');
         }
-        console.log('row reverted in client', rowIndex);
       },
       updateRow: async (rowIndex: number) => {
         const row = data[rowIndex];
@@ -135,10 +135,6 @@ export default function DonationTableClient({
             toast.error('Please select a beneficiary before saving');
             return;
           }
-          if (!updatedRecord.taxCategory) {
-            toast.error('Please select a tax category before saving');
-            return;
-          }
           if (updatedRecord.amount <= 0) {
             toast.error('Please enter a valid amount');
             return;
@@ -150,7 +146,6 @@ export default function DonationTableClient({
               datePaid: updatedRecord.datePaid,
               amount: updatedRecord.amount,
               beneficiaryType: updatedRecord.beneficiaryType,
-              taxCategory: updatedRecord.taxCategory,
               beneficiaryId: updatedRecord.beneficiaryId,
               calendarYearId: calendarYearId,
             });
@@ -195,10 +190,6 @@ export default function DonationTableClient({
             toast.error('Please select a beneficiary before saving');
             return;
           }
-          if (!updatedRecord.taxCategory) {
-            toast.error('Please select a tax category before saving');
-            return;
-          }
           if (updatedRecord.amount <= 0) {
             toast.error('Please enter a valid amount');
             return;
@@ -211,7 +202,6 @@ export default function DonationTableClient({
               datePaid: updatedRecord.datePaid,
               amount: updatedRecord.amount,
               beneficiaryType: updatedRecord.beneficiaryType,
-              taxCategory: updatedRecord.taxCategory,
               beneficiaryId: updatedRecord.beneficiaryId,
             });
 
@@ -263,15 +253,20 @@ export default function DonationTableClient({
           const deleteResult = await deleteRow({ id: row.id });
 
           if (deleteResult.success) {
-            dispatch({
-              type: 'DONATION/Payments/REMOVE_PAYMENT',
-              payload: {
-                donationPaymentId: row.id,
-              },
-            });
-            toast.success('Donation deleted successfully');
-            // Refresh to get updated server data (including totals)
-            router.refresh();
+            if (row.transactionId) {
+              toast.success('Transaction unlinked successfully');
+              router.refresh();
+            } else {
+              dispatch({
+                type: 'DONATION/Payments/REMOVE_PAYMENT',
+                payload: {
+                  donationPaymentId: row.id,
+                },
+              });
+              toast.success('Donation deleted successfully');
+              // Refresh to get updated server data (including totals)
+              router.refresh();
+            }
           } else {
             const errorMessage =
               deleteResult.error instanceof Error
@@ -290,7 +285,9 @@ export default function DonationTableClient({
         <h3 className='text-lg font-medium text-foreground'>
           Payment Records
           {isPending && (
-            <span className='ml-2 text-sm text-muted-foreground'>(Updating...)</span>
+            <span className='ml-2 text-sm text-muted-foreground'>
+              (Updating...)
+            </span>
           )}
         </h3>
         <div className='flex gap-2'>
@@ -320,7 +317,14 @@ export default function DonationTableClient({
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.THead.TR key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <Table.THead.TH key={header.id}>
+                  <Table.THead.TH
+                    key={header.id}
+                    className={
+                      header.column.columnDef.meta?.align === 'right'
+                        ? 'text-right'
+                        : ''
+                    }
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -365,7 +369,11 @@ export default function DonationTableClient({
                         <Table.TBody.TD
                           key={cell.id}
                           style={{ width: cell.column.getSize() }}
-                          className='min-w-0'
+                          className={
+                            cell.column.columnDef.meta?.align === 'right'
+                              ? 'text-right min-w-0'
+                              : 'min-w-0'
+                          }
                         >
                           {flexRender(
                             cell.column.columnDef.cell,

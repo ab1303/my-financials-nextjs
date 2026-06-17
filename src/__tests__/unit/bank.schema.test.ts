@@ -114,11 +114,11 @@ describe('bank.schema - Phase 2: Address Logic Removal', () => {
     });
   });
 
-  describe('params schema - bankId validation', () => {
-    it('should accept valid bankId', () => {
+  describe('params schema - institutionId validation', () => {
+    it('should accept valid institutionId', () => {
       // Arrange
       const validInput = {
-        bankId: 'bank-123',
+        institutionId: 'inst-123',
       };
 
       // Act
@@ -127,11 +127,11 @@ describe('bank.schema - Phase 2: Address Logic Removal', () => {
       // Assert
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.bankId).toBe('bank-123');
+        expect(result.data.institutionId).toBe('inst-123');
       }
     });
 
-    it('should reject missing bankId', () => {
+    it('should reject missing institutionId', () => {
       // Arrange
       const invalidInput = {};
 

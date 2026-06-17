@@ -1,17 +1,23 @@
-import { incomeEntriesHandler } from '@/server/controllers/income.controller';
-import { IncomeEntryStateProvider } from './StateProvider';
-import IncomeTableClient from './IncomeTableClient';
 import { auth } from '@/server/auth';
+import { incomeEntriesHandler } from '@/server/controllers/income.controller';
 
 import type { IncomeEntryType } from './_types';
 import { addRow, deleteRow, editRow } from './actions';
+import IncomeTableClient from './IncomeTableClient';
+import { IncomeEntryStateProvider } from './StateProvider';
 
 export type IncomeTableServerProps = {
   calendarYearId: string;
+  bankAccountId?: string;
+  yearDateFrom?: string;
+  yearDateTo?: string;
 };
 
 export default async function IncomeTableServer({
   calendarYearId,
+  bankAccountId,
+  yearDateFrom,
+  yearDateTo,
 }: IncomeTableServerProps) {
   try {
     // Get user session for user-specific data
@@ -23,6 +29,7 @@ export default async function IncomeTableServer({
     const incomeEntries = await incomeEntriesHandler(
       calendarYearId,
       session.user.id,
+      bankAccountId,
     );
 
     const data =
@@ -33,6 +40,7 @@ export default async function IncomeTableServer({
         incomeSourceName: entry.incomeSourceName,
         dateEarned: entry.dateEarned,
         incomeLedgerId: entry.incomeLedgerId,
+        source: entry.source,
       })) || [];
 
     return (
@@ -42,6 +50,8 @@ export default async function IncomeTableServer({
           editRow={editRow}
           deleteRow={deleteRow}
           calendarYearId={calendarYearId}
+          yearDateFrom={yearDateFrom}
+          yearDateTo={yearDateTo}
         />
       </IncomeEntryStateProvider>
     );

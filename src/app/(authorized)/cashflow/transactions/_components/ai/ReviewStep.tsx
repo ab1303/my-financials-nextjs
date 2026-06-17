@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import ConfidenceBadge from './ConfidenceBadge';
+
 import type { ReviewStepProps } from './_types';
+import ConfidenceBadge from './ConfidenceBadge';
 
 export default function ReviewStep({
   sessionId,

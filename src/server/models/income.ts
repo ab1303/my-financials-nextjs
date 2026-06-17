@@ -8,9 +8,10 @@ export type IncomeEntryModel = {
   id: string;
   dateEarned: Date;
   amount: number;
-  incomeSourceId: string;
+  incomeSourceId: string; // '' for bank imports; kept for edit form compatibility
   incomeSourceName: string;
-  incomeLedgerId: string;
+  incomeLedgerId: string; // always '' for Transaction-based entries
+  source: string; // 'USER_MANUAL' | 'LLM_CLASSIFIED' | 'USER_OVERRIDE'
 };
 
 export type IncomeEntryInput = {

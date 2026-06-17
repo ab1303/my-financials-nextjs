@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
-import { CreatableAppSelect } from '@/components/ui/CreatableAppSelect';
+import { useEffect,useState } from 'react';
+import { Controller,useFieldArray, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
+import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
 
 type SelectOption = { value: string; label: string };
 
 import { NumericFormat } from 'react-number-format';
 
-import { Modal } from '@/components/ui/Modal';
-import { Label } from '@/components/ui/Label';
 import { Button } from '@/components';
-import { trpc } from '@/server/trpc/client';
-import { createStockSnapshotSchema } from '@/server/schema/stock-asset.schema';
-
+import { Label } from '@/components/ui/Label';
+import { Modal } from '@/components/ui/Modal';
 import type { CreateStockSnapshotInput } from '@/server/schema/stock-asset.schema';
+import { createStockSnapshotSchema } from '@/server/schema/stock-asset.schema';
+import { trpc } from '@/server/trpc/client';
 
 interface Props {
   isOpen: boolean;
@@ -549,7 +549,7 @@ export default function NewSnapshotModal({
                       <Label htmlFor={`holdings.${index}.institutionId`}>
                         Brokerage Institution *
                       </Label>
-                      <CreatableAppSelect<SelectOption>
+                      <CreatableSelect<SelectOption>
                         options={institutionOptions}
                         value={
                           selectedInstitution
@@ -597,7 +597,7 @@ export default function NewSnapshotModal({
                         name={`holdings.${index}.accountId`}
                         control={control}
                         render={({ field }) => (
-                          <CreatableAppSelect<SelectOption>
+                          <CreatableSelect<SelectOption>
                             {...field}
                             options={accountOptions}
                             value={

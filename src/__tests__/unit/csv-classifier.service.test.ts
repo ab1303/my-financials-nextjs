@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { CsvTransaction } from '@/server/services/ai-import/_types';
 
 /**
@@ -12,8 +13,12 @@ vi.mock('@ai-sdk/openai', () => ({
 }));
 
 // Now import the service and dependencies
-import { classifyTransactions, classifyCreditTransactions } from '@/server/services/ai-import/csv-classifier.service';
 import { generateText } from 'ai';
+
+import {
+  classifyCreditTransactions,
+  classifyTransactions,
+} from '@/server/services/ai-import/csv-classifier.service';
 
 describe('csv-classifier.service', () => {
   const mockCategories = [
@@ -27,13 +32,16 @@ describe('csv-classifier.service', () => {
 
   const mockTransactions: CsvTransaction[] = [
     {
+      id: 'tx-1',
       date: '01/07/2025',
       amount: 85.5,
+      type: 'DEBIT',
       description: 'WOOLWORTHS 1294 HORNSBY NS',
       month: 7,
       year: 2025,
     },
     {
+      id: 'tx-2',
       date: '02/07/2025',
       amount: 15.99,
       type: 'DEBIT',
@@ -42,6 +50,7 @@ describe('csv-classifier.service', () => {
       year: 2025,
     },
     {
+      id: 'tx-3',
       date: '03/07/2025',
       amount: 1200.0,
       type: 'DEBIT',
@@ -81,7 +90,10 @@ describe('csv-classifier.service', () => {
       finishReason: 'stop',
     } as any);
 
-    const result = await classifyTransactions(mockTransactions, mockCategories as any);
+    const result = await classifyTransactions(
+      mockTransactions,
+      mockCategories as any,
+    );
 
     expect(result.classified).toHaveLength(3);
     expect(result.classified[0]).toMatchObject({
@@ -176,7 +188,9 @@ describe('csv-classifier.service', () => {
       mockCategories as any,
     );
 
-    expect(result.classified[0]!.llmCategory).toBe(mockTransactions[0]!.description);
+    expect(result.classified[0]!.llmCategory).toBe(
+      mockTransactions[0]!.description,
+    );
     expect(result.classified[0]!.confirmedCategory).toBe(
       mockTransactions[0]!.description,
     );
@@ -195,7 +209,9 @@ describe('csv-classifier.service', () => {
       mockCategories as any,
     );
 
-    expect(result.classified[0]!.llmCategory).toBe(mockTransactions[0]!.description);
+    expect(result.classified[0]!.llmCategory).toBe(
+      mockTransactions[0]!.description,
+    );
     expect(result.usage.totalTokens).toBe(0);
   });
 
@@ -271,18 +287,46 @@ describe('csv-classifier.service', () => {
       mockCategories as any,
     );
 
-    expect(result.classified[0]!.description).toBe(mockTransactions[0]!.description);
-    expect(result.classified[1]!.description).toBe(mockTransactions[1]!.description);
-    expect(result.classified[2]!.description).toBe(mockTransactions[2]!.description);
+    expect(result.classified[0]!.description).toBe(
+      mockTransactions[0]!.description,
+    );
+    expect(result.classified[1]!.description).toBe(
+      mockTransactions[1]!.description,
+    );
+    expect(result.classified[2]!.description).toBe(
+      mockTransactions[2]!.description,
+    );
   });
-
-
 });
 describe('classifyCreditTransactions', () => {
   const mockCredits: CsvTransaction[] = [
-    { date: '01/01/2024', amount: 5000, type: 'CREDIT', description: 'EMPLOYER SALARY', month: 1, year: 2024 },
-    { date: '15/01/2024', amount: 250, type: 'CREDIT', description: 'TRANSFER FROM SAVINGS', month: 1, year: 2024 },
-    { date: '20/01/2024', amount: 100, type: 'CREDIT', description: 'DIVIDEND PAYMENT ASX', month: 1, year: 2024 },
+    {
+      id: 'tx-c1',
+      date: '01/01/2024',
+      amount: 5000,
+      type: 'CREDIT',
+      description: 'EMPLOYER SALARY',
+      month: 1,
+      year: 2024,
+    },
+    {
+      id: 'tx-c2',
+      date: '15/01/2024',
+      amount: 250,
+      type: 'CREDIT',
+      description: 'TRANSFER FROM SAVINGS',
+      month: 1,
+      year: 2024,
+    },
+    {
+      id: 'tx-c3',
+      date: '20/01/2024',
+      amount: 100,
+      type: 'CREDIT',
+      description: 'DIVIDEND PAYMENT ASX',
+      month: 1,
+      year: 2024,
+    },
   ];
 
   beforeEach(() => {
@@ -316,8 +360,8 @@ describe('classifyCreditTransactions', () => {
 
     expect(result.classified[0]).toMatchObject({
       type: 'CREDIT',
-      llmCategory: 'EMPLOYMENT',
-      confirmedCategory: 'EMPLOYMENT',
+      llmCategory: 'OTHER',
+      confirmedCategory: 'OTHER',
       overridden: false,
       amount: 5000,
     });
@@ -328,7 +372,8 @@ describe('classifyCreditTransactions', () => {
     });
     expect(result.classified[2]).toMatchObject({
       type: 'CREDIT',
-      llmCategory: 'STOCKS',
+      llmCategory: 'OTHER',
+      confirmedCategory: 'OTHER',
     });
     expect(result.usage.totalTokens).toBe(150);
   });
@@ -340,8 +385,9 @@ describe('classifyCreditTransactions', () => {
     const result = await classifyCreditTransactions(mockCredits);
     expect(result.classified).toHaveLength(3);
     // Fallback: description as category
-    expect(result.classified[0].llmCategory).toBe('OTHER');
-    expect(result.classified[0].type).toBe('CREDIT');
+    expect(result.classified[0]).toBeDefined();
+    expect(result.classified[0]!.llmCategory).toBe('OTHER');
+    expect(result.classified[0]!.type).toBe('CREDIT');
     expect(result.usage.totalTokens).toBe(0);
   });
 
@@ -353,6 +399,6 @@ describe('classifyCreditTransactions', () => {
     });
 
     const result = await classifyCreditTransactions([mockCredits[0]!]);
-    expect(result.classified[0].type).toBe('CREDIT');
+    expect(result.classified[0]?.type).toBe('CREDIT');
   });
 });

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { appRouter } from '../../../server/trpc/router/_app';
 import { prismaMock } from '../../mocks/prisma.mock';
 
@@ -14,51 +15,107 @@ describe('incomeSource router', () => {
 
   it('getAll returns all sources with usageCount', async () => {
     prismaMock.incomeSource.findMany.mockResolvedValue([
+      { id: '1', name: 'Salary', isActive: true },
+      { id: '2', name: 'Freelance', isActive: false },
+    ] as any);
+
+    (prismaMock.transaction.groupBy as any).mockResolvedValue([
+      { category: 'Salary', _count: { category: 2 } },
+      { category: 'Freelance', _count: { category: 0 } },
+    ] as any);
+
+    await expect(caller.incomeSource.getAll()).resolves.toEqual([
       {
         id: '1',
         name: 'Salary',
+        description: undefined,
         isActive: true,
-        _count: { incomeRecords: 2 },
+        usageCount: 2,
       },
       {
         id: '2',
         name: 'Freelance',
+        description: undefined,
         isActive: false,
-        _count: { incomeRecords: 0 },
+        usageCount: 0,
       },
-    ] as any);
-
-    await expect(caller.incomeSource.getAll()).resolves.toEqual([
-      { id: '1', name: 'Salary', isActive: true, usageCount: 2 },
-      { id: '2', name: 'Freelance', isActive: false, usageCount: 0 },
     ]);
   });
 
-  it('create rejects duplicate name', async () => {
-    prismaMock.incomeSource.findFirst.mockResolvedValue({ id: '1', name: 'Salary' } as any);
+  it('getAll with no transactions returns usageCount 0', async () => {
+    prismaMock.incomeSource.findMany.mockResolvedValue([
+      { id: '1', name: 'Salary', isActive: true },
+    ] as any);
 
-    await expect(caller.incomeSource.create({ name: 'Salary' })).rejects.toMatchObject({
-      code: 'CONFLICT',
-      message: 'An income source with this name already exists',
-    });
+    (prismaMock.transaction.groupBy as any).mockResolvedValue([] as any);
+
+    await expect(caller.incomeSource.getAll()).resolves.toEqual([
+      {
+        id: '1',
+        name: 'Salary',
+        description: undefined,
+        isActive: true,
+        usageCount: 0,
+      },
+    ]);
   });
 
-  it('remove soft-deletes when usageCount > 0', async () => {
-    prismaMock.incomeRecord.count.mockResolvedValue(3);
-    prismaMock.incomeSource.update.mockResolvedValue({ id: '1', isActive: false } as any);
+  it('remove soft-deletes when transaction count > 0', async () => {
+    prismaMock.incomeSource.findUnique.mockResolvedValue({
+      name: 'Salary',
+    } as any);
+    prismaMock.transaction.count.mockResolvedValue(3);
+    prismaMock.incomeSource.update.mockResolvedValue({
+      id: '1',
+      isActive: false,
+    } as any);
 
-    await expect(caller.incomeSource.remove({ id: '1' })).resolves.toEqual({ softDeleted: true });
+    await expect(caller.incomeSource.remove({ id: '1' })).resolves.toEqual({
+      softDeleted: true,
+    });
     expect(prismaMock.incomeSource.update).toHaveBeenCalledWith({
       where: { id: '1' },
       data: { isActive: false },
     });
   });
 
-  it('remove hard-deletes when usageCount === 0', async () => {
-    prismaMock.incomeRecord.count.mockResolvedValue(0);
+  it('remove hard-deletes when transaction count === 0', async () => {
+    prismaMock.incomeSource.findUnique.mockResolvedValue({
+      name: 'Salary',
+    } as any);
+    prismaMock.transaction.count.mockResolvedValue(0);
     prismaMock.incomeSource.delete.mockResolvedValue({ id: '1' } as any);
 
-    await expect(caller.incomeSource.remove({ id: '1' })).resolves.toEqual({ softDeleted: false });
-    expect(prismaMock.incomeSource.delete).toHaveBeenCalledWith({ where: { id: '1' } });
+    await expect(caller.incomeSource.remove({ id: '1' })).resolves.toEqual({
+      softDeleted: false,
+    });
+    expect(prismaMock.incomeSource.delete).toHaveBeenCalledWith({
+      where: { id: '1' },
+    });
+  });
+
+  it('remove throws NOT_FOUND when source does not exist', async () => {
+    prismaMock.incomeSource.findUnique.mockResolvedValue(null);
+
+    await expect(
+      caller.incomeSource.remove({ id: 'bad-id' }),
+    ).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+      message: 'Income source not found',
+    });
+  });
+
+  it('create rejects duplicate name', async () => {
+    prismaMock.incomeSource.findFirst.mockResolvedValue({
+      id: '1',
+      name: 'Salary',
+    } as any);
+
+    await expect(
+      caller.incomeSource.create({ name: 'Salary' }),
+    ).rejects.toMatchObject({
+      code: 'CONFLICT',
+      message: 'An income source with this name already exists',
+    });
   });
 });

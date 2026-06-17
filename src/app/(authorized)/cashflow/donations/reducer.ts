@@ -1,8 +1,8 @@
+import { produce } from 'immer';
+
 import type { ActionMapUnion } from '@/types';
 
 import type { DonationPaymentType } from './_types';
-
-import { produce } from 'immer';
 
 type DonationMessages = {
   'DONATION/Payments/INITAL_DATA': DonationPaymentsState;
@@ -49,7 +49,7 @@ export const donationPaymentReducer = produce<DonationPaymentsState, [Actions]>(
         editedPayment.amount = payment.amount;
         editedPayment.beneficiaryType = payment.beneficiaryType;
         editedPayment.beneficiaryId = payment.beneficiaryId;
-        editedPayment.taxCategory = payment.taxCategory;
+        editedPayment.isDeductible = payment.isDeductible;
         editedPayment.datePaid = payment.datePaid;
         break;
       }

@@ -1,9 +1,11 @@
 'use client';
 
+import { AlertCircle, CheckCircle,Upload, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, AlertCircle, CheckCircle } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+
 import type { CSVUploadStepProps, UploadedCSVFile } from './_types';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -120,6 +122,7 @@ export default function CSVUploadStep({
           Bank Account <span className='text-red-500'>*</span>
         </label>
         <select
+          data-testid="csv-bank-account-select"
           value={selectedBankAccountId ?? ''}
           onChange={(e) => onBankAccountChange(e.target.value)}
           className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
@@ -146,6 +149,7 @@ export default function CSVUploadStep({
         <>
           <div
             {...getRootProps()}
+            data-testid="csv-dropzone"
             className={`cursor-pointer rounded-lg border-2 border-dashed p-12 text-center transition-colors ${
               isDragActive
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
@@ -265,6 +269,7 @@ export default function CSVUploadStep({
             </Button>
             <Button
               variant='default'
+              data-testid="csv-import-button"
               onClick={onStartImport}
               disabled={isLoading || !selectedBankAccountId || !file}
             >

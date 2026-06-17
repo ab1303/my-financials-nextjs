@@ -1,15 +1,17 @@
-import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { router, protectedProcedure } from '@/server/trpc/trpc';
+import { z } from 'zod';
+
 import {
-  allBusinessDetailsHandler,
   addBusinessDetailsHandler,
-  removeBusinessDetailsHandler,
+  allBusinessDetailsHandler,
   getBusinessesByTypeHandler,
+  removeBusinessDetailsHandler,
+  updateBusinessDetailsHandler,
 } from '@/server/controllers/business.controller';
-import { createBusinessSchema, params } from '@/server/schema/business.schema';
-import { addBusinessDetails, getBusinessDetails } from '@/server/services/business.service';
 import { prisma } from '@/server/db/client';
+import { createBusinessSchema, params, updateBusinessSchema } from '@/server/schema/business.schema';
+import { addBusinessDetails, getBusinessDetails } from '@/server/services/business.service';
+import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 export const businessRouter = router({
   // Quick-create: name only — used by CreateBeneficiaryModal in the donation linking drawer
@@ -46,6 +48,13 @@ export const businessRouter = router({
     .mutation(({ input, ctx: { session } }) =>
       addBusinessDetailsHandler({ input, userId: session.user.id }),
     ),
+
+  updateBusinessDetails: protectedProcedure
+    .input(updateBusinessSchema)
+    .mutation(({ input, ctx: { session } }) =>
+      updateBusinessDetailsHandler({ input, userId: session.user.id }),
+    ),
+
   getAllBusinesses: protectedProcedure.query(({ ctx: { session } }) => {
     return allBusinessDetailsHandler(session.user.id);
   }),

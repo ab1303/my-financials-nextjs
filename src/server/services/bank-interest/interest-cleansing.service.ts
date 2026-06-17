@@ -1,4 +1,4 @@
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 const CLEANSING_CATEGORY_NAME = 'Interest Cleansing';
 
@@ -6,6 +6,7 @@ export type MonthlyCredit = {
   month: number;
   year: number;
   receivedFromLedger: number;
+  cleansedAmount: number;
 };
 
 export type CleansingDonation = {
@@ -15,7 +16,14 @@ export type CleansingDonation = {
   beneficiaryName: string;
   beneficiaryType: 'INDIVIDUAL' | 'BUSINESS';
   source: 'LINKED' | 'MANUAL';
-  transactionId: string | null;
+  interestTxId: string | null;
+  interestTxDescription?: string;
+  evidence: Array<{
+    id: string;
+    amountApplied: number;
+    description: string;
+    date: Date;
+  }>;
 };
 
 export type YearlySummary = {
@@ -34,7 +42,7 @@ export type YearlyCleansingData = {
 };
 
 export const getYearlyCleansingData = async (
-  bankId: string,
+  institutionId: string,
   calendarYearId: string,
   userId: string,
 ): Promise<YearlyCleansingData> => {
@@ -45,14 +53,15 @@ export const getYearlyCleansingData = async (
   // FIX 1: Use fromMonth/toMonth from calendarYear, respecting fiscal year windows
   // ADR-1: CalendarYear is a time window — derive dateFrom/dateTo from fromYear/fromMonth → toYear/toMonth
   // Use UTC to avoid timezone offset issues
-  const dateFrom = new Date(Date.UTC(calendarYear.fromYear, calendarYear.fromMonth - 1, 1));
-  const dateTo = new Date(Date.UTC(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59));
+  const dateFrom = new Date(
+    Date.UTC(calendarYear.fromYear, calendarYear.fromMonth - 1, 1),
+  );
+  const dateTo = new Date(
+    Date.UTC(calendarYear.toYear, calendarYear.toMonth, 0, 23, 59, 59),
+  );
 
-  const bankAccounts = await prisma.financialAccount.findMany({
-    where: { institutionId: bankId, userId },
-    select: { id: true },
-  });
-  const bankAccountIds = bankAccounts.map((a) => a.id);
+  // institutionId is a FinancialAccount.id — filter transactions directly by this account
+  const bankAccountIds = [institutionId];
 
   // Generate all 12 months for this calendar window (Jan-Dec for Annual, Jul-Jun for Fiscal, etc.)
   const allMonths: Array<{ month: number; year: number }> = [];
@@ -67,7 +76,6 @@ export const getYearlyCleansingData = async (
     }
   }
 
-  // Fetch interest transactions from the ledger
   const interestTx = await prisma.transaction.findMany({
     where: {
       userId,
@@ -75,64 +83,89 @@ export const getYearlyCleansingData = async (
       type: 'CREDIT',
       status: 'CONFIRMED',
       date: { gte: dateFrom, lte: dateTo },
-      // Match both explicitly-categorised "Bank Interest" records and any CREDIT
-      // transactions whose description contains the word "interest" (e.g. the
-      // "Credit Interest" entries imported from Australian banks, which the AI
-      // classifier assigns to category "Other").
+      // "Credit Interest" income source is the canonical anchor for bank interest.
+      // "Bank Interest" is retained as a legacy fallback.
       OR: [
+        { category: { equals: 'Credit Interest', mode: 'insensitive' } },
         { category: { equals: 'Bank Interest', mode: 'insensitive' } },
-        { description: { contains: 'interest', mode: 'insensitive' } },
       ],
     },
   });
 
-  // Build monthlyCredits from all 12 months
+  const cleansingPayments = await prisma.interestCleansing.findMany({
+    where: {
+      datePaid: { gte: dateFrom, lte: dateTo },
+    },
+    include: {
+      sourceBusiness: { select: { name: true } },
+      creditTx: { select: { description: true } },
+      evidence: {
+        include: {
+          transaction: { select: { description: true, date: true } },
+        },
+      },
+    },
+    orderBy: { datePaid: 'desc' },
+  });
+
+  // Build monthlyCredits from all 12 months (after cleansingPayments is available)
   const monthlyCredits: MonthlyCredit[] = allMonths.map(({ month, year }) => {
     const monthTx = interestTx.filter(
-      (tx) => tx.date.getMonth() + 1 === month && tx.date.getFullYear() === year,
+      (tx) =>
+        tx.date.getUTCMonth() + 1 === month &&
+        tx.date.getUTCFullYear() === year,
     );
-    const receivedFromLedger = monthTx.reduce((s, tx) => s + tx.amount.toNumber(), 0);
+    const receivedFromLedger = monthTx.reduce(
+      (s, tx) => s + tx.amount.toNumber(),
+      0,
+    );
+
+    // Sum up donations linked to transactions in this month
+    const monthTxIds = new Set(monthTx.map((tx) => tx.id));
+    const cleansedAmount = cleansingPayments
+      .filter((d) => d.creditTxId && monthTxIds.has(d.creditTxId))
+      .reduce((s, d) => s + d.amount.toNumber(), 0);
 
     return {
       month,
       year,
       receivedFromLedger,
+      cleansedAmount,
     };
   });
 
-  const rawDonations = await prisma.donationPayment.findMany({
-    where: {
-      donationPurpose: 'INTEREST_CLEANSING',
-      // FIX 2: Use datePaid date range instead of FK-based calendarId lookup
-      // ADR-4: Use datePaid BETWEEN dateFrom AND dateTo, not calendarId FK as primary scope
-      datePaid: { gte: dateFrom, lte: dateTo },
-    },
-    include: {
-      business: { select: { name: true } },
-      individual: { select: { firstName: true, lastName: true } },
-    },
-    orderBy: { datePaid: 'desc' },
-  });
-
-  const cleansingDonations: CleansingDonation[] = rawDonations.map((dp) => ({
-    id: dp.id,
-    datePaid: dp.datePaid,
-    amount: dp.amount.toNumber(),
-    beneficiaryName:
-      dp.beneficiaryType === 'BUSINESS'
-        ? (dp.business?.name ?? 'Unknown')
-        : `${dp.individual?.firstName ?? ''} ${dp.individual?.lastName ?? ''}`.trim(),
-    beneficiaryType: dp.beneficiaryType as 'INDIVIDUAL' | 'BUSINESS',
-    source: dp.transactionId ? 'LINKED' : 'MANUAL',
-    transactionId: dp.transactionId,
-  }));
+  const cleansingDonations: CleansingDonation[] = cleansingPayments.map(
+    (dp) => ({
+      id: dp.id,
+      datePaid: dp.datePaid,
+      amount: dp.amount.toNumber(),
+      beneficiaryName: dp.sourceBusiness?.name ?? 'Unknown',
+      beneficiaryType: 'BUSINESS',
+      source: dp.creditTxId ? 'LINKED' : 'MANUAL',
+      interestTxId: dp.creditTxId,
+      interestTxDescription: dp.creditTx?.description,
+      evidence: dp.evidence.map((e) => ({
+        id: e.id,
+        amountApplied: e.amountLinked?.toNumber() ?? 0,
+        description: e.transaction.description,
+        date: e.transaction.date,
+      })),
+    }),
+  );
 
   const linkedTxIds = new Set(
-    rawDonations.filter((dp) => dp.transactionId !== null).map((dp) => dp.transactionId!),
+    cleansingPayments
+      .filter((dp) => dp.creditTxId !== null)
+      .map((dp) => dp.creditTxId!),
   );
-  const unlinkedInterestCount = interestTx.filter((tx) => !linkedTxIds.has(tx.id)).length;
+  const unlinkedInterestCount = interestTx.filter(
+    (tx) => !linkedTxIds.has(tx.id),
+  ).length;
 
-  const totalReceived = monthlyCredits.reduce((s, m) => s + m.receivedFromLedger, 0);
+  const totalReceived = monthlyCredits.reduce(
+    (s, m) => s + m.receivedFromLedger,
+    0,
+  );
   const totalCleansed = cleansingDonations.reduce((s, d) => s + d.amount, 0);
   const balance = Math.max(0, totalReceived - totalCleansed);
 
@@ -147,18 +180,22 @@ export const getYearlyCleansingData = async (
 };
 
 export const getUnlinkedInterestTransactions = async (
-  bankId: string,
+  institutionId: string,
   dateFrom: Date,
   dateTo: Date,
   userId: string,
-): Promise<Array<{ id: string; date: string; description: string; amount: number }>> => {
-  const bankAccounts = await prisma.financialAccount.findMany({
-    where: { institutionId: bankId, userId },
-    select: { id: true },
-  });
-  const bankAccountIds = bankAccounts.map((a) => a.id);
+): Promise<
+  Array<{
+    id: string;
+    date: string;
+    description: string;
+    amount: number;
+    cleansedAmount: number;
+  }>
+> => {
+  const bankAccountIds = [institutionId];
 
-  const transactions = await prisma.transaction.findMany({
+  const allInterestTx = await prisma.transaction.findMany({
     where: {
       userId,
       bankAccountId: { in: bankAccountIds },
@@ -166,57 +203,70 @@ export const getUnlinkedInterestTransactions = async (
       status: 'CONFIRMED',
       date: { gte: dateFrom, lte: dateTo },
       OR: [
+        { category: { equals: 'Credit Interest', mode: 'insensitive' } },
         { category: { equals: 'Bank Interest', mode: 'insensitive' } },
-        { description: { contains: 'interest', mode: 'insensitive' } },
       ],
-      AND: [
-        {
-          OR: [
-            { donationPayment: null },
-            { donationPayment: { donationPurpose: { not: 'INTEREST_CLEANSING' } } },
-          ],
+    },
+    include: {
+      interestCleansingCredit: {
+        include: {
+          evidence: {
+            select: { amountLinked: true },
+          },
         },
-      ],
+      },
     },
     orderBy: { date: 'asc' },
   });
 
-  return transactions.map((tx) => ({
-    id: tx.id,
-    date: tx.date.toISOString().split('T')[0] ?? tx.date.toISOString(),
-    description: tx.description,
-    amount: tx.amount.toNumber(),
-  }));
+  return allInterestTx.map((tx) => {
+    const cleansedAmount =
+      tx.interestCleansingCredit?.evidence.reduce(
+        (sum, e) => sum + (e.amountLinked?.toNumber() ?? 0),
+        0,
+      ) ?? 0;
+    return {
+      id: tx.id,
+      date: tx.date.toISOString().split('T')[0] ?? tx.date.toISOString(),
+      description: tx.description,
+      amount: tx.amount.toNumber(),
+      cleansedAmount,
+    };
+  });
 };
 
 export const getUnlinkedCleansingDebitTransactions = async (
   userId: string,
-  bankId: string,
-): Promise<Array<{ id: string; date: string; description: string; amount: number }>> => {
-  const accounts = await prisma.financialAccount.findMany({
-    where: {
-      userId,
-      institutionId: bankId,
-    },
-    select: { id: true },
-  });
-  const bankAccountIds = accounts.map((a) => a.id);
+  institutionId: string,
+  categoryName: string = CLEANSING_CATEGORY_NAME,
+  options?: { includeAnyType?: boolean },
+): Promise<
+  Array<{ id: string; date: string; description: string; amount: number }>
+> => {
+  // institutionId is a FinancialAccount.id — filter transactions directly by this account
+  const bankAccountIds = [institutionId];
 
   if (bankAccountIds.length === 0) return [];
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      userId,
-      bankAccountId: { in: bankAccountIds },
-      type: 'DEBIT',
-      status: 'CONFIRMED',
-      category: {
-        equals: CLEANSING_CATEGORY_NAME,
-        mode: 'insensitive',
-      },
-      donationPayment: null,
-    },
-    orderBy: { date: 'asc' },
+  // Build where clause. By default we filter to CONFIRMED DEBIT transactions
+  // in `categoryName` to follow the cleansing flow. When `options.includeAnyType`
+  // is true we relax the filter so any transaction type (DEBIT/CREDIT) is
+  // considered (still respecting CONFIRMED status and excluding already-linked evidence).
+  const where: any = {
+    userId,
+    bankAccountId: { in: bankAccountIds },
+    status: 'CONFIRMED',
+    // Ensure this transaction is NOT linked as evidence to any InterestCleansing
+    interestCleansingEvidence: { none: {} },
+  };
+
+  if (!options?.includeAnyType) {
+    where.type = 'DEBIT';
+    where.category = { equals: categoryName, mode: 'insensitive' };
+  }
+
+  const allCleansingTx = await prisma.transaction.findMany({
+    where,
     select: {
       id: true,
       date: true,
@@ -225,7 +275,18 @@ export const getUnlinkedCleansingDebitTransactions = async (
     },
   });
 
-  return transactions.map((t) => ({
+  // Find transactions already linked to donations as evidence
+  const linkedTxIds = new Set(
+    (
+      await prisma.interestCleansingEvidence.findMany({
+        select: { transactionId: true },
+      })
+    ).map((e) => e.transactionId),
+  );
+
+  // Return unlinked transactions
+  const unlinked = allCleansingTx.filter((tx) => !linkedTxIds.has(tx.id));
+  return unlinked.map((t) => ({
     id: t.id,
     date: t.date.toISOString().slice(0, 10),
     description: t.description,
@@ -233,3 +294,472 @@ export const getUnlinkedCleansingDebitTransactions = async (
   }));
 };
 
+// -------------------------
+// Interest cleansing: tRPC service helpers (Phase D)
+// -------------------------
+
+export type Candidate = {
+  transactionId: string;
+  date: string;
+  amount: number;
+  remainingAmount: number; // Added
+  existingAllocations: Array<{
+    // Added
+    interestTxId: string;
+    description: string;
+    amountApplied: number;
+  }>;
+  accountId: string;
+  accountName: string;
+  description: string;
+  matchPercent: number;
+  reasonShort: string;
+  reasonLong: string;
+  score: number;
+  scoreBreakdown: {
+    rawNormalized: {
+      amountScore: number;
+      dateScore: number;
+      descScore: number;
+      accountScore: number;
+    };
+    contributionsPercent: {
+      amount: number;
+      date: number;
+      desc: number;
+      account: number;
+    };
+  };
+};
+
+export async function getCleansingDebitCandidates(params: {
+  userId: string;
+  creditId: string;
+  bankAccountId?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  minScore?: number;
+}): Promise<Candidate[]> {
+  const {
+    userId,
+    creditId,
+    bankAccountId,
+    search,
+    dateFrom,
+    dateTo,
+    limit = 20,
+    minScore = 0,
+  } = params;
+
+  const credit = await prisma.transaction.findUniqueOrThrow({
+    where: { id: creditId },
+  });
+  const creditAmount = credit.amount.toNumber();
+  const creditDate = new Date(credit.date);
+
+  // 1. Fetch bounded superset of eligible DEBITs
+  const whereClause: any = {
+    userId,
+    type: 'DEBIT',
+    status: 'CONFIRMED',
+  };
+
+  if (bankAccountId) whereClause.bankAccountId = bankAccountId;
+  if (dateFrom)
+    whereClause.date = { ...whereClause.date, gte: new Date(dateFrom) };
+  if (dateTo) whereClause.date = { ...whereClause.date, lte: new Date(dateTo) };
+  if (search) {
+    const numericAmount = parseFloat(search);
+    const isNumeric = !isNaN(numericAmount);
+
+    whereClause.AND = [
+      {
+        OR: [
+          { description: { contains: search, mode: 'insensitive' } },
+          ...(isNumeric ? [{ amount: { equals: numericAmount } }] : []),
+        ],
+      },
+    ];
+  }
+
+  const rawCandidates = await prisma.transaction.findMany({
+    where: whereClause,
+    include: {
+      financialAccount: {
+        select: { name: true },
+      },
+      interestCleansingEvidence: {
+        include: {
+          interestCleansing: {
+            include: {
+              creditTx: { select: { id: true, description: true } },
+            },
+          },
+        },
+      },
+    },
+    take: 1000,
+  });
+
+  // 2. Score candidates
+  const candidates: Candidate[] = rawCandidates
+    .filter((tx) => {
+      const amount = Number(tx.amount);
+      const allocatedAmount = tx.interestCleansingEvidence.reduce(
+        (sum, e) => sum + (e.amountLinked?.toNumber() ?? 0),
+        0,
+      );
+      return allocatedAmount < amount;
+    })
+    .map((tx) => {
+      const amount = Number(tx.amount);
+      const allocatedAmount = tx.interestCleansingEvidence.reduce(
+        (sum, e) => sum + (e.amountLinked?.toNumber() ?? 0),
+        0,
+      );
+      const remainingAmount = amount - allocatedAmount;
+      const existingAllocations = tx.interestCleansingEvidence.map((e) => ({
+        interestTxId: e.interestCleansing.creditTx?.id ?? 'unknown',
+        description:
+          e.interestCleansing.creditTx?.description ?? 'Unknown credit',
+        amountApplied: e.amountLinked?.toNumber() ?? 0,
+      }));
+      const txDate = new Date(tx.date);
+
+      // Weights (canonical): amount 0.6, date 0.1, desc 0.2, account 0.1
+      const weights = { amount: 0.6, date: 0.1, desc: 0.2, account: 0.1 };
+
+      // amountScore (40%) - Proximity score
+      const amountDiff = Math.abs(creditAmount - amount);
+      const maxAmount = Math.max(creditAmount, amount, 1);
+      const amountScore = Math.max(0, 1 - amountDiff / maxAmount);
+
+      // dateScore (20%) - 90-day window normalization
+      const daysBetween = Math.abs(
+        (txDate.getTime() - creditDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const dateScore = Math.max(0, 1 - daysBetween / 90);
+
+      // descScore (30%) - Token overlap
+      const tokenize = (s: string) =>
+        s
+          .toLowerCase()
+          .split(/\W+/)
+          .filter((t) => t.length > 2);
+      const creditTokens = new Set(tokenize(credit.description));
+      const txTokens = new Set(tokenize(tx.description));
+
+      let common = 0;
+      creditTokens.forEach((t) => {
+        if (txTokens.has(t)) common++;
+      });
+      const descScore =
+        creditTokens.size === 0 ? 0 : common / creditTokens.size;
+
+      // accountScore (10%) - Exact match if filter is provided, else 0.5 (neutral)
+      const accountScore = bankAccountId
+        ? tx.bankAccountId === bankAccountId
+          ? 1
+          : 0
+        : 0.5;
+
+      const combinedNormalized = Math.max(
+        0,
+        Math.min(
+          1,
+          amountScore * weights.amount +
+            dateScore * weights.date +
+            descScore * weights.desc +
+            accountScore * weights.account,
+        ),
+      );
+
+      const matchPercent = Math.round(100 * combinedNormalized);
+
+      const contributions: {
+        amount: number;
+        date: number;
+        desc: number;
+        account: number;
+      } = {
+        amount: 0,
+        date: 0,
+        desc: 0,
+        account: 0,
+      };
+
+      if (combinedNormalized > 0) {
+        contributions.amount = Math.round(
+          ((amountScore * weights.amount) / combinedNormalized) * matchPercent,
+        );
+        contributions.date = Math.round(
+          ((dateScore * weights.date) / combinedNormalized) * matchPercent,
+        );
+        contributions.desc = Math.round(
+          ((descScore * weights.desc) / combinedNormalized) * matchPercent,
+        );
+        contributions.account = Math.round(
+          ((accountScore * weights.account) / combinedNormalized) *
+            matchPercent,
+        );
+
+        // Rounding drift correction
+        const currentSum =
+          contributions.amount +
+          contributions.date +
+          contributions.desc +
+          contributions.account;
+        const diff = matchPercent - currentSum;
+
+        if (diff !== 0) {
+          // Adjust the largest contributor to ensure sum equals matchPercent
+          const keys: Array<keyof typeof contributions> = [
+            'amount',
+            'date',
+            'desc',
+            'account',
+          ];
+          const largestKey = keys.reduce((a, b) =>
+            contributions[a] > contributions[b] ? a : b,
+          );
+          contributions[largestKey] += diff;
+        }
+      }
+
+      const reasonShort =
+        matchPercent >= 80
+          ? 'Strong match'
+          : matchPercent >= 50
+            ? 'Partial match'
+            : 'Weak match';
+      const reasonLong = `Match breakdown: Amount proximity (${Math.round(amountScore * 100)}% contribution weight), Date proximity (${Math.round(dateScore * 100)}% contribution weight), Description overlap (${Math.round(descScore * 100)}% contribution weight), Account match (${accountScore * 100}% contribution weight).`;
+
+      return {
+        transactionId: tx.id,
+        date: tx.date.toISOString().slice(0, 10),
+        amount,
+        remainingAmount,
+        existingAllocations,
+        accountId: tx.bankAccountId ?? 'unknown',
+        accountName: tx.financialAccount?.name ?? 'Unknown Account',
+        description: tx.description,
+        matchPercent,
+        score: matchPercent,
+        reasonShort,
+        reasonLong,
+        scoreBreakdown: {
+          rawNormalized: {
+            amountScore,
+            dateScore,
+            descScore,
+            accountScore,
+          },
+          contributionsPercent: contributions,
+        },
+      };
+    });
+
+  // 3. Sort and filter
+  return candidates
+    .filter((c) => c.matchPercent >= minScore)
+    .sort((a, b) => b.matchPercent - a.matchPercent)
+    .slice(0, limit);
+}
+
+export const suggestAllocations = async (
+  creditId: string,
+  limit: number,
+  userId: string,
+): Promise<
+  Array<{
+    donationPaymentId: string;
+    donationTransactionId: string | null;
+    evidenceAmount: number;
+    score: number;
+    suggestedAmount: number;
+  }>
+> => {
+  const credit = await prisma.transaction.findUniqueOrThrow({
+    where: { id: creditId },
+  });
+  const creditAmount = credit.amount.toNumber();
+
+  // compute 90-day window around credit date
+  const center = new Date(credit.date);
+  const dateFrom = new Date(center);
+  dateFrom.setDate(dateFrom.getDate() - 90);
+  const dateTo = new Date(center);
+  dateTo.setDate(dateTo.getDate() + 90);
+
+  // Candidate donations in window with INTEREST_CLEANSING purpose
+  const candidates = await prisma.interestCleansing.findMany({
+    where: {
+      datePaid: { gte: dateFrom, lte: dateTo },
+    },
+    include: {
+      evidence: {
+        include: { transaction: true },
+      },
+    },
+  });
+
+  // compute already-allocated amount for this credit (InterestCleansing records that reference this interest Tx)
+  const existingLinked = await prisma.interestCleansing.findMany({
+    where: { creditTxId: creditId },
+  });
+  const alreadyAllocated = existingLinked.reduce(
+    (s, d) => s + d.amount.toNumber(),
+    0,
+  );
+  const creditRemaining = Math.max(0, creditAmount - alreadyAllocated);
+
+  const scored = candidates.map((c) => {
+    const evidenceAmount = c.amount.toNumber();
+    // amount proximity score [0,1]
+    const amountScore =
+      1 -
+      Math.abs(creditAmount - evidenceAmount) /
+        Math.max(creditAmount, evidenceAmount, 1);
+    // date proximity score
+    const daysBetween = Math.abs(
+      (new Date(c.datePaid).getTime() - center.getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
+    const dateScore = Math.max(0, 1 - daysBetween / 90);
+    // simple description/reference match using evidence transaction description
+    const txDesc = c.evidence?.[0]?.transaction?.description ?? '';
+    const creditDesc = credit.description ?? '';
+    const tokenMatch = (() => {
+      const a = new Set(txDesc.toLowerCase().split(/\W+/).filter(Boolean));
+      const b = new Set(creditDesc.toLowerCase().split(/\W+/).filter(Boolean));
+      if (a.size === 0 || b.size === 0) return 0;
+      let common = 0;
+      a.forEach((t) => {
+        if (b.has(t)) common += 1;
+      });
+      return common / Math.max(a.size, b.size);
+    })();
+    const refScore = tokenMatch;
+
+    const score = Math.min(
+      1,
+      Math.max(
+        0,
+        amountScore * 0.4 + dateScore * 0.2 + refScore * 0.3 + 0.1 * 1,
+      ),
+    );
+
+    const suggestedAmount = Math.min(creditRemaining, evidenceAmount);
+
+    return {
+      donationPaymentId: c.id,
+      donationTransactionId: c.creditTxId ?? null,
+      evidenceAmount,
+      score: Number(score.toFixed(4)),
+      suggestedAmount,
+    };
+  });
+
+  // sort by score desc and limit
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit);
+};
+
+export const applyAllocations = async (
+  creditId: string,
+  allocations: Array<{ evidenceId: string; amount: number }>,
+  userId: string,
+): Promise<{ success: boolean; allocationsCreated: number }> => {
+  if (!allocations || allocations.length === 0)
+    return { success: false, allocationsCreated: 0 };
+
+  const credit = await prisma.transaction.findUniqueOrThrow({
+    where: { id: creditId },
+  });
+
+  // 1. Find or create an InterestCleansing record for this credit
+  return await prisma.$transaction(async (tx) => {
+    let cleansing = await tx.interestCleansing.findUnique({
+      where: { creditTxId: creditId },
+    });
+
+    if (!cleansing) {
+      // Find a ledger for this credit date
+      const year = credit.date.getFullYear();
+      const ledger = await tx.donationLedger.findFirst({
+        where: {
+          calendar: {
+            fromYear: { lte: year },
+            toYear: { gte: year },
+          },
+        },
+      });
+
+      if (!ledger) throw new Error(`No DonationLedger found for year ${year}`);
+
+      cleansing = await tx.interestCleansing.create({
+        data: {
+          datePaid: credit.date,
+          amount: credit.amount,
+          donationLedgerId: ledger.id,
+          creditTxId: creditId,
+        },
+      });
+    }
+
+    let createdCount = 0;
+    for (const alloc of allocations) {
+      await tx.interestCleansingEvidence.upsert({
+        where: {
+          interestCleansingId_transactionId: {
+            interestCleansingId: cleansing.id,
+            transactionId: alloc.evidenceId,
+          },
+        },
+        update: {
+          amountLinked: alloc.amount,
+        },
+        create: {
+          interestCleansingId: cleansing.id,
+          transactionId: alloc.evidenceId,
+          amountLinked: alloc.amount,
+        },
+      });
+      createdCount++;
+    }
+
+    return { success: true, allocationsCreated: createdCount };
+  });
+};
+
+export const removeAllocation = async (
+  allocationId: string,
+  userId: string,
+): Promise<{ success: boolean }> => {
+  return await prisma.$transaction(async (tx) => {
+    // 1. Get evidence to find the interestCleansingId
+    const evidence = await tx.interestCleansingEvidence.findUniqueOrThrow({
+      where: { id: allocationId },
+      select: { interestCleansingId: true },
+    });
+
+    // 2. Delete the evidence
+    await tx.interestCleansingEvidence.delete({ where: { id: allocationId } });
+
+    // 3. Check for remaining evidence
+    const remainingCount = await tx.interestCleansingEvidence.count({
+      where: { interestCleansingId: evidence.interestCleansingId },
+    });
+
+    // 4. If none, delete the cleansing record
+    if (remainingCount === 0) {
+      await tx.interestCleansing.delete({
+        where: { id: evidence.interestCleansingId },
+      });
+    }
+
+    return { success: true };
+  });
+};

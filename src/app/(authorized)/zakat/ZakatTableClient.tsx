@@ -3,30 +3,30 @@ import { enableMapSet } from 'immer';
 
 enableMapSet();
 
-import { useMemo, useState } from 'react';
 import {
-  useReactTable,
-  getCoreRowModel,
   flexRender,
+  getCoreRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
-import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
-
 import clsx from 'clsx';
+import { Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
+
+import { Button } from '@/components';
 import Table from '@/components/table';
 import { tableCellStyles } from '@/styles/theme';
-import { Button } from '@/components';
-import { useZakatPaymentState } from './StateProvider';
+import type { OptionType } from '@/types';
 
-import { getTableColumns } from './_table/columns';
-
-import type { ServerActionType, ZakatPaymentType } from './_types';
 import type {
   CreateZakatPaymentInput,
-  UpdateZakatPaymentInput,
   DeleteZakatPaymentInput,
+  UpdateZakatPaymentInput,
 } from './_schema';
-import type { OptionType } from '@/types';
+import { getTableColumns } from './_table/columns';
+import type { ServerActionType, ZakatPaymentType } from './_types';
+import { useZakatPaymentState } from './StateProvider';
 
 type ZakatTableClientProps = {
   individualsOptions: OptionType[];
@@ -47,10 +47,11 @@ export default function ZakatTableClient({
   deleteRow,
   calendarYearId,
 }: ZakatTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<number, ZakatPaymentType>>(
+  const [editedRows, setEditedRows] = useState<Map<string | number, ZakatPaymentType>>(
     new Map(),
   );
   const [validRows, setValidRows] = useState({});
+  const router = useRouter();
 
   const {
     state: { data },
@@ -71,6 +72,7 @@ export default function ZakatTableClient({
       amount: 0,
       beneficiaryType: 'INDIVIDUAL',
       beneficiaryId: '',
+      isDeductible: false,
     };
 
     // Add the temporary row to the state
@@ -83,7 +85,7 @@ export default function ZakatTableClient({
     });
 
     // Immediately put the row into edit mode
-    setEditedRows(new Map([[data.length, newRow]]));
+    setEditedRows((prev) => new Map(prev).set(tempId, newRow));
 
     toast.info('New payment row added. Fill in the details and save.');
   };
@@ -103,23 +105,29 @@ export default function ZakatTableClient({
       setEditedRows,
       revertData: (rowIndex: number) => {
         const row = data[rowIndex];
-        if (row && row.id.startsWith('temp-')) {
-          // Remove temporary row if user cancels editing
-          dispatch({
-            type: 'ZAKAT/Payments/REMOVE_PAYMENT',
-            payload: {
-              zakatPaymentId: row.id,
-            },
+        if (row) {
+          setEditedRows((prev) => {
+            const next = new Map(prev);
+            next.delete(row.id);
+            return next;
           });
-          toast.info('New payment cancelled');
+          if (row.id.startsWith('temp-')) {
+            // Remove temporary row if user cancels editing
+            dispatch({
+              type: 'ZAKAT/Payments/REMOVE_PAYMENT',
+              payload: {
+                zakatPaymentId: row.id,
+              },
+            });
+            toast.info('New payment cancelled');
+          }
         }
-        console.log('row reverted in client', rowIndex);
       },
       updateRow: async (rowIndex: number) => {
         const row = data[rowIndex];
         if (!row) return;
 
-        const updatedRecord = editedRows.get(rowIndex);
+        const updatedRecord = editedRows.get(row.id);
         if (!updatedRecord) return;
 
         // Check if this is a temporary row (new payment)
@@ -201,19 +209,24 @@ export default function ZakatTableClient({
         // Handle real payment deletion
         const deleteResult = await deleteRow({ id: record.id });
         if (deleteResult.success) {
-          dispatch({
-            type: 'ZAKAT/Payments/REMOVE_PAYMENT',
-            payload: {
-              zakatPaymentId: record.id,
-            },
-          });
-          toast.success('Payment deleted successfully');
+          if (record.transactionId) {
+            toast.success('Transaction unlinked successfully');
+            router.refresh();
+          } else {
+            dispatch({
+              type: 'ZAKAT/Payments/REMOVE_PAYMENT',
+              payload: {
+                zakatPaymentId: record.id,
+              },
+            });
+            toast.success('Payment deleted successfully');
+            router.refresh();
+          }
         } else {
           toast.error(
             (deleteResult.error as string) || 'Failed to delete payment',
           );
         }
-        console.log('row deleted in client', deleteResult);
       },
     },
   });

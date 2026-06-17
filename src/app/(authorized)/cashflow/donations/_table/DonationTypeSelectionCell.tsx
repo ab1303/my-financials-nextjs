@@ -1,4 +1,4 @@
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import type { OptionType } from '@/types';
 
 type DonationTypeSelectionCellProps = {

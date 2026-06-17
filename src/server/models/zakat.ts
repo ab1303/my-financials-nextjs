@@ -11,7 +11,9 @@ export type ZakatModel = {
 // TODO:
 export type ZakatPaymentModel = PaymentModel & {
   beneficiaryType: BeneficiaryEnumType;
+  isDeductible: boolean;
   zakatObligationId: string | null;
+  transactionId?: string | null;
 };
 
 // More flexible type for service layer operations
@@ -24,4 +26,5 @@ export type ZakatPaymentInput = {
   businessId?: string | null;
   individualId?: string | null;
   zakatObligationId?: string | null;
+  transactionId?: string | null;
 };

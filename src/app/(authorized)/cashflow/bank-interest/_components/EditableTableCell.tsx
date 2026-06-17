@@ -1,9 +1,9 @@
+import clsx from 'clsx';
+import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
-import clsx from 'clsx';
 
-import { Loader2 } from 'lucide-react';
-import { inputStyles, buttonStyles, colorStyles } from '@/styles/theme';
+import { buttonStyles, colorStyles,inputStyles } from '@/styles/theme';
 
 type EditableTableCellProps = {
   inProgress?: boolean;

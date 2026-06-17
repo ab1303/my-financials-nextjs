@@ -1,8 +1,9 @@
+import { Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
+
 import type { CreateUserInput } from '../schema/user.schema';
 import { createUser } from '../services/user.service';
-import { Prisma } from '@prisma/client';
 
 export const registerHandler = async ({
   input,

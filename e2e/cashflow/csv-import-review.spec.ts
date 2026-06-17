@@ -1,23 +1,32 @@
 import { test, expect } from '@playwright/test';
+import { dropFileOnZone } from '../helpers/drop-file';
+
+const hasApiKey = !!process.env.OPENAI_API_KEY;
 
 test.describe('CSV Import — Review & Category Override', () => {
   /**
-   * Setup: Navigate to the expense page and open the CSV import wizard.
-   * This `beforeEach` takes us to the point where we're ready to upload.
+   * All tests in this describe require a full LLM classification run.
+   * Skip entirely when OPENAI_API_KEY is not set.
+   */
+  test.beforeAll(() => {
+    if (!hasApiKey) {
+      // eslint-disable-next-line no-console
+      console.log('CSV import review tests skipped — set OPENAI_API_KEY to enable');
+    }
+  });
+
+  /**
+   * Setup: Navigate to the transactions page (where the CSV wizard lives) and open it.
    */
   test.beforeEach(async ({ page }) => {
-    await page.goto('/cashflow/expense');
+    test.skip(!hasApiKey, 'Requires OPENAI_API_KEY');
+
+    await page.goto('/cashflow/transactions');
     await page.waitForLoadState('networkidle');
 
-    // Open the CSV import wizard
-    await page
-      .getByRole('button', { name: /csv import|import csv/i })
-      .first()
-      .click();
-
-    // Wait for modal to appear
-    const modal = page.getByRole('dialog');
-    await expect(modal).toBeVisible({ timeout: 5000 });
+    // Open the CSV import wizard via stable testid
+    await page.getByTestId('open-csv-import-wizard').click();
+    await expect(page.getByTestId('csv-import-wizard')).toBeVisible({ timeout: 8000 });
   });
 
   /**
@@ -25,29 +34,28 @@ test.describe('CSV Import — Review & Category Override', () => {
    * This moves us from Step 1 (Upload) through Step 2 (Classifying) to Step 3 (Review).
    */
   async function uploadAndClassifyCSV(page: any) {
-    // Upload the fixture CSV file
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles('e2e/fixtures/commbank-sample.csv');
+    // Select a bank account using stable testid
+    const select = page.getByTestId('csv-bank-account-select');
+    const options = await select.locator('option').all();
+    for (const opt of options) {
+      const val = await opt.getAttribute('value');
+      if (val && val.length > 0) { await select.selectOption(val); break; }
+    }
 
-    // Click parse/process button to start classification
-    const processButton = page
-      .getByRole('button', { name: /parse|process|import|classify/i })
-      .filter({ hasNot: page.getByRole('button', { name: /cancel|close/i }) });
+    // Use dropFileOnZone so react-dropzone's onDrop fires (not just input onChange)
+    await dropFileOnZone(page, 'csv-dropzone', 'e2e/fixtures/commbank-sample.csv');
 
-    await expect(processButton.first()).toBeEnabled({ timeout: 5000 });
-    await processButton.first().click();
+    // Click the stable Import CSV button
+    await expect(page.getByTestId('csv-import-button')).toBeEnabled({ timeout: 5000 });
+    await page.getByTestId('csv-import-button').click();
 
     // Wait for classifying step to show (LLM calls can take time)
     await expect(page.getByText(/classifying|processing/i, { exact: false })).toBeVisible({
       timeout: 30000,
     });
 
-    // Wait for review table to appear (classifying should complete and move to review)
-    // TODO: add data-testid="review-table" to the TransactionReviewTable component
-    await page.waitForSelector(
-      '[data-testid="review-table"], table[role="table"], [role="grid"]',
-      { timeout: 30000 }
-    );
+    // Wait for review table to appear
+    await expect(page.getByTestId('csv-review-table')).toBeVisible({ timeout: 30000 });
   }
 
   test('should show Review step after LLM classification completes', async ({ page }) => {

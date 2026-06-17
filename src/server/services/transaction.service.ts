@@ -1,4 +1,4 @@
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 
 /**
  * Bulk update all transactions with a given old category name to a new category name.

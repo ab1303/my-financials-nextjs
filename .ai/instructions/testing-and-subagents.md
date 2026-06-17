@@ -14,7 +14,10 @@ Delegate all mechanical output — spec writing, doc generation, boilerplate, ph
 | Architecture / PO analysis | orchestrator only | No subagent; in-conversation reasoning |
 | Debugging unknown root cause | orchestrator or Sonnet subagent | Needs exploration |
 
-**Always pass the full context inline** in the subagent prompt — do not tell it to "read the codebase".
+**Always pass the smallest complete context inline** in the subagent prompt —
+usually the exact spec slice, the phase's file inventory, and only the file
+sections that phase will touch. Do not tell it to "read the codebase" or to
+pull sibling feature specs.
 The orchestrator does all file reading; the subagent only writes.
 
 ---
@@ -92,7 +95,7 @@ All N tests should pass. Report pass/fail counts.
 - ❌ Fix tests one file at a time in the main conversation (wastes turns, no parallelism)
 - ❌ Run the full suite after every single file edit
 - ❌ Investigate production code yourself if the root cause is already clear from the error message
-- ❌ Pass all three spec docs to every subagent — scope context to the task
+- ❌ Pass all three spec docs or sibling feature specs to every subagent — scope context to the task
 
 ---
 
@@ -165,7 +168,13 @@ When `parseCommBankCsv` delegates to the generic `parseBankCsv` with `hasHeaders
 
 ---
 
-## Vitest run commands
+## Validation & Vitest Run Commands
+
+**Preferred Validation Workflow:**
+1. **Run `pnpm run type-check` (tsc)**: Fast type validation.
+2. **Run `pnpm run lint`**: Fast style/convention validation.
+3. **Run Tests**: Use Vitest for focused unit/integration testing.
+4. **Prompt the user to run `pnpm run build`**: Final deployment verification only (perform locally).
 
 ```bash
 # Single file

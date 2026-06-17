@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+
 import TransactionRow from '@/components/transactions/TransactionRow';
 import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
@@ -52,15 +53,15 @@ function renderRow(transaction: Partial<LedgerTransactionRow>) {
     source: 'BANK',
     bankAccountName: 'Everyday',
     bankName: 'CommBank',
-  } as LedgerTransactionRow;
+  } as unknown as LedgerTransactionRow;
 
   return render(
     <table>
       <tbody>
         <TransactionRow
-          transaction={{ ...baseTransaction, ...transaction }}
+          transaction={{ ...baseTransaction, ...transaction } as unknown as LedgerTransactionRow}
           expenseCategories={[{ id: '1', name: 'Travel' }]}
-          incomeSourceLabels={['Salary']}
+          incomeSourceLabels={[{ id: '2', name: 'Salary' }]}
           onCategoryChange={vi.fn()}
         />
       </tbody>
@@ -72,13 +73,32 @@ describe('TransactionRow donation badge', () => {
   it('renders the linked badge for linked donation debits', () => {
     renderRow({ category: 'Gifts & donations', type: 'DEBIT', isDonationLinked: true });
 
-    expect(screen.getByText('🔗 Linked')).toBeInTheDocument();
+    expect(screen.getByText('🔗 Donation linked')).toBeInTheDocument();
   });
 
   it('renders the needs recipient badge for unlinked donation debits', () => {
-    renderRow({ category: 'Gifts & donations', type: 'DEBIT', isDonationLinked: false });
+    renderRow({ category: 'Gifts & donations', type: 'DEBIT', isDonationLinked: false, isZakatLinked: false, isInterestLinked: false });
 
-    expect(screen.getByText('⚠️ Needs recipient')).toBeInTheDocument();
+    expect(screen.getByText('⚠️ Needs classification')).toBeInTheDocument();
+  });
+
+  it('renders the cleansed interest linked badge for linked interest debits', () => {
+    renderRow({ category: 'Gifts & donations', type: 'DEBIT', isInterestLinked: true });
+
+    expect(screen.getByText('🔗 Cleansed interest linked')).toBeInTheDocument();
+  });
+
+  it('does not render classification buttons for cleansed interest linked debits', () => {
+    renderRow({
+      category: 'Gifts & donations',
+      type: 'DEBIT',
+      isInterestLinked: true,
+      isDonationLinked: false,
+      isZakatLinked: false,
+    });
+
+    expect(screen.queryByText('🎁 Donation')).not.toBeInTheDocument();
+    expect(screen.queryByText('🕌 Zakat')).not.toBeInTheDocument();
   });
 
   it('does not render a badge for a non-donation debit row', () => {

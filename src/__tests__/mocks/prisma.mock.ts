@@ -1,6 +1,6 @@
-import { type DeepMockProxy, mockDeep, mockReset } from 'vitest-mock-extended';
-import { vi, beforeEach } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
+import { beforeEach, vi } from 'vitest';
+import { type DeepMockProxy, mockDeep, mockReset } from 'vitest-mock-extended';
 
 // Create the mock instance
 export const prismaMock = mockDeep<PrismaClient>();
@@ -12,7 +12,7 @@ beforeEach(() => {
 
 // Mock the Prisma module globally
 // This call will be hoisted if imported correctly
-vi.mock('@/server/utils/prisma', () => ({
+vi.mock('@/server/db/client', () => ({
   __esModule: true,
   prisma: prismaMock,
   handleCaughtError: vi.fn((e) => {

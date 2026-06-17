@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
-import { auth } from '@/server/auth';
 import Card from '@/components/card';
+import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 
 import NetWorthDashboardClient from './NetWorthDashboardClient';

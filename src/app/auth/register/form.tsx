@@ -1,14 +1,15 @@
 'use client';
 
-import { trpc } from '@/server/trpc/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/Label';
+import { trpc } from '@/server/trpc/client';
 
 export default function RegisterForm() {
   const [email, setEmail] = useState('');

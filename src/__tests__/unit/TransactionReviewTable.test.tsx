@@ -1,11 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TransactionReviewTable from '@/components/csv-import/TransactionReviewTable';
+import { beforeEach,describe, expect, it, vi } from 'vitest';
+
 import type {
   ClassifiedMonth,
   TransactionReviewTableProps,
 } from '@/components/csv-import/TransactionReviewTable';
+import TransactionReviewTable from '@/components/csv-import/TransactionReviewTable';
 import type { ClassifiedTransaction } from '@/server/services/ai-import/_types';
 
 describe('TransactionReviewTable', () => {

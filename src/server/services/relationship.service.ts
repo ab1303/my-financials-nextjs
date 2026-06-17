@@ -1,5 +1,6 @@
-import { Prisma, RelationshipType } from '@prisma/client';
-import { prisma } from '../utils/prisma';
+import type { Prisma, RelationshipType } from '@prisma/client';
+
+import { prisma } from '@/server/db/client';
 
 export const addRelationship = async (
   input: Prisma.RelationshipTypeUncheckedCreateInput,

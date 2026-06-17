@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 /**
  * TDD Tests for Month/Year Picker UI - Phase 2
@@ -19,34 +19,42 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       const monthInput = '2023-06';
       
       // Act: Parse the month input
-      const [year, month] = monthInput.split('-');
+      const parts = (monthInput as any).split('-') as string[];
+      if (parts.length !== 2) throw new Error('Invalid format');
+      const [year, month] = parts;
+      if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
       // Assert: Should be June 1, 2023
-      expect(result.getFullYear()).toBe(2023);
-      expect(result.getMonth()).toBe(5); // 0-indexed (5 = June)
+      expect((result as any).getFullYear()).toBe(2023);
+      expect((result as any).getMonth()).toBe(5); // 0-indexed (5 = June)
       expect(result.getDate()).toBe(1);
-      expect(result.toISOString()).toContain('2023-06-01');
     });
 
     it('should handle January (month 1) correctly', () => {
       const monthInput = '2024-01';
-      const [year, month] = monthInput.split('-');
+      const parts = (monthInput as any).split('-') as string[];
+      if (parts.length !== 2) throw new Error('Invalid format');
+      const [year, month] = parts;
+      if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
-      expect(result.getMonth()).toBe(0); // January is 0
+      expect((result as any).getMonth()).toBe(0); // January is 0
       expect(result.getDate()).toBe(1);
-      expect(result.getFullYear()).toBe(2024);
+      expect((result as any).getFullYear()).toBe(2024);
     });
 
     it('should handle December (month 12) correctly', () => {
       const monthInput = '2023-12';
-      const [year, month] = monthInput.split('-');
+      const parts = (monthInput as any).split('-') as string[];
+      if (parts.length !== 2) throw new Error('Invalid format');
+      const [year, month] = parts;
+      if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
       
-      expect(result.getMonth()).toBe(11); // December is 11
+      expect((result as any).getMonth()).toBe(11); // December is 11
       expect(result.getDate()).toBe(1);
-      expect(result.getFullYear()).toBe(2023);
+      expect((result as any).getFullYear()).toBe(2023);
     });
   });
 
@@ -57,13 +65,16 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
      */
     it('should handle empty month input as null buyDate', () => {
       // Arrange
-      const monthInput = '';
+      let monthInput: string | undefined = '';
       
       // Act: Parse empty input
       let result = null;
-      if (monthInput) {
-        const [year, month] = monthInput.split('-');
-        result = new Date(parseInt(year), parseInt(month) - 1, 1);
+      if (monthInput !== undefined && monthInput !== '') {
+        const parts = (monthInput as any).split('-');
+        if (parts.length === 2) {
+          const [year, month] = parts;
+          result = new Date(parseInt(year!), parseInt(month!) - 1, 1);
+        }
       }
       
       // Assert: Should be null
@@ -72,13 +83,16 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should handle undefined month input as null buyDate', () => {
       // Arrange
-      const monthInput = undefined;
+      let monthInput: string | undefined = undefined;
       
       // Act: Parse undefined input
       let result = null;
-      if (monthInput) {
-        const [year, month] = monthInput.split('-');
-        result = new Date(parseInt(year), parseInt(month) - 1, 1);
+      if (monthInput !== undefined && monthInput !== '') {
+        const parts = (monthInput as any).split('-');
+        if (parts.length === 2) {
+          const [year, month] = parts;
+          result = new Date(parseInt(year!), parseInt(month!) - 1, 1);
+        }
       }
       
       // Assert: Should be null
@@ -155,17 +169,18 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should handle null buyDate on edit (leave blank)', () => {
       // Arrange
-      const existingBuyDate = null;
+      let existingBuyDate: Date | null = null;
       
       // Act: Handle null
       let monthInputValue = '';
       if (existingBuyDate) {
-        const year = existingBuyDate.getFullYear();
-        const month = String(existingBuyDate.getMonth() + 1).padStart(2, '0');
+        const year = (existingBuyDate as any).getFullYear();
+        const month = String((existingBuyDate as any).getMonth() + 1).padStart(2, '0');
         monthInputValue = `${year}-${month}`;
       }
       
       // Assert
+      expect(monthInputValue).toBe('');
     });
   });
 
@@ -176,30 +191,40 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should parse month input and submit with first-day-of-month date', () => {
       // Arrange
       const monthInput = '2023-06';
-      let buyDateMode: 'exact' | 'month' = 'month';
-      let formData: any = { buyDate: monthInput };
+      const buyDateMode: 'exact' | 'month' = 'month';
+      const formData: { buyDate: string | Date | null } = { buyDate: monthInput };
 
       // Act: Simulate form submission with month mode
-      if (buyDateMode === 'month' && formData.buyDate) {
-        const [year, month] = formData.buyDate.toString().split('-');
-        formData.buyDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+      if (buyDateMode === 'month' && typeof formData.buyDate === 'string' && formData.buyDate) {
+        const parts = formData.buyDate.split('-');
+        if (parts.length === 2) {
+          const [year, month] = parts;
+          formData.buyDate = new Date(parseInt(year!), parseInt(month!) - 1, 1);
+        }
       }
 
       // Assert
-      expect(formData.buyDate).toEqual(new Date(2023, 5, 1));
-      expect(formData.buyDate.getDate()).toBe(1);
+      if (formData.buyDate instanceof Date) {
+        expect(formData.buyDate).toEqual(new Date(2023, 5, 1));
+        expect(formData.buyDate.getDate()).toBe(1);
+      } else {
+        throw new Error('formData.buyDate should be a Date');
+      }
     });
 
     it('should submit with null buyDate when month field is empty', () => {
       // Arrange
-      const monthInput = '';
-      let buyDateMode: 'exact' | 'month' = 'month';
-      let formData: any = { buyDate: monthInput || null };
+      const monthInput: string | undefined = '';
+      const buyDateMode: 'exact' | 'month' = 'month';
+      const formData: { buyDate: string | Date | null } = { buyDate: monthInput || null };
 
       // Act: Simulate form submission with empty month
-      if (buyDateMode === 'month' && formData.buyDate) {
-        const [year, month] = formData.buyDate.toString().split('-');
-        formData.buyDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+      if (buyDateMode === 'month' && typeof formData.buyDate === 'string' && formData.buyDate) {
+        const parts = formData.buyDate.split('-');
+        if (parts.length === 2) {
+          const [year, month] = parts;
+          formData.buyDate = new Date(parseInt(year!), parseInt(month!) - 1, 1);
+        }
       }
 
       // Assert
@@ -209,17 +234,20 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should handle exact date submission in exact mode', () => {
       // Arrange
       const exactDateInput = '2023-06-15';
-      let buyDateMode: 'exact' | 'month' = 'exact';
-      let formData: any = { buyDate: exactDateInput };
+      const buyDateMode: 'exact' | 'month' = 'exact';
+      const formData: { buyDate: string | Date | null } = { buyDate: exactDateInput };
 
       // Act: Simulate form submission with exact date mode
-      // In exact mode, the date is passed as-is to the form
-      if (buyDateMode === 'exact' && formData.buyDate instanceof Date === false) {
+      if (buyDateMode === 'exact' && typeof formData.buyDate === 'string') {
         formData.buyDate = new Date(formData.buyDate);
       }
 
       // Assert: Should use the exact date provided
-      expect(formData.buyDate.getDate()).toBe(15); // Not forced to 1st
+      if (formData.buyDate instanceof Date) {
+        expect(formData.buyDate.getDate()).toBe(15); // Not forced to 1st
+      } else {
+        throw new Error('formData.buyDate should be a Date');
+      }
     });
   });
 

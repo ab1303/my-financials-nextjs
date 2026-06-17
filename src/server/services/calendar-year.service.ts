@@ -1,5 +1,6 @@
-import { prisma } from '../utils/prisma';
 import type { CalendarEnumType } from '@prisma/client';
+import { prisma } from '@/server/db/client';
+
 import type { CalendarYearModel } from '../models/calendarYear';
 
 export const addCalendarYearDetails = async ({

@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
 import { addMonths } from 'date-fns';
+import { describe, expect, it } from 'vitest';
+
+import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
 
 describe('CGTEligibilityWarning', () => {
   // Test 1: CGT warning displays 'Buy date not specified' when buyDate is null

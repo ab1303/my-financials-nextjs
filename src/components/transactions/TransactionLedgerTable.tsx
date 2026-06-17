@@ -1,21 +1,27 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+
+import LinkTransactionsDrawer from '@/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer';
+import OrphanResolutionPanel from '@/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel';
+import SmartMatchDialog from '@/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog';
+import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer';
+import UnmatchedTransfersBadge from '@/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge';
+import LinkZakatTransactionsDrawer from '@/app/(authorized)/zakat/_components/LinkZakatTransactionsDrawer';
 import InfoTooltip from '@/components/ui/InfoTooltip';
-import { trpc } from '@/server/trpc/client';
 import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
-import TransactionFilters, { getPresetDateRange, type DatePreset } from './TransactionFilters';
+import { trpc } from '@/server/trpc/client';
+import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
+
+import TransactionFilters, { type DatePreset,getPresetDateRange } from './TransactionFilters';
 import TransactionRow from './TransactionRow';
 import TransactionSummary from './TransactionSummary';
-import TransferLinkDrawer from '@/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer';
-import SmartMatchDialog from '@/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog';
-import UnmatchedTransfersBadge from '@/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge';
 
 type TabFilter = 'all' | 'expenses' | 'income' | 'excluded' | 'reimbursements' | 'uncategorized' | 'voided' | 'transfers';
 
 type GetAllInput = {
-  page: number;
+  cursor?: string;
   limit: number;
   type?: 'DEBIT' | 'CREDIT';
   status?: 'PENDING' | 'CONFIRMED' | 'EXCLUDED' | 'VOIDED';
@@ -31,6 +37,7 @@ type GetAllInput = {
   transferOnly?: boolean;
   unmatchedTransferOnly?: boolean;
   excludeTransferCategory?: boolean;
+  ids?: string[]; // review mode: fetch exactly these transaction IDs
 };
 
 interface TransactionLedgerTableProps {
@@ -39,16 +46,19 @@ interface TransactionLedgerTableProps {
   initialMonth?: number;
   initialYear?: number;
   initialCategory?: string;
+  initialTab?: string;
+  initialDateFrom?: string;
+  initialDateTo?: string;
 }
 
 const PAGE_SIZE = 50;
 
 const TAB_TO_PARAMS: Record<TabFilter, Partial<Pick<GetAllInput, 'type' | 'status' | 'reimbursementOnly' | 'transferOnly' | 'excludeTransferCategory'>>> = {
   all: {},
-  expenses: { type: 'DEBIT', status: 'CONFIRMED' },
-  income: { type: 'CREDIT', status: 'CONFIRMED' },
+  expenses: { type: 'DEBIT', status: 'CONFIRMED', excludeTransferCategory: true },
+  income: { type: 'CREDIT', status: 'CONFIRMED', excludeTransferCategory: true },
   excluded: { status: 'EXCLUDED', excludeTransferCategory: true },
-  reimbursements: { type: 'CREDIT', status: 'CONFIRMED', reimbursementOnly: true },
+  reimbursements: { reimbursementOnly: true },
   uncategorized: {},
   voided: { status: 'VOIDED' },
   transfers: { transferOnly: true },
@@ -78,6 +88,9 @@ export default function TransactionLedgerTable({
   initialMonth,
   initialYear,
   initialCategory,
+  initialTab,
+  initialDateFrom,
+  initialDateTo,
 }: TransactionLedgerTableProps) {
   return (
     <TransactionLedgerBody
@@ -86,11 +99,14 @@ export default function TransactionLedgerTable({
       initialMonth={initialMonth}
       initialYear={initialYear}
       initialCategory={initialCategory}
+      initialTab={initialTab}
+      initialDateFrom={initialDateFrom}
+      initialDateTo={initialDateTo}
     />
   );
 }
 
-function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear, initialCategory }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear' | 'initialCategory'>) {
+function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initialYear, initialCategory, initialTab, initialDateFrom, initialDateTo }: Pick<TransactionLedgerTableProps, 'bankAccounts' | 'refreshKey' | 'initialMonth' | 'initialYear' | 'initialCategory' | 'initialTab' | 'initialDateFrom' | 'initialDateTo'>) {
   const defaultFY = getPresetDateRange('this-fy')!;
 
   // Calculate date range from initialMonth/initialYear if provided
@@ -104,14 +120,23 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         to: `${initialYear}-${mm}-${String(lastDay).padStart(2, '0')}`,
       };
     }
+    if (initialDateFrom || initialDateTo) {
+      return { from: initialDateFrom ?? defaultFY.from, to: initialDateTo ?? defaultFY.to };
+    }
     return { from: defaultFY.from, to: defaultFY.to };
   };
 
   const initialDateRange = getInitialDateRange();
-  const initialPreset = (initialMonth !== undefined && initialYear !== undefined) ? 'custom' : 'this-fy';
+  const initialPreset: DatePreset = (initialMonth !== undefined && initialYear !== undefined)
+    ? 'custom'
+    : (initialDateFrom || initialDateTo) ? 'custom' : 'this-fy';
 
-  const [activeTab, setActiveTab] = useState<TabFilter>('all');
-  const [page, setPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<TabFilter>(() => {
+    const validTabs: TabFilter[] = ['all', 'expenses', 'income', 'excluded', 'reimbursements', 'uncategorized', 'voided', 'transfers'];
+    return (initialTab && validTabs.includes(initialTab as TabFilter))
+      ? (initialTab as TabFilter)
+      : 'all';
+  });
   const [bankAccountId, setBankAccountId] = useState<string | undefined>(undefined);
   const [category, setCategory] = useState<string | undefined>(initialCategory);
   const [datePreset, setDatePreset] = useState<DatePreset>(initialPreset);
@@ -123,6 +148,19 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
+  // Rows that were recategorized away from the current tab's filter — kept visible so
+  // the user can complete any follow-up action (e.g. reimbursement linking) before dismissing.
+  const [retainedRows, setRetainedRows] = useState<Map<string, LedgerTransactionRow>>(new Map());
+  // Review batch: transaction IDs that were auto-matched during a category update
+  const [reviewBatch, setReviewBatch] = useState<string[] | null>(null);
+  const [preReviewCategory, setPreReviewCategory] = useState<string | undefined>();
+  const pendingCategoryRefreshRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Single active rule prompt — only one row's prompt shows at a time
+  const [activeRulePrompt, setActiveRulePrompt] = useState<{
+    transactionId: string;
+    count: number;
+    category: string;
+  } | null>(null);
   const [transferDrawerTx, setTransferDrawerTx] = useState<{
     id: string;
     description: string;
@@ -136,6 +174,9 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     debitTransactionId: string;
     creditTransactionId: string;
   } | null>(null);
+  const [donationDrawerOpen, setDonationDrawerOpen] = useState(false);
+  const [zakatDrawerOpen, setZakatDrawerOpen] = useState(false);
+  const [charitySelectedTransactionId, setCharitySelectedTransactionId] = useState<string>('');
   const previousRefreshKey = useRef(refreshKey);
 
   const queryInput: GetAllInput = useMemo(() => {
@@ -143,7 +184,6 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     const parsedAmountMax = parseAmount(amountMax);
 
     return {
-      page,
       limit: PAGE_SIZE,
       ...TAB_TO_PARAMS[activeTab],
       ...(activeTab === 'uncategorized' ? { uncategorized: true } : {}),
@@ -156,10 +196,45 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
       ...(parsedAmountMin !== undefined ? { amountMin: parsedAmountMin } : {}),
       ...(parsedAmountMax !== undefined ? { amountMax: parsedAmountMax } : {}),
+      ...(reviewBatch !== null ? { ids: reviewBatch } : {}),
     } satisfies GetAllInput;
-  }, [page, activeTab, bankAccountId, category, dateFrom, dateTo, debouncedSearch, amountMin, amountMax]);
+  }, [activeTab, bankAccountId, category, dateFrom, dateTo, debouncedSearch, amountMin, amountMax, reviewBatch]);
 
-  const { data, isLoading, isFetching, refetch } = trpc.transactionLedger.getAll.useQuery(queryInput);
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = trpc.transactionLedger.getAll.useInfiniteQuery(queryInput, {
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    placeholderData: (previousData) => previousData,
+  });
+  const utils = trpc.useUtils();
+
+  const cancelPendingCategoryRefresh = useCallback(() => {
+    if (pendingCategoryRefreshRef.current) {
+      clearTimeout(pendingCategoryRefreshRef.current);
+      pendingCategoryRefreshRef.current = null;
+    }
+  }, []);
+
+  const schedulePendingCategoryRefresh = useCallback(() => {
+    cancelPendingCategoryRefresh();
+    pendingCategoryRefreshRef.current = setTimeout(() => {
+      pendingCategoryRefreshRef.current = null;
+      setActiveRulePrompt(null);
+      void refetch();
+    }, 4000);
+  }, [cancelPendingCategoryRefresh, refetch]);
+
+  const flushPendingCategoryRefresh = useCallback(() => {
+    cancelPendingCategoryRefresh();
+    setActiveRulePrompt(null);
+    void refetch();
+  }, [cancelPendingCategoryRefresh, refetch]);
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
   const unmatchedCountQuery = trpc.transfer.getUnmatchedCount.useQuery(undefined, {
     enabled: activeTab === 'transfers',
@@ -181,11 +256,29 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     }
   }, [refreshKey, refetch]);
 
+  useEffect(() => {
+    return () => {
+      cancelPendingCategoryRefresh();
+    };
+  }, [cancelPendingCategoryRefresh]);
+
   const updateCategoryMutation = trpc.transactionLedger.updateCategory.useMutation({
-    onSuccess: () => {
+    onSuccess: (result) => {
       setSavingId(null);
-      void refetch();
-      toast.success('Category updated');
+      void utils.transactionLedger.searchDebitTransactions.invalidate();
+      void utils.transactionLedger.getAll.invalidate();
+      if (result.matchedIds.length > 0) {
+        cancelPendingCategoryRefresh();
+        setPreReviewCategory(category); // save so we can restore on exit
+        setReviewBatch(result.matchedIds); // queryInput reacts → auto-refetches with ids filter
+        toast.success(
+          `Category updated for ${result.matchedIds.length} matching transaction${result.matchedIds.length > 1 ? 's' : ''} — scroll to review`,
+          { duration: 5000 },
+        );
+      } else {
+        schedulePendingCategoryRefresh(); // keep the row mounted long enough for the prompt to appear
+        toast.success('Category updated');
+      }
     },
     onError: (error) => {
       setSavingId(null);
@@ -194,19 +287,58 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   });
 
   const handleCategoryChange = useCallback(
-    (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null) => {
+    (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null, applyToMatching?: boolean) => {
+      const txData = data?.pages.flatMap(p => p.transactions).find(tx => tx.id === id) ?? retainedRows.get(id);
+      if (txData) {
+        // Transfers tab: retain row when moving away from Transfer category so the
+        // user can complete follow-up actions (e.g. linking the transfer pair).
+        if (activeTab === 'transfers') {
+          if (newCategory !== TRANSFER_CATEGORY) {
+            setRetainedRows(prev => {
+              const next = new Map(prev);
+              next.set(id, { ...txData, category: newCategory });
+              return next;
+            });
+          } else {
+            // Re-categorized back to Transfer — remove from retained (it'll reappear normally)
+            setRetainedRows(prev => {
+              const next = new Map(prev);
+              next.delete(id);
+              return next;
+            });
+          }
+        }
+      }
       setSavingId(id);
       updateCategoryMutation.mutate({
         id,
         newCategory,
         ...(offsetCategory ? { offsetCategory } : {}),
         ...(offsetTransactionId !== undefined ? { offsetTransactionId: offsetTransactionId ?? undefined } : {}),
+        ...(applyToMatching === false ? { applyToMatching: false } : {}),
       });
     },
-    [updateCategoryMutation],
+    [updateCategoryMutation, activeTab, data, retainedRows],
   );
 
+  const handleDismissRetained = useCallback((id: string) => {
+    setRetainedRows(prev => {
+      const next = new Map(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const handleExitReview = useCallback(() => {
+    cancelPendingCategoryRefresh();
+    setReviewBatch(null);
+    setActiveRulePrompt(null);
+    setCategory(preReviewCategory); // restore the filter the user had before review
+    setPreReviewCategory(undefined);
+  }, [cancelPendingCategoryRefresh, preReviewCategory]);
+
   const handleReset = useCallback(() => {
+    cancelPendingCategoryRefresh();
     setBankAccountId(undefined);
     setCategory(undefined);
     const fy = getPresetDateRange('this-fy')!;
@@ -216,26 +348,39 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     setAmountMax('');
     setSearch('');
     setDebouncedSearch('');
-    setPage(1);
     setActiveTab('all');
+    setReviewBatch(null);
+    setRetainedRows(new Map());
+    setActiveRulePrompt(null);
     setResetKey((k) => k + 1);
-  }, []);
+  }, [cancelPendingCategoryRefresh]);
 
   const handleTabChange = useCallback((tab: TabFilter) => {
+    cancelPendingCategoryRefresh();
     setActiveTab(tab);
-    setPage(1);
-  }, []);
+    setRetainedRows(new Map());
+    setReviewBatch(null);
+    setActiveRulePrompt(null);
+  }, [cancelPendingCategoryRefresh]);
 
   const loading = isLoading; // Only blank the table on initial load; background refetches use isFetching
   const syncing = !isLoading && isFetching; // Background sync — show subtle indicator without blanking table
-  const transactions = data?.transactions ?? [];
+  const transactions = data?.pages.flatMap((p) => p.transactions) ?? [];
+  // Retained rows: recategorized on this tab but kept visible until dismissed
+  const retainedVisible = useMemo(() => {
+    const currentIds = new Set(transactions.map(tx => tx.id));
+    return [...retainedRows.entries()]
+      .filter(([id]) => !currentIds.has(id))
+      .map(([, tx]) => tx);
+  }, [transactions, retainedRows]);
   const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
   const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
+  const lastPage = data?.pages[data.pages.length - 1];
   const categoryOptions = useMemo(() => {
     const incomeGroup = {
       label: '💰 Income Sources',
       options: incomeSourceLabels
-        .map((name) => ({ label: name, value: name }))
+        .map((item) => ({ label: item.name, value: item.name }))
         .sort((a, b) => a.label.localeCompare(b.label)),
     };
 
@@ -290,6 +435,10 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         </button>
       </div>
 
+      {activeTab === 'transfers' && (
+        <OrphanResolutionPanel onResolved={() => void refetch()} />
+      )}
+
       <TransactionFilters
         bankAccounts={bankAccounts}
         categoryOptions={categoryOptions}
@@ -303,42 +452,49 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         amountMax={amountMax}
         onBankChange={(v) => {
           setBankAccountId(v);
-          setPage(1);
         }}
         onCategoryChange={(v) => {
           setCategory(v);
-          setPage(1);
         }}
         onDateFromChange={(v) => {
           setDateFrom(v);
-          setPage(1);
         }}
         onDateToChange={(v) => {
           setDateTo(v);
-          setPage(1);
         }}
         onDatePresetChange={(preset) => {
           setDatePreset(preset);
-          setPage(1);
         }}
         onSearchChange={(v) => {
           setSearch(v);
-          setPage(1);
         }}
         onAmountMinChange={(v) => {
           setAmountMin(v);
-          setPage(1);
         }}
         onAmountMaxChange={(v) => {
           setAmountMax(v);
-          setPage(1);
         }}
         onReset={handleReset}
         resetKey={resetKey}
       />
 
-      {!loading && data && (data.totalDebitAmount > 0 || data.totalCreditAmount > 0) && (
-        <TransactionSummary totalDebitAmount={data.totalDebitAmount} totalCreditAmount={data.totalCreditAmount} />
+      {reviewBatch !== null && (
+        <div className="flex items-center justify-between rounded-lg border border-teal-300 bg-teal-50 px-4 py-2 text-sm dark:border-teal-700 dark:bg-teal-900/20">
+          <span className="text-teal-800 dark:text-teal-200">
+            Reviewing <strong>{reviewBatch.length}</strong> auto-updated transaction{reviewBatch.length !== 1 ? 's' : ''} — inline edit any row to correct it (changes here apply to this transaction only)
+          </span>
+          <button
+            type="button"
+            onClick={handleExitReview}
+            className="ml-4 text-xs font-medium text-teal-700 underline hover:text-teal-900 dark:text-teal-300 dark:hover:text-teal-100"
+          >
+            Exit review
+          </button>
+        </div>
+      )}
+
+      {!loading && lastPage && (lastPage.totalDebitAmount > 0 || lastPage.totalCreditAmount > 0) && (
+        <TransactionSummary totalDebitAmount={lastPage.totalDebitAmount} totalCreditAmount={lastPage.totalCreditAmount} />
       )}
 
       {loading ? (
@@ -394,6 +550,8 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                   onCategoryChange={handleCategoryChange}
                   isSaving={savingId === transaction.id}
                   colCount={10}
+                  onPausePendingRefresh={cancelPendingCategoryRefresh}
+                  onResolvePendingRefresh={flushPendingCategoryRefresh}
                   onVoided={() => void refetch()}
                   onRestored={() => void refetch()}
                   onUnlinked={() => void refetch()}
@@ -413,7 +571,56 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                           })
                       : undefined
                   }
+                  onClassifyAsDonation={() => {
+                    setCharitySelectedTransactionId(transaction.id);
+                    setDonationDrawerOpen(true);
+                  }}
+                  onClassifyAsZakat={() => {
+                    setCharitySelectedTransactionId(transaction.id);
+                    setZakatDrawerOpen(true);
+                  }}
                 />
+              ))}
+              {retainedVisible.map((tx) => (
+                <Fragment key={`retained-${tx.id}`}>
+                  <tr className="bg-amber-50 dark:bg-amber-900/20">
+                    <td colSpan={10} className="px-4 py-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-amber-700 dark:text-amber-300">
+                          Moved to <strong>{tx.category}</strong> — kept visible so you can complete any linking
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDismissRetained(tx.id)}
+                          className="ml-4 text-xs text-amber-600 underline hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <TransactionRow
+                    transaction={tx}
+                    expenseCategories={expenseCategories}
+                    incomeSourceLabels={incomeSourceLabels}
+                    onCategoryChange={handleCategoryChange}
+                    isSaving={savingId === tx.id}
+                    colCount={10}
+                    onPausePendingRefresh={cancelPendingCategoryRefresh}
+                    onResolvePendingRefresh={flushPendingCategoryRefresh}
+                    onVoided={() => { handleDismissRetained(tx.id); void refetch(); }}
+                    onRestored={() => { handleDismissRetained(tx.id); void refetch(); }}
+                    onUnlinked={() => void refetch()}
+                    onClassifyAsDonation={() => {
+                      setCharitySelectedTransactionId(tx.id);
+                      setDonationDrawerOpen(true);
+                    }}
+                    onClassifyAsZakat={() => {
+                      setCharitySelectedTransactionId(tx.id);
+                      setZakatDrawerOpen(true);
+                    }}
+                  />
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -421,27 +628,18 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
       )}
 
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Page {data?.page ?? page} of {data?.totalPages ?? 1}
-        </p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => setPage((c) => Math.max(1, c - 1))}
-            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200"
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            disabled={(data?.totalPages ?? 1) <= page}
-            onClick={() => setPage((c) => c + 1)}
-            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200"
-          >
-            Next
-          </button>
-        </div>
+        {hasNextPage && (
+          <div className="flex justify-center py-4 w-full">
+            <button
+              type="button"
+              onClick={() => void fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="rounded border border-gray-300 px-4 py-2 text-sm text-teal-600 hover:bg-teal-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-teal-400 dark:hover:bg-teal-900/20"
+            >
+              {isFetchingNextPage ? 'Loading...' : 'Load more transactions'}
+            </button>
+          </div>
+        )}
       </div>
     </section>
 
@@ -466,6 +664,32 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
           createRuleMutation.mutate({ debitTransactionId, creditTransactionId, name: suggestedName });
           setSmartMatchPair(null);
         }}
+      />
+    )}
+    {donationDrawerOpen && dateFrom && dateTo && (
+      <LinkTransactionsDrawer
+        isOpen={donationDrawerOpen}
+        onClose={() => {
+          setDonationDrawerOpen(false);
+          setCharitySelectedTransactionId('');
+          void refetch();
+        }}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        selectedTransactionId={charitySelectedTransactionId}
+      />
+    )}
+    {zakatDrawerOpen && dateFrom && dateTo && (
+      <LinkZakatTransactionsDrawer
+        isOpen={zakatDrawerOpen}
+        onClose={() => {
+          setZakatDrawerOpen(false);
+          setCharitySelectedTransactionId('');
+          void refetch();
+        }}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        selectedTransactionId={charitySelectedTransactionId}
       />
     )}
   </>

@@ -1,20 +1,20 @@
 'use client';
 
-import { Label } from '@/components/ui/Label';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import { usePathname, useRouter,useSearchParams } from 'next/navigation';
 import React, { useEffect, useId, useMemo, useState } from 'react';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import type { InputAttributes, NumericFormatProps } from 'react-number-format';
 import { NumericFormat } from 'react-number-format';
+import type { SingleValue } from 'react-select';
 
 import { Card } from '@/components';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { Label } from '@/components/ui/Label';
 import { stylingUtils } from '@/styles/styling';
+import { inputStyles } from '@/styles/theme';
+import type { CalendarYearType,OptionType } from '@/types';
 
-import type { SingleValue } from 'react-select';
-import type { OptionType, CalendarYearType } from '@/types';
-import type { InputAttributes, NumericFormatProps } from 'react-number-format';
 import type { FormInput } from './_schema';
 import type { ServerActionType } from './_types';
-import { inputStyles } from '@/styles/theme';
 
 // React Table
 type NumericFormatWithIndicatorProps<BaseType> =
@@ -28,17 +28,18 @@ function NumericFormatWithIndicator<BaseType = InputAttributes>({
   value,
   indicatorText,
   isWorking,
+  isSaved,
   onValueChange,
   onBlur,
   className,
   ...props
-}: NumericFormatWithIndicatorProps<BaseType>) {
+}: NumericFormatWithIndicatorProps<BaseType> & { isSaved: boolean }) {
   return (
     <div className='flex items-center gap-2'>
       <NumericFormat
         className={stylingUtils.overrideClasses(
           inputStyles.base,
-          { w: 'w-3/5' }, // Override any w-* classes with w-3/5
+          { w: 'w-3/5' },
           className,
         )}
         prefix='$'
@@ -69,6 +70,11 @@ function NumericFormatWithIndicator<BaseType = InputAttributes>({
           <span className='sr-only'>{indicatorText}</span>
         </div>
       )}
+      {isSaved && (
+        <span className='text-sm text-green-600 font-medium' role='status'>
+          Saved
+        </span>
+      )}
     </div>
   );
 }
@@ -77,6 +83,11 @@ type ZakatFormProps = {
   initialData: {
     zakatYearData: Array<CalendarYearType>;
     amountDue: number;
+    totalPaid: number;
+    zakatTotals: {
+      deductibleTotal: number;
+      nonDeductibleTotal: number;
+    };
   };
   yearIdParam: string;
   children?: React.ReactNode;
@@ -84,7 +95,7 @@ type ZakatFormProps = {
 };
 
 export default function ZakatForm({
-  initialData: { zakatYearData, amountDue },
+  initialData: { zakatYearData, amountDue, totalPaid, zakatTotals },
   yearIdParam,
   addZakatCalendarYear,
   children,
@@ -97,6 +108,7 @@ export default function ZakatForm({
 
   const [totalAmountDue, setTotalAmountDue] = useState<number>(amountDue);
   const [isSavingAmount, setIsSavingAmount] = useState<boolean>(false);
+  const [isSavedAmount, setIsSavedAmount] = useState<boolean>(false);
 
   useEffect(() => {
     setTotalAmountDue(amountDue);
@@ -145,6 +157,9 @@ export default function ZakatForm({
       totalAmount: totalAmountDue,
     });
     setIsSavingAmount(false);
+    
+    setIsSavedAmount(true);
+    setTimeout(() => setIsSavedAmount(false), 2000);
   };
 
   return (
@@ -170,20 +185,70 @@ export default function ZakatForm({
           />
         </div>
       </div>
-      <div className='mx-10'>
-        <Label>Total Amount Due</Label>
-        <div className='mt-3'>
-          <NumericFormatWithIndicator
-            indicatorText='Saving...'
-            isWorking={isSavingAmount}
-            value={totalAmountDue}
-            onValueChange={(values) => {
-              setTotalAmountDue(values.floatValue || 0);
-            }}
-            onBlur={updateTotalZakatAmount}
-          />
+      <div className='mx-10 grid grid-cols-2 gap-4'>
+        <div>
+          <Label>Total Amount Due</Label>
+          <div className='mt-3'>
+            <NumericFormatWithIndicator
+              indicatorText='Saving...'
+              isWorking={isSavingAmount}
+              isSaved={isSavedAmount}
+              value={totalAmountDue}
+              onValueChange={(values) => {
+                setTotalAmountDue(values.floatValue || 0);
+              }}
+              onBlur={updateTotalZakatAmount}
+            />
+          </div>
+        </div>
+        <div>
+          <Label>Total Paid</Label>
+          <div className='mt-3'>
+            <NumericFormat
+              className='w-3/5 block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+              prefix='$'
+              displayType='text'
+              thousandSeparator
+              value={totalPaid}
+              readOnly
+            />
+          </div>
         </div>
       </div>
+
+      {/* Breakdown by Deductibility */}
+      <div className='mx-10'>
+        <div className='grid grid-cols-2 gap-4'>
+          <div>
+            <Label>Deductible (DGR)</Label>
+            <div className='mt-3'>
+              <NumericFormat
+                className='block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+                prefix='$'
+                displayType='text'
+                thousandSeparator
+                value={zakatTotals.deductibleTotal}
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>Non-Deductible</Label>
+            <div className='mt-3'>
+              <NumericFormat
+                className='block px-3 py-2 text-sm border border-input bg-muted/50 text-foreground rounded-lg font-medium'
+                prefix='$'
+                displayType='text'
+                thousandSeparator
+                value={zakatTotals.nonDeductibleTotal}
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className='mt-8'>
         <Card.Body>{children}</Card.Body>
       </div>

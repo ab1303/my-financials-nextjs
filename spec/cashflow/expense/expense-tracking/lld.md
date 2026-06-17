@@ -1,15 +1,24 @@
-# Expense Tracking — Low-Level Design
+# Expense Tracking — Low Level Design
 
-## Implementation Details
-- Implement CRUD for `ExpenseEntry` via tRPC procedures backed by Prisma.
-- Validate expense payloads with Zod and normalize money values consistently.
-- Keep expense pages server-first, with client wrappers for inline editing, deletion, and drill-down UI.
-- Support category and month-based analysis so expense totals can feed broader cashflow summaries.
-- Preserve integration points used by reporting, analytics, and cashflow audit work.
+## Service Contracts
 
-## File Inventory
-- `src/server/api/expense.ts` — expense router and CRUD procedures.
-- `src/prisma/schema.prisma` — expense model definition.
-- `src/app/(expense)/` — expense route server/client components.
-- `src/types/expense.ts` — shared expense types.
-- `src/utils/validation.ts` — expense validation schemas.
+| Action | Service Call |
+|---|---|
+| Read Expenses | `getExpenseEntriesForMonth()` |
+| Breakdown | `getCategoryBreakdownForYear()` |
+
+## UX Flow: Expense Management
+```mermaid
+sequenceDiagram
+  participant UI as ExpensePage
+  participant API as getExpenseDataHandler
+  participant Service as getCategoryBreakdownForYear
+  participant DB as Transaction Table
+
+  UI->>API: Load Page (yearId, bankId)
+  API->>Service: Get Breakdown
+  Service->>DB: Query Aggregates (DEBIT)
+  DB-->>Service: Expense Data
+  Service-->>API: Breakdown Response
+  API-->>UI: Render Chart + Table
+```

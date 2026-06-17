@@ -1,29 +1,28 @@
 'use client';
 
-import { useId, useState } from 'react';
+import type { CalendarEnumType } from '@prisma/client';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useId, useState } from 'react';
 import type { SingleValue } from 'react-select';
 
-import { Label } from '@/components/ui/Label';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
 import CalendarYearPicker from '@/components/CalendarYearPicker';
-
-import type { OptionType, CalendarYearType } from '@/types';
-import type { CalendarEnumType } from '@prisma/client';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { Label } from '@/components/ui/Label';
+import type { CalendarYearType,OptionType } from '@/types';
 
 type BankInterestFiltersProps = {
   initialData: {
     bankOptions: OptionType[];
     yearlyData: Array<CalendarYearType>;
   };
-  bankIdParam: string;
+  institutionIdParam: string;
   yearIdParam: string;
   defaultType?: CalendarEnumType;
 };
 
 export default function BankInterestFilters({
   initialData: { bankOptions, yearlyData },
-  bankIdParam,
+  institutionIdParam,
   yearIdParam,
   defaultType,
 }: BankInterestFiltersProps) {
@@ -33,7 +32,7 @@ export default function BankInterestFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const currentBank = bankOptions.find((b) => b.id === bankIdParam);
+  const currentBank = bankOptions.find((b) => b.id === institutionIdParam);
 
   const [selectedBank, setSelectedBank] = useState<
     SingleValue<OptionType> | undefined
@@ -46,7 +45,7 @@ export default function BankInterestFilters({
       setSelectedBank(option);
     }
 
-    updateURLSearchParams('bank', option?.label);
+    updateURLSearchParams('bank', option?.id);
   };
 
   const updateURLSearchParams = (
@@ -66,22 +65,23 @@ export default function BankInterestFilters({
   };
 
   return (
-    <div className='mb-6 space-y-6'>
-      <CalendarYearPicker
-        applicableTypes={['ANNUAL', 'FISCAL']}
-        calendarYears={yearlyData}
-        selectedYearId={yearIdParam || undefined}
-        defaultType={defaultType}
-        onYearChange={(yearId) => updateURLSearchParams('year', yearId ?? undefined)}
-        label='Year'
-      />
-      <div>
-        <Label>Bank</Label>
-        <div className='mt-1'>
+    <div className='mb-6'>
+      <div className='flex flex-wrap items-end gap-4'>
+        <CalendarYearPicker
+          applicableTypes={['ANNUAL', 'FISCAL']}
+          calendarYears={yearlyData}
+          selectedYearId={yearIdParam || undefined}
+          defaultType={defaultType}
+          onYearChange={(yearId) => updateURLSearchParams('year', yearId ?? undefined)}
+          label='Year'
+        />
+        <div className='flex flex-col space-y-1.5 flex-1 min-w-[280px]'>
+          <Label htmlFor={uniqSelectBankId}>Bank</Label>
           <Select<OptionType>
             instanceId={uniqSelectBankId}
+            inputId={uniqSelectBankId}
             isClearable
-            className='w-3/5 mr-2'
+            className='w-full'
             value={selectedBank}
             options={bankOptions}
             getOptionValue={(option) => option.id}

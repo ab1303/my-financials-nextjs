@@ -1,101 +1,93 @@
 'use client';
 
-import { AppSelect as Select } from '@/components/ui/AppSelect';
-import React, { useEffect, useId, useMemo, useState } from 'react';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-
+import type { CalendarEnumType } from '@prisma/client';
+import { usePathname, useRouter,useSearchParams } from 'next/navigation';
+import React, { useEffect, useId, useState } from 'react';
 import type { SingleValue } from 'react-select';
-import type { OptionType, CalendarYearType } from '@/types';
+
+import CalendarYearPicker from '@/components/CalendarYearPicker';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { Label } from '@/components/ui/Label';
+import type { CalendarYearType,OptionType } from '@/types';
 
 type Props = {
   expenseYearData: Array<CalendarYearType>;
-  selectedCalendarYear: CalendarYearType | undefined;
+  yearIdParam: string;
+  bankOptions: OptionType[];
+  selectedBankId: string;
+  defaultCalendarType: CalendarEnumType;
 };
 
 export default function ExpenseForm({
   expenseYearData,
-  selectedCalendarYear,
+  yearIdParam,
+  bankOptions,
+  selectedBankId,
+  defaultCalendarType,
 }: Props) {
   const id = useId();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [selectedExpenseYear, setSelectedExpenseYear] =
-    useState<SingleValue<OptionType>>(null);
+  const [selectedBank, setSelectedBank] = useState<SingleValue<OptionType>>(null);
 
-  const expenseYearOptions: Array<OptionType> = useMemo(
-    () =>
-      expenseYearData.map((ey) => ({
-        id: ey.id,
-        label: ey.description,
-      })),
-    [expenseYearData],
-  );
-
-  // Set selected year based on URL params or default
+  // Initialize bank selection from props
   useEffect(() => {
-    if (selectedCalendarYear) {
-      setSelectedExpenseYear({
-        id: selectedCalendarYear.id,
-        label: selectedCalendarYear.description,
-      });
-    } else if (expenseYearOptions.length > 0) {
-      // Auto-select the first year if no selection
-      const firstYear = expenseYearOptions[0];
-      if (firstYear) {
-        setSelectedExpenseYear(firstYear);
-
-        // Update URL with first year
-        const yearData = expenseYearData[0];
-        if (yearData) {
-          const params = new URLSearchParams(searchParams?.toString());
-          params.set('fromYear', yearData.fromYear.toString());
-          params.set('toYear', yearData.toYear.toString());
-          router.replace(`${pathname}?${params.toString()}`);
-        }
+    if (selectedBankId) {
+      const currentBank = bankOptions.find((b) => b.id === selectedBankId);
+      if (currentBank) {
+        setSelectedBank(currentBank);
       }
+    } else {
+      setSelectedBank(null);
     }
-  }, [
-    selectedCalendarYear,
-    expenseYearOptions,
-    expenseYearData,
-    pathname,
-    router,
-    searchParams,
-  ]);
+  }, [selectedBankId, bankOptions]);
 
-  const handleYearChange = (newValue: SingleValue<OptionType>) => {
-    setSelectedExpenseYear(newValue);
+  const updateURLSearchParams = (key: 'year' | 'bank', value?: string) => {
+    const current = new URLSearchParams(searchParams?.toString() ?? '');
+    if (!value) current.delete(key);
+    else current.set(key, value);
+    const search = current.toString();
+    const query = search ? `?${search}` : '';
+    router.replace(`${pathname}${query}`);
+  };
 
-    if (newValue) {
-      const yearData = expenseYearData.find((yd) => yd.id === newValue.id);
-      if (yearData) {
-        const params = new URLSearchParams(searchParams?.toString());
-        params.set('fromYear', yearData.fromYear.toString());
-        params.set('toYear', yearData.toYear.toString());
-        router.replace(`${pathname}?${params.toString()}`);
-      }
-    }
+  const handleYearChange = (yearId: string | null) => {
+    updateURLSearchParams('year', yearId ?? undefined);
+  };
+
+  const handleBankChange = (option: SingleValue<OptionType>) => {
+    if (!option) setSelectedBank(null);
+    else if (option.id) setSelectedBank(option);
+    updateURLSearchParams('bank', option?.id);
   };
 
   return (
-    <div className='w-full max-w-md'>
-      <label
-        htmlFor={`expense-year-${id}`}
-        className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-default'
-      >
-        Fiscal Year
-      </label>
-      <Select<OptionType>
-        instanceId={`expense-year-${id}`}
-        options={expenseYearOptions}
-        value={selectedExpenseYear}
-        onChange={handleYearChange}
-        getOptionValue={(option) => option.id}
-        placeholder='Select fiscal year...'
-        isClearable={false}
-      />
+    <div className='w-full space-y-6'>
+      <div className='flex flex-wrap items-end gap-4'>
+        <CalendarYearPicker
+          applicableTypes={['FISCAL', 'ANNUAL']}
+          calendarYears={expenseYearData}
+          selectedYearId={yearIdParam || undefined}
+          defaultType={defaultCalendarType}
+          onYearChange={handleYearChange}
+        />
+        <div className='flex flex-col space-y-1.5 flex-1 min-w-[280px]'>
+          <Label htmlFor={`expense-bank-${id}`}>Bank Account</Label>
+          <Select<OptionType>
+            instanceId={`expense-bank-${id}`}
+            inputId={`expense-bank-${id}`}
+            isClearable
+            className='w-full'
+            value={selectedBank}
+            options={bankOptions}
+            getOptionValue={(option) => option.id}
+            onChange={(option) => handleBankChange(option)}
+            placeholder='Select bank…'
+          />
+        </div>
+      </div>
     </div>
   );
 }

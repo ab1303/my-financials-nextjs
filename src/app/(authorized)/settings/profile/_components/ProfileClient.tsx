@@ -1,7 +1,9 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+
 import { trpc } from '@/server/trpc/client';
+
 import { AvatarUpload } from './AvatarUpload';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import { ProfileForm } from './ProfileForm';

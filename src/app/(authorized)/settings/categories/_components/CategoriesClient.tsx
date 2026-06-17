@@ -1,7 +1,7 @@
 'use client';
 
-import IncomeSources from './IncomeSources';
 import ExpenseCategories from './ExpenseCategories';
+import IncomeSources from './IncomeSources';
 import SpecialCategories from './SpecialCategories';
 
 export default function CategoriesClient() {

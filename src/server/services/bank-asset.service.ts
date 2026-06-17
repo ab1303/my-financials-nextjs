@@ -1,17 +1,18 @@
 import type { Prisma } from '@prisma/client';
-import { prisma } from '../utils/prisma';
+
+import { prisma } from '@/server/db/client';
 
 // Bank Account Service
 
 export const createBankAccount = async (input: {
   name: string;
-  bankId: string;
+  institutionId: string;
   userId: string;
 }) => {
   return await prisma.financialAccount.create({
     data: {
       name: input.name,
-      institutionId: input.bankId,
+      institutionId: input.institutionId,
       userId: input.userId,
     },
     include: {
@@ -20,11 +21,14 @@ export const createBankAccount = async (input: {
   });
 };
 
-export const getBankAccounts = async (userId: string, bankId?: string) => {
+export const getBankAccounts = async (
+  userId: string,
+  institutionId?: string,
+) => {
   return await prisma.financialAccount.findMany({
     where: {
       userId,
-      ...(bankId && { institutionId: bankId }),
+      ...(institutionId && { institutionId: institutionId }),
     },
     include: {
       institution: {
@@ -275,7 +279,7 @@ export const updateBankAssetEntry = async (
   });
 };
 
-export const deleteBankAssetEntry= async (entryId: string, userId: string) => {
+export const deleteBankAssetEntry = async (entryId: string, userId: string) => {
   // Verify the entry belongs to the user's snapshot
   const entry = await prisma.bankBalanceRecord.findFirst({
     where: {
@@ -306,7 +310,8 @@ export const addEntryToSnapshot = async (
   const snapshot = await prisma.bankBalanceSnapshot.findFirst({
     where: { id: snapshotId, userId },
   });
-  if (!snapshot) throw new Error('Snapshot not found or does not belong to user');
+  if (!snapshot)
+    throw new Error('Snapshot not found or does not belong to user');
 
   const account = await prisma.financialAccount.findFirst({
     where: { id: accountId, userId },
@@ -354,20 +359,20 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
   // Calculate totals by bank
   const bankTotals = snapshot.balanceRecords.reduce(
     (acc, entry) => {
-      const bankId = entry.account.institutionId;
+      const instId = entry.account.institutionId;
       const bankName = entry.account.institution.name;
 
-      if (!acc[bankId]) {
-        acc[bankId] = {
-          bankId,
+      if (!acc[instId]) {
+        acc[instId] = {
+          institutionId: instId,
           bankName,
           total: 0,
           accounts: [],
         };
       }
 
-      acc[bankId].total += Number(entry.balance);
-      acc[bankId].accounts.push({
+      acc[instId].total += Number(entry.balance);
+      acc[instId].accounts.push({
         accountId: entry.accountId,
         accountName: entry.account.name,
         balance: Number(entry.balance),
@@ -378,7 +383,7 @@ export const getSnapshotTotals = async (snapshotId: string, userId: string) => {
     {} as Record<
       string,
       {
-        bankId: string;
+        institutionId: string;
         bankName: string;
         total: number;
         accounts: Array<{

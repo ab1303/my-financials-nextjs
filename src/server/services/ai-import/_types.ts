@@ -1,6 +1,6 @@
-import {
-  ImportTypeEnum,
+import type {
   ImportStatusEnum,
+  ImportTypeEnum,
   StorageProviderEnum,
 } from '@prisma/client';
 
@@ -137,6 +137,7 @@ export interface EmbeddingMatchResult {
  * CSV Transaction from CommBank CSV format
  */
 export interface CsvTransaction {
+  id: string;
   date: string; // 'DD/MM/YYYY'
   amount: number; // always positive absolute value
   type: 'DEBIT' | 'CREDIT';  // derived from raw CSV amount sign
@@ -190,6 +191,11 @@ export interface ClassifiedTransaction {
   confirmedCategory: string; // starts = llmCategory; user may change
   overridden: boolean; // true if user changed from llmCategory
   balance?: number; // bank running balance after this tx; preserved for dedup tiebreaker
+  // NEW: Transfer likelihood indicators (optional, client-side derived)
+  transferLikelihood?: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+  transferLikelihoodReason?: string | null;
+  sourceHint?: string;
+  preMatch?: { ruleId: string; ruleName: string };
 }
 
 /**
@@ -213,6 +219,11 @@ export interface ClassifiedCreditTransaction {
   overridden: boolean; // true if user changed from llmCategory
   type: 'CREDIT';
   balance?: number; // bank running balance after this tx; preserved for dedup tiebreaker
+  // NEW: Transfer likelihood indicators (optional, client-side derived)
+  transferLikelihood?: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+  transferLikelihoodReason?: string | null;
+  sourceHint?: string;
+  preMatch?: { ruleId: string; ruleName: string };
 }
 
 /**

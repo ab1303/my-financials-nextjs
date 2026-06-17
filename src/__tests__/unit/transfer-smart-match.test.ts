@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  extractPatternFromPair,
-  batchLinkTransferPairs,
-} from '@/server/services/transactions/transfer.service';
-import { Decimal } from '@prisma/client/runtime/library';
 import { TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  batchLinkTransferPairs,
+  extractPatternFromPair,
+} from '@/server/services/transactions/transfer.service';
 
 function createMockPrisma(options?: { failDebitId?: string }) {
   const updates: Array<{ id: string }> = [];
@@ -45,7 +46,9 @@ function createMockPrisma(options?: { failDebitId?: string }) {
     incomeRecord: {
       deleteMany: vi.fn(async () => ({ count: 0 })),
     },
-    $transaction: vi.fn(async (cb: (tx: any) => Promise<void>) => cb(mockPrisma)),
+    $transaction: vi.fn(async (cb: (tx: any) => Promise<void>) =>
+      cb(mockPrisma),
+    ),
   } as any;
 
   return { mockPrisma, updates };

@@ -1,43 +1,45 @@
 'use client';
 
-import * as Collapsible from '@radix-ui/react-collapsible';
 import type { RoleEnumType } from '@prisma/client';
-import { signOut } from 'next-auth/react';
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import * as Collapsible from '@radix-ui/react-collapsible';
 import {
-  Home,
-  Gift,
-  Receipt,
-  Building2,
-  BarChart3,
-  Settings,
-  LogOut,
-  ChevronDown,
-  ChevronRight,
-  ChevronLeft,
-  DollarSign,
   ArrowLeftRight,
-  Landmark,
-  CandlestickChart,
-  Users,
-  User,
+  BarChart2,
+  BarChart3,
+  Building2,
   Calendar,
+  CandlestickChart,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   CircleDollarSign,
-  X,
-  Percent,
-  Wallet,
+  DollarSign,
+  Gift,
+  GitMerge,
+  Home,
+  Landmark,
+  LayoutDashboard,
+  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Percent,
+  Receipt,
+  Settings,
   Sparkles,
-  LayoutDashboard,
   Tag,
-  GitMerge,
+  User,
+  Users,
+  Wallet,
+  X,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import useOutsideAlerter from '@/hooks/useOutsideAlerter';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { useEffect, useRef, useState } from 'react';
+
 import { APP_NAME } from '@/constants';
+import useOutsideAlerter from '@/hooks/useOutsideAlerter';
+import { cn } from '@/lib/utils';
 
 type SideNavProps = {
   userRole: RoleEnumType | null;
@@ -66,6 +68,7 @@ const cashflowItems: NavItem[] = [
   { name: 'Expenses', href: '/cashflow/expense', icon: Receipt },
   { name: 'Transactions', href: '/cashflow/transactions', icon: ArrowLeftRight },
   { name: 'Bank Interest', href: '/cashflow/bank-interest', icon: Percent },
+  { name: 'Analytics', href: '/cashflow/analytics', icon: BarChart2 },
   { name: 'Transfer Rules', href: '/cashflow/transfer-rules', icon: GitMerge },
   { name: 'Category Rules', href: '/cashflow/category-rules', icon: Tag },
 ];
@@ -221,6 +224,7 @@ export default function SideNav({
         pathname.startsWith('/cashflow/expense') ||
         pathname.startsWith('/cashflow/transactions') ||
         pathname.startsWith('/cashflow/bank-interest') ||
+        pathname.startsWith('/cashflow/analytics') ||
         pathname.startsWith('/cashflow/transfer-rules'),
     },
     {

@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
+import { z } from 'zod';
 
 export const FormDataSchema = z.object({
   calendarYearId: z.string().nonempty('Calendar year is required.'),
@@ -28,7 +28,6 @@ export const CreateDonationPaymentSchema = z.object({
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType, {
     required_error: 'Beneficiary type is required',
   }),
-  taxCategory: z.string().nonempty('Tax category is required'),
   beneficiaryId: z.string().nonempty('Please select a beneficiary'),
   transactionId: z.string().optional(),
   donationPurpose: z.nativeEnum(DonationPurposeEnum).optional().default('VOLUNTARY'),
@@ -48,7 +47,6 @@ export const UpdateDonationPaymentSchema = z.object({
       'Amount can have at most 2 decimal places',
     ),
   beneficiaryType: z.nativeEnum(BeneficiaryEnumType),
-  taxCategory: z.string().nonempty('Tax category is required'),
   beneficiaryId: z.string().nonempty('Please select a beneficiary'),
 });
 

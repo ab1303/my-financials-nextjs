@@ -1,23 +1,24 @@
 'use server';
 
-import { auth } from '@/server/auth';
 import { revalidatePath } from 'next/cache';
+
+import { auth } from '@/server/auth';
 import {
   addIncomeEntry,
-  updateIncomeEntry,
   deleteIncomeEntry,
+  updateIncomeEntry,
 } from '@/server/services/income.service';
-import { createIncomeYearHandler } from '@/server/controllers/income.controller';
-import { prisma } from '@/server/utils/prisma';
-import {
-  CreateIncomeEntrySchema,
-  UpdateIncomeEntrySchema,
-  DeleteIncomeEntrySchema,
-} from './_schema';
+import { prisma } from '@/server/db/client';
+
 import type {
   CreateIncomeEntryInput,
-  UpdateIncomeEntryInput,
   DeleteIncomeEntryInput,
+  UpdateIncomeEntryInput,
+} from './_schema';
+import {
+  CreateIncomeEntrySchema,
+  DeleteIncomeEntrySchema,
+  UpdateIncomeEntrySchema,
 } from './_schema';
 
 export async function addRow(input: CreateIncomeEntryInput) {
@@ -60,20 +61,8 @@ export async function addRow(input: CreateIncomeEntryInput) {
       }
     }
 
-    // Get or create Income record for the calendar year
-    const incomeResult = await createIncomeYearHandler(
-      validatedInput.calendarYearId,
-      session.user.id,
-    );
-    if (!incomeResult.incomeCalendarId) {
-      return {
-        success: false,
-        error: 'Failed to create income year record.',
-      };
-    }
-
-    // Create income entry record
-    const newEntry = await addIncomeEntry(incomeResult.incomeCalendarId, {
+    // Create income entry as a USER_MANUAL Transaction
+    const newEntry = await addIncomeEntry(session.user.id, {
       dateEarned: validatedInput.dateEarned,
       amount: validatedInput.amount,
       incomeSourceId: validatedInput.incomeSourceId,
@@ -88,7 +77,8 @@ export async function addRow(input: CreateIncomeEntryInput) {
         amount: newEntry.amount.toNumber(),
         incomeSourceId: newEntry.incomeSourceId,
         incomeSourceName: newEntry.incomeSource.name,
-        incomeLedgerId: newEntry.incomeLedgerId,
+        incomeLedgerId: '',
+        source: 'USER_MANUAL',
       },
     };
   } catch (error) {
@@ -138,7 +128,7 @@ export async function editRow(input: UpdateIncomeEntryInput) {
     const validatedInput = UpdateIncomeEntrySchema.parse(input);
 
     // Update income entry record
-    await updateIncomeEntry(validatedInput.id, {
+    await updateIncomeEntry(validatedInput.id, session.user.id, {
       dateEarned: validatedInput.dateEarned,
       amount: validatedInput.amount,
       incomeSourceId: validatedInput.incomeSourceId,
@@ -192,7 +182,7 @@ export async function deleteRow(input: DeleteIncomeEntryInput) {
     const validatedInput = DeleteIncomeEntrySchema.parse(input);
 
     // Delete income entry record
-    await deleteIncomeEntry(validatedInput.id);
+    await deleteIncomeEntry(validatedInput.id, session.user.id);
 
     return { success: true, error: null };
   } catch (error) {

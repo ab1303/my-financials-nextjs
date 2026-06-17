@@ -1,22 +1,25 @@
-import { donationPaymentsHandler } from '@/server/controllers/donation.controller';
-import { DonationPaymentStateProvider } from './StateProvider';
-import DonationTableClient from './DonationTableClient';
-import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
-import { allBusinessDetailsHandler } from '@/server/controllers/business.controller';
 import { auth } from '@/server/auth';
+import { allBusinessDetailsHandler } from '@/server/controllers/business.controller';
+import { donationPaymentsHandler } from '@/server/controllers/donation.controller';
+import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
+import type { OptionType } from '@/types';
+import { BeneficiaryEnumType } from '@prisma/client';
 
 import type { DonationPaymentType } from './_types';
-import type { OptionType } from '@/types';
 import { addRow, deleteRow, editRow } from './actions';
+import DonationTableClient from './DonationTableClient';
+import { DonationPaymentStateProvider } from './StateProvider';
 
 export type DonationTableServerProps = {
   calendarYearId: string;
+  beneficiaryId?: string;
   dateFrom?: string;
   dateTo?: string;
 };
 
 export default async function DonationPaymentsTableServer({
   calendarYearId,
+  beneficiaryId,
   dateFrom,
   dateTo,
 }: DonationTableServerProps) {
@@ -27,7 +30,7 @@ export default async function DonationPaymentsTableServer({
       throw new Error('User session not found');
     }
 
-    const donationPayments = await donationPaymentsHandler(calendarYearId);
+    const donationPayments = await donationPaymentsHandler(calendarYearId, beneficiaryId);
     const individuals = await allIndividualDetailsHandler(session.user.id);
     const businesses = await allBusinessDetailsHandler(session.user.id);
 
@@ -48,25 +51,44 @@ export default async function DonationPaymentsTableServer({
     }
 
     const data =
-      donationPayments?.map<DonationPaymentType>((dp) => ({
-        id: dp.id,
-        amount: dp.amount,
-        beneficiaryId:
-          (dp.beneficiaryType === 'BUSINESS'
-            ? dp.businessId
-            : dp.individualId) || '',
-        beneficiaryType: dp.beneficiaryType,
-        taxCategory: dp.taxCategory,
-        datePaid: dp.datePaid,
-        transactionId: dp.transactionId ?? undefined,
-      })) || [];
+      donationPayments?.map<DonationPaymentType>((dp) => {
+        // Need to narrow type to extract specific fields
+        const isVoluntary = 'beneficiaryType' in dp && dp.beneficiaryType !== undefined;
+        const isZakat = 'beneficiaryType' in dp && dp.donationPurpose === 'ZAKAT';
+        
+        let beneficiaryId = '';
+        let beneficiaryType: BeneficiaryEnumType = BeneficiaryEnumType.BUSINESS;
+        let isDeductible = false;
+
+        if ('beneficiaryType' in dp) {
+           beneficiaryType = dp.beneficiaryType;
+           beneficiaryId = (dp.beneficiaryType === 'BUSINESS' ? (dp as any).businessId : (dp as any).individualId) || '';
+           isDeductible = dp.isDeductible;
+        } else {
+           // Interest Cleansing
+           beneficiaryType = BeneficiaryEnumType.BUSINESS;
+           beneficiaryId = (dp as any).sourceBusinessId || '';
+           isDeductible = dp.isDeductible;
+        }
+
+        return {
+          id: dp.id,
+          amount: dp.amount,
+          beneficiaryId,
+          beneficiaryType,
+          isDeductible,
+          datePaid: dp.datePaid,
+          transactionId: dp.transactionId ?? undefined,
+          donationPurpose: dp.donationPurpose,
+        };
+      }) || [];
 
     return (
       <DonationPaymentStateProvider data={data}>
         <DonationTableClient
           individualsOptions={individualsOptions}
           businessesOptions={businessesOptions}
-          addRow={addRow}
+          addRow={addRow as any}
           editRow={editRow}
           deleteRow={deleteRow}
           calendarYearId={calendarYearId}

@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';

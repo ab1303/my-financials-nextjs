@@ -1,16 +1,19 @@
-import type { Prisma, Business } from '@prisma/client';
-import { prisma } from '../utils/prisma';
+import type { Business, Prisma } from '@prisma/client';
+
+import { prisma } from '@/server/db/client';
 
 export const addBankDetails = async (
-  input: Omit<Prisma.BusinessUncheckedCreateInput, 'userId'>
+  input: Omit<Prisma.BusinessUncheckedCreateInput, 'userId'>,
 ) => {
-  const result = await prisma.business.create({ data: { ...input, userId: null } });
+  const result = await prisma.business.create({
+    data: { ...input, userId: null },
+  });
   return result as Business;
 };
 
 export const getBankDetails = async (
   where?: Partial<Prisma.BusinessWhereUniqueInput>,
-  select?: Prisma.BusinessSelect
+  select?: Prisma.BusinessSelect,
 ) => {
   const finalWhere: Partial<Prisma.BusinessWhereUniqueInput> = {
     ...where,

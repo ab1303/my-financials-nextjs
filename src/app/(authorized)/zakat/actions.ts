@@ -2,22 +2,23 @@
 
 import { auth } from '@/server/auth';
 import {
+  addZakatCalendarYearDetails,
   addZakatPaymentDetail,
-  updateZakatPayment,
   deleteZakatPayment,
   getZakat,
-} from '@/server/services/zakat.service';
-import {
-  CreateZakatPaymentSchema,
-  UpdateZakatPaymentSchema,
-  DeleteZakatPaymentSchema,
-} from './_schema';
+  updateZakatPayment,
+} from '@/server/services/zakat/zakat.service';
+
 import type {
   CreateZakatPaymentInput,
-  UpdateZakatPaymentInput,
   DeleteZakatPaymentInput,
+  UpdateZakatPaymentInput,
 } from './_schema';
-import type { ZakatPaymentType } from './_types';
+import {
+  CreateZakatPaymentSchema,
+  DeleteZakatPaymentSchema,
+  UpdateZakatPaymentSchema,
+} from './_schema';
 
 export async function addRow(input: CreateZakatPaymentInput) {
   try {
@@ -31,16 +32,22 @@ export async function addRow(input: CreateZakatPaymentInput) {
     const validatedInput = CreateZakatPaymentSchema.parse(input);
 
     // Get or create Zakat record for the calendar year
-    const zakat = await getZakat(validatedInput.calendarYearId);
-    if (!zakat.id) {
-      return {
-        success: false,
-        error: 'Zakat year not found. Please set up the Zakat year first.',
-      };
+    let zakatRecord = await getZakat(validatedInput.calendarYearId);
+    let zakatId = zakatRecord.id;
+    let zakatAmountDue = zakatRecord.amountDue;
+
+    if (!zakatId) {
+      // Auto-initialize obligation if missing
+      const newZakat = await addZakatCalendarYearDetails({
+        calendarId: validatedInput.calendarYearId,
+        amountDue: 0,
+      });
+      zakatId = newZakat.id;
+      zakatAmountDue = newZakat.amountDue.toNumber();
     }
 
     // Create payment record
-    const newPayment = await addZakatPaymentDetail(zakat.id, {
+    const newPayment = await addZakatPaymentDetail(zakatId, {
       datePaid: validatedInput.datePaid,
       amount: validatedInput.amount,
       beneficiaryType: validatedInput.beneficiaryType,
@@ -54,9 +61,11 @@ export async function addRow(input: CreateZakatPaymentInput) {
       data: {
         id: newPayment.id,
         datePaid: newPayment.datePaid,
-        amount: newPayment.amount.toNumber(),
+        amount: newPayment.amount,
         beneficiaryType: newPayment.beneficiaryType,
+        isDeductible: newPayment.isDeductible,
         beneficiaryId: validatedInput.beneficiaryId || '',
+        transactionId: validatedInput.transactionId,
       },
     };
   } catch (error) {
@@ -81,6 +90,7 @@ export async function editRow(input: UpdateZakatPaymentInput) {
 
     // Update payment record
     await updateZakatPayment(
+      validatedInput.id,
       {
         id: validatedInput.id,
         datePaid: validatedInput.datePaid,
@@ -89,7 +99,6 @@ export async function editRow(input: UpdateZakatPaymentInput) {
         beneficiaryId: validatedInput.beneficiaryId,
         zakatObligationId: '', // This will be ignored in the update
       },
-      validatedInput.id,
     );
 
     return { success: true, error: null };

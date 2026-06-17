@@ -3,10 +3,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
 import { trpc } from '@/server/trpc/client';
+
 import {
-  changePasswordSchema,
   type ChangePasswordFormValues,
+  changePasswordSchema,
 } from '../_schema';
 
 export function ChangePasswordForm() {

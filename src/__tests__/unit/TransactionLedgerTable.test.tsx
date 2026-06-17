@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockRefetch = vi.fn();
 const mockMutate = vi.fn();
@@ -9,18 +9,40 @@ const mockUseMutation = vi.fn();
 const mockSearchDebitTransactionsFetch = vi.fn();
 const mockCategoryFilteredLedger = vi.fn();
 
+// Ensure next-auth client APIs are stubbed before importing app code
+vi.mock('next-auth/react', () => ({
+  useSession: () => ({ data: null, status: 'unauthenticated' }),
+  signOut: vi.fn(),
+  signIn: vi.fn(),
+}));
+
+// Stub the main next-auth module so its server-side entrypoints (which import `next/server`)
+// are not evaluated in the test environment.
+vi.mock('next-auth', () => ({
+  default: (cfg: any) => ({
+    auth: {},
+    handlers: {},
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+  }),
+}));
+
 vi.mock('@/components/transactions/CategoryFilteredLedger', () => ({
-  CategoryFilteredLedger: (props: { category: string; month: number; year: number }) => {
+  CategoryFilteredLedger: (props: {
+    category: string;
+    month: number;
+    year: number;
+  }) => {
     mockCategoryFilteredLedger(props);
     return <div data-testid='category-filtered-ledger'>Filtered Ledger</div>;
   },
 }));
 
-import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
-
 vi.mock('react-select/async', () => ({
   default: (props: Record<string, unknown>) => (
-    <div aria-label={(props['aria-label'] as string | undefined) ?? 'async-select'} />
+    <div
+      aria-label={(props['aria-label'] as string | undefined) ?? 'async-select'}
+    />
   ),
 }));
 
@@ -48,11 +70,12 @@ vi.mock('react-select', () => ({
       aria-label={placeholder ?? name}
       value={value?.value ?? ''}
       onChange={(event) => {
-        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        const selected =
+          options.find((option) => option.value === event.target.value) ?? null;
         onChange?.(selected);
       }}
     >
-      {isClearable ? <option value="">All</option> : null}
+      {isClearable ? <option value=''>All</option> : null}
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
@@ -62,18 +85,20 @@ vi.mock('react-select', () => ({
   ),
 }));
 
+// Mock trpc client before importing the component so its imports don't trigger next/server resolution
 vi.mock('@/server/trpc/client', () => ({
   trpc: {
     useUtils: () => ({
       transactionLedger: {
         searchDebitTransactions: {
-          fetch: (...args: unknown[]) => mockSearchDebitTransactionsFetch(...args),
+          fetch: (...args: unknown[]) =>
+            mockSearchDebitTransactionsFetch(...args),
         },
       },
     }),
     transactionLedger: {
       getAll: {
-        useQuery: (...args: unknown[]) => mockUseAllQuery(...args),
+        useInfiniteQuery: (...args: unknown[]) => mockUseAllQuery(...args),
       },
       getFilterOptions: {
         useQuery: (...args: unknown[]) => mockUseFilterOptionsQuery(...args),
@@ -105,14 +130,22 @@ vi.mock('@/server/trpc/client', () => ({
   },
 }));
 
+import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
+
 describe('TransactionLedgerTable', () => {
-  const bankAccounts = [{ id: 'acc-1', name: 'Everyday Account', bankName: 'CommBank' }];
+  const bankAccounts = [
+    { id: 'acc-1', name: 'Everyday Account', bankName: 'CommBank' },
+  ];
 
   const baseData = {
-    transactions: [],
-    total: 0,
-    page: 1,
-    totalPages: 1,
+    pages: [
+      {
+        transactions: [],
+        nextCursor: null,
+        totalDebitAmount: 0,
+        totalCreditAmount: 0,
+      },
+    ],
   };
 
   const filterOptions = {
@@ -120,7 +153,10 @@ describe('TransactionLedgerTable', () => {
       { id: 'cat-1', name: 'Groceries' },
       { id: 'cat-2', name: 'Transport' },
     ],
-    incomeSourceLabels: ['EMPLOYMENT', 'BUSINESS'],
+    incomeSourceLabels: [
+      { id: 'src-1', name: 'EMPLOYMENT' },
+      { id: 'src-2', name: 'BUSINESS' },
+    ],
   };
 
   beforeEach(() => {
@@ -129,6 +165,9 @@ describe('TransactionLedgerTable', () => {
       data: baseData,
       isLoading: false,
       isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
       refetch: mockRefetch,
     });
     mockUseFilterOptionsQuery.mockReturnValue({
@@ -147,11 +186,15 @@ describe('TransactionLedgerTable', () => {
   it('renders tab bar with 5 tabs', () => {
     render(<TransactionLedgerTable bankAccounts={bankAccounts} />);
 
-    expect(screen.getAllByRole('button', { name: /^all$/i }).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole('button', { name: /^all$/i }).length,
+    ).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /expenses/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /income/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /excluded/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /uncategorized/i })).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: /uncategorized/i }),
+    ).toBeDefined();
   });
 
   it('shows loading state while fetching', () => {
@@ -159,6 +202,9 @@ describe('TransactionLedgerTable', () => {
       data: undefined,
       isLoading: true,
       isFetching: true,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
       refetch: mockRefetch,
     });
 
@@ -176,26 +222,34 @@ describe('TransactionLedgerTable', () => {
   it('renders transaction rows when data is available', () => {
     mockUseAllQuery.mockReturnValueOnce({
       data: {
-        ...baseData,
-        total: 1,
-        transactions: [
+        pages: [
           {
-            id: 'tx-1',
-            date: '2024-01-15T00:00:00.000Z',
-            description: 'Supermarket',
-            amount: 123.45,
-            type: 'DEBIT',
-            category: 'Groceries',
-            source: 'LLM_CLASSIFIED',
-            status: 'CONFIRMED',
-            bankAccountName: 'Everyday Account',
-            bankName: 'CommBank',
-            reimbursements: [],
+            transactions: [
+              {
+                id: 'tx-1',
+                date: '2024-01-15T00:00:00.000Z',
+                description: 'Supermarket',
+                amount: 123.45,
+                type: 'DEBIT',
+                category: 'Groceries',
+                source: 'LLM_CLASSIFIED',
+                status: 'CONFIRMED',
+                bankAccountName: 'Everyday Account',
+                bankName: 'CommBank',
+                reimbursements: [],
+              },
+            ],
+            nextCursor: null,
+            totalDebitAmount: 123.45,
+            totalCreditAmount: 0,
           },
         ],
       },
       isLoading: false,
       isFetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: vi.fn(),
       refetch: mockRefetch,
     });
 
@@ -220,11 +274,13 @@ describe('TransactionLedgerTable', () => {
     fireEvent.click(screen.getByRole('button', { name: /expenses/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /expenses/i })).toHaveClass('border-teal-500');
+      expect(screen.getByRole('button', { name: /expenses/i })).toHaveClass(
+        'border-teal-500',
+      );
     });
   });
 
-  it('renders filtered ledger when category props are provided', () => {
+  it('renders normal ledger when category prop is provided (no CategoryFilteredLedger)', () => {
     render(
       <TransactionLedgerTable
         bankAccounts={bankAccounts}
@@ -234,9 +290,8 @@ describe('TransactionLedgerTable', () => {
       />,
     );
 
-    expect(screen.getByTestId('category-filtered-ledger')).toBeDefined();
-    expect(mockUseAllQuery).not.toHaveBeenCalled();
-    expect(mockUseFilterOptionsQuery).not.toHaveBeenCalled();
+    // The ledger renders normally with category filter applied — no separate CategoryFilteredLedger component
+    expect(mockUseAllQuery).toHaveBeenCalled();
   });
 
   it('calls refetch when refreshKey prop changes', async () => {
@@ -244,7 +299,9 @@ describe('TransactionLedgerTable', () => {
       <TransactionLedgerTable bankAccounts={bankAccounts} refreshKey={0} />,
     );
 
-    rerender(<TransactionLedgerTable bankAccounts={bankAccounts} refreshKey={1} />);
+    rerender(
+      <TransactionLedgerTable bankAccounts={bankAccounts} refreshKey={1} />,
+    );
 
     await waitFor(() => {
       expect(mockRefetch).toHaveBeenCalled();

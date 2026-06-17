@@ -1,13 +1,13 @@
-import { Inter } from 'next/font/google';
-import Providers from '@/components/Providers';
-import { ThemeProvider } from '@/components/theme-provider';
-
-// types
-import type { Metadata } from 'next';
-
 // styles
 import '@/styles/globals.css';
 import 'react-day-picker/dist/style.css';
+
+// types
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+
+import Providers from '@/components/Providers';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const inter = Inter({
   subsets: ['latin'],

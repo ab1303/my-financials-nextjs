@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@prisma/client";
-import { CategoryRuleMatchType } from "@prisma/client";
+import type { PrismaClient } from '@prisma/client';
+import { CategoryRuleMatchType } from '@prisma/client';
 
 export type { CategoryRuleMatchType };
 
@@ -60,7 +60,7 @@ export async function listRules(params: {
 }): Promise<CategoryRuleListItem[]> {
   const rules = await (params.prisma.categoryRule as any).findMany({
     where: { userId: params.userId },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: 'desc' },
   });
 
   return rules.map((rule: any) => ({
@@ -90,7 +90,7 @@ export async function toggleRule(params: {
   });
 
   if (!rule || rule.userId !== params.userId) {
-    throw new Error("Rule not found");
+    throw new Error('Rule not found');
   }
 
   await (params.prisma.categoryRule as any).update({
@@ -113,7 +113,7 @@ export async function deleteRule(params: {
   });
 
   if (!rule || rule.userId !== params.userId) {
-    throw new Error("Rule not found or not authorized");
+    throw new Error('Rule not found or not authorized');
   }
 
   await (params.prisma.categoryRule as any).delete({
@@ -122,19 +122,19 @@ export async function deleteRule(params: {
 }
 
 const STOP_WORDS = new Set([
-  "to",
-  "from",
-  "the",
-  "a",
-  "an",
-  "and",
-  "or",
-  "of",
-  "in",
-  "at",
-  "on",
-  "for",
-  "by",
+  'to',
+  'from',
+  'the',
+  'a',
+  'an',
+  'and',
+  'or',
+  'of',
+  'in',
+  'at',
+  'on',
+  'for',
+  'by',
 ]);
 
 /**
@@ -149,7 +149,7 @@ function extractPattern(description: string): string {
     .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
     .slice(0, 3);
 
-  return words.join(" ");
+  return words.join(' ');
 }
 
 /**
@@ -173,7 +173,7 @@ export async function findSimilarTransactions(params: {
       userId: params.userId,
       description: {
         contains: pattern,
-        mode: "insensitive",
+        mode: 'insensitive',
       },
       ...(params.excludeTransactionId && {
         id: { not: params.excludeTransactionId },
@@ -188,20 +188,24 @@ export async function findSimilarTransactions(params: {
  * Builds a Prisma description filter for a rule's matchType and pattern.
  * Pushes pattern matching into the database rather than JS memory.
  */
-function buildDescriptionFilter(matchType: CategoryRuleMatchType, pattern: string) {
+function buildDescriptionFilter(
+  matchType: CategoryRuleMatchType,
+  pattern: string,
+) {
   if (matchType === CategoryRuleMatchType.STARTS_WITH) {
-    return { startsWith: pattern, mode: "insensitive" as const };
+    return { startsWith: pattern, mode: 'insensitive' as const };
   }
   if (matchType === CategoryRuleMatchType.EXACT) {
-    return { equals: pattern, mode: "insensitive" as const };
+    return { equals: pattern, mode: 'insensitive' as const };
   }
   // CONTAINS (default)
-  return { contains: pattern, mode: "insensitive" as const };
+  return { contains: pattern, mode: 'insensitive' as const };
 }
 
 /**
  * Applies category rules to transactions in an import session.
  * Only processes transactions with source=LLM_CLASSIFIED.
+ * Excludes transactions already processed by pre-apply or manual override.
  * Uses one DB updateMany per rule — no in-memory transaction scanning.
  * Returns count of rules run and total applied.
  */
@@ -221,11 +225,14 @@ export async function runCategoryRules(params: {
       where: {
         userId: params.userId,
         importSessionId: params.importSessionId,
-        source: "LLM_CLASSIFIED",
-        status: { in: ["PENDING", "CONFIRMED"] },
+        source: 'LLM_CLASSIFIED',
+        status: { in: ['PENDING', 'CONFIRMED'] },
         description: buildDescriptionFilter(rule.matchType, rule.pattern),
       },
-      data: { category: rule.category, source: "USER_OVERRIDE" },
+      data: {
+        category: rule.category,
+        source: 'USER_OVERRIDE',
+      },
     });
 
     if (result.count > 0) {
@@ -255,16 +262,16 @@ export async function applyRuleToPast(params: {
   });
 
   if (!rule || rule.userId !== params.userId) {
-    throw new Error("Rule not found or not authorized");
+    throw new Error('Rule not found or not authorized');
   }
 
   const result = await (params.prisma.transaction as any).updateMany({
     where: {
       userId: params.userId,
-      status: { not: "VOIDED" },
+      status: { not: 'VOIDED' },
       description: buildDescriptionFilter(rule.matchType, rule.pattern),
     },
-    data: { category: rule.category, source: "USER_OVERRIDE" },
+    data: { category: rule.category, source: 'USER_OVERRIDE' },
   });
 
   return result.count;

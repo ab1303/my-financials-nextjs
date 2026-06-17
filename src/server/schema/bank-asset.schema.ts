@@ -1,5 +1,5 @@
 import type { TypeOf } from 'zod';
-import { object, string, z, array } from 'zod';
+import { array,object, string, z } from 'zod';
 
 // Schema for creating a bank account
 export const createBankAccountSchema = object({
@@ -7,7 +7,7 @@ export const createBankAccountSchema = object({
     100,
     'Account name must be less than 100 characters',
   ),
-  bankId: string({ required_error: 'Bank is required' }),
+  institutionId: string({ required_error: 'Institution is required' }),
 });
 
 // Schema for a single bank asset entry (account balance in a snapshot)
@@ -64,7 +64,7 @@ export const getSnapshotByIdSchema = object({
 
 // Schema for getting user's bank accounts
 export const getBankAccountsSchema = object({
-  bankId: string().optional(),
+  institutionId: string().optional(),
 });
 
 // Schema for updating a bank account name

@@ -1,8 +1,10 @@
 'use client';
 
-import { useRef, useState, type ChangeEvent } from 'react';
+import { type ChangeEvent,useRef, useState } from 'react';
 import { toast } from 'sonner';
+
 import { trpc } from '@/server/trpc/client';
+
 import type { UserProfileData } from '../_types';
 
 interface AvatarUploadProps {

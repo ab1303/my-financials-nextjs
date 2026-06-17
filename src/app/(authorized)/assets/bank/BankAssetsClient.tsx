@@ -1,31 +1,32 @@
 'use client';
 
-import { useId, useState, useEffect, useMemo } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import type { SingleValue } from 'react-select';
-import { AppSelect as Select } from '@/components/ui/AppSelect';
 import { Disclosure } from '@headlessui/react';
-import { ChevronDown, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import clsx from 'clsx';
+import { Check, ChevronDown, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useId, useMemo,useState } from 'react';
 import { NumericFormat } from 'react-number-format';
+import type { SingleValue } from 'react-select';
 import { toast } from 'sonner';
 
+import AIUsageCard from '@/components/AIUsageCard';
+import ImportAuditIcon from '@/components/ImportAuditIcon';
+import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/Label';
+import { Modal } from '@/components/ui/Modal';
 import { trpc } from '@/server/trpc/client';
 import type { CalendarYearType, OptionType } from '@/types';
 import type {
-  BankTotalSummary,
   AccountBalance,
+  BankTotalSummary,
   SnapshotTotals,
 } from '@/types/bank-asset.types';
-import { AppCreatableSelect } from '@/components/ui/AppCreatableSelect';
-import { Label } from '@/components/ui/Label';
-import { Button } from '@/components/ui/button';
-import { Modal } from '@/components/ui/Modal';
-import NewSnapshotModal from './NewSnapshotModal';
-import { updateAccountName } from './actions';
+
 import BankAssetAIImportWizard from './_components/BankAssetAIImportWizard';
-import ImportAuditIcon from '@/components/ImportAuditIcon';
-import AIUsageCard from '@/components/AIUsageCard';
+import { updateAccountName } from './actions';
+import NewSnapshotModal from './NewSnapshotModal';
 
 type CalendarType = 'FISCAL' | 'ANNUAL' | 'ZAKAT';
 
@@ -86,7 +87,7 @@ export default function BankAssetsClient({ initialData }: Props) {
   const [editingEntry, setEditingEntry] = useState<{
     entryId: string;
     accountId: string;
-    bankId: string;
+    institutionId: string;
     accountName: string;
     balance: number;
   } | null>(null);
@@ -104,7 +105,7 @@ export default function BankAssetsClient({ initialData }: Props) {
   // Edit account name state
   const [editingAccountName, setEditingAccountName] = useState<{
     accountId: string;
-    bankId: string;
+    institutionId: string;
     currentName: string;
   } | null>(null);
   const [newAccountName, setNewAccountName] = useState('');
@@ -216,18 +217,18 @@ export default function BankAssetsClient({ initialData }: Props) {
     [snapshot],
   );
 
-  // Map bankId → BankTotalSummary for O(1) lookup during render
+  // Map institutionId → BankTotalSummary for O(1) lookup during render
   const totalsMap = useMemo(
     () =>
       new Map(
-        (totals as SnapshotTotals | undefined)?.banks.map((b) => [b.bankId, b]) ?? [],
+        (totals as SnapshotTotals | undefined)?.banks.map((b) => [b.institutionId, b]) ?? [],
       ),
     [totals],
   );
 
-  const getAddableAccountsForBank = (bankId: string) =>
+  const getAddableAccountsForBank = (institutionId: string) =>
     allBankAccounts
-      .filter((acc) => acc.institutionId === bankId && !accountsAlreadyInSnapshot.has(acc.id))
+      .filter((acc) => acc.institutionId === institutionId && !accountsAlreadyInSnapshot.has(acc.id))
       .map((acc) => ({ value: acc.id, label: acc.name }));
 
   // Update entry mutation
@@ -334,11 +335,11 @@ export default function BankAssetsClient({ initialData }: Props) {
   const handleEditEntry = (
     entryId: string,
     accountId: string,
-    bankId: string,
+    institutionId: string,
     accountName: string,
     balance: number,
   ) => {
-    setEditingEntry({ entryId, accountId, bankId, accountName, balance });
+    setEditingEntry({ entryId, accountId, institutionId, accountName, balance });
     setEditBalance(balance);
     setEditAccountName(accountName);
     setIsEditingModalName(false);
@@ -401,10 +402,10 @@ export default function BankAssetsClient({ initialData }: Props) {
 
   const handleStartEditAccountName = (
     accountId: string,
-    bankId: string,
+    institutionId: string,
     currentName: string,
   ) => {
-    setEditingAccountName({ accountId, bankId, currentName });
+    setEditingAccountName({ accountId, institutionId, currentName });
     setNewAccountName(currentName);
     setAccountNameError('');
   };
@@ -450,8 +451,8 @@ export default function BankAssetsClient({ initialData }: Props) {
     setAccountNameError('');
   };
 
-  const handleOpenAddEntry = (bankId: string) => {
-    setAddingEntryForBankId(bankId);
+  const handleOpenAddEntry = (institutionId: string) => {
+    setAddingEntryForBankId(institutionId);
     setNewEntryAccountId('');
     setNewEntryBalance(0);
     setNewEntryError('');
@@ -479,12 +480,12 @@ export default function BankAssetsClient({ initialData }: Props) {
   };
 
   const handleCreateAccountForEntry = async (
-    bankId: string,
+    institutionId: string,
     accountName: string,
   ): Promise<string> => {
     const result = await createAccountForEntryMutation.mutateAsync({
       name: accountName,
-      bankId,
+      institutionId,
     });
     if (!result?.data?.account?.id) throw new Error('Failed to create account');
     return result.data.account.id;
@@ -773,7 +774,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                               onClick={() =>
                                                 handleStartEditAccountName(
                                                   account.accountId,
-                                                  bankTotals.bankId,
+                                                  bankTotals.institutionId,
                                                   account.accountName,
                                                 )
                                               }
@@ -810,7 +811,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                               handleEditEntry(
                                                 snapshotEntry?.id || '',
                                                 account.accountId,
-                                                bankTotals.bankId,
+                                                bankTotals.institutionId,
                                                 account.accountName,
                                                 Number(account.balance),
                                               )
@@ -856,7 +857,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                                   <label className='block text-xs font-medium text-muted-foreground mb-1'>
                                     Account
                                   </label>
-                                  <AppCreatableSelect
+                                  <CreatableSelect
                                     inputId={`add-entry-account-${bank.id}`}
                                     options={getAddableAccountsForBank(bank.id)}
                                     value={
@@ -948,7 +949,7 @@ export default function BankAssetsClient({ initialData }: Props) {
                               <label className='block text-xs font-medium text-muted-foreground mb-1'>
                                 Account
                               </label>
-                              <AppCreatableSelect
+                              <CreatableSelect
                                 inputId={`add-entry-account-${bank.id}`}
                                 options={getAddableAccountsForBank(bank.id)}
                                 value={

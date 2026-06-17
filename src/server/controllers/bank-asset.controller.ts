@@ -1,29 +1,28 @@
-import { handleCaughtError } from '@/server/utils/prisma';
+import type {
+  AddEntryToSnapshotInput,
+  CreateBankAccountInput,
+  CreateBankAssetSnapshotInput,
+  DeleteEntryInput,
+  DeleteSnapshotInput,
+  GetBankAccountsInput,
+  GetSnapshotByIdInput,
+  GetSnapshotsInput,
+  UpdateBankAssetEntryInput,
+} from '@/server/schema/bank-asset.schema';
 import {
+  addEntryToSnapshot,
   createBankAccount,
-  getBankAccounts,
   createBankAssetSnapshot,
+  deleteBankAssetEntry,
+  deleteBankAssetSnapshot,
+  getBankAccounts,
   getBankAssetSnapshots,
   getMostRecentSnapshot,
   getSnapshotById,
-  updateBankAssetEntry,
-  deleteBankAssetEntry,
-  addEntryToSnapshot,
-  deleteBankAssetSnapshot,
   getSnapshotTotals,
+  updateBankAssetEntry,
 } from '@/server/services/bank-asset.service';
-
-import type {
-  CreateBankAccountInput,
-  CreateBankAssetSnapshotInput,
-  UpdateBankAssetEntryInput,
-  DeleteSnapshotInput,
-  DeleteEntryInput,
-  AddEntryToSnapshotInput,
-  GetSnapshotsInput,
-  GetSnapshotByIdInput,
-  GetBankAccountsInput,
-} from '@/server/schema/bank-asset.schema';
+import { handleCaughtError } from '@/server/db/client';
 
 // Bank Account Controllers
 
@@ -37,7 +36,7 @@ export const createBankAccountHandler = async ({
   try {
     const account = await createBankAccount({
       name: input.name,
-      bankId: input.bankId,
+      institutionId: input.institutionId,
       userId,
     });
     return {
@@ -59,7 +58,7 @@ export const getBankAccountsHandler = async ({
   userId: string;
 }) => {
   try {
-    const accounts = await getBankAccounts(userId, input.bankId);
+    const accounts = await getBankAccounts(userId, input.institutionId);
     return accounts;
   } catch (e) {
     handleCaughtError(e);
@@ -106,7 +105,7 @@ export const getSnapshotsHandler = async ({
 
     if (input.calendarYearId) {
       // Import calendar year service to get date range
-      const { prisma } = await import('../utils/prisma');
+      const { prisma } = await import('@/server/db/client');
       const calendarYear = await prisma.calendarYear.findUnique({
         where: { id: input.calendarYearId },
       });
@@ -146,7 +145,7 @@ export const getMostRecentSnapshotHandler = async ({
     let toDate: Date | undefined;
 
     if (input.calendarYearId) {
-      const { prisma } = await import('../utils/prisma');
+      const { prisma } = await import('@/server/db/client');
       const calendarYear = await prisma.calendarYear.findUnique({
         where: { id: input.calendarYearId },
       });

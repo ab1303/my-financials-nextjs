@@ -1,16 +1,22 @@
-import { z } from 'zod';
-import { router, protectedProcedure } from '@/server/trpc/trpc';
+import type { Prisma } from '@prisma/client';
+import { TransferOrphanResolution } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+
 import {
-  getCandidates,
-  searchTransferCandidates,
-  linkTransferPair,
-  unlinkTransferPair,
-  getUnmatchedTransferCount,
-  findSimilarUnmatchedPairs,
+  ORPHAN_RESOLUTION_DAYS,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
+import {
   batchLinkTransferPairs,
+  findSimilarUnmatchedPairs,
+  getCandidates,
+  getUnmatchedTransferCount,
+  linkTransferPair,
+  searchTransferCandidates,
+  unlinkTransferPair,
 } from '@/server/services/transactions/transfer.service';
-import { TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 const getCandidatesSchema = z.object({
   transactionId: z.string().min(1),
@@ -61,11 +67,13 @@ export const transferRouter = router({
     }),
 
   searchCandidates: protectedProcedure
-    .input(z.object({
-      transactionId: z.string().min(1),
-      search: z.string().optional(),
-      bankAccountId: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        transactionId: z.string().min(1),
+        search: z.string().optional(),
+        bankAccountId: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       return searchTransferCandidates({
         prisma: ctx.prisma,
@@ -89,7 +97,8 @@ export const transferRouter = router({
       } catch (err) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: err instanceof Error ? err.message : 'Failed to link transfer pair',
+          message:
+            err instanceof Error ? err.message : 'Failed to link transfer pair',
         });
       }
     }),
@@ -106,7 +115,10 @@ export const transferRouter = router({
       } catch (err) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: err instanceof Error ? err.message : 'Failed to unlink transfer pair',
+          message:
+            err instanceof Error
+              ? err.message
+              : 'Failed to unlink transfer pair',
         });
       }
     }),
@@ -134,7 +146,8 @@ export const transferRouter = router({
       } catch (err) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: err instanceof Error ? err.message : 'Failed to batch link pairs',
+          message:
+            err instanceof Error ? err.message : 'Failed to batch link pairs',
         });
       }
     }),
@@ -153,7 +166,7 @@ export const transferRouter = router({
             transferLinkedTransactionId: null,
             transferCounterpart: { is: null },
           },
-          include: { financialAccount: { include: { bank: true } } },
+          include: { financialAccount: { include: { institution: true } } },
           orderBy: { date: 'desc' },
           skip,
           take: input.limit,
@@ -168,7 +181,12 @@ export const transferRouter = router({
         }),
       ]);
 
-      return { transactions, total, page: input.page, totalPages: Math.ceil((total as number) / input.limit) };
+      return {
+        transactions,
+        total,
+        page: input.page,
+        totalPages: Math.ceil((total as number) / input.limit),
+      };
     }),
 
   getUnmatchedCount: protectedProcedure.query(async ({ ctx }) => {
@@ -193,9 +211,9 @@ export const transferRouter = router({
             transferLinkedTransactionId: { not: null },
           } as any,
           include: {
-            bankAccount: { include: { bank: true } },
+            financialAccount: { include: { institution: true } },
             transferLinkedTransaction: {
-              include: { financialAccount: { include: { bank: true } } },
+              include: { financialAccount: { include: { institution: true } } },
             },
           } as any,
           orderBy: { date: 'desc' },
@@ -212,7 +230,193 @@ export const transferRouter = router({
         }),
       ]);
 
-      return { pairs, total, page: input.page, totalPages: Math.ceil(total / input.limit) };
+      return {
+        pairs,
+        total,
+        page: input.page,
+        totalPages: Math.ceil(total / input.limit),
+      };
+    }),
+
+  getOrphanedTransfers: protectedProcedure
+    .input(
+      z.object({
+        bankAccountId: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - ORPHAN_RESOLUTION_DAYS);
+
+      return (ctx.prisma.transaction as any).findMany({
+        where: {
+          userId: ctx.session.user.id,
+          category: TRANSFER_CATEGORY,
+          transferLinkedTransactionId: null,
+          transferCounterpart: { is: null }, // exclude CREDIT legs already linked as counterparts
+          orphanResolution: null, // only show unresolved orphans
+          date: { lt: cutoffDate },
+          ...(input.bankAccountId
+            ? { bankAccountId: input.bankAccountId }
+            : {}),
+        },
+        include: {
+          financialAccount: { select: { name: true } },
+        },
+        orderBy: { date: 'desc' },
+      });
+    }),
+
+  resolveOrphan: protectedProcedure
+    .input(
+      z.object({
+        transactionId: z.string(),
+        resolution: z.enum(['EXCLUDED', 'EXPENSE', 'INCOME']),
+        newCategory: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Guard: verify it IS an orphaned transfer owned by this user
+      const tx = await (ctx.prisma.transaction as any).findFirst({
+        where: {
+          id: input.transactionId,
+          userId: ctx.session.user.id,
+          category: TRANSFER_CATEGORY,
+          transferLinkedTransactionId: null,
+        },
+      });
+
+      if (!tx) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Orphaned transfer not found',
+        });
+      }
+
+      if (
+        (input.resolution === 'EXPENSE' || input.resolution === 'INCOME') &&
+        !input.newCategory
+      ) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'newCategory required for EXPENSE/INCOME resolution',
+        });
+      }
+
+      return (ctx.prisma.transaction as any).update({
+        where: { id: input.transactionId },
+        data: {
+          orphanResolution: input.resolution,
+          ...(input.resolution !== 'EXCLUDED' && input.newCategory
+            ? { category: input.newCategory }
+            : {}),
+        },
+      });
+    }),
+
+  getResolvedOrphans: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().int().min(1).max(100).default(50),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return (ctx.prisma.transaction as any).findMany({
+        where: {
+          userId: ctx.session.user.id,
+          category: TRANSFER_CATEGORY,
+          transferLinkedTransactionId: null,
+          transferCounterpart: { is: null },
+          orphanResolution: { not: null },
+        },
+        include: {
+          financialAccount: { select: { name: true } },
+        },
+        orderBy: { date: 'desc' },
+        take: input.limit,
+      });
+    }),
+
+  resetOrphanResolution: protectedProcedure
+    .input(z.object({ transactionId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const tx = await (ctx.prisma.transaction as any).findFirst({
+        where: {
+          id: input.transactionId,
+          userId: ctx.session.user.id,
+          transferLinkedTransactionId: null,
+          orphanResolution: { not: null },
+        },
+      });
+
+      if (!tx) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Resolved orphan not found',
+        });
+      }
+
+      return (ctx.prisma.transaction as any).update({
+        where: { id: input.transactionId },
+        data: {
+          orphanResolution: null,
+          category: TRANSFER_CATEGORY,
+        },
+      });
+    }),
+
+  getLinkedTransferPairs: protectedProcedure.query(async ({ ctx }) => {
+    return (ctx.prisma.transaction as any).findMany({
+      where: {
+        userId: ctx.session.user.id,
+        category: TRANSFER_CATEGORY,
+        type: 'DEBIT',
+        transferLinkedTransactionId: { not: null },
+      },
+      include: {
+        financialAccount: { select: { name: true } },
+        transferLinkedTransaction: {
+          include: { financialAccount: { select: { name: true } } },
+        },
+      },
+      orderBy: { date: 'desc' },
+      take: 50,
+    });
+  }),
+
+  runRetroactiveDetection: protectedProcedure.mutation(async ({ ctx }) => {
+    const { runRetroactiveDetection } =
+      await import('@/server/services/transactions/transfer.service');
+    return runRetroactiveDetection({
+      prisma: ctx.prisma,
+      userId: ctx.session.user.id,
+    });
+  }),
+
+  getExcludedTransferSummary: protectedProcedure
+    .input(z.object({ year: z.number().int().optional() }))
+    .query(async ({ ctx, input }) => {
+      const where: Prisma.TransactionWhereInput = {
+        userId: ctx.session.user.id,
+        category: TRANSFER_CATEGORY,
+        ...(input.year
+          ? {
+              date: {
+                gte: new Date(input.year, 0, 1),
+                lte: new Date(input.year, 11, 31, 23, 59, 59),
+              },
+            }
+          : {}),
+      };
+
+      const [count, aggregate] = await Promise.all([
+        ctx.prisma.transaction.count({ where }),
+        ctx.prisma.transaction.aggregate({ where, _sum: { amount: true } }),
+      ]);
+
+      return {
+        count,
+        totalAmount: Number(aggregate._sum.amount ?? 0),
+      };
     }),
 });
-

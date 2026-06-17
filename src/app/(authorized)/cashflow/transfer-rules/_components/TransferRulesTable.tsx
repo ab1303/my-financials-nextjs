@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { trpc } from '@/server/trpc/client';
+
 import type { RuleListItem } from '@/server/services/transactions/transfer-rule.service';
+import { trpc } from '@/server/trpc/client';
 
 interface TransferRulesTableProps {
   initialRules: RuleListItem[];

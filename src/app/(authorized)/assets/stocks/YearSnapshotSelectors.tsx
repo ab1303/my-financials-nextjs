@@ -1,11 +1,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import type { SingleValue } from 'react-select';
-import { Label } from '@/components/ui/Label';
 import { Suspense } from 'react';
+import type { SingleValue } from 'react-select';
+
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { Label } from '@/components/ui/Label';
 import type { OptionType } from '@/types';
-import AppSelect from '@/components/ui/AppSelect';
 
 interface YearSnapshotSelectorsProps {
   yearOptions: OptionType[];
@@ -28,7 +29,7 @@ function YearSnapshotSelectorsContent({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <Label htmlFor="year-select">Fiscal Year</Label>
-        <AppSelect
+        <Select
           inputId="year-select"
           options={yearOptions}
           value={selectedYear}
@@ -42,7 +43,7 @@ function YearSnapshotSelectorsContent({
       {snapshotOptions.length > 0 && (
         <div>
           <Label htmlFor="snapshot-select">Snapshot Date</Label>
-          <AppSelect
+          <Select
             inputId="snapshot-select"
             options={snapshotOptions}
             value={selectedSnapshot}

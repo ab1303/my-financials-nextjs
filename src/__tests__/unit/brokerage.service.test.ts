@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import {
   addBrokerageDetails,
-  getBrokerageDetails,
   deleteBrokerageDetails,
+  getBrokerageDetails,
 } from '@/server/services/brokerage.service';
 
 describe('Brokerage Service', () => {
@@ -85,9 +86,12 @@ describe('Brokerage Service', () => {
 
       // Assert
       expect(results).toHaveLength(3);
-      expect(results[0].name).toBe('Fidelity');
-      expect(results[1].name).toBe('Charles Schwab');
-      expect(results[2].name).toBe('TD Ameritrade');
+      expect(results[0]).toBeDefined();
+      expect(results[0]?.name).toBe('Fidelity');
+      expect(results[1]).toBeDefined();
+      expect(results[1]?.name).toBe('Charles Schwab');
+      expect(results[2]).toBeDefined();
+      expect(results[2]?.name).toBe('TD Ameritrade');
       expect(prismaMock.business.create).toHaveBeenCalledTimes(3);
     });
   });
@@ -288,10 +292,9 @@ describe('Brokerage Service', () => {
         deleteBrokerageDetails(brokerageId)
       ).rejects.toThrow();
 
-      // Verify count was called before delete
-      expect(prismaMock.financialAccount.count).toHaveBeenCalledBefore(
-        prismaMock.business.delete
-      );
+      // Verify count was called and delete was NOT called (rejection prevents deletion)
+      expect(prismaMock.financialAccount.count).toHaveBeenCalled();
+      expect(prismaMock.business.delete).not.toHaveBeenCalled();
     });
   });
 });

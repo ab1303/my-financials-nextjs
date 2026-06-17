@@ -1,12 +1,14 @@
-import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { auth } from '@/server/auth';
-import { redirect, notFound } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
+import type { Metadata } from 'next';
+import { notFound,redirect } from 'next/navigation';
+import { Suspense } from 'react';
+
+import { auth } from '@/server/auth';
 import {
-  getUserCategoryBreakdown,
   getExchangeRate,
+  getUserCategoryBreakdown,
 } from '@/server/services/ai-usage-queries';
+
 import AdminDateRangeFilter from '../_components/AdminDateRangeFilter';
 import UserDrillDownTable from './_components/UserDrillDownTable';
 

@@ -1,8 +1,10 @@
 'use client';
 
-import { Check, AlertCircle, X } from 'lucide-react';
+import { AlertCircle, Check, X } from 'lucide-react';
 import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
+
 import PostImportMatchBanner from '../transfer/PostImportMatchBanner';
 import type { CSVResultsStepProps } from './_types';
 
@@ -55,6 +57,27 @@ export default function CSVResultsStep({
             onDismiss={() => setBannerDismissed(true)}
           />
         )}
+
+      {/* Post-import transfer alert for unmatched flagged transfers */}
+      {(matchJobSummary?.flaggedCount ?? 0) > 0 && (
+        <div className='flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950'>
+          <span className='mt-0.5 flex-shrink-0 text-lg text-yellow-600 dark:text-yellow-400'>↔</span>
+          <p className='text-sm text-yellow-800 dark:text-yellow-200'>
+            <span className='font-medium dark:text-yellow-100'>
+              {matchJobSummary!.flaggedCount} possible transfer{matchJobSummary!.flaggedCount > 1 ? 's' : ''}
+            </span>{' '}
+            were detected but could not be automatically matched.{' '}
+            <a
+              href='/cashflow/transactions?tab=transfers'
+              className='font-medium underline hover:text-yellow-900 dark:hover:text-yellow-100'
+            >
+              Review now →
+            </a>{' '}
+            to keep your reports accurate.
+          </p>
+        </div>
+      )}
+
       <div className={`${config.bgColor} border ${config.borderColor} flex items-start space-x-3 rounded-lg p-4`}>
         <Icon className='mt-0.5 h-5 w-5 flex-shrink-0 text-current' />
         <div>

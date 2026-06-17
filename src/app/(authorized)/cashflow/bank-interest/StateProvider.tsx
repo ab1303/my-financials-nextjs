@@ -1,11 +1,11 @@
 'use client';
 
-import { createContext, useContext, useEffect, useReducer } from 'react';
 import type { Dispatch } from 'react';
+import { createContext, useContext, useEffect, useReducer } from 'react';
 
-import { bankInterestReducer } from './reducer';
-import type { Actions, BankInterestState } from './reducer';
 import type { BankInterestType } from './_types';
+import type { Actions, BankInterestState } from './reducer';
+import { bankInterestReducer } from './reducer';
 
 const BankInterestStateContext = createContext<{
   state: BankInterestState;

@@ -1,10 +1,11 @@
 'use server';
 
-import { auth } from '@/server/auth';
 import { revalidatePath } from 'next/cache';
-import { updateBankAccount as updateBankAccountService } from '@/server/services/bank-asset.service';
-import { updateBankAccountSchema } from '@/server/schema/bank-asset.schema';
+
+import { auth } from '@/server/auth';
 import type { UpdateBankAccountInput } from '@/server/schema/bank-asset.schema';
+import { updateBankAccountSchema } from '@/server/schema/bank-asset.schema';
+import { updateBankAccount as updateBankAccountService } from '@/server/services/bank-asset.service';
 
 export async function updateAccountName(input: UpdateBankAccountInput) {
   try {

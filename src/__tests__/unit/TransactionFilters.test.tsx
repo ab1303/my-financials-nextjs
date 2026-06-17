@@ -1,6 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import TransactionFilters from '@/components/transactions/TransactionFilters';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import TransactionFilters, { type DatePreset } from '@/components/transactions/TransactionFilters';
 
 vi.mock('react-select', () => ({
   default: ({
@@ -51,6 +52,7 @@ describe('TransactionFilters', () => {
     category: undefined,
     dateFrom: undefined,
     dateTo: undefined,
+    datePreset: 'this-fy' as DatePreset,
     search: '',
     amountMin: '',
     amountMax: '',
@@ -58,6 +60,7 @@ describe('TransactionFilters', () => {
     onCategoryChange: vi.fn(),
     onDateFromChange: vi.fn(),
     onDateToChange: vi.fn(),
+    onDatePresetChange: vi.fn(),
     onSearchChange: vi.fn(),
     onAmountMinChange: vi.fn(),
     onAmountMaxChange: vi.fn(),
@@ -140,20 +143,27 @@ describe('TransactionFilters', () => {
   });
 
   it('clicking Custom pill keeps panel open', () => {
-    render(<TransactionFilters {...props} />);
+    const { rerender } = render(<TransactionFilters {...props} />);
 
     openPeriodPanel();
     fireEvent.click(screen.getByRole('button', { name: /^custom$/i }));
+
+    // onDatePresetChange was called with 'custom'; simulate parent state update
+    expect(props.onDatePresetChange).toHaveBeenCalledWith('custom');
+    rerender(<TransactionFilters {...props} datePreset='custom' />);
 
     expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('button', { name: /^custom$/i })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('clicking Custom shows date inputs', () => {
-    render(<TransactionFilters {...props} />);
+    const { rerender } = render(<TransactionFilters {...props} />);
 
     openPeriodPanel();
     fireEvent.click(screen.getByRole('button', { name: /^custom$/i }));
+
+    // Simulate parent updating datePreset to 'custom' after onDatePresetChange callback
+    rerender(<TransactionFilters {...props} datePreset='custom' />);
 
     expect(screen.getByLabelText(/date from/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/date to/i)).toBeInTheDocument();

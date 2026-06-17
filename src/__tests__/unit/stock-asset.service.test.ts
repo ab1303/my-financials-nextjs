@@ -1,6 +1,12 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
-import { calculateHoldingMetrics, getCGTProjectionText } from '@/utils/stock-asset-calculations';
+import type { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
+import {
+  calculateHoldingMetrics,
+  getCGTProjectionText,
+} from '@/utils/stock-asset-calculations';
 
 /**
  * Phase 3: Service Layer Null Handling Tests
@@ -11,17 +17,37 @@ import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
 
 describe('Stock Asset Service - Null buyDate Handling', () => {
   // Helper to create a mock holding with optional buyDate
+  const toDecimal = (
+    v: number | Prisma.Decimal | undefined,
+    fallback: number,
+  ): Prisma.Decimal => {
+    if (v === undefined || v === null)
+      return new Decimal(String(fallback)) as unknown as Prisma.Decimal;
+    if (typeof v === 'number')
+      return new Decimal(String(v)) as unknown as Prisma.Decimal;
+    return v as unknown as Prisma.Decimal;
+  };
+
+  type HoldingOverrides = Omit<
+    Partial<StockHoldingWithAccount>,
+    'quantity' | 'buyPrice' | 'currentPrice'
+  > & {
+    quantity?: number | Prisma.Decimal | undefined;
+    buyPrice?: number | Prisma.Decimal | undefined;
+    currentPrice?: number | Prisma.Decimal | undefined;
+  };
+
   const createMockHolding = (
-    overrides: Partial<StockHoldingWithAccount> = {}
+    overrides: HoldingOverrides = {},
   ): StockHoldingWithAccount => {
-    return {
+    const base = {
       id: 'holding-1',
       ticker: 'AAPL',
       companyName: 'Apple Inc',
-      quantity: 10,
-      buyPrice: 150,
+      quantity: toDecimal(undefined, 10),
+      buyPrice: toDecimal(undefined, 150),
       buyDate: new Date('2023-01-15'), // Default with date
-      currentPrice: 175,
+      currentPrice: toDecimal(undefined, 175),
       currency: 'USD' as const,
       plannedTerm: 'LONG_TERM' as const,
       salePrice: null,
@@ -32,11 +58,33 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       account: {
         id: 'account-1',
         name: 'Main Brokerage',
+        institution: { id: 'inst-1', name: 'Broker' },
       },
       createdAt: new Date(),
       updatedAt: new Date(),
-      ...overrides,
     };
+
+    // Normalize overrides: convert numeric/undefined price/quantity values to Decimal
+    const cleanedOverrides: Partial<Record<string, unknown>> = { ...overrides };
+    if (overrides.quantity !== undefined) {
+      cleanedOverrides.quantity = toDecimal(overrides.quantity as any, 10);
+    }
+    if (overrides.buyPrice !== undefined) {
+      cleanedOverrides.buyPrice = toDecimal(overrides.buyPrice as any, 150);
+    }
+    if (overrides.currentPrice !== undefined) {
+      cleanedOverrides.currentPrice = toDecimal(
+        overrides.currentPrice as any,
+        175,
+      );
+    }
+
+    const merged = {
+      ...base,
+      ...cleanedOverrides,
+    } as unknown as StockHoldingWithAccount;
+
+    return merged;
   };
 
   describe('Test 1: getSnapshotTotals with null buyDate', () => {
@@ -51,7 +99,10 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       });
 
       // Act
-      const metrics = calculateHoldingMetrics(holdingWithNullBuyDate, snapshotDate);
+      const metrics = calculateHoldingMetrics(
+        holdingWithNullBuyDate,
+        snapshotDate,
+      );
 
       // Assert
       expect(metrics.holdingPeriodMonths).toBe(0);
@@ -71,7 +122,10 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       });
 
       // Act
-      const metrics = calculateHoldingMetrics(holdingWithNullBuyDate, snapshotDate);
+      const metrics = calculateHoldingMetrics(
+        holdingWithNullBuyDate,
+        snapshotDate,
+      );
 
       // Assert - Should calculate P/L based on prices, not buyDate
       expect(metrics.unrealizedPL).toBe(1000); // (120 - 100) * 50
@@ -89,7 +143,10 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       });
 
       // Act
-      const metrics = calculateHoldingMetrics(holdingWithNullBuyDate, snapshotDate);
+      const metrics = calculateHoldingMetrics(
+        holdingWithNullBuyDate,
+        snapshotDate,
+      );
 
       // Assert
       expect(metrics.unrealizedPL).toBe(-1000); // (80 - 100) * 50
@@ -117,12 +174,20 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       });
 
       // Act
-      const metricsWithDate = calculateHoldingMetrics(holdingWithDate, snapshotDate);
-      const metricsWithoutDate = calculateHoldingMetrics(holdingWithoutDate, snapshotDate);
+      const metricsWithDate = calculateHoldingMetrics(
+        holdingWithDate,
+        snapshotDate,
+      );
+      const metricsWithoutDate = calculateHoldingMetrics(
+        holdingWithoutDate,
+        snapshotDate,
+      );
 
       // Assert - Both should aggregate properly
-      const totalMarketValue = metricsWithDate.marketValue + metricsWithoutDate.marketValue;
-      const totalUnrealizedPL = metricsWithDate.unrealizedPL + metricsWithoutDate.unrealizedPL;
+      const totalMarketValue =
+        metricsWithDate.marketValue + metricsWithoutDate.marketValue;
+      const totalUnrealizedPL =
+        metricsWithDate.unrealizedPL + metricsWithoutDate.unrealizedPL;
 
       expect(totalMarketValue).toBe(1200 + 1200); // 1200 + 1200
       expect(totalUnrealizedPL).toBe(200 + 200); // (120-100)*10 + (60-50)*20
@@ -132,13 +197,33 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       // Arrange
       const snapshotDate = new Date('2024-01-31');
       const holdings = [
-        createMockHolding({ id: 'h1', buyDate: new Date('2023-01-15'), quantity: 10, buyPrice: 100, currentPrice: 120 }),
-        createMockHolding({ id: 'h2', buyDate: null, quantity: 5, buyPrice: 50, currentPrice: 60 }),
-        createMockHolding({ id: 'h3', buyDate: new Date('2022-06-01'), quantity: 15, buyPrice: 200, currentPrice: 210 }),
+        createMockHolding({
+          id: 'h1',
+          buyDate: new Date('2023-01-15'),
+          quantity: 10,
+          buyPrice: 100,
+          currentPrice: 120,
+        }),
+        createMockHolding({
+          id: 'h2',
+          buyDate: null,
+          quantity: 5,
+          buyPrice: 50,
+          currentPrice: 60,
+        }),
+        createMockHolding({
+          id: 'h3',
+          buyDate: new Date('2022-06-01'),
+          quantity: 15,
+          buyPrice: 200,
+          currentPrice: 210,
+        }),
       ];
 
       // Act
-      const allMetrics = holdings.map((h) => calculateHoldingMetrics(h, snapshotDate));
+      const allMetrics = holdings.map((h) =>
+        calculateHoldingMetrics(h, snapshotDate),
+      );
 
       // Assert
       expect(allMetrics).toHaveLength(3);
@@ -149,8 +234,8 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       });
 
       // Verify null buyDate results in expected state
-      expect(allMetrics[1].holdingPeriodMonths).toBe(0);
-      expect(allMetrics[1].isCGTEligible).toBe(false);
+      expect(allMetrics[1]!.holdingPeriodMonths).toBe(0);
+      expect(allMetrics[1]!.isCGTEligible).toBe(false);
     });
   });
 
@@ -217,7 +302,10 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       });
 
       // Act - Calculate metrics before null
-      const metricsBefore = calculateHoldingMetrics(originalHolding, snapshotDate);
+      const metricsBefore = calculateHoldingMetrics(
+        originalHolding,
+        snapshotDate,
+      );
 
       // Create updated holding with null buyDate
       const updatedHolding = createMockHolding({
@@ -227,7 +315,10 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
         buyPrice: 50,
         currentPrice: 75,
       });
-      const metricsAfter = calculateHoldingMetrics(updatedHolding, snapshotDate);
+      const metricsAfter = calculateHoldingMetrics(
+        updatedHolding,
+        snapshotDate,
+      );
 
       // Assert
       expect(metricsBefore.holdingPeriodMonths).toBeGreaterThan(0);
@@ -248,13 +339,16 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
         quantity: 100,
         buyPrice: 50,
         currentPrice: 0, // No longer holding
-        salePrice: 75,
+        salePrice: new Decimal(75),
         saleDate: new Date('2024-01-30'),
-        soldQuantity: 100,
+        soldQuantity: new Decimal(100),
       });
 
       // Act
-      const metrics = calculateHoldingMetrics(soldHoldingWithNullBuyDate, snapshotDate);
+      const metrics = calculateHoldingMetrics(
+        soldHoldingWithNullBuyDate,
+        snapshotDate,
+      );
 
       // Assert
       expect(metrics.isSold).toBe(true);
@@ -272,13 +366,16 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
         quantity: 100,
         buyPrice: 50,
         currentPrice: 60,
-        salePrice: 75,
+        salePrice: new Decimal(75),
         saleDate: new Date('2024-01-15'),
-        soldQuantity: 50,
+        soldQuantity: new Decimal(50),
       });
 
       // Act
-      const metrics = calculateHoldingMetrics(partiallySoldWithNullBuyDate, snapshotDate);
+      const metrics = calculateHoldingMetrics(
+        partiallySoldWithNullBuyDate,
+        snapshotDate,
+      );
 
       // Assert
       expect(metrics.isSold).toBe(true);
@@ -320,17 +417,46 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
       // Arrange
       const snapshotDate = new Date('2024-01-31');
       const portfolioHoldings = [
-        createMockHolding({ id: 'h1', buyDate: null, ticker: 'AAPL', quantity: 10, buyPrice: 150, currentPrice: 175 }),
-        createMockHolding({ id: 'h2', buyDate: null, ticker: 'MSFT', quantity: 5, buyPrice: 300, currentPrice: 350 }),
-        createMockHolding({ id: 'h3', buyDate: null, ticker: 'GOOGL', quantity: 3, buyPrice: 100, currentPrice: 120 }),
+        createMockHolding({
+          id: 'h1',
+          buyDate: null,
+          ticker: 'AAPL',
+          quantity: 10,
+          buyPrice: 150,
+          currentPrice: 175,
+        }),
+        createMockHolding({
+          id: 'h2',
+          buyDate: null,
+          ticker: 'MSFT',
+          quantity: 5,
+          buyPrice: 300,
+          currentPrice: 350,
+        }),
+        createMockHolding({
+          id: 'h3',
+          buyDate: null,
+          ticker: 'GOOGL',
+          quantity: 3,
+          buyPrice: 100,
+          currentPrice: 120,
+        }),
       ];
 
       // Act
-      const allMetrics = portfolioHoldings.map((h) => calculateHoldingMetrics(h, snapshotDate));
+      const allMetrics = portfolioHoldings.map((h) =>
+        calculateHoldingMetrics(h, snapshotDate),
+      );
 
       // Assert
-      const totalMarketValue = allMetrics.reduce((sum, m) => sum + m.marketValue, 0);
-      const totalUnrealizedPL = allMetrics.reduce((sum, m) => sum + m.unrealizedPL, 0);
+      const totalMarketValue = allMetrics.reduce(
+        (sum, m) => sum + m.marketValue,
+        0,
+      );
+      const totalUnrealizedPL = allMetrics.reduce(
+        (sum, m) => sum + m.unrealizedPL,
+        0,
+      );
 
       expect(totalMarketValue).toBeGreaterThan(0);
       expect(totalUnrealizedPL).toBeGreaterThan(0);

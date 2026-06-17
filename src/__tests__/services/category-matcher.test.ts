@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { makeCategories } from '@/__tests__/helpers/test-helpers';
 import type { AITokenUsage } from '@/server/services/ai-import/_types';
 
 /**
@@ -47,7 +49,7 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
 
   /**
    * Test 1: Exact match skips embedding
-   * 
+   *
    * When the extracted name matches a category exactly (case-insensitive),
    * the function should return immediately without making any embedding API calls.
    * Token usage should be zero.
@@ -55,15 +57,13 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
   describe('exact match skips embedding', () => {
     it('should return immediately with zero token usage for exact match', async () => {
       // We need to dynamically import after setting up mocks
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
-      const result = await matchCategoryWithEmbedding('Food', [
+      const result = await matchCategoryWithEmbedding(
         'Food',
-        'Transportation',
-        'Housing',
-      ]);
+        makeCategories(['Food', 'Transportation', 'Housing']),
+      );
 
       expect(result).toEqual({
         categoryName: 'Food',
@@ -75,90 +75,97 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       });
 
       // No embedding service calls should have been made
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).not.toHaveBeenCalled();
-      expect(mockEmbeddingService.findBestEmbeddingMatch).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.findBestEmbeddingMatch,
+      ).not.toHaveBeenCalled();
     });
 
     it('should be case-insensitive for exact match', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
-      const result = await matchCategoryWithEmbedding('FOOD', [
-        'Food',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'FOOD',
+        makeCategories(['Food', 'Transportation']),
+      );
 
       expect(result.categoryName).toBe('Food');
       expect(result.embeddingUsage.totalTokens).toBe(0);
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle whitespace in extracted name for exact match', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
-      const result = await matchCategoryWithEmbedding('  Food  ', [
-        'Food',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        '  Food  ',
+        makeCategories(['Food', 'Transportation']),
+      );
 
       expect(result.categoryName).toBe('Food');
       expect(result.embeddingUsage.totalTokens).toBe(0);
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).not.toHaveBeenCalled();
     });
   });
 
   /**
    * Test 2: Substring match skips embedding
-   * 
+   *
    * When the extracted name is a substring of a category or vice versa,
    * the function should return immediately without API calls.
    * Token usage should be zero.
    */
   describe('substring match skips embedding', () => {
     it('should return immediately with zero token usage for substring match', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       // "Food" is a substring of "Food & Dining"
-      const result = await matchCategoryWithEmbedding('Food', [
-        'Food & Dining',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'Food',
+        makeCategories(['Food & Dining', 'Transportation']),
+      );
 
       expect(result.categoryName).toBe('Food & Dining');
       expect(result.embeddingUsage.totalTokens).toBe(0);
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).not.toHaveBeenCalled();
     });
 
     it('should match when category is substring of extracted name', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       // Category "Transport" is substring of extracted name "Public Transportation"
-      const result = await matchCategoryWithEmbedding('Public Transportation', [
-        'Transport',
-        'Housing',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'Public Transportation',
+        makeCategories(['Transport', 'Housing']),
+      );
 
       expect(result.categoryName).toBe('Transport');
       expect(result.embeddingUsage.totalTokens).toBe(0);
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).not.toHaveBeenCalled();
     });
 
     it('should be case-insensitive for substring match', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
-      const result = await matchCategoryWithEmbedding('FOOD', [
-        'Food & Dining',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'FOOD',
+        makeCategories(['Food & Dining', 'Transportation']),
+      );
 
       expect(result.categoryName).toBe('Food & Dining');
       expect(result.embeddingUsage.totalTokens).toBe(0);
@@ -167,7 +174,7 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
 
   /**
    * Test 3: Embedding match returns category + usage
-   * 
+   *
    * When neither exact nor substring match succeeds, the function should:
    * - Call ensureCategoryEmbeddings to initialize the cache
    * - Call findBestEmbeddingMatch to compute similarity
@@ -175,9 +182,8 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
    */
   describe('embedding match returns category + usage', () => {
     it('should call embedding service and return matched category with token usage', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       // Mock the embedding service responses
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
@@ -200,11 +206,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('taxi ride', [
-        'Food',
-        'Transportation',
-        'Housing',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'taxi ride',
+        makeCategories(['Food', 'Transportation', 'Housing']),
+      );
 
       expect(result).toEqual({
         categoryName: 'Transportation',
@@ -216,20 +221,19 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       });
 
       // Verify embedding service was called
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).toHaveBeenCalledWith([
-        'Food',
-        'Transportation',
-        'Housing',
-      ]);
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).toHaveBeenCalledWith(
+        makeCategories(['Food', 'Transportation', 'Housing']),
+      );
       expect(mockEmbeddingService.findBestEmbeddingMatch).toHaveBeenCalledWith(
         'taxi ride',
       );
     });
 
     it('should accumulate embedding usage from cache and query', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 50,
@@ -251,10 +255,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('doctor visit', [
-        'Food',
-        'Healthcare',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'doctor visit',
+        makeCategories(['Food', 'Healthcare']),
+      );
 
       expect(result.embeddingUsage).toEqual({
         promptTokens: 55, // 50 + 5
@@ -264,9 +268,8 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
     });
 
     it('should handle multiple matching attempts with proper token accumulation', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 100,
@@ -289,10 +292,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       });
 
       // First call
-      const result1 = await matchCategoryWithEmbedding('movie tickets', [
-        'Entertainment',
-        'Food',
-      ]);
+      const result1 = await matchCategoryWithEmbedding(
+        'movie tickets',
+        makeCategories(['Entertainment', 'Food']),
+      );
 
       expect(result1.embeddingUsage.totalTokens).toBe(108); // 100 + 8
 
@@ -318,10 +321,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
       });
 
       // Second call
-      const result2 = await matchCategoryWithEmbedding('restaurant', [
-        'Entertainment',
-        'Food',
-      ]);
+      const result2 = await matchCategoryWithEmbedding(
+        'restaurant',
+        makeCategories(['Entertainment', 'Food']),
+      );
 
       expect(result2.embeddingUsage.totalTokens).toBe(107); // 100 + 7
     });
@@ -329,15 +332,14 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
 
   /**
    * Test 4: Below threshold returns null
-   * 
+   *
    * When embedding similarity is below the configured threshold,
    * the function should return null with the embedding token usage included.
    */
   describe('below threshold returns null', () => {
     it('should return null when similarity is below threshold', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 10,
@@ -360,10 +362,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('random gibberish', [
-        'Food',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'random gibberish',
+        makeCategories(['Food', 'Transportation']),
+      );
 
       expect(result).toEqual({
         categoryName: null,
@@ -376,9 +378,8 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
     });
 
     it('should still accumulate token usage when returning null', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 50,
@@ -400,19 +401,18 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('xyz123', [
-        'Food',
-        'Housing',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'xyz123',
+        makeCategories(['Food', 'Housing']),
+      );
 
       expect(result.categoryName).toBeNull();
       expect(result.embeddingUsage.totalTokens).toBe(55); // Still accumulates tokens
     });
 
     it('should handle zero similarity correctly', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 10,
@@ -434,9 +434,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         },
       });
 
-      const result = await matchCategoryWithEmbedding('unrelated', [
-        'Food',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'unrelated',
+        makeCategories(['Food']),
+      );
 
       expect(result.categoryName).toBeNull();
       expect(result.embeddingUsage.totalTokens).toBe(13);
@@ -445,7 +446,7 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
 
   /**
    * Test 5: API error falls back to fuzzy matching
-   * 
+   *
    * When the embedding API call fails, the function should:
    * - Catch the error
    * - Fall back to Levenshtein distance-based fuzzy matching
@@ -453,19 +454,18 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
    */
   describe('API error falls back to fuzzy', () => {
     it('should fall back to fuzzy matching when embed API fails', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockRejectedValue(
         new Error('API rate limited'),
       );
 
       // When fallback to fuzzy matching happens, no embedding service should succeed
-      const result = await matchCategoryWithEmbedding('restarant', [
-        'Food',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'restarant',
+        makeCategories(['Food', 'Transportation']),
+      );
 
       // Should match "Food" via fuzzy (Levenshtein similarity)
       // "restarant" is similar to "Food" via fuzzy matching rules
@@ -474,18 +474,17 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
     });
 
     it('should return null from fuzzy if no close match exists', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockRejectedValue(
         new Error('Network error'),
       );
 
-      const result = await matchCategoryWithEmbedding('xyzabc123', [
-        'Food',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'xyzabc123',
+        makeCategories(['Food', 'Transportation']),
+      );
 
       // "xyzabc123" has no fuzzy match with available categories
       expect(result.categoryName).toBeNull();
@@ -493,9 +492,8 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
     });
 
     it('should fall back gracefully when findBestEmbeddingMatch fails', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 10,
@@ -507,10 +505,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         new Error('Embedding service timeout'),
       );
 
-      const result = await matchCategoryWithEmbedding('pizza place', [
-        'Food',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'pizza place',
+        makeCategories(['Food', 'Transportation']),
+      );
 
       // Should fall back to fuzzy; "pizza place" should match "Food"
       expect(result.categoryName).not.toBeNull();
@@ -519,34 +517,34 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
     });
 
     it('should preserve exact/substring matches even if embedding fails', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       // Exact match should succeed without calling embedding service at all
-      const result = await matchCategoryWithEmbedding('Food', [
+      const result = await matchCategoryWithEmbedding(
         'Food',
-        'Transportation',
-      ]);
+        makeCategories(['Food', 'Transportation']),
+      );
 
       expect(result.categoryName).toBe('Food');
       expect(result.embeddingUsage.totalTokens).toBe(0);
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle error during category embedding cache initialization', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockRejectedValue(
         new Error('Failed to initialize category embeddings'),
       );
 
-      const result = await matchCategoryWithEmbedding('dining out', [
-        'Food',
-        'Housing',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'dining out',
+        makeCategories(['Food', 'Housing']),
+      );
 
       // Should fall back to fuzzy matching
       // "dining out" should fuzzy-match to "Food"
@@ -560,9 +558,8 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
    */
   describe('complex scenarios', () => {
     it('should prioritize exact match over embedding match', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 10,
@@ -580,21 +577,22 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         usage: { promptTokens: 3, completionTokens: 0, totalTokens: 3 },
       });
 
-      const result = await matchCategoryWithEmbedding('Food', [
+      const result = await matchCategoryWithEmbedding(
         'Food',
-        'Similar Category',
-      ]);
+        makeCategories(['Food', 'Similar Category']),
+      );
 
       // Should return exact match "Food" and zero tokens
       expect(result.categoryName).toBe('Food');
       expect(result.embeddingUsage.totalTokens).toBe(0);
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).not.toHaveBeenCalled();
     });
 
     it('should prioritize substring match over embedding match', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 10,
@@ -612,21 +610,22 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         usage: { promptTokens: 3, completionTokens: 0, totalTokens: 3 },
       });
 
-      const result = await matchCategoryWithEmbedding('Food', [
-        'Food & Beverages',
-        'Other',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        'Food',
+        makeCategories(['Food & Beverages', 'Other']),
+      );
 
       // Should return substring match "Food & Beverages" and zero tokens
       expect(result.categoryName).toBe('Food & Beverages');
       expect(result.embeddingUsage.totalTokens).toBe(0);
-      expect(mockEmbeddingService.ensureCategoryEmbeddings).not.toHaveBeenCalled();
+      expect(
+        mockEmbeddingService.ensureCategoryEmbeddings,
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle empty category list gracefully', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 0,
@@ -651,9 +650,8 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
     });
 
     it('should handle whitespace and normalization correctly', async () => {
-      const { matchCategoryWithEmbedding } = await import(
-        '@/server/services/ai-import/category-matcher.service'
-      );
+      const { matchCategoryWithEmbedding } =
+        await import('@/server/services/ai-import/category-matcher.service');
 
       mockEmbeddingService.ensureCategoryEmbeddings.mockResolvedValue({
         promptTokens: 10,
@@ -671,10 +669,10 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
         usage: { promptTokens: 3, completionTokens: 0, totalTokens: 3 },
       });
 
-      const result = await matchCategoryWithEmbedding('   Taxi   ', [
-        'Taxi Services',
-        'Transportation',
-      ]);
+      const result = await matchCategoryWithEmbedding(
+        '   Taxi   ',
+        makeCategories(['Taxi Services', 'Transportation']),
+      );
 
       // "   Taxi   " should substring-match with "Taxi Services"
       expect(result.categoryName).toBe('Taxi Services');

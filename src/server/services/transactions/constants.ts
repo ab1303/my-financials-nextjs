@@ -1,3 +1,9 @@
+/**
+ * Transfer matching tolerances
+ */
+export const TRANSFER_DATE_TOLERANCE_DAYS = 5; // Same-institution: ±5 days
+export const TRANSFER_DATE_TOLERANCE_DAYS_CROSS = 10; // Cross-institution: ±10 days (YNAB standard)
+
 export const REIMBURSEMENT_CATEGORY = 'Reimbursement' as const;
 
 export const TRANSFER_CATEGORY = 'Transfer' as const;
@@ -14,3 +20,15 @@ export const EXCLUDED_CREDIT_LABELS = ['Transfer', 'Excluded', 'Reimbursement'] 
  * Transfer debits must not create MonthlyExpenseSummary entries.
  */
 export const EXCLUDED_DEBIT_LABELS = ['Transfer'] as const;
+
+/**
+ * Categories that must be excluded from all expense and income aggregation queries.
+ * Single source of truth for all cashflow query guards across the app.
+ */
+export const EXCLUDED_FROM_EXPENSE_AGGREGATION = [TRANSFER_CATEGORY] as const;
+
+/**
+ * Number of days after which a transfer is considered orphaned if not linked to a counterpart.
+ * Used to identify stale unresolved transfers that may inflate expense/income figures.
+ */
+export const ORPHAN_RESOLUTION_DAYS = 30;

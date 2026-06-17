@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useCallback, type ReactNode } from 'react';
-import { History, GitMerge, Tag } from 'lucide-react';
+import { GitMerge, History, Tag } from 'lucide-react';
 import Link from 'next/link';
+import { type ReactNode,useCallback, useState } from 'react';
 
-import CSVImportWizard from './csv/CSVImportWizard';
-import AIImportWizard from './ai/AIImportWizard';
-import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
-import ImportSessionHistory from '@/components/transactions/ImportSessionHistory';
 import { CategoryFilteredLedger } from '@/components/transactions/CategoryFilteredLedger';
+import ImportSessionHistory from '@/components/transactions/ImportSessionHistory';
+import TransactionLedgerTable from '@/components/transactions/TransactionLedgerTable';
+
+import AIImportWizard from './ai/AIImportWizard';
+import CSVImportWizard from './csv/CSVImportWizard';
 
 interface BankAccount {
   id: string;
@@ -21,9 +22,10 @@ interface ImportCardProps {
   description: string;
   onClick: () => void;
   icon: ReactNode;
+  testId?: string;
 }
 
-function ImportCard({ title, description, onClick, icon }: ImportCardProps) {
+function ImportCard({ title, description, onClick, icon, testId }: ImportCardProps) {
   return (
     <div
       role="button"
@@ -32,6 +34,7 @@ function ImportCard({ title, description, onClick, icon }: ImportCardProps) {
       onKeyDown={(e) => {
         if (e.key === 'Enter') onClick();
       }}
+      data-testid={testId}
       className="cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="flex items-center gap-4">
@@ -54,6 +57,9 @@ interface Props {
   initialMonth?: number;
   initialYear?: number;
   viewMode?: string;
+  initialTab?: string;
+  initialDateFrom?: string;
+  initialDateTo?: string;
 }
 
 export default function TransactionsClient({
@@ -63,6 +69,9 @@ export default function TransactionsClient({
   initialMonth,
   initialYear,
   viewMode,
+  initialTab,
+  initialDateFrom,
+  initialDateTo,
 }: Props) {
   const [csvOpen, setCsvOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
@@ -128,6 +137,7 @@ export default function TransactionsClient({
         <ImportCard
           title="CSV Bank Statement"
           description="Import transactions from a CommBank CSV statement"
+          testId="open-csv-import-wizard"
           icon={
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -176,6 +186,9 @@ export default function TransactionsClient({
           initialCategory={initialCategory}
           initialMonth={initialMonth}
           initialYear={initialYear}
+          initialTab={initialTab}
+          initialDateFrom={initialDateFrom}
+          initialDateTo={initialDateTo}
         />
       </div>
 

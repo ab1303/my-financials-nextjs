@@ -1,8 +1,10 @@
 'use client';
 
 import type { User } from 'next-auth';
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback,useEffect, useState } from 'react';
+
 import { cn } from '@/lib/utils';
+
 import Header from './Header';
 
 type AppShellProps = {

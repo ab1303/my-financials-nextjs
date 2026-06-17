@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { groupByMonth } from '../../app/(authorized)/cashflow/income/IncomeTableClient';
 import type { IncomeEntryType } from '../../app/(authorized)/cashflow/income/_types';
+import { groupByMonth } from '../../app/(authorized)/cashflow/income/IncomeTableClient';
 
 function makeEntry(
   overrides: Partial<IncomeEntryType> & { dateEarned: Date; amount: number },
@@ -33,8 +33,8 @@ describe('groupByMonth', () => {
       makeEntry({ dateEarned: new Date(2025, 3, 20), amount: 10 }),
     ]);
 
-    expect(groups[0].subtotal).toBe(350.5);
-    expect(groups[1].subtotal).toBe(10);
+    expect(groups[0]?.subtotal).toBe(350.5);
+    expect(groups[1]?.subtotal).toBe(10);
   });
 
   it('preserves originalIndex for each entry', () => {
@@ -47,7 +47,7 @@ describe('groupByMonth', () => {
     const groups = groupByMonth(entries);
 
     expect(groups).toHaveLength(1);
-    expect(groups[0].entries.map((item) => item.originalIndex)).toEqual([0, 1, 2]);
+    expect(groups[0]?.entries.map((item) => item.originalIndex)).toEqual([0, 1, 2]);
   });
 
   it('returns empty array for empty input', () => {

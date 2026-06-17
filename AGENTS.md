@@ -4,35 +4,60 @@ Rules for all AI agents working in this repository.
 
 ---
 
-## File Governance: AGENTS.md vs CLAUDE.md
+## File Governance: AGENTS.md vs CLAUDE.md vs GEMINI.md
 
 **This section prevents conflicting/duplicate advice across instruction files.**
 
-| File | Audience | Content | When to Update |
-|------|----------|---------|-----------------|
-| **AGENTS.md** | All agents (universal rules) | Efficiency, planning, specs, code standards, database safety, dev server safety, scope control | Any change affecting all agents |
-| **CLAUDE.md** | Copilot CLI sessions powered by Claude | Persona/expertise, MCP tools, Claude-specific context, references to AGENTS.md | Claude-specific behavior or MCP changes only |
+| File          | Audience                               | Content                                                                                                             | When to Update                               |
+| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| **AGENTS.md** | All agents (universal rules)           | Foundational mandates, safety, standards, persona, specs, interactions, DB safety, dev server safety, scope control | Any change affecting all agents              |
+| **CLAUDE.md** | Copilot CLI sessions powered by Claude | Persona tweaks, MCP tools                                                                                           | Claude-specific behavior or MCP changes only |
+| **GEMINI.md** | Gemini CLI sessions                    | Persona tweaks                                                                                                      | Gemini-specific behavior changes only        |
 
 **Golden Rule:**
-- **Universal rules** (database, form patterns, auth, pnpm, migrations) → `AGENTS.md` **ONLY**
-- **Claude-specific** (MCP tools, persona, expertise) → `CLAUDE.md` **ONLY**
-- **Never duplicate** a rule across both files — leads to agent confusion and maintenance drift
-- **When updating AGENTS.md**: Check if CLAUDE.md repeats it; remove the duplicate and add a cross-reference instead
 
-**Current Audit (last checked 2026-05-24):**
-- ✅ Database Safety: unified in AGENTS.md (line 127-134)
-- ✅ pnpm usage: defined in AGENTS.md (line 125), CLAUDE.md references it (line 21)
-- ✅ MCP tools: in CLAUDE.md (line 23-28) — read-only Postgres restriction documented
-- ✅ Spec-driven: unified in AGENTS.md (line 15), CLAUDE.md adds "Read instructions" context (line 41)
+- **Universal rules** (database, form patterns, auth, pnpm, migrations, spec workflow, interaction logic) → `AGENTS.md` **ONLY**
+- **Agent-specific tweaks** → Their respective files (e.g., `CLAUDE.md` for MCP tools, `GEMINI.md` for Gemini-specific persona)
+- **Never duplicate** a rule across files — leads to agent confusion and maintenance drift
 
 **For detailed governance rules and maintenance procedures, see `.ai/instructions/instruction-governance.md`.**
 
 ---
 
-## Efficiency
+## Interaction Logic (Universal)
+
+- **Directives**: Perform implementation/testing with minimal confirmation unless critically underspecified.
+- **Inquiries**: Provide analysis or advice only when explicitly asked; do not modify files.
+- **Ask Clarifying Questions**: Follow the `prd-mode` workflow for any new feature requests.
+
+## Project Context (Universal)
+
+- **Framework**: Next.js App Router (T3 Stack) — tRPC, Prisma, NextAuth v5 beta, Tailwind, Flowbite.
+- **Directory**: All source code in `src/`. Prisma schema in `prisma/`. Specs in `spec/`.
+- **CI/CD**: GitHub Actions → Render.com. See `.github/instructions/deployment.instructions.md`.
+- **Environment**: Document all required env vars in `.env-example`. Never expose secrets to the client.
+- **Testing**: Playwright e2e in `e2e/`. Vitest unit tests in `src/__tests__/`.
+
+## Database Access Scope (Universal)
+
+- **Constraint:** Access is strictly limited to databases used by the `my-financials-nextjs` application and its integration tests.
+- **Prohibition:** Accessing, listing, or querying other databases (e.g., `CapacityDb`, `local`) is strictly prohibited.
+- **Action:** Any attempt to list or interact with databases outside this scope is a violation of protocol.
+
+## Windows 11 & Token Optimization
+
+- Use `bash` over powershell for file operations.
+- File Ops: NEVER use shell commands (`echo`, `Out-File`, `New-Item`, `mkdir`) to manage files. Use native workspace file tools exclusively.
+- Path Syntax: All shell execution paths must use Windows backslashes (`\`).
+- Suppress Noise: Always pass `--quiet` or `--silent` flags to terminal commands (`pnpm`, `prisma`) to minimize token-wasting stdout/stderr.
+
+---
+
+## Efficiency (Universal)
 
 - Read files yourself before delegating — only launch sub-agents for work you haven't done.
-- Pass file content directly in sub-agent prompts; don't tell them to read the codebase.
+- Pass only the smallest complete slice in sub-agent prompts; don't tell them to read the codebase.
+- If the slice is insufficient to form a true picture, ask the user for more context instead of widening the search.
 - Batch all independent file reads into one parallel tool-call turn.
 
 ## Skill Delegation Mandate
@@ -43,12 +68,12 @@ Rules for all AI agents working in this repository.
 - ❌ Never run `prisma migrate` or `prisma generate` in the main conversation
 - ❌ Never rationalize "I'll just do this small change myself" — all code changes go through agents
 - ✅ Spawn `Next.js Expert` background agents with `model: "claude-haiku-4.5"` for every phase
-- ✅ Pass all file contents inline in the agent prompt — never say "read the codebase"
+- ✅ Pass only the exact spec slice and touched excerpts inline — never say "read the codebase"
 - ✅ Run `pnpm run build` AFTER all agents complete — this is the orchestrator's only code interaction
 
 **Enforcement**: The SKILL.md requires a public delegation declaration to the user before any source files are read for bundles. If that declaration was not posted, the orchestrator skipped the guardrail — stop and post it now.
 
-## Planning
+## Planning (Universal)
 
 - Spec and PRD files → `spec/{domain}/{feature}/` only (see Spec Documents below).
 - `plan.md` → session workspace only; never commit planning files to the repo.
@@ -158,10 +183,13 @@ Never use layer names: ~~`schema/`~~, ~~`api/`~~, ~~`ui/`~~ — these recreate h
 
 Never pass all three docs at once for a single implementation task — context.md alone is enough orientation; lld.md is the implementation contract.
 
-## Code
+## Code (Universal)
 
 - Use `pnpm` exclusively — never `npm` or `yarn`.
-- Ask user to Run `pnpm run build` before marking any feature complete.
+- **Validation Workflow**:
+  1. **Run `pnpm run type-check` (tsc)**: Fast type validation.
+  2. **Run `pnpm run lint`**: Fast style/convention validation.
+  3. **Prompt the user to run `pnpm run build`**: Final deployment verification only (perform locally).
 - Stop the dev server before any Prisma CLI operation (prevents EPERM on Windows).
 - Never run `prisma migrate reset` without explicit user consent and a confirmed backup.
 - **NEVER use `prisma db push` for schema changes** — it modifies the DB without creating a migration file, causing irreversible schema drift. Always use `pnpm prisma migrate dev --name <descriptive-name>`. See `.ai/instructions/database-safety.md`.
@@ -222,6 +250,12 @@ pnpm run dev
 - Before deleting a feature directory, grep `src/` for all imports of its files. Extract anything imported outside the feature to `src/components/` first.
 - A file at `feature-a/_components/foo.tsx` is owned by `feature-a`. Cross-feature imports are hidden dependencies — they break silently on cleanup.
 
+## Shared UI Components
+
+- **Prioritize `src/components/ui/`**: New UI components that are domain-agnostic and reusable MUST be developed in `src/components/ui/`.
+- **Prefer Composition**: When building complex UI components, use composition patterns to ensure flexibility and avoid boolean prop anti-patterns.
+- **Refactor Early**: If you identify UI logic duplicated across multiple domains, factor it out into `src/components/ui/` immediately to maintain structural consistency.
+
 ## UI Rules (Recurring Issues)
 
 ### Dark Mode
@@ -244,20 +278,21 @@ pnpm run dev
 
 All coding standards live in `.ai/instructions/`. Read the relevant file before implementing:
 
-| Topic                            | File                                             |
-| -------------------------------- | ------------------------------------------------ |
-| Auth / session                   | `.ai/instructions/auth.md`                       |
-| Database / Prisma safety         | `.ai/instructions/database-safety.md`            |
-| Forms (react-hook-form, zod)     | `.ai/instructions/form-patterns.md`              |
-| Middleware & icons               | `.ai/instructions/middleware-and-icons.md`       |
-| State management & notifications | `.ai/instructions/state-and-ui.md`               |
-| Dark mode & react-select         | `.ai/instructions/dark-mode-and-react-select.md` |
-| Cursor & text selection          | `.ai/instructions/cursor-and-text-selection.md`  |
-| Performance                      | `.ai/instructions/performance.md`                |
-| Deployment                       | `.ai/instructions/deployment.md`                 |
-| Product / UX principles          | `.ai/instructions/product-owner-ux.md`           |
-| Testing & subagent orchestration | `.ai/instructions/testing-and-subagents.md`      |
-| Git worktree workflow            | `.ai/instructions/git-worktree.md`               |
+| Topic                            | File                                              |
+| -------------------------------- | ------------------------------------------------- |
+| Auth / session                   | `.ai/instructions/auth.md`                        |
+| Database / Prisma safety         | `.ai/instructions/database-safety.md`             |
+| Forms (react-hook-form, zod)     | `.ai/instructions/form-patterns.md`               |
+| Middleware & icons               | `.ai/instructions/middleware-and-icons.md`        |
+| State management & notifications | `.ai/instructions/state-and-ui.md`                |
+| Dark mode & react-select         | `.ai/instructions/dark-mode-and-react-select.md`  |
+| Cursor & text selection          | `.ai/instructions/cursor-and-text-selection.md`   |
+| Performance                      | `.ai/instructions/performance.md`                 |
+| Transaction ledger patterns      | `.ai/instructions/transaction-ledger-patterns.md` |
+| Deployment                       | `.ai/instructions/deployment.md`                  |
+| Product / UX principles          | `.ai/instructions/product-owner-ux.md`            |
+| Testing & subagent orchestration | `.ai/instructions/testing-and-subagents.md`       |
+| Git worktree workflow            | `.ai/instructions/git-worktree.md`                |
 
 `.github/instructions/` contains GitHub Copilot **scoped** rules (file-pattern bound, `applyTo` frontmatter). Do not duplicate general rules there — add them to `.ai/instructions/` instead.
 

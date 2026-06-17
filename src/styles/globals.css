@@ -6,6 +6,13 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    /* 14px base — scales all rem Tailwind classes down proportionally.
+       text-base → 14px, text-sm → 12.25px, text-2xl → 21px, etc.
+       Improves density on 15" laptops without touching individual components. */
+    font-size: 87.5%;
+  }
+
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;

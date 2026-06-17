@@ -1,22 +1,23 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { NumericFormat } from 'react-number-format';
 import {
-  useReactTable,
   createColumnHelper,
-  getCoreRowModel,
   flexRender,
+  getCoreRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
 import { List } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import { NumericFormat } from 'react-number-format';
 
+import AIUsageCard from '@/components/AIUsageCard';
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
-import type { MonthlyExpenseSummary } from '@/server/models/expense';
-import AIUsageCard from '@/components/AIUsageCard';
+import type { CategoryBreakdown, MonthlyExpenseSummary } from '@/server/models/expense';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
+import ExpenseCategoryBreakdownWidget from './_components/ExpenseCategoryBreakdownWidget';
 
 /**
  * Returns month numbers in fiscal-year order starting from `fromMonth`.
@@ -48,6 +49,9 @@ type ExpenseTableClientProps = {
   calendarLabel: string;
   fromMonth: number;
   fromYear: number;
+  categoryBreakdown: CategoryBreakdown[];
+  yearDateFrom: string;  // YYYY-MM-DD
+  yearDateTo: string;    // YYYY-MM-DD
 };
 
 export default function ExpenseTableClient({
@@ -58,6 +62,9 @@ export default function ExpenseTableClient({
   calendarLabel,
   fromMonth,
   fromYear,
+  categoryBreakdown,
+  yearDateFrom,
+  yearDateTo,
 }: ExpenseTableClientProps) {
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [selectedMonthYear, setSelectedMonthYear] = useState<number | null>(
@@ -165,6 +172,14 @@ export default function ExpenseTableClient({
           </Link>
         </div>
       </div>
+
+      {/* Category Breakdown Widget */}
+      <ExpenseCategoryBreakdownWidget
+        breakdown={categoryBreakdown}
+        yearDateFrom={yearDateFrom}
+        yearDateTo={yearDateTo}
+        calendarLabel={calendarLabel}
+      />
 
       <div className='overflow-x-auto'>
         <Table>

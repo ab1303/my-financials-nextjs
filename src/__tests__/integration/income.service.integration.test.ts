@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
 import { Decimal } from '@prisma/client/runtime/library';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   addIncomeEntry,
   deleteIncomeEntry,
@@ -7,242 +8,185 @@ import {
   getTotalIncome,
   updateIncomeEntry,
 } from '@/server/services/income.service';
-import { prismaMock } from '../mocks/prisma.mock';
-import { createMockIncomeEntry } from '../mocks/income.mock';
 
-describe('Income Service - CRUD Operations', () => {
+import { createMockIncomeTransaction } from '../mocks/income.mock';
+import { prismaMock } from '../mocks/prisma.mock';
+
+describe('Income Service (integration)', () => {
   const userId = 'test-user-id';
   const calendarYearId = 'test-calendar-id';
-  const incomeId = 'test-income-id';
 
   beforeEach(() => {
-    // Reset mocks before each test
+    vi.clearAllMocks();
   });
 
   describe('getIncomeEntries', () => {
-    it('should return income entries for a calendar year', async () => {
-      const mockEntries = [
-        {
-          id: 'entry-1',
-          incomeLedgerId: incomeId,
-          dateEarned: new Date('2024-01-15'),
-          amount: new Decimal('5000.00'),
-          source: 'EMPLOYMENT' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          incomeLedger: {
-            id: incomeId,
-            calendarId: calendarYearId,
-            userId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        },
-        {
-          id: 'entry-2',
-          incomeLedgerId: incomeId,
-          dateEarned: new Date('2024-02-15'),
-          amount: new Decimal('5000.00'),
-          source: 'EMPLOYMENT' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          incomeLedger: {
-            id: incomeId,
-            calendarId: calendarYearId,
-            userId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        },
-      ];
+    it('returns mapped income entries for a calendar year', async () => {
+      prismaMock.calendarYear.findUnique.mockResolvedValue({
+        fromYear: 2024,
+        fromMonth: 1,
+        toYear: 2024,
+        toMonth: 12,
+      } as any);
 
-      prismaMock.incomeRecord.findMany.mockResolvedValue(mockEntries);
+      prismaMock.transaction.findMany.mockResolvedValue([
+        createMockIncomeTransaction({
+          id: 'txn-1',
+          date: new Date('2024-01-15'),
+          amount: new Decimal('5000.00'),
+          category: 'Employment',
+        }),
+        createMockIncomeTransaction({
+          id: 'txn-2',
+          date: new Date('2024-02-15'),
+          amount: new Decimal('2000.00'),
+          category: 'Freelance',
+        }),
+      ] as any);
 
-      const result = await getIncomeEntries(calendarYearId, userId);
+      prismaMock.incomeSource.findMany.mockResolvedValue([
+        { id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() },
+        { id: 'src-2', name: 'Freelance', description: null, isActive: true, createdAt: new Date() },
+      ] as any);
+
+      const result = await getIncomeEntries(calendarYearId, userId, prismaMock);
 
       expect(result).toHaveLength(2);
-      expect(result[0]?.amount).toBe(5000);
-      expect(result[0]?.source).toBe('EMPLOYMENT');
-      expect(prismaMock.incomeRecord.findMany).toHaveBeenCalledWith({
-        where: {
-          incomeLedger: {
-            calendarId: calendarYearId,
-            userId,
-          },
-        },
-        include: {
-          incomeLedger: true,
-        },
-        orderBy: {
-          dateEarned: 'desc',
-        },
-      });
+      expect(result[0]!.incomeSourceName).toBe('Employment');
+      expect(result[0]!.amount).toBe(5000);
+      expect(result[1]!.incomeSourceName).toBe('Freelance');
+      expect(result[1]!.amount).toBe(2000);
     });
 
-    it('should return empty array when no entries exist', async () => {
-      prismaMock.incomeRecord.findMany.mockResolvedValue([]);
-
-      const result = await getIncomeEntries(calendarYearId, userId);
-
+    it('returns [] when calendarYear not found', async () => {
+      prismaMock.calendarYear.findUnique.mockResolvedValue(null);
+      const result = await getIncomeEntries(calendarYearId, userId, prismaMock);
       expect(result).toEqual([]);
     });
   });
 
   describe('addIncomeEntry', () => {
-    it('should create a new income entry', async () => {
-      const entryData = {
+    it('creates a Transaction with correct fields', async () => {
+      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() } as any);
+      prismaMock.transaction.create.mockResolvedValue(
+        createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' })
+      );
+
+      const entry = {
         dateEarned: new Date('2024-01-15'),
         amount: 5000,
-        source: 'EMPLOYMENT' as const,
+        incomeSourceId: 'src-1',
       };
+      const result = await addIncomeEntry(userId, entry, prismaMock);
 
-      const mockCreatedEntry = {
-        id: 'new-entry-id',
-        incomeLedgerId: incomeId,
-        dateEarned: entryData.dateEarned,
-        amount: new Decimal('5000.00'),
-        source: entryData.source,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      prismaMock.incomeRecord.create.mockResolvedValue(mockCreatedEntry);
-
-      const result = await addIncomeEntry(incomeId, entryData);
-
-      expect(result.id).toBe('new-entry-id');
-      expect(result.amount.toNumber()).toBe(5000);
-      expect(prismaMock.incomeRecord.create).toHaveBeenCalledWith({
-        data: {
-          incomeLedgerId: incomeId,
-          dateEarned: entryData.dateEarned,
-          amount: entryData.amount,
-          source: entryData.source,
-        },
+      expect(prismaMock.transaction.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId,
+          type: 'CREDIT',
+          source: 'USER_MANUAL',
+          status: 'CONFIRMED',
+          date: entry.dateEarned,
+          amount: entry.amount,
+          category: 'Employment',
+        }),
       });
+      expect(result.incomeSourceId).toBe('src-1');
+      expect(result.source).toBe('USER_MANUAL');
     });
 
-    it('should handle different income sources', async () => {
-      const sources: Array<
-        'EMPLOYMENT' | 'BUSINESS' | 'INVESTMENT' | 'RENTAL' | 'GIFT' | 'ZAKAT' | 'OTHER'
-      > = ['BUSINESS', 'INVESTMENT', 'RENTAL', 'GIFT', 'ZAKAT', 'OTHER'];
-
-      for (const source of sources) {
-        const entryData = {
-          dateEarned: new Date('2024-01-15'),
-          amount: 1000,
-          source,
-        };
-
-        const mockEntry = createMockIncomeEntry({
-          source,
-          amount: new Decimal('1000.00'),
-        });
-
-        prismaMock.incomeRecord.create.mockResolvedValue(mockEntry);
-
-        const result = await addIncomeEntry(incomeId, entryData);
-
-        expect(result.source).toBe(source);
-      }
+    it('throws if incomeSource not found', async () => {
+      prismaMock.incomeSource.findUnique.mockResolvedValue(null);
+      await expect(
+        addIncomeEntry(userId, { dateEarned: new Date(), amount: 100, incomeSourceId: 'bad-id' }, prismaMock)
+      ).rejects.toThrow('Income source not found');
     });
   });
 
   describe('updateIncomeEntry', () => {
-    it('should update an existing income entry', async () => {
-      const entryId = 'entry-to-update';
-      const updatedData = {
-        dateEarned: new Date('2024-02-15'),
-        amount: 6000,
-        source: 'BUSINESS' as const,
-      };
+    it('updates Transaction if source is USER_MANUAL and userId matches', async () => {
+      prismaMock.transaction.findUnique.mockResolvedValue({
+        source: 'USER_MANUAL',
+        userId,
+      } as any);
+      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() } as any);
+      prismaMock.transaction.update.mockResolvedValue({} as any);
 
-      const mockUpdatedEntry = {
-        id: entryId,
-        incomeLedgerId: incomeId,
-        dateEarned: updatedData.dateEarned,
-        amount: new Decimal('6000.00'),
-        source: updatedData.source,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      await updateIncomeEntry('txn-1', userId, {
+        dateEarned: new Date('2024-01-15'),
+        amount: 1234,
+        incomeSourceId: 'src-1',
+      }, prismaMock);
 
-      prismaMock.incomeRecord.update.mockResolvedValue(mockUpdatedEntry);
+      expect(prismaMock.transaction.update).toHaveBeenCalled();
+    });
 
-      await updateIncomeEntry(entryId, updatedData);
+    it('throws if source is not USER_MANUAL', async () => {
+      prismaMock.transaction.findUnique.mockResolvedValue({
+        source: 'LLM_CLASSIFIED',
+        userId,
+      } as any);
+      await expect(
+        updateIncomeEntry('txn-1', userId, { dateEarned: new Date(), amount: 1, incomeSourceId: 'src-1' }, prismaMock)
+      ).rejects.toThrow('Cannot edit an imported income entry');
+    });
 
-      expect(prismaMock.incomeRecord.update).toHaveBeenCalledWith({
-        where: { id: entryId },
-        data: {
-          dateEarned: updatedData.dateEarned,
-          amount: updatedData.amount,
-          source: updatedData.source,
-        },
-      });
+    it('throws if userId does not match', async () => {
+      prismaMock.transaction.findUnique.mockResolvedValue({
+        source: 'USER_MANUAL',
+        userId: 'other-user',
+      } as any);
+      await expect(
+        updateIncomeEntry('txn-1', userId, { dateEarned: new Date(), amount: 1, incomeSourceId: 'src-1' }, prismaMock)
+      ).rejects.toThrow('Income entry not found');
     });
   });
 
   describe('deleteIncomeEntry', () => {
-    it('should delete an income entry', async () => {
-      const entryId = 'entry-to-delete';
+    it('deletes Transaction if source is USER_MANUAL and userId matches', async () => {
+      prismaMock.transaction.findUnique.mockResolvedValue({
+        source: 'USER_MANUAL',
+        userId,
+      } as any);
+      prismaMock.transaction.delete.mockResolvedValue({} as any);
+      await deleteIncomeEntry('txn-1', userId, prismaMock);
+      expect(prismaMock.transaction.delete).toHaveBeenCalledWith({ where: { id: 'txn-1' } });
+    });
 
-      prismaMock.incomeRecord.delete.mockResolvedValue(
-        createMockIncomeEntry({ id: entryId })
-      );
+    it('throws if source is not USER_MANUAL', async () => {
+      prismaMock.transaction.findUnique.mockResolvedValue({
+        source: 'LLM_CLASSIFIED',
+        userId,
+      } as any);
+      await expect(deleteIncomeEntry('txn-1', userId, prismaMock)).rejects.toThrow('Cannot delete an imported income entry');
+    });
 
-      await deleteIncomeEntry(entryId);
-
-      expect(prismaMock.incomeRecord.delete).toHaveBeenCalledWith({
-        where: { id: entryId },
-      });
+    it('throws if userId does not match', async () => {
+      prismaMock.transaction.findUnique.mockResolvedValue({
+        source: 'USER_MANUAL',
+        userId: 'other-user',
+      } as any);
+      await expect(deleteIncomeEntry('txn-1', userId, prismaMock)).rejects.toThrow('Income entry not found');
     });
   });
 
   describe('getTotalIncome', () => {
-    it('should calculate total income for a calendar year', async () => {
-      const mockAggregate = {
-        _sum: {
-          amount: new Decimal('15000.00'),
-        },
-        _avg: { amount: null },
-        _count: { amount: 0 },
-        _max: { amount: null },
-        _min: { amount: null },
-      };
-
-      prismaMock.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
-
-      const total = await getTotalIncome(calendarYearId, userId);
-
+    it('returns sum of CREDIT transactions for year', async () => {
+      prismaMock.calendarYear.findUnique.mockResolvedValue({
+        fromYear: 2024,
+        fromMonth: 1,
+        toYear: 2024,
+        toMonth: 12,
+      } as any);
+      prismaMock.transaction.aggregate.mockResolvedValue({
+        _sum: { amount: new Decimal('15000') },
+      } as any);
+      const total = await getTotalIncome(calendarYearId, userId, prismaMock);
       expect(total).toBe(15000);
-      expect(prismaMock.incomeRecord.aggregate).toHaveBeenCalledWith({
-        where: {
-          incomeLedger: {
-            calendarId: calendarYearId,
-            userId,
-          },
-        },
-        _sum: {
-          amount: true,
-        },
-      });
     });
 
-    it('should return 0 when no income entries exist', async () => {
-      const mockAggregate = {
-        _sum: {
-          amount: null,
-        },
-        _avg: { amount: null },
-        _count: { amount: 0 },
-        _max: { amount: null },
-        _min: { amount: null },
-      };
-
-      prismaMock.incomeRecord.aggregate.mockResolvedValue(mockAggregate);
-
-      const total = await getTotalIncome(calendarYearId, userId);
-
+    it('returns 0 if calendarYear not found', async () => {
+      prismaMock.calendarYear.findUnique.mockResolvedValue(null);
+      const total = await getTotalIncome(calendarYearId, userId, prismaMock);
       expect(total).toBe(0);
     });
   });

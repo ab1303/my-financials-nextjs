@@ -1,15 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   addBrokerageDetailsHandler,
   allBrokerageDetailsHandler,
   removeBrokerageDetailsHandler,
 } from '@/server/controllers/brokerage.controller';
 import * as brokerageService from '@/server/services/brokerage.service';
-import * as prismaUtils from '@/server/utils/prisma';
+import * as prismaUtils from '@/server/db/client';
 
 // Mock the service layer
 vi.mock('@/server/services/brokerage.service');
-vi.mock('@/server/utils/prisma');
+vi.mock('@/server/db/client');
 
 describe('Brokerage Controller', () => {
   beforeEach(() => {

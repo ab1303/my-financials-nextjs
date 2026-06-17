@@ -1,20 +1,22 @@
-import { zakatPaymentsHandler } from '@/server/controllers/zakat.controller';
-import { ZakatPaymentStateProvider } from './StateProvider';
-import ZakatTableClient from './ZakatTableClient';
-import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
-import { allBusinessDetailsHandler } from '@/server/controllers/business.controller';
 import { auth } from '@/server/auth';
+import { allBusinessDetailsHandler } from '@/server/controllers/business.controller';
+import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
+import { zakatPaymentsHandler } from '@/server/controllers/zakat.controller';
+import type { OptionType } from '@/types';
 
 import type { ZakatPaymentType } from './_types';
-import type { OptionType } from '@/types';
 import { addRow, deleteRow, editRow } from './actions';
+import { ZakatPaymentStateProvider } from './StateProvider';
+import ZakatTableClient from './ZakatTableClient';
 
 export type ZakatTableServerProps = {
   calendarYearId: string;
+  beneficiaryId?: string;
 };
 
 export default async function ZakatPaymentsTableServer({
   calendarYearId,
+  beneficiaryId,
 }: ZakatTableServerProps) {
   try {
     // Get user session for user-specific data
@@ -23,7 +25,7 @@ export default async function ZakatPaymentsTableServer({
       throw new Error('User session not found');
     }
 
-    const zakatPayments = await zakatPaymentsHandler(calendarYearId);
+    const zakatPayments = await zakatPaymentsHandler(calendarYearId, beneficiaryId);
     const individuals = await allIndividualDetailsHandler(session.user.id);
     const businesses = await allBusinessDetailsHandler(session.user.id);
 
@@ -53,6 +55,8 @@ export default async function ZakatPaymentsTableServer({
             : zp.individualId) || '',
         beneficiaryType: zp.beneficiaryType,
         datePaid: zp.datePaid,
+        isDeductible: zp.isDeductible,
+        transactionId: zp.transactionId ?? undefined,
       })) || [];
 
     return (

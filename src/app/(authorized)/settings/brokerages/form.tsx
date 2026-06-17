@@ -4,22 +4,30 @@ import { enableMapSet } from 'immer';
 
 enableMapSet();
 
-import { useState, useMemo } from 'react';
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  createColumnHelper,
-  type ColumnDef,
-} from '@tanstack/react-table';
-import { Loader2, Trash2, TrendingUp, Plus, Pen, Save, Undo2 } from 'lucide-react';
-import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { produce, castDraft } from 'immer';
+import {
+  type ColumnDef,
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { castDraft,produce } from 'immer';
+import {
+  Loader2,
+  Pen,
+  Plus,
+  Save,
+  Trash2,
+  TrendingUp,
+  Undo2,
+} from 'lucide-react';
+import { useMemo,useState } from 'react';
+import { toast } from 'sonner';
 
-import { Card, Button } from '@/components';
-import { Label, TextInput } from '@/components/ui';
+import { Button,Card } from '@/components';
 import Table from '@/components/table';
+import { Label, TextInput } from '@/components/ui';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { trpc } from '@/server/trpc/client';
 
@@ -87,7 +95,7 @@ export default function BrokeragesForm() {
     saveMutation.mutate({ name: trimmed });
   };
 
-  const columns: ColumnDef<BrokerageRow>[] = useMemo(
+  const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
         header: 'Institution',
@@ -104,7 +112,10 @@ export default function BrokeragesForm() {
                 autoFocus
                 value={value}
                 onChange={(e) => {
-                  const updatedRecord = { ...editedRecord, name: e.target.value };
+                  const updatedRecord = {
+                    ...editedRecord,
+                    name: e.target.value,
+                  };
                   setEditedRows(
                     produce((draft) => {
                       draft.set(row.index, castDraft(updatedRecord));
@@ -188,7 +199,10 @@ export default function BrokeragesForm() {
                   className='rounded p-1 text-green-600 hover:bg-green-100 dark:hover:bg-green-950 disabled:opacity-50'
                 >
                   {updateMutation.isPending ? (
-                    <Loader2 className='h-4 w-4 animate-spin' aria-hidden='true' />
+                    <Loader2
+                      className='h-4 w-4 animate-spin'
+                      aria-hidden='true'
+                    />
                   ) : (
                     <Save className='h-4 w-4' aria-hidden='true' />
                   )}
@@ -232,7 +246,7 @@ export default function BrokeragesForm() {
       }),
     ],
     [editedRows, updateMutation.isPending],
-  );
+  ) as ColumnDef<BrokerageRow, unknown>[];
 
   const table = useReactTable({
     data: getBrokeragesQuery.data ?? [],
@@ -348,10 +362,7 @@ export default function BrokeragesForm() {
                   {table.getRowModel().rows.map((row) => (
                     <tr key={row.id} className='hover:bg-muted/50'>
                       {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className='px-4 py-3 text-foreground'
-                        >
+                        <td key={cell.id} className='px-4 py-3 text-foreground'>
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),

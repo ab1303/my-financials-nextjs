@@ -1,8 +1,34 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+
 import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const calendarYearRouter = router({
+  getAll: protectedProcedure
+    .input(
+      z.object({
+        types: z.array(z.enum(['FISCAL', 'ANNUAL'])).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const calendarYears = await ctx.prisma.calendarYear.findMany({
+        where: {
+          ...(input.types && input.types.length > 0 ? { type: { in: input.types } } : {}),
+        },
+        orderBy: [{ fromYear: 'desc' }],
+        select: {
+          id: true,
+          description: true,
+          fromYear: true,
+          fromMonth: true,
+          toYear: true,
+          toMonth: true,
+          type: true,
+        },
+      });
+      return calendarYears;
+    }),
+
   lockYear: protectedProcedure
     .input(z.object({ calendarYearId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {

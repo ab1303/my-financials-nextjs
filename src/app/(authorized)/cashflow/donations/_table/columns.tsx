@@ -1,25 +1,19 @@
+import { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
 import { createColumnHelper } from '@tanstack/react-table';
+import { Lock, Unlink } from 'lucide-react';
 
-import { TableCell, EditCell } from '@/components/react-table';
-import type { DonationPaymentType } from '../_types';
+import { TableCell } from '@/components/react-table';
 import type { OptionType } from '@/types';
-import { BeneficiaryEnumType } from '@prisma/client';
-import { castDraft, produce } from 'immer';
-import BeneficiarySelectionCell from './BeneficiarySelectionCell';
+
+import { getTaxCategoryLabel } from '../../_utils/charity-tax';
+import type { DonationPaymentType } from '../_types';
 
 const beneficiaryOptions = Object.entries(
   BeneficiaryEnumType,
 ).flatMap<OptionType>(([k, v]) => ({ id: k, label: v }));
-
-const taxCategoryOptions: OptionType[] = [
-  { id: 'RELIGIOUS', label: 'Religious Organizations' },
-  { id: 'EDUCATIONAL', label: 'Educational Institutions' },
-  { id: 'HEALTHCARE', label: 'Healthcare/Medical' },
-  { id: 'ENVIRONMENTAL', label: 'Environmental Causes' },
-  { id: 'SOCIAL', label: 'Social Services' },
-  { id: 'ARTS', label: 'Arts & Culture' },
-  { id: 'OTHER', label: 'Other/General Charity' },
-];
+const donationPurposeOptions = Object.entries(DonationPurposeEnum).map(
+  ([k, v]) => ({ id: v, label: k === 'VOLUNTARY' ? 'Voluntary' : k === 'INTEREST_CLEANSING' ? 'Interest Cleansing' : k })
+);
 
 const columnHelper = createColumnHelper<DonationPaymentType>();
 
@@ -42,17 +36,28 @@ export function getTableColumns(
       maxSize: 200,
       header: () => <span>Amount Donated</span>,
       cell: TableCell,
-      meta: { type: 'AMOUNT', propName: 'amount' },
+      meta: { type: 'AMOUNT', propName: 'amount', align: 'right' },
       footer: (props) => props.column.id,
     }),
-    columnHelper.accessor('taxCategory', {
-      size: 160,
-      header: () => <span>Tax Category</span>,
+    columnHelper.accessor('donationPurpose', {
+      size: 150,
+      header: () => <span>Purpose</span>,
       cell: TableCell,
       meta: {
         type: 'SELECT',
-        propName: 'taxCategory',
-        selectOptions: taxCategoryOptions,
+        propName: 'donationPurpose',
+        selectOptions: donationPurposeOptions,
+      },
+    }),
+    columnHelper.accessor('isDeductible', {
+      size: 150,
+      header: () => <span>Deductible Status</span>,
+      cell: ({ row }) => {
+        return (
+          <span className='text-sm'>
+            {getTaxCategoryLabel(row.original.isDeductible)}
+          </span>
+        );
       },
       footer: (props) => props.column.id,
     }),
@@ -70,57 +75,21 @@ export function getTableColumns(
     columnHelper.accessor('beneficiaryId', {
       size: 200,
       header: () => <span>Beneficiary</span>,
-      cell: ({ row, table }) => {
+      cell: ({ row }) => {
         const { original } = row;
-        const tableMeta = table.options.meta;
 
-        const updateRecord = (
-          editedRecord: DonationPaymentType,
-          beneficiaryId: string,
-        ) => {
-          const updatedRecord = {
-            ...editedRecord,
-            beneficiaryId,
-          };
-
-          tableMeta?.setEditedRows(
-            produce((draft) => {
-              draft.set(row.index, castDraft(updatedRecord));
-            }),
+        if (original.beneficiaryType === 'BUSINESS') {
+          const selectedOption = businessesOptions?.find(
+            (b) => b.id === original.beneficiaryId,
           );
-        };
-
-        const editedRecord = tableMeta?.editedRows.get(row.index);
-
-        // Display
-        if (!editedRecord) {
-          // Display business or individual name based on beneficiary type
-          if (original.beneficiaryType == 'BUSINESS') {
-            const selectedOption = businessesOptions?.find(
-              (b) => b.id === original.beneficiaryId,
-            );
-            return <span>{selectedOption?.label || 'Unknown Business'}</span>;
-          }
-
-          const selectedOption = individualsOptions.find(
-            (i) => i.id === original.beneficiaryId,
-          );
-
-          return <span>{selectedOption?.label}</span>;
+          return <span>{selectedOption?.label || 'Unknown Business'}</span>;
         }
 
-        // Edit mode - always show the BeneficiarySelectionCell for both INDIVIDUAL and BUSINESS
-        return (
-          <BeneficiarySelectionCell
-            defaultIndividualOptions={individualsOptions}
-            beneficiaryId={editedRecord.beneficiaryId}
-            beneficiaryType={editedRecord.beneficiaryType}
-            onSelectionChange={(beneficiaryId?: string) => {
-              updateRecord(editedRecord, beneficiaryId || '');
-              return;
-            }}
-          />
+        const selectedOption = individualsOptions.find(
+          (i) => i.id === original.beneficiaryId,
         );
+
+        return <span>{selectedOption?.label || 'Unknown Individual'}</span>;
       },
       footer: (props) => props.column.id,
     }),
@@ -128,7 +97,31 @@ export function getTableColumns(
       id: 'actions',
       size: 100,
       header: () => <span>Actions</span>,
-      cell: EditCell,
+      cell: ({ row, table }) => {
+        const hasLinkedTransaction = Boolean(row.original.transactionId);
+
+        return (
+          <div className='flex justify-center items-center gap-1'>
+            <span
+              title='Linked record — read only'
+              className='text-gray-400 dark:text-gray-500'
+            >
+              <Lock size={14} />
+            </span>
+            {hasLinkedTransaction ? (
+              <button
+                type='button'
+                title='Unlink transaction'
+                aria-label='Unlink transaction'
+                className='rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20'
+                onClick={() => table.options.meta?.removeRow?.(row.index)}
+              >
+                <Unlink size={14} />
+              </button>
+            ) : null}
+          </div>
+        );
+      },
     }),
   ];
 }

@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import SourceBreakdownWidget, { computeBreakdown } from '@/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget';
+import SourceBreakdownWidget, {
+  computeBreakdown,
+} from '@/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget';
 import type { IncomeEntryType } from '@/app/(authorized)/cashflow/income/_types';
 
 const entries: IncomeEntryType[] = [
@@ -12,6 +14,7 @@ const entries: IncomeEntryType[] = [
     incomeSourceId: 'employment-1',
     incomeSourceName: 'Employment',
     incomeLedgerId: 'ledger-1',
+    source: 'USER_MANUAL',
   },
   {
     id: '2',
@@ -20,6 +23,7 @@ const entries: IncomeEntryType[] = [
     incomeSourceId: 'stocks-1',
     incomeSourceName: 'Stocks',
     incomeLedgerId: 'ledger-1',
+    source: 'USER_MANUAL',
   },
 ];
 
@@ -45,7 +49,7 @@ describe('SourceBreakdownWidget', () => {
   });
 
   it('handles a single source as 100%', () => {
-    const breakdown = computeBreakdown([entries[0]]);
+    const breakdown = computeBreakdown([entries[0] as IncomeEntryType]);
 
     expect(breakdown).toEqual([
       expect.objectContaining({
@@ -58,8 +62,8 @@ describe('SourceBreakdownWidget', () => {
 
   it('sorts by descending total', () => {
     const breakdown = computeBreakdown([
-      entries[1],
-      entries[0],
+      entries[1] as IncomeEntryType,
+      entries[0] as IncomeEntryType,
       {
         id: '3',
         dateEarned: new Date('2024-01-03'),
@@ -67,9 +71,14 @@ describe('SourceBreakdownWidget', () => {
         incomeSourceId: 'interest-1',
         incomeSourceName: 'Interest',
         incomeLedgerId: 'ledger-1',
-      },
+        source: 'USER_MANUAL',
+      } as IncomeEntryType,
     ]);
 
-    expect(breakdown.map((item) => item.sourceName)).toEqual(['Employment', 'Stocks', 'Interest']);
+    expect(breakdown.map((item) => item.sourceName)).toEqual([
+      'Employment',
+      'Stocks',
+      'Interest',
+    ]);
   });
 });

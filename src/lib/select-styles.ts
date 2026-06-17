@@ -2,7 +2,7 @@
  * Shared react-select styles that use CSS variables for theme consistency.
  * Supports dark mode and palette swaps automatically.
  */
-import type { StylesConfig, GroupBase } from 'react-select';
+import type { GroupBase, StylesConfig } from 'react-select';
 
 export function getSelectStyles<
   T = unknown,
@@ -24,23 +24,35 @@ export function getSelectStyles<
       boxShadow: state.isFocused
         ? '0 0 0 1px hsl(var(--ring))'
         : base.boxShadow,
-      '&:hover': { borderColor: state.isDisabled ? undefined : 'hsl(var(--ring))' },
+      '&:hover': {
+        borderColor: state.isDisabled ? undefined : 'hsl(var(--ring))',
+      },
       minHeight: '36px',
       opacity: state.isDisabled ? 0.6 : 1,
       cursor: state.isDisabled ? 'default' : 'default',
     }),
-    menu: (base) => ({
+    menu: (base, state) => ({
       ...base,
       backgroundColor: 'hsl(var(--popover))',
       border: '1px solid hsl(var(--border))',
       borderRadius: 'var(--radius)',
       boxShadow:
         '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-      zIndex: 50,
+      zIndex: 9999,
+      // Allow callers to pass a menuWidth prop (number) to match the control width
+      boxSizing: 'border-box',
+      minWidth: (() => {
+        const mw = (state?.selectProps as any)?.menuWidth as number | undefined;
+        const MIN = 400; // use 400px min-width per common UI guidelines for dropdowns
+        if (mw && !Number.isNaN(mw)) return `${Math.max(mw, MIN)}px`;
+        return `${MIN}px`;
+      })(),
     }),
     menuList: (base) => ({
       ...base,
       padding: '4px',
+      maxHeight: '280px',
+      overflowY: 'auto',
     }),
     option: (base, state) => ({
       ...base,

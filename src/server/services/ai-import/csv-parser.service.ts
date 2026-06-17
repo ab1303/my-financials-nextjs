@@ -1,6 +1,9 @@
-import { CsvTransaction, CsvParseResult } from './_types';
+import { randomUUID } from 'crypto';
+import { robustParseDate } from '@/lib/date-utils';
 import { getBankFormat } from '@/server/services/transactions/bank-format-registry';
 import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
+
+import type { CsvParseResult,CsvTransaction } from './_types';
 
 /**
  * @deprecated Use parseBankCsv(content, format) from csv-parser-generic.service.ts instead.
@@ -85,19 +88,11 @@ export function parseCsvRow(
     throw new Error('Missing date field');
   }
 
-  // Parse date in DD/MM/YYYY format
-  const parts = dateStr.split('/');
-  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
-    throw new Error(`Invalid date format: ${dateStr}`);
-  }
-
-  const day = parseInt(parts[0]!, 10);
-  const month = parseInt(parts[1]!, 10);
-  const year = parseInt(parts[2]!, 10);
-
-  if (isNaN(day) || isNaN(month) || isNaN(year)) {
-    throw new Error(`Invalid date: ${dateStr}`);
-  }
+  // Parse date using centralized robust parser
+  // Assuming 'DD/MM/YYYY' for this legacy CommBank helper
+  const parsedDate = robustParseDate(dateStr, 'DD/MM/YYYY');
+  const month = parsedDate.getMonth() + 1;
+  const year = parsedDate.getFullYear();
 
   if (month < 1 || month > 12) {
     throw new Error(`Invalid month: ${month}`);
@@ -111,6 +106,7 @@ export function parseCsvRow(
       : undefined;
 
   return {
+    id: randomUUID(),
     date: dateStr,
     amount,
     type,

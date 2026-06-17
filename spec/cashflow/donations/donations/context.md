@@ -1,24 +1,19 @@
-# Donations — Context
+# Donations - Context
 
 ## Problem
-Users need a fiscal-year view of charitable outflows that records what was paid, who received it, and how it should be categorized for reporting. This feature now lives under the cashflow domain because donations are a money-out workflow alongside expenses, while still preserving their distinct charitable semantics.
+Users need a fiscal-year view of charitable outflows (Voluntary, Interest Cleansing, Zakat) that records what was paid, who received it, purpose, and deductibility.
 
-## Domain Dependencies
+## Architecture
+The system uses purpose-scoped models for persistence (`VoluntaryDonation`, `InterestCleansing`, `ZakatPayment`). The frontend interacts with a unified API shape (`DonationPaymentModel`) via adapter logic in the donation service layer.
 
-- Uses `DonationRecord`, `CharitablePaymentRecord`, and the donations-outflow rules from [`../../hld.md`](../../hld.md).
-- Depends on fiscal-year `CalendarYear` records and shared beneficiary entities (`Business`, `Individual`).
-- May reconcile against imported transaction evidence from the [transactions domain HLD](../../../transactions/hld.md) when a donation row is linked back to bank activity.
-- Shares money-out reporting boundaries with expense tracking while preserving beneficiary and tax metadata.
+## Product Decisions
+- Donation purpose is a first-class, editable field: `VOLUNTARY`, `INTEREST_CLEANSING`, `ZAKAT`.
+- DGR status is derived from the linked `Business` entity.
+- Zakat and donations contribute to unified year-end reporting.
+- Default beneficiary type is `Business`.
 
 ## Scope
-
-**In scope:**
-- Fiscal-year donation totals and payment history.
-- Inline create, edit, and delete of donation rows.
-- Beneficiary capture, tax-category capture, and donation-purpose classification.
-- Server-validated mutations and user-scoped beneficiary selection.
-
-**Out of scope:**
-- External payment processing.
-- Automated tax or charitable advice.
-- Import-wizard changes (handled by the transaction-linking feature when transaction enrichment is needed).
+- Fiscal-year totals and payment history.
+- CRUD operations for all donation types.
+- Reporting by purpose and deductible status.
+- Optional linking to `Transaction` for bank reconciliation.

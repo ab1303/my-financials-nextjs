@@ -19,6 +19,8 @@ export type ZakatPaymentType = {
   amount: number;
   beneficiaryId: string;
   beneficiaryType: BeneficiaryEnumType;
+  isDeductible: boolean;
+  transactionId?: string;
 };
 
 const BENEFICIARY_ENUM_KEYS = Object.entries(BeneficiaryEnumType).map(

@@ -1,16 +1,15 @@
-import { handleCaughtError } from '@/server/utils/prisma';
+import type {
+  CreateBrokerageInput,
+  ParamsInput,
+  UpdateBrokerageInput,
+} from '@/server/schema/brokerage.schema';
 import {
   addBrokerageDetails,
   deleteBrokerageDetails,
   getBrokerageDetails,
   updateBrokerageDetails,
 } from '@/server/services/brokerage.service';
-
-import type {
-  CreateBrokerageInput,
-  UpdateBrokerageInput,
-  ParamsInput,
-} from '@/server/schema/brokerage.schema';
+import { handleCaughtError } from '@/server/db/client';
 
 export const addBrokerageDetailsHandler = async ({
   input,

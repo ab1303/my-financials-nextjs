@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import {
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
 } from 'lucide-react';
-import type {
-  ClassifiedTransaction,
-} from '@/server/services/ai-import/_types';
+import { useCallback, useState } from 'react';
+
+import type { ClassifiedTransaction } from '@/server/services/ai-import/_types';
 
 /**
  * Known Australian brand tokens for merchant detection
@@ -56,6 +55,7 @@ export function isLikelyUnknownMerchant(description: string): boolean {
 export interface ClassifiedMonth {
   month: string;
   transactions: ClassifiedTransaction[];
+  duplicates?: Array<{ csvId: string; dedupKey: string; matchedTransactionIds: string[] }>;
   totalUsage: {
     promptTokens: number;
     completionTokens: number;
@@ -76,7 +76,11 @@ export interface TransactionReviewTableProps {
 // GPT-4o-mini: $0.15/1M input, $0.60/1M output tokens
 // Conservative: treat all tokens as input price for a safe ceiling estimate
 function estimateCostUSD(totalTokens: number, model: string): string {
-  const pricePerMillion = model.includes('gpt-4o-mini') ? 0.60 : model.includes('gpt-4o') ? 15.0 : 0.60;
+  const pricePerMillion = model.includes('gpt-4o-mini')
+    ? 0.6
+    : model.includes('gpt-4o')
+      ? 15.0
+      : 0.6;
   const cost = (totalTokens / 1_000_000) * pricePerMillion;
   return cost < 0.01 ? '<$0.01' : `~$${cost.toFixed(3)}`;
 }
@@ -98,7 +102,9 @@ export default function TransactionReviewTable({
   );
 
   // Sort state (global for all months)
-  const [sortColumn, setSortColumn] = useState<'date' | 'description' | 'amount' | null>('date');
+  const [sortColumn, setSortColumn] = useState<
+    'date' | 'description' | 'amount' | null
+  >('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const handleAcceptAll = useCallback(() => {
@@ -114,14 +120,17 @@ export default function TransactionReviewTable({
     onUpdateMonths?.(resetMonths);
   }, [months, onUpdateMonths]);
 
-  const handleSort = useCallback((col: 'date' | 'description' | 'amount') => {
-    if (sortColumn === col) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortColumn(col);
-      setSortDirection(col === 'date' ? 'desc' : 'asc');
-    }
-  }, [sortColumn]);
+  const handleSort = useCallback(
+    (col: 'date' | 'description' | 'amount') => {
+      if (sortColumn === col) {
+        setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setSortColumn(col);
+        setSortDirection(col === 'date' ? 'desc' : 'asc');
+      }
+    },
+    [sortColumn],
+  );
 
   const handleToggleMonth = useCallback((month: string) => {
     setExpandedMonths((prev) => {
@@ -164,7 +173,10 @@ export default function TransactionReviewTable({
 
   const totalUsage = {
     promptTokens: months.reduce((sum, m) => sum + m.totalUsage.promptTokens, 0),
-    completionTokens: months.reduce((sum, m) => sum + m.totalUsage.completionTokens, 0),
+    completionTokens: months.reduce(
+      (sum, m) => sum + m.totalUsage.completionTokens,
+      0,
+    ),
     totalTokens: months.reduce((sum, m) => sum + m.totalUsage.totalTokens, 0),
   };
 
@@ -176,8 +188,8 @@ export default function TransactionReviewTable({
             Review Classifications
           </h2>
           <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>
-            {months.reduce((sum, m) => sum + m.transactions.length, 0)} transactions •{' '}
-            {totalOverrides} changes applied
+            {months.reduce((sum, m) => sum + m.transactions.length, 0)}{' '}
+            transactions • {totalOverrides} changes applied
           </p>
         </div>
         <div className='flex flex-col items-end gap-2'>
@@ -191,11 +203,13 @@ export default function TransactionReviewTable({
             </button>
           )}
           <div className='space-y-0.5 text-right text-xs text-gray-500 dark:text-gray-400'>
-          <p className='font-medium text-gray-700 dark:text-gray-300'>{llmModel}</p>
-          <p>{totalUsage.totalTokens.toLocaleString()} tokens used</p>
-          <p className='text-teal-600 dark:text-teal-400'>
-            Est. cost: {estimateCostUSD(totalUsage.totalTokens, llmModel)}
-          </p>
+            <p className='font-medium text-gray-700 dark:text-gray-300'>
+              {llmModel}
+            </p>
+            <p>{totalUsage.totalTokens.toLocaleString()} tokens used</p>
+            <p className='text-teal-600 dark:text-teal-400'>
+              Est. cost: {estimateCostUSD(totalUsage.totalTokens, llmModel)}
+            </p>
           </div>
         </div>
       </div>
@@ -216,7 +230,9 @@ export default function TransactionReviewTable({
                 ) : (
                   <ChevronDown className='h-4 w-4 text-gray-600 dark:text-gray-400' />
                 )}
-                <span className='font-medium text-gray-900 dark:text-white'>{month.month}</span>
+                <span className='font-medium text-gray-900 dark:text-white'>
+                  {month.month}
+                </span>
                 <span className='text-sm text-gray-600 dark:text-gray-400'>
                   ({month.transactions.length} transactions)
                 </span>
@@ -238,7 +254,11 @@ export default function TransactionReviewTable({
                         <span className='inline-flex items-center gap-1'>
                           Date
                           {sortColumn === 'date' ? (
-                            sortDirection === 'asc' ? <ArrowUp className='inline h-3 w-3' /> : <ArrowDown className='inline h-3 w-3' />
+                            sortDirection === 'asc' ? (
+                              <ArrowUp className='inline h-3 w-3' />
+                            ) : (
+                              <ArrowDown className='inline h-3 w-3' />
+                            )
                           ) : (
                             <ArrowUpDown className='inline h-3 w-3 text-gray-400' />
                           )}
@@ -251,7 +271,11 @@ export default function TransactionReviewTable({
                         <span className='inline-flex items-center gap-1'>
                           Description
                           {sortColumn === 'description' ? (
-                            sortDirection === 'asc' ? <ArrowUp className='inline h-3 w-3' /> : <ArrowDown className='inline h-3 w-3' />
+                            sortDirection === 'asc' ? (
+                              <ArrowUp className='inline h-3 w-3' />
+                            ) : (
+                              <ArrowDown className='inline h-3 w-3' />
+                            )
                           ) : (
                             <ArrowUpDown className='inline h-3 w-3 text-gray-400' />
                           )}
@@ -264,7 +288,11 @@ export default function TransactionReviewTable({
                         <span className='inline-flex items-center gap-1'>
                           Amount
                           {sortColumn === 'amount' ? (
-                            sortDirection === 'asc' ? <ArrowUp className='inline h-3 w-3' /> : <ArrowDown className='inline h-3 w-3' />
+                            sortDirection === 'asc' ? (
+                              <ArrowUp className='inline h-3 w-3' />
+                            ) : (
+                              <ArrowDown className='inline h-3 w-3' />
+                            )
                           ) : (
                             <ArrowUpDown className='inline h-3 w-3 text-gray-400' />
                           )}
@@ -281,7 +309,10 @@ export default function TransactionReviewTable({
                   <tbody>
                     {(() => {
                       // Map original index for stable handleCategoryChange
-                      const txsWithIdx = month.transactions.map((tx, idx) => ({ tx, idx }));
+                      const txsWithIdx = month.transactions.map((tx, idx) => ({
+                        tx,
+                        idx,
+                      }));
                       // Sort logic
                       const sorted = [...txsWithIdx].sort((a, b) => {
                         if (sortColumn === 'date') {
@@ -290,8 +321,16 @@ export default function TransactionReviewTable({
                             : b.tx.date.localeCompare(a.tx.date);
                         } else if (sortColumn === 'description') {
                           return sortDirection === 'asc'
-                            ? a.tx.description.localeCompare(b.tx.description, undefined, { sensitivity: 'base' })
-                            : b.tx.description.localeCompare(a.tx.description, undefined, { sensitivity: 'base' });
+                            ? a.tx.description.localeCompare(
+                                b.tx.description,
+                                undefined,
+                                { sensitivity: 'base' },
+                              )
+                            : b.tx.description.localeCompare(
+                                a.tx.description,
+                                undefined,
+                                { sensitivity: 'base' },
+                              );
                         } else if (sortColumn === 'amount') {
                           return sortDirection === 'asc'
                             ? a.tx.amount - b.tx.amount
@@ -308,43 +347,61 @@ export default function TransactionReviewTable({
                               : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                           }`}
                         >
-                        <td className='px-4 py-3 text-sm text-gray-900 dark:text-gray-200'>
-                          {tx.date}
-                        </td>
-                        <td className='max-w-[240px] px-4 py-3 text-sm text-gray-900 dark:text-gray-200'>
-                          <div className='flex items-center space-x-2'>
-                            {isLikelyUnknownMerchant(tx.description) && (
-                              <AlertCircle className='h-4 w-4 flex-shrink-0 text-amber-500' />
+                          <td className='px-4 py-3 text-sm text-gray-900 dark:text-gray-200'>
+                            {tx.date}
+                          </td>
+                          <td className='max-w-[240px] px-4 py-3 text-sm text-gray-900 dark:text-gray-200'>
+                            <div className='flex items-center space-x-2'>
+                              {isLikelyUnknownMerchant(tx.description) && (
+                                <AlertCircle className='h-4 w-4 flex-shrink-0 text-amber-500' />
+                              )}
+                              <span
+                                className='truncate font-medium'
+                                title={tx.description}
+                              >
+                                {tx.description}
+                              </span>
+                            </div>
+                          </td>
+                          <td className='px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-gray-200'>
+                            ${tx.amount.toFixed(2)}
+                          </td>
+                          <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
+                            <div>{tx.llmCategory}</div>
+                            {tx.preMatch?.ruleName && (
+                              <div className='text-xs text-gray-500'>
+                                Rule: {tx.preMatch.ruleName}
+                              </div>
                             )}
-                            <span className='truncate font-medium' title={tx.description}>
-                              {tx.description}
-                            </span>
-                          </div>
-                        </td>
-                        <td className='px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-gray-200'>
-                          ${tx.amount.toFixed(2)}
-                        </td>
-                        <td className='px-4 py-3 text-sm text-gray-600 dark:text-gray-400'>
-                          {tx.llmCategory}
-                        </td>
-                        <td className='px-4 py-3 text-sm'>
-                          <select
-                            value={tx.confirmedCategory}
-                            onChange={(e) => handleCategoryChange(monthIdx, idx, e.target.value)}
-                            className='w-full min-w-[140px] rounded border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
-                          >
-                            {!categories.some((c) => c.name === tx.confirmedCategory) && (
-                              <option value={tx.confirmedCategory}>{tx.confirmedCategory}</option>
-                            )}
-                            {categories.map((cat) => (
-                              <option key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    ));
+                          </td>
+                          <td className='px-4 py-3 text-sm'>
+                            <select
+                              value={tx.confirmedCategory}
+                              onChange={(e) =>
+                                handleCategoryChange(
+                                  monthIdx,
+                                  idx,
+                                  e.target.value,
+                                )
+                              }
+                              className='w-full min-w-[140px] rounded border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+                            >
+                              {!categories.some(
+                                (c) => c.name === tx.confirmedCategory,
+                              ) && (
+                                <option value={tx.confirmedCategory}>
+                                  {tx.confirmedCategory}
+                                </option>
+                              )}
+                              {categories.map((cat) => (
+                                <option key={cat.id} value={cat.name}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      ));
                     })()}
                   </tbody>
                 </table>
@@ -353,8 +410,6 @@ export default function TransactionReviewTable({
           </div>
         ))}
       </div>
-
-
     </div>
   );
 }

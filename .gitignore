@@ -5,6 +5,11 @@
 /.pnp
 .pnp.js
 
+
+# Database backups
+
+/db-backups
+
 # testing
 /coverage
 
@@ -60,3 +65,5 @@ build-output.log
 # typescript
 *.tsbuildinfo
 .gemini/settings.json
+backup.sql
+backup.dump

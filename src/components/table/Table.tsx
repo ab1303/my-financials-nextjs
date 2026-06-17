@@ -1,9 +1,9 @@
-import React from 'react';
 import clsx from 'clsx';
+import React from 'react';
 
-import THead from './components/THead';
 import TBody from './components/TBody';
 import TFoot from './components/TFoot';
+import THead from './components/THead';
 
 type CommonComponents = {
   TBody: typeof TBody;

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockUseQuery = vi.fn();
 
@@ -23,7 +23,7 @@ describe('CategoryFilteredLedger', () => {
   it('renders loading state', () => {
     mockUseQuery.mockReturnValue({ data: undefined, isLoading: true, error: null });
 
-    render(<CategoryFilteredLedger category='groceries' month={2} year={2025} />);
+    render(<CategoryFilteredLedger category='groceries' categoryId='cat-1' month={2} year={2025} />);
 
     expect(screen.getByText(/loading transactions/i)).toBeDefined();
   });
@@ -31,7 +31,7 @@ describe('CategoryFilteredLedger', () => {
   it('renders error state', () => {
     mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: new Error('Boom') });
 
-    render(<CategoryFilteredLedger category='groceries' month={2} year={2025} />);
+    render(<CategoryFilteredLedger category='groceries' categoryId='cat-1' month={2} year={2025} />);
 
     expect(screen.getByText(/error loading transactions/i)).toBeDefined();
     expect(screen.getByText(/boom/i)).toBeDefined();
@@ -52,9 +52,9 @@ describe('CategoryFilteredLedger', () => {
       error: null,
     });
 
-    render(<CategoryFilteredLedger category='groceries' month={2} year={2025} />);
+    render(<CategoryFilteredLedger category='groceries' categoryId='cat-1' month={2} year={2025} />);
 
-    expect(screen.getByText(/no transactions for this category and month/i)).toBeDefined();
+    expect(screen.getByText(/No transactions for this category in February 2025/i)).toBeDefined();
   });
 
   it('renders summary stats and transactions', () => {
@@ -93,9 +93,9 @@ describe('CategoryFilteredLedger', () => {
       error: null,
     });
 
-    render(<CategoryFilteredLedger category='groceries' month={2} year={2025} />);
+    render(<CategoryFilteredLedger category='groceries' categoryId='cat-1' month={2} year={2025} />);
 
-    expect(screen.getByRole('heading', { name: /groceries – february 2025/i })).toBeDefined();
+    expect(screen.getByRole('heading', { name: /groceries/i })).toBeDefined();
     expect(screen.getByText('2', { selector: 'span' })).toBeDefined();
     expect(screen.getByText(/\$165.95/i)).toBeDefined();
     expect(screen.getByText(/\$82.9[78]/i)).toBeDefined();

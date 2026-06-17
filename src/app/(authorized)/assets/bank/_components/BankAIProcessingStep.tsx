@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-import type { UploadedFile, AIImportSessionResult } from '../../../cashflow/transactions/_components/ai/_types';
+import { useEffect, useRef,useState } from 'react';
+
+import type { AIImportSessionResult,UploadedFile } from '../../../cashflow/transactions/_components/ai/_types';
 
 interface BankAIProcessingStepProps {
   files: UploadedFile[];

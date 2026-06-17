@@ -1,18 +1,22 @@
 export const dynamic = 'force-dynamic';
 
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { totalDonationsHandler } from '@/server/controllers/donation.controller';
+import {
+  donationTotalsByCategoryHandler,
+  donationTotalsByBeneficiaryHandler,
+} from '@/server/controllers/donation.controller';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
-import { prisma } from '@/server/utils/prisma';
+import { prisma } from '@/server/db/client';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
+import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
+import DonationBeneficiaryBreakdownWidget from './_components/DonationBeneficiaryBreakdownWidget';
 import DonationFilters from './DonationFilters';
 import DonationPaymentsTableServer from './DonationTableServer';
-import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
 
 export const metadata: Metadata = {
   title: 'Donation Tracking | My Financials',
@@ -49,12 +53,14 @@ export default async function DonationPage({
     getDefaultCalendarYear(donationYearData, fiscalYearType ?? 'FISCAL');
 
   const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
+  const beneficiaryId = getSelectedParam(params?.beneficiaryId) || undefined;
 
-  const totalDonations = await totalDonationsHandler(selectedCalendarYearId);
+  const donationTotals = await donationTotalsByCategoryHandler(selectedCalendarYearId);
+  const beneficiaryBreakdown = await donationTotalsByBeneficiaryHandler(selectedCalendarYearId);
 
   const initialData = {
     donationYearData,
-    totalDonations,
+    donationTotals,
   };
 
   return (
@@ -83,6 +89,9 @@ export default async function DonationPage({
             />
           </Suspense>
         )}
+        <DonationBeneficiaryBreakdownWidget
+          breakdown={beneficiaryBreakdown}
+        />
         <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
           {selectedCalendarYear && (
             <div className='font-mono text-muted-foreground mb-3'>
@@ -92,6 +101,7 @@ export default async function DonationPage({
 
           <DonationPaymentsTableServer
             calendarYearId={selectedCalendarYearId}
+            beneficiaryId={beneficiaryId}
             dateFrom={selectedCalendarYear ? `${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01` : ''}
             dateTo={selectedCalendarYear ? `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}` : ''}
           />

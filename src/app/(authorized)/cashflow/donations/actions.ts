@@ -1,25 +1,26 @@
 'use server';
 
-import { auth } from '@/server/auth';
 import { revalidatePath } from 'next/cache';
-import {
-  addDonationPaymentDetail,
-  updateDonationPayment,
-  deleteDonationPayment,
-  getDonation,
-} from '@/server/services/donation.service';
+
+import { auth } from '@/server/auth';
 import { createDonationYearHandler } from '@/server/controllers/donation.controller';
+import { getDonation } from '@/server/services/donation-ledger.service';
 import {
-  CreateDonationPaymentSchema,
-  UpdateDonationPaymentSchema,
-  DeleteDonationPaymentSchema,
-} from './_schema';
+  addVoluntaryDonation,
+  deleteVoluntaryDonation,
+  updateVoluntaryDonation,
+} from '@/server/services/voluntary-donations/voluntary-donation.service';
+
 import type {
   CreateDonationPaymentInput,
-  UpdateDonationPaymentInput,
   DeleteDonationPaymentInput,
+  UpdateDonationPaymentInput,
 } from './_schema';
-import type { DonationPaymentType } from './_types';
+import {
+  CreateDonationPaymentSchema,
+  DeleteDonationPaymentSchema,
+  UpdateDonationPaymentSchema,
+} from './_schema';
 
 export async function addRow(input: CreateDonationPaymentInput) {
   try {
@@ -52,18 +53,17 @@ export async function addRow(input: CreateDonationPaymentInput) {
     }
 
     // Create payment record
-    const newPayment = await addDonationPaymentDetail(
-      donationResult.donationCalendarId,
-      {
-        datePaid: validatedInput.datePaid,
-        amount: validatedInput.amount,
-        beneficiaryType: validatedInput.beneficiaryType,
-        taxCategory: validatedInput.taxCategory,
-        beneficiaryId: validatedInput.beneficiaryId,
-        transactionId: validatedInput.transactionId,
-        donationPurpose: validatedInput.donationPurpose ?? 'VOLUNTARY',
-      },
-    );
+    const newPayment = await addVoluntaryDonation({
+      donationLedgerId: donationResult.donationCalendarId,
+      datePaid: validatedInput.datePaid,
+      amount: validatedInput.amount,
+      beneficiaryType: validatedInput.beneficiaryType,
+      beneficiaryId: validatedInput.beneficiaryId,
+      transactionId: validatedInput.transactionId,
+      donationPurpose: validatedInput.donationPurpose ?? 'VOLUNTARY',
+    });
+
+    const paymentData = newPayment as any;
 
     return {
       success: true,
@@ -71,10 +71,10 @@ export async function addRow(input: CreateDonationPaymentInput) {
       data: {
         id: newPayment.id,
         datePaid: newPayment.datePaid,
-        amount: newPayment.amount.toNumber(),
-        beneficiaryType: newPayment.beneficiaryType,
-        taxCategory: newPayment.taxCategory,
-        donationPurpose: newPayment.donationPurpose,
+        amount: newPayment.amount,
+        beneficiaryType: paymentData.beneficiaryType ?? 'BUSINESS',
+        isDeductible: paymentData.isDeductible ?? false,
+        donationPurpose: paymentData.donationPurpose,
         beneficiaryId: validatedInput.beneficiaryId || '',
         transactionId: validatedInput.transactionId,
       },
@@ -111,18 +111,14 @@ export async function editRow(input: UpdateDonationPaymentInput) {
     }
 
     // Update payment record
-    await updateDonationPayment(
-      {
-        id: validatedInput.id,
-        datePaid: validatedInput.datePaid,
-        amount: validatedInput.amount,
-        beneficiaryType: validatedInput.beneficiaryType,
-        taxCategory: validatedInput.taxCategory,
-        beneficiaryId: validatedInput.beneficiaryId,
-        donationLedgerId: '', // This will be ignored in the update
-      },
-      validatedInput.id,
-    );
+    await updateVoluntaryDonation(validatedInput.id, {
+      id: validatedInput.id,
+      datePaid: validatedInput.datePaid,
+      amount: validatedInput.amount,
+      beneficiaryType: validatedInput.beneficiaryType,
+      beneficiaryId: validatedInput.beneficiaryId,
+      donationLedgerId: '', // placeholder
+    });
 
     return { success: true, error: null };
   } catch (error) {
@@ -150,7 +146,7 @@ export async function deleteRow(input: DeleteDonationPaymentInput) {
     const validatedInput = DeleteDonationPaymentSchema.parse(input);
 
     // Delete payment record
-    await deleteDonationPayment(validatedInput.id);
+    await deleteVoluntaryDonation(validatedInput.id);
 
     return { success: true, error: null };
   } catch (error) {

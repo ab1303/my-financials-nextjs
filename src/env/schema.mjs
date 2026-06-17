@@ -22,6 +22,10 @@ export const serverSchema = z.object({
   AI_PROVIDER: z.enum(['openai', 'github']).default('github'),
   AI_VISION_MODEL: z.string().default('gpt-4o-mini'),
   AI_API_KEY: z.string().optional(),
+  USE_NEW_DONATION_MODELS: z.preprocess(
+    (val) => val === 'true',
+    z.boolean().default(false),
+  ),
 });
 
 /**

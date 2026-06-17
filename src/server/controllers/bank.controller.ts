@@ -1,11 +1,10 @@
-import { handleCaughtError } from '@/server/utils/prisma';
+import type { CreateBankInput, ParamsInput } from '@/server/schema/bank.schema';
 import {
   addBankDetails,
   deleteBankDetails,
   getBankDetails,
 } from '@/server/services/bank.service';
-
-import type { CreateBankInput, ParamsInput } from '@/server/schema/bank.schema';
+import { handleCaughtError } from '@/server/db/client';
 
 export const addBankDetailsHandler = async ({
   input,
@@ -44,7 +43,7 @@ export const removeBankDetailsHandler = async ({
   params: ParamsInput;
 }) => {
   try {
-    await deleteBankDetails(params.bankId);
+    await deleteBankDetails(params.institutionId);
   } catch (e) {
     handleCaughtError(e);
   }

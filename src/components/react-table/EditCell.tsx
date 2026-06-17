@@ -1,21 +1,23 @@
 import type { CellContext, RowData } from '@tanstack/react-table';
-import type { Dispatch, MouseEvent, SetStateAction } from 'react';
 import { castDraft, produce } from 'immer';
-import { Pen, Trash2, Save, Undo2 } from 'lucide-react';
+import { Pen, Save, Trash2, Undo2 } from 'lucide-react';
+import type { Dispatch, MouseEvent, SetStateAction } from 'react';
 import { useState } from 'react';
+
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { tableCellStyles } from '@/styles/theme';
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     validRows: Record<string, TData>;
-    editedRows: Map<number, TData>;
+    editedRows: Map<string | number, TData>;
     updateRow: (rowIndex: number) => void;
     removeRow: (rowIndex: number) => void;
     revertData: (rowIndex: number) => void;
-    setEditedRows: Dispatch<SetStateAction<Map<number, TData>>>;
+    setEditedRows: Dispatch<SetStateAction<Map<string | number, TData>>>;
   }
 }
+
 
 type EditCellProps<TData, TValue> = {
   table: CellContext<TData, TValue>['table'];

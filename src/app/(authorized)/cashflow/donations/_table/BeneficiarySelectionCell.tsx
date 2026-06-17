@@ -1,10 +1,9 @@
-import { AppSelect as Select } from '@/components/ui/AppSelect';
+import type { BeneficiaryEnumType, Business } from '@prisma/client';
 import { toast } from 'sonner';
 
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { trpc } from '@/server/trpc/client';
-
 import type { OptionType } from '@/types';
-import type { BeneficiaryEnumType, Business } from '@prisma/client';
 
 type BeneficiarySelectionCellProps = {
   defaultIndividualOptions: Array<OptionType>;

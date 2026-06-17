@@ -4,12 +4,24 @@ import {
   TransactionTypeEnum,
 } from '@prisma/client';
 
+import { robustParseDate } from '@/lib/date-utils';
 import { prisma } from '@/server/db/client';
-import type { ClassifiedCreditTransaction, ClassifiedTransactionV2 } from '@/server/services/ai-import/_types';
+import type {
+  ClassifiedCreditTransaction,
+  ClassifiedTransactionV2,
+} from '@/server/services/ai-import/_types';
 
-import { buildDedupSet, getDateRangeFromMonthKeys, isDuplicate, makeDedupKey } from './dedup.service';
 import type { CreditMonth, DebitMonth, TransactionSaveResult } from './_types';
-import { EXCLUDED_CREDIT_LABELS, EXCLUDED_DEBIT_LABELS } from './constants';
+import {
+  EXCLUDED_CREDIT_LABELS,
+  EXCLUDED_FROM_EXPENSE_AGGREGATION,
+} from './constants';
+import {
+  buildDedupSet,
+  getDateRangeFromMonthKeys,
+  isDuplicate,
+  makeDedupKey,
+} from './dedup.service';
 
 function createEmptyResult(): TransactionSaveResult {
   return {
@@ -34,7 +46,10 @@ async function getFiscalCalendarYear(_year: number, _monthNum: number) {
   });
 }
 
-async function getOrCreateExpenseLedger(calendarYearId: string, userId: string) {
+async function getOrCreateExpenseLedger(
+  calendarYearId: string,
+  userId: string,
+) {
   let ledger = await prisma.expenseLedger.findUnique({
     where: { calendarId_userId: { calendarId: calendarYearId, userId } },
   });
@@ -46,31 +61,6 @@ async function getOrCreateExpenseLedger(calendarYearId: string, userId: string) 
   }
 
   return ledger;
-}
-
-async function getOrCreateIncomeLedger(calendarYearId: string, userId: string) {
-  let ledger = await prisma.incomeLedger.findUnique({
-    where: { calendarId_userId: { calendarId: calendarYearId, userId } },
-  });
-
-  if (!ledger) {
-    ledger = await prisma.incomeLedger.create({
-      data: { calendarId: calendarYearId, userId },
-    });
-  }
-
-  return ledger;
-}
-
-
-function resolveIncomeSourceId(
-  categoryName: string,
-  allSources: Array<{ id: string; name: string }>,
-): string {
-  const match = allSources.find((s) => s.name.toLowerCase() === categoryName.toLowerCase());
-  if (match) return match.id;
-  const other = allSources.find((s) => s.name === 'Other');
-  return other?.id ?? allSources[0]!.id;
 }
 
 async function upsertMonthlyExpenseSummary(params: {
@@ -117,10 +107,11 @@ async function createTransactionRecord(params: {
   importSessionId: string;
   source: TransactionSourceEnum;
   runningBalance?: number;
-}) {
-  await prisma.transaction.create({
+  appliedRuleId?: string;
+}): Promise<string> {
+  const tx = await prisma.transaction.create({
     data: {
-      date: new Date(params.date),
+      date: robustParseDate(params.date, 'DD/MM/YYYY'),
       description: params.description,
       amount: params.amount,
       type: params.type,
@@ -132,8 +123,14 @@ async function createTransactionRecord(params: {
       bankAccountId: params.bankAccountId,
       importSessionId: params.importSessionId,
       runningBalance: params.runningBalance ?? null,
+      // NOTE: provenance persistence (appliedRuleId) is Phase 2. Do not write
+      // `metadata` to the `transaction` table in Phase 1 — schema currently
+      // lacks a JSON `metadata` column. Keep `appliedRuleId` in the signature
+      // for future Phase 2 migration, but do not persist it here.
     },
+    select: { id: true },
   });
+  return tx.id;
 }
 
 /**
@@ -144,21 +141,33 @@ export async function confirmDebitTransactions(
   userId: string,
   bankAccountId: string,
   importSessionId: string,
+  forceCreateIds?: string[],
 ): Promise<TransactionSaveResult> {
   const result = createEmptyResult();
 
   const monthKeys = debitMonths.map((m) => m.month);
   if (monthKeys.length === 0) return result;
   const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
-  const dedupSet = await buildDedupSet({ userId, bankAccountId, startDate, endDate });
+  const dedupSet = await buildDedupSet({
+    userId,
+    bankAccountId,
+    startDate,
+    endDate,
+  });
 
-  const categories = await prisma.expenseCategory.findMany({ where: { isActive: true } });
-  const categoryMap = new Map(categories.map((category) => [category.name.toLowerCase(), category.id]));
+  const categories = await prisma.expenseCategory.findMany({
+    where: { isActive: true },
+  });
+  const categoryMap = new Map(
+    categories.map((category) => [category.name.toLowerCase(), category.id]),
+  );
 
   // Get or create "Other" category for unmapped transactions
   let otherCategoryId = categoryMap.get('other');
   if (!otherCategoryId) {
-    const otherCategory = categories.find((c) => c.name.toLowerCase() === 'other');
+    const otherCategory = categories.find(
+      (c) => c.name.toLowerCase() === 'other',
+    );
     if (otherCategory) {
       otherCategoryId = otherCategory.id;
       categoryMap.set('other', otherCategoryId);
@@ -178,95 +187,138 @@ export async function confirmDebitTransactions(
       const calendarYear = await getFiscalCalendarYear(year, monthNum);
 
       if (!calendarYear) {
-        result.errors.push({ month: monthKey, message: `No fiscal year found for ${monthKey}` });
+        result.errors.push({
+          month: monthKey,
+          message: `No fiscal year found for ${monthKey}`,
+        });
         continue;
       }
 
+      // Review, could be a Tech Debt
       const ledger = await getOrCreateExpenseLedger(calendarYear.id, userId);
 
       for (const tx of transactions as ClassifiedTransactionV2[]) {
-        const dedupKey = makeDedupKey({
-          date: tx.date,
-          description: tx.description,
-          amount: tx.amount,
-          type: 'DEBIT',
-          runningBalance: tx.balance ?? null,
-        });
-        if (isDuplicate(dedupKey, dedupSet)) {
-          result.duplicatesSkipped += 1;
-          continue;
-        }
+        try {
+          const dedupKey = makeDedupKey({
+            date: tx.date,
+            description: tx.description,
+            amount: tx.amount,
+            type: 'DEBIT',
+            runningBalance: tx.balance ?? null,
+          });
+          const isForced = forceCreateIds?.includes(tx.id);
+          if (isDuplicate(dedupKey, dedupSet) && !isForced) {
+            console.error('[csv-confirm] dedup check', {
+              csvId: tx.id,
+              dedupKey,
+              txDate: tx.date,
+              txAmount: tx.amount,
+              txBalance: tx.balance,
+              isForced,
+              dedupSetSize: dedupSet.size,
+            });
+            result.duplicatesSkipped += 1;
+            continue;
+          }
 
-        // Guard: Transfer debits are saved as EXCLUDED — no expense rollup
-        const isTransferDebit = (EXCLUDED_DEBIT_LABELS as readonly string[]).includes(tx.confirmedCategory);
+          // Guard: categories in EXCLUDED_FROM_EXPENSE_AGGREGATION are saved as EXCLUDED — no expense rollup
+          const isTransferDebit = (
+            EXCLUDED_FROM_EXPENSE_AGGREGATION as readonly string[]
+          ).includes(tx.confirmedCategory);
 
-        if (isTransferDebit) {
+          // Determine source and provenance
+          const source =
+            tx.sourceHint === 'RULE_MATCH'
+              ? TransactionSourceEnum.USER_OVERRIDE
+              : tx.overridden
+                ? TransactionSourceEnum.USER_OVERRIDE
+                : TransactionSourceEnum.LLM_CLASSIFIED;
+          const appliedRuleId = tx.preMatch?.ruleId;
+
+          if (isTransferDebit) {
+            await createTransactionRecord({
+              date: tx.date,
+              description: tx.description,
+              amount: tx.amount,
+              type: TransactionTypeEnum.DEBIT,
+              category: tx.confirmedCategory,
+              source,
+              status: TransactionStatusEnum.EXCLUDED,
+              userId,
+              bankAccountId,
+              importSessionId,
+              runningBalance: tx.balance,
+              appliedRuleId,
+            });
+            result.totalEntries += 1;
+            dedupSet.add(dedupKey);
+            continue;
+          }
+
+          // Try to find category; fallback to "Other" if not found (instead of silently skipping)
+          let categoryId = categoryMap.get(tx.confirmedCategory.toLowerCase());
+          if (!categoryId) {
+            categoryId = otherCategoryId;
+          }
+
+          await upsertMonthlyExpenseSummary({
+            ledgerId: ledger.id,
+            categoryId,
+            monthNum,
+            amount: tx.amount,
+          });
+
           await createTransactionRecord({
             date: tx.date,
             description: tx.description,
             amount: tx.amount,
             type: TransactionTypeEnum.DEBIT,
             category: tx.confirmedCategory,
-            source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
-            status: TransactionStatusEnum.EXCLUDED,
+            source,
+            status: TransactionStatusEnum.CONFIRMED,
             userId,
             bankAccountId,
             importSessionId,
             runningBalance: tx.balance,
+            appliedRuleId,
           });
-          result.totalEntries += 1;
-          dedupSet.add(dedupKey);
-          continue;
-        }
 
-        // Try to find category; fallback to "Other" if not found (instead of silently skipping)
-        let categoryId = categoryMap.get(tx.confirmedCategory.toLowerCase());
-        if (!categoryId) {
-          categoryId = otherCategoryId;
-        }
-
-        await upsertMonthlyExpenseSummary({
-          ledgerId: ledger.id,
-          categoryId,
-          monthNum,
-          amount: tx.amount,
-        });
-
-        await createTransactionRecord({
-          date: tx.date,
-          description: tx.description,
-          amount: tx.amount,
-          type: TransactionTypeEnum.DEBIT,
-          category: tx.confirmedCategory,
-          source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
-          status: TransactionStatusEnum.CONFIRMED,
-          userId,
-          bankAccountId,
-          importSessionId,
-          runningBalance: tx.balance,
-        });
-
-        await prisma.merchantCategoryMap.upsert({
-          where: {
-            userId_description: {
+          await prisma.merchantCategoryMap.upsert({
+            where: {
+              userId_description: {
+                userId,
+                description: tx.description.toLowerCase().trim(),
+              },
+            },
+            update: {
+              category: tx.confirmedCategory,
+              source:
+                source === TransactionSourceEnum.USER_OVERRIDE
+                  ? 'user_override'
+                  : 'llm_confirmed',
+            },
+            create: {
               userId,
               description: tx.description.toLowerCase().trim(),
+              category: tx.confirmedCategory,
+              source:
+                source === TransactionSourceEnum.USER_OVERRIDE
+                  ? 'user_override'
+                  : 'llm_confirmed',
             },
-          },
-          update: {
-            category: tx.confirmedCategory,
-            source: tx.overridden ? 'user_override' : 'llm_confirmed',
-          },
-          create: {
-            userId,
-            description: tx.description.toLowerCase().trim(),
-            category: tx.confirmedCategory,
-            source: tx.overridden ? 'user_override' : 'llm_confirmed',
-          },
-        });
+          });
 
-        result.totalEntries += 1;
-        dedupSet.add(dedupKey);
+          result.totalEntries += 1;
+          dedupSet.add(dedupKey);
+        } catch (txErr: unknown) {
+          const msg = txErr instanceof Error ? txErr.message : String(txErr);
+          console.error('[csv-confirm] tx error (debit)', {
+            month: monthKey,
+            error: msg,
+          });
+          result.errors.push({ month: monthKey, message: msg });
+          continue;
+        }
       }
 
       result.savedMonths += 1;
@@ -282,7 +334,8 @@ export async function confirmDebitTransactions(
 }
 
 /**
- * Confirm credit transactions: route to IncomeLedger+IncomeRecord (income) or EXCLUDED Transaction only.
+ * Confirm credit transactions: create Transaction records (type=CREDIT) as the income source of truth.
+ * Income Tracking page queries Transaction directly — no IncomeRecord is created.
  */
 export async function confirmCreditTransactions(
   creditMonths: CreditMonth[],
@@ -295,11 +348,11 @@ export async function confirmCreditTransactions(
   const monthKeys = creditMonths.map((m) => m.month);
   if (monthKeys.length === 0) return result;
   const { startDate, endDate } = getDateRangeFromMonthKeys(monthKeys);
-  const dedupSet = await buildDedupSet({ userId, bankAccountId, startDate, endDate });
-
-  const allIncomeSources = await prisma.incomeSource.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true },
+  const dedupSet = await buildDedupSet({
+    userId,
+    bankAccountId,
+    startDate,
+    endDate,
   });
 
   for (const { month: monthKey, transactions } of creditMonths) {
@@ -308,68 +361,84 @@ export async function confirmCreditTransactions(
       const calendarYear = await getFiscalCalendarYear(year, monthNum);
 
       if (!calendarYear) {
-        result.errors.push({ month: monthKey, message: `No fiscal year found for ${monthKey}` });
+        result.errors.push({
+          month: monthKey,
+          message: `No fiscal year found for ${monthKey}`,
+        });
         continue;
       }
 
       for (const tx of transactions as ClassifiedCreditTransaction[]) {
-        const dedupKey = makeDedupKey({
-          date: tx.date,
-          description: tx.description,
-          amount: tx.amount,
-          type: 'CREDIT',
-          runningBalance: tx.balance ?? null,
-        });
-        if (isDuplicate(dedupKey, dedupSet)) {
-          result.duplicatesSkipped += 1;
+        try {
+          const dedupKey = makeDedupKey({
+            date: tx.date,
+            description: tx.description,
+            amount: tx.amount,
+            type: 'CREDIT',
+            runningBalance: tx.balance ?? null,
+          });
+          if (isDuplicate(dedupKey, dedupSet)) {
+            result.duplicatesSkipped += 1;
+            continue;
+          }
+
+          const isExcluded = (
+            EXCLUDED_CREDIT_LABELS as readonly string[]
+          ).includes(tx.confirmedCategory);
+
+          // Determine source and provenance
+          const source =
+            tx.sourceHint === 'RULE_MATCH'
+              ? TransactionSourceEnum.USER_OVERRIDE
+              : tx.overridden
+                ? TransactionSourceEnum.USER_OVERRIDE
+                : TransactionSourceEnum.LLM_CLASSIFIED;
+          const appliedRuleId = tx.preMatch?.ruleId;
+
+          if (isExcluded) {
+            await createTransactionRecord({
+              date: tx.date,
+              description: tx.description,
+              amount: tx.amount,
+              type: TransactionTypeEnum.CREDIT,
+              category: tx.confirmedCategory,
+              source,
+              status: TransactionStatusEnum.EXCLUDED,
+              userId,
+              bankAccountId,
+              importSessionId,
+              runningBalance: tx.balance,
+              appliedRuleId,
+            });
+          } else {
+            // Create Transaction record — income view queries Transaction directly (source of truth).
+            await createTransactionRecord({
+              date: tx.date,
+              description: tx.description,
+              amount: tx.amount,
+              type: TransactionTypeEnum.CREDIT,
+              category: tx.confirmedCategory,
+              source,
+              status: TransactionStatusEnum.CONFIRMED,
+              userId,
+              bankAccountId,
+              importSessionId,
+              runningBalance: tx.balance,
+              appliedRuleId,
+            });
+          }
+
+          result.totalEntries += 1;
+          dedupSet.add(dedupKey);
+        } catch (txErr: unknown) {
+          const msg = txErr instanceof Error ? txErr.message : String(txErr);
+          console.error('[csv-confirm] tx error (credit)', {
+            month: monthKey,
+            error: msg,
+          });
+          result.errors.push({ month: monthKey, message: msg });
           continue;
         }
-
-        const isExcluded = (EXCLUDED_CREDIT_LABELS as readonly string[]).includes(tx.confirmedCategory);
-
-        if (isExcluded) {
-          await createTransactionRecord({
-            date: tx.date,
-            description: tx.description,
-            amount: tx.amount,
-            type: TransactionTypeEnum.CREDIT,
-            category: tx.confirmedCategory,
-            source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
-            status: TransactionStatusEnum.EXCLUDED,
-            userId,
-            bankAccountId,
-            importSessionId,
-            runningBalance: tx.balance,
-          });
-        } else {
-          const incomeLedger = await getOrCreateIncomeLedger(calendarYear.id, userId);
-
-          await prisma.incomeRecord.create({
-            data: {
-              dateEarned: new Date(tx.date),
-              amount: String(tx.amount),
-              incomeSourceId: resolveIncomeSourceId(tx.confirmedCategory, allIncomeSources),
-              incomeLedgerId: incomeLedger.id,
-            },
-          });
-
-          await createTransactionRecord({
-            date: tx.date,
-            description: tx.description,
-            amount: tx.amount,
-            type: TransactionTypeEnum.CREDIT,
-            category: tx.confirmedCategory,
-            source: tx.overridden ? TransactionSourceEnum.USER_OVERRIDE : TransactionSourceEnum.LLM_CLASSIFIED,
-            status: TransactionStatusEnum.CONFIRMED,
-            userId,
-            bankAccountId,
-            importSessionId,
-            runningBalance: tx.balance,
-          });
-        }
-
-        result.totalEntries += 1;
-        dedupSet.add(dedupKey);
       }
 
       result.savedMonths += 1;

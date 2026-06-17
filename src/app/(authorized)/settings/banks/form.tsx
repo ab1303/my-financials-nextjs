@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { Loader2, Trash2, Building2, Plus } from 'lucide-react';
-import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { Building2, Loader2, Plus,Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
-import { Card, Button } from '@/components';
+import { Button,Card } from '@/components';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 
@@ -114,13 +114,13 @@ export default function BanksForm() {
                     </td>
                     <td className='px-4 py-3 text-right'>
                       {deleteMutation.isPending &&
-                      deleteMutation.variables?.bankId === bank.id ? (
+                      deleteMutation.variables?.institutionId === bank.id ? (
                         <Loader2 className='ml-auto h-4 w-4 animate-spin text-muted-foreground' />
                       ) : (
                         <button
                           type='button'
                           onClick={() =>
-                            deleteMutation.mutate({ bankId: bank.id })
+                            deleteMutation.mutate({ institutionId: bank.id })
                           }
                           aria-label={`Remove ${bank.name}`}
                           className='rounded p-1 text-destructive hover:bg-destructive/10'

@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { dbClientMock } from '@/__tests__/mocks/db-client.mock';
+import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { dbClientMock } from '@/__tests__/mocks/db-client.mock';
 import { mapBankAssetData } from '@/server/services/ai-import/bank-asset-mapper.service';
 
 describe('mapBankAssetData', () => {

@@ -1,4 +1,4 @@
-export type { MonthlyCredit, CleansingDonation, YearlySummary, YearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
+export type { CleansingDonation, MonthlyCredit, YearlyCleansingData,YearlySummary } from '@/server/services/bank-interest/interest-cleansing.service';
 
 export type BankInterestType = {
   id: string;
@@ -12,4 +12,10 @@ export type BankInterestType = {
   balance: number;
   status: 'CLEANSED' | 'PARTIAL' | 'PENDING' | 'MANUAL' | 'NONE';
   uncleansedTxCount: number;
+  evidence: Array<{
+    id: string;
+    amountApplied: number;
+    description: string;
+    date: Date;
+  }>;
 };

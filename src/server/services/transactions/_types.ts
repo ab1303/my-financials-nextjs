@@ -52,7 +52,6 @@ export interface TransferLinkResult {
   creditTransactionId: string;
   linkedAt: Date;
   rollupReversed: boolean;
-  incomeRecordDeleted: boolean;
 }
 
 export interface TransferUnlinkResult {

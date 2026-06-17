@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+
 import type { ClassifiedCreditMonth } from '@/server/services/ai-import/_types';
-import type { CSVClassifyingStepProps, ClassifiedMonth } from './_types';
+
+import type { ClassifiedMonth, CSVClassifyingStepProps } from './_types';
 
 interface ProgressEntry {
   month: string;
@@ -29,17 +31,18 @@ export default function CSVClassifyingStep({
 
     async function startClassification() {
       try {
+        const body = JSON.stringify({ fileId: file.id });
         const response = await fetch('/api/transactions/csv/classify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileId: file.id,
-          }),
+          body: body,
           signal: abortController.signal,
         });
 
         if (!response.ok) {
-          const err = await response.json().catch(() => ({ error: 'Unknown error' }));
+          const err = await response
+            .json()
+            .catch(() => ({ error: 'Unknown error' }));
           onError(err.error ?? 'Classification failed');
           return;
         }
@@ -76,13 +79,17 @@ export default function CSVClassifyingStep({
       }
     }
 
-    function upsertProgress(month: string, updater: (entry?: ProgressEntry) => ProgressEntry) {
+    function upsertProgress(
+      month: string,
+      updater: (entry?: ProgressEntry) => ProgressEntry,
+    ) {
+      // Replace any existing entry for the same month to avoid duplicate keys
+      // in the rendered list when events arrive concurrently.
       setProgress((prev) => {
         const existing = prev.find((p) => p.month === month);
-        if (existing) {
-          return prev.map((p) => (p.month === month ? updater(p) : p));
-        }
-        return [...prev, updater(undefined)];
+        const without = prev.filter((p) => p.month !== month);
+        const nextEntry = updater(existing);
+        return [...without, nextEntry];
       });
     }
 
@@ -100,13 +107,64 @@ export default function CSVClassifyingStep({
       } else if (type === 'debit_classified' || type === 'classified') {
         const month = event.month as string;
         const transactions = (event.transactions ?? []) as any[];
+        const duplicates = (event.duplicates ?? []) as any[]; // Capture duplicates
         const usage = (event.usage ?? {
           promptTokens: 0,
           completionTokens: 0,
           totalTokens: 0,
-        }) as { promptTokens: number; completionTokens: number; totalTokens: number };
-        const classified: ClassifiedMonth = { month, transactions, totalUsage: usage };
-        classifiedMonthsRef.current = [...classifiedMonthsRef.current, classified];
+        }) as {
+          promptTokens: number;
+          completionTokens: number;
+          totalTokens: number;
+        };
+        const classified: ClassifiedMonth = {
+          month,
+          transactions,
+          duplicates, // Store duplicates
+          totalUsage: usage,
+        };
+        // Merge with existing month if present so pre-matched (rule-match)
+        // transactions are not overwritten by subsequent LLM results.
+        const existingDebit = classifiedMonthsRef.current.find(
+          (c) => c.month === month,
+        );
+        if (existingDebit) {
+          // merge by id, preferring existing transaction object when ids collide
+          const existingById = new Map(
+            existingDebit.transactions.map((t) => [t.id, t]),
+          );
+          for (const tx of transactions) {
+            if (!existingById.has(tx.id)) existingById.set(tx.id, tx);
+          }
+          const mergedTxs = Array.from(existingById.values());
+          // Merge duplicates as well
+          const mergedDuplicates = [...(existingDebit.duplicates ?? []), ...duplicates];
+          const mergedUsage = {
+            promptTokens:
+              (existingDebit.totalUsage.promptTokens ?? 0) +
+              (usage.promptTokens ?? 0),
+            completionTokens:
+              (existingDebit.totalUsage.completionTokens ?? 0) +
+              (usage.completionTokens ?? 0),
+            totalTokens:
+              (existingDebit.totalUsage.totalTokens ?? 0) +
+              (usage.totalTokens ?? 0),
+          };
+          const merged: ClassifiedMonth = {
+            month,
+            transactions: mergedTxs,
+            duplicates: mergedDuplicates, // Merge duplicates
+            totalUsage: mergedUsage,
+          };
+          classifiedMonthsRef.current = classifiedMonthsRef.current.map((c) =>
+            c.month === month ? merged : c,
+          );
+        } else {
+          classifiedMonthsRef.current = [
+            ...classifiedMonthsRef.current,
+            classified,
+          ];
+        }
         upsertProgress(month, () => ({
           month,
           status: 'done',
@@ -119,11 +177,50 @@ export default function CSVClassifyingStep({
           promptTokens: 0,
           completionTokens: 0,
           totalTokens: 0,
-        }) as { promptTokens: number; completionTokens: number; totalTokens: number };
-        classifiedCreditMonthsRef.current = [
-          ...classifiedCreditMonthsRef.current,
-          { month, transactions, totalUsage: usage },
-        ];
+        }) as {
+          promptTokens: number;
+          completionTokens: number;
+          totalTokens: number;
+        };
+        // Upsert the classified credit month to avoid duplicate month entries
+        const creditClassified = { month, transactions, totalUsage: usage };
+        const existingCredit = classifiedCreditMonthsRef.current.find(
+          (c) => c.month === month,
+        );
+        if (existingCredit) {
+          const existingById = new Map(
+            existingCredit.transactions.map((t) => [t.id, t]),
+          );
+          for (const tx of transactions) {
+            if (!existingById.has(tx.id)) existingById.set(tx.id, tx);
+          }
+          const mergedTxs = Array.from(existingById.values());
+          const mergedUsage = {
+            promptTokens:
+              (existingCredit.totalUsage.promptTokens ?? 0) +
+              (usage.promptTokens ?? 0),
+            completionTokens:
+              (existingCredit.totalUsage.completionTokens ?? 0) +
+              (usage.completionTokens ?? 0),
+            totalTokens:
+              (existingCredit.totalUsage.totalTokens ?? 0) +
+              (usage.totalTokens ?? 0),
+          };
+          const merged = {
+            month,
+            transactions: mergedTxs,
+            totalUsage: mergedUsage,
+          } as ClassifiedCreditMonth;
+          classifiedCreditMonthsRef.current =
+            classifiedCreditMonthsRef.current.map((c) =>
+              c.month === month ? merged : c,
+            );
+        } else {
+          classifiedCreditMonthsRef.current = [
+            ...classifiedCreditMonthsRef.current,
+            creditClassified,
+          ];
+        }
         upsertProgress(month, () => ({
           month,
           status: 'done',
@@ -138,7 +235,10 @@ export default function CSVClassifyingStep({
         }));
       } else if (type === 'done') {
         hasCompletedRef.current = true;
-        const cats = (event.categories ?? []) as Array<{ id: string; name: string }>;
+        const cats = (event.categories ?? []) as Array<{
+          id: string;
+          name: string;
+        }>;
         const incomeSrcLabels = (event.incomeSourceLabels ?? []) as string[];
         const model = (event.model as string) ?? 'gpt-4o-mini';
         setStatusMessage('Classification complete');
@@ -170,12 +270,17 @@ export default function CSVClassifyingStep({
     <div className='flex flex-col items-center justify-center py-8 text-center'>
       <div className='mb-4 h-12 w-12 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600 dark:border-teal-800 dark:border-t-teal-400' />
 
-      <p className='mb-6 text-sm font-medium text-gray-700 dark:text-gray-300'>{statusMessage}</p>
+      <p className='mb-6 text-sm font-medium text-gray-700 dark:text-gray-300'>
+        {statusMessage}
+      </p>
 
       {total > 0 && (
         <div className='w-full max-w-sm space-y-3'>
           <div className='h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700'>
-            <div className='h-2 rounded-full bg-teal-500 transition-all duration-300' style={{ width: `${pct}%` }} />
+            <div
+              className='h-2 rounded-full bg-teal-500 transition-all duration-300'
+              style={{ width: `${pct}%` }}
+            />
           </div>
           <p className='text-xs text-gray-500 dark:text-gray-400'>
             {done} / {total} months classified
@@ -183,7 +288,10 @@ export default function CSVClassifyingStep({
 
           <ul className='mt-3 space-y-1 text-left'>
             {progress.map((p) => (
-              <li key={p.month} className='flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400'>
+              <li
+                key={p.month}
+                className='flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400'
+              >
                 {p.status === 'done' ? (
                   <span className='text-teal-500'>✓</span>
                 ) : p.status === 'classifying' ? (
@@ -193,7 +301,9 @@ export default function CSVClassifyingStep({
                 )}
                 <span>{p.month}</span>
                 {p.transactionCount !== undefined && (
-                  <span className='ml-auto text-gray-400 dark:text-gray-500'>{p.transactionCount} txns</span>
+                  <span className='ml-auto text-gray-400 dark:text-gray-500'>
+                    {p.transactionCount} txns
+                  </span>
                 )}
               </li>
             ))}
@@ -207,4 +317,3 @@ export default function CSVClassifyingStep({
     </div>
   );
 }
-

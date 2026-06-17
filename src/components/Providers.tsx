@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SessionProvider } from 'next-auth/react';
+import React, { useState } from 'react';
 import { Toaster } from 'sonner';
 
 import { clientOptions, trpc } from '@/server/trpc/client';

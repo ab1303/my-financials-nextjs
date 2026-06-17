@@ -1,17 +1,19 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { BeneficiaryEnumType } from "@prisma/client";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from 'next/navigation';
 import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { BeneficiaryEnumType } from "@prisma/client";
-import { AppSelect as Select } from "@/components/ui/AppSelect";
 import CreatableSelect from "react-select/creatable";
-import { getSelectStyles } from "@/lib/select-styles";
 import { toast } from "sonner";
+import { z } from "zod";
 
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { getSelectStyles } from "@/lib/select-styles";
 import { trpc } from "@/server/trpc/client";
+
 import { addRow } from "../actions";
 
 type LinkZakatTransactionsDrawerProps = {
@@ -19,7 +21,8 @@ type LinkZakatTransactionsDrawerProps = {
   onClose: () => void;
   dateFrom: string;
   dateTo: string;
-  calendarYearId: string;
+  calendarYearId?: string;
+  selectedTransactionId?: string;
 };
 
 const linkFormSchema = z.object({
@@ -53,11 +56,14 @@ export default function LinkZakatTransactionsDrawer({
   onClose,
   dateFrom,
   dateTo,
-  calendarYearId,
+  calendarYearId: initialCalendarYearId,
+  selectedTransactionId: initialSelectedTransactionId,
 }: LinkZakatTransactionsDrawerProps) {
   const [transactions, setTransactions] = useState<Array<TransactionRow>>([]);
-  const [selectedTransactionId, setSelectedTransactionId] = useState("");
+  const [selectedTransactionId, setSelectedTransactionId] = useState(initialSelectedTransactionId ?? "");
   const [isSaving, setIsSaving] = useState(false);
+  const [effectiveCalendarYearId, setEffectiveCalendarYearId] = useState(initialCalendarYearId ?? "");
+  const router = useRouter();
 
   const unlinkedTransactionsQuery = trpc.transactionLedger.getUnlinkedZakatTransactions.useQuery(
     { dateFrom, dateTo },
@@ -69,6 +75,10 @@ export default function LinkZakatTransactionsDrawer({
   const businessesQuery = trpc.business.getBusinessesByType.useQuery(
     { type: "PHILANTHROPY" },
     { enabled: isOpen },
+  );
+  const calendarYearsQuery = trpc.calendarYear.getAll.useQuery(
+    { types: ["FISCAL", "ANNUAL"] },
+    { enabled: isOpen && !initialCalendarYearId },
   );
 
   const {
@@ -82,7 +92,7 @@ export default function LinkZakatTransactionsDrawer({
     resolver: zodResolver(linkFormSchema),
     mode: "onChange",
     defaultValues: {
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: "",
     },
   });
@@ -94,13 +104,22 @@ export default function LinkZakatTransactionsDrawer({
   );
 
   useEffect(() => {
+    if (initialCalendarYearId) {
+      setEffectiveCalendarYearId(initialCalendarYearId);
+    } else if (calendarYearsQuery.data && calendarYearsQuery.data.length > 0) {
+      // Use the first calendar year (most recent) as default if none provided
+      setEffectiveCalendarYearId(calendarYearsQuery.data[0]?.id ?? "");
+    }
+  }, [initialCalendarYearId, calendarYearsQuery.data]);
+
+  useEffect(() => {
     if (unlinkedTransactionsQuery.data && unlinkedTransactionsQuery.data.length > 0) {
       setTransactions(unlinkedTransactionsQuery.data);
-      if (!selectedTransactionId) {
+      if (!initialSelectedTransactionId && !selectedTransactionId) {
         setSelectedTransactionId(unlinkedTransactionsQuery.data[0]?.id ?? "");
       }
     }
-  }, [unlinkedTransactionsQuery.data, selectedTransactionId]);
+  }, [unlinkedTransactionsQuery.data, initialSelectedTransactionId]);
 
   useEffect(() => {
     setValue("beneficiaryId", "");
@@ -121,7 +140,7 @@ export default function LinkZakatTransactionsDrawer({
   const handleSelectTransaction = (transactionId: string) => {
     setSelectedTransactionId(transactionId);
     reset({
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: "",
     });
   };
@@ -130,7 +149,7 @@ export default function LinkZakatTransactionsDrawer({
     setTransactions([]);
     setSelectedTransactionId("");
     reset({
-      beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+      beneficiaryType: BeneficiaryEnumType.BUSINESS,
       beneficiaryId: "",
     });
     onClose();
@@ -142,6 +161,11 @@ export default function LinkZakatTransactionsDrawer({
       return;
     }
 
+    if (!effectiveCalendarYearId) {
+      toast.error("Unable to determine fiscal year for this transaction.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const result = await addRow({
@@ -149,7 +173,7 @@ export default function LinkZakatTransactionsDrawer({
         amount: selectedTransaction.amount,
         beneficiaryType: values.beneficiaryType,
         beneficiaryId: values.beneficiaryId,
-        calendarYearId,
+        calendarYearId: effectiveCalendarYearId,
         transactionId: selectedTransaction.id,
       });
 
@@ -161,13 +185,14 @@ export default function LinkZakatTransactionsDrawer({
       }
 
       toast.success("Zakat payment linked!");
+      router.refresh();
       setTransactions((current) => {
         const remaining = current.filter((transaction) => transaction.id !== selectedTransaction.id);
         setSelectedTransactionId(remaining[0]?.id ?? "");
         return remaining;
       });
       reset({
-        beneficiaryType: BeneficiaryEnumType.INDIVIDUAL,
+        beneficiaryType: BeneficiaryEnumType.BUSINESS,
         beneficiaryId: "",
       });
     } catch (error) {
@@ -204,8 +229,8 @@ export default function LinkZakatTransactionsDrawer({
               </button>
             </div>
 
-            <div className="grid flex-1 grid-cols-5 gap-0 overflow-hidden">
-              <aside className="col-span-2 border-r border-gray-200 p-4 dark:border-gray-800">
+            <div className="grid min-h-0 flex-1 grid-cols-5 gap-0 overflow-hidden">
+              <aside className="col-span-2 min-h-0 border-r border-gray-200 p-4 dark:border-gray-800">
                 <h3 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-200">
                   Unlinked transactions
                 </h3>
@@ -247,8 +272,8 @@ export default function LinkZakatTransactionsDrawer({
                 )}
               </aside>
 
-              <section className="col-span-3 flex flex-col p-4">
-                <div className="flex flex-1 flex-col gap-4">
+              <section className="col-span-3 flex min-h-0 flex-col overflow-hidden">
+                <div className="flex min-h-full flex-col gap-4">
                   <div className="rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
                     {selectedTransaction ? (
                       <>
@@ -290,12 +315,12 @@ export default function LinkZakatTransactionsDrawer({
                             inputId="beneficiaryType"
                             isDisabled={!selectedTransaction}
                             options={[
+                              { value: BeneficiaryEnumType.BUSINESS, label: "Business" },
                               { value: BeneficiaryEnumType.INDIVIDUAL, label: "Individual" },
-                              { value: BeneficiaryEnumType.BUSINESS, label: "Organization" },
                             ]}
                             value={{
                               value: field.value,
-                              label: field.value === BeneficiaryEnumType.BUSINESS ? "Organization" : "Individual",
+                              label: field.value === BeneficiaryEnumType.BUSINESS ? "Business" : "Individual",
                             }}
                             onChange={(option) => field.onChange(option?.value)}
                           />
@@ -342,22 +367,24 @@ export default function LinkZakatTransactionsDrawer({
                     </div>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-800">
-                    <button
-                      type="button"
-                      onClick={handleClose}
-                      className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={onSubmit}
-                      disabled={!selectedTransaction || !isValid || isSaving}
-                      className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isSaving ? "Saving..." : "Save & Next"}
-                    </button>
+                  <div className="shrink-0 border-t border-gray-200 bg-white/95 px-4 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+                    <div className="flex items-center justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={handleClose}
+                        className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onSubmit}
+                        disabled={!selectedTransaction || !isValid || isSaving}
+                        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isSaving ? "Linking..." : "Link Zakat payment"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>

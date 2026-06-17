@@ -1,7 +1,8 @@
-import { router, protectedProcedure } from '@/server/trpc/trpc';
-import { updateTransactionCategory } from '@/server/services/transaction.service';
-import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+
+import { updateTransactionCategory } from '@/server/services/transaction.service';
+import { protectedProcedure,router } from '@/server/trpc/trpc';
 
 const createSchema = z.object({ name: z.string().min(1).max(100) });
 const updateSchema = z.object({ id: z.string(), name: z.string().min(1).max(100) });

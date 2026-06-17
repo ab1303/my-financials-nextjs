@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,19 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Necessary for Next auth
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -32,53 +28,45 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
-  expires      DateTime
   userId       String
+  expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum RoleEnumType {
-  user
-  admin
-}
-
 model User {
-  id            String        @id @default(cuid())
-  name          String?
-  email         String?       @unique
-  emailVerified DateTime?
-  image         String?
-  password      String
-  role          RoleEnumType? @default(user)
-  // Extended profile fields
-  phone                 String?
-  bio                   String?               @db.Text
-  timezone              String?               @default("Australia/Sydney")
-  linkedInUrl           String?
-  preferredCurrency     CurrencyEnumType?     @default(AUD)
-  fiscalYearType        CalendarEnumType?     @default(FISCAL)
-  avatarStorageUrl      String?
+  id                    String                @id @default(cuid())
+  name                  String?
+  email                 String?               @unique
+  emailVerified         DateTime?
+  image                 String?
+  createdAt             DateTime              @default(now())
+  password              String
+  role                  RoleEnumType?         @default(user)
+  updatedAt             DateTime              @updatedAt
   avatarStorageProvider StorageProviderEnum?
-
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  accounts            Account[]
-  sessions            Session[]
-  individuals         Individual[]
-  businesses          Business[]
-  relationshipTypes   RelationshipType[]
-  incomeLedgers       IncomeLedger[]
-  expenseLedgers      ExpenseLedger[]
-  financialAccounts   FinancialAccount[]
-  bankBalanceSnapshots BankBalanceSnapshot[]
-  portfolioSnapshots  PortfolioSnapshot[]
-  importSessions      ImportSession[]
-  importImages        ImportImage[]
-  aiUsageLogs         AIUsageLog[]
-  merchantCategoryMaps MerchantCategoryMap[]
-  transactions        Transaction[]
-  transferMatchRules  TransferMatchRule[]
-  categoryRules       CategoryRule[]
+  avatarStorageUrl      String?
+  bio                   String?
+  fiscalYearType        CalendarEnumType?     @default(FISCAL)
+  linkedInUrl           String?
+  phone                 String?
+  preferredCurrency     CurrencyEnumType?     @default(AUD)
+  timezone              String?               @default("Australia/Sydney")
+  aiUsageLogs           AIUsageLog[]
+  accounts              Account[]
+  bankBalanceSnapshots  BankBalanceSnapshot[]
+  businesses            Business[]
+  categoryRules         CategoryRule[]
+  expenseLedgers        ExpenseLedger[]
+  financialAccounts     FinancialAccount[]
+  importImages          ImportImage[]
+  importSessions        ImportSession[]
+  individuals           Individual[]
+  merchantCategoryMaps  MerchantCategoryMap[]
+  portfolioSnapshots    PortfolioSnapshot[]
+  relationshipTypes     RelationshipType[]
+  sessions              Session[]
+  transactions          Transaction[]
+  transferMatchRules    TransferMatchRule[]
 }
 
 model VerificationToken {
@@ -87,6 +75,515 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model IncomeSource {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  description String?
+}
+
+model RelationshipType {
+  id          String       @id @default(cuid())
+  name        String
+  userId      String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  individuals Individual[]
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([name, userId])
+}
+
+model Individual {
+  id                 String              @id @default(cuid())
+  name               String
+  firstName          String?
+  lastName           String?
+  userId             String
+  addressLine        String?
+  createdAt          DateTime            @default(now())
+  postcode           Int?
+  relationshipId     String?
+  state              String?
+  streetAddress      String?
+  suburb             String?
+  updatedAt          DateTime            @updatedAt
+  addressFormat      String?             @default("AU")
+  relationship       RelationshipType?   @relation(fields: [relationshipId], references: [id])
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voluntaryDonations VoluntaryDonation[]
+  zakatPayments      ZakatPayment[]
+
+  @@unique([name, userId])
+}
+
+model Business {
+  id                       String              @id @default(cuid())
+  name                     String
+  addressLine              String?
+  streetAddress            String?
+  suburb                   String?
+  postcode                 Int?
+  state                    String?
+  type                     BusinessEnumType?
+  userId                   String?
+  isDgrRegistered          Boolean?            @default(false)
+  user                     User?               @relation(fields: [userId], references: [id])
+  financialAccounts        FinancialAccount[]
+  interestCleansingRecords InterestCleansing[]
+  voluntaryDonations       VoluntaryDonation[]
+  zakatPayments            ZakatPayment[]
+}
+
+model ZakatObligation {
+  id         String         @id @default(cuid())
+  calendarId String         @unique
+  amountDue  Decimal        @db.Decimal(12, 2)
+  calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
+  payments   ZakatPayment[]
+}
+
+model ZakatPayment {
+  id                String              @id @default(cuid())
+  datePaid          DateTime
+  amount            Decimal             @db.Decimal(19, 4)
+  beneficiaryType   BeneficiaryEnumType
+  businessId        String?
+  individualId      String?
+  zakatObligationId String
+  transactionId     String?             @unique
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  business          Business?           @relation(fields: [businessId], references: [id])
+  individual        Individual?         @relation(fields: [individualId], references: [id])
+  transaction       Transaction?        @relation(fields: [transactionId], references: [id])
+  zakatObligation   ZakatObligation     @relation(fields: [zakatObligationId], references: [id])
+}
+
+model DonationLedger {
+  id                       String              @id @default(cuid())
+  calendarId               String              @unique
+  calendar                 CalendarYear        @relation(fields: [calendarId], references: [id])
+  interestCleansingRecords InterestCleansing[]
+  voluntaryDonations       VoluntaryDonation[]
+}
+
+// Legacy models removed for final cutover
+
+model VoluntaryDonation {
+  id               String                      @id @default(cuid())
+  datePaid         DateTime
+  amount           Decimal                     @db.Decimal(19, 4)
+  beneficiaryType  BeneficiaryEnumType
+  businessId       String?
+  individualId     String?
+  donationLedgerId String
+  purpose          DonationPurposeEnum         @default(VOLUNTARY)
+  transactionId    String?                     @unique
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  business         Business?                   @relation(fields: [businessId], references: [id])
+  donationLedger   DonationLedger              @relation(fields: [donationLedgerId], references: [id])
+  individual       Individual?                 @relation(fields: [individualId], references: [id])
+  transaction      Transaction?                @relation(fields: [transactionId], references: [id])
+}
+
+model InterestCleansing {
+  id               String                      @id @default(cuid())
+  datePaid         DateTime
+  amount           Decimal                     @db.Decimal(19, 4)
+  sourceBusinessId String?
+  donationLedgerId String
+  creditTxId       String?                     @unique
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  creditTx         Transaction?                @relation("InterestCredit", fields: [creditTxId], references: [id])
+  donationLedger   DonationLedger              @relation(fields: [donationLedgerId], references: [id])
+  sourceBusiness   Business?                   @relation(fields: [sourceBusinessId], references: [id])
+  evidence         InterestCleansingEvidence[]
+}
+
+model InterestCleansingEvidence {
+  id                  String            @id @default(cuid())
+  interestCleansingId String
+  transactionId       String
+  amountLinked        Decimal?          @db.Decimal(19, 4)
+  confidence          Float?            @default(0)
+  createdAt           DateTime          @default(now())
+  interestCleansing   InterestCleansing @relation(fields: [interestCleansingId], references: [id], onDelete: Cascade)
+  transaction         Transaction       @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@unique([interestCleansingId, transactionId])
+  @@index([interestCleansingId])
+  @@index([transactionId])
+}
+
+model MigrationAudit {
+  id          String          @id @default(cuid())
+  legacyTable String
+  legacyId    String
+  newTable    String
+  newId       String?
+  status      MigrationStatus @default(PENDING)
+  note        String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([legacyTable, legacyId])
+}
+
+model SpecialCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  isActive    Boolean  @default(true)
+  isEditable  Boolean  @default(false)
+  color       String?
+  createdAt   DateTime @default(now())
+}
+
+model ExpenseCategory {
+  id                      String                  @id @default(cuid())
+  name                    String                  @unique
+  isActive                Boolean                 @default(true)
+  createdAt               DateTime                @default(now())
+  iconName                String?
+  description             String?
+  monthlyExpenseSummaries MonthlyExpenseSummary[]
+}
+
+model ExpenseLedger {
+  id                      String                  @id @default(cuid())
+  calendarId              String
+  userId                  String
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  calendar                CalendarYear            @relation(fields: [calendarId], references: [id])
+  user                    User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthlyExpenseSummaries MonthlyExpenseSummary[]
+
+  @@unique([calendarId, userId])
+}
+
+model MonthlyExpenseSummary {
+  id              String          @id @default(cuid())
+  month           Int
+  amount          Decimal         @db.Decimal(12, 2)
+  categoryId      String
+  expenseLedgerId String
+  importImageId   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  category        ExpenseCategory @relation(fields: [categoryId], references: [id])
+  expenseLedger   ExpenseLedger   @relation(fields: [expenseLedgerId], references: [id], onDelete: Cascade)
+  importImage     ImportImage?    @relation(fields: [importImageId], references: [id])
+
+  @@index([expenseLedgerId, month])
+}
+
+model CalendarYear {
+  id               String            @id @default(cuid())
+  description      String
+  fromYear         Int
+  fromMonth        Int
+  toYear           Int
+  toMonth          Int
+  type             CalendarEnumType?
+  lockedAt         DateTime?
+  donationLedgers  DonationLedger?
+  expenseLedgers   ExpenseLedger[]
+  zakatObligations ZakatObligation?
+}
+
+model FinancialAccount {
+  id                  String                 @id @default(cuid())
+  name                String
+  institutionId       String
+  userId              String
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  isTracked           Boolean                @default(true)
+  balanceRecords      BankBalanceRecord[]
+  cashBalances        BrokerageCashBalance[]
+  institution         Business               @relation(fields: [institutionId], references: [id])
+  user                User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockHoldings       StockHolding[]
+  transactions        Transaction[]
+  creditTransferRules TransferMatchRule[]    @relation("creditRules")
+  debitTransferRules  TransferMatchRule[]    @relation("debitRules")
+
+  @@unique([name, institutionId, userId])
+  @@index([userId, institutionId])
+}
+
+model BankBalanceSnapshot {
+  id             String              @id @default(cuid())
+  snapshotDate   DateTime
+  userId         String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  balanceRecords BankBalanceRecord[]
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, snapshotDate])
+}
+
+model BankBalanceRecord {
+  id            String              @id @default(cuid())
+  balance       Decimal             @db.Decimal(12, 2)
+  accountId     String
+  snapshotId    String
+  importImageId String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  account       FinancialAccount    @relation(fields: [accountId], references: [id])
+  importImage   ImportImage?        @relation(fields: [importImageId], references: [id])
+  snapshot      BankBalanceSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, snapshotId])
+  @@index([snapshotId])
+}
+
+model PortfolioSnapshot {
+  id           String                 @id @default(cuid())
+  snapshotDate DateTime
+  userId       String
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  usdToAudRate Decimal?
+  cashBalances BrokerageCashBalance[]
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  holdings     StockHolding[]
+
+  @@index([userId, snapshotDate])
+}
+
+model BrokerageCashBalance {
+  id         String            @id @default(cuid())
+  amount     Decimal           @db.Decimal(12, 2)
+  currency   CurrencyEnumType
+  accountId  String
+  snapshotId String
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  account    FinancialAccount  @relation(fields: [accountId], references: [id])
+  snapshot   PortfolioSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, currency, snapshotId])
+  @@index([snapshotId])
+  @@index([accountId])
+}
+
+model StockHolding {
+  id           String                 @id @default(cuid())
+  ticker       String
+  companyName  String
+  quantity     Decimal
+  buyPrice     Decimal                @db.Decimal(12, 2)
+  buyDate      DateTime?
+  currentPrice Decimal                @db.Decimal(12, 2)
+  currency     CurrencyEnumType
+  plannedTerm  InvestmentTermEnumType
+  salePrice    Decimal?               @db.Decimal(12, 2)
+  saleDate     DateTime?
+  soldQuantity Decimal?
+  accountId    String
+  snapshotId   String
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  account      FinancialAccount       @relation(fields: [accountId], references: [id])
+  snapshot     PortfolioSnapshot      @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@index([snapshotId])
+  @@index([accountId])
+  @@index([ticker])
+}
+
+model ImportSession {
+  id                String                   @id @default(cuid())
+  userId            String
+  importType        ImportTypeEnum
+  status            ImportStatusEnum         @default(PENDING)
+  overallConfidence Float?
+  recordsCreated    Int                      @default(0)
+  metadata          Json?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  endDate           DateTime?
+  startDate         DateTime?
+  usageLogs         AIUsageLog[]
+  images            ImportImage[]
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions      Transaction[]
+  matchJobResults   TransferMatchJobResult[]
+
+  @@index([userId, createdAt])
+}
+
+model ImportImage {
+  id                      String                  @id @default(cuid())
+  userId                  String
+  sessionId               String
+  fileName                String
+  fileSize                Int
+  mimeType                String
+  storageUrl              String
+  storageProvider         StorageProviderEnum
+  confidence              Float?
+  extractedData           Json?
+  errorMessage            String?
+  createdAt               DateTime                @default(now())
+  expiresAt               DateTime?
+  bankBalanceRecords      BankBalanceRecord[]
+  session                 ImportSession           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user                    User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthlyExpenseSummaries MonthlyExpenseSummary[]
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model AIUsageLog {
+  id               String         @id @default(cuid())
+  sessionId        String
+  userId           String
+  imageId          String?
+  importType       ImportTypeEnum
+  model            String
+  promptTokens     Int
+  completionTokens Int
+  totalTokens      Int
+  estimatedCostUSD Float
+  createdAt        DateTime       @default(now())
+  session          ImportSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, importType, createdAt])
+  @@index([importType, createdAt])
+  @@index([sessionId])
+}
+
+model MerchantCategoryMap {
+  id          String   @id @default(cuid())
+  userId      String
+  description String
+  category    String
+  source      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, description])
+  @@index([userId])
+}
+
+model Transaction {
+  id                          String                      @id @default(cuid())
+  date                        DateTime
+  description                 String
+  amount                      Decimal                     @db.Decimal(12, 2)
+  type                        TransactionTypeEnum
+  category                    String
+  source                      TransactionSourceEnum
+  status                      TransactionStatusEnum       @default(PENDING)
+  confirmedAt                 DateTime?
+  bankAccountId               String?
+  userId                      String
+  importSessionId             String?
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
+  offsetCategory              String?
+  offsetTransactionId         String?
+  preLinkCategory             String?
+  preLinkStatus               TransactionStatusEnum?
+  transferLinkedTransactionId String?                     @unique
+  preVoidStatus               TransactionStatusEnum?
+  runningBalance              Decimal?                    @db.Decimal(12, 2)
+  orphanResolution            TransferOrphanResolution?
+  interestCleansingCredit     InterestCleansing?          @relation("InterestCredit")
+  interestCleansingEvidence   InterestCleansingEvidence[]
+  financialAccount            FinancialAccount?           @relation(fields: [bankAccountId], references: [id])
+  importSession               ImportSession?              @relation(fields: [importSessionId], references: [id])
+  offsetTransaction           Transaction?                @relation("ReimbursementLink", fields: [offsetTransactionId], references: [id])
+  reimbursements              Transaction[]               @relation("ReimbursementLink")
+  transferLinkedTransaction   Transaction?                @relation("TransferLink", fields: [transferLinkedTransactionId], references: [id])
+  transferCounterpart         Transaction?                @relation("TransferLink")
+  user                        User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zakatPayment                ZakatPayment?
+  voluntaryDonations          VoluntaryDonation[]
+
+  @@index([userId, date, id])
+  @@index([userId, bankAccountId, date])
+  @@index([userId, type, status])
+  @@index([importSessionId])
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
+}
+
+model TransferMatchRule {
+  id                  String                   @id @default(cuid())
+  userId              String
+  name                String
+  isActive            Boolean                  @default(true)
+  amountExact         Decimal?                 @db.Decimal(12, 2)
+  amountMin           Decimal?                 @db.Decimal(12, 2)
+  amountMax           Decimal?                 @db.Decimal(12, 2)
+  debitKeywords       String[]
+  creditKeywords      String[]
+  maxDayGap           Int                      @default(5)
+  debitBankAccountId  String?
+  creditBankAccountId String?
+  confidenceThreshold Int                      @default(85)
+  matchCount          Int                      @default(0)
+  lastMatchedAt       DateTime?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  jobResults          TransferMatchJobResult[]
+  creditBankAccount   FinancialAccount?        @relation("creditRules", fields: [creditBankAccountId], references: [id])
+  debitBankAccount    FinancialAccount?        @relation("debitRules", fields: [debitBankAccountId], references: [id])
+  user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+}
+
+model TransferMatchJobResult {
+  id              String             @id @default(cuid())
+  userId          String
+  importSessionId String
+  ruleId          String?
+  autoLinkedCount Int                @default(0)
+  flaggedCount    Int                @default(0)
+  skippedCount    Int                @default(0)
+  reviewedAt      DateTime?
+  createdAt       DateTime           @default(now())
+  importSession   ImportSession      @relation(fields: [importSessionId], references: [id], onDelete: Cascade)
+  rule            TransferMatchRule? @relation(fields: [ruleId], references: [id])
+
+  @@index([userId, importSessionId])
+}
+
+model CategoryRule {
+  id           String                @id @default(cuid())
+  userId       String
+  name         String
+  matchType    CategoryRuleMatchType @default(CONTAINS)
+  pattern      String
+  category     String
+  isActive     Boolean               @default(true)
+  appliedCount Int                   @default(0)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+}
+
+enum RoleEnumType {
+  user
+  admin
 }
 
 enum BusinessEnumType {
@@ -106,205 +603,10 @@ enum DonationPurposeEnum {
   ZAKAT
 }
 
-// IncomeSource — user-managed income source lookup (replaces IncomeSourceEnumType enum)
-model IncomeSource {
-  id            String         @id @default(cuid())
-  name          String         @unique
-  description   String?        @db.Text
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  incomeRecords IncomeRecord[]
+enum TaxCategoryEnumType {
+  DEDUCTIBLE
+  NON_DEDUCTIBLE
 }
-
-// RelationshipType — lookup table of relationship labels (e.g. "Mother", "Spouse")
-model RelationshipType {
-  id          String       @id @default(cuid())
-  name        String
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  individuals Individual[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  @@unique([name, userId])
-}
-
-model Individual {
-  id               String            @id @default(cuid())
-  name             String
-  firstName        String?
-  lastName         String?
-  relationshipId   String?
-  relationship     RelationshipType? @relation(fields: [relationshipId], references: [id])
-  addressLine      String?
-  streetAddress    String?
-  suburb           String?
-  postcode         Int?
-  state            String?
-  addressFormat    String?           @default("AU")
-  userId           String
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  zakatPayments    ZakatPayment[]
-  donationPayments DonationPayment[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-
-  @@unique([name, userId])
-}
-
-// Business — an organisation (bank, charity, or brokerage) the user transacts with
-model Business {
-  id               String               @id @default(cuid())
-  name             String
-  addressLine      String?
-  streetAddress    String?
-  suburb           String?
-  postcode         Int?
-  state            String?
-  type             BusinessEnumType?
-  zakatPayments    ZakatPayment[]
-  donationPayments DonationPayment[]
-  financialAccounts FinancialAccount[]
-  // userId is null for global/admin-managed institutions (BANK, BROKERAGE).
-  // userId is set for user-specific institutions (e.g. PHILANTHROPY).
-  userId           String?
-  user             User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
-}
-
-// ZakatObligation — per-calendar-year header for zakat obligations
-model ZakatObligation {
-  id         String         @id @default(cuid())
-  calendar   CalendarYear   @relation(fields: [calendarId], references: [id], onDelete: Restrict)
-  calendarId String         @unique
-  amountDue  Decimal        @db.Money
-  payments   ZakatPayment[]
-}
-
-model ZakatPayment {
-  id              String              @id @default(cuid())
-  datePaid        DateTime
-  amount          Decimal             @db.Money
-  beneficiaryType BeneficiaryEnumType
-  business        Business?           @relation(fields: [businessId], references: [id])
-  businessId      String?
-  individual      Individual?         @relation(fields: [individualId], references: [id])
-  individualId    String?
-  zakatObligation ZakatObligation     @relation(fields: [zakatObligationId], references: [id])
-  zakatObligationId String
-  transaction     Transaction?        @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  transactionId   String?             @unique
-}
-
-// DonationLedger — per-calendar-year header for donation tracking
-model DonationLedger {
-  id         String            @id @default(cuid())
-  calendar   CalendarYear      @relation(fields: [calendarId], references: [id])
-  calendarId String            @unique
-  payments   DonationPayment[]
-}
-
-model DonationPayment {
-  id              String              @id @default(cuid())
-  datePaid        DateTime
-  amount          Decimal             @db.Money
-  beneficiaryType BeneficiaryEnumType
-  taxCategory     String
-  business        Business?           @relation(fields: [businessId], references: [id])
-  businessId      String?
-  individual      Individual?         @relation(fields: [individualId], references: [id])
-  individualId    String?
-  donationLedger  DonationLedger      @relation(fields: [donationLedgerId], references: [id])
-  donationLedgerId String
-  transaction     Transaction?        @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  transactionId   String?             @unique
-  donationPurpose DonationPurposeEnum @default(VOLUNTARY)
-}
-
-// IncomeLedger — per-user per-calendar-year container for income records
-model IncomeLedger {
-  id         String         @id @default(cuid())
-  calendar   CalendarYear   @relation(fields: [calendarId], references: [id])
-  calendarId String
-  userId     String
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  records    IncomeRecord[]
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  @@unique([calendarId, userId])
-}
-
-// IncomeRecord — an individual income event (dated, with source)
-model IncomeRecord {
-  id              String       @id @default(cuid())
-  dateEarned      DateTime
-  amount          Decimal      @db.Money
-  incomeSource    IncomeSource @relation(fields: [incomeSourceId], references: [id])
-  incomeSourceId  String
-  incomeLedger    IncomeLedger @relation(fields: [incomeLedgerId], references: [id], onDelete: Cascade)
-  incomeLedgerId  String
-  transaction     Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
-  transactionId   String?      @unique
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  @@index([incomeLedgerId, dateEarned])
-}
-
-// SpecialCategory — system-managed categories (Transfer, Excluded, etc) with descriptions
-model SpecialCategory {
-  id            String   @id @default(cuid())
-  name          String   @unique
-  description   String   @db.Text
-  isActive      Boolean  @default(true)
-  isEditable    Boolean  @default(false)
-  color         String?  // For UI badges (e.g., "red", "blue", "gray")
-  createdAt     DateTime @default(now())
-}
-
-// Expenses
-model ExpenseCategory {
-  id                    String                  @id @default(cuid())
-  name                  String                  @unique
-  description           String?                 @db.Text
-  iconName              String?
-  isActive              Boolean                 @default(true)
-  createdAt             DateTime                @default(now())
-  monthlyExpenseSummaries MonthlyExpenseSummary[]
-}
-
-// ExpenseLedger — per-user per-fiscal-year container (header) for expense summaries
-model ExpenseLedger {
-  id                    String                  @id @default(cuid())
-  calendar              CalendarYear            @relation(fields: [calendarId], references: [id])
-  calendarId            String
-  userId                String
-  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  monthlyExpenseSummaries MonthlyExpenseSummary[]
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-
-  @@unique([calendarId, userId])
-}
-
-// MonthlyExpenseSummary — consolidated spend per category per month (aggregate, not individual transaction)
-model MonthlyExpenseSummary {
-  id              String          @id @default(cuid())
-  month           Int // 1-12 (January = 1, December = 12)
-  amount          Decimal         @db.Money
-  category        ExpenseCategory @relation(fields: [categoryId], references: [id])
-  categoryId      String
-  expenseLedger   ExpenseLedger   @relation(fields: [expenseLedgerId], references: [id], onDelete: Cascade)
-  expenseLedgerId String
-  importImage     ImportImage?    @relation(fields: [importImageId], references: [id])
-  importImageId   String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-
-  @@index([expenseLedgerId, month])
-}
-
-// Calendar Year
 
 enum CalendarEnumType {
   ZAKAT
@@ -323,131 +625,12 @@ enum CurrencyEnumType {
   USD
 }
 
-model CalendarYear {
-  id                      String                  @id @default(cuid())
-  description             String
-  fromYear                Int
-  fromMonth               Int
-  toYear                  Int
-  toMonth                 Int
-  type                    CalendarEnumType?
-  lockedAt                DateTime?
-  zakatObligations        ZakatObligation[]
-  incomeLedgers           IncomeLedger[]
-  expenseLedgers          ExpenseLedger[]
-  donationLedgers         DonationLedger[]
+enum MigrationStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  FAILED
 }
-
-// FinancialAccount — user's individual account at a bank or brokerage
-model FinancialAccount {
-  id           String               @id @default(cuid())
-  name         String
-  institutionId String
-  institution  Business             @relation(fields: [institutionId], references: [id])
-  userId       String
-  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  balanceRecords BankBalanceRecord[]
-  stockHoldings  StockHolding[]
-  cashBalances   BrokerageCashBalance[]
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-
-  @@unique([name, institutionId, userId])
-  @@index([userId, institutionId])
-  transactions Transaction[]
-  debitTransferRules  TransferMatchRule[] @relation("debitRules")
-  creditTransferRules TransferMatchRule[] @relation("creditRules")
-}
-
-// BankBalanceSnapshot — point-in-time snapshot header (one per date)
-model BankBalanceSnapshot {
-  id             String               @id @default(cuid())
-  snapshotDate   DateTime
-  userId         String
-  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  balanceRecords BankBalanceRecord[]
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-
-  @@index([userId, snapshotDate])
-}
-
-// BankBalanceRecord — a single account's balance at one snapshot date
-model BankBalanceRecord {
-  id           String              @id @default(cuid())
-  balance      Decimal             @db.Money
-  accountId    String
-  account      FinancialAccount    @relation(fields: [accountId], references: [id])
-  snapshotId   String
-  snapshot     BankBalanceSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
-  importImage  ImportImage?        @relation(fields: [importImageId], references: [id])
-  importImageId String?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-
-  @@unique([accountId, snapshotId])
-  @@index([snapshotId])
-}
-
-// PortfolioSnapshot — point-in-time portfolio snapshot header (one per date)
-model PortfolioSnapshot {
-  id           String                  @id @default(cuid())
-  snapshotDate DateTime
-  usdToAudRate Decimal?                // USD→AUD rate at snapshot time; null for pre-existing snapshots
-  userId       String
-  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  holdings     StockHolding[]
-  cashBalances BrokerageCashBalance[]
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
-
-  @@index([userId, snapshotDate])
-}
-
-// BrokerageCashBalance — idle cash per account per currency at snapshot time
-model BrokerageCashBalance {
-  id         String           @id @default(cuid())
-  amount     Decimal          @db.Money
-  currency   CurrencyEnumType
-  accountId  String
-  account    FinancialAccount @relation(fields: [accountId], references: [id])
-  snapshotId String
-  snapshot   PortfolioSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  @@unique([accountId, currency, snapshotId])
-  @@index([snapshotId])
-  @@index([accountId])
-}
-
-// StockHolding — individual holding within a portfolio snapshot
-model StockHolding {
-  id           String                 @id @default(cuid())
-  ticker       String
-  companyName  String
-  quantity     Decimal
-  buyPrice     Decimal                @db.Money
-  buyDate      DateTime?
-  currentPrice Decimal                @db.Money
-  currency     CurrencyEnumType
-  plannedTerm  InvestmentTermEnumType
-  salePrice    Decimal?               @db.Money
-  saleDate     DateTime?
-  soldQuantity Decimal?
-  accountId    String
-  account      FinancialAccount       @relation(fields: [accountId], references: [id])
-  snapshotId   String
-  snapshot     PortfolioSnapshot      @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-
-  @@index([snapshotId])
-  @@index([accountId])
-  @@index([ticker])
-}
-
-// AI / Import Infrastructure
 
 enum ImportTypeEnum {
   EXPENSE
@@ -469,91 +652,6 @@ enum StorageProviderEnum {
   S3
 }
 
-// ImportSession — tracks any file import operation (image or CSV)
-model ImportSession {
-  id                String           @id @default(cuid())
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId            String
-  importType        ImportTypeEnum
-  status            ImportStatusEnum @default(PENDING)
-  overallConfidence Float?
-  recordsCreated    Int              @default(0)
-  metadata          Json?
-  startDate         DateTime?        // earliest transaction date in this import
-  endDate           DateTime?        // latest transaction date in this import
-  images            ImportImage[]
-  usageLogs         AIUsageLog[]
-  transactions      Transaction[]
-  matchJobResults   TransferMatchJobResult[]
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-
-  @@index([userId, createdAt])
-}
-
-model ImportImage {
-  id              String              @id @default(cuid())
-  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String
-  session         ImportSession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sessionId       String
-  fileName        String
-  fileSize        Int
-  mimeType        String
-  storageUrl      String
-  storageProvider StorageProviderEnum
-  confidence      Float?
-  extractedData   Json?
-  errorMessage    String?
-  expiresAt       DateTime?
-  createdAt       DateTime            @default(now())
-
-  monthlyExpenseSummaries MonthlyExpenseSummary[]
-  bankBalanceRecords       BankBalanceRecord[]
-
-  @@index([sessionId])
-  @@index([userId])
-}
-
-model AIUsageLog {
-  id               String        @id @default(cuid())
-  sessionId        String
-  session          ImportSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  userId           String
-  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  imageId          String?
-  importType       ImportTypeEnum
-  model            String
-  promptTokens     Int
-  completionTokens Int
-  totalTokens      Int
-  estimatedCostUSD Float
-  createdAt        DateTime      @default(now())
-
-  @@index([userId, createdAt])
-  @@index([userId, importType, createdAt])
-  @@index([importType, createdAt])
-  @@index([sessionId])
-}
-
-// MerchantCategoryMap — per-user merchant-to-category dictionary for Phase 2 RAG
-model MerchantCategoryMap {
-  id          String   @id @default(cuid())
-  userId      String
-  description String   // lowercased, trimmed bank transaction description
-  category    String   // expense category name
-  source      String   // "llm_confirmed" or "user_override"
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, description])
-  @@index([userId])
-}
-
-
-// ─── Transactions ──────────────────────────────────────────────────────────
-
 enum TransactionTypeEnum {
   DEBIT
   CREDIT
@@ -572,119 +670,14 @@ enum TransactionStatusEnum {
   VOIDED
 }
 
-// Transaction — staging record for every line in a CSV or AI-extracted receipt
-model Transaction {
-  id                  String                @id @default(cuid())
-  date                DateTime
-  description         String
-  amount              Decimal               @db.Money
-  type                TransactionTypeEnum
-  category            String
-  offsetCategory      String?               // non-null only when category = 'Reimbursement'
-  offsetTransactionId String?
-  source              TransactionSourceEnum
-  status              TransactionStatusEnum @default(PENDING)
-  confirmedAt         DateTime?
-
-  financialAccount    FinancialAccount?     @relation(fields: [bankAccountId], references: [id])
-  bankAccountId       String?
-  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId              String
-  importSession       ImportSession?        @relation(fields: [importSessionId], references: [id])
-  importSessionId     String?
-
-  offsetTransaction Transaction?  @relation("ReimbursementLink", fields: [offsetTransactionId], references: [id])
-  reimbursements    Transaction[] @relation("ReimbursementLink")
-  donationPayment   DonationPayment?
-  zakatPayment      ZakatPayment?
-  incomeRecord      IncomeRecord?
-
-  // Transfer reconciliation
-  transferLinkedTransactionId  String?                @unique
-  transferLinkedTransaction    Transaction?           @relation("TransferLink", fields: [transferLinkedTransactionId], references: [id])
-  transferCounterpart          Transaction?           @relation("TransferLink")
-  preLinkCategory              String?
-  preLinkStatus                TransactionStatusEnum?
-
-  // Void / restore
-  preVoidStatus                TransactionStatusEnum?
-
-  // Running account balance after this transaction — bank's own unique differentiator for dedup
-  runningBalance               Decimal?              @db.Money
-
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-
-  @@index([userId, bankAccountId, date])
-  @@index([userId, type, status])
-  @@index([importSessionId])
-  // GIN trigram index: enables fast ILIKE '%pattern%' for category rule matching.
-  // Requires pg_trgm extension (installed via migration 20260524130550).
-  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin)
-}
-
-model TransferMatchRule {
-  id                  String    @id @default(cuid())
-  userId              String
-  name                String
-  isActive            Boolean   @default(true)
-  amountExact         Decimal?  @db.Money
-  amountMin           Decimal?  @db.Money
-  amountMax           Decimal?  @db.Money
-  debitKeywords       String[]
-  creditKeywords      String[]
-  maxDayGap           Int       @default(5)
-  debitBankAccountId  String?
-  creditBankAccountId String?
-  confidenceThreshold Int       @default(85)
-  matchCount          Int       @default(0)
-  lastMatchedAt       DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  debitBankAccount  FinancialAccount?        @relation("debitRules", fields: [debitBankAccountId], references: [id])
-  creditBankAccount FinancialAccount?        @relation("creditRules", fields: [creditBankAccountId], references: [id])
-  jobResults        TransferMatchJobResult[]
-
-  @@index([userId, isActive])
-}
-
-model TransferMatchJobResult {
-  id              String    @id @default(cuid())
-  userId          String
-  importSessionId String
-  ruleId          String?
-  autoLinkedCount Int       @default(0)
-  flaggedCount    Int       @default(0)
-  skippedCount    Int       @default(0)
-  reviewedAt      DateTime?
-  createdAt       DateTime  @default(now())
-
-  importSession ImportSession      @relation(fields: [importSessionId], references: [id], onDelete: Cascade)
-  rule          TransferMatchRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
-
-  @@index([userId, importSessionId])
+enum TransferOrphanResolution {
+  EXCLUDED
+  EXPENSE
+  INCOME
 }
 
 enum CategoryRuleMatchType {
   CONTAINS
   STARTS_WITH
   EXACT
-}
-
-model CategoryRule {
-  id           String                @id @default(cuid())
-  userId       String
-  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name         String
-  matchType    CategoryRuleMatchType @default(CONTAINS)
-  pattern      String
-  category     String
-  isActive     Boolean               @default(true)
-  appliedCount Int                   @default(0)
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
-
-  @@index([userId, isActive])
 }

@@ -95,6 +95,11 @@ export async function rerollupExpenseSummary(params: {
   });
 }
 
+/**
+ * No-op: IncomeRecord table has been dropped.
+ * Category changes on CREDIT transactions are stored in Transaction.category directly.
+ * The Transaction row itself is the income record — no secondary sync needed.
+ */
 export async function updateIncomeRecordSource(params: {
   prismaClient: PrismaClient;
   userId: string;
@@ -102,57 +107,8 @@ export async function updateIncomeRecordSource(params: {
   amount: Decimal;
   transactionDate: Date;
 }): Promise<void> {
-  const fiscalCalendar = await params.prismaClient.calendarYear.findFirst({
-    where: { type: 'FISCAL' },
-    select: { id: true },
-  });
-
-  if (!fiscalCalendar) {
-    return;
-  }
-
-  const incomeLedger = await params.prismaClient.incomeLedger.findUnique({
-    where: {
-      calendarId_userId: {
-        calendarId: fiscalCalendar.id,
-        userId: params.userId,
-      },
-    },
-    select: { id: true },
-  });
-
-  if (!incomeLedger) {
-    return;
-  }
-
-  const incomeRecord = await params.prismaClient.incomeRecord.findFirst({
-    where: {
-      incomeLedgerId: incomeLedger.id,
-      dateEarned: params.transactionDate,
-      amount: params.amount.toString(),
-    },
-    select: { id: true },
-  });
-
-  if (!incomeRecord) {
-    return;
-  }
-
-  const incomeSource = await params.prismaClient.incomeSource.findFirst({
-    where: { name: { equals: params.newSourceName, mode: 'insensitive' } },
-    select: { id: true },
-  });
-
-  if (!incomeSource) {
-    return;
-  }
-
-  await params.prismaClient.incomeRecord.update({
-    where: { id: incomeRecord.id },
-    data: {
-      incomeSourceId: incomeSource.id,
-    },
-  });
+  // IncomeLedger/IncomeRecord tables removed — Transaction is the source of truth.
+  // Category update already applied to Transaction row by the caller.
 }
 
 /**

@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Decimal } from '@prisma/client/runtime/library';
 import { TransactionTypeEnum } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { runTransferMatchRules } from '@/server/services/transactions/transfer-rule-job.service';
 
 const mockLinkTransferPair = vi.fn();
@@ -49,7 +50,9 @@ describe('runTransferMatchRules', () => {
       importSessionId: 's1',
     });
 
-    expect(findMany).toHaveBeenCalledWith({ where: { userId: 'u1', isActive: true } });
+    expect(findMany).toHaveBeenCalledWith({
+      where: { userId: 'u1', isActive: true },
+    });
   });
 
   it('increments rule matchCount after successful auto-link', async () => {
@@ -84,7 +87,10 @@ describe('runTransferMatchRules', () => {
               bankAccountId: 'acc-1',
               transferLinkedTransactionId: null,
               transferCounterpart: null,
-              bankAccount: { bankId: 'b1' },
+              financialAccount: {
+                institutionId: 'b1',
+                institution: { id: 'b1', name: 'Bank' },
+              },
               importSessionId: 's1',
             },
           ])
@@ -100,7 +106,10 @@ describe('runTransferMatchRules', () => {
               bankAccountId: 'acc-2',
               transferLinkedTransactionId: null,
               transferCounterpart: null,
-              bankAccount: { bankId: 'b2' },
+              financialAccount: {
+                institutionId: 'b2',
+                institution: { id: 'b2', name: 'Bank' },
+              },
             },
           ]),
         findUnique: vi.fn().mockResolvedValue({

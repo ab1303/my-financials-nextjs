@@ -1,9 +1,9 @@
 // In your application's entrypoint
 
-import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
 
 import Hero from '@/components/Hero';
+import { auth } from '@/server/auth';
 
 export default async function LandingPage() {
   const data = {

@@ -1,7 +1,7 @@
 'use client';
 
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, ArrowLeft, ExternalLink } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
 
 import MONTHS_MAP from '@/constants/map';

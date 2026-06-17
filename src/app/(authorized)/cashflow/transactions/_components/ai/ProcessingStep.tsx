@@ -1,9 +1,10 @@
 'use client';
 
+import { Check, Loader2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Loader2, Check, X } from 'lucide-react';
-import type { ExtractedImageResult, UploadedFile } from './_types';
+
 import { SSEEventSchema } from './_schema';
+import type { ExtractedImageResult, UploadedFile } from './_types';
 
 interface ProcessingStepProps {
   files: UploadedFile[];

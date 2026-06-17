@@ -1,6 +1,7 @@
-import { TRPCError } from '@trpc/server';
 import { Decimal } from '@prisma/client/runtime/library';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+
 import {
   createRule,
   createRuleFromPair,

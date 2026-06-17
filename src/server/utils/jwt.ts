@@ -1,5 +1,6 @@
 import type { SignOptions } from 'jsonwebtoken';
 import jwt from 'jsonwebtoken';
+
 import customConfig from '../config/default';
 
 /* TODO Remove; probably not required */

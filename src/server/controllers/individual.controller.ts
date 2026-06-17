@@ -1,18 +1,17 @@
-import { handleCaughtError } from '@/server/utils/prisma';
+import type {
+  CreateIndividualInput,
+  ParamsInput,
+  UpdateIndividualInput,
+} from '@/server/schema/individual.schema';
 import {
   addIndividualDetails,
   deleteIndividualDetails,
   getIndividualDetails,
-  validateIndividualNameUniqueness,
   updateIndividualDetails,
+  validateIndividualNameUniqueness,
 } from '@/server/services/individual.service';
 import { getOrCreateRelationship } from '@/server/services/relationship.service';
-
-import type {
-  CreateIndividualInput,
-  UpdateIndividualInput,
-  ParamsInput,
-} from '@/server/schema/individual.schema';
+import { handleCaughtError } from '@/server/db/client';
 
 export const addIndividualDetailsHandler = async ({
   input,

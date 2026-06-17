@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { auth } from '@/server/auth';
@@ -8,10 +9,10 @@ import {
   confirmDebitTransactions,
 } from '@/server/services/transactions/csv-confirm.service';
 import { runTransferMatchRules } from '@/server/services/transactions/transfer-rule-job.service';
-import { runCategoryRules } from '@/server/services/transactions/category-rule.service';
 
 const ConfirmRequestSchema = z.object({
   fileId: z.string().min(1),
+  forceCreateIds: z.array(z.string()).optional(),
   llmUsage: z.object({
     promptTokens: z.number().int().min(0),
     completionTokens: z.number().int().min(0),
@@ -38,14 +39,32 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json();
+    const raw = await req.text();
+    // raw body parsed silently (no debug logs)
+    let body: unknown;
+    try {
+      body = raw.length ? JSON.parse(raw) : {};
+    } catch (parseErr) {
+      console.error(
+        'CSV confirm parse error:',
+        parseErr,
+        'rawLength:',
+        raw.length,
+      );
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
     const parse = ConfirmRequestSchema.safeParse(body);
 
     if (!parse.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 },
+      );
     }
 
-    const { fileId, llmUsage, debitMonths, creditMonths } = parse.data;
+    const { fileId, llmUsage, debitMonths, creditMonths, forceCreateIds } = parse.data;
+
+    // request parsed successfully
 
     const importSession = await prisma.importSession.findUnique({
       where: { id: fileId },
@@ -60,29 +79,53 @@ export async function POST(req: NextRequest) {
     }
 
     const metadata = importSession.metadata as Record<string, unknown> | null;
-    const bankAccountId = typeof metadata?.bankAccountId === 'string' ? metadata.bankAccountId : '';
+    const bankAccountId =
+      typeof metadata?.bankAccountId === 'string' ? metadata.bankAccountId : '';
 
     if (!bankAccountId) {
-      return NextResponse.json({ error: 'Bank account not found in import session' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Bank account not found in import session' },
+        { status: 400 },
+      );
     }
 
     const [debitResult, creditResult] = await Promise.all([
-      confirmDebitTransactions(debitMonths, session.user.id, bankAccountId, fileId),
-      confirmCreditTransactions(creditMonths, session.user.id, bankAccountId, fileId),
+      confirmDebitTransactions(
+        debitMonths,
+        session.user.id,
+        bankAccountId,
+        fileId,
+        forceCreateIds,
+      ),
+      confirmCreditTransactions(
+        creditMonths,
+        session.user.id,
+        bankAccountId,
+        fileId,
+      ),
     ]);
 
     const totalEntries = debitResult.totalEntries + creditResult.totalEntries;
-    const duplicatesSkipped = debitResult.duplicatesSkipped + creditResult.duplicatesSkipped;
+    const duplicatesSkipped =
+      debitResult.duplicatesSkipped + creditResult.duplicatesSkipped;
     const creditsExcluded = creditMonths.reduce((count, month) => {
       return (
         count +
-        month.transactions.filter((tx: any) => tx.confirmedCategory === 'Transfer' || tx.confirmedCategory === 'Excluded')
-          .length
+        month.transactions.filter(
+          (tx: any) =>
+            tx.confirmedCategory === 'Transfer' ||
+            tx.confirmedCategory === 'Excluded',
+        ).length
       );
     }, 0);
 
     const errors = [...debitResult.errors, ...creditResult.errors];
-    const status = errors.length > 0 ? (totalEntries > 0 ? 'PARTIAL' : 'FAILED') : 'COMPLETED';
+    const status =
+      errors.length > 0
+        ? totalEntries > 0
+          ? 'PARTIAL'
+          : 'FAILED'
+        : 'COMPLETED';
 
     // Aggregate min/max transaction date for this import
     const dateRange = await prisma.transaction.aggregate({
@@ -97,7 +140,7 @@ export async function POST(req: NextRequest) {
         status,
         recordsCreated: totalEntries,
         startDate: dateRange._min.date ?? null,
-        endDate:   dateRange._max.date ?? null,
+        endDate: dateRange._max.date ?? null,
       },
     });
 
@@ -121,16 +164,7 @@ export async function POST(req: NextRequest) {
       console.error('Transfer match job error:', jobErr);
     }
 
-    let categoryRulesSummary: { rulesRan: number; appliedCount: number } | null = null;
-    try {
-      categoryRulesSummary = await runCategoryRules({
-        prisma,
-        userId: session.user.id,
-        importSessionId: fileId,
-      });
-    } catch (catErr) {
-      console.error('Category rules job error:', catErr);
-    }
+    let categoryRulesSummary = null;
 
     return NextResponse.json(
       {
@@ -149,6 +183,9 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error('CSV confirm error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 },
+    );
   }
 }

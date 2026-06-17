@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 
 vi.mock('@/server/db/client', () => ({
@@ -13,6 +14,9 @@ import {
 describe('donation-link.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.voluntaryDonation.findMany.mockResolvedValue([]);
+    prismaMock.interestCleansingEvidence.findMany.mockResolvedValue([]);
+    prismaMock.zakatPayment.findMany.mockResolvedValue([]);
   });
 
   it('getUnlinkedDonationTransactions returns only DEBIT CONFIRMED "Gifts & donations" transactions with no linked DonationPayment', async () => {
@@ -22,6 +26,7 @@ describe('donation-link.service', () => {
         date: new Date('2025-01-15T00:00:00.000Z'),
         description: 'Donation to charity',
         amount: 125.5,
+        category: 'Gifts & donations',
       },
     ] as any);
 
@@ -37,7 +42,7 @@ describe('donation-link.service', () => {
         date: '2025-01-15',
         description: 'Donation to charity',
         amount: 125.5,
-        category: '',
+        category: 'Gifts & donations',
       },
     ]);
 
@@ -48,28 +53,30 @@ describe('donation-link.service', () => {
           type: 'DEBIT',
           status: 'CONFIRMED',
           category: { equals: 'Gifts & donations', mode: 'insensitive' },
-          donationPayment: null,
         }),
       }),
     );
   });
 
-  it('getUnlinkedDonationTransactions excludes transactions already linked to a DonationPayment', async () => {
-    prismaMock.transaction.findMany.mockResolvedValue([] as any);
+  it('getUnlinkedDonationTransactions excludes transactions linked to VoluntaryDonation, InterestCleansing, or ZakatPayment', async () => {
+    prismaMock.transaction.findMany.mockResolvedValue([
+      { id: 'tx_1', date: new Date(), description: 'd1', amount: 1, category: 'c' },
+      { id: 'tx_2', date: new Date(), description: 'd2', amount: 2, category: 'c' },
+      { id: 'tx_3', date: new Date(), description: 'd3', amount: 3, category: 'c' },
+      { id: 'tx_4', date: new Date(), description: 'd4', amount: 4, category: 'c' },
+    ] as any);
+    prismaMock.voluntaryDonation.findMany.mockResolvedValue([{ transactionId: 'tx_1' }] as any);
+    prismaMock.interestCleansingEvidence.findMany.mockResolvedValue([{ transactionId: 'tx_2' }] as any);
+    prismaMock.zakatPayment.findMany.mockResolvedValue([{ transactionId: 'tx_3' }] as any);
 
-    await getUnlinkedDonationTransactions(
+    const result = await getUnlinkedDonationTransactions(
       'user_1',
       new Date('2024-07-01T00:00:00.000Z'),
       new Date('2025-06-30T23:59:59.000Z'),
     );
 
-    expect(prismaMock.transaction.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          donationPayment: null,
-        }),
-      }),
-    );
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe('tx_4');
   });
 
   it('getUnlinkedDonationTransactions excludes transactions outside the given date range', async () => {
@@ -83,26 +90,25 @@ describe('donation-link.service', () => {
 
     const call = prismaMock.transaction.findMany.mock.calls[0]?.[0];
 
-    expect(call?.where.date.gte).toEqual(new Date('2024-07-01T00:00:00.000Z'));
-    expect(call?.where.date.lte).toEqual(new Date('2025-06-30T23:59:59.000Z'));
+    expect((call?.where as any)?.date?.gte).toEqual(new Date('2024-07-01T00:00:00.000Z'));
+    expect((call?.where as any)?.date?.lte).toEqual(new Date('2025-06-30T23:59:59.000Z'));
   });
 
   it('countUnlinkedDonationTransactions returns 0 when all donations are linked', async () => {
-    prismaMock.transaction.count.mockResolvedValue(0 as any);
+    prismaMock.transaction.findMany.mockResolvedValue([{ id: 'tx_1' }] as any);
+    prismaMock.voluntaryDonation.findMany.mockResolvedValue([{ transactionId: 'tx_1' }] as any);
 
     const result = await countUnlinkedDonationTransactions('user_1', 2024, 2025);
 
     expect(result).toBe(0);
-    expect(prismaMock.transaction.count).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          userId: 'user_1',
-          type: 'DEBIT',
-          status: 'CONFIRMED',
-          category: { equals: 'Gifts & donations', mode: 'insensitive' },
-          donationPayment: null,
-        }),
-      }),
-    );
+  });
+
+  it('countUnlinkedDonationTransactions returns 0 when donation is linked via InterestCleansingEvidence', async () => {
+    prismaMock.transaction.findMany.mockResolvedValue([{ id: 'tx_1' }] as any);
+    prismaMock.interestCleansingEvidence.findMany.mockResolvedValue([{ transactionId: 'tx_1' }] as any);
+
+    const result = await countUnlinkedDonationTransactions('user_1', 2024, 2025);
+
+    expect(result).toBe(0);
   });
 });

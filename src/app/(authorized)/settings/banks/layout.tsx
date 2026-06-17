@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-before-interactive-script-outside-document */
+ 
 import Script from 'next/script';
 import React from 'react';
 

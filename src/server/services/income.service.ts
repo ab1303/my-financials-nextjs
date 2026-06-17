@@ -1,261 +1,327 @@
-import { prisma } from '../utils/prisma';
+import { prisma } from '@/server/db/client';
+import {
+  REIMBURSEMENT_CATEGORY,
+  TRANSFER_CATEGORY,
+} from './transactions/constants';
+
+// Categories excluded from income totals — these are expense offsets, not earned income
+const INCOME_EXCLUDED_CATEGORIES = [
+  TRANSFER_CATEGORY,
+  REIMBURSEMENT_CATEGORY,
+] as const;
 import type {
-  IncomeModel,
-  IncomeEntryModel,
   IncomeEntryInput,
+  IncomeEntryModel,
+  IncomeModel,
   MonthlyIncomeSummary,
   SourceBreakdown,
 } from '../models/income';
-import type { Prisma } from '@prisma/client';
 
 /**
- * Create Income record for a calendar year and user
- * @param calendarId - Calendar year ID (typically FISCAL type)
- * @param userId - User ID for ownership
- * @returns Created Income record
+ * Create Income record for a calendar year and user.
+ * No-op stub kept for controller compatibility — IncomeLedger table has been dropped.
+ * All income now flows through Transaction (type=CREDIT).
  */
 export const addIncomeCalendarYearDetails = async ({
   calendarId,
   userId,
 }: Omit<IncomeModel, 'id'>) => {
-  return await prisma.incomeLedger.create({
-    data: {
-      calendarId,
-      userId,
-    },
-  });
+  // IncomeLedger table removed — Transaction is the source of truth
+  return { id: '', calendarId, userId };
 };
 
 /**
- * Get Income record by calendar year ID and user ID
- * @param calendarYearId - Calendar year ID
- * @param userId - User ID for ownership verification
- * @returns Income record or empty object if not found
+ * Get Income record by calendar year ID and user ID.
+ * Stub kept for controller compatibility — IncomeLedger table has been dropped.
+ * Returns a synthetic record so callers don't break.
  */
 export const getIncome = async (
   calendarYearId: string,
   userId: string,
 ): Promise<IncomeModel> => {
-  const income = await prisma.incomeLedger.findUnique({
-    where: {
-      calendarId_userId: {
-        calendarId: calendarYearId,
-        userId,
-      },
-    },
-  });
-
-  if (!income)
-    return {
-      id: '',
-      calendarId: calendarYearId,
-      userId,
-    };
-
-  return {
-    id: income.id,
-    calendarId: income.calendarId,
-    userId: income.userId,
-  };
+  // IncomeLedger table removed — return synthetic record
+  return { id: '', calendarId: calendarYearId, userId };
 };
 
 /**
- * Get all income entries for a calendar year
- * @param calendarYearId - Calendar year ID
- * @param userId - User ID for ownership verification
- * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
- * @returns Array of income entries
+ * Get all income entries for a calendar year.
+ * Queries Transaction (type=CREDIT, status=CONFIRMED) as the source of truth.
  */
 export const getIncomeEntries = async (
   calendarYearId: string,
   userId: string,
   prismaClient = prisma,
+  bankAccountId?: string,
 ): Promise<Array<IncomeEntryModel>> => {
-  // The incomeLedger.calendarId association is the source of truth for FY membership.
-  // A secondary dateEarned filter is intentionally omitted here to prevent "orphaned" entries
-  // (entries that were saved to a ledger before a toMonth correction would become invisible).
-  // The addRow server action enforces the date boundary on write.
-  const where: Prisma.IncomeRecordWhereInput = {
-    incomeLedger: {
-      calendarId: calendarYearId,
-      userId,
-    },
-  };
+  const calendarYear = await prismaClient.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
+  if (!calendarYear) return [];
 
-  const incomeEntries = await prismaClient.incomeRecord.findMany({
-    where,
-    include: {
-      incomeLedger: true,
-      incomeSource: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
+
+  const transactions = await prismaClient.transaction.findMany({
+    where: {
+      userId,
+      type: 'CREDIT',
+      status: 'CONFIRMED',
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      date: { gte: startDate, lte: endDate },
+      ...(bankAccountId ? { bankAccountId } : {}),
     },
-    orderBy: {
-      dateEarned: 'desc',
+    select: {
+      id: true,
+      date: true,
+      amount: true,
+      category: true,
+      source: true,
     },
+    orderBy: { date: 'desc' },
   });
 
-  return incomeEntries.map<IncomeEntryModel>((entry) => ({
-    id: entry.id,
-    dateEarned: entry.dateEarned,
-    amount: entry.amount.toNumber(),
-    incomeSourceId: entry.incomeSourceId,
-    incomeSourceName: entry.incomeSource.name,
-    incomeLedgerId: entry.incomeLedgerId,
-  }));
+  // Batch-resolve category names to IncomeSource IDs
+  const allSources = await prismaClient.incomeSource.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true },
+  });
+  const sourceByName = new Map(
+    allSources.map((s) => [s.name.toLowerCase(), s]),
+  );
+
+  return transactions.map<IncomeEntryModel>((tx) => {
+    const incomeSource = sourceByName.get(tx.category.toLowerCase());
+    return {
+      id: tx.id,
+      dateEarned: tx.date,
+      amount: tx.amount.toNumber(),
+      incomeSourceId: incomeSource?.id ?? '',
+      incomeSourceName: tx.category,
+      incomeLedgerId: '',
+      source: tx.source,
+    };
+  });
 };
 
 /**
- * Add a new income entry to an Income record
- * @param incomeId - Parent Income record ID
- * @param entry - Income entry data
- * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
- * @returns Created IncomeEntry record
+ * Add a new income entry by creating a USER_MANUAL Transaction (CREDIT, CONFIRMED).
  */
 export const addIncomeEntry = async (
-  incomeId: string,
-  entry: Omit<IncomeEntryInput, 'id' | 'incomeLedgerId'>,
+  userId: string,
+  entry: { dateEarned: Date; amount: number; incomeSourceId: string },
   prismaClient = prisma,
 ) => {
-  const createdEntry = await prismaClient.incomeRecord.create({
+  const incomeSource = await prismaClient.incomeSource.findUnique({
+    where: { id: entry.incomeSourceId },
+    select: { id: true, name: true },
+  });
+  if (!incomeSource) throw new Error('Income source not found');
+
+  const created = await prismaClient.transaction.create({
     data: {
-      incomeLedgerId: incomeId,
-      dateEarned: entry.dateEarned,
+      userId,
+      type: 'CREDIT',
+      source: 'USER_MANUAL',
+      status: 'CONFIRMED',
+      date: entry.dateEarned,
       amount: entry.amount,
-      incomeSourceId: entry.incomeSourceId,
-    },
-    include: {
-      incomeSource: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+      category: incomeSource.name,
+      description: `Manual income: ${incomeSource.name}`,
+      bankAccountId: null,
+      importSessionId: null,
+      confirmedAt: new Date(),
     },
   });
 
   return {
-    ...createdEntry,
-    incomeSourceName: createdEntry.incomeSource.name,
+    id: created.id,
+    dateEarned: created.date,
+    amount: created.amount, // Decimal — caller calls .toNumber()
+    incomeSourceId: incomeSource.id,
+    incomeSource: { id: incomeSource.id, name: incomeSource.name },
+    incomeLedgerId: '',
+    source: 'USER_MANUAL' as const,
   };
 };
 
 /**
- * Update an existing income entry
- * @param entryId - IncomeEntry ID to update
- * @param entry - Updated income entry data
- * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
+ * Update an existing manual income entry (Transaction).
+ * Guards against editing imported entries and enforces userId ownership.
  */
 export const updateIncomeEntry = async (
   entryId: string,
+  userId: string,
   entry: Omit<IncomeEntryInput, 'id' | 'incomeLedgerId'>,
   prismaClient = prisma,
 ) => {
-  const where: Prisma.IncomeRecordWhereUniqueInput = {
-    id: entryId,
-  };
+  const existing = await prismaClient.transaction.findUnique({
+    where: { id: entryId },
+    select: { source: true, userId: true },
+  });
+  if (!existing) throw new Error('Income entry not found');
+  if (existing.userId !== userId) throw new Error('Income entry not found');
+  if (existing.source !== 'USER_MANUAL') {
+    throw new Error(
+      'Cannot edit an imported income entry. Only manually added entries can be modified.',
+    );
+  }
 
-  await prismaClient.incomeRecord.update({
-    where,
+  const incomeSource = await prismaClient.incomeSource.findUnique({
+    where: { id: entry.incomeSourceId },
+    select: { name: true },
+  });
+  if (!incomeSource) throw new Error('Income source not found');
+
+  await prismaClient.transaction.update({
+    where: { id: entryId },
     data: {
-      dateEarned: entry.dateEarned,
+      date: entry.dateEarned,
       amount: entry.amount,
-      incomeSourceId: entry.incomeSourceId,
+      category: incomeSource.name,
+      description: `Manual income: ${incomeSource.name}`,
     },
   });
 };
 
 /**
- * Delete an income entry
- * @param entryId - IncomeEntry ID to delete
- * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
+ * Delete a manual income entry (Transaction).
+ * Guards against deleting imported entries and enforces userId ownership.
  */
 export const deleteIncomeEntry = async (
   entryId: string,
+  userId: string,
   prismaClient = prisma,
 ) => {
-  await prismaClient.incomeRecord.delete({
-    where: {
-      id: entryId,
-    },
+  const existing = await prismaClient.transaction.findUnique({
+    where: { id: entryId },
+    select: { source: true, userId: true },
   });
+  if (!existing) throw new Error('Income entry not found');
+  if (existing.userId !== userId) throw new Error('Income entry not found');
+  if (existing.source !== 'USER_MANUAL') {
+    throw new Error(
+      'Cannot delete an imported income entry. Only manually added entries can be deleted.',
+    );
+  }
+
+  await prismaClient.transaction.delete({ where: { id: entryId } });
 };
 
 /**
- * Calculate total income for a calendar year
- * @param calendarYearId - Calendar year ID
- * @param userId - User ID for ownership verification
- * @param prismaClient - Optional Prisma client for dependency injection (defaults to global instance)
- * @returns Total income amount
+ * Calculate total income for a calendar year by aggregating CREDIT CONFIRMED Transactions.
  */
 export const getTotalIncome = async (
   calendarYearId: string,
   userId: string,
   prismaClient = prisma,
+  bankAccountId?: string,
 ): Promise<number> => {
-  // Same rationale as getIncomeEntries: ledger membership is the source of truth.
-  const where: Prisma.IncomeRecordWhereInput = {
-    incomeLedger: {
-      calendarId: calendarYearId,
-      userId,
-    },
-  };
+  const calendarYear = await prismaClient.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
+  if (!calendarYear) return 0;
 
-  const result = await prismaClient.incomeRecord.aggregate({
-    where,
-    _sum: {
-      amount: true,
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
+
+  const result = await prismaClient.transaction.aggregate({
+    where: {
+      userId,
+      type: 'CREDIT',
+      status: 'CONFIRMED',
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      date: { gte: startDate, lte: endDate },
+      ...(bankAccountId ? { bankAccountId } : {}),
     },
+    _sum: { amount: true },
   });
 
   return result._sum.amount?.toNumber() ?? 0;
 };
 
 /**
- * Get monthly income summary for a calendar year
- * Aggregates income entries by month/year with totals
- * @param calendarYearId - Calendar year ID
- * @param userId - User ID for ownership verification
- * @returns Array of monthly summaries
+ * Get monthly income summary for a calendar year.
+ * Groups CREDIT CONFIRMED Transactions by month.
  */
 export const getMonthlyIncomeSummary = async (
   calendarYearId: string,
   userId: string,
 ): Promise<Array<MonthlyIncomeSummary>> => {
-  // Fetch all entries for the calendar year
-  const entries = await prisma.incomeRecord.findMany({
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
+  if (!calendarYear) return [];
+
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
+
+  const transactions = await prisma.transaction.findMany({
     where: {
-      incomeLedger: {
-        calendarId: calendarYearId,
-        userId,
-      },
+      userId,
+      type: 'CREDIT',
+      status: 'CONFIRMED',
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      date: { gte: startDate, lte: endDate },
     },
-    select: {
-      dateEarned: true,
-      amount: true,
-    },
+    select: { date: true, amount: true },
   });
 
   // Group by month/year in memory
   const monthlyMap = new Map<string, { totalAmount: number; count: number }>();
 
-  entries.forEach((entry) => {
-    const date = new Date(entry.dateEarned);
+  transactions.forEach((tx) => {
+    const date = new Date(tx.date);
     const month = date.getMonth() + 1; // 1-12
     const year = date.getFullYear();
     const key = `${year}-${month}`;
 
     const existing = monthlyMap.get(key) ?? { totalAmount: 0, count: 0 };
     monthlyMap.set(key, {
-      totalAmount: existing.totalAmount + entry.amount.toNumber(),
+      totalAmount: existing.totalAmount + tx.amount.toNumber(),
       count: existing.count + 1,
     });
   });
 
-  // Convert map to array and sort by year/month
+  // Convert map to array and sort by year/month DESC
   const summaries: MonthlyIncomeSummary[] = [];
   monthlyMap.forEach((value, key) => {
     const [yearStr, monthStr] = key.split('-');
@@ -269,7 +335,6 @@ export const getMonthlyIncomeSummary = async (
     });
   });
 
-  // Sort by year DESC, then month DESC
   summaries.sort((a, b) => {
     if (a.year !== b.year) return b.year - a.year;
     return b.month - a.month;
@@ -279,12 +344,8 @@ export const getMonthlyIncomeSummary = async (
 };
 
 /**
- * Get income breakdown by source for a specific month/year
- * @param calendarYearId - Calendar year ID
- * @param month - Month (1-12)
- * @param year - Year (e.g., 2024)
- * @param userId - User ID for ownership verification
- * @returns Array of source breakdowns with percentages
+ * Get income breakdown by source for a specific month/year.
+ * Queries CREDIT CONFIRMED Transactions; maps category → source name.
  */
 export const getSourceBreakdown = async (
   calendarYearId: string,
@@ -292,43 +353,31 @@ export const getSourceBreakdown = async (
   year: number,
   userId: string,
 ): Promise<Array<SourceBreakdown>> => {
-  // Calculate date range for the month
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-  // Fetch entries for the specific month
-  const entries = await prisma.incomeRecord.findMany({
+  const transactions = await prisma.transaction.findMany({
     where: {
-      incomeLedger: {
-        calendarId: calendarYearId,
-        userId,
-      },
-      dateEarned: {
-        gte: startDate,
-        lte: endDate,
-      },
+      userId,
+      type: 'CREDIT',
+      status: 'CONFIRMED',
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      date: { gte: startDate, lte: endDate },
     },
-    select: {
-      incomeSource: {
-        select: {
-          name: true,
-        },
-      },
-      amount: true,
-    },
+    select: { category: true, amount: true },
   });
 
-  // Group by source
+  // Group by category (income source name)
   const sourceMap = new Map<string, { amount: number; count: number }>();
   let totalAmount = 0;
 
-  entries.forEach((entry) => {
-    const source = entry.incomeSource.name;
-    const amount = entry.amount.toNumber();
+  transactions.forEach((tx) => {
+    const sourceName = tx.category;
+    const amount = tx.amount.toNumber();
     totalAmount += amount;
 
-    const existing = sourceMap.get(source) ?? { amount: 0, count: 0 };
-    sourceMap.set(source, {
+    const existing = sourceMap.get(sourceName) ?? { amount: 0, count: 0 };
+    sourceMap.set(sourceName, {
       amount: existing.amount + amount,
       count: existing.count + 1,
     });
@@ -345,8 +394,156 @@ export const getSourceBreakdown = async (
     });
   });
 
-  // Sort by amount descending
   breakdowns.sort((a, b) => b.amount - a.amount);
 
+  return breakdowns;
+};
+
+/**
+ * Get monthly income summary for a calendar year with optional bank account filter.
+ * Extends getMonthlyIncomeSummary to support filtering by FinancialAccount.
+ * USER_MANUAL entries (bankAccountId=null) are always included when filter is active.
+ */
+export const getMonthlyIncomeSummaryFiltered = async (
+  calendarYearId: string,
+  userId: string,
+  bankAccountId?: string,
+): Promise<Array<MonthlyIncomeSummary>> => {
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
+  if (!calendarYear) return [];
+
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: 'CREDIT',
+      status: 'CONFIRMED',
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      date: { gte: startDate, lte: endDate },
+      ...(bankAccountId
+        ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
+        : {}),
+    },
+    select: { date: true, amount: true },
+  });
+
+  const monthlyMap = new Map<string, { totalAmount: number; count: number }>();
+  for (const tx of transactions) {
+    const month = tx.date.getMonth() + 1;
+    const year = tx.date.getFullYear();
+    const key = `${year}-${month}`;
+    const existing = monthlyMap.get(key) ?? { totalAmount: 0, count: 0 };
+    monthlyMap.set(key, {
+      totalAmount: existing.totalAmount + tx.amount.toNumber(),
+      count: existing.count + 1,
+    });
+  }
+
+  const summaries: MonthlyIncomeSummary[] = [];
+  monthlyMap.forEach((value, key) => {
+    const [yearStr, monthStr] = key.split('-');
+    summaries.push({
+      month: parseInt(monthStr!, 10),
+      year: parseInt(yearStr!, 10),
+      totalAmount: value.totalAmount,
+      entryCount: value.count,
+    });
+  });
+
+  summaries.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.month - b.month;
+  });
+
+  return summaries;
+};
+
+/**
+ * Get income breakdown by source for a full calendar year with optional bank account filter.
+ * Groups CREDIT CONFIRMED Transactions by category (= income source name).
+ * USER_MANUAL entries are always included when filter is active.
+ */
+export const getIncomeSourceBreakdownForYear = async (
+  calendarYearId: string,
+  userId: string,
+  bankAccountId?: string,
+): Promise<Array<SourceBreakdown>> => {
+  const calendarYear = await prisma.calendarYear.findUnique({
+    where: { id: calendarYearId },
+    select: { fromYear: true, fromMonth: true, toYear: true, toMonth: true },
+  });
+  if (!calendarYear) return [];
+
+  const startDate = new Date(
+    calendarYear.fromYear,
+    calendarYear.fromMonth - 1,
+    1,
+  );
+  const endDate = new Date(
+    calendarYear.toYear,
+    calendarYear.toMonth,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      type: 'CREDIT',
+      status: 'CONFIRMED',
+      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      date: { gte: startDate, lte: endDate },
+      ...(bankAccountId
+        ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
+        : {}),
+    },
+    select: { category: true, amount: true },
+  });
+
+  const sourceMap = new Map<string, { amount: number; count: number }>();
+  let totalAmount = 0;
+
+  for (const tx of transactions) {
+    const sourceName = tx.category;
+    const amount = tx.amount.toNumber();
+    totalAmount += amount;
+    const existing = sourceMap.get(sourceName) ?? { amount: 0, count: 0 };
+    sourceMap.set(sourceName, {
+      amount: existing.amount + amount,
+      count: existing.count + 1,
+    });
+  }
+
+  const breakdowns: SourceBreakdown[] = [];
+  sourceMap.forEach((value, sourceKey) => {
+    breakdowns.push({
+      source: sourceKey,
+      amount: value.amount,
+      percentage: totalAmount > 0 ? (value.amount / totalAmount) * 100 : 0,
+      entryCount: value.count,
+    });
+  });
+
+  breakdowns.sort((a, b) => b.amount - a.amount);
   return breakdowns;
 };

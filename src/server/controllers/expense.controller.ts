@@ -1,14 +1,15 @@
 import {
   addExpenseCalendarYearDetails,
+  getCategoryBreakdownForMonth,
   getExpense,
+  getExpenseCategories,
+  getExpenseCategoryBreakdownForYear,
   getExpenseEntries,
   getExpenseEntriesForMonth,
-  getTotalExpenses,
   getMonthlyExpenseSummaries,
-  getCategoryBreakdownForMonth,
-  getExpenseCategories,
+  getTotalExpenses,
 } from '../services/expense.service';
-import { handleCaughtError } from '../utils/prisma';
+import { handleCaughtError } from '@/server/db/client';
 
 /**
  * Create or retrieve Expense record for a calendar year and user
@@ -101,14 +102,16 @@ export const expenseEntriesForMonthHandler = async (
  * Get total expenses for a calendar year
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
+ * @param bankAccountId - Optional FinancialAccount ID filter
  * @returns Total expense amount or 0 on error
  */
 export const totalExpensesHandler = async (
   calendarYearId: string,
   userId: string,
+  bankAccountId?: string,
 ) => {
   try {
-    const total = await getTotalExpenses(calendarYearId, userId);
+    const total = await getTotalExpenses(calendarYearId, userId, bankAccountId);
     return total;
   } catch (e) {
     handleCaughtError(e);
@@ -175,11 +178,13 @@ export const expenseCategoriesHandler = async () => {
  * Get complete expense data for the main page
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
+ * @param bankAccountId - Optional FinancialAccount ID filter
  * @returns Complete expense data including monthly summaries and total
  */
 export const getExpenseDataHandler = async (
   calendarYearId: string,
   userId: string,
+  bankAccountId?: string,
 ) => {
   try {
     // Ensure expense record exists
@@ -194,8 +199,8 @@ export const getExpenseDataHandler = async (
 
     // Get monthly summaries and total in parallel
     const [monthlySummaries, totalAmount] = await Promise.all([
-      getMonthlyExpenseSummaries(calendarYearId, userId),
-      getTotalExpenses(calendarYearId, userId),
+      getMonthlyExpenseSummaries(calendarYearId, userId, bankAccountId),
+      getTotalExpenses(calendarYearId, userId, bankAccountId),
     ]);
 
     return {
@@ -234,5 +239,29 @@ export const getMonthBreakdownHandler = async (
     return entries;
   } catch (e) {
     handleCaughtError(e);
+  }
+};
+
+/**
+ * Get yearly expense breakdown by category
+ * @param calendarYearId - Calendar year ID
+ * @param userId - User ID for ownership verification
+ * @param bankAccountId - Optional FinancialAccount ID filter
+ * @returns Array of category breakdowns sorted by amount descending, or [] on error
+ */
+export const getExpenseCategoryBreakdownHandler = async (
+  calendarYearId: string,
+  userId: string,
+  bankAccountId?: string,
+) => {
+  try {
+    return await getExpenseCategoryBreakdownForYear(
+      calendarYearId,
+      userId,
+      bankAccountId,
+    );
+  } catch (e) {
+    handleCaughtError(e);
+    return [];
   }
 };

@@ -1,12 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import CategoriesClient from '@/app/(authorized)/settings/categories/_components/CategoriesClient';
 import IncomeSources from '@/app/(authorized)/settings/categories/_components/IncomeSources';
 
 const mocks = vi.hoisted(() => ({
-  incomeQueryState: { data: [], isLoading: false as boolean },
-  expenseQueryState: { data: [], isLoading: false as boolean },
+  incomeQueryState: { data: [] as any[], isLoading: false as boolean },
+  expenseQueryState: { data: [] as any[], isLoading: false as boolean },
   invalidateMock: vi.fn(),
   useMutationMock: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }));
@@ -57,6 +58,11 @@ vi.mock('@/server/trpc/client', () => ({
         useMutation: mocks.useMutationMock,
       },
     },
+    specialCategory: {
+      getAll: {
+        useQuery: vi.fn(() => ({ data: [] })),
+      },
+    },
   },
 }));
 
@@ -70,20 +76,26 @@ describe('Categories settings', () => {
     mocks.useMutationMock.mockClear();
   });
 
-  it('CategoriesClient renders Income Sources tab by default', () => {
+  it('CategoriesClient renders Income Sources section', () => {
     render(<CategoriesClient />);
 
-    expect(screen.getByRole('button', { name: 'Income Sources' })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('New income source name…')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Income Sources' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/search or add income source/i),
+    ).toBeInTheDocument();
   });
 
-  it('Clicking Expense Categories tab shows expense panel', async () => {
-    const user = userEvent.setup();
+  it('CategoriesClient renders Expense Categories section alongside Income Sources', () => {
     render(<CategoriesClient />);
 
-    await user.click(screen.getByRole('button', { name: 'Expense Categories' }));
-
-    expect(screen.getByPlaceholderText('New expense category name…')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Expense Categories' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/search or add expense category/i),
+    ).toBeInTheDocument();
   });
 
   it('IncomeSources renders loading state while data is fetching', () => {
@@ -91,7 +103,10 @@ describe('Categories settings', () => {
 
     render(<IncomeSources />);
 
-    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    // LoadingSkeleton renders animated placeholder divs, not text
+    expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(
+      0,
+    );
   });
 
   it('IncomeSources renders active sources list', () => {
@@ -114,7 +129,8 @@ describe('Categories settings', () => {
     render(<IncomeSources />);
 
     expect(screen.getByText('Inactive')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Restore Old Source' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Restore Old Source' }),
+    ).toBeInTheDocument();
   });
 });
-

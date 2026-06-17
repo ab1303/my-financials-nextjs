@@ -1,12 +1,13 @@
 import { CalendarEnumType } from '@prisma/client';
+
 import {
   addCalendarYearDetails,
+  checkCalendarYearDeletability,
+  deleteCalendarYearById,
   getCalendarYears,
   updateCalendarYearDetails,
-  deleteCalendarYearById,
-  checkCalendarYearDeletability,
 } from '../services/calendar-year.service';
-import { handleCaughtError, handleDatabaseError } from '../utils/prisma';
+import { handleCaughtError, handleDatabaseError } from '@/server/db/client';
 
 export const createCalendarYearHandler = async (
   description: string,

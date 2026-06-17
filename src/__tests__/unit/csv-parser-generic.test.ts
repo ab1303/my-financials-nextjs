@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
+import { describe, expect,it } from 'vitest';
+
 import {
   getBankFormat,
   getBankFormatByName,
@@ -9,6 +9,7 @@ import {
   detectCsvFormat,
   extractHeadersAndSamples,
 } from '@/server/services/transactions/csv-format-detector.service';
+import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
 
 // ---------------------------------------------------------------------------
 // CommBank (headerless, signed amount)

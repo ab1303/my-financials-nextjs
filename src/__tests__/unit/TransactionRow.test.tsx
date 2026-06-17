@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import TransactionRow from '@/components/transactions/TransactionRow';
+import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 
 const mockSearchDebitTransactionsFetch = vi.fn();
 
@@ -74,7 +75,10 @@ describe('TransactionRow', () => {
     { id: 'cat-2', name: 'Transport' },
   ];
 
-  const incomeSourceLabels = ['EMPLOYMENT', 'BUSINESS'];
+  const incomeSourceLabels = [
+    { id: 'src-1', name: 'EMPLOYMENT' },
+    { id: 'src-2', name: 'BUSINESS' },
+  ];
 
   const debitTransaction: LedgerTransactionRow = {
     id: 'tx-1',
@@ -91,6 +95,11 @@ describe('TransactionRow', () => {
     transferLinkedTransactionId: null,
     transferCounterpartId: null,
     isTransferClassified: false,
+    confirmedAt: null,
+    bankAccountId: 'bank-1',
+    offsetCategory: null,
+    offsetTransactionId: null,
+    transferCounterpart: null,
   };
 
   const creditTransaction: LedgerTransactionRow = {
@@ -193,7 +202,7 @@ describe('TransactionRow', () => {
       target: { value: 'Transport' },
     });
 
-    expect(onCategoryChange).toHaveBeenCalledWith('tx-1', 'Transport');
+    expect(onCategoryChange).toHaveBeenCalledWith('tx-1', 'Transport', undefined, undefined, true);
   });
 
   it('lets the user exit the link picker with reset', () => {

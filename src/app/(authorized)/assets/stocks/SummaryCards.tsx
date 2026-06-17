@@ -1,9 +1,10 @@
 'use client';
 
+import { Check, Pencil, X } from 'lucide-react';
 import { useState } from 'react';
-import { Pencil, Check, X } from 'lucide-react';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
+
 import { trpc } from '@/server/trpc/client';
 import {
   formatCurrency,

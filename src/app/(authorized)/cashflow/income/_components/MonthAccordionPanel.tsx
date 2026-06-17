@@ -1,24 +1,25 @@
 'use client';
 
+import { flexRender,getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { ChevronDown, ChevronRight, ExternalLink,Plus } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 import { useMemo, useState, useTransition } from 'react';
-import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
-import { toast } from 'sonner';
-import { Plus, ChevronRight, ChevronDown } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
+import { toast } from 'sonner';
 
 import Table from '@/components/table';
 import { Button } from '@/components/ui/button';
-import { useIncomeEntryState } from '../StateProvider';
-import { getTableColumns } from '../_table/columns';
 
-import type { ServerActionType, IncomeEntryType } from '../_types';
 import type {
   CreateIncomeEntryInput,
-  UpdateIncomeEntryInput,
   DeleteIncomeEntryInput,
+  UpdateIncomeEntryInput,
 } from '../_schema';
+import { getTableColumns } from '../_table/columns';
+import type { IncomeEntryType,ServerActionType } from '../_types';
+import { useIncomeEntryState } from '../StateProvider';
 
 type MonthAccordionPanelProps = {
   monthKey: string;
@@ -48,7 +49,7 @@ export default function MonthAccordionPanel({
   defaultOpen = false,
 }: MonthAccordionPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const [editedRows, setEditedRows] = useState<Map<number, IncomeEntryType>>(
+  const [editedRows, setEditedRows] = useState<Map<string | number, IncomeEntryType>>(
     new Map(),
   );
   const [isPending, startTransition] = useTransition();
@@ -73,6 +74,7 @@ export default function MonthAccordionPanel({
       incomeSourceId: '',
       incomeSourceName: '',
       incomeLedgerId: '',
+      source: 'USER_MANUAL',
     };
     dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: tempId, entry: newRow } });
     setEditedRows(new Map([[entries.length, newRow]]));
@@ -195,17 +197,24 @@ export default function MonthAccordionPanel({
 
   const panelId = `panel-${monthKey}`;
 
+  // Parse calendar month and year from the monthKey (format: "YYYY-MM")
+  const [yearStr, monthStr] = monthKey.split('-');
+  const ledgerMonth = parseInt(monthStr ?? '1', 10);
+  const ledgerYear = parseInt(yearStr ?? String(new Date().getFullYear()), 10);
+  const ledgerHref = `/cashflow/transactions?month=${ledgerMonth}&year=${ledgerYear}&tab=income`;
+
   return (
     <div className='border border-border rounded-md overflow-hidden bg-card dark:bg-card'>
-      {/* Collapsed/Expanded Toggle Header */}
-      <button
-        type='button'
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
-        aria-controls={panelId}
-        className='w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-muted/40 dark:bg-card dark:hover:bg-muted/40 transition-colors select-none cursor-pointer'
-      >
-        <div className='flex items-center gap-2'>
+      {/* Accordion header — split into toggle button (left) and actions (right) to avoid nested interactives */}
+      <div className='w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-muted/40 dark:bg-card dark:hover:bg-muted/40 transition-colors'>
+        {/* Toggle button */}
+        <button
+          type='button'
+          onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          className='flex items-center gap-2 select-none cursor-pointer'
+        >
           {isOpen ? (
             <ChevronDown className='w-5 h-5 text-muted-foreground flex-shrink-0' />
           ) : (
@@ -217,17 +226,30 @@ export default function MonthAccordionPanel({
           <span className='ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-primary rounded-full'>
             {entryCount}
           </span>
+        </button>
+
+        {/* Right side: subtotal + link to transaction ledger */}
+        <div className='flex items-center gap-3'>
+          <NumericFormat
+            value={subtotal}
+            displayType='text'
+            thousandSeparator
+            prefix='$'
+            decimalScale={2}
+            fixedDecimalScale
+            className='text-base font-bold text-primary dark:text-primary tabular-nums'
+          />
+          <Link
+            href={ledgerHref}
+            title={`View ${label} transactions in ledger`}
+            aria-label={`View ${label} transactions in ledger`}
+            className='text-muted-foreground hover:text-primary transition-colors'
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink className='w-4 h-4' />
+          </Link>
         </div>
-        <NumericFormat
-          value={subtotal}
-          displayType='text'
-          thousandSeparator
-          prefix='$'
-          decimalScale={2}
-          fixedDecimalScale
-          className='text-base font-bold text-primary dark:text-primary tabular-nums'
-        />
-      </button>
+      </div>
 
       {/* Expanded Content */}
       {isOpen && (

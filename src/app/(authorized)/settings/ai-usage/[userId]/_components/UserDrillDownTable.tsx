@@ -1,8 +1,9 @@
 'use client';
 
+import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { NumericFormat } from 'react-number-format';
-import { ChevronLeft } from 'lucide-react';
+
 import { IMPORT_TYPE_LABELS } from '@/constants/import-type-labels';
 
 type CategoryRow = {

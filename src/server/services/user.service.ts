@@ -1,8 +1,9 @@
 import type { Prisma, User } from '@prisma/client';
+import { prisma } from '@/server/db/client';
+
 import customConfig from '../config/default';
 // import redisClient from '../utils/connectRedis';
 import { signJwt } from '../utils/jwt';
-import { prisma } from '../utils/prisma';
 
 export const excludedFields = ['password', 'verified', 'verificationCode'];
 
@@ -14,7 +15,7 @@ export const createUser = async (input: Prisma.UserCreateInput) => {
 
 export const findUser = async (
   where: Partial<Prisma.UserWhereUniqueInput>,
-  select?: Prisma.UserSelect
+  select?: Prisma.UserSelect,
 ) => {
   return (await prisma.user.findFirst({
     where,
@@ -24,7 +25,7 @@ export const findUser = async (
 
 export const findUniqueUser = async (
   where: Prisma.UserWhereUniqueInput,
-  select?: Prisma.UserSelect
+  select?: Prisma.UserSelect,
 ) => {
   return (await prisma.user.findUnique({
     where,
@@ -35,7 +36,7 @@ export const findUniqueUser = async (
 export const updateUser = async (
   where: Prisma.UserWhereUniqueInput,
   data: Prisma.UserUpdateInput,
-  select?: Prisma.UserSelect
+  select?: Prisma.UserSelect,
 ) => {
   return (await prisma.user.update({ where, data, select })) as User;
 };

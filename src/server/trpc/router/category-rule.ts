@@ -1,12 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+
 import {
+  applyRuleToPast,
   createRule,
   deleteRule,
   findSimilarTransactions,
   listRules,
   toggleRule,
-  applyRuleToPast,
 } from "@/server/services/transactions/category-rule.service";
 import { protectedProcedure, router } from "@/server/trpc/trpc";
 

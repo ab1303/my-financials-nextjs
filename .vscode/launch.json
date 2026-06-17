@@ -24,6 +24,18 @@
         "uriFormat": "%s",
         "action": "debugWithChrome"
       }
+    },
+    {
+      "name": "Playwright: Debug Current Test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx playwright test \"${file}\" --debug"
+    },
+    {
+      "name": "Playwright: Debug All E2E",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm run test:e2e:debug"
     }
   ]
 }

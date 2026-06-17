@@ -4,21 +4,21 @@ import { enableMapSet } from 'immer';
 
 enableMapSet();
 
+import { Plus } from 'lucide-react';
 import { useMemo, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { useIncomeEntryState } from './StateProvider';
-import SourceBreakdownWidget from './_components/SourceBreakdownWidget';
-import MonthAccordionPanel from './_components/MonthAccordionPanel';
 
-import type { ServerActionType, IncomeEntryType } from './_types';
+import MonthAccordionPanel from './_components/MonthAccordionPanel';
+import SourceBreakdownWidget from './_components/SourceBreakdownWidget';
 import type {
   CreateIncomeEntryInput,
-  UpdateIncomeEntryInput,
   DeleteIncomeEntryInput,
+  UpdateIncomeEntryInput,
 } from './_schema';
+import type { IncomeEntryType,ServerActionType } from './_types';
+import { useIncomeEntryState } from './StateProvider';
 
 type IncomeTableClientProps = {
   editRow: (input: UpdateIncomeEntryInput) => Promise<ServerActionType>;
@@ -27,6 +27,8 @@ type IncomeTableClientProps = {
   ) => Promise<ServerActionType<IncomeEntryType>>;
   deleteRow: (input: DeleteIncomeEntryInput) => Promise<ServerActionType>;
   calendarYearId: string;
+  yearDateFrom?: string;
+  yearDateTo?: string;
 };
 
 type MonthGroup = {
@@ -55,6 +57,8 @@ export default function IncomeTableClient({
   editRow,
   deleteRow,
   calendarYearId,
+  yearDateFrom,
+  yearDateTo,
 }: IncomeTableClientProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -86,6 +90,7 @@ export default function IncomeTableClient({
       incomeSourceId: '',
       incomeSourceName: '',
       incomeLedgerId: '',
+      source: 'USER_MANUAL',
     };
     dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: tempId, entry: newRow } });
     toast.info('New income row added. Fill in the details and save.');
@@ -107,7 +112,13 @@ export default function IncomeTableClient({
       </div>
 
       {/* Source Breakdown Widget */}
-      {data.length > 0 && <SourceBreakdownWidget entries={data} />}
+      {data.length > 0 && (
+        <SourceBreakdownWidget 
+          entries={data} 
+          yearDateFrom={yearDateFrom}
+          yearDateTo={yearDateTo}
+        />
+      )}
 
       {/* Empty State */}
       {monthGroups.length === 0 && (

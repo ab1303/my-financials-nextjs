@@ -1,3 +1,4 @@
+import type { RoleEnumType } from '@prisma/client';
 import type { Session } from 'next-auth';
 
 /**
@@ -8,6 +9,7 @@ export const mockSession: Session = {
     id: 'test-user-id',
     name: 'Test User',
     email: 'test@example.com',
+    role: 'user' as RoleEnumType,
   },
   expires: '2099-12-31T23:59:59.999Z',
 };

@@ -4,9 +4,10 @@
  * Features: caching, concurrency safety, graceful degradation.
  */
 
-import { embed, embedMany } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import type { ExpenseCategory } from '@prisma/client';
+import { embed, embedMany } from 'ai';
+
 import type { AITokenUsage } from './_types';
 
 // --- 1. Pure Functions ---

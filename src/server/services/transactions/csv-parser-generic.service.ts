@@ -1,7 +1,10 @@
+import { randomUUID } from 'crypto';
+import { robustParseDate } from '@/lib/date-utils';
 import type {
   CsvParseResult,
   CsvTransaction,
 } from '@/server/services/ai-import/_types';
+
 import type { AmountStructure, BankCsvFormat } from './csv-format.types';
 
 /**
@@ -144,7 +147,16 @@ function parseRow(
 
   const { month, year } = parseDateComponents(dateStr, format.dateFormat);
 
-  return { date: dateStr, amount, type, description, month, year, balance };
+  return {
+    id: randomUUID(),
+    date: dateStr,
+    amount,
+    type,
+    description,
+    month,
+    year,
+    balance,
+  };
 }
 
 function extractAmount(
@@ -212,36 +224,12 @@ function parseDateComponents(
   dateStr: string,
   format: BankCsvFormat['dateFormat'],
 ): { month: number; year: number } {
-  let month: number;
-  let year: number;
-  let day: number;
+  const parsedDate = robustParseDate(dateStr, format);
 
-  if (format === 'DD/MM/YYYY') {
-    const [d, m, y] = dateStr.split('/').map(Number);
-    day = d!;
-    month = m!;
-    year = y!;
-  } else if (format === 'MM/DD/YYYY') {
-    const [m, d, y] = dateStr.split('/').map(Number);
-    month = m!;
-    day = d!;
-    year = y!;
-  } else {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    year = y!;
-    month = m!;
-    day = d!;
-  }
-
-  if (isNaN(day) || isNaN(month) || isNaN(year)) {
-    throw new Error(`Could not parse date components from: ${dateStr}`);
-  }
-  if (month < 1 || month > 12)
-    throw new Error(`Invalid month ${month} in date: ${dateStr}`);
-  if (day < 1 || day > 31)
-    throw new Error(`Invalid day ${day} in date: ${dateStr}`);
-
-  return { month, year };
+  return {
+    month: parsedDate.getMonth() + 1,
+    year: parsedDate.getFullYear(),
+  };
 }
 
 /**

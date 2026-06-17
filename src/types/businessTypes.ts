@@ -16,7 +16,7 @@ export type OptionType = {
 
 export type BankType = {
   bankName: string;
-  address: Address;
+  address?: Address;
 };
 
 export type ProfileType = {

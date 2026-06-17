@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { appRouter } from '@/server/trpc/router/_app';
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
+import { appRouter } from '@/server/trpc/router/_app';
 
 const caller = appRouter.createCaller({
   prisma: prismaMock,
@@ -23,7 +23,7 @@ describe('categoryTransactionsRouter.getByCategory', () => {
         category: 'Groceries',
         source: 'LLM_CLASSIFIED',
         status: 'CONFIRMED',
-        bankAccount: { name: 'Everyday' },
+        financialAccount: { name: 'Everyday' },
       },
     ] as never);
     prismaMock.transaction.count.mockResolvedValue(1 as never);
@@ -74,7 +74,7 @@ describe('categoryTransactionsRouter.getByCategory', () => {
         category: 'Groceries',
         source: 'LLM_CLASSIFIED',
         status: 'CONFIRMED',
-        bankAccount: { name: 'Everyday' },
+        financialAccount: { name: 'Everyday' },
       },
       {
         id: 'tx-2',
@@ -84,7 +84,7 @@ describe('categoryTransactionsRouter.getByCategory', () => {
         category: 'Groceries',
         source: 'USER_OVERRIDE',
         status: 'CONFIRMED',
-        bankAccount: { name: 'Everyday' },
+        financialAccount: { name: 'Everyday' },
       },
     ] as never);
     prismaMock.transaction.count.mockResolvedValue(2 as never);
@@ -100,4 +100,44 @@ describe('categoryTransactionsRouter.getByCategory', () => {
     expect(result.totalAmount).toBe(40);
     expect(result.averageAmount).toBe(20);
   });
+
+  it('includes Transfer exclusion guard (AND filter) when querying a non-Transfer category', async () => {
+    prismaMock.transaction.findMany.mockResolvedValue([] as never);
+    prismaMock.transaction.count.mockResolvedValue(0 as never);
+
+    await caller.categoryTransactions.getByCategory({
+      category: 'Groceries',
+      month: 3,
+      year: 2025,
+      limit: 50,
+      offset: 0,
+    });
+
+    expect(prismaMock.transaction.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.objectContaining({
+            category: expect.objectContaining({ notIn: expect.arrayContaining(['Transfer']) }),
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('does NOT add Transfer exclusion guard when querying the Transfer category itself', async () => {
+    prismaMock.transaction.findMany.mockResolvedValue([] as never);
+    prismaMock.transaction.count.mockResolvedValue(0 as never);
+
+    await caller.categoryTransactions.getByCategory({
+      category: 'Transfer',
+      month: 3,
+      year: 2025,
+      limit: 50,
+      offset: 0,
+    });
+
+    const callArgs = prismaMock.transaction.findMany.mock.calls[0]![0] as { where: Record<string, unknown> };
+    expect(callArgs.where).not.toHaveProperty('AND');
+  });
 });
+
