@@ -31,7 +31,7 @@ The orchestrator does all file reading; the subagent only writes.
 - You may ONLY modify these exact files: [list paths]
 - DO NOT run: pnpm lint --fix, pnpm format, prettier --write, or any global formatting
 - DO NOT run: pnpm run build (unless explicitly required in success criteria)
-- DO NOT commit code automatically (orchestrator will commit when all phases done)
+- DO NOT commit code automatically. Require explicit user confirmation before any commit or PR.
 - DO NOT modify test files other than those explicitly listed
 - DO NOT run vitest --update or any snapshot auto-update commands
 - DO NOT modify any files outside the scope above, even if linting warnings appear

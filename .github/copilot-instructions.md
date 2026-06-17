@@ -4,6 +4,8 @@
 
 All agents must strictly follow the foundational mandates defined in `AGENTS.md`.
 
+- Agents must not commit code or create pull requests without explicit user confirmation. Do not auto-commit.
+
 ## Universal Standards
 
 - **Architecture**: T3 Stack (Next.js App Router, tRPC, Prisma, Tailwind).

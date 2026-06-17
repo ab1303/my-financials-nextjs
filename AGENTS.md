@@ -26,7 +26,9 @@ Rules for all AI agents working in this repository.
 
 ## Interaction Logic (Universal)
 
-- **Directives**: Perform implementation/testing with minimal confirmation unless critically underspecified.
+- **Directives**:
+  - Perform implementation/testing with minimal confirmation unless critically underspecified.
+  - Require explicit user confirmation before committing or pushing changes. Ask before creating commits or pull requests; do not auto-commit.
 - **Inquiries**: Provide analysis or advice only when explicitly asked; do not modify files.
 - **Ask Clarifying Questions**: Follow the `prd-mode` workflow for any new feature requests.
 
@@ -210,7 +212,7 @@ Never pass all three docs at once for a single implementation task — context.m
 - You may ONLY modify these exact files: [explicit list]
 - DO NOT run: pnpm lint --fix, pnpm format, prettier --write, or global formatting
 - DO NOT run: pnpm run build (orchestrator handles verification)
-- DO NOT commit code (orchestrator commits when complete)
+- DO NOT commit code. Require explicit user confirmation before committing or creating a PR; do not auto-commit.
 - DO NOT modify test files except those explicitly listed
 - DO NOT run vitest --update or snapshot auto-update
 - DO NOT touch any files outside the scope above
