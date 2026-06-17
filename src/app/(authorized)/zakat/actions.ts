@@ -89,17 +89,14 @@ export async function editRow(input: UpdateZakatPaymentInput) {
     const validatedInput = UpdateZakatPaymentSchema.parse(input);
 
     // Update payment record
-    await updateZakatPayment(
-      validatedInput.id,
-      {
-        id: validatedInput.id,
-        datePaid: validatedInput.datePaid,
-        amount: validatedInput.amount,
-        beneficiaryType: validatedInput.beneficiaryType,
-        beneficiaryId: validatedInput.beneficiaryId,
-        zakatObligationId: '', // This will be ignored in the update
-      },
-    );
+    await updateZakatPayment(validatedInput.id, {
+      id: validatedInput.id,
+      datePaid: validatedInput.datePaid,
+      amount: validatedInput.amount,
+      beneficiaryType: validatedInput.beneficiaryType,
+      beneficiaryId: validatedInput.beneficiaryId,
+      zakatObligationId: '', // This will be ignored in the update
+    });
 
     return { success: true, error: null };
   } catch (error) {
