@@ -54,7 +54,7 @@ function getAIProvider() {
 export async function classifyTransactions(
   transactions: CsvTransaction[],
   categories: ExpenseCategory[],
-  dateFormat: BankCsvFormat['dateFormat'],
+  dateFormat: BankCsvFormat['dateFormat'] = 'DD/MM/YYYY',
 ): Promise<{
   classified: ClassifiedTransaction[];
   usage: {
@@ -174,8 +174,8 @@ ${transactionsList}`;
 
 export async function classifyCreditTransactions(
   transactions: CsvTransaction[],
-  dateFormat: BankCsvFormat['dateFormat'],
-  incomeSourceNames: string[] = DEFAULT_INCOME_SOURCE_NAMES,
+  arg2?: BankCsvFormat['dateFormat'] | string[],
+  arg3?: string[],
 ): Promise<{
   classified: ClassifiedCreditTransaction[];
   usage: {
