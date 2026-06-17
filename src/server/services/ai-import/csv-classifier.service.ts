@@ -5,7 +5,11 @@ import { randomUUID } from 'crypto';
 import { normalizeDateToISO } from '@/lib/date-utils';
 import type { BankCsvFormat } from '@/server/services/transactions/csv-format.types';
 
-import type { ClassifiedCreditTransaction,ClassifiedTransaction, CsvTransaction } from './_types';
+import type {
+  ClassifiedCreditTransaction,
+  ClassifiedTransaction,
+  CsvTransaction,
+} from './_types';
 
 /**
  * AI Classifier Service for CSV transactions
@@ -40,7 +44,9 @@ function getAIProvider() {
     apiKey,
     ...(baseURL
       ? { baseURL }
-      : provider === 'github' && { baseURL: 'https://models.inference.ai.azure.com' }),
+      : provider === 'github' && {
+          baseURL: 'https://models.inference.ai.azure.com',
+        }),
   });
 
   return openai.chat(modelId);
@@ -51,7 +57,11 @@ export async function classifyTransactions(
   dateFormat: BankCsvFormat['dateFormat'],
 ): Promise<{
   classified: ClassifiedTransaction[];
-  usage: { promptTokens: number; completionTokens: number; totalTokens: number };
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
 }> {
   if (!transactions.length) {
     return {
@@ -66,7 +76,7 @@ export async function classifyTransactions(
 
   for (let i = 0; i < transactions.length; i += BATCH_SIZE) {
     const batch = transactions.slice(i, i + BATCH_SIZE);
-    
+
     try {
       const categoryNames = categories.map((c) => c.name);
 
@@ -139,11 +149,10 @@ ${transactionsList}`;
       usage.totalTokens += batchUsage.totalTokens ?? 0;
 
       // Add a small delay between batches to respect rate limits
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
       console.error('[CSVClassifierService] Failed to classify batch:', error);
-      
+
       // Fallback for this batch
       batch.forEach((tx) => {
         classified.push({
@@ -169,8 +178,30 @@ export async function classifyCreditTransactions(
   incomeSourceNames: string[] = DEFAULT_INCOME_SOURCE_NAMES,
 ): Promise<{
   classified: ClassifiedCreditTransaction[];
-  usage: { promptTokens: number; completionTokens: number; totalTokens: number };
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
 }> {
+  // Support legacy and current call signatures:
+  // - classifyCreditTransactions(transactions)
+  // - classifyCreditTransactions(transactions, dateFormat)
+  // - classifyCreditTransactions(transactions, incomeSourceNames)
+  // - classifyCreditTransactions(transactions, dateFormat, incomeSourceNames)
+  let dateFormat: BankCsvFormat['dateFormat'] = 'DD/MM/YYYY';
+  let incomeSourceNames: string[] = DEFAULT_INCOME_SOURCE_NAMES;
+  if (Array.isArray(arg2)) {
+    incomeSourceNames = arg2;
+    if (typeof arg3 === 'string') {
+      dateFormat = arg3 as BankCsvFormat['dateFormat'];
+    }
+  } else if (typeof arg2 === 'string') {
+    dateFormat = arg2 as BankCsvFormat['dateFormat'];
+    if (Array.isArray(arg3)) {
+      incomeSourceNames = arg3;
+    }
+  }
   if (!transactions.length) {
     return {
       classified: [],
@@ -228,23 +259,25 @@ ${transactionsList}`;
       category: string;
     }>;
 
-    const classified: ClassifiedCreditTransaction[] = transactions.map((tx, idx) => {
-      const parsedItem = parsed[idx];
-      const raw = parsedItem?.category ?? 'OTHER';
-      const llmCategory = CREDIT_LABELS.includes(raw) ? raw : 'OTHER';
+    const classified: ClassifiedCreditTransaction[] = transactions.map(
+      (tx, idx) => {
+        const parsedItem = parsed[idx];
+        const raw = parsedItem?.category ?? 'OTHER';
+        const llmCategory = CREDIT_LABELS.includes(raw) ? raw : 'OTHER';
 
-      return {
-        id: randomUUID(),
-        description: tx.description,
-        amount: tx.amount,
-        date: normalizeDateToISO(tx.date, dateFormat),
-        llmCategory,
-        confirmedCategory: llmCategory,
-        overridden: false,
-        type: 'CREDIT' as const,
-        balance: tx.balance,
-      };
-    });
+        return {
+          id: randomUUID(),
+          description: tx.description,
+          amount: tx.amount,
+          date: normalizeDateToISO(tx.date, dateFormat),
+          llmCategory,
+          confirmedCategory: llmCategory,
+          overridden: false,
+          type: 'CREDIT' as const,
+          balance: tx.balance,
+        };
+      },
+    );
 
     return {
       classified,
@@ -255,19 +288,24 @@ ${transactionsList}`;
       },
     };
   } catch (error) {
-    console.error('[CSVClassifierService] Failed to classify credit transactions:', error);
+    console.error(
+      '[CSVClassifierService] Failed to classify credit transactions:',
+      error,
+    );
 
-    const classified: ClassifiedCreditTransaction[] = transactions.map((tx) => ({
-      id: randomUUID(),
-      description: tx.description,
-      amount: tx.amount,
-      date: normalizeDateToISO(tx.date, dateFormat),
-      llmCategory: 'OTHER',
-      confirmedCategory: 'OTHER',
-      overridden: false,
-      type: 'CREDIT' as const,
-      balance: tx.balance,
-    }));
+    const classified: ClassifiedCreditTransaction[] = transactions.map(
+      (tx) => ({
+        id: randomUUID(),
+        description: tx.description,
+        amount: tx.amount,
+        date: normalizeDateToISO(tx.date, dateFormat),
+        llmCategory: 'OTHER',
+        confirmedCategory: 'OTHER',
+        overridden: false,
+        type: 'CREDIT' as const,
+        balance: tx.balance,
+      }),
+    );
 
     return {
       classified,

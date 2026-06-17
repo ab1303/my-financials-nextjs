@@ -190,7 +190,7 @@ STACK CONSTRAINTS — must follow exactly:
 - You may ONLY modify these exact files: [list from Files to modify/create table]
 - DO NOT run: pnpm lint --fix, pnpm format, prettier --write, or any global formatting
 - DO NOT run: pnpm run build (verification happens in orchestrator, not agent)
-- DO NOT commit code automatically (orchestrator commits when feature complete)
+- DO NOT commit code automatically. Require explicit user confirmation before any commit or PR.
 - DO NOT modify test files other than those explicitly listed in this phase
 - DO NOT run vitest --update or any snapshot auto-update commands
 - DO NOT modify any files outside the scope above, even if ESLint/Prettier warnings appear

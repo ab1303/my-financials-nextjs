@@ -151,7 +151,7 @@ For each feature below, reorganize into spec/transactions/{feature}/:
 - DO NOT delete old spec/ folders (orchestrator will rm -rf after validation)
 - DO NOT modify code files (only spec docs)
 - DO NOT run build/lint
-- DO NOT commit changes (orchestrator handles git)
+- DO NOT commit changes. Require explicit user confirmation before any commit or PR.
 ```
 
 ---
