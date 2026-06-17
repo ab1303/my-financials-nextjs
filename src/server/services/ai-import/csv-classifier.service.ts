@@ -48,7 +48,7 @@ function getAIProvider() {
 export async function classifyTransactions(
   transactions: CsvTransaction[],
   categories: ExpenseCategory[],
-  dateFormat: BankCsvFormat['dateFormat'],
+  dateFormat: BankCsvFormat['dateFormat'] = 'DD/MM/YYYY',
 ): Promise<{
   classified: ClassifiedTransaction[];
   usage: { promptTokens: number; completionTokens: number; totalTokens: number };
@@ -165,12 +165,30 @@ ${transactionsList}`;
 
 export async function classifyCreditTransactions(
   transactions: CsvTransaction[],
-  dateFormat: BankCsvFormat['dateFormat'],
-  incomeSourceNames: string[] = DEFAULT_INCOME_SOURCE_NAMES,
+  arg2?: BankCsvFormat['dateFormat'] | string[],
+  arg3?: string[],
 ): Promise<{
   classified: ClassifiedCreditTransaction[];
   usage: { promptTokens: number; completionTokens: number; totalTokens: number };
 }> {
+  // Support legacy and current call signatures:
+  // - classifyCreditTransactions(transactions)
+  // - classifyCreditTransactions(transactions, dateFormat)
+  // - classifyCreditTransactions(transactions, incomeSourceNames)
+  // - classifyCreditTransactions(transactions, dateFormat, incomeSourceNames)
+  let dateFormat: BankCsvFormat['dateFormat'] = 'DD/MM/YYYY';
+  let incomeSourceNames: string[] = DEFAULT_INCOME_SOURCE_NAMES;
+  if (Array.isArray(arg2)) {
+    incomeSourceNames = arg2;
+    if (typeof arg3 === 'string') {
+      dateFormat = arg3 as BankCsvFormat['dateFormat'];
+    }
+  } else if (typeof arg2 === 'string') {
+    dateFormat = arg2 as BankCsvFormat['dateFormat'];
+    if (Array.isArray(arg3)) {
+      incomeSourceNames = arg3;
+    }
+  }
   if (!transactions.length) {
     return {
       classified: [],
