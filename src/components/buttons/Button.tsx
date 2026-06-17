@@ -9,6 +9,7 @@ enum ButtonVariant {
   'light',
   'primary',
   'secondary',
+  'default',
 }
 
 type ButtonProps = {
@@ -39,6 +40,8 @@ export default function Button({
         return 'flex w-full justify-center py-2 px-4 border border-gray-600 rounded-md shadow-sm rounded font-bold hover:text-teal-400 focus:outline-none focus-visible:text-teal-400 bg-gray-800 disabled:bg-gray-600 text-white disabled:hover:text-white';
       case 'light':
         return 'flex w-full justify-center py-2 px-4 border border-gray-400 rounded-md shadow-sm rounded font-bold hover:text-teal-400 focus:outline-none focus-visible:text-teal-400 bg-white disabled:bg-gray-200 text-dark hover:bg-gray-200 hover:text-dark focus-visible:text-dark disabled:hover:text-dark';
+      case 'default':
+        return buttonStyles.primary;
       default:
         return buttonStyles.primary;
     }
