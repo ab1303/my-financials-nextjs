@@ -6,6 +6,7 @@ Problem statement
 Goals
 - Let users group categories and include/exclude groups or individual categories from aggregation summaries.
 - Make filters discoverable on all rollup pages, provide live preview of totals, and allow saving filter sets as "Saved Views".
+- Use the shared `react-select` baseline for the filter UI so styling and accessibility match the rest of the app.
 
 User stories
 - As a user, I can toggle a group to include/exclude all categories in that group and see totals update instantly.
@@ -21,6 +22,7 @@ UX flows
 
 Related pages / files (implementation hints)
 - UI: src/components/ui/filters.tsx (FiltersPanel, GroupRow, CategoryItem, PreviewTotals)
+- Shared select baseline: src/components/ui/Select/Select.tsx, src/lib/select-styles.ts
 - Example pattern: src/components/TransferExclusionSummary.tsx
 - Shared UI tokens: src/components/ui/
 

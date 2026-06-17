@@ -1,14 +1,16 @@
 'use client';
 
 import type { CalendarEnumType } from '@prisma/client';
-import { useCallback,useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SingleValue } from 'react-select';
 
 import { CalendarYearPicker } from '@/components/CalendarYearPicker';
-import { SelectWrapper as Select } from '@/components/ui/Select';
+import { FiltersPanel } from '@/components/ui/filters';
 import { Label } from '@/components/ui/Label';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import type { CategoryGroup } from '@/lib/mockFilterData';
 import type { CashflowAnalyticsData, MonthlyTrendPoint } from '@/server/models/cashflow-analytics';
-import type { CalendarYearType,OptionType } from '@/types';
+import type { CalendarYearType, OptionType } from '@/types';
 
 import AnalyticsDrillDownDrawer, { type DrillDownFilter } from './AnalyticsDrillDownDrawer';
 import { ChartSkeleton } from './ChartSkeleton';
@@ -37,6 +39,7 @@ export default function CashflowAnalyticsClient({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [drillDownFilter, setDrillDownFilter] = useState<DrillDownFilter | null>(null);
+  const [selectedExpenseCategoryIds, setSelectedExpenseCategoryIds] = useState<string[]>([]);
 
   const selectedBank = bankOptions.find((b) => b.id === selectedBankId) ?? null;
 
@@ -103,6 +106,40 @@ export default function CashflowAnalyticsClient({
     });
   };
 
+  const expenseFilterGroups = useMemo<CategoryGroup[]>(() => {
+    const categories = data?.expenseCategories ?? [];
+
+    if (categories.length === 0) return [];
+
+    return [
+      {
+        id: 'expense-categories',
+        name: 'Expense Categories',
+        categories: categories.map((category) => ({
+          id: category.categoryId || category.categoryName,
+          name: category.categoryName,
+          type: 'expense',
+          amount: category.amount,
+        })),
+      },
+    ];
+  }, [data?.expenseCategories]);
+
+  const filteredExpenseCategories = useMemo(() => {
+    const categories = data?.expenseCategories ?? [];
+    if (expenseFilterGroups.length === 0) return categories;
+
+    const selected = new Set(selectedExpenseCategoryIds);
+    return categories.filter((category) => selected.has(category.categoryId));
+  }, [data?.expenseCategories, expenseFilterGroups.length, selectedExpenseCategoryIds]);
+
+  useEffect(() => {
+    const allExpenseCategoryIds = expenseFilterGroups.flatMap((group) =>
+      group.categories.map((category) => category.id),
+    );
+    setSelectedExpenseCategoryIds(allExpenseCategoryIds);
+  }, [expenseFilterGroups]);
+
   return (
     <div className="space-y-6">
       {/* Filter Bar */}
@@ -150,6 +187,23 @@ export default function CashflowAnalyticsClient({
       {/* KPI Cards */}
       <KPISummaryCards kpis={data?.kpis ?? null} loading={loading} />
 
+      {/* Category Filters */}
+      {!loading && expenseFilterGroups.length > 0 && (
+        <section className="rounded-xl border border-border bg-card shadow p-4">
+          <div className="mb-4">
+            <h2 className="text-sm font-medium text-foreground">Expense category filters</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use the panel to hide categories from the expense breakdown. KPI and trend totals still reflect the full analytics aggregate.
+            </p>
+          </div>
+          <FiltersPanel
+            initialGroups={expenseFilterGroups}
+            defaultSelectAll
+            onSelectionChange={setSelectedExpenseCategoryIds}
+          />
+        </section>
+      )}
+
       {/* Main Trend Chart */}
       {loading ? (
         <ChartSkeleton height={320} />
@@ -177,7 +231,7 @@ export default function CashflowAnalyticsClient({
         ) : (
           <>
             <ExpenseCategoryChart
-              data={data?.expenseCategories ?? []}
+              data={filteredExpenseCategories}
               calendarYearId={selectedYearId}
               onCategoryClick={handleCategoryClick}
             />

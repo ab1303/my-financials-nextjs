@@ -5,27 +5,27 @@ Purpose
 
 Scope of this LLD
 - Implement UI components and client persistence + mocked aggregator endpoint. Do NOT change DB schema or run prisma migrations in this phase.
+- Base the filter interactions on the shared `react-select` wrapper/styles rather than a bespoke checkbox panel.
 
 Files to add (frontend)
-- src/components/filters/FiltersPanel.tsx  ← main feature folder (component-scoped)
-- src/components/filters/GroupRow.tsx
-- src/components/filters/CategoryItem.tsx
-- src/components/filters/PreviewTotals.tsx
-- src/components/filters/index.ts
+- src/components/ui/filters.tsx  ← main feature component
 - src/hooks/useCategoryFilters.ts (encapsulate selection logic & tri-state helpers)
-- src/lib/mockFilterData.ts (existing)
-- storybook stories: src/components/filters/FiltersPanel.stories.tsx
+- src/lib/mockFilterData.ts
+- src/components/filters/FiltersPanel.stories.tsx
+- src/components/ui/index.ts
+- src/__tests__/unit/useCategoryFilters.test.ts
+- src/__tests__/unit/FiltersPanel.test.tsx
 
 Component contracts
 - FiltersPanel
   - Props: groups: CategoryGroup[] (optional; default loads from API/mock)
-  - Behavior: maintains selection map, exposes apply/save handlers
+  - Behavior: maintains selection map, exposes apply/save handlers, and renders react-select-driven group/category controls.
 
 - GroupRow
   - Props: group: CategoryGroup
   - Props: selection: Record<string, boolean>
   - Callbacks: onToggleCategory(id), onToggleGroup(groupId, checked)
-  - UX: show indeterminate state, checkedCount/total
+  - UX: show indeterminate state, checkedCount/total, and custom option styling that matches react-select.
 
 - CategoryItem
   - Props: category: Category
@@ -57,7 +57,7 @@ Implementation notes
 
 Testing
 - Unit tests for useCategoryFilters: initial state, toggling single, toggling group, indeterminate behavior
-- Storybook story shows interactive panel and preview totals
+- Storybook story shows interactive panel and preview totals using the shared react-select baseline
 
 Agent constraints (for sub-agents)
 - CRITICAL SCOPE: Agent may ONLY modify files listed above. DO NOT run global formatting or autorewrite unrelated files.
