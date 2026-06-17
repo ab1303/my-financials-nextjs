@@ -61,7 +61,7 @@ export async function addRow(input: CreateZakatPaymentInput) {
       data: {
         id: newPayment.id,
         datePaid: newPayment.datePaid,
-        amount: newPayment.amount,
+        amount: Number((newPayment as any).amount),
         beneficiaryType: newPayment.beneficiaryType,
         isDeductible: newPayment.isDeductible,
         beneficiaryId: validatedInput.beneficiaryId || '',

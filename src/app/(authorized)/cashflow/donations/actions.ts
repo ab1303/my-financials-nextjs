@@ -71,7 +71,7 @@ export async function addRow(input: CreateDonationPaymentInput) {
       data: {
         id: newPayment.id,
         datePaid: newPayment.datePaid,
-        amount: newPayment.amount,
+        amount: Number((newPayment as any).amount),
         beneficiaryType: paymentData.beneficiaryType ?? 'BUSINESS',
         isDeductible: paymentData.isDeductible ?? false,
         donationPurpose: paymentData.donationPurpose,
