@@ -44,3 +44,20 @@ Decouple `src/server/services/donation.service.ts` into independent, vertical do
 - Pre-requisite: Establish baseline test suite health.
 - Post-refactoring: Run unit and integration tests for each domain.
 - Verify UI flows (Donation Tracking, Zakat, Interest Cleansing).
+
+## Domain Boundary Refactor Checklist (Completed June 2026)
+
+- [x] **Phase 0: Safety & API**
+  - [x] Extend `applyAllocations` signature in `interest-cleansing.service.ts` to accept `sourceBusinessId`.
+  - [x] Remove the direct `voluntaryDonation` DB lookup from Interest domain service.
+  - [x] Pass the returned `beneficiaryId` from client-side `addRow` to the `applyAllocations` mutation call.
+  - [x] Add unit tests for `applyAllocations` verifying `sourceBusinessId` propagation.
+- [x] **Phase 1: Consolidate Interest Domain**
+  - [x] Migrate all interest cleansing service logic from `bank-interest` to `interest-cleansing` domain.
+  - [x] Delete `src/server/services/bank-interest/` directory and update imports across all routes and tests.
+- [x] **Phase 2: Replace remaining cross-domain reads**
+  - [x] Create `getVoluntaryDonationTotalsByBeneficiary` API in `voluntary-donation.service.ts`.
+  - [x] Create `getLinkedTransactionIds` API in `interest-cleansing.service.ts`.
+  - [x] Refactor transaction utility `donation-utils.service.ts` and reporting service `donation-aggregator.service.ts` to consume domain services instead of direct Prisma tables queries.
+- [x] **Phase 3: Backfill and Hardening**
+  - [x] Create the `scripts/backfill-interest-source-business.sql` script to populate historical `InterestCleansing.sourceBusinessId`.
