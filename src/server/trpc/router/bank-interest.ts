@@ -117,10 +117,16 @@ export const bankInterestRouter = router({
         allocations: z.array(
           z.object({ evidenceId: z.string(), amount: z.number() }),
         ),
+        sourceBusinessId: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) =>
-      applyAllocations(input.creditId, input.allocations, ctx.session.user.id),
+      applyAllocations(
+        input.creditId,
+        input.allocations,
+        ctx.session.user.id,
+        input.sourceBusinessId,
+      ),
     ),
 
   removeAllocation: protectedProcedure

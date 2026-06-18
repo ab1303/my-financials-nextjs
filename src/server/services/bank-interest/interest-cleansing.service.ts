@@ -671,6 +671,7 @@ export const applyAllocations = async (
   creditId: string,
   allocations: Array<{ evidenceId: string; amount: number }>,
   userId: string,
+  sourceBusinessId?: string | null,
 ): Promise<{ success: boolean; allocationsCreated: number }> => {
   if (!allocations || allocations.length === 0)
     return { success: false, allocationsCreated: 0 };
@@ -705,6 +706,7 @@ export const applyAllocations = async (
           amount: credit.amount,
           donationLedgerId: ledger.id,
           creditTxId: creditId,
+          sourceBusinessId: sourceBusinessId ?? null,
         },
       });
     }

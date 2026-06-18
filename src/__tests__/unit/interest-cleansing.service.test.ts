@@ -2,7 +2,10 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
-import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
+import {
+  getYearlyCleansingData,
+  applyAllocations,
+} from '@/server/services/bank-interest/interest-cleansing.service';
 
 describe('interest-cleansing.service', () => {
   beforeEach(() => {
@@ -555,4 +558,71 @@ describe('interest-cleansing.service', () => {
       expect(dateToQuery.toISOString().slice(0, 10)).toBe('2024-12-31');
     });
   }); // end describe('getYearlyCleansingData')
+
+  describe('applyAllocations', () => {
+    beforeEach(() => {
+      prismaMock.$transaction.mockImplementation((cb) => cb(prismaMock as any));
+    });
+
+    it('should set sourceBusinessId to the provided value when creating a new InterestCleansing record', async () => {
+      const creditId = 'tx-credit-1';
+      const allocations = [{ evidenceId: 'tx-debit-1', amount: 50 }];
+      const userId = 'user-1';
+      const sourceBusinessId = 'beneficiary-business-1';
+
+      prismaMock.transaction.findUniqueOrThrow.mockResolvedValue({
+        id: creditId,
+        date: new Date('2026-06-15'),
+        amount: new Decimal('100'),
+      } as any);
+
+      prismaMock.interestCleansing.findUnique.mockResolvedValue(null);
+      prismaMock.donationLedger.findFirst.mockResolvedValue({ id: 'ledger-1' } as any);
+      prismaMock.interestCleansing.create.mockResolvedValue({ id: 'cleansing-1' } as any);
+      prismaMock.interestCleansingEvidence.upsert.mockResolvedValue({} as any);
+
+      const result = await applyAllocations(creditId, allocations, userId, sourceBusinessId);
+
+      expect(result.success).toBe(true);
+      expect(prismaMock.interestCleansing.create).toHaveBeenCalledWith({
+        data: {
+          datePaid: expect.any(Date),
+          amount: expect.any(Decimal),
+          donationLedgerId: 'ledger-1',
+          creditTxId: creditId,
+          sourceBusinessId: sourceBusinessId,
+        },
+      });
+    });
+
+    it('should set sourceBusinessId to null when no value is provided', async () => {
+      const creditId = 'tx-credit-1';
+      const allocations = [{ evidenceId: 'tx-debit-1', amount: 50 }];
+      const userId = 'user-1';
+
+      prismaMock.transaction.findUniqueOrThrow.mockResolvedValue({
+        id: creditId,
+        date: new Date('2026-06-15'),
+        amount: new Decimal('100'),
+      } as any);
+
+      prismaMock.interestCleansing.findUnique.mockResolvedValue(null);
+      prismaMock.donationLedger.findFirst.mockResolvedValue({ id: 'ledger-1' } as any);
+      prismaMock.interestCleansing.create.mockResolvedValue({ id: 'cleansing-1' } as any);
+      prismaMock.interestCleansingEvidence.upsert.mockResolvedValue({} as any);
+
+      const result = await applyAllocations(creditId, allocations, userId);
+
+      expect(result.success).toBe(true);
+      expect(prismaMock.interestCleansing.create).toHaveBeenCalledWith({
+        data: {
+          datePaid: expect.any(Date),
+          amount: expect.any(Decimal),
+          donationLedgerId: 'ledger-1',
+          creditTxId: creditId,
+          sourceBusinessId: null,
+        },
+      });
+    });
+  });
 }); // end describe('interest-cleansing.service')

@@ -257,6 +257,7 @@ export function useCleanseDonationState({
           evidenceId: ev.id,
           amount: ev.amount,
         })),
+        sourceBusinessId: result.data?.beneficiaryId || null,
       });
 
       toast.success('Cleansing donation linked!');
