@@ -1,4 +1,4 @@
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/server/auth';
@@ -10,7 +10,7 @@ import {
   MAX_CSV_ROWS,
 } from '@/server/services/ai-import/validation';
 import {
-  getBankFormatByName,
+  getBankFormat,
   getSupportedBankNamesText,
 } from '@/server/services/transactions/bank-format-registry';
 import type { BankCsvFormat } from '@/server/services/transactions/csv-format.types';
@@ -86,12 +86,14 @@ export async function POST(req: NextRequest) {
     const csvContent = buffer.toString('utf8');
 
     // -----------------------------------------------------------------------
-    // Tier 1: Registry lookup by bank name
+    // Tier 1: Registry lookup by persisted institution key
     // -----------------------------------------------------------------------
     let detectedFormat: BankCsvFormat | undefined;
     let detectionMethod: 'registry' | 'auto-detect' | null = null;
 
-    const registryFormat = getBankFormatByName(account.institution.name);
+    const registryFormat = account.institution.institutionKey
+      ? getBankFormat(account.institution.institutionKey)
+      : undefined;
     if (registryFormat) {
       detectedFormat = registryFormat;
       detectionMethod = 'registry';
@@ -155,6 +157,7 @@ export async function POST(req: NextRequest) {
           fileSize,
           bankAccountId,
           bankName: account.institution.name,
+          institutionKey: account.institution.institutionKey,
           detectionMethod,
           transactions,
         } as any,
@@ -183,5 +186,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-

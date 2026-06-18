@@ -1,4 +1,4 @@
-import { parse, isValid } from 'date-fns';
+import { format as formatDate, isValid, parse } from 'date-fns';
 import type { BankCsvFormat } from '@/server/services/transactions/csv-format.types';
 
 /**
@@ -39,5 +39,5 @@ export function normalizeDateToISO(
   dateStr: string,
   format: BankCsvFormat['dateFormat'],
 ): string {
-  return robustParseDate(dateStr, format).toISOString().split('T')[0]!;
+  return formatDate(robustParseDate(dateStr, format), 'yyyy-MM-dd');
 }

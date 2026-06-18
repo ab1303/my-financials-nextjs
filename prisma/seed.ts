@@ -21,15 +21,32 @@ import {
 // ─── Income Sources ────────────────────────────────────────────────────────────
 
 const INCOME_SOURCES = [
-  { name: 'Employment', description: 'Salary, wages, payroll from an employer' },
+  {
+    name: 'Employment',
+    description: 'Salary, wages, payroll from an employer',
+  },
   { name: 'Freelance', description: 'Contractor payments, gig economy income' },
   { name: 'Business', description: 'Business income, invoice payments' },
   { name: 'Rental', description: 'Rent received, property income' },
-  { name: 'Dividend', description: 'ETF distributions, managed fund distributions, trust distributions' },
-  { name: 'Stocks', description: 'Dividends from individual shares, stock income' },
+  {
+    name: 'Dividend',
+    description:
+      'ETF distributions, managed fund distributions, trust distributions',
+  },
+  {
+    name: 'Stocks',
+    description: 'Dividends from individual shares, stock income',
+  },
   { name: 'Bonds', description: 'Bond interest, fixed income payments' },
-  { name: 'Credit Interest', description: 'Bank savings account interest credited by financial institutions' },
-  { name: 'Other', description: 'Government payments, tax refunds, miscellaneous income' },
+  {
+    name: 'Credit Interest',
+    description:
+      'Bank savings account interest credited by financial institutions',
+  },
+  {
+    name: 'Other',
+    description: 'Government payments, tax refunds, miscellaneous income',
+  },
 ];
 
 const prisma = new PrismaClient();
@@ -199,7 +216,8 @@ const SPECIAL_CATEGORIES = [
   },
   {
     name: 'Reimbursement',
-    description: 'Transactions awaiting reimbursement or manual reconciliation.',
+    description:
+      'Transactions awaiting reimbursement or manual reconciliation.',
     isEditable: true,
     color: null,
   },
@@ -232,10 +250,10 @@ async function seedSpecialCategories() {
 // ─── Bank Institutions ─────────────────────────────────────────────────────────
 
 const BANKS = [
-  { name: 'Commonwealth Bank (CBA)' },
-  { name: 'Westpac' },
-  { name: 'ANZ' },
-  { name: 'NAB' },
+  { name: 'Commonwealth Bank (CBA)', institutionKey: 'commbank' },
+  { name: 'Westpac', institutionKey: 'westpac' },
+  { name: 'ANZ', institutionKey: 'anz' },
+  { name: 'NAB', institutionKey: 'nab' },
   { name: 'Macquarie Bank' },
   { name: 'ING' },
   { name: 'Bendigo Bank' },
@@ -260,11 +278,26 @@ async function seedBanks() {
     });
     if (!existing) {
       await prisma.business.create({
-        data: { ...bank, type: BusinessEnumType.BANK, userId: null },
+        data: {
+          ...bank,
+          institutionKey: bank.institutionKey ?? null,
+          type: BusinessEnumType.BANK,
+          userId: null,
+        },
       });
       console.log(`  ✓ ${bank.name}`);
       created++;
     } else {
+      if (
+        bank.institutionKey &&
+        existing.institutionKey !== bank.institutionKey
+      ) {
+        await prisma.business.update({
+          where: { id: existing.id },
+          data: { institutionKey: bank.institutionKey },
+        });
+        console.log(`  ↺ ${bank.name} institutionKey updated`);
+      }
       console.log(`  - ${bank.name} already exists`);
     }
   }

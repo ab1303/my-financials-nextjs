@@ -103,8 +103,8 @@ export async function POST(req: NextRequest) {
       include: { institution: true },
     });
 
-    const bankFormat = financialAccount?.institution?.name
-      ? getBankFormat(financialAccount.institution.name.toLowerCase())
+    const bankFormat = financialAccount?.institution?.institutionKey
+      ? getBankFormat(financialAccount.institution.institutionKey)
       : undefined;
     const dateFormat = bankFormat?.dateFormat ?? 'DD/MM/YYYY';
 

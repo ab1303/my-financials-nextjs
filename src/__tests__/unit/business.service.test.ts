@@ -1,4 +1,4 @@
-import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the prisma module before importing the service
 vi.mock('@/server/db/client', () => ({
@@ -28,6 +28,7 @@ describe('business.service', () => {
   const mockBusiness: Business = {
     id: mockBusinessId,
     name: 'Acme Corp',
+    institutionKey: null,
     type: BusinessEnumType.PHILANTHROPY,
     isDgrRegistered: true,
     addressLine: '123 Main St',
