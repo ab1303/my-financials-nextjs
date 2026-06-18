@@ -47,14 +47,16 @@ Data model
   - owns category link rows
 
 - model CategoryGroupExpenseCategory
-  - id, userId, categoryGroupId, expenseCategoryId, createdAt, updatedAt
+  - id, categoryGroupId, expenseCategoryId, createdAt, updatedAt
   - links a user-owned group to a global ExpenseCategory record
-  - unique per user + expenseCategoryId so an expense category can only belong to one group for that user
+  - same expense category may belong to multiple groups
+  - ownership flows through CategoryGroup.userId; link rows are pure associations
 
 - model CategoryGroupIncomeSource
-  - id, userId, categoryGroupId, incomeSourceId, createdAt, updatedAt
+  - id, categoryGroupId, incomeSourceId, createdAt, updatedAt
   - links a user-owned group to a global IncomeSource record
-  - unique per user + incomeSourceId so an income source can only belong to one group for that user
+  - same income source may belong to multiple groups
+  - ownership flows through CategoryGroup.userId; link rows are pure associations
 
 Implementation notes
 - useCategoryFilters hook
@@ -69,6 +71,7 @@ Implementation notes
 - Persistence notes
   - category group membership is the source of truth for UI grouping
   - UI can derive tri-state group state from the persisted category-group links plus the current selection
+  - scope validation must ensure expense groups only link ExpenseCategory rows and income groups only link IncomeSource rows
 
 Testing
 - Unit tests for useCategoryFilters: initial state, toggling single, toggling group, indeterminate behavior

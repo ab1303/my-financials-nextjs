@@ -7,7 +7,7 @@ Goals
 - Let users group categories and include/exclude groups or individual categories from aggregation summaries.
 - Make filters discoverable on all rollup pages and provide live preview of totals that updates as the user changes selection.
 - Use the shared `react-select` baseline for the filter UI so styling and accessibility match the rest of the app.
-- Persist category groups per user against the existing `IncomeSource` and `ExpenseCategory` tables.
+- Persist category groups per user against the existing `IncomeSource` and `ExpenseCategory` tables, allowing the same category to appear in multiple groups.
 
 User stories
 - As a user, I can toggle a group to include/exclude all categories in that group and see totals update instantly.

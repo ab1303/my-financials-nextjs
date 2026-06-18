@@ -56,6 +56,7 @@ model User {
   bankBalanceSnapshots  BankBalanceSnapshot[]
   businesses            Business[]
   categoryRules         CategoryRule[]
+  categoryGroups        CategoryGroup[]
   expenseLedgers        ExpenseLedger[]
   financialAccounts     FinancialAccount[]
   importImages          ImportImage[]
@@ -78,11 +79,12 @@ model VerificationToken {
 }
 
 model IncomeSource {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  description String?
+  id                        String                       @id @default(cuid())
+  name                      String                       @unique
+  isActive                  Boolean                      @default(true)
+  createdAt                 DateTime                     @default(now())
+  description               String?
+  categoryGroupIncomeSources CategoryGroupIncomeSource[]
 }
 
 model RelationshipType {
@@ -246,13 +248,56 @@ model SpecialCategory {
 }
 
 model ExpenseCategory {
-  id                      String                  @id @default(cuid())
-  name                    String                  @unique
-  isActive                Boolean                 @default(true)
-  createdAt               DateTime                @default(now())
-  iconName                String?
-  description             String?
-  monthlyExpenseSummaries MonthlyExpenseSummary[]
+  id                        String                       @id @default(cuid())
+  name                      String                       @unique
+  isActive                  Boolean                      @default(true)
+  createdAt                 DateTime                     @default(now())
+  iconName                  String?
+  description               String?
+  monthlyExpenseSummaries   MonthlyExpenseSummary[]
+  categoryGroupExpenseCategories CategoryGroupExpenseCategory[]
+}
+
+model CategoryGroup {
+  id                     String                       @id @default(cuid())
+  userId                 String
+  scope                  CategoryGroupScope
+  name                   String
+  description            String?
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+  user                   User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenseCategories      CategoryGroupExpenseCategory[]
+  incomeSources          CategoryGroupIncomeSource[]
+
+  @@unique([userId, scope, name])
+  @@index([userId, scope, createdAt])
+}
+
+model CategoryGroupExpenseCategory {
+  id               String         @id @default(cuid())
+  categoryGroupId  String
+  expenseCategoryId String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  categoryGroup    CategoryGroup  @relation(fields: [categoryGroupId], references: [id], onDelete: Cascade)
+  expenseCategory  ExpenseCategory @relation(fields: [expenseCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryGroupId, expenseCategoryId])
+  @@index([categoryGroupId, createdAt])
+}
+
+model CategoryGroupIncomeSource {
+  id              String        @id @default(cuid())
+  categoryGroupId String
+  incomeSourceId  String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  categoryGroup   CategoryGroup @relation(fields: [categoryGroupId], references: [id], onDelete: Cascade)
+  incomeSource    IncomeSource  @relation(fields: [incomeSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryGroupId, incomeSourceId])
+  @@index([categoryGroupId, createdAt])
 }
 
 model ExpenseLedger {
@@ -680,4 +725,9 @@ enum CategoryRuleMatchType {
   CONTAINS
   STARTS_WITH
   EXACT
+}
+
+enum CategoryGroupScope {
+  INCOME
+  EXPENSE
 }
