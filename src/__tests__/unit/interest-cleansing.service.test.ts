@@ -5,7 +5,7 @@ import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import {
   getYearlyCleansingData,
   applyAllocations,
-} from '@/server/services/bank-interest/interest-cleansing.service';
+} from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 describe('interest-cleansing.service', () => {
   beforeEach(() => {

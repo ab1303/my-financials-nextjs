@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import InfoTooltip from '@/components/ui/InfoTooltip';
 import { cn } from '@/lib/utils';
-import { type Candidate } from '@/server/services/bank-interest/interest-cleansing.service';
+import { type Candidate } from '@/server/services/interest-cleansing/interest-cleansing.service';
 import { trpc } from '@/server/trpc/client';
 
 interface CleansingCandidatePickerProps {

@@ -7,7 +7,7 @@ import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
+import { getYearlyCleansingData } from '@/server/services/interest-cleansing/interest-cleansing.service';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { prisma } from '@/server/db/client';
 import type { OptionType } from '@/types';

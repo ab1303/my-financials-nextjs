@@ -2,14 +2,14 @@ import { z } from 'zod';
 
 import {
   applyAllocations,
+  deleteInterestCleansingPayment,
   getCleansingDebitCandidates,
   getUnlinkedCleansingDebitTransactions,
   getUnlinkedInterestTransactions,
   getYearlyCleansingData,
   removeAllocation,
   suggestAllocations,
-} from '@/server/services/bank-interest/interest-cleansing.service';
-import { deleteInterestCleansingPayment } from '@/server/services/interest-cleansing/interest-cleansing.service';
+} from '@/server/services/interest-cleansing/interest-cleansing.service';
 import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const bankInterestRouter = router({

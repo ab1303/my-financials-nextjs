@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { getCleansingDebitCandidates } from '@/server/services/bank-interest/interest-cleansing.service';
+import { getCleansingDebitCandidates } from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 // Mock prisma
 vi.mock('@/server/db/client', () => ({

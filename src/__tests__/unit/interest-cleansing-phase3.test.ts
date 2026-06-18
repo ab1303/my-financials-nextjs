@@ -2,7 +2,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
-import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
+import { getYearlyCleansingData } from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () => {
   beforeEach(() => {

@@ -4,7 +4,7 @@ import { ArrowLeft,X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { type Candidate } from '@/server/services/bank-interest/interest-cleansing.service';
+import { type Candidate } from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 import { CleansingCandidatePicker } from './CleansingCandidatePicker';
 

@@ -1,5 +1,5 @@
 import { auth } from '@/server/auth';
-import { getYearlyCleansingData } from '@/server/services/bank-interest/interest-cleansing.service';
+import { getYearlyCleansingData } from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 import CleansingDonationsList from './_components/CleansingDonationsList';
 import InterestCreditsTable from './InterestCreditsTable';

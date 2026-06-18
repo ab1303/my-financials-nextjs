@@ -1,6 +1,6 @@
 import { beforeEach,describe, expect, it, vi } from 'vitest';
 
-import { getCleansingDebitCandidates } from '@/server/services/bank-interest/interest-cleansing.service';
+import { getCleansingDebitCandidates } from '@/server/services/interest-cleansing/interest-cleansing.service';
 import { prisma } from '@/server/db/client';
 
 vi.mock('@/server/db/client', () => ({

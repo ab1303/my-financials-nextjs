@@ -1,7 +1,7 @@
 import { beforeEach,describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
-import { removeAllocation } from '@/server/services/bank-interest/interest-cleansing.service';
+import { removeAllocation } from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 describe('removeAllocation bug reproduction', () => {
   beforeEach(() => {
