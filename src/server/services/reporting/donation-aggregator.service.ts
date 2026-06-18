@@ -1,8 +1,12 @@
-import { prisma } from '@/server/db/client';
-
 import { getInterestCleansingPayments } from '../interest-cleansing/interest-cleansing.service';
-import { getVoluntaryDonations } from '../voluntary-donations/voluntary-donation.service';
-import { getZakatPayments } from '../zakat/zakat.service';
+import {
+  getVoluntaryDonations,
+  getVoluntaryDonationTotalsByBeneficiary,
+} from '../voluntary-donations/voluntary-donation.service';
+import {
+  getZakatPayments,
+  getZakatTotalsByBeneficiary,
+} from '../zakat/zakat.service';
 
 export const getDonationPaymentsAggregated = async (
   calendarYearId: string,
@@ -54,22 +58,8 @@ export const getDonationTotalsByBeneficiaryAggregated = async (
   calendarYearId: string,
 ): Promise<Array<{ id: string; name: string; total: number }>> => {
   const [voluntary, zakat] = await Promise.all([
-    prisma.voluntaryDonation.findMany({
-      where: { donationLedger: { calendarId: calendarYearId } },
-      select: {
-        amount: true,
-        business: { select: { id: true, name: true } },
-        individual: { select: { id: true, name: true } },
-      },
-    }),
-    prisma.zakatPayment.findMany({
-      where: { zakatObligation: { calendarId: calendarYearId } },
-      select: {
-        amount: true,
-        business: { select: { id: true, name: true } },
-        individual: { select: { id: true, name: true } },
-      },
-    }),
+    getVoluntaryDonationTotalsByBeneficiary(calendarYearId),
+    getZakatTotalsByBeneficiary(calendarYearId),
   ]);
 
   const beneficiaryTotals: Record<
@@ -77,16 +67,13 @@ export const getDonationTotalsByBeneficiaryAggregated = async (
     { id: string; name: string; total: number }
   > = {};
 
-  [...voluntary, ...zakat].forEach((payment) => {
-    const amount = payment.amount.toNumber();
-    const entity = payment.business ?? payment.individual;
-    const id = entity?.id ?? 'unknown';
-    const name = entity?.name ?? 'Unknown';
-
-    if (!beneficiaryTotals[id]) {
-      beneficiaryTotals[id] = { id, name, total: 0 };
+  [...voluntary, ...zakat].forEach((b) => {
+    let existing = beneficiaryTotals[b.id];
+    if (!existing) {
+      existing = { id: b.id, name: b.name, total: 0 };
+      beneficiaryTotals[b.id] = existing;
     }
-    beneficiaryTotals[id].total += amount;
+    existing.total += b.total;
   });
 
   return Object.values(beneficiaryTotals);

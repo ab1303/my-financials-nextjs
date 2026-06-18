@@ -89,3 +89,35 @@ export const getLinkedTransactionIds = async (): Promise<string[]> => {
   });
   return linked.map((d) => d.transactionId!);
 };
+
+export const getVoluntaryDonationTotalsByBeneficiary = async (
+  calendarYearId: string,
+): Promise<Array<{ id: string; name: string; total: number }>> => {
+  const donations = await prisma.voluntaryDonation.findMany({
+    where: { donationLedger: { calendarId: calendarYearId } },
+    select: {
+      amount: true,
+      business: { select: { id: true, name: true } },
+      individual: { select: { id: true, name: true } },
+    },
+  });
+
+  const beneficiaryTotals: Record<
+    string,
+    { id: string; name: string; total: number }
+  > = {};
+
+  donations.forEach((payment) => {
+    const amount = payment.amount.toNumber();
+    const entity = payment.business ?? payment.individual;
+    const id = entity?.id ?? 'unknown';
+    const name = entity?.name ?? 'Unknown';
+
+    if (!beneficiaryTotals[id]) {
+      beneficiaryTotals[id] = { id, name, total: 0 };
+    }
+    beneficiaryTotals[id].total += amount;
+  });
+
+  return Object.values(beneficiaryTotals);
+};

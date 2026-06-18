@@ -1,6 +1,6 @@
 import { getLinkedTransactionIds as getVoluntaryLinkedTransactionIds } from '@/server/services/voluntary-donations/voluntary-donation.service';
+import { getLinkedTransactionIds as getInterestLinkedTransactionIds } from '@/server/services/interest-cleansing/interest-cleansing.service';
 import { getLinkedTransactionIds as getZakatLinkedTransactionIds } from '@/server/services/zakat/zakat.service';
-import { prisma } from '@/server/db/client';
 
 export const DONATION_PURPOSES = {
   VOLUNTARY: 'VOLUNTARY',
@@ -16,10 +16,7 @@ export async function getLinkedTransactionIds(purpose: DonationPurpose): Promise
       return new Set(await getVoluntaryLinkedTransactionIds());
     }
     case DONATION_PURPOSES.INTEREST_CLEANSING: {
-      const linked = await prisma.interestCleansingEvidence.findMany({
-        select: { transactionId: true },
-      });
-      return new Set(linked.map((d) => d.transactionId));
+      return new Set(await getInterestLinkedTransactionIds());
     }
     case DONATION_PURPOSES.ZAKAT: {
       return new Set(await getZakatLinkedTransactionIds());

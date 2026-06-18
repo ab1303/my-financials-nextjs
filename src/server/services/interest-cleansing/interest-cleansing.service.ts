@@ -784,3 +784,10 @@ export const removeAllocation = async (
     return { success: true };
   });
 };
+
+export const getLinkedTransactionIds = async (): Promise<string[]> => {
+  const linked = await prisma.interestCleansingEvidence.findMany({
+    select: { transactionId: true },
+  });
+  return linked.map((d) => d.transactionId);
+};
