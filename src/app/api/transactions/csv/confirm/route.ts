@@ -62,7 +62,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { fileId, llmUsage, debitMonths, creditMonths, forceCreateIds } = parse.data;
+    const { fileId, llmUsage, debitMonths, creditMonths, forceCreateIds } =
+      parse.data;
+
+    // Enforce ISO date-only strings (yyyy-MM-dd) for all incoming transactions.
+    // This guarantees confirm only receives canonical dates produced by classify.
+    const isoDateRE = /^\d{4}-\d{2}-\d{2}$/;
+    const allTxs = [
+      ...debitMonths.flatMap((m: any) => m.transactions as any[]),
+      ...creditMonths.flatMap((m: any) => m.transactions as any[]),
+    ];
+
+    const bad = allTxs.find((tx) => {
+      const v = tx?.date;
+      return typeof v !== 'string' || !isoDateRE.test(v);
+    });
+
+    if (bad) {
+      return NextResponse.json(
+        {
+          error:
+            'Invalid date format in payload. expected ISO yyyy-MM-dd for all transaction.date fields.',
+        },
+        { status: 400 },
+      );
+    }
 
     // request parsed successfully
 

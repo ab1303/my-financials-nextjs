@@ -3,8 +3,9 @@ import {
   TransactionStatusEnum,
   TransactionTypeEnum,
 } from '@prisma/client';
+import { parseISO } from 'date-fns';
 
-import { robustParseDate } from '@/lib/date-utils';
+import { normalizeDateToISO } from '@/lib/date-utils';
 import { prisma } from '@/server/db/client';
 import type {
   ClassifiedCreditTransaction,
@@ -109,9 +110,14 @@ async function createTransactionRecord(params: {
   runningBalance?: number;
   appliedRuleId?: string;
 }): Promise<string> {
+  // Persist as UTC midnight for a date-only value so timezone conversions do not
+  // shift the calendar day between CSV, classify payload, and DB reads.
+  const normalizedDate = normalizeDateToISO(params.date, 'DD/MM/YYYY');
+  const persistedDate = parseISO(`${normalizedDate}T00:00:00.000Z`);
+
   const tx = await prisma.transaction.create({
     data: {
-      date: robustParseDate(params.date, 'DD/MM/YYYY'),
+      date: persistedDate,
       description: params.description,
       amount: params.amount,
       type: params.type,
