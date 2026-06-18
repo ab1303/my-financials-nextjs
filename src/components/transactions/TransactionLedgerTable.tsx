@@ -315,7 +315,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         newCategory,
         ...(offsetCategory ? { offsetCategory } : {}),
         ...(offsetTransactionId !== undefined ? { offsetTransactionId: offsetTransactionId ?? undefined } : {}),
-        ...(applyToMatching === false ? { applyToMatching: false } : {}),
+        ...(applyToMatching !== undefined ? { applyToMatching } : {}),
       });
     },
     [updateCategoryMutation, activeTab, data, retainedRows],

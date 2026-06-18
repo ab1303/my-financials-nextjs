@@ -4,10 +4,13 @@ Purpose
 - Provide implementation details, component contracts, API contracts, tests, and files to change so an implementer (or sub-agent) can complete the feature.
 
 Scope of this LLD
-- Implement UI components and client persistence + mocked aggregator endpoint. Do NOT change DB schema or run prisma migrations in this phase.
+- Define the persistence data model for user-owned category groups.
+- Category groups are persisted per user and per category domain, then used by the filter UI.
 - Base the filter interactions on the shared `react-select` wrapper/styles rather than a bespoke checkbox panel.
 
-Files to add (frontend)
+Files to add/update
+- prisma/schema.prisma
+- prisma/migrations/<timestamp>_category_groups/migration.sql
 - src/components/ui/filters.tsx  ← main feature component
 - src/hooks/useCategoryFilters.ts (encapsulate selection logic & tri-state helpers)
 - src/lib/mockFilterData.ts
@@ -19,7 +22,7 @@ Files to add (frontend)
 Component contracts
 - FiltersPanel
   - Props: groups: CategoryGroup[] (optional; default loads from API/mock)
-  - Behavior: maintains selection map, exposes apply/save handlers, and renders react-select-driven group/category controls.
+  - Behavior: maintains selection map and renders react-select-driven group/category controls.
 
 - GroupRow
   - Props: group: CategoryGroup
@@ -36,14 +39,22 @@ Types (TS)
 - type Category = { id: string; name: string; color?: string; type: 'income'|'expense'|'other'; }
 - type CategoryGroup = { id: string; name: string; categories: Category[] }
 
-API contract (mock/production)
-- POST /api/aggregates
-  - Body: { includeCategoryIds?: string[], excludeCategoryIds?: string[] }
-  - Response: { income: number, expense: number, net: number, groups: { [groupId]: { income:number, expense:number, net:number } } }
-- GET /api/user/filter-views
-  - Response: [{ id, name, selection: { [categoryId]: boolean }, createdAt }]
-- PUT /api/user/filter-views/:id
-  - Body: { name, selection }
+Data model
+- enum CategoryGroupScope = { INCOME, EXPENSE }
+- model CategoryGroup
+  - id, userId, scope, name, description?, createdAt, updatedAt
+  - unique per user + scope + name
+  - owns category link rows
+
+- model CategoryGroupExpenseCategory
+  - id, userId, categoryGroupId, expenseCategoryId, createdAt, updatedAt
+  - links a user-owned group to a global ExpenseCategory record
+  - unique per user + expenseCategoryId so an expense category can only belong to one group for that user
+
+- model CategoryGroupIncomeSource
+  - id, userId, categoryGroupId, incomeSourceId, createdAt, updatedAt
+  - links a user-owned group to a global IncomeSource record
+  - unique per user + incomeSourceId so an income source can only belong to one group for that user
 
 Implementation notes
 - useCategoryFilters hook
@@ -52,8 +63,12 @@ Implementation notes
   - tri-state helper: checkedCount vs total
 
 - Preview totals
-  - compute client-side from mock data for immediate UX; call POST /api/aggregates on Save or Apply (server authoritative)
+  - compute client-side from mock data for immediate UX; call POST /api/aggregates when the backend aggregator exists (server authoritative)
   - debounce live previews (150ms)
+
+- Persistence notes
+  - category group membership is the source of truth for UI grouping
+  - UI can derive tri-state group state from the persisted category-group links plus the current selection
 
 Testing
 - Unit tests for useCategoryFilters: initial state, toggling single, toggling group, indeterminate behavior
@@ -62,7 +77,7 @@ Testing
 Agent constraints (for sub-agents)
 - CRITICAL SCOPE: Agent may ONLY modify files listed above. DO NOT run global formatting or autorewrite unrelated files.
 - DO NOT run pnpm lint --fix or pnpm format in sub-agent steps.
-- DO NOT change database schema or run prisma migration commands in this phase.
+- DO NOT change database schema or run prisma migration commands until the schema phase is explicitly started.
 
 Deployment
 - No backend migrations required for initial rollout. Switch mock aggregator to real API when endpoint is available and update LLD accordingly.
@@ -70,7 +85,6 @@ Deployment
 Acceptance tests
 - Toggle group -> child checkboxes reflect change; indeterminate shows when partially selected
 - Live preview reflects selection and matches POST /api/aggregates response when applied
-- Saved view restores selection exactly
 
 Notes for reviewers
 - Validate ARIA attributes and keyboard navigation.
