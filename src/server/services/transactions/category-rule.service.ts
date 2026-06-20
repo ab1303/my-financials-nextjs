@@ -141,7 +141,7 @@ const STOP_WORDS = new Set([
  * Extracts a pattern from a description.
  * Pattern is first 3 meaningful words (>2 chars, not in STOP_WORDS).
  */
-function extractPattern(description: string): string {
+export function extractPattern(description: string): string {
   const words = description
     .toLowerCase()
     .split(/\W+/)

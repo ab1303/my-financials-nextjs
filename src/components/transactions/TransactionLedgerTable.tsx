@@ -82,6 +82,49 @@ function parseAmount(value: string) {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+/**
+ * Determines whether a transaction row should remain visible (retained) after a category change.
+ * This preserves the row long enough for preview actions to be used before the updated row
+ * falls out of the current filtered view.
+ *
+ * Retained rows are shown with an amber banner indicating they've been recategorized.
+ */
+export function shouldRetainRowAfterCategoryChange(
+  transaction: LedgerTransactionRow,
+  newCategory: string,
+  activeTab: TabFilter,
+  currentCategoryFilter?: string,
+): boolean {
+  // If this view is already narrowed to a specific category, keep the edited row visible
+  // until the refetch swaps it out, unless it still matches the same filter.
+  if (currentCategoryFilter) {
+    return (
+      transaction.category === currentCategoryFilter &&
+      newCategory !== currentCategoryFilter
+    );
+  }
+
+  if (activeTab === 'transfers') {
+    // Transfers tab: retain when moving away from Transfer category.
+    // This allows the user to complete linking/follow-up actions before the row disappears.
+    return transaction.category === TRANSFER_CATEGORY && newCategory !== TRANSFER_CATEGORY;
+  }
+
+  // Uncategorized tab: retain when categorizing an uncategorized transaction.
+  // The row will no longer match the uncategorized filter once a category is assigned.
+  if (activeTab === 'uncategorized') {
+    return !transaction.category && !!newCategory;
+  }
+
+  // Any other non-"all" tab is a filtered view; keep edited rows mounted long enough for the
+  // UI to finish the mutation/refetch cycle before they disappear from the list.
+  if (activeTab !== 'all') {
+    return true;
+  }
+
+  return false;
+}
+
 export default function TransactionLedgerTable({
   bankAccounts,
   refreshKey,
@@ -225,14 +268,12 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     cancelPendingCategoryRefresh();
     pendingCategoryRefreshRef.current = setTimeout(() => {
       pendingCategoryRefreshRef.current = null;
-      setActiveRulePrompt(null);
       void refetch();
     }, 4000);
   }, [cancelPendingCategoryRefresh, refetch]);
 
   const flushPendingCategoryRefresh = useCallback(() => {
     cancelPendingCategoryRefresh();
-    setActiveRulePrompt(null);
     void refetch();
   }, [cancelPendingCategoryRefresh, refetch]);
   const filterOptionsQuery = trpc.transactionLedger.getFilterOptions.useQuery();
@@ -290,23 +331,21 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
     (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null, applyToMatching?: boolean) => {
       const txData = data?.pages.flatMap(p => p.transactions).find(tx => tx.id === id) ?? retainedRows.get(id);
       if (txData) {
-        // Transfers tab: retain row when moving away from Transfer category so the
-        // user can complete follow-up actions (e.g. linking the transfer pair).
-        if (activeTab === 'transfers') {
-          if (newCategory !== TRANSFER_CATEGORY) {
-            setRetainedRows(prev => {
-              const next = new Map(prev);
-              next.set(id, { ...txData, category: newCategory });
-              return next;
-            });
-          } else {
-            // Re-categorized back to Transfer — remove from retained (it'll reappear normally)
-            setRetainedRows(prev => {
-              const next = new Map(prev);
-              next.delete(id);
-              return next;
-            });
-          }
+        // Retained-row pattern: keep a recategorized row mounted until the refetch catches up.
+        // This prevents the filtered row from disappearing before follow-up actions (preview/apply/link) can run.
+        if (shouldRetainRowAfterCategoryChange(txData, newCategory, activeTab, category)) {
+          setRetainedRows(prev => {
+            const next = new Map(prev);
+            next.set(id, { ...txData, category: newCategory });
+            return next;
+          });
+        } else if (activeTab === 'transfers' && newCategory === TRANSFER_CATEGORY) {
+          // Re-categorized back to Transfer — remove from retained (it'll reappear normally)
+          setRetainedRows(prev => {
+            const next = new Map(prev);
+            next.delete(id);
+            return next;
+          });
         }
       }
       setSavingId(id);
@@ -318,7 +357,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         ...(applyToMatching !== undefined ? { applyToMatching } : {}),
       });
     },
-    [updateCategoryMutation, activeTab, data, retainedRows],
+    [updateCategoryMutation, activeTab, category, data, retainedRows],
   );
 
   const handleDismissRetained = useCallback((id: string) => {
@@ -327,6 +366,15 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
       next.delete(id);
       return next;
     });
+    setActiveRulePrompt((current) =>
+      current?.transactionId === id ? null : current,
+    );
+  }, []);
+
+  const clearRulePromptForTransaction = useCallback((transactionId: string) => {
+    setActiveRulePrompt((current) =>
+      current?.transactionId === transactionId ? null : current,
+    );
   }, []);
 
   const handleExitReview = useCallback(() => {
@@ -548,6 +596,21 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                   expenseCategories={expenseCategories}
                   incomeSourceLabels={incomeSourceLabels}
                   onCategoryChange={handleCategoryChange}
+                  onSuggestRule={(count, category) =>
+                    setActiveRulePrompt({
+                      transactionId: transaction.id,
+                      count,
+                      category,
+                    })
+                  }
+                  onClearRulePrompt={() =>
+                    clearRulePromptForTransaction(transaction.id)
+                  }
+                  suggestionCount={
+                    activeRulePrompt?.transactionId === transaction.id
+                      ? activeRulePrompt.count
+                      : undefined
+                  }
                   isSaving={savingId === transaction.id}
                   colCount={10}
                   onPausePendingRefresh={cancelPendingCategoryRefresh}
@@ -582,7 +645,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                 />
               ))}
               {retainedVisible.map((tx) => (
-                <Fragment key={`retained-${tx.id}`}>
+                <Fragment key={tx.id}>
                   <tr className="bg-amber-50 dark:bg-amber-900/20">
                     <td colSpan={10} className="px-4 py-1">
                       <div className="flex items-center justify-between">
@@ -604,10 +667,23 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                     expenseCategories={expenseCategories}
                     incomeSourceLabels={incomeSourceLabels}
                     onCategoryChange={handleCategoryChange}
-                    isSaving={savingId === tx.id}
-                    colCount={10}
-                    onPausePendingRefresh={cancelPendingCategoryRefresh}
-                    onResolvePendingRefresh={flushPendingCategoryRefresh}
+                      onSuggestRule={(count, category) =>
+                        setActiveRulePrompt({
+                          transactionId: tx.id,
+                          count,
+                          category,
+                        })
+                      }
+                      onClearRulePrompt={() => clearRulePromptForTransaction(tx.id)}
+                      suggestionCount={
+                        activeRulePrompt?.transactionId === tx.id
+                          ? activeRulePrompt.count
+                          : undefined
+                      }
+                      isSaving={savingId === tx.id}
+                      colCount={10}
+                      onPausePendingRefresh={cancelPendingCategoryRefresh}
+                      onResolvePendingRefresh={flushPendingCategoryRefresh}
                     onVoided={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onRestored={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onUnlinked={() => void refetch()}

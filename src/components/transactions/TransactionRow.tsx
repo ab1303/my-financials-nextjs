@@ -17,6 +17,7 @@ import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 
 import CategoryRuleDrawer from './CategoryRuleDrawer';
+import { PreviewMatchesModal } from './PreviewMatchesModal';
 import { useCategoryEdit } from './hooks/useCategoryEdit';
 import ReimbursementSubRow from './ReimbursementSubRow';
 import RestoreTransactionButton from './RestoreTransactionButton';
@@ -43,6 +44,9 @@ interface TransactionRowProps {
   onUnlinked?: () => void;
   onClassifyAsDonation?: (transactionId: string) => void;
   onClassifyAsZakat?: (transactionId: string) => void;
+  onSuggestRule?: (count: number, category: string) => void;
+  onClearRulePrompt?: () => void;
+  suggestionCount?: number;
   /** Pause the delayed refetch while the rule drawer is open */
   onPausePendingRefresh?: () => void;
   /** Flush the delayed refetch after the rule prompt is resolved */
@@ -81,6 +85,9 @@ export default function TransactionRow({
   onUnlinked,
   onClassifyAsDonation,
   onClassifyAsZakat,
+  onSuggestRule,
+  onClearRulePrompt,
+  suggestionCount,
   onPausePendingRefresh,
   onResolvePendingRefresh,
 }: TransactionRowProps) {
@@ -99,6 +106,8 @@ export default function TransactionRow({
   );
   const [isExpanded, setIsExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewMatchScope, setPreviewMatchScope] = useState<'recent' | 'all'>('recent');
 
   const [localOffsetTxId, setLocalOffsetTxId] = useState<string | null>(
     transaction.offsetTransactionId ?? null,
@@ -121,7 +130,23 @@ export default function TransactionRow({
   } = useCategoryEdit({
     transaction,
     onCategoryChange,
+    onSuggestRule,
+    onClearRulePrompt,
   });
+
+  const effectiveMatchCount = suggestionCount ?? matchCount;
+
+  // Fetch preview data when preview modal should be opened
+  const previewQuery = trpc.transactionLedger.previewMatchingCategoryChanges.useQuery(
+    {
+      transactionId: transaction.id,
+      description: transaction.description,
+      matchScope: { type: previewMatchScope, days: previewMatchScope === 'recent' ? 90 : undefined },
+    },
+    {
+      enabled: showPreviewModal && effectiveMatchCount >= 2,
+    },
+  );
 
   // Keep localCategory synced with hook value
   useEffect(() => {
@@ -356,11 +381,22 @@ export default function TransactionRow({
   };
 
   const handlePreviewBulk = () => {
-    // Future scoped: acts as Apply for now
+    // Open the preview modal to show matched transactions
+    setShowPreviewModal(true);
+  };
+
+  const handlePreviewModalApply = () => {
+    // Close modal and apply the bulk change
+    setShowPreviewModal(false);
     handleApplyBulk();
   };
 
-  const showSuggestionUI = matchCount >= 2;
+  const handlePreviewModalCancel = () => {
+    // Close the modal without applying
+    setShowPreviewModal(false);
+  };
+
+  const showSuggestionUI = effectiveMatchCount >= 2;
 
   return (
     <>
@@ -704,7 +740,7 @@ export default function TransactionRow({
         <tr className='bg-teal-50 dark:bg-teal-900/10'>
           <td colSpan={colCount} className='px-4 py-2 text-sm'>
             <div className='flex items-center gap-2'>
-              <span className='text-teal-700 dark:text-teal-300'>Similar transactions found ({matchCount}):</span>
+              <span className='text-teal-700 dark:text-teal-300'>Similar transactions found ({effectiveMatchCount}):</span>
               <button onClick={handlePreviewBulk} className='text-xs text-teal-600 underline'>Preview matches</button>
               <button onClick={handleApplyBulk} className='text-xs font-medium text-teal-700'>Apply to these</button>
               <button onClick={() => setShowRuleDrawer(true)} className='text-xs text-gray-500'>Create rule</button>
@@ -729,6 +765,17 @@ export default function TransactionRow({
           }}
         />
       )}
+
+      <PreviewMatchesModal
+        open={showPreviewModal}
+        matches={previewQuery.data?.matches ?? []}
+        totalCount={previewQuery.data?.totalCount ?? 0}
+        matchScope={previewMatchScope}
+        onMatchScopeChange={setPreviewMatchScope}
+        onCancel={handlePreviewModalCancel}
+        onApply={handlePreviewModalApply}
+        isLoading={previewQuery.isLoading}
+      />
 
       {isExpanded &&
         transaction.reimbursements.map((r) => (

@@ -43,6 +43,7 @@ interface UseCategoryEditReturn {
 export function useCategoryEdit({
   transaction,
   onCategoryChange,
+  onSuggestRule,
   onClearRulePrompt,
 }: UseCategoryEditArgs): UseCategoryEditReturn {
   const utils = trpc.useUtils();
@@ -85,7 +86,13 @@ export function useCategoryEdit({
     
     setRuleCategory(newCategory);
     // Trigger match check eagerly but silently
-    findMatches();
+    void findMatches().then((count) => {
+      if (count >= 2) {
+        onSuggestRule?.(count, newCategory);
+      } else {
+        onClearRulePrompt?.();
+      }
+    });
   }
 
   return {
