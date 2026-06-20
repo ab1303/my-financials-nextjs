@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   BarChart2,
   BarChart3,
+  Book,
   Building2,
   Calendar,
   CandlestickChart,
@@ -29,7 +30,6 @@ import {
   User,
   Users,
   Wallet,
-  Book,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -239,6 +239,12 @@ const transactionItems: NavNode[] = [
     kind: 'link',
     name: 'Category Rules',
     href: '/cashflow/category-rules',
+    icon: Tag,
+  },
+  {
+    kind: 'link',
+    name: 'Category Groups',
+    href: '/cashflow/category-groups',
     icon: Tag,
   },
 ];

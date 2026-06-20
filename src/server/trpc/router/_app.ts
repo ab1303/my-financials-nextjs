@@ -10,6 +10,7 @@ import { bankInterestRouter } from './bank-interest';
 import { brokerageRouter } from './brokerage';
 import { businessRouter } from './business';
 import { calendarYearRouter } from './calendar-year';
+import { categoryGroupRouter } from './category-groups';
 import { categoryRuleRouter } from './category-rule';
 import { categoryTransactionsRouter } from './category-transactions';
 import { exampleRouter } from './example';
@@ -41,6 +42,7 @@ export const appRouter = router({
   transfer: transferRouter,
   transferRule: transferRuleRouter,
   categoryRule: categoryRuleRouter,
+  categoryGroup: categoryGroupRouter,
   assetDashboard: assetDashboardRouter,
   calendarYear: calendarYearRouter,
   incomeSource: incomeSourceRouter,

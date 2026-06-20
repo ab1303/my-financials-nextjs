@@ -58,6 +58,19 @@ describe('SideNav cashflow navigation', () => {
     );
   });
 
+  it('renders Category Groups link under Transactions', () => {
+    render(<SideNav {...defaultProps} />);
+
+    expect(
+      screen.getAllByRole('button', { name: 'Transactions' }),
+    ).toHaveLength(2);
+    const categoryGroupsLinks = screen.getAllByRole('link', { name: 'Category Groups' });
+    expect(categoryGroupsLinks).toHaveLength(2);
+    categoryGroupsLinks.forEach((link) =>
+      expect(link).toHaveAttribute('href', '/cashflow/category-groups'),
+    );
+  });
+
   it('keeps Zakat inside the CashFlow navigation tree', () => {
     render(<SideNav {...defaultProps} />);
 
