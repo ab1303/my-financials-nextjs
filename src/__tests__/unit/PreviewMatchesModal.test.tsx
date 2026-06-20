@@ -81,6 +81,18 @@ describe('PreviewMatchesModal', () => {
     expect(screen.getByText(/showing 3 loaded/)).toBeDefined();
   });
 
+  it('uses a scrollable viewport shell when the dialog grows tall', () => {
+    render(<PreviewMatchesModal {...defaultProps} />);
+
+    const overlay = document.body.querySelector('div.fixed.inset-0.z-50');
+    expect(overlay).toBeTruthy();
+    expect(overlay).toHaveClass('overflow-y-auto');
+
+    const panel = overlay?.querySelector('div.mx-auto');
+    expect(panel).toBeTruthy();
+    expect(panel).toHaveClass('max-h-[calc(100dvh-2rem)]');
+  });
+
   it('renders all matched transactions in the table', () => {
     render(<PreviewMatchesModal {...defaultProps} />);
 

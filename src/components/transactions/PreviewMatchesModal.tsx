@@ -69,8 +69,8 @@ export function PreviewMatchesModal({
   };
 
   return createPortal(
-    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
-      <div className='max-h-[90vh] w-[min(96vw,72rem)] overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
+    <div className='fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4'>
+      <div className='mx-auto flex min-h-full w-[min(96vw,72rem)] max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
         {/* Header */}
         <div className='border-b border-gray-200 px-6 py-4 dark:border-gray-700'>
           <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
@@ -115,7 +115,7 @@ export function PreviewMatchesModal({
         </div>
 
         {/* Transactions Table */}
-        <div className='overflow-auto'>
+        <div className='min-h-0 flex-1 overflow-auto'>
           {matches.length === 0 ? (
             <div className='px-6 py-8 text-center'>
               <p className='text-gray-600 dark:text-gray-400'>
