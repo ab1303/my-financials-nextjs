@@ -1,5 +1,9 @@
+import type { RoleEnumType } from '@prisma/client';
 import { render, screen } from '@testing-library/react';
-import { beforeEach,describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import SideNav from '@/layouts/SideNav';
 
 const mockUsePathname = vi.hoisted(() => vi.fn(() => '/home'));
 
@@ -12,16 +16,16 @@ vi.mock('next-auth/react', () => ({
 }));
 
 vi.mock('@radix-ui/react-collapsible', () => ({
-  Root: ({ children, open }: any) => <div data-open={open}>{children}</div>,
-  Trigger: ({ children }: any) => <div>{children}</div>,
-  Content: ({ children }: any) => <div>{children}</div>,
+  Root: ({ children, open }: { children: ReactNode; open?: boolean }) => (
+    <div data-open={open}>{children}</div>
+  ),
+  Trigger: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Content: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
-import SideNav from '@/layouts/SideNav';
-
-describe('SideNav — Transactions item', () => {
+describe('SideNav cashflow navigation', () => {
   const defaultProps = {
-    userRole: 'admin' as any,
+    userRole: 'admin' as RoleEnumType,
     showSideNav: true,
     collapsed: false,
     onToggleCollapse: vi.fn(),
@@ -32,32 +36,43 @@ describe('SideNav — Transactions item', () => {
     vi.clearAllMocks();
   });
 
-  it('renders a Transactions link in the CashFlow nav group', () => {
+  it('renders the Transactions group and its Ledger child link', () => {
     render(<SideNav {...defaultProps} />);
 
-    expect(screen.getAllByText('Transactions').length).toBeGreaterThan(0);
-  });
-
-  it('Transactions link points to /cashflow/transactions', () => {
-    render(<SideNav {...defaultProps} />);
-
-    const links = screen.getAllByRole('link');
-    const txLink = links.find(
-      (link) => link.getAttribute('href') === '/cashflow/transactions',
+    expect(
+      screen.getAllByRole('button', { name: 'Transactions' }),
+    ).toHaveLength(2);
+    const ledgerLinks = screen.getAllByRole('link', { name: 'Ledger' });
+    expect(ledgerLinks).toHaveLength(2);
+    ledgerLinks.forEach((link) =>
+      expect(link).toHaveAttribute('href', '/cashflow/transactions'),
     );
-
-    expect(txLink).toBeDefined();
+    screen.getAllByRole('link', { name: 'Analytics' }).forEach((link) =>
+      expect(link).toHaveAttribute('href', '/cashflow/analytics'),
+    );
+    screen.getAllByRole('link', { name: 'Transfer Rules' }).forEach((link) =>
+      expect(link).toHaveAttribute('href', '/cashflow/transfer-rules'),
+    );
+    screen.getAllByRole('link', { name: 'Category Rules' }).forEach((link) =>
+      expect(link).toHaveAttribute('href', '/cashflow/category-rules'),
+    );
   });
 
-  it('CashFlow group opens by default when on /cashflow/transactions', () => {
+  it('keeps Zakat inside the CashFlow navigation tree', () => {
+    render(<SideNav {...defaultProps} />);
+
+    const zakatLinks = screen.getAllByRole('link', { name: 'Zakat' });
+    expect(zakatLinks).toHaveLength(2);
+    zakatLinks.forEach((link) => expect(link).toHaveAttribute('href', '/zakat'));
+  });
+
+  it('opens CashFlow by default when on a cashflow route', () => {
     mockUsePathname.mockReturnValue('/cashflow/transactions');
 
     render(<SideNav {...defaultProps} />);
 
-    const txLink = screen.getAllByRole('link').find(
-      (link) => link.getAttribute('href') === '/cashflow/transactions',
+    expect(document.querySelectorAll('[data-open="true"]').length).toBeGreaterThan(
+      0,
     );
-
-    expect(txLink).toBeDefined();
   });
 });

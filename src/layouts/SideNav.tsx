@@ -10,7 +10,6 @@ import {
   Calendar,
   CandlestickChart,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   CircleDollarSign,
   DollarSign,
@@ -30,6 +29,7 @@ import {
   User,
   Users,
   Wallet,
+  Book,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -50,56 +50,86 @@ type SideNavProps = {
 };
 
 type NavItem = {
+  kind: 'link';
   name: string;
   href: string;
   icon: React.ElementType;
 };
 
 type NavGroup = {
+  kind: 'group';
   name: string;
   icon: React.ElementType;
-  items: NavItem[];
+  items: NavNode[];
   defaultOpen?: boolean;
 };
 
-const cashflowItems: NavItem[] = [
-  { name: 'Income', href: '/cashflow/income', icon: DollarSign },
-  { name: 'Donations', href: '/cashflow/donations', icon: Gift },
-  { name: 'Expenses', href: '/cashflow/expense', icon: Receipt },
-  { name: 'Transactions', href: '/cashflow/transactions', icon: ArrowLeftRight },
-  { name: 'Bank Interest', href: '/cashflow/bank-interest', icon: Percent },
-  { name: 'Analytics', href: '/cashflow/analytics', icon: BarChart2 },
-  { name: 'Transfer Rules', href: '/cashflow/transfer-rules', icon: GitMerge },
-  { name: 'Category Rules', href: '/cashflow/category-rules', icon: Tag },
-];
+type NavNode = NavItem | NavGroup;
 
-const assetItems: NavItem[] = [
-  { name: 'Overview', href: '/assets', icon: LayoutDashboard },
-  { name: 'Bank(s)', href: '/assets/bank', icon: Landmark },
-  { name: 'Stock(s)', href: '/assets/stocks', icon: CandlestickChart },
-];
+function isNavGroup(node: NavNode): node is NavGroup {
+  return node.kind === 'group';
+}
 
-const relationItems: NavItem[] = [
-  { name: 'Business', href: '/relation/business', icon: Building2 },
-  { name: 'Individual', href: '/relation/individual', icon: User },
-];
+function navNodeMatchesPath(node: NavNode, pathname: string): boolean {
+  if (isNavGroup(node)) {
+    return node.items.some((child) => navNodeMatchesPath(child, pathname));
+  }
 
-const reportItems: NavItem[] = [
-  { name: 'Income Summary', href: '/reports/income-summary', icon: BarChart3 },
-];
+  return pathname === node.href || pathname.startsWith(`${node.href}/`);
+}
 
-const settingsItems: NavItem[] = [
-  { name: 'Calendar Year(s)', href: '/settings/calendar', icon: Calendar },
-  { name: 'AI Spend', href: '/settings/ai-usage', icon: Sparkles },
-  { name: 'Categories', href: '/settings/categories', icon: Tag },
-  { name: 'Bank Institutions', href: '/settings/banks', icon: Landmark },
-  { name: 'Brokerage Institutions', href: '/settings/brokerages', icon: CandlestickChart },
-];
+function NavLinkItem({
+  item,
+  pathname,
+  collapsed,
+  onClose,
+  className,
+}: {
+  item: NavItem;
+  pathname: string;
+  collapsed: boolean;
+  onClose: () => void;
+  className?: string;
+}) {
+  const ItemIcon = item.icon;
+  const isActive = pathname === item.href;
 
-const accountItems: NavItem[] = [
-  { name: 'Profile', href: '/account/profile', icon: User },
-  { name: 'Bank Accounts', href: '/account/bank-accounts', icon: Landmark },
-];
+  if (collapsed) {
+    return (
+      <Link
+        href={item.href}
+        title={item.name}
+        onClick={onClose}
+        className={cn(
+          'flex items-center justify-center rounded-md p-2 transition-colors',
+          isActive
+            ? 'bg-primary/10 text-primary'
+            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+          className,
+        )}
+      >
+        <ItemIcon className='h-5 w-5' />
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href}
+      onClick={onClose}
+      className={cn(
+        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+        isActive
+          ? 'bg-primary/10 font-medium text-primary'
+          : 'text-foreground/70 hover:bg-accent hover:text-foreground',
+        className,
+      )}
+    >
+      <ItemIcon className='h-4 w-4' />
+      {item.name}
+    </Link>
+  );
+}
 
 function NavGroupItem({
   group,
@@ -114,11 +144,10 @@ function NavGroupItem({
   onExpand: () => void;
   onClose: () => void;
 }) {
-  const isActive = group.items.some((item) => pathname === item.href);
+  const isActive = navNodeMatchesPath(group, pathname);
   const [open, setOpen] = useState(isActive || group.defaultOpen || false);
   const GroupIcon = group.icon;
 
-  // Icon-only collapsed mode: show clickable group icon that expands sidebar
   if (collapsed) {
     return (
       <button
@@ -161,32 +190,113 @@ function NavGroupItem({
       </Collapsible.Trigger>
       <Collapsible.Content>
         <ul className='mt-1 ml-4 space-y-1 border-l border-border pl-3'>
-          {group.items.map((item) => {
-            const ItemIcon = item.icon;
-            const itemActive = pathname === item.href;
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={onClose}
-                  className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                    itemActive
-                      ? 'bg-primary/10 font-medium text-primary'
-                      : 'text-foreground/70 hover:bg-accent hover:text-foreground',
-                  )}
-                >
-                  <ItemIcon className='h-3.5 w-3.5' />
-                  {item.name}
-                </Link>
-              </li>
-            );
-          })}
+          {group.items.map((item) => (
+            <li key={item.name}>
+              {isNavGroup(item) ? (
+                <NavGroupItem
+                  group={item}
+                  pathname={pathname}
+                  collapsed={false}
+                  onExpand={onExpand}
+                  onClose={onClose}
+                />
+              ) : (
+                <NavLinkItem
+                  item={item}
+                  pathname={pathname}
+                  collapsed={false}
+                  onClose={onClose}
+                />
+              )}
+            </li>
+          ))}
         </ul>
       </Collapsible.Content>
     </Collapsible.Root>
   );
 }
+
+const transactionItems: NavNode[] = [
+  {
+    kind: 'link',
+    name: 'Analytics',
+    href: '/cashflow/analytics',
+    icon: BarChart2,
+  },
+  {
+    kind: 'link',
+    name: 'Ledger',
+    href: '/cashflow/transactions',
+    icon: Book,
+  },
+  {
+    kind: 'link',
+    name: 'Transfer Rules',
+    href: '/cashflow/transfer-rules',
+    icon: GitMerge,
+  },
+  {
+    kind: 'link',
+    name: 'Category Rules',
+    href: '/cashflow/category-rules',
+    icon: Tag,
+  },
+];
+
+const cashflowItems = (): NavNode[] => [
+  { kind: 'link', name: 'Income', href: '/cashflow/income', icon: DollarSign },
+  { kind: 'link', name: 'Donations', href: '/cashflow/donations', icon: Gift },
+  { kind: 'link', name: 'Expenses', href: '/cashflow/expense', icon: Receipt },
+  {
+    kind: 'link',
+    name: 'Bank Interest',
+    href: '/cashflow/bank-interest',
+    icon: Percent,
+  },
+  { kind: 'link', name: 'Zakat', href: '/zakat', icon: CircleDollarSign },
+];
+
+const transactionsGroup = (pathname: string): NavGroup => ({
+  kind: 'group',
+  name: 'Transactions',
+  icon: ArrowLeftRight,
+  items: transactionItems,
+  defaultOpen: transactionItems.some((item) =>
+    navNodeMatchesPath(item, pathname),
+  ),
+});
+
+const assetItems: Array<Omit<NavItem, 'kind'>> = [
+  { name: 'Overview', href: '/assets', icon: LayoutDashboard },
+  { name: 'Bank(s)', href: '/assets/bank', icon: Landmark },
+  { name: 'Stock(s)', href: '/assets/stocks', icon: CandlestickChart },
+];
+
+const relationItems: Array<Omit<NavItem, 'kind'>> = [
+  { name: 'Business', href: '/relation/business', icon: Building2 },
+  { name: 'Individual', href: '/relation/individual', icon: User },
+];
+
+const reportItems: Array<Omit<NavItem, 'kind'>> = [
+  { name: 'Income Summary', href: '/reports/income-summary', icon: BarChart3 },
+];
+
+const settingsItems: Array<Omit<NavItem, 'kind'>> = [
+  { name: 'Calendar Year(s)', href: '/settings/calendar', icon: Calendar },
+  { name: 'AI Spend', href: '/settings/ai-usage', icon: Sparkles },
+  { name: 'Categories', href: '/settings/categories', icon: Tag },
+  { name: 'Bank Institutions', href: '/settings/banks', icon: Landmark },
+  {
+    name: 'Brokerage Institutions',
+    href: '/settings/brokerages',
+    icon: CandlestickChart,
+  },
+];
+
+const accountItems: Array<Omit<NavItem, 'kind'>> = [
+  { name: 'Profile', href: '/account/profile', icon: User },
+  { name: 'Bank Accounts', href: '/account/bank-accounts', icon: Landmark },
+];
 
 export default function SideNav({
   userRole,
@@ -200,6 +310,56 @@ export default function SideNav({
   const pathname = usePathname();
   useOutsideAlerter(wrapperRef, handleCloseSideNav);
 
+  const navNodes: NavNode[] = [
+    { kind: 'link', name: 'Home', href: '/home', icon: Home },
+    {
+      kind: 'group',
+      name: 'CashFlow',
+      icon: Wallet,
+      items: cashflowItems(),
+      defaultOpen: pathname.startsWith('/cashflow') || pathname === '/zakat',
+    },
+    transactionsGroup(pathname),
+    {
+      kind: 'group',
+      name: 'Asset(s)',
+      icon: Building2,
+      items: assetItems.map((item) => ({ kind: 'link', ...item })),
+      defaultOpen:
+        pathname.startsWith('/assets/bank') ||
+        pathname.startsWith('/assets/stocks'),
+    },
+    {
+      kind: 'group',
+      name: 'Relation(s)',
+      icon: Users,
+      items: relationItems.map((item) => ({ kind: 'link', ...item })),
+      defaultOpen: pathname.startsWith('/relation'),
+    },
+    {
+      kind: 'group',
+      name: 'Reports',
+      icon: BarChart3,
+      items: reportItems.map((item) => ({ kind: 'link', ...item })),
+      defaultOpen: pathname.startsWith('/reports'),
+    },
+    {
+      kind: 'group',
+      name: 'Account',
+      icon: User,
+      items: accountItems.map((item) => ({ kind: 'link', ...item })),
+      defaultOpen: pathname.startsWith('/account'),
+    },
+  ];
+
+  const adminNavNode: NavGroup = {
+    kind: 'group',
+    name: 'Settings',
+    icon: Settings,
+    items: settingsItems.map((item) => ({ kind: 'link', ...item })),
+    defaultOpen: pathname.startsWith('/settings'),
+  };
+
   useEffect(() => {
     setOpenNav(showSideNav);
   }, [showSideNav]);
@@ -212,48 +372,6 @@ export default function SideNav({
   async function handleSignOut() {
     await signOut({ callbackUrl: '/' });
   }
-
-  const navGroups: NavGroup[] = [
-    {
-      name: 'CashFlow',
-      icon: Wallet,
-      items: cashflowItems,
-      defaultOpen:
-        pathname.startsWith('/cashflow/income') ||
-        pathname.startsWith('/cashflow/donations') ||
-        pathname.startsWith('/cashflow/expense') ||
-        pathname.startsWith('/cashflow/transactions') ||
-        pathname.startsWith('/cashflow/bank-interest') ||
-        pathname.startsWith('/cashflow/analytics') ||
-        pathname.startsWith('/cashflow/transfer-rules'),
-    },
-    {
-      name: 'Asset(s)',
-      icon: Building2,
-      items: assetItems,
-      defaultOpen:
-        pathname.startsWith('/assets/bank') ||
-        pathname.startsWith('/assets/stocks'),
-    },
-    {
-      name: 'Relation(s)',
-      icon: Users,
-      items: relationItems,
-      defaultOpen: pathname.startsWith('/relation'),
-    },
-    {
-      name: 'Reports',
-      icon: BarChart3,
-      items: reportItems,
-      defaultOpen: pathname.startsWith('/reports'),
-    },
-    {
-      name: 'Account',
-      icon: User,
-      items: accountItems,
-      defaultOpen: pathname.startsWith('/account'),
-    },
-  ];
 
   const sidebarContent = (isCollapsed: boolean, isMobile: boolean) => (
     <>
@@ -301,92 +419,35 @@ export default function SideNav({
           isCollapsed && !isMobile && 'flex flex-col items-center',
         )}
       >
-        {/* Home */}
-        {isCollapsed && !isMobile ? (
-          <Link
-            href='/home'
-            title='Home'
-            className={cn(
-              'flex items-center justify-center rounded-md p-2 transition-colors',
-              pathname === '/home'
-                ? 'bg-primary/10 text-primary'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-            )}
-          >
-            <Home className='h-5 w-5' />
-          </Link>
-        ) : (
-          <Link
-            href='/home'
-            onClick={isMobile ? handleCloseSideNav : undefined}
-            className={cn(
-              'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-              pathname === '/home'
-                ? 'bg-primary/10 text-primary'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-            )}
-          >
-            <Home className='h-4 w-4' />
-            Home
-          </Link>
-        )}
-
-        {/* Nav Groups */}
-        {navGroups.map((group) => (
+        {navNodes.map((node) => (
           <div
-            key={group.name}
+            key={`${node.kind}-${node.name}${'href' in node ? node.href : ''}`}
             className={cn(isCollapsed && !isMobile && 'w-full')}
           >
-            <NavGroupItem
-              group={group}
-              pathname={pathname}
-              collapsed={isCollapsed && !isMobile}
-              onExpand={onToggleCollapse}
-              onClose={isMobile ? handleCloseSideNav : () => {}}
-            />
+            {isNavGroup(node) ? (
+              <NavGroupItem
+                group={node}
+                pathname={pathname}
+                collapsed={isCollapsed && !isMobile}
+                onExpand={onToggleCollapse}
+                onClose={isMobile ? handleCloseSideNav : () => {}}
+              />
+            ) : (
+              <NavLinkItem
+                item={node}
+                pathname={pathname}
+                collapsed={isCollapsed && !isMobile}
+                onClose={isMobile ? handleCloseSideNav : () => {}}
+              />
+            )}
           </div>
         ))}
-
-        {/* Zakat */}
-        {isCollapsed && !isMobile ? (
-          <Link
-            href='/zakat'
-            title='Zakat'
-            className={cn(
-              'flex items-center justify-center rounded-md p-2 transition-colors',
-              pathname === '/zakat'
-                ? 'bg-primary/10 text-primary'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-            )}
-          >
-            <CircleDollarSign className='h-5 w-5' />
-          </Link>
-        ) : (
-          <Link
-            href='/zakat'
-            onClick={isMobile ? handleCloseSideNav : undefined}
-            className={cn(
-              'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-              pathname === '/zakat'
-                ? 'bg-primary/10 text-primary'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-            )}
-          >
-            <CircleDollarSign className='h-4 w-4' />
-            Zakat
-          </Link>
-        )}
 
         {/* Settings (admin only) */}
         {userRole === 'admin' && (
           <div className={cn(isCollapsed && !isMobile && 'w-full')}>
             <NavGroupItem
-              group={{
-                name: 'Settings',
-                icon: Settings,
-                items: settingsItems,
-                defaultOpen: pathname.startsWith('/settings'),
-              }}
+              group={adminNavNode}
               pathname={pathname}
               collapsed={isCollapsed && !isMobile}
               onExpand={onToggleCollapse}
@@ -454,6 +515,3 @@ export default function SideNav({
     </>
   );
 }
-
-
-

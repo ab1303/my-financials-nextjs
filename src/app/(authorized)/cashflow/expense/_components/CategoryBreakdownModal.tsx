@@ -293,7 +293,7 @@ function CategoryBreakdownDialog({
 
 
 
-              <Dialog.Panel className='flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-background shadow-xl ring-1 ring-border'>
+              <Dialog.Panel className='flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-background shadow-xl ring-1 ring-border sm:max-w-3xl lg:max-w-5xl 2xl:max-w-6xl'>
 
 
 
@@ -1502,7 +1502,6 @@ export default function CategoryBreakdownModal(props: CategoryBreakdownModalProp
 
 
 }
-
 
 
 
