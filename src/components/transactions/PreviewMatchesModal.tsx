@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface PreviewMatch {
@@ -17,10 +17,13 @@ interface PreviewMatchesModalProps {
   open: boolean;
   matches: PreviewMatch[];
   totalCount: number;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
   matchScope: 'recent' | 'all';
   onMatchScopeChange: (scope: 'recent' | 'all') => void;
   onCancel: () => void;
-  onApply: () => void;
+  onApply: (selectedIds: string[]) => void;
+  onLoadMore?: () => void;
   isLoading?: boolean;
 }
 
@@ -35,27 +38,39 @@ export function PreviewMatchesModal({
   open,
   matches,
   totalCount,
+  hasMore = false,
+  isLoadingMore = false,
   matchScope,
   onMatchScopeChange,
   onCancel,
   onApply,
+  onLoadMore,
   isLoading = false,
 }: PreviewMatchesModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   if (!open) return null;
-  if (!mounted) return null;
+  if (typeof document === 'undefined') return null;
 
-  const displayCount = Math.min(matches.length, 5);
-  const hasMore = totalCount > displayCount;
+  const loadedCount = matches.length;
+
+  const handleCheckboxChange = (matchId: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(matchId)) {
+      newSelected.delete(matchId);
+    } else {
+      newSelected.add(matchId);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleApply = () => {
+    onApply(Array.from(selectedIds));
+  };
 
   return createPortal(
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
-      <div className='max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
+      <div className='max-h-[90vh] w-[min(96vw,72rem)] overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
         {/* Header */}
         <div className='border-b border-gray-200 px-6 py-4 dark:border-gray-700'>
           <h2 className='text-lg font-semibold text-gray-900 dark:text-white'>
@@ -63,7 +78,8 @@ export function PreviewMatchesModal({
           </h2>
           <p className='mt-1 text-sm text-gray-600 dark:text-gray-400'>
             Found {totalCount} similar transaction{totalCount !== 1 ? 's' : ''}
-            {hasMore && ` — showing first ${displayCount}`}
+            {' — '}
+            showing {loadedCount} loaded
           </p>
         </div>
 
@@ -122,6 +138,9 @@ export function PreviewMatchesModal({
                   <th className='px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300'>
                     Current Category
                   </th>
+                  <th className='w-12 px-4 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-300'>
+                    Select
+                  </th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
@@ -150,6 +169,14 @@ export function PreviewMatchesModal({
                     <td className='px-4 py-3 text-sm text-gray-700 dark:text-gray-300'>
                       {match.category}
                     </td>
+                    <td className='w-12 px-4 py-3 text-center'>
+                      <input
+                        type='checkbox'
+                        checked={selectedIds.has(match.id)}
+                        onChange={() => handleCheckboxChange(match.id)}
+                        aria-label={`select-${match.id}`}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -159,6 +186,15 @@ export function PreviewMatchesModal({
 
         {/* Footer */}
         <div className='border-t border-gray-200 flex justify-end gap-3 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800'>
+          {hasMore && onLoadMore && (
+            <button
+              onClick={onLoadMore}
+              disabled={isLoading || isLoadingMore}
+              className='mr-auto rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+            >
+              {isLoadingMore ? 'Loading more...' : 'Load more'}
+            </button>
+          )}
           <button
             onClick={onCancel}
             disabled={isLoading}
@@ -167,11 +203,11 @@ export function PreviewMatchesModal({
             Cancel
           </button>
           <button
-            onClick={onApply}
-            disabled={isLoading || matches.length === 0}
+            onClick={handleApply}
+            disabled={isLoading || selectedIds.size === 0}
             className='rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50 dark:bg-teal-700 dark:hover:bg-teal-600'
           >
-            {isLoading ? 'Applying...' : 'Apply to All'}
+            {isLoading ? 'Applying...' : `Apply to ${selectedIds.size} ${selectedIds.size === 1 ? 'row' : 'rows'}`}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { createPortal } from 'react-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import TransactionRow from '@/components/transactions/TransactionRow';
@@ -65,7 +66,21 @@ vi.mock('@/server/trpc/client', () => ({
     }),
     transactionLedger: {
       previewMatchingCategoryChanges: {
-        useQuery: () => ({ data: { matches: [], totalCount: 0 }, isLoading: false }),
+        useInfiniteQuery: () => ({
+          data: {
+            pages: [
+              {
+                matches: [],
+                totalCount: 0,
+                nextCursor: null,
+              },
+            ],
+          },
+          isLoading: false,
+          hasNextPage: false,
+          isFetchingNextPage: false,
+          fetchNextPage: vi.fn(),
+        }),
       },
     },
     categoryRule: {
@@ -92,14 +107,17 @@ vi.mock('@/components/transactions/PreviewMatchesModal', () => ({
   }: {
     open: boolean;
     onCancel: () => void;
-    onApply: () => void;
+    onApply: (selectedIds: string[]) => void;
   }) =>
-    open ? (
-      <div data-testid="preview-modal">
-        <button onClick={onCancel}>Cancel</button>
-        <button onClick={onApply}>Apply</button>
-      </div>
-    ) : null,
+    open
+      ? createPortal(
+          <div data-testid="preview-modal">
+            <button onClick={onCancel}>Cancel</button>
+            <button onClick={() => onApply([])}>Apply</button>
+          </div>,
+          document.body,
+        )
+      : null,
 }));
 
 describe('TransactionRow', () => {
@@ -389,7 +407,7 @@ describe('TransactionRow', () => {
     it('renders suggestion UI when matchCount >= 2', () => {
       mockSearchDebitTransactionsFetch.mockResolvedValue([]);
 
-      const { rerender } = render(
+      render(
         <table>
           <tbody>
             <TransactionRow
@@ -475,6 +493,94 @@ describe('TransactionRow', () => {
 
       // The Create rule button is in the suggestion UI
       // It should be testable once the suggestion UI is rendered
+    });
+
+    it('opens preview modal when "Preview matches" is clicked', () => {
+      const onCategoryChange = vi.fn();
+
+      // Mock useCategoryEdit to return matchCount >= 2 to show suggestion UI
+      render(
+        <table>
+          <tbody>
+            <TransactionRow
+              transaction={debitTransaction}
+              expenseCategories={expenseCategories}
+              incomeSourceLabels={incomeSourceLabels}
+              onCategoryChange={onCategoryChange}
+              suggestionCount={3}
+            />
+          </tbody>
+        </table>,
+      );
+
+      const previewButton = screen.getByText('Preview matches');
+      fireEvent.click(previewButton);
+
+      expect(screen.getByTestId('preview-modal')).toBeDefined();
+    });
+
+    it('closes preview modal when Cancel is clicked', () => {
+      const onCategoryChange = vi.fn();
+
+      render(
+        <table>
+          <tbody>
+            <TransactionRow
+              transaction={debitTransaction}
+              expenseCategories={expenseCategories}
+              incomeSourceLabels={incomeSourceLabels}
+              onCategoryChange={onCategoryChange}
+              suggestionCount={3}
+            />
+          </tbody>
+        </table>,
+      );
+
+      const previewButton = screen.getByText('Preview matches');
+      fireEvent.click(previewButton);
+
+      expect(screen.getByTestId('preview-modal')).toBeDefined();
+
+      const cancelButton = screen.getByText('Cancel');
+      fireEvent.click(cancelButton);
+
+      expect(screen.queryByTestId('preview-modal')).toBeNull();
+    });
+
+    it('passes selected transaction IDs to onCategoryChange when Apply is clicked', () => {
+      const onCategoryChange = vi.fn();
+
+      render(
+        <table>
+          <tbody>
+            <TransactionRow
+              transaction={debitTransaction}
+              expenseCategories={expenseCategories}
+              incomeSourceLabels={incomeSourceLabels}
+              onCategoryChange={onCategoryChange}
+              suggestionCount={3}
+            />
+          </tbody>
+        </table>,
+      );
+
+      const previewButton = screen.getByText('Preview matches');
+      fireEvent.click(previewButton);
+
+      const applyButton = screen.getByText('Apply');
+      fireEvent.click(applyButton);
+
+      // Verify onCategoryChange is called with selectedTransactionIds as the last parameter
+      // The actual values for offsetCategory and offsetTransactionId depend on the transaction state
+      expect(onCategoryChange).toHaveBeenCalled();
+      const calls = onCategoryChange.mock.calls;
+      expect(calls).toHaveLength(1);
+      
+      const [id, newCategory, , , applyToMatching, selectedTransactionIds] = calls[0]!;
+      expect(id).toBe('tx-1');
+      expect(newCategory).toBe('Groceries');
+      expect(applyToMatching).toBe(true);
+      expect(selectedTransactionIds).toEqual([]); // Empty because mock doesn't select any
     });
   });
 });

@@ -328,7 +328,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
   });
 
   const handleCategoryChange = useCallback(
-    (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null, applyToMatching?: boolean) => {
+    (id: string, newCategory: string, offsetCategory?: string, offsetTransactionId?: string | null, applyToMatching?: boolean, selectedTransactionIds?: string[]) => {
       const txData = data?.pages.flatMap(p => p.transactions).find(tx => tx.id === id) ?? retainedRows.get(id);
       if (txData) {
         // Retained-row pattern: keep a recategorized row mounted until the refetch catches up.
@@ -355,6 +355,7 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
         ...(offsetCategory ? { offsetCategory } : {}),
         ...(offsetTransactionId !== undefined ? { offsetTransactionId: offsetTransactionId ?? undefined } : {}),
         ...(applyToMatching !== undefined ? { applyToMatching } : {}),
+        ...(selectedTransactionIds && selectedTransactionIds.length > 0 ? { selectedTransactionIds } : {}),
       });
     },
     [updateCategoryMutation, activeTab, category, data, retainedRows],
@@ -413,17 +414,26 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
 
   const loading = isLoading; // Only blank the table on initial load; background refetches use isFetching
   const syncing = !isLoading && isFetching; // Background sync — show subtle indicator without blanking table
-  const transactions = data?.pages.flatMap((p) => p.transactions) ?? [];
+  const transactions = useMemo(
+    () => data?.pages.flatMap((p) => p.transactions) ?? [],
+    [data?.pages],
+  );
   // Retained rows: recategorized on this tab but kept visible until dismissed
   const retainedVisible = useMemo(() => {
-    const currentIds = new Set(transactions.map(tx => tx.id));
+    const currentIds = new Set(transactions.map((tx) => tx.id));
     return [...retainedRows.entries()]
       .filter(([id]) => !currentIds.has(id))
       .map(([, tx]) => tx);
   }, [transactions, retainedRows]);
-  const expenseCategories = filterOptionsQuery.data?.expenseCategories ?? [];
-  const incomeSourceLabels = filterOptionsQuery.data?.incomeSourceLabels ?? [];
-  const lastPage = data?.pages[data.pages.length - 1];
+  const expenseCategories = useMemo(
+    () => filterOptionsQuery.data?.expenseCategories ?? [],
+    [filterOptionsQuery.data?.expenseCategories],
+  );
+  const incomeSourceLabels = useMemo(
+    () => filterOptionsQuery.data?.incomeSourceLabels ?? [],
+    [filterOptionsQuery.data?.incomeSourceLabels],
+  );
+  const lastPage = data?.pages?.[data.pages.length - 1];
   const categoryOptions = useMemo(() => {
     const incomeGroup = {
       label: '💰 Income Sources',
@@ -613,7 +623,6 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                   }
                   isSaving={savingId === transaction.id}
                   colCount={10}
-                  onPausePendingRefresh={cancelPendingCategoryRefresh}
                   onResolvePendingRefresh={flushPendingCategoryRefresh}
                   onVoided={() => void refetch()}
                   onRestored={() => void refetch()}
@@ -682,7 +691,6 @@ function TransactionLedgerBody({ bankAccounts, refreshKey, initialMonth, initial
                       }
                       isSaving={savingId === tx.id}
                       colCount={10}
-                      onPausePendingRefresh={cancelPendingCategoryRefresh}
                       onResolvePendingRefresh={flushPendingCategoryRefresh}
                     onVoided={() => { handleDismissRetained(tx.id); void refetch(); }}
                     onRestored={() => { handleDismissRetained(tx.id); void refetch(); }}

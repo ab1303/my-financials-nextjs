@@ -145,13 +145,56 @@ export async function applyMatchingCategoryChanges(ctx: {
   newCategory: string;
   applyToMatching?: boolean;
   matchScope?: { type: 'recent' | 'all'; days?: number };
+  selectedTransactionIds?: string[];
 }): Promise<string[]> {
-  const { prismaClient, userId, transaction, newCategory, applyToMatching, matchScope } = ctx;
+  const { prismaClient, userId, transaction, newCategory, applyToMatching, matchScope, selectedTransactionIds } = ctx;
   const matchedIds: string[] = [];
   const isSpecialCategory = newCategory === REIMBURSEMENT_CATEGORY || newCategory === TRANSFER_CATEGORY;
 
   // New Safety: Explicitly require flag to run, and skip for special categories
   if (applyToMatching !== true || isSpecialCategory) {
+    return matchedIds;
+  }
+
+  // If selectedTransactionIds are provided (from preview dialog), use those instead of finding matches
+  if (selectedTransactionIds && selectedTransactionIds.length > 0) {
+    const selectedMatches = await prismaClient.transaction.findMany({
+      where: {
+        userId,
+        id: { in: selectedTransactionIds },
+        status: { not: TransactionStatusEnum.VOIDED },
+      },
+      select: { id: true, type: true, status: true, category: true, amount: true, date: true },
+    });
+
+    for (const match of selectedMatches) {
+      await prismaClient.transaction.update({
+        where: { id: match.id },
+        data: { category: newCategory, source: TransactionSourceEnum.USER_OVERRIDE },
+      });
+
+      if (match.status === TransactionStatusEnum.CONFIRMED) {
+        if (match.type === TransactionTypeEnum.DEBIT) {
+          await rerollupExpenseSummary({
+            prismaClient,
+            userId,
+            oldCategory: match.category,
+            newCategory,
+            amount: match.amount as Decimal,
+            date: match.date,
+          });
+        } else if (match.type === TransactionTypeEnum.CREDIT) {
+          await updateIncomeRecordSource({
+            prismaClient,
+            userId,
+            newSourceName: newCategory,
+            amount: match.amount as Decimal,
+            transactionDate: match.date,
+          });
+        }
+      }
+      matchedIds.push(match.id);
+    }
     return matchedIds;
   }
 

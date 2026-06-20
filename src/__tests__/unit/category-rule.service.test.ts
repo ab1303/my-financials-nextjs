@@ -196,6 +196,7 @@ describe("category-rule service", () => {
       expect(call).toBeDefined();
       const callArgs = call![0];
       expect(callArgs.where.userId).toBe("user-1");
+      expect(callArgs.where.status).toEqual({ not: "VOIDED" });
       expect(callArgs.where.description).toBeDefined();
     });
 

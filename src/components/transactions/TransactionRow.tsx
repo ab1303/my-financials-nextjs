@@ -3,11 +3,11 @@
 import clsx from 'clsx';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import type { SingleValue } from 'react-select';
+
 import {
   AsyncSelectWrapper as AsyncSelect,
   SelectWrapper as Select,
 } from '@/components/ui/Select';
-
 import { getCompactSelectStyles } from '@/lib/select-styles';
 import {
   REIMBURSEMENT_CATEGORY,
@@ -17,8 +17,8 @@ import { trpc } from '@/server/trpc/client';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 
 import CategoryRuleDrawer from './CategoryRuleDrawer';
-import { PreviewMatchesModal } from './PreviewMatchesModal';
 import { useCategoryEdit } from './hooks/useCategoryEdit';
+import { PreviewMatchesModal } from './PreviewMatchesModal';
 import ReimbursementSubRow from './ReimbursementSubRow';
 import RestoreTransactionButton from './RestoreTransactionButton';
 import TransactionSourceIndicator from './TransactionSourceIndicator';
@@ -35,6 +35,7 @@ interface TransactionRowProps {
     offsetCategory?: string,
     offsetTransactionId?: string | null,
     applyToMatching?: boolean,
+    selectedTransactionIds?: string[],
   ) => void;
   isSaving?: boolean;
   colCount?: number;
@@ -47,8 +48,6 @@ interface TransactionRowProps {
   onSuggestRule?: (count: number, category: string) => void;
   onClearRulePrompt?: () => void;
   suggestionCount?: number;
-  /** Pause the delayed refetch while the rule drawer is open */
-  onPausePendingRefresh?: () => void;
   /** Flush the delayed refetch after the rule prompt is resolved */
   onResolvePendingRefresh?: () => void;
 }
@@ -88,7 +87,6 @@ export default function TransactionRow({
   onSuggestRule,
   onClearRulePrompt,
   suggestionCount,
-  onPausePendingRefresh,
   onResolvePendingRefresh,
 }: TransactionRowProps) {
   const statusClasses: Record<string, string> = {
@@ -136,17 +134,20 @@ export default function TransactionRow({
 
   const effectiveMatchCount = suggestionCount ?? matchCount;
 
-  // Fetch preview data when preview modal should be opened
-  const previewQuery = trpc.transactionLedger.previewMatchingCategoryChanges.useQuery(
+  const previewQuery = trpc.transactionLedger.previewMatchingCategoryChanges.useInfiniteQuery(
     {
       transactionId: transaction.id,
       description: transaction.description,
+      limit: 10,
       matchScope: { type: previewMatchScope, days: previewMatchScope === 'recent' ? 90 : undefined },
     },
     {
       enabled: showPreviewModal && effectiveMatchCount >= 2,
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     },
   );
+  const previewMatches = previewQuery.data?.pages.flatMap((page) => page.matches) ?? [];
+  const previewTotalCount = previewQuery.data?.pages[0]?.totalCount ?? 0;
 
   // Keep localCategory synced with hook value
   useEffect(() => {
@@ -159,7 +160,7 @@ export default function TransactionRow({
 
   useEffect(() => {
     setLocalOffsetTxId(transaction.offsetTransactionId ?? null);
-  }, [transaction.offsetTransactionId]);
+  }, [transaction.offsetTransactionId, transaction.offsetCategory]);
 
   useEffect(() => {
     if (!transaction.offsetTransactionId) {
@@ -177,7 +178,7 @@ export default function TransactionRow({
             category: transaction.offsetCategory ?? '',
           },
     );
-  }, [transaction.offsetTransactionId]);
+  }, [transaction.offsetTransactionId, transaction.offsetCategory]);
 
   const amountClass =
     transaction.type === 'DEBIT' ? 'text-red-600' : 'text-green-600';
@@ -370,13 +371,14 @@ export default function TransactionRow({
   }
 
   // Explicitly handle the new 3-button actions
-  const handleApplyBulk = () => {
+  const handleApplyBulk = (selectedTransactionIds?: string[]) => {
     onCategoryChange(
       transaction.id,
       localCategory,
       localOffsetCategory,
       localOffsetTxId,
       true, // applyToMatching = true
+      selectedTransactionIds, // Pass selected transaction IDs
     );
   };
 
@@ -385,10 +387,10 @@ export default function TransactionRow({
     setShowPreviewModal(true);
   };
 
-  const handlePreviewModalApply = () => {
-    // Close modal and apply the bulk change
+  const handlePreviewModalApply = (selectedIds: string[]) => {
+    // Close modal and apply the bulk change with selected IDs
     setShowPreviewModal(false);
-    handleApplyBulk();
+    handleApplyBulk(selectedIds);
   };
 
   const handlePreviewModalCancel = () => {
@@ -742,7 +744,7 @@ export default function TransactionRow({
             <div className='flex items-center gap-2'>
               <span className='text-teal-700 dark:text-teal-300'>Similar transactions found ({effectiveMatchCount}):</span>
               <button onClick={handlePreviewBulk} className='text-xs text-teal-600 underline'>Preview matches</button>
-              <button onClick={handleApplyBulk} className='text-xs font-medium text-teal-700'>Apply to these</button>
+              <button onClick={() => handleApplyBulk()} className='text-xs font-medium text-teal-700'>Apply to these</button>
               <button onClick={() => setShowRuleDrawer(true)} className='text-xs text-gray-500'>Create rule</button>
             </div>
           </td>
@@ -767,14 +769,18 @@ export default function TransactionRow({
       )}
 
       <PreviewMatchesModal
+        key={`${transaction.id}-${previewMatchScope}-${showPreviewModal ? 'open' : 'closed'}`}
         open={showPreviewModal}
-        matches={previewQuery.data?.matches ?? []}
-        totalCount={previewQuery.data?.totalCount ?? 0}
+        matches={previewMatches}
+        totalCount={previewTotalCount}
+        hasMore={previewQuery.hasNextPage ?? false}
+        isLoadingMore={previewQuery.isFetchingNextPage}
         matchScope={previewMatchScope}
         onMatchScopeChange={setPreviewMatchScope}
         onCancel={handlePreviewModalCancel}
         onApply={handlePreviewModalApply}
         isLoading={previewQuery.isLoading}
+        onLoadMore={() => void previewQuery.fetchNextPage()}
       />
 
       {isExpanded &&

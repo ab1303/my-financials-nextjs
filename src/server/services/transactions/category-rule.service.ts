@@ -171,6 +171,7 @@ export async function findSimilarTransactions(params: {
   const count = await (params.prisma.transaction as any).count({
     where: {
       userId: params.userId,
+      status: { not: 'VOIDED' },
       description: {
         contains: pattern,
         mode: 'insensitive',

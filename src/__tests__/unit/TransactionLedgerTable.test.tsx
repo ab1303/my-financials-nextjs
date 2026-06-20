@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { shouldRetainRowAfterCategoryChange } from '@/components/transactions/TransactionLedgerTable';
 
 const mockRefetch = vi.fn();
@@ -20,7 +21,7 @@ vi.mock('next-auth/react', () => ({
 // Stub the main next-auth module so its server-side entrypoints (which import `next/server`)
 // are not evaluated in the test environment.
 vi.mock('next-auth', () => ({
-  default: (cfg: any) => ({
+  default: () => ({
     auth: {},
     handlers: {},
     signIn: vi.fn(),
@@ -112,7 +113,21 @@ vi.mock('@/server/trpc/client', () => ({
         useMutation: (...args: unknown[]) => mockUseMutation(...args),
       },
       previewMatchingCategoryChanges: {
-        useQuery: () => ({ data: { matches: [], totalCount: 0 }, isLoading: false }),
+        useInfiniteQuery: () => ({
+          data: {
+            pages: [
+              {
+                matches: [],
+                totalCount: 0,
+                nextCursor: null,
+              },
+            ],
+          },
+          isLoading: false,
+          isFetchingNextPage: false,
+          hasNextPage: false,
+          fetchNextPage: vi.fn(),
+        }),
       },
     },
     categoryTransactions: {
@@ -371,7 +386,7 @@ describe('TransactionLedgerTable', () => {
       successCallback({
         success: true,
         matchedIds: ['tx-1', 'tx-2', 'tx-3'],
-      } as any);
+      } as never);
     }
 
     await waitFor(() => {
@@ -388,7 +403,7 @@ describe('TransactionLedgerTable', () => {
 describe('shouldRetainRowAfterCategoryChange', () => {
   const TRANSFER_CATEGORY = 'Transfer';
 
-  const createMockTransaction = (overrides = {}): any => ({
+  const createMockTransaction = (overrides = {}) => ({
     id: 'tx-1',
     date: '2024-01-15T00:00:00.000Z',
     description: 'Test transaction',
@@ -409,7 +424,7 @@ describe('shouldRetainRowAfterCategoryChange', () => {
     confirmedAt: null,
     bankAccountId: 'bank-1',
     ...overrides,
-  });
+  }) as unknown as Parameters<typeof shouldRetainRowAfterCategoryChange>[0];
 
   describe('transfers tab', () => {
     it('retains row when moving away from Transfer category', () => {

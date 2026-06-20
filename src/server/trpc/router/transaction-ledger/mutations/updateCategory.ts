@@ -15,6 +15,7 @@ const updateCategorySchema = z.object({
   offsetTransactionId: z.string().optional(),
   applyToMatching: z.boolean().optional(),
   matchScope: z.object({ type: z.enum(['recent', 'all']), days: z.number().optional() }).optional(),
+  selectedTransactionIds: z.array(z.string()).optional(),
 });
 
 export const updateCategoryMutation = protectedProcedure
@@ -88,6 +89,7 @@ export const updateCategoryMutation = protectedProcedure
       newCategory: input.newCategory,
       applyToMatching: input.applyToMatching,
       matchScope: input.matchScope,
+      selectedTransactionIds: input.selectedTransactionIds,
     });
 
     if (matchedIds.length > 0) {

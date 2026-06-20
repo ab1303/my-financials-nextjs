@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import { appRouter } from '@/server/trpc/router/_app';
@@ -217,11 +217,12 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
 
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.transaction.count.mockResolvedValue(0 as never);
   });
 
-  it('returns matching transactions and total count for a given description', async () => {
+  it('returns matching transactions, total count, and nextCursor for a given description', async () => {
     const transactionId = 'tx-1';
-    const mockMatches = Array.from({ length: 5 }, (_, i) => ({
+    const mockMatches = Array.from({ length: 6 }, (_, i) => ({
       id: `tx-match-${i + 1}`,
       date: new Date('2024-01-15'),
       description: 'Supermarket',
@@ -230,22 +231,24 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
       category: 'Groceries',
       source: 'LLM_CLASSIFIED',
       status: TransactionStatusEnum.CONFIRMED,
-      bankAccountId: 'acc-1',
-      bankAccountName: 'Everyday',
-      bankName: 'CommBank',
     }));
 
     prismaMock.transaction.findMany.mockResolvedValue(mockMatches as never);
+    prismaMock.transaction.count.mockResolvedValue(6 as never);
 
     const result = await caller.transactionLedger.previewMatchingCategoryChanges({
       transactionId,
       description: 'Supermarket',
+      limit: 5,
     });
 
     expect(result).toHaveProperty('matches');
     expect(result).toHaveProperty('totalCount');
+    expect(result).toHaveProperty('nextCursor');
     expect(Array.isArray(result.matches)).toBe(true);
-    expect(result.totalCount).toBeGreaterThanOrEqual(result.matches.length);
+    expect(result.matches).toHaveLength(5);
+    expect(result.totalCount).toBe(6);
+    expect(result.nextCursor).toBe('tx-match-5');
   });
 
   it('filters matches by matchScope when provided (recent 90 days)', async () => {
@@ -261,6 +264,7 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
         status: TransactionStatusEnum.CONFIRMED,
       },
     ] as never);
+    prismaMock.transaction.count.mockResolvedValue(1 as never);
 
     await caller.transactionLedger.previewMatchingCategoryChanges({
       transactionId,
@@ -272,50 +276,25 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
       expect.objectContaining({
         where: expect.objectContaining({
           date: expect.objectContaining({
-            gte: expect.any(String),
+            gte: expect.any(Date),
           }),
         }),
       }),
     );
   });
 
-  it('limits matches to a sample size (3-5 rows) but counts all', async () => {
+  it('returns no rows and no cursor when the description does not produce a pattern', async () => {
     const transactionId = 'tx-1';
-    const twoMatches = [
-      {
-        id: 'tx-match-1',
-        date: new Date('2024-01-15'),
-        description: 'Supermarket',
-        amount: { toNumber: () => 50 } as any,
-        type: TransactionTypeEnum.DEBIT,
-        category: 'Groceries',
-        status: TransactionStatusEnum.CONFIRMED,
-        bankAccountId: 'acc-1',
-        bankAccountName: 'Everyday',
-        bankName: 'CommBank',
-      },
-      {
-        id: 'tx-match-2',
-        date: new Date('2024-01-16'),
-        description: 'Supermarket',
-        amount: { toNumber: () => 60 } as any,
-        type: TransactionTypeEnum.DEBIT,
-        category: 'Groceries',
-        status: TransactionStatusEnum.CONFIRMED,
-        bankAccountId: 'acc-1',
-        bankAccountName: 'Everyday',
-        bankName: 'CommBank',
-      },
-    ];
-    prismaMock.transaction.findMany.mockResolvedValue(twoMatches as never);
+    prismaMock.transaction.findMany.mockResolvedValue([] as never);
+    prismaMock.transaction.count.mockResolvedValue(0 as never);
 
     const result = await caller.transactionLedger.previewMatchingCategoryChanges({
       transactionId,
-      description: 'Supermarket',
+      description: 'to and of',
     });
 
-    expect(result.matches.length).toBeLessThanOrEqual(5);
-    expect(result.matches.length).toBeGreaterThanOrEqual(0);
-    expect(result.totalCount).toBe(2);
+    expect(result.matches).toEqual([]);
+    expect(result.totalCount).toBe(0);
+    expect(result.nextCursor).toBeNull();
   });
 });
