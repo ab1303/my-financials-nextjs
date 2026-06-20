@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client';
+
 import { prisma } from '@/server/db/client';
 
 import type {
@@ -207,15 +208,18 @@ export const getExpenseEntriesForMonth = async (
  * Calculate monthly expense totals for a calendar year.
  * Derives totals directly from the Transaction table (source of truth)
  * using DEBIT + CONFIRMED transactions within the fiscal year's date range.
+ * Supports optional filtering by expense category IDs (group members).
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
  * @param bankAccountId - Optional FinancialAccount ID filter; USER_MANUAL entries always included
+ * @param expenseCategoryIds - Optional array of expense category IDs to filter by (for group filtering)
  * @returns Array of monthly summaries with total amounts and entry counts
  */
 export const getMonthlyExpenseSummaries = async (
   calendarYearId: string,
   userId: string,
   bankAccountId?: string,
+  expenseCategoryIds?: string[],
 ): Promise<Array<MonthlyExpenseSummary>> => {
   const calendarYear = await prisma.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -245,13 +249,26 @@ export const getMonthlyExpenseSummaries = async (
     999,
   );
 
+  // When filtering by expense groups, map category IDs to category names
+  let categoryInFilter: string[] | undefined;
+  if (expenseCategoryIds && expenseCategoryIds.length > 0) {
+    const categories = await prisma.expenseCategory.findMany({
+      where: { id: { in: expenseCategoryIds } },
+      select: { name: true },
+    });
+    categoryInFilter = categories.map((c) => c.name);
+  }
+
   const transactions = await prisma.transaction.findMany({
     where: {
       userId,
       type: 'DEBIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
-      category: { not: TRANSFER_CATEGORY },
+      category: {
+        not: TRANSFER_CATEGORY,
+        ...(categoryInFilter ? { in: categoryInFilter } : {}),
+      },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
         : {}),
@@ -289,15 +306,18 @@ export const getMonthlyExpenseSummaries = async (
  * Calculate total expenses for a calendar year.
  * Derives totals directly from the Transaction table (source of truth)
  * using DEBIT + CONFIRMED transactions within the fiscal year's date range.
+ * Supports optional filtering by expense category IDs (group members).
  * @param calendarYearId - Calendar year ID
  * @param userId - User ID for ownership verification
  * @param bankAccountId - Optional FinancialAccount ID filter; USER_MANUAL entries always included
+ * @param expenseCategoryIds - Optional array of expense category IDs to filter by (for group filtering)
  * @returns Total expense amount
  */
 export const getTotalExpenses = async (
   calendarYearId: string,
   userId: string,
   bankAccountId?: string,
+  expenseCategoryIds?: string[],
 ): Promise<number> => {
   const calendarYear = await prisma.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -321,13 +341,26 @@ export const getTotalExpenses = async (
     999,
   );
 
+  // When filtering by expense groups, map category IDs to category names
+  let categoryInFilter: string[] | undefined;
+  if (expenseCategoryIds && expenseCategoryIds.length > 0) {
+    const categories = await prisma.expenseCategory.findMany({
+      where: { id: { in: expenseCategoryIds } },
+      select: { name: true },
+    });
+    categoryInFilter = categories.map((c) => c.name);
+  }
+
   const result = await prisma.transaction.aggregate({
     where: {
       userId,
       type: 'DEBIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
-      category: { not: TRANSFER_CATEGORY },
+      category: {
+        not: TRANSFER_CATEGORY,
+        ...(categoryInFilter ? { in: categoryInFilter } : {}),
+      },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
         : {}),
@@ -499,14 +532,16 @@ export const getCategoryBreakdownForMonth = async (
 };
 
 /**
- * Get expense breakdown by category for a full calendar year with optional bank account filter.
+ * Get expense breakdown by category for a full calendar year with optional bank account and expense group filtering.
  * Groups DEBIT CONFIRMED Transactions (excluding TRANSFER) by category name.
  * USER_MANUAL entries are always included when filter is active.
+ * Supports filtering by expense category IDs (group members).
  */
 export const getExpenseCategoryBreakdownForYear = async (
   calendarYearId: string,
   userId: string,
   bankAccountId?: string,
+  expenseCategoryIds?: string[],
 ): Promise<Array<CategoryBreakdown>> => {
   const calendarYear = await prisma.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -529,13 +564,26 @@ export const getExpenseCategoryBreakdownForYear = async (
     999,
   );
 
+  // When filtering by expense groups, map category IDs to category names
+  let categoryInFilter: string[] | undefined;
+  if (expenseCategoryIds && expenseCategoryIds.length > 0) {
+    const categories = await prisma.expenseCategory.findMany({
+      where: { id: { in: expenseCategoryIds } },
+      select: { name: true },
+    });
+    categoryInFilter = categories.map((c) => c.name);
+  }
+
   const transactions = await prisma.transaction.findMany({
     where: {
       userId,
       type: 'DEBIT',
       status: 'CONFIRMED',
       date: { gte: startDate, lte: endDate },
-      category: { not: TRANSFER_CATEGORY },
+      category: {
+        not: TRANSFER_CATEGORY,
+        ...(categoryInFilter ? { in: categoryInFilter } : {}),
+      },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
         : {}),

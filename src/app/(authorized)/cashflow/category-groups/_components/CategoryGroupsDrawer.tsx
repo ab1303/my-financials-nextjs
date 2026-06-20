@@ -68,7 +68,7 @@ export default function CategoryGroupsDrawer({
         scope: editingGroup.scope,
         name: editingGroup.name,
         description: editingGroup.description || '',
-        memberIds: [], // Will be loaded from members
+        memberIds: editingGroup.memberIds,
       });
     }
   }, [isOpen, editingGroup]);

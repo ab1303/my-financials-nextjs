@@ -1,4 +1,12 @@
 import { prisma } from '@/server/db/client';
+import type {
+  IncomeEntryInput,
+  IncomeEntryModel,
+  IncomeModel,
+  MonthlyIncomeSummary,
+  SourceBreakdown,
+} from '../models/income';
+
 import {
   REIMBURSEMENT_CATEGORY,
   TRANSFER_CATEGORY,
@@ -9,13 +17,6 @@ const INCOME_EXCLUDED_CATEGORIES = [
   TRANSFER_CATEGORY,
   REIMBURSEMENT_CATEGORY,
 ] as const;
-import type {
-  IncomeEntryInput,
-  IncomeEntryModel,
-  IncomeModel,
-  MonthlyIncomeSummary,
-  SourceBreakdown,
-} from '../models/income';
 
 /**
  * Create Income record for a calendar year and user.
@@ -222,12 +223,14 @@ export const deleteIncomeEntry = async (
 
 /**
  * Calculate total income for a calendar year by aggregating CREDIT CONFIRMED Transactions.
+ * Supports optional filtering by income source IDs (group members).
  */
 export const getTotalIncome = async (
   calendarYearId: string,
   userId: string,
   prismaClient = prisma,
   bankAccountId?: string,
+  incomeSourceIds?: string[],
 ): Promise<number> => {
   const calendarYear = await prismaClient.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -250,12 +253,25 @@ export const getTotalIncome = async (
     999,
   );
 
+  // When filtering by income groups, we need to map source IDs to category names
+  let categoryInFilter: string[] | undefined;
+  if (incomeSourceIds && incomeSourceIds.length > 0) {
+    const sources = await prismaClient.incomeSource.findMany({
+      where: { id: { in: incomeSourceIds } },
+      select: { name: true },
+    });
+    categoryInFilter = sources.map((s) => s.name);
+  }
+
   const result = await prismaClient.transaction.aggregate({
     where: {
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      category: {
+        notIn: [...INCOME_EXCLUDED_CATEGORIES],
+        ...(categoryInFilter ? { in: categoryInFilter } : {}),
+      },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId ? { bankAccountId } : {}),
     },
@@ -400,14 +416,15 @@ export const getSourceBreakdown = async (
 };
 
 /**
- * Get monthly income summary for a calendar year with optional bank account filter.
- * Extends getMonthlyIncomeSummary to support filtering by FinancialAccount.
+ * Get monthly income summary for a calendar year with optional bank account and income group filtering.
+ * Extends getMonthlyIncomeSummary to support filtering by FinancialAccount and income source groups.
  * USER_MANUAL entries (bankAccountId=null) are always included when filter is active.
  */
 export const getMonthlyIncomeSummaryFiltered = async (
   calendarYearId: string,
   userId: string,
   bankAccountId?: string,
+  incomeSourceIds?: string[],
 ): Promise<Array<MonthlyIncomeSummary>> => {
   const calendarYear = await prisma.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -430,12 +447,25 @@ export const getMonthlyIncomeSummaryFiltered = async (
     999,
   );
 
+  // When filtering by income groups, map source IDs to category names
+  let categoryInFilter: string[] | undefined;
+  if (incomeSourceIds && incomeSourceIds.length > 0) {
+    const sources = await prisma.incomeSource.findMany({
+      where: { id: { in: incomeSourceIds } },
+      select: { name: true },
+    });
+    categoryInFilter = sources.map((s) => s.name);
+  }
+
   const transactions = await prisma.transaction.findMany({
     where: {
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      category: {
+        notIn: [...INCOME_EXCLUDED_CATEGORIES],
+        ...(categoryInFilter ? { in: categoryInFilter } : {}),
+      },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }
@@ -476,14 +506,16 @@ export const getMonthlyIncomeSummaryFiltered = async (
 };
 
 /**
- * Get income breakdown by source for a full calendar year with optional bank account filter.
+ * Get income breakdown by source for a full calendar year with optional bank account and income group filtering.
  * Groups CREDIT CONFIRMED Transactions by category (= income source name).
  * USER_MANUAL entries are always included when filter is active.
+ * Supports filtering by income source IDs (group members).
  */
 export const getIncomeSourceBreakdownForYear = async (
   calendarYearId: string,
   userId: string,
   bankAccountId?: string,
+  incomeSourceIds?: string[],
 ): Promise<Array<SourceBreakdown>> => {
   const calendarYear = await prisma.calendarYear.findUnique({
     where: { id: calendarYearId },
@@ -506,12 +538,25 @@ export const getIncomeSourceBreakdownForYear = async (
     999,
   );
 
+  // When filtering by income groups, map source IDs to category names
+  let categoryInFilter: string[] | undefined;
+  if (incomeSourceIds && incomeSourceIds.length > 0) {
+    const sources = await prisma.incomeSource.findMany({
+      where: { id: { in: incomeSourceIds } },
+      select: { name: true },
+    });
+    categoryInFilter = sources.map((s) => s.name);
+  }
+
   const transactions = await prisma.transaction.findMany({
     where: {
       userId,
       type: 'CREDIT',
       status: 'CONFIRMED',
-      category: { notIn: [...INCOME_EXCLUDED_CATEGORIES] },
+      category: {
+        notIn: [...INCOME_EXCLUDED_CATEGORIES],
+        ...(categoryInFilter ? { in: categoryInFilter } : {}),
+      },
       date: { gte: startDate, lte: endDate },
       ...(bankAccountId
         ? { OR: [{ bankAccountId }, { source: 'USER_MANUAL' }] }

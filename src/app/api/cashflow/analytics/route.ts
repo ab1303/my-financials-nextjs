@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/server/auth';
+import { prisma } from '@/server/db/client';
 import type {
   CashflowAnalyticsData,
   CashflowKPIs,
@@ -16,7 +17,6 @@ import {
   getMonthlyIncomeSummaryFiltered,
   getTotalIncome,
 } from '@/server/services/income.service';
-import { prisma } from '@/server/db/client';
 
 export async function GET(request: Request) {
   try {
@@ -39,11 +39,62 @@ export async function GET(request: Request) {
     const bankAccountIdParam = searchParams.get('bankAccountId');
     const bankAccountId = bankAccountIdParam ? bankAccountIdParam : undefined;
 
+    // Parse group filter parameters (comma-separated list of IDs)
+    const incomeGroupIdsParam = searchParams.get('incomeGroupIds');
+    const incomeGroupIds = incomeGroupIdsParam
+      ? incomeGroupIdsParam.split(',').filter((id) => id.trim())
+      : undefined;
+
+    const expenseGroupIdsParam = searchParams.get('expenseGroupIds');
+    const expenseGroupIds = expenseGroupIdsParam
+      ? expenseGroupIdsParam.split(',').filter((id) => id.trim())
+      : undefined;
+
     // Fetch calendar year for expense month→year resolution
     const calendarYear = await prisma.calendarYear.findUnique({
       where: { id: calendarYearId },
       select: { fromYear: true, fromMonth: true, toYear: true },
     });
+
+    // Build expense category member IDs from selected expense groups
+    let expenseCategoryIds: string[] | undefined;
+    if (expenseGroupIds && expenseGroupIds.length > 0) {
+      const groups = await prisma.categoryGroup.findMany({
+        where: {
+          id: { in: expenseGroupIds },
+          userId,
+          scope: 'EXPENSE',
+        },
+        include: {
+          expenseCategories: {
+            select: { expenseCategoryId: true },
+          },
+        },
+      });
+      expenseCategoryIds = groups.flatMap((g) =>
+        g.expenseCategories.map((ec) => ec.expenseCategoryId),
+      );
+    }
+
+    // Build income source member IDs from selected income groups
+    let incomeSourceIds: string[] | undefined;
+    if (incomeGroupIds && incomeGroupIds.length > 0) {
+      const groups = await prisma.categoryGroup.findMany({
+        where: {
+          id: { in: incomeGroupIds },
+          userId,
+          scope: 'INCOME',
+        },
+        include: {
+          incomeSources: {
+            select: { incomeSourceId: true },
+          },
+        },
+      });
+      incomeSourceIds = groups.flatMap((g) =>
+        g.incomeSources.map((s) => s.incomeSourceId),
+      );
+    }
 
     const [
       totalIncome,
@@ -53,12 +104,12 @@ export async function GET(request: Request) {
       expenseCategories,
       incomeSources,
     ] = await Promise.all([
-      getTotalIncome(calendarYearId, userId, undefined, bankAccountId),
-      getTotalExpenses(calendarYearId, userId, bankAccountId),
-      getMonthlyIncomeSummaryFiltered(calendarYearId, userId, bankAccountId),
-      getMonthlyExpenseSummaries(calendarYearId, userId, bankAccountId),
-      getExpenseCategoryBreakdownForYear(calendarYearId, userId, bankAccountId),
-      getIncomeSourceBreakdownForYear(calendarYearId, userId, bankAccountId),
+      getTotalIncome(calendarYearId, userId, undefined, bankAccountId, incomeSourceIds),
+      getTotalExpenses(calendarYearId, userId, bankAccountId, expenseCategoryIds),
+      getMonthlyIncomeSummaryFiltered(calendarYearId, userId, bankAccountId, incomeSourceIds),
+      getMonthlyExpenseSummaries(calendarYearId, userId, bankAccountId, expenseCategoryIds),
+      getExpenseCategoryBreakdownForYear(calendarYearId, userId, bankAccountId, expenseCategoryIds),
+      getIncomeSourceBreakdownForYear(calendarYearId, userId, bankAccountId, incomeSourceIds),
     ]);
 
     // Helper: determine calendar year for an expense month

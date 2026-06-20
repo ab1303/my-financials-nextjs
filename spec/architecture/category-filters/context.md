@@ -1,36 +1,47 @@
 Feature Context: Category Grouping & Filters
 
 Problem statement
-- Users need to exclude categories (e.g., Investments, Transfers) from rollup totals to get meaningful operational views (income/expenses/net) — current summaries are inflated by categories that should not be counted.
+- Users need a place to define reusable category groups before those groups can drive analytics rollups.
+- Analytics summaries are currently inflated by categories that should not be counted, and the page does not yet expose group-based selectors.
 
 Goals
-- Let users group categories and include/exclude groups or individual categories from aggregation summaries.
-- Make filters discoverable on all rollup pages and provide live preview of totals that updates as the user changes selection.
-- Use the shared `react-select` baseline for the filter UI so styling and accessibility match the rest of the app.
+- Add a `Transactions > Category Groups` page where users can create, edit, delete, and review category groups.
+- Show a dashboard of existing `Income` and `Expense` groups on landing, with a primary `+` action to open a side drawer.
+- Add top-of-page `Income groups` and `Expense groups` selectors on the Analytics page, sourced from the authored groups.
+- Make those analytics selections drive totals, rollups, summaries, and graphs across the page.
+- Use the shared `react-select` baseline for the group selector UI so styling and accessibility match the rest of the app.
 - Persist category groups per user against the existing `IncomeSource` and `ExpenseCategory` tables, allowing the same category to appear in multiple groups.
 
 User stories
-- As a user, I can toggle a group to include/exclude all categories in that group and see totals update instantly.
-- As a user, I can expand a group and include/exclude individual categories.
-- As a mobile user, I can open a bottom-sheet filter UI and perform the same actions.
+- As a user, I can open Transactions > Category Groups and see all of my existing income and expense groups.
+- As a user, I can click `+` to create a new group in a side drawer, choose the group type, select items, and name the group.
+- As a user, I can edit or delete an existing group from the dashboard.
+- As a user, I can choose income groups and expense groups on Analytics and have those selections drive every chart and total.
 
 UX flows
-1. Open report/dashboard → left Filter Panel visible (desktop) or Filters FAB (mobile).
-2. Toggle group checkbox (tri-state) or individual category checkboxes.
-3. Preview Totals card updates immediately as the selection changes.
+1. Open Transactions → Category Groups from the side nav.
+2. Land on a dashboard of grouped sections for Income and Expense groups.
+3. Click `+` to open a right-side drawer for create/edit.
+4. Select `Income Sources` or `Expense Category`, pick the linked items, and name the group.
+5. Open Analytics and choose income groups plus expense groups from the top filter bar; those selections drive totals, rollups, and graphs.
 
 Related pages / files (implementation hints)
-- UI: src/components/ui/filters.tsx (FiltersPanel, GroupRow, CategoryItem, PreviewTotals)
-- Shared select baseline: src/components/ui/Select/Select.tsx, src/lib/select-styles.ts
-- Example pattern: src/components/TransferExclusionSummary.tsx
-- Shared UI tokens: src/components/ui/
+- Authoring page: `src/app/(authorized)/cashflow/category-groups/page.tsx`
+- Authoring shell: `src/app/(authorized)/cashflow/category-groups/_components/*`
+- Side-nav entry: `src/layouts/SideNav.tsx`
+- CRUD pattern reference: `src/app/(authorized)/cashflow/bank-interest/_components/cleanse-drawer/*`
+- Analytics page shell: `src/app/(authorized)/cashflow/analytics/_components/CashflowAnalyticsClient.tsx`
+- Group selector UI: `src/components/ui/filters.tsx`
+- Shared select baseline: `src/components/ui/Select/Select.tsx`, `src/lib/select-styles.ts`
 
 Constraints
+- The category-group authoring page is the first implementation phase and must land before analytics linkage work.
 - Start with client-side mock aggregation for development. Server API contract must be defined and mocked; integration with real aggregator postponed until API exists.
 - Accessibility: ARIA roles and indeterminate state required.
 - Performance: preview updates should be debounced and memoized.
 
 Acceptance criteria
-- Group tri-state toggles behave correctly and are keyboard accessible.
-- Preview Totals update within expected latency (<300ms for typical datasets).
-- Filter state is derived dynamically from the current selection and persisted category groups.
+- A Transactions nav item named Category Groups exists alongside Category Rules.
+- The Category Groups dashboard shows existing Income and Expense groups with create/edit/delete actions.
+- The Analytics page exposes separate income-group and expense-group selectors at the top of the page.
+- Analytics totals, summaries, and graphs respond to the selected groups.

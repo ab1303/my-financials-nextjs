@@ -2,7 +2,7 @@
 
 import type { CalendarEnumType } from '@prisma/client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { SingleValue } from 'react-select';
+import type { MultiValue, SingleValue } from 'react-select';
 
 import { CalendarYearPicker } from '@/components/CalendarYearPicker';
 import { FiltersPanel } from '@/components/ui/filters';
@@ -25,6 +25,8 @@ type CashflowAnalyticsClientProps = {
   defaultCalendarYearId: string;
   defaultCalendarType: CalendarEnumType;
   bankOptions: OptionType[];
+  incomeGroupOptions: OptionType[];
+  expenseGroupOptions: OptionType[];
 };
 
 export default function CashflowAnalyticsClient({
@@ -32,9 +34,13 @@ export default function CashflowAnalyticsClient({
   defaultCalendarYearId,
   defaultCalendarType,
   bankOptions,
+  incomeGroupOptions,
+  expenseGroupOptions,
 }: CashflowAnalyticsClientProps) {
   const [selectedYearId, setSelectedYearId] = useState<string>(defaultCalendarYearId);
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
+  const [selectedIncomeGroupIds, setSelectedIncomeGroupIds] = useState<string[]>([]);
+  const [selectedExpenseGroupIds, setSelectedExpenseGroupIds] = useState<string[]>([]);
   const [data, setData] = useState<CashflowAnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,38 +48,61 @@ export default function CashflowAnalyticsClient({
   const [selectedExpenseCategoryIds, setSelectedExpenseCategoryIds] = useState<string[]>([]);
 
   const selectedBank = bankOptions.find((b) => b.id === selectedBankId) ?? null;
+  const selectedIncomeGroups = incomeGroupOptions.filter((g) =>
+    selectedIncomeGroupIds.includes(g.id)
+  );
+  const selectedExpenseGroups = expenseGroupOptions.filter((g) =>
+    selectedExpenseGroupIds.includes(g.id)
+  );
 
   // Get the year number from the selected calendar year
   const selectedYear = calendarYears.find((y) => y.id === selectedYearId);
   const yearNumber = selectedYear?.fromYear ?? new Date().getFullYear();
 
-  const fetchAnalytics = useCallback(async (yearId: string, bankId: string | null) => {
-    if (!yearId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ calendarYearId: yearId });
-      if (bankId) params.set('bankAccountId', bankId);
-      const res = await fetch(`/api/cashflow/analytics?${params.toString()}`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error ?? `HTTP ${res.status}`);
+  const fetchAnalytics = useCallback(
+    async (yearId: string, bankId: string | null, incomeGroupIds: string[], expenseGroupIds: string[]) => {
+      if (!yearId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams({ calendarYearId: yearId });
+        if (bankId) params.set('bankAccountId', bankId);
+        if (incomeGroupIds.length > 0) {
+          params.set('incomeGroupIds', incomeGroupIds.join(','));
+        }
+        if (expenseGroupIds.length > 0) {
+          params.set('expenseGroupIds', expenseGroupIds.join(','));
+        }
+        const res = await fetch(`/api/cashflow/analytics?${params.toString()}`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body?.error ?? `HTTP ${res.status}`);
+        }
+        const json: CashflowAnalyticsData = await res.json();
+        setData(json);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load analytics');
+      } finally {
+        setLoading(false);
       }
-      const json: CashflowAnalyticsData = await res.json();
-      setData(json);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load analytics');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
-    void fetchAnalytics(selectedYearId, selectedBankId);
-  }, [fetchAnalytics, selectedYearId, selectedBankId]);
+    void fetchAnalytics(selectedYearId, selectedBankId, selectedIncomeGroupIds, selectedExpenseGroupIds);
+  }, [fetchAnalytics, selectedYearId, selectedBankId, selectedIncomeGroupIds, selectedExpenseGroupIds]);
 
   const handleYearChange = (yearId: string | null) => {
     if (yearId) setSelectedYearId(yearId);
+  };
+
+  const handleIncomeGroupChange = (value: MultiValue<OptionType>) => {
+    setSelectedIncomeGroupIds(value.map((v) => v.id));
+  };
+
+  const handleExpenseGroupChange = (value: MultiValue<OptionType>) => {
+    setSelectedExpenseGroupIds(value.map((v) => v.id));
   };
 
   const handleMonthClick = (point: MonthlyTrendPoint, series: 'income' | 'expenses') => {
@@ -135,7 +164,7 @@ export default function CashflowAnalyticsClient({
 
   useEffect(() => {
     const allExpenseCategoryIds = expenseFilterGroups.flatMap((group) =>
-      group.categories.map((category) => category.id),
+      group.categories.map((category) => category.id)
     );
     setSelectedExpenseCategoryIds(allExpenseCategoryIds);
   }, [expenseFilterGroups]);
@@ -144,34 +173,80 @@ export default function CashflowAnalyticsClient({
     <div className="space-y-6">
       {/* Filter Bar */}
       <div className="rounded-xl border border-border bg-card shadow p-4">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          {/* Calendar Year Picker */}
-          <CalendarYearPicker
-            applicableTypes={['FISCAL', 'ANNUAL']}
-            calendarYears={calendarYears}
-            selectedYearId={selectedYearId}
-            defaultType={defaultCalendarType}
-            onYearChange={handleYearChange}
-          />
+        <div className="flex flex-col gap-4">
+          {/* First Row: Calendar Year + Bank */}
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            {/* Calendar Year Picker */}
+            <CalendarYearPicker
+              applicableTypes={['FISCAL', 'ANNUAL']}
+              calendarYears={calendarYears}
+              selectedYearId={selectedYearId}
+              defaultType={defaultCalendarType}
+              onYearChange={handleYearChange}
+            />
 
-          {/* Bank Account Filter */}
-          {bankOptions.length > 0 && (
-            <div className="space-y-1.5">
-              <Label htmlFor="bank-filter">Bank Account</Label>
-              <Select<OptionType>
-                instanceId="bank-filter"
-                inputId="bank-filter"
-                options={bankOptions}
-                value={selectedBank}
-                onChange={(opt: SingleValue<OptionType>) => setSelectedBankId(opt?.id ?? null)}
-                isClearable
-                placeholder="All accounts"
-                className="w-56"
-                getOptionValue={(opt) => opt.id}
-                getOptionLabel={(opt) => opt.label}
-              />
-            </div>
-          )}
+            {/* Bank Account Filter */}
+            {bankOptions.length > 0 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="bank-filter">Bank Account</Label>
+                <Select<OptionType>
+                  instanceId="bank-filter"
+                  inputId="bank-filter"
+                  options={bankOptions}
+                  value={selectedBank}
+                  onChange={(opt: SingleValue<OptionType>) => setSelectedBankId(opt?.id ?? null)}
+                  isClearable
+                  placeholder="All accounts"
+                  className="w-56"
+                  getOptionValue={(opt) => opt.id}
+                  getOptionLabel={(opt) => opt.label}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Second Row: Income Groups + Expense Groups */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Income Groups */}
+            {incomeGroupOptions.length > 0 && (
+              <div className="space-y-1.5 flex-1">
+                <Label htmlFor="income-groups">Income groups</Label>
+                <Select<OptionType, true>
+                  instanceId="income-groups"
+                  inputId="income-groups"
+                  options={incomeGroupOptions}
+                  value={selectedIncomeGroups}
+                  onChange={handleIncomeGroupChange}
+                  isMulti
+                  isClearable
+                  placeholder="All income groups"
+                  className="w-full"
+                  getOptionValue={(opt) => opt.id}
+                  getOptionLabel={(opt) => opt.label}
+                />
+              </div>
+            )}
+
+            {/* Expense Groups */}
+            {expenseGroupOptions.length > 0 && (
+              <div className="space-y-1.5 flex-1">
+                <Label htmlFor="expense-groups">Expense groups</Label>
+                <Select<OptionType, true>
+                  instanceId="expense-groups"
+                  inputId="expense-groups"
+                  options={expenseGroupOptions}
+                  value={selectedExpenseGroups}
+                  onChange={handleExpenseGroupChange}
+                  isMulti
+                  isClearable
+                  placeholder="All expense groups"
+                  className="w-full"
+                  getOptionValue={(opt) => opt.id}
+                  getOptionLabel={(opt) => opt.label}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -9,6 +9,7 @@ export interface CategoryGroupListItem {
   createdAt: string;
   updatedAt: string;
   memberCount: number;
+  memberIds: string[];
 }
 
 /**
@@ -42,6 +43,10 @@ export async function listCategoryGroups(params: {
       group.scope === 'INCOME'
         ? group.incomeSources.length
         : group.expenseCategories.length,
+    memberIds:
+      group.scope === 'INCOME'
+        ? group.incomeSources.map((member) => member.incomeSourceId)
+        : group.expenseCategories.map((member) => member.expenseCategoryId),
   }));
 }
 
@@ -117,6 +122,10 @@ export async function createCategoryGroup(params: {
       group.scope === 'INCOME'
         ? group.incomeSources.length
         : group.expenseCategories.length,
+    memberIds:
+      group.scope === 'INCOME'
+        ? group.incomeSources.map((member) => member.incomeSourceId)
+        : group.expenseCategories.map((member) => member.expenseCategoryId),
   };
 }
 
@@ -221,6 +230,10 @@ export async function updateCategoryGroup(params: {
       updated.scope === 'INCOME'
         ? updated.incomeSources.length
         : updated.expenseCategories.length,
+    memberIds:
+      updated.scope === 'INCOME'
+        ? updated.incomeSources.map((member) => member.incomeSourceId)
+        : updated.expenseCategories.map((member) => member.expenseCategoryId),
   };
 }
 

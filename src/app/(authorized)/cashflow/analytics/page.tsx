@@ -4,8 +4,9 @@ import type { Metadata } from 'next';
 import { auth } from '@/server/auth';
 import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { prisma } from '@/server/db/client';
+import { listCategoryGroups } from '@/server/services/category-groups/category-groups.service';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import type { OptionType } from '@/types';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
@@ -26,10 +27,11 @@ export default async function CashflowAnalyticsPage() {
     );
   }
 
-  const [calendarYears, bankAccounts, fiscalYearType] = await Promise.all([
+  const [calendarYears, bankAccounts, fiscalYearType, categoryGroups] = await Promise.all([
     getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
     listBankAccountsHandler(session.user.id),
     getUserFiscalYearType(prisma, session.user.id),
+    listCategoryGroups({ prisma, userId: session.user.id }),
   ]);
 
   const defaultCalendarYear = getDefaultCalendarYear(calendarYears, fiscalYearType);
@@ -37,6 +39,20 @@ export default async function CashflowAnalyticsPage() {
   const bankOptions: OptionType[] = bankAccounts.map((a) => ({
     id: a.id,
     label: `${a.name} (${a.institution.name})`,
+  }));
+
+  // Separate category groups by scope
+  const incomeGroups = categoryGroups.filter((g) => g.scope === 'INCOME');
+  const expenseGroups = categoryGroups.filter((g) => g.scope === 'EXPENSE');
+
+  const incomeGroupOptions: OptionType[] = incomeGroups.map((g) => ({
+    id: g.id,
+    label: g.name,
+  }));
+
+  const expenseGroupOptions: OptionType[] = expenseGroups.map((g) => ({
+    id: g.id,
+    label: g.name,
   }));
 
   return (
@@ -55,6 +71,8 @@ export default async function CashflowAnalyticsPage() {
         defaultCalendarYearId={defaultCalendarYear?.id ?? ''}
         defaultCalendarType={(fiscalYearType ?? 'FISCAL') as CalendarEnumType}
         bankOptions={bankOptions}
+        incomeGroupOptions={incomeGroupOptions}
+        expenseGroupOptions={expenseGroupOptions}
       />
     </main>
   );

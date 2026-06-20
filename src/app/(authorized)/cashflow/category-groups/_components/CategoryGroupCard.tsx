@@ -3,7 +3,6 @@
 import { Edit2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 import { trpc } from '@/server/trpc/client';
 
@@ -53,27 +52,25 @@ export default function CategoryGroupCard({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 border-t border-border pt-3">
-        <Button
-          variant="ghost"
-          size="sm"
+      <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
+        <button
+          type="button"
           onClick={() => onEdit(group)}
-          className="flex-1 gap-2"
           disabled={deleteMutation.isPending}
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-950 dark:hover:bg-slate-900"
         >
-          <Edit2 className="h-4 w-4" />
+          <Edit2 className="h-4 w-4 text-muted-foreground" />
           Edit
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
+        </button>
+        <button
+          type="button"
           onClick={handleDelete}
-          className="flex-1 gap-2 text-destructive hover:text-destructive"
           disabled={deleteMutation.isPending}
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-500/15 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-300 dark:hover:bg-red-400/15 dark:hover:text-red-200"
         >
           <Trash2 className="h-4 w-4" />
           Delete
-        </Button>
+        </button>
       </div>
     </div>
   );
