@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import type { GroupBase } from 'react-select';
 
 import { useCategoryFilters } from '@/hooks/useCategoryFilters';
-import mockGroups, { type Category as MockCategory, type CategoryGroup } from '@/lib/mockFilterData';
+import mockGroups, { type Category as MockCategory, type CategoryGroup, type GroupedCategoryOption } from '@/lib/mockFilterData';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { Label } from '@/components/ui/Label';
 
 /**
  * PreviewTotals component - memoized computation of income, expense, net
@@ -51,7 +54,26 @@ export function PreviewTotals({
 }
 
 /**
- * CategoryItem - individual category checkbox with label and amount
+ * Convert CategoryGroup array to react-select grouped options format
+ * Groups categories by their group heading with Ungrouped bucket
+ */
+function buildGroupedSelectOptions(
+  groups: CategoryGroup[]
+): Array<GroupBase<GroupedCategoryOption>> {
+  return groups.map((group) => ({
+    label: group.name,
+    options: group.categories.map((cat) => ({
+      label: cat.name,
+      value: cat.id,
+      groupLabel: group.name,
+      type: cat.type,
+      amount: cat.amount,
+    })),
+  }));
+}
+
+/**
+ * CategoryItem - individual category checkbox with label and amount (legacy)
  */
 function CategoryItem({
   category,
@@ -82,7 +104,7 @@ function CategoryItem({
 }
 
 /**
- * GroupRow - group header with tri-state checkbox and nested categories
+ * GroupRow - group header with tri-state checkbox and nested categories (legacy)
  */
 function GroupRow({
   group,
@@ -145,23 +167,26 @@ function GroupRow({
 /**
  * FiltersPanel - main component for category filtering
  *
- * Features:
- * - Tri-state group checkboxes
- * - Individual category checkboxes
+ * Features (Phase 2 - react-select with grouped categories):
+ * - Grouped category selectors using react-select
+ * - Categories presented under authored group headings
+ * - Single Ungrouped section for categories not assigned to any group
+ * - Multi-select with group-level organization
  * - Live preview totals
  * - Clear filters button
- * - Save View button (placeholder)
- * - Keyboard accessible with aria-checked for tri-state
+ * - Keyboard accessible
  * - Uses useCategoryFilters hook for state management
  */
 export function FiltersPanel({
   initialGroups = mockGroups,
   defaultSelectAll = false,
   onSelectionChange,
+  useGroupedSelect = true,
 }: {
   initialGroups?: CategoryGroup[];
   defaultSelectAll?: boolean;
   onSelectionChange?: (selectedCategoryIds: string[]) => void;
+  useGroupedSelect?: boolean;
 }) {
   const {
     buildInitialSelection,
@@ -190,6 +215,91 @@ export function FiltersPanel({
     onSelectionChange?.(activeFilterIds);
   }, [activeFilterIds, onSelectionChange]);
 
+  // Build grouped options for react-select
+  const groupedOptions = useMemo(
+    () => buildGroupedSelectOptions(initialGroups),
+    [initialGroups]
+  );
+
+  // Build selected values for react-select
+  const selectedValues = useMemo(() => {
+    return groupedOptions.flatMap((group) =>
+      group.options.filter((opt) => selectedCategories.has(opt.value))
+    );
+  }, [groupedOptions, selectedCategories]);
+
+  const handleSelectChange = (
+    newValues: readonly GroupedCategoryOption[] | null
+  ) => {
+    const newSelectedIds = new Set(newValues?.map((v) => v.value) ?? []);
+    
+    // Determine which categories to add and remove
+    const toAdd = Array.from(newSelectedIds).filter(
+      (id) => !selectedCategories.has(id)
+    );
+    const toRemove = Array.from(selectedCategories).filter(
+      (id) => !newSelectedIds.has(id)
+    );
+
+    // Toggle added categories
+    toAdd.forEach((id) => toggleCategory(id));
+    // Toggle removed categories
+    toRemove.forEach((id) => toggleCategory(id));
+  };
+
+  // Use grouped select (Phase 2) or legacy checkbox panel
+  if (useGroupedSelect) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="rounded-lg border border-border bg-card shadow-sm p-4">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="category-selector" className="text-base font-semibold">
+                Category Filter
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Select categories to include in your analysis. Organized by group.
+              </p>
+            </div>
+            <Select<GroupedCategoryOption, true, GroupBase<GroupedCategoryOption>>
+              inputId="category-selector"
+              instanceId="category-selector"
+              options={groupedOptions}
+              value={selectedValues}
+              onChange={handleSelectChange}
+              isMulti
+              isClearable
+              placeholder="Select categories..."
+              className="w-full"
+              getOptionValue={(opt) => opt.value}
+              getOptionLabel={(opt) => opt.label}
+              formatGroupLabel={(group) => (
+                <div className="text-sm font-semibold text-foreground py-2">
+                  {group.label}
+                </div>
+              )}
+            />
+          </div>
+
+          <div className="mt-4 flex items-center gap-2">
+            <button
+              onClick={clearSelection}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear all category filters"
+            >
+              Clear all
+            </button>
+          </div>
+        </div>
+
+        <div className="max-w-md">
+          <PreviewTotals groups={initialGroups} selectedCategories={selectedCategories} />
+        </div>
+      </div>
+    );
+  }
+
+  // Legacy checkbox panel (for backward compatibility)
   return (
     <div className="flex gap-6">
       <aside className="w-80 bg-slate-50 dark:bg-slate-900 p-4 rounded shadow-sm">

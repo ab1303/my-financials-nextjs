@@ -5,9 +5,9 @@ Purpose
 
 Scope of this LLD
 - Define the persistence data model for user-owned category groups.
-- Category groups are persisted per user and per category domain, then used by the authoring dashboard and the analytics selectors.
-- The authoring page is the first phase and must land before the analytics page linkage phase.
-- Base the group-selector interactions on the shared `react-select` wrapper/styles rather than a bespoke checkbox panel.
+- Category groups are persisted per user and per category domain, then used by the authoring dashboard and the analytics grouped category filter surface.
+- The authoring page is the first phase and must land before the analytics filter refinement phase.
+- Base the grouped-category interactions on the shared `react-select` wrapper/styles rather than a bespoke checkbox panel.
 
 Wireframe / UX direction
 - Use the same page-shell pattern as `Bank Interest` / `Category Rules`: title, short description, and a primary action on the right.
@@ -15,7 +15,8 @@ Wireframe / UX direction
 - Each section renders group cards with name, member count, and edit/delete actions.
 - The `+` button opens a right-side drawer for create/edit.
 - The drawer contains: scope select (`Income Sources` vs `Expense Category`), group name input, selectable source/category list, and save/cancel actions.
-- On Analytics, render two top-level selectors: `Income groups` and `Expense groups`, both using `react-select`.
+- On Analytics, render grouped category selectors using `react-select`.
+- Categories should be presented under their authored group headings, with uncategorized items collected under a single `Ungrouped` section.
 - Those selectors feed page-level calculations and should update totals, rollups, summaries, and graphs.
 
 Files to add/update
@@ -58,9 +59,9 @@ Component contracts
   - Props: `mode: 'create' | 'edit'`, `group?`, `onSubmit`, `onCancel`
   - Behavior: scope select, name input, option list filtered by scope, and validation.
 
-- Analytics group selectors
-  - Props: available `incomeGroups`, `expenseGroups`, selected IDs, and change callbacks.
-  - Behavior: two react-select controls at the top of the page; selections drive derived analytics state.
+- Analytics grouped category selectors
+  - Props: grouped category options, selected IDs, and change callbacks.
+  - Behavior: react-select controls at the top of the page; options are grouped by authored group and an Ungrouped bucket; selections drive derived analytics state.
 
 Types (TS)
 - `type CategoryGroupScope = 'INCOME' | 'EXPENSE'`
@@ -86,17 +87,17 @@ Implementation notes
 - The dashboard should derive its data from the persisted groups, not from the analytics filter state.
 - Use the drawer as the single create/edit surface to avoid duplicating form logic.
 - Keep delete actions explicit with confirmation.
-- Analytics should remain server-authoritative for totals where possible, but the group selectors may start with mock aggregation and then switch to the API-backed aggregator.
+- Analytics should remain server-authoritative for totals where possible, but the grouped category selectors may start with mock aggregation and then switch to the API-backed aggregator.
 
 Testing
 - Unit tests for the dashboard empty state, grouped sections, and action triggers.
 - Unit tests for the drawer’s scope switching, item list rendering, and validation.
-- Unit tests for analytics selector wiring and derived totals/selection state.
+- Unit tests for analytics grouped-category selector wiring and derived totals/selection state.
 - Existing `useCategoryFilters` tests remain relevant for the selector helpers and tri-state behavior.
 
 Acceptance tests
 - Category Groups appears under Transactions in the side nav.
 - Landing page shows two dashboard sections: Income and Expense.
 - Clicking `+` opens a drawer with scope select, item selection, and name input.
-- Analytics page exposes separate income-group and expense-group selectors at the top.
-- Analytics totals and graphs update when the selected groups change.
+- Analytics page exposes grouped category selectors at the top.
+- Analytics totals and graphs update when the selected categories change.

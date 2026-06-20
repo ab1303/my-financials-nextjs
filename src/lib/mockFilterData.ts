@@ -12,6 +12,18 @@ export type CategoryGroup = {
   categories: Category[];
 };
 
+/**
+ * Grouped category option for react-select displays
+ * Includes group headings and Ungrouped bucket
+ */
+export type GroupedCategoryOption = {
+  label: string;
+  value: string;
+  groupLabel?: string;
+  type?: 'income' | 'expense' | 'other';
+  amount?: number;
+};
+
 const mockGroups: CategoryGroup[] = [
   {
     id: 'g-essentials',
@@ -34,6 +46,14 @@ const mockGroups: CategoryGroup[] = [
     name: 'Income',
     categories: [
       { id: 'c-salary', name: 'Salary', color: 'bg-yellow-500', type: 'income', amount: 5000 },
+    ],
+  },
+  // Ungrouped bucket for categories not assigned to any group
+  {
+    id: 'g-ungrouped',
+    name: 'Ungrouped',
+    categories: [
+      { id: 'c-misc', name: 'Miscellaneous', color: 'bg-gray-500', type: 'other', amount: 100 },
     ],
   },
 ];

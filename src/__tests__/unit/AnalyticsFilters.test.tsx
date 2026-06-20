@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CashflowAnalyticsClient from '@/app/(authorized)/cashflow/analytics/_components/CashflowAnalyticsClient';
@@ -39,6 +40,10 @@ vi.mock('@/app/(authorized)/cashflow/analytics/_components/AnalyticsDrillDownDra
   default: () => <div data-testid="drill-down-drawer">Drill Down Drawer</div>,
 }));
 
+vi.mock('@/app/(authorized)/cashflow/analytics/_components/ChartSkeleton', () => ({
+  ChartSkeleton: () => <div data-testid="chart-skeleton">Loading Chart</div>,
+}));
+
 vi.mock('@/components/CalendarYearPicker', () => ({
   CalendarYearPicker: ({ onYearChange }: any) => (
     <div data-testid="calendar-picker">
@@ -47,7 +52,7 @@ vi.mock('@/components/CalendarYearPicker', () => ({
   ),
 }));
 
-describe('AnalyticsFilters', () => {
+describe('AnalyticsFilters - Grouped Category Selectors', () => {
   const mockCalendarYears: CalendarYearType[] = [
     {
       id: 'year-1',
@@ -76,30 +81,45 @@ describe('AnalyticsFilters', () => {
     { id: 'expense-group-2', label: 'Entertainment' },
   ];
 
+  const mockAnalyticsData = {
+    kpis: {
+      totalIncome: 10000,
+      totalExpenses: 5000,
+      netCashflow: 5000,
+      savingsRate: 50,
+      avgMonthlyIncome: 833.33,
+      avgMonthlyExpenses: 416.67,
+    },
+    monthlyTrend: [],
+    expenseCategories: [
+      {
+        categoryId: 'cat-1',
+        categoryName: 'Rent',
+        amount: 1200,
+      },
+      {
+        categoryId: 'cat-2',
+        categoryName: 'Groceries',
+        amount: 300,
+      },
+    ],
+    incomeSources: [
+      {
+        sourceId: 'src-1',
+        sourceName: 'Salary',
+        amount: 10000,
+      },
+    ],
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
+    (global.fetch as any).mockResolvedValue(
+      new Response(JSON.stringify(mockAnalyticsData), { status: 200 })
+    );
   });
 
-  it('should render group selector labels when options are provided', () => {
-    (global.fetch as any).mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          kpis: {
-            totalIncome: 0,
-            totalExpenses: 0,
-            netCashflow: 0,
-            savingsRate: 0,
-            avgMonthlyIncome: 0,
-            avgMonthlyExpenses: 0,
-          },
-          monthlyTrend: [],
-          expenseCategories: [],
-          incomeSources: [],
-        }),
-        { status: 200 }
-      )
-    );
-
+  it('should render income and expense group selector labels', async () => {
     render(
       <CashflowAnalyticsClient
         calendarYears={mockCalendarYears}
@@ -111,30 +131,35 @@ describe('AnalyticsFilters', () => {
       />
     );
 
-    expect(screen.getByText(/Income groups/i)).toBeInTheDocument();
-    expect(screen.getByText(/Expense groups/i)).toBeInTheDocument();
+    // Wait for labels to appear
+    await waitFor(() => {
+      const labels = screen.getAllByText(/Income groups/i);
+      expect(labels.length).toBeGreaterThan(0);
+    });
+
+    expect(screen.getAllByText(/Expense groups/i).length).toBeGreaterThan(0);
   });
 
-  it('should include group IDs in API request parameters', async () => {
-    (global.fetch as any).mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          kpis: {
-            totalIncome: 0,
-            totalExpenses: 0,
-            netCashflow: 0,
-            savingsRate: 0,
-            avgMonthlyIncome: 0,
-            avgMonthlyExpenses: 0,
-          },
-          monthlyTrend: [],
-          expenseCategories: [],
-          incomeSources: [],
-        }),
-        { status: 200 }
-      )
+  it('should render category group selectors in the filter bar', async () => {
+    render(
+      <CashflowAnalyticsClient
+        calendarYears={mockCalendarYears}
+        defaultCalendarYearId="year-1"
+        defaultCalendarType="FISCAL"
+        bankOptions={mockBankOptions}
+        incomeGroupOptions={mockIncomeGroupOptions}
+        expenseGroupOptions={mockExpenseGroupOptions}
+      />
     );
 
+    // Wait for the filter inputs to appear
+    await waitFor(() => {
+      const inputs = screen.getAllByRole('combobox');
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('should include initial fetch with calendarYearId parameter', async () => {
     render(
       <CashflowAnalyticsClient
         calendarYears={mockCalendarYears}
@@ -147,10 +172,51 @@ describe('AnalyticsFilters', () => {
     );
 
     // Wait for initial fetch
-    await screen.findByTestId('kpi-cards');
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalled();
+    });
 
-    expect(global.fetch).toHaveBeenCalled();
     const call = (global.fetch as any).mock.calls[0][0] as string;
     expect(call).toContain('calendarYearId=year-1');
+  });
+
+  it('should pass empty group parameters initially', async () => {
+    render(
+      <CashflowAnalyticsClient
+        calendarYears={mockCalendarYears}
+        defaultCalendarYearId="year-1"
+        defaultCalendarType="FISCAL"
+        bankOptions={mockBankOptions}
+        incomeGroupOptions={mockIncomeGroupOptions}
+        expenseGroupOptions={mockExpenseGroupOptions}
+      />
+    );
+
+    // Wait for initial render
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalled();
+    });
+
+    // The initial call should not include group IDs or have empty values
+    const firstCall = (global.fetch as any).mock.calls[0][0] as string;
+    expect(firstCall).not.toContain('incomeGroupIds=');
+    expect(firstCall).not.toContain('expenseGroupIds=');
+  });
+
+  it('should hide bank/group selectors when no options provided', () => {
+    render(
+      <CashflowAnalyticsClient
+        calendarYears={mockCalendarYears}
+        defaultCalendarYearId="year-1"
+        defaultCalendarType="FISCAL"
+        bankOptions={[]}
+        incomeGroupOptions={[]}
+        expenseGroupOptions={[]}
+      />
+    );
+
+    // Should not show labels when no options available
+    expect(screen.queryByText('Income groups')).not.toBeInTheDocument();
+    expect(screen.queryByText('Expense groups')).not.toBeInTheDocument();
   });
 });

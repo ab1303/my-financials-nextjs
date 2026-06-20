@@ -36,7 +36,7 @@ describe('SideNav cashflow navigation', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the Transactions group and its Ledger child link', () => {
+  it('renders the Transactions group and its child links', () => {
     render(<SideNav {...defaultProps} />);
 
     expect(
@@ -58,7 +58,7 @@ describe('SideNav cashflow navigation', () => {
     );
   });
 
-  it('renders Category Groups link under Transactions', () => {
+  it('renders Category Groups link under Transactions with correct href', () => {
     render(<SideNav {...defaultProps} />);
 
     expect(
@@ -68,6 +68,17 @@ describe('SideNav cashflow navigation', () => {
     expect(categoryGroupsLinks).toHaveLength(2);
     categoryGroupsLinks.forEach((link) =>
       expect(link).toHaveAttribute('href', '/cashflow/category-groups'),
+    );
+  });
+
+  it('activates Transactions group when viewing Category Groups page', () => {
+    mockUsePathname.mockReturnValue('/cashflow/category-groups');
+
+    render(<SideNav {...defaultProps} />);
+
+    // Should have at least one open group when on category-groups route
+    expect(document.querySelectorAll('[data-open="true"]').length).toBeGreaterThan(
+      0,
     );
   });
 

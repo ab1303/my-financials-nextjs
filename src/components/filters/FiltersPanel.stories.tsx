@@ -7,12 +7,14 @@ import { FiltersPanel } from '../ui/filters';
 /**
  * FiltersPanel - Interactive category filter panel with live preview totals
  *
- * Features:
- * - Tri-state group checkboxes for selecting/deselecting all categories in a group
- * - Individual category checkboxes
+ * Features (Phase 2 - Grouped Category Selectors):
+ * - React-select grouped multi-selector for category selection
+ * - Categories organized under their authored group headings
+ * - Single Ungrouped bucket for categories not assigned to any group
  * - Live preview of income, expenses, and net totals
  * - Clear filters button to reset all selections
- * - Fully keyboard accessible with ARIA support
+ * - Fully keyboard accessible
+ * - Legacy checkbox panel available for backward compatibility
  */
 const meta = {
   title: 'Components/FiltersPanel',
@@ -27,12 +29,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Default story showing the filters panel with all available mock groups
- * Categories start unselected, allowing users to choose what to include
+ * Default story showing the grouped select filter panel
+ * Categories are grouped by their assigned group heading
+ * Uses react-select with GroupBase for organized presentation
  */
 export const Default: Story = {
   args: {
     initialGroups: mockGroups,
+    useGroupedSelect: true,
   },
   render: (args) => (
     <div className="w-full bg-white dark:bg-slate-950 p-8">
@@ -42,23 +46,47 @@ export const Default: Story = {
 };
 
 /**
- * Interactive demo showing the full filtering experience
+ * Interactive demo showing the grouped category selector experience
  * Users can:
- * - Toggle individual categories
- * - Use group checkboxes for quick select/deselect all
+ * - Select/deselect categories from the grouped dropdown
+ * - See categories organized by their group heading
+ * - See Ungrouped bucket for unassigned categories
  * - See preview totals update in real-time
  * - Clear all filters with one button
  */
-export const Interactive: Story = {
+export const InteractiveGroupedSelect: Story = {
   args: {
     initialGroups: mockGroups,
+    useGroupedSelect: true,
   },
   render: (args) => (
     <div className="w-full bg-white dark:bg-slate-950 p-8">
       <div className="mb-4">
-        <h2 className="text-2xl font-bold mb-2">Category Filtering Demo</h2>
+        <h2 className="text-2xl font-bold mb-2">Category Filtering Demo (Phase 2)</h2>
         <p className="text-slate-600 dark:text-slate-400">
-          Select categories to include in your totals. Use group checkboxes to quickly select or deselect all categories in a group.
+          Select categories using the grouped dropdown. Categories are organized by their group heading with an Ungrouped bucket for unassigned items.
+        </p>
+      </div>
+      <FiltersPanel {...args} />
+    </div>
+  ),
+};
+
+/**
+ * Legacy checkbox panel for backward compatibility
+ * Shows the original tri-state checkbox UI
+ */
+export const LegacyCheckboxPanel: Story = {
+  args: {
+    initialGroups: mockGroups,
+    useGroupedSelect: false,
+  },
+  render: (args) => (
+    <div className="w-full bg-white dark:bg-slate-950 p-8">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold mb-2">Legacy Checkbox Panel</h2>
+        <p className="text-slate-600 dark:text-slate-400">
+          Original tri-state checkbox interface for category selection.
         </p>
       </div>
       <FiltersPanel {...args} />
@@ -87,6 +115,7 @@ export const WithMinimalGroups: Story = {
         ],
       },
     ],
+    useGroupedSelect: true,
   },
   render: (args) => (
     <div className="w-full bg-white dark:bg-slate-950 p-8">
