@@ -7,6 +7,7 @@ import type {
   CashflowKPIs,
   MonthlyTrendPoint,
 } from '@/server/models/cashflow-analytics';
+import type { MonthlyIncomeSummary } from '@/server/models/income';
 import {
   getExpenseCategoryBreakdownForYear,
   getMonthlyExpenseSummaries,
@@ -39,7 +40,20 @@ export async function GET(request: Request) {
     const bankAccountIdParam = searchParams.get('bankAccountId');
     const bankAccountId = bankAccountIdParam ? bankAccountIdParam : undefined;
 
-    // Parse group filter parameters (comma-separated list of IDs)
+    const parseSelectionParam = (paramName: string) => {
+      if (!searchParams.has(paramName)) return undefined;
+      const rawValue = searchParams.get(paramName);
+      if (rawValue === null || rawValue.trim() === '') return null;
+      const values = rawValue.split(',').filter((id) => id.trim());
+      return values.length > 0 ? values : null;
+    };
+
+    // Parse filter parameters (comma-separated list of IDs)
+    const incomeCategoryIds = parseSelectionParam('incomeCategoryIds');
+
+    const expenseCategoryIds = parseSelectionParam('expenseCategoryIds');
+
+    // Backwards compatibility with older group-based params
     const incomeGroupIdsParam = searchParams.get('incomeGroupIds');
     const incomeGroupIds = incomeGroupIdsParam
       ? incomeGroupIdsParam.split(',').filter((id) => id.trim())
@@ -56,9 +70,18 @@ export async function GET(request: Request) {
       select: { fromYear: true, fromMonth: true, toYear: true },
     });
 
-    // Build expense category member IDs from selected expense groups
-    let expenseCategoryIds: string[] | undefined;
-    if (expenseGroupIds && expenseGroupIds.length > 0) {
+    const selectedExpenseCategoryIds = expenseCategoryIds;
+
+    const selectedIncomeCategoryIds = incomeCategoryIds;
+
+    // Build expense category member IDs from selected expense groups (legacy)
+    let resolvedExpenseCategoryIds: string[] | null | undefined =
+      selectedExpenseCategoryIds;
+    if (
+      resolvedExpenseCategoryIds === undefined &&
+      expenseGroupIds &&
+      expenseGroupIds.length > 0
+    ) {
       const groups = await prisma.categoryGroup.findMany({
         where: {
           id: { in: expenseGroupIds },
@@ -71,14 +94,19 @@ export async function GET(request: Request) {
           },
         },
       });
-      expenseCategoryIds = groups.flatMap((g) =>
+      resolvedExpenseCategoryIds = groups.flatMap((g) =>
         g.expenseCategories.map((ec) => ec.expenseCategoryId),
       );
     }
 
-    // Build income source member IDs from selected income groups
-    let incomeSourceIds: string[] | undefined;
-    if (incomeGroupIds && incomeGroupIds.length > 0) {
+    // Build income source member IDs from selected income groups (legacy)
+    let resolvedIncomeSourceIds: string[] | null | undefined =
+      selectedIncomeCategoryIds;
+    if (
+      resolvedIncomeSourceIds === undefined &&
+      incomeGroupIds &&
+      incomeGroupIds.length > 0
+    ) {
       const groups = await prisma.categoryGroup.findMany({
         where: {
           id: { in: incomeGroupIds },
@@ -91,10 +119,34 @@ export async function GET(request: Request) {
           },
         },
       });
-      incomeSourceIds = groups.flatMap((g) =>
+      resolvedIncomeSourceIds = groups.flatMap((g) =>
         g.incomeSources.map((s) => s.incomeSourceId),
       );
     }
+
+    const emptyMonthlyIncome: MonthlyIncomeSummary[] = Array.from(
+      { length: 12 },
+      (_, index) => {
+        const month = index + 1;
+        const year =
+          calendarYear && month < calendarYear.fromMonth
+            ? calendarYear.toYear
+            : calendarYear?.fromYear ?? new Date().getFullYear();
+
+        return {
+          month,
+          year,
+          totalAmount: 0,
+          entryCount: 0,
+        };
+      },
+    );
+
+    const emptyMonthlyExpenseSummaries = Array.from({ length: 12 }, (_, index) => ({
+      month: index + 1,
+      totalAmount: 0,
+      entryCount: 0,
+    }));
 
     const [
       totalIncome,
@@ -104,12 +156,55 @@ export async function GET(request: Request) {
       expenseCategories,
       incomeSources,
     ] = await Promise.all([
-      getTotalIncome(calendarYearId, userId, undefined, bankAccountId, incomeSourceIds),
-      getTotalExpenses(calendarYearId, userId, bankAccountId, expenseCategoryIds),
-      getMonthlyIncomeSummaryFiltered(calendarYearId, userId, bankAccountId, incomeSourceIds),
-      getMonthlyExpenseSummaries(calendarYearId, userId, bankAccountId, expenseCategoryIds),
-      getExpenseCategoryBreakdownForYear(calendarYearId, userId, bankAccountId, expenseCategoryIds),
-      getIncomeSourceBreakdownForYear(calendarYearId, userId, bankAccountId, incomeSourceIds),
+      resolvedIncomeSourceIds === null
+        ? Promise.resolve(0)
+        : getTotalIncome(
+            calendarYearId,
+            userId,
+            undefined,
+            bankAccountId,
+            resolvedIncomeSourceIds,
+          ),
+      resolvedExpenseCategoryIds === null
+        ? Promise.resolve(0)
+        : getTotalExpenses(
+            calendarYearId,
+            userId,
+            bankAccountId,
+            resolvedExpenseCategoryIds,
+          ),
+      resolvedIncomeSourceIds === null
+        ? Promise.resolve(emptyMonthlyIncome)
+        : getMonthlyIncomeSummaryFiltered(
+            calendarYearId,
+            userId,
+            bankAccountId,
+            resolvedIncomeSourceIds,
+          ),
+      resolvedExpenseCategoryIds === null
+        ? Promise.resolve(emptyMonthlyExpenseSummaries)
+        : getMonthlyExpenseSummaries(
+            calendarYearId,
+            userId,
+            bankAccountId,
+            resolvedExpenseCategoryIds,
+          ),
+      resolvedExpenseCategoryIds === null
+        ? Promise.resolve([])
+        : getExpenseCategoryBreakdownForYear(
+            calendarYearId,
+            userId,
+            bankAccountId,
+            resolvedExpenseCategoryIds,
+          ),
+      resolvedIncomeSourceIds === null
+        ? Promise.resolve([])
+        : getIncomeSourceBreakdownForYear(
+            calendarYearId,
+            userId,
+            bankAccountId,
+            resolvedIncomeSourceIds,
+          ),
     ]);
 
     // Helper: determine calendar year for an expense month

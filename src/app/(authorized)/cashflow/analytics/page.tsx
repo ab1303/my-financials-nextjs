@@ -34,25 +34,24 @@ export default async function CashflowAnalyticsPage() {
     listCategoryGroups({ prisma, userId: session.user.id }),
   ]);
 
+  const [incomeSources, expenseCategories] = await Promise.all([
+    prisma.incomeSource.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.expenseCategory.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
+
   const defaultCalendarYear = getDefaultCalendarYear(calendarYears, fiscalYearType);
 
   const bankOptions: OptionType[] = bankAccounts.map((a) => ({
     id: a.id,
     label: `${a.name} (${a.institution.name})`,
-  }));
-
-  // Separate category groups by scope
-  const incomeGroups = categoryGroups.filter((g) => g.scope === 'INCOME');
-  const expenseGroups = categoryGroups.filter((g) => g.scope === 'EXPENSE');
-
-  const incomeGroupOptions: OptionType[] = incomeGroups.map((g) => ({
-    id: g.id,
-    label: g.name,
-  }));
-
-  const expenseGroupOptions: OptionType[] = expenseGroups.map((g) => ({
-    id: g.id,
-    label: g.name,
   }));
 
   return (
@@ -71,8 +70,12 @@ export default async function CashflowAnalyticsPage() {
         defaultCalendarYearId={defaultCalendarYear?.id ?? ''}
         defaultCalendarType={(fiscalYearType ?? 'FISCAL') as CalendarEnumType}
         bankOptions={bankOptions}
-        incomeGroupOptions={incomeGroupOptions}
-        expenseGroupOptions={expenseGroupOptions}
+        categoryGroups={categoryGroups}
+        incomeSources={incomeSources.map((source) => ({ id: source.id, label: source.name }))}
+        expenseCategories={expenseCategories.map((category) => ({
+          id: category.id,
+          label: category.name,
+        }))}
       />
     </main>
   );
