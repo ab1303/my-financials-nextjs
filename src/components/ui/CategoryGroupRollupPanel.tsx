@@ -51,6 +51,7 @@ type Props = {
   defaultFilterOpen?: boolean;
   showSelectedValuesInFilter?: boolean;
   showFilterLabel?: boolean;
+  showEmptyGroups?: boolean;
 };
 
 export function CategoryGroupRollupPanel({
@@ -65,6 +66,7 @@ export function CategoryGroupRollupPanel({
   defaultFilterOpen = false,
   showSelectedValuesInFilter = false,
   showFilterLabel = false,
+  showEmptyGroups = false,
 }: Props) {
   const [viewMode, setViewMode] = useState<'categories' | 'groups'>('categories');
   const [expanded, setExpanded] = useState(false);
@@ -121,10 +123,32 @@ export function CategoryGroupRollupPanel({
   const visibleItems = expanded ? distributionItems : distributionItems.slice(0, 5);
   const hiddenCount = distributionItems.length - 5;
 
-  const groupedBreakdown = useMemo(
-    () => groupExpenseBreakdown(breakdown, scopedGroups, selectedCategoryIds),
-    [breakdown, scopedGroups, selectedCategoryIds],
-  );
+  const groupedBreakdown = useMemo(() => {
+    const base = groupExpenseBreakdown(breakdown, scopedGroups, selectedCategoryIds);
+    if (!showEmptyGroups) return base;
+
+    const existingGroupIds = new Set(
+      base.map((group) => group.groupId).filter((groupId): groupId is string => Boolean(groupId)),
+    );
+    const selectedBreakdown = breakdown.filter((entry) => selectedCategoryIds.has(entry.categoryId));
+    const missingGroups = scopedGroups
+      .filter((group) => !existingGroupIds.has(group.id))
+      .map((group) => {
+        const categories = selectedBreakdown.filter((entry) =>
+          group.memberIds.includes(entry.categoryId),
+        );
+        const totalAmount = categories.reduce((sum, entry) => sum + entry.amount, 0);
+        return {
+          groupId: group.id,
+          groupName: group.name,
+          totalAmount,
+          percentage: 0,
+          categories,
+        };
+      });
+
+    return [...base, ...missingGroups];
+  }, [breakdown, scopedGroups, selectedCategoryIds, showEmptyGroups]);
 
   const groupDistributionItems: (DistributionItem & GroupedBreakdown)[] = groupedBreakdown.map(
     (g, i) => ({

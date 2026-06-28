@@ -33,9 +33,7 @@ export function groupExpenseBreakdown(
   const total = filtered.reduce((sum, b) => sum + b.amount, 0);
   const groupedIds = new Set<string>();
 
-  const expenseGroups = groups.filter((g) => g.scope === 'EXPENSE');
-
-  const result: GroupedBreakdown[] = expenseGroups
+  const result: GroupedBreakdown[] = groups
     .map((group) => {
       const cats = filtered.filter((b) => group.memberIds.includes(b.categoryId));
       cats.forEach((c) => groupedIds.add(c.categoryId));
@@ -74,9 +72,8 @@ export function groupExpenseEntries(
   groups: CategoryGroupListItem[],
 ): GroupedEntry[] {
   const groupedIds = new Set<string>();
-  const expenseGroups = groups.filter((g) => g.scope === 'EXPENSE');
 
-  const result: GroupedEntry[] = expenseGroups
+  const result: GroupedEntry[] = groups
     .map((group) => {
       const groupEntries = entries.filter((e) => group.memberIds.includes(e.categoryId));
       groupEntries.forEach((e) => groupedIds.add(e.categoryId));

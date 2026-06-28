@@ -155,10 +155,13 @@ export default function CashflowAnalyticsClient({
 
   const filteredExpenseCategories = data?.expenseCategories ?? [];
   const incomeBreakdown = useMemo<CategoryBreakdown[]>(() => {
-    const byLabel = new Map(incomeSources.map((source) => [source.label, source.id]));
+    const normalize = (value: string) => value.trim().toLowerCase();
+    const byLabel = new Map(
+      incomeSources.map((source) => [normalize(source.label), source.id]),
+    );
     const mapped: CategoryBreakdown[] = [];
     for (const source of filteredIncomeSources) {
-      const matchedId = byLabel.get(source.source);
+      const matchedId = byLabel.get(normalize(source.source));
       if (!matchedId) continue;
       mapped.push({
         categoryId: matchedId,
@@ -216,6 +219,7 @@ export default function CashflowAnalyticsClient({
               breakdown={incomeBreakdown}
               allCategories={incomeSources}
               categoryGroups={categoryGroups}
+              showEmptyGroups
               selectedCategoryIds={new Set(selectedIncomeSourceIds)}
               onSelectionChange={(ids) =>
                 setSelectedIncomeSourceIds(Array.from(ids))
