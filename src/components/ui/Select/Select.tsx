@@ -3,20 +3,38 @@
 import Select, {
   type GroupBase,
   type Props as SelectProps,
+  type OptionProps,
+  components as selectComponents,
 } from 'react-select';
 
 import { getCompactSelectStyles, getSelectStyles } from '@/lib/select-styles';
 import { PopperMenu } from './PopperMenu';
-import { components as selectComponents } from 'react-select';
 
-/**
- * Custom Option component that adds a title attribute for native browser tooltips on hover.
- */
-function CustomOption(props: any) {
+function CustomOption<Option, IsMulti extends boolean, Group extends GroupBase<Option>>(
+  props: OptionProps<Option, IsMulti, Group>,
+) {
   const label = (props.data as { label?: string }).label;
   return (
     <selectComponents.Option {...props} innerProps={{ ...props.innerProps, title: label }}>
-      {props.children}
+      <div
+        className={`flex w-full items-center gap-2 ${
+          props.isSelected ? 'text-foreground' : 'text-muted-foreground'
+        }`}
+      >
+        {props.selectProps.isMulti && (
+          <span
+            aria-hidden='true'
+            className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+              props.isSelected
+                ? 'border-primary bg-primary/15 text-primary'
+                : 'border-border bg-background/60 text-muted-foreground'
+            }`}
+          >
+            {props.isSelected && <span className='text-[10px] leading-none'>✓</span>}
+          </span>
+        )}
+        <span className='min-w-0 flex-1 truncate'>{props.children}</span>
+      </div>
     </selectComponents.Option>
   );
 }
@@ -51,9 +69,11 @@ export function SelectWrapper<
   const portalTarget =
     typeof document !== 'undefined' ? document.body : undefined;
 
-  const components = usePortal
-    ? { Menu: PopperMenu, Option: CustomOption, ...componentOverrides }
-    : componentOverrides;
+  const components = {
+    Option: CustomOption,
+    ...(usePortal ? { Menu: PopperMenu } : {}),
+    ...componentOverrides,
+  };
 
   return (
     <Select

@@ -1,16 +1,16 @@
 'use client';
 
 import { Dialog, Transition } from '@headlessui/react';
-import { ChevronDown, ChevronUp, ExternalLink, Filter, LayoutList, Search, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, LayoutList, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, useMemo, useRef, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
-import type { GroupBase, MultiValue } from 'react-select';
+import type { GroupBase } from 'react-select';
 
 import Portal from '@/components/Portal';
 import { DistributionWidget, type DistributionItem } from '@/components/ui/DistributionWidget';
 import { GroupCategoryPopover } from '@/components/ui/GroupCategoryPopover';
-import { SelectWrapper as Select } from '@/components/ui/Select';
+import { GroupedCategorySelect } from '@/components/ui/GroupedCategorySelect';
 import { groupExpenseBreakdown, type GroupedBreakdown } from '@/lib/category-group-utils';
 import type { CategoryBreakdown } from '@/server/models/expense';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
@@ -74,8 +74,8 @@ export default function ExpenseCategoryBreakdownWidget({
   const [expanded, setExpanded] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'categories' | 'groups'>('categories');
+  const [filterOpen, setFilterOpen] = useState(false);
   const [openPopoverGroupId, setOpenPopoverGroupId] = useState<string | null>(null);
-  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const _groupBadgeRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const expenseGroups = categoryGroups.filter((g) => g.scope === 'EXPENSE');
@@ -143,20 +143,19 @@ export default function ExpenseCategoryBreakdownWidget({
   }, [breakdown, expenseGroups]);
 
   const selectedOptions = useMemo(
-    () => crossGroupOptions.flatMap((g) => g.options.filter((o) => selectedCategoryIds.has(o.id))),
+    () =>
+      crossGroupOptions.flatMap((g) =>
+        g.options.filter((o: OptionType) => selectedCategoryIds.has(o.id)),
+      ),
     [crossGroupOptions, selectedCategoryIds],
   );
-
-  function handleCrossGroupChange(values: MultiValue<OptionType>) {
-    onCategorySelectionChange(new Set(values.map((v) => v.id)));
-  }
 
   if (breakdown.length === 0) return null;
 
   return (
     <>
       <div className='mb-4 rounded-lg border border-border bg-card/50 p-3'>
-        {/* Top row: mode toggle + filter button */}
+        {/* Top row: mode toggle + filter controls */}
         <div className='mb-2 flex items-center justify-between gap-2'>
           {hasGroups ? (
             <div className='flex items-center rounded-md border border-border bg-muted/40 p-0.5'>
@@ -173,7 +172,7 @@ export default function ExpenseCategoryBreakdownWidget({
               </button>
               <button
                 type='button'
-                onClick={() => setViewMode('groups')}
+                onClick={() => { setViewMode('groups'); setFilterOpen(false); }}
                 className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
                   viewMode === 'groups'
                     ? 'bg-card text-foreground shadow-sm'
@@ -192,13 +191,13 @@ export default function ExpenseCategoryBreakdownWidget({
             </Link>
           )}
 
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-1.5'>
             {!allSelected && (
               <button
                 type='button'
                 onClick={() => {
                   setOpenPopoverGroupId(null);
-                  setFilterPanelOpen(false);
+                  setFilterOpen(false);
                   onCategorySelectionChange(new Set(allCategoryIds));
                 }}
                 className='rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors'
@@ -207,43 +206,41 @@ export default function ExpenseCategoryBreakdownWidget({
                 All
               </button>
             )}
-            <button
-              type='button'
-              onClick={() => setFilterPanelOpen((v) => !v)}
-              className='flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors'
-              aria-label='Filter categories'
-            >
-              <Filter size={12} />
-              Filter
-              {selectedCategoryIds.size < breakdown.length && (
-                <span className='ml-0.5 rounded-full bg-primary/15 px-1.5 py-px text-[10px] font-semibold text-primary'>
-                  {selectedCategoryIds.size}/{breakdown.length}
-                </span>
-              )}
-            </button>
+            {viewMode === 'categories' && (
+              <button
+                type='button'
+                onClick={() => setFilterOpen((p) => !p)}
+                className={`flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs transition-colors ${
+                  filterOpen
+                    ? 'bg-muted/60 border-border text-foreground'
+                    : 'border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                }`}
+                aria-label='Toggle category filter'
+              >
+                <Search size={11} />
+                Filter
+                {!allSelected && (
+                  <span className='rounded-full bg-primary/15 px-1 text-[10px] font-semibold leading-4 text-primary'>
+                    {selectedCategoryIds.size}/{allCategoryIds.length}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Cross-group filter panel */}
-        {filterPanelOpen && (
+        {filterOpen && viewMode === 'categories' && (
           <div className='mb-3'>
-            <Select<OptionType, true, GroupBase<OptionType>>
+            <GroupedCategorySelect
+              label='Expense categories'
               instanceId='expense-category-filter-widget'
-              inputId='expense-category-filter-widget'
               options={crossGroupOptions}
               value={selectedOptions}
-              onChange={handleCrossGroupChange}
-              isMulti
-              isClearable
-              placeholder='Select categories...'
-              className='w-full text-sm'
-              getOptionValue={(opt) => opt.id}
-              getOptionLabel={(opt) => opt.label}
-              formatGroupLabel={(group) => (
-                <div className='py-1 text-xs font-semibold text-foreground'>
-                  {group.label}
-                </div>
-              )}
+              onChange={(values) => onCategorySelectionChange(new Set(values.map((v) => v.id)))}
+              placeholder='Search categories...'
+              hideSelectedValues
+              hideLabel
+              searchable={false}
             />
           </div>
         )}

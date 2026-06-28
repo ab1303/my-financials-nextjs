@@ -57,15 +57,17 @@ export function getSelectStyles<
     option: (base, state) => ({
       ...base,
       backgroundColor: state.isSelected
-        ? 'hsl(var(--primary))'
+        ? 'hsl(var(--primary) / 0.12)'
         : state.isFocused
-          ? 'hsl(var(--accent))'
+          ? 'hsl(var(--accent) / 0.75)'
           : 'transparent',
       color: state.isSelected
-        ? 'hsl(var(--primary-foreground))'
-        : 'hsl(var(--foreground))',
+        ? 'hsl(var(--foreground))'
+        : 'hsl(var(--muted-foreground))',
       borderRadius: 'calc(var(--radius) - 4px)',
       cursor: 'pointer',
+      fontWeight: state.isSelected ? 600 : 400,
+      opacity: state.isSelected ? 1 : 0.88,
       '&:active': { backgroundColor: 'hsl(var(--primary) / 0.2)' },
     }),
     singleValue: (base, state) => ({

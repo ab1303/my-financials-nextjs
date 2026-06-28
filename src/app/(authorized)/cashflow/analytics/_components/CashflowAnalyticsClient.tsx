@@ -1,16 +1,18 @@
 'use client';
 
 import type { CalendarEnumType } from '@prisma/client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { GroupBase, MultiValue, SingleValue } from 'react-select';
+import { useEffect, useMemo, useState } from 'react';
+import type { SingleValue } from 'react-select';
 
 import { CalendarYearPicker } from '@/components/CalendarYearPicker';
+import { CategoryGroupRollupPanel } from '@/components/ui/CategoryGroupRollupPanel';
 import { Label } from '@/components/ui/Label';
 import { SelectWrapper as Select } from '@/components/ui/Select';
 import type {
   CashflowAnalyticsData,
   MonthlyTrendPoint,
 } from '@/server/models/cashflow-analytics';
+import type { CategoryBreakdown } from '@/server/models/expense';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 import type { CalendarYearType, OptionType } from '@/types';
 
@@ -116,14 +118,6 @@ export default function CashflowAnalyticsClient({
     if (yearId) setSelectedYearId(yearId);
   };
 
-  const handleIncomeSourceChange = (value: MultiValue<OptionType>) => {
-    setSelectedIncomeSourceIds(value.map((v) => v.id));
-  };
-
-  const handleExpenseCategoryChange = (value: MultiValue<OptionType>) => {
-    setSelectedExpenseCategoryIds(value.map((v) => v.id));
-  };
-
   const handleMonthClick = (
     point: MonthlyTrendPoint,
     series: 'income' | 'expenses',
@@ -157,68 +151,24 @@ export default function CashflowAnalyticsClient({
     });
   };
 
-  const buildGroupedOptions = useCallback(
-    (
-      items: OptionType[],
-      scope: 'INCOME' | 'EXPENSE',
-    ): Array<GroupBase<OptionType>> => {
-      if (items.length === 0) return [];
-
-      const scopedGroups = categoryGroups.filter((group) => group.scope === scope);
-      const groupedIds = new Set<string>();
-      const groupedOptions = scopedGroups.flatMap((group) => {
-        const options = items.filter((item) => group.memberIds.includes(item.id));
-        options.forEach((option) => groupedIds.add(option.id));
-        return options.length > 0
-          ? [
-              {
-                label: group.name,
-                options,
-              },
-            ]
-          : [];
-      });
-
-      const ungroupedOptions = items.filter((item) => !groupedIds.has(item.id));
-      if (ungroupedOptions.length > 0) {
-        groupedOptions.push({
-          label: 'Ungrouped',
-          options: ungroupedOptions,
-        });
-      }
-
-      return groupedOptions;
-    },
-    [categoryGroups],
-  );
-
-  const incomeSourceGroups = useMemo(
-    () => buildGroupedOptions(incomeSources, 'INCOME'),
-    [buildGroupedOptions, incomeSources],
-  );
-
-  const expenseCategoryGroups = useMemo(
-    () => buildGroupedOptions(expenseCategories, 'EXPENSE'),
-    [buildGroupedOptions, expenseCategories],
-  );
-
-  const selectedIncomeSources = useMemo(() => {
-    const selected = new Set(selectedIncomeSourceIds);
-    return incomeSourceGroups.flatMap((group: GroupBase<OptionType>) =>
-      group.options.filter((option: OptionType) => selected.has(option.id)),
-    );
-  }, [incomeSourceGroups, selectedIncomeSourceIds]);
-
-  const selectedExpenseCategories = useMemo(() => {
-    const selected = new Set(selectedExpenseCategoryIds);
-    return expenseCategoryGroups.flatMap((group: GroupBase<OptionType>) =>
-      group.options.filter((option: OptionType) => selected.has(option.id)),
-    );
-  }, [expenseCategoryGroups, selectedExpenseCategoryIds]);
-
   const filteredIncomeSources = data?.incomeSources ?? [];
 
   const filteredExpenseCategories = data?.expenseCategories ?? [];
+  const incomeBreakdown = useMemo<CategoryBreakdown[]>(() => {
+    const byLabel = new Map(incomeSources.map((source) => [source.label, source.id]));
+    const mapped: CategoryBreakdown[] = [];
+    for (const source of filteredIncomeSources) {
+      const matchedId = byLabel.get(source.source);
+      if (!matchedId) continue;
+      mapped.push({
+        categoryId: matchedId,
+        categoryName: source.source,
+        amount: source.amount,
+        percentage: source.percentage,
+      });
+    }
+    return mapped;
+  }, [filteredIncomeSources, incomeSources]);
 
   return (
     <div className='space-y-6'>
@@ -260,48 +210,29 @@ export default function CashflowAnalyticsClient({
 
           {/* Main grouped category filter */}
           <div className='grid gap-4 lg:grid-cols-2'>
-            <div className='space-y-1.5'>
-              <Label htmlFor='income-category-filter'>Income categories</Label>
-              <Select<OptionType, true, GroupBase<OptionType>>
-                instanceId='income-category-filter'
-                inputId='income-category-filter'
-                options={incomeSourceGroups}
-                value={selectedIncomeSources}
-                onChange={handleIncomeSourceChange}
-                isMulti
-                isClearable
-                placeholder='Select income categories...'
-                className='w-full'
-                getOptionValue={(opt) => opt.id}
-                getOptionLabel={(opt) => opt.label}
-                formatGroupLabel={(group) => (
-                  <div className='py-2 text-sm font-semibold text-foreground'>
-                    {group.label}
-                  </div>
-                )}
-              />
-            </div>
-            <div className='space-y-1.5'>
-              <Label htmlFor='expense-category-filter'>Expense categories</Label>
-              <Select<OptionType, true, GroupBase<OptionType>>
-                instanceId='expense-category-filter'
-                inputId='expense-category-filter'
-                options={expenseCategoryGroups}
-                value={selectedExpenseCategories}
-                onChange={handleExpenseCategoryChange}
-                isMulti
-                isClearable
-                placeholder='Select expense categories...'
-                className='w-full'
-                getOptionValue={(opt) => opt.id}
-                getOptionLabel={(opt) => opt.label}
-                formatGroupLabel={(group) => (
-                  <div className='py-2 text-sm font-semibold text-foreground'>
-                    {group.label}
-                  </div>
-                )}
-              />
-            </div>
+            <CategoryGroupRollupPanel
+              label='Income categories'
+              scope='INCOME'
+              breakdown={incomeBreakdown}
+              allCategories={incomeSources}
+              categoryGroups={categoryGroups}
+              selectedCategoryIds={new Set(selectedIncomeSourceIds)}
+              onSelectionChange={(ids) =>
+                setSelectedIncomeSourceIds(Array.from(ids))
+              }
+            />
+            <CategoryGroupRollupPanel
+              label='Expense categories'
+              scope='EXPENSE'
+              breakdown={data?.expenseCategories ?? []}
+              allCategories={expenseCategories}
+              categoryGroups={categoryGroups}
+              selectedCategoryIds={new Set(selectedExpenseCategoryIds)}
+              onSelectionChange={(ids) =>
+                setSelectedExpenseCategoryIds(Array.from(ids))
+              }
+              emptyStateHref='/cashflow/category-groups'
+            />
           </div>
         </div>
       </div>

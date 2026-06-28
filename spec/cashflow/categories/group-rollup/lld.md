@@ -18,7 +18,9 @@ Expense Tracking page: distribution bar and monthly breakdown modal.
 | `src/app/(authorized)/cashflow/expense/page.tsx` | Fetch `categoryGroups` and pass as prop |
 | `src/app/(authorized)/cashflow/expense/ExpenseTableServer.tsx` | Accept + forward `categoryGroups` |
 | `src/app/(authorized)/cashflow/expense/ExpenseTableClient.tsx` | Add `categoryGroups` prop; lift `selectedCategoryIds` state; keep selection shared with the widget |
-| `src/app/(authorized)/cashflow/expense/_components/ExpenseCategoryBreakdownWidget.tsx` | "Categories \| Groups" toggle; `GroupCategoryPopover` per group; "Filter ⚙" grouped react-select |
+| `src/app/(authorized)/cashflow/expense/_components/ExpenseCategoryBreakdownWidget.tsx` | "Categories \| Groups" toggle; shared grouped react-select; `GroupCategoryPopover` per group |
+| `src/components/ui/CategoryGroupRollupPanel.tsx` | Shared expense-page-style rollup panel for analytics and expense UI |
+| `src/app/(authorized)/cashflow/analytics/_components/CashflowAnalyticsClient.tsx` | Use the rollup panel for expense categories; keep income grouped selector |
 | `src/app/(authorized)/cashflow/expense/_components/CategoryBreakdownModal.tsx` | "Flat \| Grouped" toggle; accordion grouped mode |
 
 ---
@@ -79,7 +81,7 @@ Behavior:
 - In **Groups mode**: pass `groupExpenseBreakdown(breakdown, groups)` to the bar; render group badges below bar
 - Each group badge shows `GroupName $total (X%)` and a `▼` chevron
 - Click badge → `GroupCategoryPopover` opens with checkboxes for that group's sub-categories
-- "Filter ⚙" button → grouped react-select (reuse `SelectWrapper` with `GroupBase` options, same as Analytics `buildGroupedOptions`)
+- Shared grouped react-select above the bar (reuse `SelectWrapper` with `GroupBase` options, same as Analytics `buildGroupedOptions`)
 - Monthly expense totals update from the filtered summary endpoint when selected categories change
 - If no groups defined → render empty state CTA linking to `/cashflow/category-groups`
 
@@ -143,7 +145,7 @@ Grouped mode renders:
 - [ ] "Categories | Groups" toggle visible on the distribution bar
 - [ ] Groups mode shows group-level segments in the stacked bar
 - [ ] Clicking a group badge opens a popover with checkboxes; bar updates on selection
-- [ ] "Filter ⚙" opens grouped multi-select for cross-group selection
+- [ ] Expense categories use the shared grouped multi-select pattern
 - [ ] Monthly table totals recalculate when the selected categories change
 - [ ] Selection cleared → bar totals reflect only selected categories
 - [ ] Monthly modal has "Flat | Grouped" toggle
