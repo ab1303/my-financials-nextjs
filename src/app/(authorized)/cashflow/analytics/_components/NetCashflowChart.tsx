@@ -26,12 +26,15 @@ const formatTick = (v: number) =>
   v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : v <= -1000 ? `-$${(Math.abs(v) / 1000).toFixed(0)}k` : `$${v}`;
 
 export function NetCashflowChart({ data }: NetCashflowChartProps) {
-  // Compute cumulative savings line
-  let running = 0;
-  const chartData = data.map((point) => {
-    running += point.net;
-    return { ...point, cumulative: running };
-  });
+  // Compute cumulative savings line using reduce
+  const chartData = data.reduce(
+    (acc: any[], point, index) => {
+      const cumulative = (acc[index - 1]?.cumulative ?? 0) + point.net;
+      acc.push({ ...point, cumulative });
+      return acc;
+    },
+    []
+  );
   return (
     <Card>
       <CardHeader>

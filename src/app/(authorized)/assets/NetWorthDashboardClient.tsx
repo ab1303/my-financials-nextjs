@@ -3,7 +3,7 @@
 import type { CalendarEnumType } from '@prisma/client';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import type { CalendarYearType } from '@/app/(authorized)/settings/calendar/_types';
 import { trpc } from '@/server/trpc/client';
@@ -39,13 +39,15 @@ export default function NetWorthDashboardClient({
     [calendarYears, selectedType],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (selectedType === 'ALL') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCalendarYearId(null);
       return;
     }
 
     if (!selectedCalendarYearId && filteredCalendarYears[0]?.id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCalendarYearId(filteredCalendarYears[0].id);
       return;
     }
@@ -54,6 +56,7 @@ export default function NetWorthDashboardClient({
       selectedCalendarYearId &&
       !filteredCalendarYears.some((year) => year.id === selectedCalendarYearId)
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCalendarYearId(filteredCalendarYears[0]?.id ?? null);
     }
   }, [filteredCalendarYears, selectedCalendarYearId, selectedType]);

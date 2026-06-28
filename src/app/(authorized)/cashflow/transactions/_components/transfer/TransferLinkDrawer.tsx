@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect,useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 
@@ -26,8 +26,9 @@ export default function TransferLinkDrawer({
   }, [manualSearch]);
 
   // Reset state when drawer opens
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCandidateId(null);
       setManualSearch('');
       setDebouncedSearch('');
@@ -158,7 +159,7 @@ export default function TransferLinkDrawer({
             )}
             {!isAutoEmpty && (
               <p className="text-xs text-gray-400 dark:text-gray-500">
-                Can't find it above? Search or filter for any transaction:
+                Can&apos;t find it above? Search or filter for any transaction:
               </p>
             )}
             <input

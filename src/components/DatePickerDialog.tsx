@@ -104,6 +104,7 @@ export default function DatePickerDialog({
           <FloatingOverlay className='z-[60] bg-black/20'>
             <FloatingFocusManager context={context}>
               <div
+                // eslint-disable-next-line react-hooks/refs
                 ref={refs.setFloating}
                 aria-labelledby={labelId}
                 aria-describedby={descriptionId}

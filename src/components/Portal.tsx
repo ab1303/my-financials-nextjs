@@ -67,7 +67,8 @@ export default function Portal({ children, containerId = 'portal-root' }: Portal
   }, [containerId]);
 
   // Not yet mounted (SSR / first pass) — render nothing.
-  if (!mounted || !containerRef.current) return null;
+  if (!mounted) return null;
 
-  return createPortal(children, containerRef.current);
+  // eslint-disable-next-line react-hooks/refs
+  return createPortal(children, containerRef.current!);
 }

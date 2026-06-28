@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { RuleListItem } from '@/server/services/transactions/transfer-rule.service';
@@ -11,31 +10,23 @@ interface TransferRulesTableProps {
 }
 
 export default function TransferRulesTable({ initialRules }: TransferRulesTableProps) {
-  const [rules, setRules] = useState<RuleListItem[]>(initialRules);
+  const utils = trpc.useUtils();
 
-  const listQuery = trpc.transferRule.listRules.useQuery(undefined, {
+  const { data: rules = initialRules } = trpc.transferRule.listRules.useQuery(undefined, {
     initialData: initialRules,
   });
 
-  useEffect(() => {
-    if (listQuery.data) setRules(listQuery.data);
-  }, [listQuery.data]);
-
   const toggleMutation = trpc.transferRule.toggleRule.useMutation({
-    onSuccess: (_, variables) => {
-      setRules((prev) =>
-        prev.map((r) =>
-          r.id === variables.ruleId ? { ...r, isActive: variables.isActive } : r,
-        ),
-      );
+    onSuccess: async (_, variables) => {
+      await utils.transferRule.listRules.invalidate();
       toast.success(variables.isActive ? 'Rule activated' : 'Rule deactivated');
     },
     onError: (err) => toast.error(err.message ?? 'Failed to toggle rule'),
   });
 
   const deleteMutation = trpc.transferRule.deleteRule.useMutation({
-    onSuccess: (_, variables) => {
-      setRules((prev) => prev.filter((r) => r.id !== variables.ruleId));
+    onSuccess: async () => {
+      await utils.transferRule.listRules.invalidate();
       toast.success('Rule deleted');
     },
     onError: (err) => toast.error(err.message ?? 'Failed to delete rule'),

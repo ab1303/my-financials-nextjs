@@ -186,7 +186,7 @@ export function CleansingCandidatePicker({
               No candidates found
             </p>
             <p className='text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[280px]'>
-              We couldn't find any DEBIT transactions matching your criteria.
+              We couldn&apos;t find any DEBIT transactions matching your criteria.
               Try adjusting your search or account filters.
             </p>
           </div>

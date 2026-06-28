@@ -28,61 +28,6 @@ export default function CSVUploadStep({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
-  const validateCSV = async (
-    csvFile: File,
-  ): Promise<UploadedCSVFile | null> => {
-    if (!selectedBankAccountId) {
-      setValidationError('Please select a bank account before uploading.');
-      return null;
-    }
-
-    setIsValidating(true);
-    setValidationError(null);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', csvFile);
-      formData.append('bankAccountId', selectedBankAccountId ?? '');
-
-      const response = await fetch('/api/transactions/csv/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.error || 'Failed to validate CSV file';
-        setValidationError(errorMessage);
-        setIsValidating(false);
-        return null;
-      }
-
-      const uploadResponse = await response.json();
-
-      const uploadedFile: UploadedCSVFile = {
-        id: uploadResponse.fileId,
-        file: csvFile,
-        fileName: uploadResponse.fileName,
-        fileSize: uploadResponse.fileSize,
-        rowCount: uploadResponse.rowCount,
-        status: 'valid',
-        transactions: uploadResponse.transactions,
-        detectionMethod: uploadResponse.detectionMethod,
-        bankName: uploadResponse.bankName,
-      };
-
-      onFileSelected(uploadedFile);
-      setIsValidating(false);
-      return uploadedFile;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to validate CSV';
-      setValidationError(errorMessage);
-      setIsValidating(false);
-      return null;
-    }
-  };
-
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
@@ -100,9 +45,57 @@ export default function CSVUploadStep({
         return;
       }
 
-      await validateCSV(csvFile);
+      // Validate CSV inline
+      if (!selectedBankAccountId) {
+        setValidationError('Please select a bank account before uploading.');
+        return;
+      }
+
+      setIsValidating(true);
+      setValidationError(null);
+
+      try {
+        const formData = new FormData();
+        formData.append('file', csvFile);
+        formData.append('bankAccountId', selectedBankAccountId ?? '');
+
+        const response = await fetch('/api/transactions/csv/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          const errorMessage = errorData.error || 'Failed to validate CSV file';
+          setValidationError(errorMessage);
+          setIsValidating(false);
+          return;
+        }
+
+        const uploadResponse = await response.json();
+
+        const uploadedFile: UploadedCSVFile = {
+          id: uploadResponse.fileId,
+          file: csvFile,
+          fileName: uploadResponse.fileName,
+          fileSize: uploadResponse.fileSize,
+          rowCount: uploadResponse.rowCount,
+          status: 'valid',
+          transactions: uploadResponse.transactions,
+          detectionMethod: uploadResponse.detectionMethod,
+          bankName: uploadResponse.bankName,
+        };
+
+        onFileSelected(uploadedFile);
+        setIsValidating(false);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to validate CSV';
+        setValidationError(errorMessage);
+        setIsValidating(false);
+      }
     },
-    [selectedBankAccountId],
+    [selectedBankAccountId, onFileSelected],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -164,7 +157,7 @@ export default function CSVUploadStep({
                 : 'Drop CSV file or click to select'}
             </h3>
             <p className='mb-4 text-sm text-gray-600 dark:text-gray-400'>
-              Export your transaction history as CSV from your bank's internet
+              Export your transaction history as CSV from your bank&apos;s internet
               banking
             </p>
             <p className='text-xs text-gray-500 dark:text-gray-400'>

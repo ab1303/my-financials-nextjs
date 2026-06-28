@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { CategoryRuleListItem } from '@/server/services/transactions/category-rule.service';
@@ -11,38 +10,31 @@ interface CategoryRulesTableProps {
 }
 
 export default function CategoryRulesTable({ initialRules }: CategoryRulesTableProps) {
-  const [rules, setRules] = useState<CategoryRuleListItem[]>(initialRules);
+  const utils = trpc.useUtils();
 
-  const listQuery = trpc.categoryRule.list.useQuery(undefined, {
+  const { data: rules = initialRules } = trpc.categoryRule.list.useQuery(undefined, {
     initialData: initialRules,
   });
 
-  useEffect(() => {
-    if (listQuery.data) setRules(listQuery.data);
-  }, [listQuery.data]);
-
   const toggleMutation = trpc.categoryRule.toggle.useMutation({
-    onSuccess: (_, variables) => {
-      setRules((prev) =>
-        prev.map((r) =>
-          r.id === variables.ruleId ? { ...r, isActive: variables.isActive } : r,
-        ),
-      );
+    onSuccess: async (_, variables) => {
+      await utils.categoryRule.list.invalidate();
       toast.success(variables.isActive ? 'Rule activated' : 'Rule deactivated');
     },
     onError: (err) => toast.error(err.message ?? 'Failed to toggle rule'),
   });
 
   const deleteMutation = trpc.categoryRule.delete.useMutation({
-    onSuccess: (_, variables) => {
-      setRules((prev) => prev.filter((r) => r.id !== variables.ruleId));
+    onSuccess: async () => {
+      await utils.categoryRule.list.invalidate();
       toast.success('Rule deleted');
     },
     onError: (err) => toast.error(err.message ?? 'Failed to delete rule'),
   });
 
   const applyToPastMutation = trpc.categoryRule.applyToPast.useMutation({
-    onSuccess: (data, _) => {
+    onSuccess: async (data) => {
+      await utils.categoryRule.list.invalidate();
       toast.success(`Applied to ${data.updatedCount} past transactions`);
     },
     onError: (err) => toast.error(err.message ?? 'Failed to apply rule to past transactions'),
@@ -53,7 +45,7 @@ export default function CategoryRulesTable({ initialRules }: CategoryRulesTableP
       <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-gray-700">
         <p className="text-sm text-muted-foreground">No category rules yet.</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Change a transaction''s category and save it as a rule to get started.
+          Change a transaction&apos;s category and save it as a rule to get started.
         </p>
       </div>
     );

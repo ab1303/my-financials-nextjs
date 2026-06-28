@@ -34,7 +34,7 @@ function EmptyState({ isFiltered, query }: { isFiltered: boolean; query: string 
       <div className='flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-8 text-center'>
         <Search className='h-6 w-6 text-muted-foreground/40' aria-hidden='true' />
         <p className='text-sm text-muted-foreground'>
-          No match for <span className='font-medium text-foreground'>"{query}"</span>
+          No match for <span className='font-medium text-foreground'>&quot;{query}&quot;</span>
         </p>
         <p className='text-xs text-muted-foreground'>Press Enter or click Add to create it.</p>
       </div>

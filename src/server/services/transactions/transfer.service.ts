@@ -114,7 +114,6 @@ export async function getCandidates(params: {
 }): Promise<TransferCandidateScore[]> {
   const source = await params.prisma.transaction.findUnique({
     where: { id: params.transactionId, userId: params.userId },
-    // @ts-ignore — new relation fields not yet in generated client
     include: { financialAccount: { include: { institution: true } } },
   });
 
@@ -158,7 +157,6 @@ export async function getCandidates(params: {
     } | null;
   }>;
 
-  // @ts-ignore — bankId on bankAccount available after migration
   const sourceBankId: string | null =
     (source as any).financialAccount?.institutionId ?? null;
   const sourceIsTracked: boolean =
@@ -231,7 +229,6 @@ export async function searchTransferCandidates(params: {
 }): Promise<TransferCandidateScore[]> {
   const source = await params.prisma.transaction.findUnique({
     where: { id: params.transactionId, userId: params.userId },
-    // @ts-ignore
     include: { financialAccount: { include: { institution: true } } },
   });
 
@@ -290,7 +287,6 @@ export async function searchTransferCandidates(params: {
     } | null;
   }>;
 
-  // @ts-ignore
   const sourceBankId: string | null =
     (source as any).financialAccount?.institutionId ?? null;
 
@@ -361,7 +357,6 @@ export async function linkTransferPair(params: {
     throw new Error('Second transaction must be CREDIT');
   // Same-account transfers are valid (e.g. loan sent out and returned via the same bank account)
 
-  // @ts-ignore — new fields not in generated client yet
   if (
     (debit as any).transferLinkedTransactionId ??
     (credit as any).transferLinkedTransactionId

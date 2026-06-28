@@ -35,6 +35,25 @@ export default function SmartMatchDialog({
   const ruleNameInitialisedRef = useRef(false);
   const initializedRef = useRef(false);
 
+  const getSuggestedRuleName = (data: SimilarPairSuggestion[]) => {
+    if (data.length > 0) {
+      const words = data[0]!.debit.description
+        .toLowerCase()
+        .split(/\W+/)
+        .filter(Boolean)
+        .filter(
+          (w) =>
+            !['to', 'from', 'the', 'a', 'an', 'and', 'or', 'of', 'in', 'at', 'on', 'for'].includes(
+              w,
+            ) && w.length > 1,
+        );
+      return words[0]
+        ? `${words[0].charAt(0).toUpperCase()}${words[0].slice(1)} Transfer`
+        : 'Transfer Rule';
+    }
+    return 'Transfer Rule';
+  };
+
   const suggestQuery = trpc.transfer.suggestSimilarPairs.useQuery(
     {
       debitTransactionId: sourcePair.debitTransactionId,
@@ -55,7 +74,8 @@ export default function SmartMatchDialog({
       // No similar pairs — go straight to Save Rule prompt instead of auto-closing
       if (!ruleNameInitialisedRef.current) {
         ruleNameInitialisedRef.current = true;
-        setRuleName(getSuggestedRuleName(suggestQuery.data));
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setRuleName(getSuggestedRuleName(suggestQuery.data ?? []));
       }
       setShowSaveRulePrompt(true);
       return;
@@ -125,25 +145,6 @@ export default function SmartMatchDialog({
     }
     onClose();
   }
-
-  const getSuggestedRuleName = (data: typeof pairs) => {
-    if (data.length > 0) {
-      const words = data[0]!.debit.description
-        .toLowerCase()
-        .split(/\W+/)
-        .filter(Boolean)
-        .filter(
-          (w) =>
-            !['to', 'from', 'the', 'a', 'an', 'and', 'or', 'of', 'in', 'at', 'on', 'for'].includes(
-              w,
-            ) && w.length > 1,
-        );
-      return words[0]
-        ? `${words[0].charAt(0).toUpperCase()}${words[0].slice(1)} Transfer`
-        : 'Transfer Rule';
-    }
-    return 'Transfer Rule';
-  };
 
   const content = (
     <div className="fixed inset-0 z-50 flex items-center justify-center">

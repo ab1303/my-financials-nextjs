@@ -32,7 +32,7 @@ export async function addRow(input: CreateZakatPaymentInput) {
     const validatedInput = CreateZakatPaymentSchema.parse(input);
 
     // Get or create Zakat record for the calendar year
-    let zakatRecord = await getZakat(validatedInput.calendarYearId);
+    const zakatRecord = await getZakat(validatedInput.calendarYearId);
     let zakatId = zakatRecord.id;
     let zakatAmountDue = zakatRecord.amountDue;
 

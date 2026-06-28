@@ -1,7 +1,7 @@
 'use client';
 
 import type { User } from 'next-auth';
-import { useCallback,useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -15,8 +15,9 @@ type AppShellProps = {
 export default function AppShell({ user, children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const stored = localStorage.getItem('sidebar-collapsed');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored === 'true') setCollapsed(true);
   }, []);
 

@@ -64,7 +64,7 @@ export function VoidedTransactionsModal({
           <div className="space-y-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {data.transactions.length} transaction{data.transactions.length !== 1 ? 's' : ''} voided.
-              Click "Restore" to bring them back into the ledger.
+              Click &quot;Restore&quot; to bring them back into the ledger.
             </p>
             <div className="max-h-96 overflow-y-auto rounded border border-gray-200 dark:border-gray-700">
               <table className="w-full text-sm">

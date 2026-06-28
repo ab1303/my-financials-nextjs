@@ -19,6 +19,16 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect('/auth/signin');
 
+  let bankAccounts: Array<{ id: string; name: string; bankName: string }> = [];
+  let initialCategory: string | undefined;
+  let initialCategoryId: string | undefined;
+  let initialDateFrom: string | undefined;
+  let initialDateTo: string | undefined;
+  let initialMonth: number | undefined;
+  let initialYear: number | undefined;
+  let viewMode: string | undefined;
+  let initialTab: string | undefined;
+
   try {
     const bankAccountRecords = await prisma.financialAccount.findMany({
       where: { userId: session.user.id },
@@ -26,7 +36,7 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
       orderBy: { createdAt: 'asc' },
     });
 
-    const bankAccounts = bankAccountRecords.map((a) => ({
+    bankAccounts = bankAccountRecords.map((a) => ({
       id: a.id,
       name: a.name,
       bankName: a.institution?.name ?? 'Unknown Bank',
@@ -35,8 +45,6 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
     const resolvedSearchParams = await searchParams;
 
     // Handle categoryId instead of category name
-    let initialCategory: string | undefined;
-    let initialCategoryId: string | undefined;
     const categoryId = resolvedSearchParams.category as string | undefined;
 
     if (categoryId) {
@@ -59,28 +67,28 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
       // No categoryId needed — ledger filters by name directly
     }
 
-    const initialDateFrom = resolvedSearchParams.dateFrom as string | undefined;
-    const initialDateTo = resolvedSearchParams.dateTo as string | undefined;
+    initialDateFrom = resolvedSearchParams.dateFrom as string | undefined;
+    initialDateTo = resolvedSearchParams.dateTo as string | undefined;
 
-    const initialMonth = resolvedSearchParams.month ? Number.parseInt(resolvedSearchParams.month as string, 10) : undefined;
-    const initialYear = resolvedSearchParams.year ? Number.parseInt(resolvedSearchParams.year as string, 10) : undefined;
-    const viewMode = resolvedSearchParams.view as string | undefined;
-    const initialTab = resolvedSearchParams.tab as string | undefined;
-
-    return (
-      <TransactionsClient
-        bankAccounts={bankAccounts}
-        initialCategory={initialCategory}
-        initialCategoryId={initialCategoryId}
-        initialMonth={initialMonth}
-        initialYear={initialYear}
-        viewMode={viewMode}
-        initialTab={initialTab}
-        initialDateFrom={initialDateFrom}
-        initialDateTo={initialDateTo}
-      />
-    );
+    initialMonth = resolvedSearchParams.month ? Number.parseInt(resolvedSearchParams.month as string, 10) : undefined;
+    initialYear = resolvedSearchParams.year ? Number.parseInt(resolvedSearchParams.year as string, 10) : undefined;
+    viewMode = resolvedSearchParams.view as string | undefined;
+    initialTab = resolvedSearchParams.tab as string | undefined;
   } catch {
     return <TransactionsUnavailable />;
   }
+
+  return (
+    <TransactionsClient
+      bankAccounts={bankAccounts}
+      initialCategory={initialCategory}
+      initialCategoryId={initialCategoryId}
+      initialMonth={initialMonth}
+      initialYear={initialYear}
+      viewMode={viewMode}
+      initialTab={initialTab}
+      initialDateFrom={initialDateFrom}
+      initialDateTo={initialDateTo}
+    />
+  );
 }

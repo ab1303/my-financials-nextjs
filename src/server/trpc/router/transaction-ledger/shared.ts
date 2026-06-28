@@ -94,9 +94,7 @@ export function buildTransactionWhere(
   if (input.transferOnly === true) where.category = TRANSFER_CATEGORY;
   if (input.unmatchedTransferOnly === true) {
     where.category = TRANSFER_CATEGORY;
-    // @ts-ignore
     where.transferLinkedTransactionId = null;
-    // @ts-ignore
     where.transferCounterpart = { is: null };
   }
 

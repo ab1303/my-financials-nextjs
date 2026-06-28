@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { NumericFormat } from 'react-number-format';
 
@@ -45,7 +45,8 @@ export default function AnalyticsDrillDownDrawer({
   }, [open, onClose]);
 
   // Mount client-side to avoid hydration mismatch
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

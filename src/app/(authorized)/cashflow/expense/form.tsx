@@ -2,7 +2,7 @@
 
 import type { CalendarEnumType } from '@prisma/client';
 import { usePathname, useRouter,useSearchParams } from 'next/navigation';
-import React, { useEffect, useId, useState } from 'react';
+import { useId } from 'react';
 import type { SingleValue } from 'react-select';
 
 import CalendarYearPicker from '@/components/CalendarYearPicker';
@@ -30,19 +30,9 @@ export default function ExpenseForm({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [selectedBank, setSelectedBank] = useState<SingleValue<OptionType>>(null);
-
-  // Initialize bank selection from props
-  useEffect(() => {
-    if (selectedBankId) {
-      const currentBank = bankOptions.find((b) => b.id === selectedBankId);
-      if (currentBank) {
-        setSelectedBank(currentBank);
-      }
-    } else {
-      setSelectedBank(null);
-    }
-  }, [selectedBankId, bankOptions]);
+  const selectedBank = selectedBankId
+    ? bankOptions.find((b) => b.id === selectedBankId) ?? null
+    : null;
 
   const updateURLSearchParams = (key: 'year' | 'bank', value?: string) => {
     const current = new URLSearchParams(searchParams?.toString() ?? '');
@@ -58,8 +48,6 @@ export default function ExpenseForm({
   };
 
   const handleBankChange = (option: SingleValue<OptionType>) => {
-    if (!option) setSelectedBank(null);
-    else if (option.id) setSelectedBank(option);
     updateURLSearchParams('bank', option?.id);
   };
 

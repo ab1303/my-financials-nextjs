@@ -454,7 +454,7 @@ export default function CSVImportWizard({
                 <p className='mb-2 text-sm text-gray-600 dark:text-gray-300'>
                   <span className='font-semibold dark:text-gray-100'>{flaggedCount} transaction{flaggedCount > 1 ? 's' : ''}</span>{' '}
                   look like inter-account transfers. Confirming them now may inflate your expense
-                  figures if the matching counterpart hasn't been imported yet.
+                  figures if the matching counterpart hasn&apos;t been imported yet.
                 </p>
                 <p className='mb-4 text-xs text-gray-500 dark:text-gray-400'>
                   You can still confirm and resolve any unmatched transfers in the Transfers tab

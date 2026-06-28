@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
       console.error('Transfer match job error:', jobErr);
     }
 
-    let categoryRulesSummary = null;
+    const categoryRulesSummary = null;
 
     return NextResponse.json(
       {

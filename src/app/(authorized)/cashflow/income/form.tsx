@@ -2,7 +2,8 @@
 
 import type { CalendarEnumType } from '@prisma/client';
 import { usePathname, useRouter,useSearchParams } from 'next/navigation';
-import React, { useEffect, useId, useState } from 'react';
+import { useId } from 'react';
+import type { ReactNode } from 'react';
 import { NumericFormat } from 'react-number-format';
 import type { SingleValue } from 'react-select';
 
@@ -23,7 +24,7 @@ type InitialDataType = {
 type Props = {
   initialData: InitialDataType;
   yearIdParam: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export default function IncomeForm({
@@ -36,28 +37,10 @@ export default function IncomeForm({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [selectedBank, setSelectedBank] = useState<SingleValue<OptionType>>(null);
-  const [totalIncome, setTotalIncome] = useState(initialData.totalIncome);
-
-  // Initialize bank selection from props
-  useEffect(() => {
-    const bankOptions = initialData.bankOptions || [];
-    const selectedBankId = initialData.selectedBankId || '';
-
-    if (selectedBankId) {
-      const currentBank = bankOptions.find((b) => b.id === selectedBankId);
-      if (currentBank) {
-        setSelectedBank(currentBank);
-      }
-    } else {
-      setSelectedBank(null);
-    }
-  }, [initialData.bankOptions, initialData.selectedBankId]);
-
-  // Update total income when year changes
-  useEffect(() => {
-    setTotalIncome(initialData.totalIncome);
-  }, [initialData.totalIncome]);
+  const selectedBank =
+    initialData.selectedBankId && initialData.bankOptions?.length
+      ? initialData.bankOptions.find((b) => b.id === initialData.selectedBankId) ?? null
+      : null;
 
   const updateURLSearchParams = (key: 'year' | 'bank', value?: string) => {
     const current = new URLSearchParams(searchParams?.toString() ?? '');
@@ -73,8 +56,6 @@ export default function IncomeForm({
   };
 
   const handleBankChange = (option: SingleValue<OptionType>) => {
-    if (!option) setSelectedBank(null);
-    else if (option.id) setSelectedBank(option);
     updateURLSearchParams('bank', option?.id);
   };
 
@@ -117,7 +98,7 @@ export default function IncomeForm({
             thousandSeparator
             decimalScale={2}
             fixedDecimalScale
-            value={totalIncome}
+            value={initialData.totalIncome}
             readOnly
           />
         </div>
@@ -128,4 +109,3 @@ export default function IncomeForm({
     </div>
   );
 }
-

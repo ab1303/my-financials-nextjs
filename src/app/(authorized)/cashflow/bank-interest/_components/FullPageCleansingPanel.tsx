@@ -55,7 +55,7 @@ export function FullPageCleansingPanel({
               <span className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>{creditDate}</span>
               <span className='text-gray-300 dark:text-gray-700 font-light'>|</span>
               <span className='text-xs font-medium text-gray-400 truncate max-w-[400px] italic' title={creditDescription}>
-                "{creditDescription}"
+                &quot;{creditDescription}&quot;
               </span>
             </div>
           </div>

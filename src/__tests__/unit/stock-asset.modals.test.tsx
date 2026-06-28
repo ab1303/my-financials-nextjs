@@ -65,7 +65,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
      */
     it('should handle empty month input as null buyDate', () => {
       // Arrange
-      let monthInput: string | undefined = '';
+      const monthInput: string | undefined = '';
       
       // Act: Parse empty input
       let result = null;
@@ -83,7 +83,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should handle undefined month input as null buyDate', () => {
       // Arrange
-      let monthInput: string | undefined = undefined;
+      const monthInput: string | undefined = undefined;
       
       // Act: Parse undefined input
       let result = null;
@@ -169,7 +169,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
 
     it('should handle null buyDate on edit (leave blank)', () => {
       // Arrange
-      let existingBuyDate: Date | null = null;
+      const existingBuyDate: Date | null = null;
       
       // Act: Handle null
       let monthInputValue = '';

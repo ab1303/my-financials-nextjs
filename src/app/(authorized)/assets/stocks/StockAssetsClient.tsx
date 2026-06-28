@@ -5,7 +5,7 @@ import type { CurrencyEnumType } from '@prisma/client';
 import clsx from 'clsx';
 import { ChevronDown, Plus, Trash2 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Fragment, useEffect, useMemo,useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import type { SingleValue } from 'react-select';
 import { toast } from 'sonner';
@@ -189,7 +189,7 @@ export default function StockAssetsClient({ initialData }: Props) {
   const isLoading = isLoadingSnapshots || isLoadingTotals;
 
   // Update snapshot options when snapshots change
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (snapshots && snapshots.length > 0) {
       const options = snapshots.map((snapshot: any) => ({
         id: snapshot.id,
@@ -199,6 +199,7 @@ export default function StockAssetsClient({ initialData }: Props) {
           day: 'numeric',
         }),
       }));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSnapshotOptions(options);
 
       // Auto-select first snapshot if not already selected
@@ -211,7 +212,7 @@ export default function StockAssetsClient({ initialData }: Props) {
       setSelectedSnapshotId(null);
       setSelectedSnapshot(null);
     }
-  }, [snapshots, selectedSnapshotId]);
+  }, [snapshots]);
 
   // Update URL when year changes — only when yearId actually differs to prevent infinite re-render loop
   useEffect(() => {

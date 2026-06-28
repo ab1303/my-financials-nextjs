@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useState } from 'react';
 import type { GroupBase, SingleValue } from 'react-select';
 
 import { SelectWrapper as Select } from '@/components/ui/Select';
@@ -202,7 +202,8 @@ export default function TransactionFilters({
   );
 
   // Close period panel when reset
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsPeriodOpen(false);
   }, [resetKey]);
 

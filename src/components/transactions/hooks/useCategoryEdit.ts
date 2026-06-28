@@ -54,6 +54,7 @@ export function useCategoryEdit({
 
   // Sync local category when transaction changes from server
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalCategory(transaction.category);
   }, [transaction.category]);
 
