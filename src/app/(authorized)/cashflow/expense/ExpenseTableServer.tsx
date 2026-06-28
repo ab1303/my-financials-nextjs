@@ -1,4 +1,5 @@
 import { getExpenseCategoryBreakdownHandler,getExpenseDataHandler } from '@/server/controllers/expense.controller';
+import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 
 import ExpenseTableClient from './ExpenseTableClient';
 
@@ -11,6 +12,7 @@ export type ExpenseTableServerProps = {
   fromMonth: number;
   fromYear: number;
   bankAccountId?: string;
+  categoryGroups: CategoryGroupListItem[];
 };
 
 export default async function ExpenseTableServer({
@@ -22,6 +24,7 @@ export default async function ExpenseTableServer({
   fromMonth,
   fromYear,
   bankAccountId,
+  categoryGroups,
 }: ExpenseTableServerProps) {
   const [expenseData, categoryBreakdown] = await Promise.all([
     getExpenseDataHandler(calendarYearId, userId, bankAccountId),
@@ -51,9 +54,11 @@ export default async function ExpenseTableServer({
       calendarLabel={calendarLabel}
       fromMonth={fromMonth}
       fromYear={fromYear}
+      bankAccountId={bankAccountId}
       categoryBreakdown={categoryBreakdown}
       yearDateFrom={dateFrom.toISOString().slice(0, 10)}
       yearDateTo={dateTo.toISOString().slice(0, 10)}
+      categoryGroups={categoryGroups}
     />
   );
 }

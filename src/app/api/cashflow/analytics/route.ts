@@ -7,7 +7,9 @@ import type {
   CashflowKPIs,
   MonthlyTrendPoint,
 } from '@/server/models/cashflow-analytics';
+
 import type { MonthlyIncomeSummary } from '@/server/models/income';
+
 import {
   getExpenseCategoryBreakdownForYear,
   getMonthlyExpenseSummaries,
@@ -131,7 +133,7 @@ export async function GET(request: Request) {
         const year =
           calendarYear && month < calendarYear.fromMonth
             ? calendarYear.toYear
-            : calendarYear?.fromYear ?? new Date().getFullYear();
+            : (calendarYear?.fromYear ?? new Date().getFullYear());
 
         return {
           month,
@@ -142,11 +144,14 @@ export async function GET(request: Request) {
       },
     );
 
-    const emptyMonthlyExpenseSummaries = Array.from({ length: 12 }, (_, index) => ({
-      month: index + 1,
-      totalAmount: 0,
-      entryCount: 0,
-    }));
+    const emptyMonthlyExpenseSummaries = Array.from(
+      { length: 12 },
+      (_, index) => ({
+        month: index + 1,
+        totalAmount: 0,
+        entryCount: 0,
+      }),
+    );
 
     const [
       totalIncome,
@@ -263,8 +268,7 @@ export async function GET(request: Request) {
     });
 
     const netCashflow = totalIncome - totalExpenses;
-    const savingsRate =
-      totalIncome > 0 ? (netCashflow / totalIncome) * 100 : 0;
+    const savingsRate = totalIncome > 0 ? (netCashflow / totalIncome) * 100 : 0;
     const monthsWithIncome = monthlyIncome.filter(
       (m) => m.totalAmount > 0,
     ).length;

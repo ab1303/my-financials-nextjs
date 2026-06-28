@@ -1,14 +1,20 @@
 'use client';
 
 import { Dialog, Transition } from '@headlessui/react';
-import { ChevronDown, ChevronUp, ExternalLink, LayoutList, Search,X } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Filter, LayoutList, Search, X } from 'lucide-react';
 import Link from 'next/link';
-import { Fragment, useState } from 'react';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
+import type { GroupBase, MultiValue } from 'react-select';
 
 import Portal from '@/components/Portal';
 import { DistributionWidget, type DistributionItem } from '@/components/ui/DistributionWidget';
+import { GroupCategoryPopover } from '@/components/ui/GroupCategoryPopover';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { groupExpenseBreakdown, type GroupedBreakdown } from '@/lib/category-group-utils';
 import type { CategoryBreakdown } from '@/server/models/expense';
+import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
+import type { OptionType } from '@/types';
 
 // Fixed ordered palette — assigned by rank (index 0 = highest spend)
 const BAR_COLORS = [
@@ -49,17 +55,47 @@ type Props = {
   yearDateFrom: string;
   yearDateTo: string;
   calendarLabel?: string;
+  categoryGroups: CategoryGroupListItem[];
+  selectedCategoryIds: Set<string>;
+  onCategorySelectionChange: (ids: Set<string>) => void;
 };
 
 type ExpenseDistributionItem = DistributionItem & CategoryBreakdown;
 
-export default function ExpenseCategoryBreakdownWidget({ breakdown, yearDateFrom, yearDateTo, calendarLabel }: Props) {
+export default function ExpenseCategoryBreakdownWidget({
+  breakdown,
+  yearDateFrom,
+  yearDateTo,
+  calendarLabel,
+  categoryGroups,
+  selectedCategoryIds,
+  onCategorySelectionChange,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'categories' | 'groups'>('categories');
+  const [openPopoverGroupId, setOpenPopoverGroupId] = useState<string | null>(null);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const _groupBadgeRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  if (breakdown.length === 0) return null;
+  const expenseGroups = categoryGroups.filter((g) => g.scope === 'EXPENSE');
+  const hasGroups = expenseGroups.length > 0;
+  const allCategoryIds = useMemo(
+    () => breakdown.map((b) => b.categoryId),
+    [breakdown],
+  );
+  const allSelected =
+    allCategoryIds.length > 0 &&
+    selectedCategoryIds.size === allCategoryIds.length &&
+    allCategoryIds.every((id) => selectedCategoryIds.has(id));
 
-  const distributionItems: ExpenseDistributionItem[] = breakdown.map((item, i) => ({
+  // Categories mode: filter to selected
+  const filteredBreakdown = useMemo(
+    () => breakdown.filter((b) => selectedCategoryIds.has(b.categoryId)),
+    [breakdown, selectedCategoryIds],
+  );
+
+  const distributionItems: ExpenseDistributionItem[] = filteredBreakdown.map((item, i) => ({
     name: item.categoryName,
     total: item.amount,
     percentage: item.percentage,
@@ -72,51 +108,263 @@ export default function ExpenseCategoryBreakdownWidget({ breakdown, yearDateFrom
   const visibleItems = expanded ? distributionItems : distributionItems.slice(0, TOP_N);
   const hiddenCount = distributionItems.length - TOP_N;
 
+  // Groups mode
+  const groupedBreakdown = useMemo(
+    () => groupExpenseBreakdown(breakdown, expenseGroups, selectedCategoryIds),
+    [breakdown, expenseGroups, selectedCategoryIds],
+  );
+
+  const groupDistributionItems: (DistributionItem & GroupedBreakdown)[] = groupedBreakdown.map(
+    (g, i) => ({
+      ...g,
+      name: g.groupName,
+      total: g.totalAmount,
+      color: BAR_COLORS[i % BAR_COLORS.length] ?? 'bg-gray-400',
+    }),
+  );
+
+  // Cross-group filter panel options
+  const crossGroupOptions: GroupBase<OptionType>[] = useMemo(() => {
+    const grouped = expenseGroups.map((g) => ({
+      label: g.name,
+      options: breakdown
+        .filter((b) => g.memberIds.includes(b.categoryId))
+        .map((b) => ({ id: b.categoryId, label: b.categoryName })),
+    })).filter((g) => g.options.length > 0);
+
+    const groupedIds = new Set(expenseGroups.flatMap((g) => g.memberIds));
+    const ungrouped = breakdown
+      .filter((b) => !groupedIds.has(b.categoryId))
+      .map((b) => ({ id: b.categoryId, label: b.categoryName }));
+    if (ungrouped.length > 0) {
+      grouped.push({ label: 'Ungrouped', options: ungrouped });
+    }
+    return grouped;
+  }, [breakdown, expenseGroups]);
+
+  const selectedOptions = useMemo(
+    () => crossGroupOptions.flatMap((g) => g.options.filter((o) => selectedCategoryIds.has(o.id))),
+    [crossGroupOptions, selectedCategoryIds],
+  );
+
+  function handleCrossGroupChange(values: MultiValue<OptionType>) {
+    onCategorySelectionChange(new Set(values.map((v) => v.id)));
+  }
+
+  if (breakdown.length === 0) return null;
+
   return (
     <>
       <div className='mb-4 rounded-lg border border-border bg-card/50 p-3'>
-        <DistributionWidget
-          items={visibleItems}
-          renderItem={(item) => (
-            <CategoryBadgeLink
-              key={item.categoryName}
-              item={item}
-              colorIndex={distributionItems.indexOf(item)}
-              yearDateFrom={yearDateFrom}
-              yearDateTo={yearDateTo}
-            />
-          )}
-        />
-        
-        {/* Toggle + View All */}
-        <div className='mt-2 flex flex-wrap items-center gap-2'>
-           {hiddenCount > 0 && (
-            <button
-              type='button'
-              onClick={() => setExpanded((prev) => !prev)}
-              className='flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors'
-              aria-label={expanded ? 'Show fewer categories' : `Show ${hiddenCount} more categories`}
+        {/* Top row: mode toggle + filter button */}
+        <div className='mb-2 flex items-center justify-between gap-2'>
+          {hasGroups ? (
+            <div className='flex items-center rounded-md border border-border bg-muted/40 p-0.5'>
+              <button
+                type='button'
+                onClick={() => setViewMode('categories')}
+                className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
+                  viewMode === 'categories'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Categories
+              </button>
+              <button
+                type='button'
+                onClick={() => setViewMode('groups')}
+                className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
+                  viewMode === 'groups'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Groups
+              </button>
+            </div>
+          ) : (
+            <Link
+              href='/cashflow/category-groups'
+              className='text-xs text-muted-foreground hover:text-foreground transition-colors'
             >
-              {expanded ? (
-                <><ChevronUp size={12} />{' '}{hiddenCount} fewer</>
-              ) : (
-                <><ChevronDown size={12} />{' '}+ {hiddenCount} more</>
-              )}
-            </button>
+              + Create category groups for rollup view
+            </Link>
           )}
 
-          <div className='ml-auto'>
+          <div className='flex items-center gap-2'>
+            {!allSelected && (
+              <button
+                type='button'
+                onClick={() => {
+                  setOpenPopoverGroupId(null);
+                  setFilterPanelOpen(false);
+                  onCategorySelectionChange(new Set(allCategoryIds));
+                }}
+                className='rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors'
+                aria-label='Restore all categories'
+              >
+                All
+              </button>
+            )}
             <button
               type='button'
-              onClick={() => setDialogOpen(true)}
-              className='flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground border border-border hover:bg-muted/60 hover:text-foreground transition-colors'
-              aria-label='View full category breakdown'
+              onClick={() => setFilterPanelOpen((v) => !v)}
+              className='flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors'
+              aria-label='Filter categories'
             >
-              <LayoutList size={13} />
-              View all
+              <Filter size={12} />
+              Filter
+              {selectedCategoryIds.size < breakdown.length && (
+                <span className='ml-0.5 rounded-full bg-primary/15 px-1.5 py-px text-[10px] font-semibold text-primary'>
+                  {selectedCategoryIds.size}/{breakdown.length}
+                </span>
+              )}
             </button>
           </div>
         </div>
+
+        {/* Cross-group filter panel */}
+        {filterPanelOpen && (
+          <div className='mb-3'>
+            <Select<OptionType, true, GroupBase<OptionType>>
+              instanceId='expense-category-filter-widget'
+              inputId='expense-category-filter-widget'
+              options={crossGroupOptions}
+              value={selectedOptions}
+              onChange={handleCrossGroupChange}
+              isMulti
+              isClearable
+              placeholder='Select categories...'
+              className='w-full text-sm'
+              getOptionValue={(opt) => opt.id}
+              getOptionLabel={(opt) => opt.label}
+              formatGroupLabel={(group) => (
+                <div className='py-1 text-xs font-semibold text-foreground'>
+                  {group.label}
+                </div>
+              )}
+            />
+          </div>
+        )}
+
+        {viewMode === 'categories' ? (
+          <>
+            <DistributionWidget
+              items={visibleItems}
+              renderItem={(item) => (
+                <CategoryBadgeLink
+                  key={item.categoryName}
+                  item={item}
+                  colorIndex={distributionItems.indexOf(item)}
+                  yearDateFrom={yearDateFrom}
+                  yearDateTo={yearDateTo}
+                />
+              )}
+            />
+            <div className='mt-2 flex flex-wrap items-center gap-2'>
+              {hiddenCount > 0 && (
+                <button
+                  type='button'
+                  onClick={() => setExpanded((prev) => !prev)}
+                  className='flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors'
+                  aria-label={expanded ? 'Show fewer categories' : `Show ${hiddenCount} more categories`}
+                >
+                  {expanded ? (
+                    <><ChevronUp size={12} /> {hiddenCount} fewer</>
+                  ) : (
+                    <><ChevronDown size={12} /> + {hiddenCount} more</>
+                  )}
+                </button>
+              )}
+              <div className='ml-auto'>
+                <button
+                  type='button'
+                  onClick={() => setDialogOpen(true)}
+                  className='flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-muted-foreground border border-border hover:bg-muted/60 hover:text-foreground transition-colors'
+                  aria-label='View full category breakdown'
+                >
+                  <LayoutList size={13} />
+                  View all
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Groups mode */
+          <div>
+            <div className='flex h-3 w-full overflow-hidden rounded-full bg-muted mb-3'>
+              {groupDistributionItems.map((g) => (
+                <div
+                  key={g.groupName}
+                  style={{ width: `${g.percentage}%` }}
+                  className={g.color}
+                  title={`${g.groupName}: ${g.percentage.toFixed(1)}%`}
+                />
+              ))}
+            </div>
+            <div className='flex flex-wrap gap-2'>
+              {groupDistributionItems.map((g, i) => {
+                const popoverId = g.groupId ?? 'ungrouped';
+                const isOpen = openPopoverGroupId === popoverId;
+                const selectedInGroup = g.categories.filter((c) =>
+                  selectedCategoryIds.has(c.categoryId),
+                ).length;
+                const totalInGroup = g.categories.length;
+
+                return (
+                  <div
+                    key={g.groupName}
+                    ref={(el) => { _groupBadgeRefs.current[popoverId] = el; }}
+                    className='relative'
+                  >
+                    <button
+                      type='button'
+                      onClick={() => setOpenPopoverGroupId(isOpen ? null : popoverId)}
+                      className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                        BADGE_COLORS[i % BADGE_COLORS.length] ?? ''
+                      } border-transparent hover:border-current`}
+                      aria-expanded={isOpen}
+                      aria-haspopup='dialog'
+                    >
+                      <span
+                        className={`inline-block h-2 w-2 rounded-full flex-shrink-0 ${BAR_COLORS[i % BAR_COLORS.length] ?? 'bg-gray-400'}`}
+                      />
+                      {g.groupName}
+                      {selectedInGroup < totalInGroup && (
+                        <span className='opacity-70'>
+                          ({selectedInGroup}/{totalInGroup})
+                        </span>
+                      )}
+                      {'\u00a0'}
+                      <NumericFormat
+                        value={g.totalAmount}
+                        displayType='text'
+                        thousandSeparator
+                        prefix='$'
+                        decimalScale={0}
+                      />
+                      <span className='opacity-60'>({g.percentage.toFixed(1)}%)</span>
+                      <ChevronDown
+                        size={10}
+                        className={isOpen ? 'rotate-180 transition-transform' : 'transition-transform'}
+                      />
+                    </button>
+
+                    {isOpen && (
+                      <GroupCategoryPopover
+                        group={g}
+                        selectedCategoryIds={selectedCategoryIds}
+                        onSelectionChange={onCategorySelectionChange}
+                        onClose={() => setOpenPopoverGroupId(null)}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <CategorySummaryDialog

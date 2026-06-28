@@ -8,8 +8,7 @@
 
 import { Dialog, Transition } from '@headlessui/react';
 import clsx from 'clsx';
-import { Lock,X } from 'lucide-react';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, ChevronRight, Lock, X } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Fragment, useCallback, useEffect, useId, useMemo, useState } from 'react';
@@ -21,8 +20,10 @@ import ImportAuditIcon from '@/components/ImportAuditIcon';
 import Portal from '@/components/Portal';
 import { Label } from '@/components/ui';
 import { SelectWrapper as Select } from '@/components/ui/Select';
+import { groupExpenseEntries, type GroupedEntry } from '@/lib/category-group-utils';
 import { cn } from '@/lib/utils';
 import type { ExpenseEntryWithCategory } from '@/server/models/expense';
+import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 import { cardStyles } from '@/styles/theme';
 import { buttonStyles,inputStyles } from '@/styles/theme';
 import type { OptionType } from '@/types';
@@ -66,6 +67,10 @@ type CategoryBreakdownModalProps = {
 
 
   isOpen: boolean;
+
+
+
+  categoryGroups: CategoryGroupListItem[];
 
 
 
@@ -449,6 +454,10 @@ function CategoryBreakdownContent({
 
 
 
+  categoryGroups,
+
+
+
   onClose,
 
 
@@ -481,11 +490,11 @@ function CategoryBreakdownContent({
 
 
 
+    const [viewMode, setViewMode] = useState<'flat' | 'grouped'>('flat');
 
 
 
-
-  const { state, dispatch } = useExpenseEntryState();
+    const { state, dispatch } = useExpenseEntryState();
 
 
 
@@ -845,15 +854,18 @@ function CategoryBreakdownContent({
 
 
 
+    const groupedEntries = useMemo(
+      () => groupExpenseEntries(state.data, categoryGroups),
+      [state.data, categoryGroups],
+    );
 
 
 
-
-  return (
-
+    return (
 
 
-    <CategoryBreakdownDialog
+
+      <CategoryBreakdownDialog
 
 
 
@@ -1073,27 +1085,47 @@ function CategoryBreakdownContent({
 
 
 
-              {/* Sort control */}
+              {/* View mode toggle + Sort control */}
 
 
 
-              <div className='mb-2 flex items-center justify-end'>
+                            <div className='mb-2 flex items-center justify-between gap-2'>
+                              {categoryGroups.filter(g => g.scope === 'EXPENSE').length > 0 && (
+                                <div className='flex items-center rounded-md border border-border bg-muted/40 p-0.5'>
+                                  <button
+                                    type='button'
+                                    onClick={() => setViewMode('flat')}
+                                    className={`rounded px-2 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
+                                      viewMode === 'flat' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                  >
+                                    Flat
+                                  </button>
+                                  <button
+                                    type='button'
+                                    onClick={() => setViewMode('grouped')}
+                                    className={`rounded px-2 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
+                                      viewMode === 'grouped' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                  >
+                                    Grouped
+                                  </button>
+                                </div>
+                              )}
+                              {viewMode === 'flat' && (
+                                <button
 
 
 
-                <button
+                                type='button'
 
 
 
-                  type='button'
+                                onClick={toggleSort}
 
 
 
-                  onClick={toggleSort}
-
-
-
-                  className='inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'
+                                className='inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'
 
 
 
@@ -1114,16 +1146,17 @@ function CategoryBreakdownContent({
 
 
                 </button>
+                                  )}
 
 
 
-              </div>
+                                </div>
 
 
 
 
 
-
+{viewMode === 'flat' ? (
 
             <div className='space-y-3'>
 
@@ -1350,42 +1383,172 @@ function CategoryBreakdownContent({
 
 
             </div>
+                        ) : (
+                          /* Grouped view */
+                          <GroupedEntriesView
+                            groupedEntries={groupedEntries}
+                            month={month}
+                            monthYear={monthYear}
+                            startEdit={startEdit}
+                            handleDeleteEntry={handleDeleteEntry}
+                            isLoading={isLoading}
+                            editEntryId={editEntryId}
+                            entryForm={entryForm}
+                            setEntryForm={setEntryForm}
+                            handleEditEntry={handleEditEntry}
+                            cancelEdit={cancelEdit}
+                            categoryOptions={categoryOptions}
+                            selectId={selectId}
+                          />
+                        )}
 
 
 
-            </>
+                          </>
 
 
 
-          )}
+                        )}
 
 
 
-        </div>
+                      </div>
 
 
 
-      </div>
+                    </div>
 
 
 
-    </CategoryBreakdownDialog>
+                  </CategoryBreakdownDialog>
 
 
 
-  );
+                );
 
 
 
-}
+              }
 
+              // ─── Grouped Entries View ─────────────────────────────────────────────────────
 
+              const GROUP_LEFT_COLORS = [
+                'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-400',
+                'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500',
+                'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500',
+                'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500',
+              ];
 
+              type GroupedEntriesViewProps = {
+                groupedEntries: GroupedEntry[];
+                month: number;
+                monthYear: number;
+                startEdit: (entry: ExpenseEntryWithCategory) => void;
+                handleDeleteEntry: (id: string) => Promise<void>;
+                isLoading: boolean;
+                editEntryId: string | null;
+                entryForm: { id: string; categoryId: string; categoryName: string; amount: number };
+                setEntryForm: (form: { id: string; categoryId: string; categoryName: string; amount: number }) => void;
+                handleEditEntry: (id: string) => Promise<void>;
+                cancelEdit: () => void;
+                categoryOptions: OptionType[];
+                selectId: string;
+              };
 
+              function GroupedEntriesView({ groupedEntries, month, monthYear }: GroupedEntriesViewProps) {
+                const [openGroupIds, setOpenGroupIds] = useState<Set<string | null>>(() =>
+                  new Set(groupedEntries.slice(0, 1).map((g) => g.groupId)),
+                );
 
+                function toggleGroup(groupId: string | null) {
+                  setOpenGroupIds((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(groupId)) {
+                      next.delete(groupId);
+                    } else {
+                      next.add(groupId);
+                    }
+                    return next;
+                  });
+                }
 
+                return (
+                  <div className='space-y-2'>
+                    {groupedEntries.map((group, i) => {
+                      const isOpen = openGroupIds.has(group.groupId);
+                      const colorClass = GROUP_LEFT_COLORS[i % GROUP_LEFT_COLORS.length] ?? 'bg-teal-500';
 
-export default function CategoryBreakdownModal(props: CategoryBreakdownModalProps) {
+                      return (
+                        <div key={group.groupId ?? 'ungrouped'} className='rounded-lg border border-border overflow-hidden'>
+                          {/* Group header */}
+                          <button
+                            type='button'
+                            onClick={() => toggleGroup(group.groupId)}
+                            className='flex w-full items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors'
+                          >
+                            <span className={`h-full w-1 min-h-[1rem] rounded-full flex-shrink-0 ${colorClass}`} />
+                            {isOpen ? (
+                              <ChevronDown size={14} className='text-muted-foreground flex-shrink-0' />
+                            ) : (
+                              <ChevronRight size={14} className='text-muted-foreground flex-shrink-0' />
+                            )}
+                            <span className='flex-1 text-sm font-semibold text-foreground'>
+                              {group.groupName}
+                            </span>
+                            <span className='text-xs text-muted-foreground'>
+                              {group.entries.length} {group.entries.length === 1 ? 'item' : 'items'}
+                            </span>
+                            <span className='text-sm font-bold text-foreground tabular-nums'>
+                              <NumericFormat
+                                value={group.totalAmount.toFixed(2)}
+                                displayType='text'
+                                thousandSeparator
+                                prefix='$'
+                              />
+                            </span>
+                          </button>
+
+                          {/* Group entries */}
+                          {isOpen && (
+                            <div className='border-t border-border divide-y divide-border/50'>
+                              {group.entries.map((entry) => (
+                                <div key={entry.id} className='flex items-center gap-3 px-4 py-2 hover:bg-muted/30 transition-colors'>
+                                  <span className={`h-8 w-0.5 rounded-full flex-shrink-0 ${colorClass} opacity-40`} />
+                                  <Link
+                                    href={buildCategoryTransactionHref(entry.categoryId, month, monthYear)}
+                                    className='flex-1 text-sm text-teal-600 hover:text-teal-700 hover:underline dark:text-teal-400 dark:hover:text-teal-300 transition-colors'
+                                    aria-label={`View transactions for ${entry.categoryName}`}
+                                  >
+                                    {entry.categoryName}
+                                  </Link>
+                                  {entry.importImageId && (
+                                    <ImportAuditIcon importImageId={entry.importImageId} fileName={entry.importImage?.fileName} />
+                                  )}
+                                  {entry.source === 'bank' && (
+                                    <span className='flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground'>
+                                      <Lock className='h-2.5 w-2.5' />Bank
+                                    </span>
+                                  )}
+                                  <span className='text-sm font-semibold text-foreground tabular-nums'>
+                                    <NumericFormat
+                                      value={entry.amount.toFixed(2)}
+                                      displayType='text'
+                                      thousandSeparator
+                                      prefix='$'
+                                    />
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+
+              export default function CategoryBreakdownModal(props: CategoryBreakdownModalProps) {
 
 
 

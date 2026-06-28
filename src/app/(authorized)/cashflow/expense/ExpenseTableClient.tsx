@@ -6,15 +6,16 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { List } from 'lucide-react';
+import { ExternalLink, List } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 
 import AIUsageCard from '@/components/AIUsageCard';
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
 import type { CategoryBreakdown, MonthlyExpenseSummary } from '@/server/models/expense';
+import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
 import ExpenseCategoryBreakdownWidget from './_components/ExpenseCategoryBreakdownWidget';
@@ -49,9 +50,11 @@ type ExpenseTableClientProps = {
   calendarLabel: string;
   fromMonth: number;
   fromYear: number;
+  bankAccountId?: string;
   categoryBreakdown: CategoryBreakdown[];
   yearDateFrom: string;  // YYYY-MM-DD
   yearDateTo: string;    // YYYY-MM-DD
+  categoryGroups: CategoryGroupListItem[];
 };
 
 export default function ExpenseTableClient({
@@ -62,18 +65,117 @@ export default function ExpenseTableClient({
   calendarLabel,
   fromMonth,
   fromYear,
+  bankAccountId,
   categoryBreakdown,
   yearDateFrom,
   yearDateTo,
+  categoryGroups,
 }: ExpenseTableClientProps) {
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [selectedMonthYear, setSelectedMonthYear] = useState<number | null>(
     null,
   );
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(
+    () => new Set(categoryBreakdown.map((b) => b.categoryId)),
+  );
+  const allCategoryIds = useMemo(
+    () => categoryBreakdown.map((b) => b.categoryId),
+    [categoryBreakdown],
+  );
+  const selectedCategoryIdsKey = useMemo(
+    () => Array.from(selectedCategoryIds).sort().join(','),
+    [selectedCategoryIds],
+  );
+  const [displayMonthlySummaries, setDisplayMonthlySummaries] = useState(
+    monthlySummaries,
+  );
+  const [displayTotalAmount, setDisplayTotalAmount] = useState(
+    monthlySummaries.reduce((sum, summary) => sum + summary.totalAmount, 0),
+  );
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const allSelected =
+      allCategoryIds.length > 0 &&
+      selectedCategoryIds.size === allCategoryIds.length &&
+      allCategoryIds.every((id) => selectedCategoryIds.has(id));
+
+    if (allSelected) {
+      setDisplayMonthlySummaries(monthlySummaries);
+      setDisplayTotalAmount(
+        monthlySummaries.reduce((sum, summary) => sum + summary.totalAmount, 0),
+      );
+      setSummaryError(null);
+      return;
+    }
+
+    if (selectedCategoryIds.size === 0) {
+      setDisplayMonthlySummaries(
+        monthlySummaries.map((summary) => ({
+          ...summary,
+          totalAmount: 0,
+          entryCount: 0,
+        })),
+      );
+      setDisplayTotalAmount(0);
+      setSummaryError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const selectedIds = Array.from(selectedCategoryIds).sort();
+    const params = new URLSearchParams({
+      calendarYearId,
+      expenseCategoryIds: selectedIds.join(','),
+    });
+    if (bankAccountId) {
+      params.set('bankAccountId', bankAccountId);
+    }
+
+    async function loadFilteredSummaries() {
+      const response = await fetch(
+        `/api/cashflow/expense/monthly-summary?${params.toString()}`,
+        {
+          signal: controller.signal,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh filtered monthly expense totals');
+      }
+
+      const data: { monthlySummaries: MonthlyExpenseSummary[] } =
+        await response.json();
+      setDisplayMonthlySummaries(data.monthlySummaries);
+      setDisplayTotalAmount(
+        data.monthlySummaries.reduce(
+          (sum, summary) => sum + summary.totalAmount,
+          0,
+        ),
+      );
+      setSummaryError(null);
+    }
+
+    loadFilteredSummaries().catch((error) => {
+      if (controller.signal.aborted) return;
+      console.error('Expense summary refresh failed:', error);
+      setSummaryError('Unable to refresh monthly totals for the selected categories.');
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [
+    allCategoryIds,
+    bankAccountId,
+    calendarYearId,
+    monthlySummaries,
+    selectedCategoryIdsKey,
+  ]);
 
   // Build display rows in fiscal-year order, each annotated with its calendar year
   const orderedRows = useMemo<DisplayRow[]>(() => {
-    const summaryMap = new Map(monthlySummaries.map((s) => [s.month, s]));
+    const summaryMap = new Map(displayMonthlySummaries.map((s) => [s.month, s]));
     return getFiscalMonthsOrdered(fromMonth).map((month) => {
       const summary = summaryMap.get(month) ?? {
         month,
@@ -82,7 +184,7 @@ export default function ExpenseTableClient({
       };
       return { ...summary, calendarYear: getMonthCalendarYear(month, fromMonth, fromYear) };
     });
-  }, [monthlySummaries, fromMonth, fromYear]);
+  }, [displayMonthlySummaries, fromMonth, fromYear]);
 
   const columns = [
     columnHelper.accessor('month', {
@@ -91,7 +193,17 @@ export default function ExpenseTableClient({
       cell: (info) => {
         const month = info.getValue();
         const year = info.row.original.calendarYear;
-        return `${MONTHS_MAP.get(month) ?? `Month ${month}`} ${year}`;
+        const label = `${MONTHS_MAP.get(month) ?? `Month ${month}`} ${year}`;
+        return (
+          <Link
+            href={`/cashflow/transactions?month=${month}&year=${year}`}
+            className='inline-flex items-center gap-1.5 font-medium text-foreground hover:text-primary transition-colors'
+            aria-label={`Open transactions for ${label}`}
+          >
+            <span>{label}</span>
+            <ExternalLink className='h-3.5 w-3.5 opacity-70' aria-hidden='true' />
+          </Link>
+        );
       },
     }),
     columnHelper.accessor('totalAmount', {
@@ -109,10 +221,10 @@ export default function ExpenseTableClient({
         );
       },
     }),
-     columnHelper.display({
+    columnHelper.display({
       id: 'categoryBreakdown',
       size: 150,
-      header: () => <span>Category Breakdown</span>,
+      header: () => <span className='inline-flex w-full justify-center'>Category Breakdown</span>,
       cell: ({ row }) => {
         const month = row.original.month;
         const year = row.original.calendarYear;
@@ -120,15 +232,16 @@ export default function ExpenseTableClient({
         return (
           <div className='flex justify-center'>
             <button
+              type='button'
               onClick={(e) => {
                 e.stopPropagation();
                 setSelectedMonth(month);
                 setSelectedMonthYear(year);
               }}
-              className='text-primary hover:text-primary/80 transition-colors'
+              className='rounded-sm text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors'
               aria-label={`View category breakdown for ${label}`}
             >
-              <List className='h-5 w-5' />
+              <List className='h-5 w-5' aria-hidden='true' />
             </button>
           </div>
         );
@@ -173,12 +286,37 @@ export default function ExpenseTableClient({
         </div>
       </div>
 
+      <div className='mb-4 p-4 bg-muted/50 border border-border rounded-lg'>
+        <div className='flex justify-between items-center gap-4'>
+          <span className='text-sm font-medium text-muted-foreground'>
+            Total Expenses for {calendarLabel}:
+          </span>
+          <span className='text-lg font-bold text-foreground'>
+            <NumericFormat
+              prefix='$'
+              displayType='text'
+              thousandSeparator
+              value={displayTotalAmount.toFixed(2)}
+            />
+          </span>
+        </div>
+      </div>
+
+      {summaryError && (
+        <div className='mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive'>
+          {summaryError}
+        </div>
+      )}
+
       {/* Category Breakdown Widget */}
       <ExpenseCategoryBreakdownWidget
         breakdown={categoryBreakdown}
         yearDateFrom={yearDateFrom}
         yearDateTo={yearDateTo}
         calendarLabel={calendarLabel}
+        categoryGroups={categoryGroups}
+        selectedCategoryIds={selectedCategoryIds}
+        onCategorySelectionChange={setSelectedCategoryIds}
       />
 
       <div className='overflow-x-auto'>
@@ -220,15 +358,10 @@ export default function ExpenseTableClient({
               </Table.TBody.TR>
             ) : (
               table.getRowModel().rows.map((row) => {
-                const month = row.original.month;
-                const year = row.original.calendarYear;
                 return (
                   <tr
                     key={row.id}
-                    className="odd:bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => {
-                      window.location.href = `/cashflow/transactions?month=${month}&year=${year}`;
-                    }}
+                    className='odd:bg-muted/30 hover:bg-muted/50 transition-colors'
                   >
                     {row.getVisibleCells().map((cell) => (
                       <Table.TBody.TD key={cell.id}>
@@ -271,6 +404,7 @@ export default function ExpenseTableClient({
           monthName={selectedMonthLabel}
           monthYear={selectedMonthYear}
           isOpen={true}
+          categoryGroups={categoryGroups}
           onClose={() => {
             setSelectedMonth(null);
             setSelectedMonthYear(null);

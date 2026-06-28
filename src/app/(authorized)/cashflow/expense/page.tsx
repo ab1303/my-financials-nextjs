@@ -7,12 +7,12 @@ import { UnresolvedTransfersBanner } from '@/components/UnresolvedTransfersBanne
 import { auth } from '@/server/auth';
 import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { totalExpensesHandler } from '@/server/controllers/expense.controller';
 import {
   ORPHAN_RESOLUTION_DAYS,
   TRANSFER_CATEGORY,
 } from '@/server/services/transactions/constants';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
+import { listCategoryGroups } from '@/server/services/category-groups/category-groups.service';
 import { prisma } from '@/server/db/client';
 import type { OptionType } from '@/types';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
@@ -59,9 +59,10 @@ export default async function ExpensePage({
   const bankIdParam = getSelectedParam(params?.bank);
   const fiscalYearType = await getUserFiscalYearType(prisma, session.user.id);
 
-  const [calendarYears, bankAccounts] = await Promise.all([
+  const [calendarYears, bankAccounts, categoryGroups] = await Promise.all([
     getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
     listBankAccountsHandler(session.user.id),
+    listCategoryGroups({ prisma, userId: session.user.id }),
   ]);
 
   const expenseYearData = calendarYears;
@@ -81,14 +82,6 @@ export default async function ExpensePage({
   }));
   const selectedBankId =
     bankOptions.find((b) => b.id === bankIdParam)?.id ?? '';
-
-  const totalExpense = selectedCalendarYearId
-    ? await totalExpensesHandler(
-        selectedCalendarYearId,
-        session.user.id,
-        selectedBankId || undefined,
-      )
-    : 0;
 
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - ORPHAN_RESOLUTION_DAYS);
@@ -170,26 +163,13 @@ export default async function ExpensePage({
           </div>
         </div>
 
-        {/* Total Expense Display */}
-        {selectedCalendarYearId && (
-          <div className='mb-6 p-4 bg-muted/50 border border-border rounded-lg'>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm font-medium text-muted-foreground'>
-                Total Expenses for {selectedCalendarYear?.description}:
-              </span>
-              <span className='text-lg font-bold text-foreground'>
-                ${totalExpense?.toFixed(2) || '0.00'}
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* Monthly Expense Table */}
         {selectedCalendarYearId && selectedCalendarYear ? (
           <Suspense fallback={<div>Loading expenses...</div>}>
             <ExpenseTableServer
               calendarYearId={selectedCalendarYearId}
               userId={session.user.id}
+              categoryGroups={categoryGroups}
               dateFrom={
                 new Date(
                   selectedCalendarYear.fromYear,

@@ -19,6 +19,7 @@ import AnalyticsDrillDownDrawer, {
 } from './AnalyticsDrillDownDrawer';
 import { ChartSkeleton } from './ChartSkeleton';
 import { ExpenseCategoryChart } from './ExpenseCategoryChart';
+import { ExpenseGroupSummaryChart } from './ExpenseGroupSummaryChart';
 import { IncomeExpenseTrendChart } from './IncomeExpenseTrendChart';
 import { IncomeSourceChart } from './IncomeSourceChart';
 import { NetCashflowChart } from './NetCashflowChart';
@@ -352,6 +353,16 @@ export default function CashflowAnalyticsClient({
           </>
         )}
       </div>
+
+      {/* Group Spending Summary (shown when category groups exist) */}
+      {!loading && categoryGroups.filter((g) => g.scope === 'EXPENSE').length > 0 && (
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+          <ExpenseGroupSummaryChart
+            expenseCategories={filteredExpenseCategories}
+            categoryGroups={categoryGroups}
+          />
+        </div>
+      )}
 
       {/* Drill-Down Drawer */}
       <AnalyticsDrillDownDrawer
