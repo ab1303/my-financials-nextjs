@@ -1,11 +1,11 @@
-import { expect,test as base } from '@playwright/test';
+import { expect, test as base } from '@playwright/test';
 
 type AuthFixtures = {
   authenticatedPage: typeof expect;
 };
 
 export const test = base.extend<AuthFixtures>({
-  authenticatedPage: async ({ page }, use) => {
+  authenticatedPage: async ({ page }, applyFixture) => {
     // Use the storageState that was set up by auth.setup.ts
     // The page already has the authenticated session loaded
     // Just verify we're authenticated
@@ -16,7 +16,7 @@ export const test = base.extend<AuthFixtures>({
       throw new Error('Authentication setup failed - user not logged in');
     }
 
-    await use(expect);
+    await applyFixture(expect);
   },
 });
 

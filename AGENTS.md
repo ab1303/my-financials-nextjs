@@ -201,6 +201,13 @@ Never pass all three docs at once for a single implementation task — context.m
   2. Run `pnpm prisma migrate dev --name <descriptive-name>`
   3. Commit `schema.prisma` AND the new `prisma/migrations/<name>/migration.sql` together
 
+### Lint Artifact Placement
+
+- Do not write ad-hoc lint JSON artifacts in repository root (for example `eslint-*.json`).
+- Store generated lint reports under `reports/lint/`.
+- Preferred command: `pnpm run lint:evaluate:json` (writes `reports/lint/eslint-scope.json`).
+- Temporary investigative artifacts should be deleted before handoff unless explicitly requested.
+
 ## Subagent Scope Control (Critical Lesson)
 
 **Problem**: Subagents will globally format, lint, and rewrite unrelated files unless explicitly constrained. This causes 300+ file modifications that pollute git history.

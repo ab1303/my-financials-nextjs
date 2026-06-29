@@ -1,3 +1,4 @@
+import type { CalendarYear, IncomeSource, Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -11,6 +12,47 @@ import {
 import { createMockContext, type MockContext } from '../helpers/mock-context';
 import { createMockIncomeTransaction } from '../mocks/income.mock';
 
+type TransactionFindManyArgs = { where?: Prisma.TransactionWhereInput };
+
+const createIncomeSource = (
+  overrides?: Partial<IncomeSource>,
+): IncomeSource => ({
+  id: 'src-1',
+  name: 'Employment',
+  description: null,
+  isActive: true,
+  createdAt: new Date('2024-01-01'),
+  ...overrides,
+});
+
+const createCalendarYear = (
+  overrides?: Partial<CalendarYear>,
+): CalendarYear => ({
+  id: 'cal-1',
+  description: 'FY 2024',
+  fromYear: 2024,
+  fromMonth: 1,
+  toYear: 2024,
+  toMonth: 12,
+  type: null,
+  lockedAt: null,
+  ...overrides,
+});
+
+const getCategoryFilter = (
+  args: TransactionFindManyArgs | undefined,
+): Prisma.StringFilter<'Transaction'> | undefined => {
+  const category = args?.where?.category;
+  if (
+    typeof category === 'object' &&
+    category !== null &&
+    'notIn' in category
+  ) {
+    return category as Prisma.StringFilter<'Transaction'>;
+  }
+  return undefined;
+};
+
 describe('Income Service (unit, with MockContext)', () => {
   let mockCtx: MockContext;
   const userId = 'test-user-id';
@@ -22,12 +64,8 @@ describe('Income Service (unit, with MockContext)', () => {
 
   it('addIncomeEntry saves Transaction with correct fields', async () => {
     mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({
-      id: 'src-1',
-      name: 'Employment',
-      description: null,
-      isActive: true,
-      createdAt: new Date(),
-    } as any);
+      ...createIncomeSource(),
+    });
     mockCtx.prisma.transaction.create.mockResolvedValue(
       createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' }),
     );
@@ -57,12 +95,8 @@ describe('Income Service (unit, with MockContext)', () => {
 
   it('addIncomeEntry result includes incomeSource data', async () => {
     mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({
-      id: 'src-1',
-      name: 'Employment',
-      description: null,
-      isActive: true,
-      createdAt: new Date(),
-    } as any);
+      ...createIncomeSource(),
+    });
     mockCtx.prisma.transaction.create.mockResolvedValue(
       createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' }),
     );
@@ -82,12 +116,9 @@ describe('Income Service (unit, with MockContext)', () => {
   });
 
   it('getIncomeEntries returns entries mapped from Transactions', async () => {
-    mockCtx.prisma.calendarYear.findUnique.mockResolvedValue({
-      fromYear: 2024,
-      fromMonth: 1,
-      toYear: 2024,
-      toMonth: 12,
-    } as any);
+    mockCtx.prisma.calendarYear.findUnique.mockResolvedValue(
+      createCalendarYear(),
+    );
 
     mockCtx.prisma.transaction.findMany.mockResolvedValue([
       createMockIncomeTransaction({
@@ -96,11 +127,11 @@ describe('Income Service (unit, with MockContext)', () => {
         amount: new Decimal('5000.00'),
         category: 'Employment',
       }),
-    ] as any);
+    ]);
 
     mockCtx.prisma.incomeSource.findMany.mockResolvedValue([
-      { id: 'src-1', name: 'Employment', isActive: true },
-    ] as any);
+      createIncomeSource({ id: 'src-1', name: 'Employment' }),
+    ]);
 
     const result = await getIncomeEntries(
       calendarYearId,
@@ -113,52 +144,49 @@ describe('Income Service (unit, with MockContext)', () => {
   });
 
   it('getIncomeEntries excludes Transfer-category credits from income', async () => {
-    mockCtx.prisma.calendarYear.findUnique.mockResolvedValue({
-      fromYear: 2024,
-      fromMonth: 1,
-      toYear: 2024,
-      toMonth: 12,
-    } as any);
-    mockCtx.prisma.transaction.findMany.mockResolvedValue([] as any);
-    mockCtx.prisma.incomeSource.findMany.mockResolvedValue([] as any);
+    mockCtx.prisma.calendarYear.findUnique.mockResolvedValue(
+      createCalendarYear(),
+    );
+    mockCtx.prisma.transaction.findMany.mockResolvedValue([]);
+    mockCtx.prisma.incomeSource.findMany.mockResolvedValue([]);
 
     await getIncomeEntries(calendarYearId, userId, mockCtx.prisma);
 
     const whereArg = mockCtx.prisma.transaction.findMany.mock
-      .calls[0]![0] as any;
-    expect(whereArg.where.category).toEqual({
+      .calls[0]![0] as TransactionFindManyArgs;
+    const categoryFilter = getCategoryFilter(whereArg);
+    expect(categoryFilter).toEqual({
       notIn: ['Transfer', 'Reimbursement'],
     });
   });
 
   it('getIncomeEntries excludes Reimbursement-category credits from income', async () => {
-    mockCtx.prisma.calendarYear.findUnique.mockResolvedValue({
-      fromYear: 2024,
-      fromMonth: 1,
-      toYear: 2024,
-      toMonth: 12,
-    } as any);
-    mockCtx.prisma.transaction.findMany.mockResolvedValue([] as any);
-    mockCtx.prisma.incomeSource.findMany.mockResolvedValue([] as any);
+    mockCtx.prisma.calendarYear.findUnique.mockResolvedValue(
+      createCalendarYear(),
+    );
+    mockCtx.prisma.transaction.findMany.mockResolvedValue([]);
+    mockCtx.prisma.incomeSource.findMany.mockResolvedValue([]);
 
     await getIncomeEntries(calendarYearId, userId, mockCtx.prisma);
 
     const whereArg = mockCtx.prisma.transaction.findMany.mock
-      .calls[0]![0] as any;
+      .calls[0]![0] as TransactionFindManyArgs;
+    const categoryFilter = getCategoryFilter(whereArg);
     // Reimbursements are expense offsets (split payments), not earned income
-    expect(whereArg.where.category.notIn).toContain('Reimbursement');
-    expect(whereArg.where.category.notIn).toContain('Transfer');
+    expect(categoryFilter?.notIn).toContain('Reimbursement');
+    expect(categoryFilter?.notIn).toContain('Transfer');
   });
 
   it('updateIncomeEntry updates Transaction correctly', async () => {
-    mockCtx.prisma.transaction.findUnique.mockResolvedValue({
-      source: 'USER_MANUAL',
-      userId,
-    } as any);
-    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue({
-      name: 'Employment',
-    } as any);
-    mockCtx.prisma.transaction.update.mockResolvedValue({} as any);
+    mockCtx.prisma.transaction.findUnique.mockResolvedValue(
+      createMockIncomeTransaction({ source: 'USER_MANUAL', userId }),
+    );
+    mockCtx.prisma.incomeSource.findUnique.mockResolvedValue(
+      createIncomeSource({ name: 'Employment' }),
+    );
+    mockCtx.prisma.transaction.update.mockResolvedValue(
+      createMockIncomeTransaction({ id: 'txn-1' }),
+    );
 
     await updateIncomeEntry(
       'txn-1',
@@ -175,11 +203,12 @@ describe('Income Service (unit, with MockContext)', () => {
   });
 
   it('deleteIncomeEntry deletes Transaction correctly', async () => {
-    mockCtx.prisma.transaction.findUnique.mockResolvedValue({
-      source: 'USER_MANUAL',
-      userId,
-    } as any);
-    mockCtx.prisma.transaction.delete.mockResolvedValue({} as any);
+    mockCtx.prisma.transaction.findUnique.mockResolvedValue(
+      createMockIncomeTransaction({ source: 'USER_MANUAL', userId }),
+    );
+    mockCtx.prisma.transaction.delete.mockResolvedValue(
+      createMockIncomeTransaction({ id: 'txn-1' }),
+    );
     await deleteIncomeEntry('txn-1', userId, mockCtx.prisma);
     expect(mockCtx.prisma.transaction.delete).toHaveBeenCalledWith({
       where: { id: 'txn-1' },

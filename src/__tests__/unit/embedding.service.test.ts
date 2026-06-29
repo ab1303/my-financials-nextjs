@@ -33,6 +33,24 @@ import { embed, embedMany } from 'ai';
 import { prisma } from '@/server/db';
 import * as embeddingService from '@/server/services/ai-import/embedding.service';
 
+type EmbedManyResult = Awaited<ReturnType<typeof embedMany>>;
+type EmbedResult = Awaited<ReturnType<typeof embed>>;
+
+const asEmbedManyResult = (
+  embeddings: number[][],
+  tokens: number,
+): EmbedManyResult =>
+  ({
+    embeddings,
+    usage: { tokens },
+  }) as unknown as EmbedManyResult;
+
+const asEmbedResult = (embedding: number[], tokens: number): EmbedResult =>
+  ({
+    embedding,
+    usage: { tokens },
+  }) as unknown as EmbedResult;
+
 // --- Test Data ---
 const mockCategories: ExpenseCategory[] = [
   { id: '1', name: 'Food' },
@@ -110,14 +128,16 @@ describe('embedding.service', () => {
   // --- ensureCategoryEmbeddings ---
   describe('ensureCategoryEmbeddings', () => {
     it('should generate embeddings for categories on first call', async () => {
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [0.1, 0.2],
-          [0.2, 0.3],
-          [0.3, 0.4],
-        ],
-        usage: { tokens: 30 },
-      });
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          30,
+        ),
+      );
       const usage =
         await embeddingService.ensureCategoryEmbeddings(mockCategories);
       expect(embedMany).toHaveBeenCalledTimes(1);
@@ -126,79 +146,92 @@ describe('embedding.service', () => {
     });
 
     it('should cache embeddings and not regenerate on second call', async () => {
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [0.1, 0.2],
-          [0.2, 0.3],
-          [0.3, 0.4],
-        ],
-        usage: { tokens: 30 },
-      });
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          30,
+        ),
+      );
       await embeddingService.ensureCategoryEmbeddings(mockCategories);
       await embeddingService.ensureCategoryEmbeddings(mockCategories);
       expect(embedMany).toHaveBeenCalledTimes(1);
     });
 
     it('should regenerate embeddings when fingerprint changes', async () => {
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [0.1, 0.2],
-          [0.2, 0.3],
-          [0.3, 0.4],
-        ],
-        usage: { tokens: 30 },
-      });
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          30,
+        ),
+      );
       await embeddingService.ensureCategoryEmbeddings(mockCategories);
       const newCategories = [...mockCategories, { id: '4', name: 'NewCat' }];
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [0.1, 0.2],
-          [0.2, 0.3],
-          [0.3, 0.4],
-          [0.4, 0.5],
-        ],
-        usage: { tokens: 40 },
-      });
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+            [0.4, 0.5],
+          ],
+          40,
+        ),
+      );
       await embeddingService.ensureCategoryEmbeddings(newCategories);
       expect(embedMany).toHaveBeenCalledTimes(2);
     });
 
     it('should prevent concurrent API calls with lock', async () => {
-      let resolveEmbedMany: any;
-      (embedMany as any).mockImplementation(
-        () => new Promise((resolve) => (resolveEmbedMany = resolve)),
+      let resolveEmbedMany: ((result: EmbedManyResult) => void) | undefined;
+      vi.mocked(embedMany).mockImplementation(
+        () =>
+          new Promise<EmbedManyResult>((resolve) => {
+            resolveEmbedMany = resolve;
+          }),
       );
       const p1 = embeddingService.ensureCategoryEmbeddings(mockCategories);
       const p2 = embeddingService.ensureCategoryEmbeddings(mockCategories);
-      resolveEmbedMany({
-        embeddings: [
-          [0.1, 0.2],
-          [0.2, 0.3],
-          [0.3, 0.4],
-        ],
-        usage: { tokens: 30 },
-      });
+      resolveEmbedMany?.(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          30,
+        ),
+      );
       const [r1, r2] = await Promise.all([p1, p2]);
       expect(embedMany).toHaveBeenCalledTimes(1);
       expect(r1).toEqual(r2);
     });
 
     it('should return AITokenUsage with correct cost calculation', async () => {
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [0.1, 0.2],
-          [0.2, 0.3],
-          [0.3, 0.4],
-        ],
-        usage: { tokens: 1000 },
-      });
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          1000,
+        ),
+      );
       const usage =
         await embeddingService.ensureCategoryEmbeddings(mockCategories);
       expect(usage.estimatedCostUSD).toBeCloseTo(0.02 * (1000 / 1_000_000), 6);
     });
 
     it('should throw on embedding API failure', async () => {
-      (embedMany as any).mockRejectedValue(new Error('API error'));
+      vi.mocked(embedMany).mockRejectedValueOnce(new Error('API error'));
       await expect(
         embeddingService.ensureCategoryEmbeddings(mockCategories),
       ).rejects.toThrow(/API error/);
@@ -209,21 +242,20 @@ describe('embedding.service', () => {
   describe('findBestCategoryMatch', () => {
     beforeEach(() => {
       // Pre-cache embeddings for deterministic test
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [1, 0],
-          [0, 1],
-          [0.5, 0.5],
-        ],
-        usage: { tokens: 30 },
-      });
+      vi.mocked(embedMany).mockResolvedValue(
+        asEmbedManyResult(
+          [
+            [1, 0],
+            [0, 1],
+            [0.5, 0.5],
+          ],
+          30,
+        ),
+      );
     });
 
     it('should find category with highest similarity', async () => {
-      (embed as any).mockResolvedValue({
-        embedding: [1, 0],
-        usage: { tokens: 3 },
-      });
+      vi.mocked(embed).mockResolvedValueOnce(asEmbedResult([1, 0], 3));
       await embeddingService.ensureCategoryEmbeddings(mockCategories);
       const result = await embeddingService.findBestCategoryMatch(
         'food',
@@ -234,10 +266,7 @@ describe('embedding.service', () => {
     });
 
     it('should return null if no match above 0.75 threshold', async () => {
-      (embed as any).mockResolvedValue({
-        embedding: [0, 0],
-        usage: { tokens: 3 },
-      });
+      vi.mocked(embed).mockResolvedValueOnce(asEmbedResult([0, 0], 3));
       await embeddingService.ensureCategoryEmbeddings(mockCategories);
       const result = await embeddingService.findBestCategoryMatch(
         'unknown',
@@ -252,10 +281,7 @@ describe('embedding.service', () => {
     });
 
     it('should call ensureCategoryEmbeddings internally', async () => {
-      (embed as any).mockResolvedValue({
-        embedding: [1, 0],
-        usage: { tokens: 3 },
-      });
+      vi.mocked(embed).mockResolvedValueOnce(asEmbedResult([1, 0], 3));
       // Just verify the function calls ensureCategoryEmbeddings by checking it doesn't throw
       // when embeddings aren't cached yet and we clear the cache
       embeddingService.clearEmbeddingCache();
@@ -268,24 +294,26 @@ describe('embedding.service', () => {
   // --- findBestCategoryMatchWithRetry ---
   describe('findBestCategoryMatchWithRetry', () => {
     beforeEach(async () => {
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [1, 0],
-          [0, 1],
-          [0.5, 0.5],
-        ],
-        usage: { tokens: 30 },
-      });
+      vi.mocked(embedMany).mockResolvedValue(
+        asEmbedManyResult(
+          [
+            [1, 0],
+            [0, 1],
+            [0.5, 0.5],
+          ],
+          30,
+        ),
+      );
       await embeddingService.ensureCategoryEmbeddings(mockCategories);
     });
 
     it('should retry on timeout', async () => {
       let callCount = 0;
-      (embed as any).mockImplementation(() => {
+      vi.mocked(embed).mockImplementation(() => {
         callCount++;
         if (callCount < 3)
           throw Object.assign(new Error('timeout'), { code: 'ETIMEDOUT' });
-        return { embedding: [1, 0], usage: { tokens: 3 } };
+        return Promise.resolve(asEmbedResult([1, 0], 3));
       });
       const result = await embeddingService.findBestCategoryMatchWithRetry(
         'food',
@@ -297,11 +325,11 @@ describe('embedding.service', () => {
 
     it('should retry on 429 rate limit', async () => {
       let callCount = 0;
-      (embed as any).mockImplementation(() => {
+      vi.mocked(embed).mockImplementation(() => {
         callCount++;
         if (callCount < 2)
           throw Object.assign(new Error('rate limit'), { status: 429 });
-        return { embedding: [1, 0], usage: { tokens: 3 } };
+        return Promise.resolve(asEmbedResult([1, 0], 3));
       });
       const result = await embeddingService.findBestCategoryMatchWithRetry(
         'food',
@@ -313,11 +341,11 @@ describe('embedding.service', () => {
 
     it('should retry on 500 error', async () => {
       let callCount = 0;
-      (embed as any).mockImplementation(() => {
+      vi.mocked(embed).mockImplementation(() => {
         callCount++;
         if (callCount < 2)
           throw Object.assign(new Error('server error'), { status: 500 });
-        return { embedding: [1, 0], usage: { tokens: 3 } };
+        return Promise.resolve(asEmbedResult([1, 0], 3));
       });
       const result = await embeddingService.findBestCategoryMatchWithRetry(
         'food',
@@ -330,11 +358,11 @@ describe('embedding.service', () => {
     it('should use exponential backoff (1s, 2s, 4s)', async () => {
       vi.useFakeTimers();
       let callCount = 0;
-      (embed as any).mockImplementation(() => {
+      vi.mocked(embed).mockImplementation(() => {
         callCount++;
         if (callCount < 4)
           throw Object.assign(new Error('timeout'), { code: 'ETIMEDOUT' });
-        return { embedding: [1, 0], usage: { tokens: 3 } };
+        return Promise.resolve(asEmbedResult([1, 0], 3));
       });
       const promise = embeddingService.findBestCategoryMatchWithRetry(
         'food',
@@ -351,7 +379,7 @@ describe('embedding.service', () => {
 
     it('should return null after 3 retries', async () => {
       vi.useFakeTimers();
-      (embed as any).mockImplementation(() => {
+      vi.mocked(embed).mockImplementation(() => {
         throw Object.assign(new Error('timeout'), { code: 'ETIMEDOUT' });
       });
       const promise = embeddingService.findBestCategoryMatchWithRetry(
@@ -371,14 +399,26 @@ describe('embedding.service', () => {
   // --- clearEmbeddingCache ---
   describe('clearEmbeddingCache', () => {
     it('should clear module-level cache', async () => {
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [0.1, 0.2],
-          [0.2, 0.3],
-          [0.3, 0.4],
-        ],
-        usage: { tokens: 30 },
-      });
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          30,
+        ),
+      );
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          30,
+        ),
+      );
       await embeddingService.ensureCategoryEmbeddings(mockCategories);
       embeddingService.clearEmbeddingCache();
       // After clearing, next call should re-invoke embedMany
@@ -387,14 +427,26 @@ describe('embedding.service', () => {
     });
 
     it('should allow regeneration on next call', async () => {
-      (embedMany as any).mockResolvedValue({
-        embeddings: [
-          [0.1, 0.2],
-          [0.2, 0.3],
-          [0.3, 0.4],
-        ],
-        usage: { tokens: 30 },
-      });
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          30,
+        ),
+      );
+      vi.mocked(embedMany).mockResolvedValueOnce(
+        asEmbedManyResult(
+          [
+            [0.1, 0.2],
+            [0.2, 0.3],
+            [0.3, 0.4],
+          ],
+          30,
+        ),
+      );
       await embeddingService.ensureCategoryEmbeddings(mockCategories);
       embeddingService.clearEmbeddingCache();
       await embeddingService.ensureCategoryEmbeddings(mockCategories);

@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/reports/lint/
 
 # Playwright E2E Testing
 e2e/.auth/

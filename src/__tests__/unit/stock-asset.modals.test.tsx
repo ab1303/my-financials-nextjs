@@ -1,6 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 /**
  * TDD Tests for Month/Year Picker UI - Phase 2
@@ -8,6 +6,23 @@ import { describe, expect, it, vi } from 'vitest';
  */
 
 describe('Stock Asset Modals - Month/Year Picker UI', () => {
+  const parseMonthYear = (value: string): Date => {
+    const parts = value.split('-');
+    if (parts.length !== 2) throw new Error('Invalid format');
+
+    const [year, month] = parts;
+    if (!year || !month) throw new Error('Invalid format');
+
+    return new Date(parseInt(year, 10), parseInt(month, 10) - 1, 1);
+  };
+
+  const toMonthInputValue = (value: Date | null): string => {
+    if (!value) return '';
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  };
+
   describe('parseMonthYearToDate utility', () => {
     /**
      * Test 1: Month/year input parses to first day of month
@@ -19,42 +34,30 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       const monthInput = '2023-06';
 
       // Act: Parse the month input
-      const parts = (monthInput as any).split('-') as string[];
-      if (parts.length !== 2) throw new Error('Invalid format');
-      const [year, month] = parts;
-      if (!year || !month) throw new Error('Invalid format');
-      const result = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const result = parseMonthYear(monthInput);
 
       // Assert: Should be June 1, 2023
-      expect((result as any).getFullYear()).toBe(2023);
-      expect((result as any).getMonth()).toBe(5); // 0-indexed (5 = June)
+      expect(result.getFullYear()).toBe(2023);
+      expect(result.getMonth()).toBe(5); // 0-indexed (5 = June)
       expect(result.getDate()).toBe(1);
     });
 
     it('should handle January (month 1) correctly', () => {
       const monthInput = '2024-01';
-      const parts = (monthInput as any).split('-') as string[];
-      if (parts.length !== 2) throw new Error('Invalid format');
-      const [year, month] = parts;
-      if (!year || !month) throw new Error('Invalid format');
-      const result = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const result = parseMonthYear(monthInput);
 
-      expect((result as any).getMonth()).toBe(0); // January is 0
+      expect(result.getMonth()).toBe(0); // January is 0
       expect(result.getDate()).toBe(1);
-      expect((result as any).getFullYear()).toBe(2024);
+      expect(result.getFullYear()).toBe(2024);
     });
 
     it('should handle December (month 12) correctly', () => {
       const monthInput = '2023-12';
-      const parts = (monthInput as any).split('-') as string[];
-      if (parts.length !== 2) throw new Error('Invalid format');
-      const [year, month] = parts;
-      if (!year || !month) throw new Error('Invalid format');
-      const result = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const result = parseMonthYear(monthInput);
 
-      expect((result as any).getMonth()).toBe(11); // December is 11
+      expect(result.getMonth()).toBe(11); // December is 11
       expect(result.getDate()).toBe(1);
-      expect((result as any).getFullYear()).toBe(2023);
+      expect(result.getFullYear()).toBe(2023);
     });
   });
 
@@ -70,11 +73,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       // Act: Parse empty input
       let result = null;
       if (monthInput !== undefined && monthInput !== '') {
-        const parts = (monthInput as any).split('-');
-        if (parts.length === 2) {
-          const [year, month] = parts;
-          result = new Date(parseInt(year!), parseInt(month!) - 1, 1);
-        }
+        result = parseMonthYear(monthInput);
       }
 
       // Assert: Should be null
@@ -88,11 +87,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       // Act: Parse undefined input
       let result = null;
       if (monthInput !== undefined && monthInput !== '') {
-        const parts = (monthInput as any).split('-');
-        if (parts.length === 2) {
-          const [year, month] = parts;
-          result = new Date(parseInt(year!), parseInt(month!) - 1, 1);
-        }
+        result = parseMonthYear(monthInput);
       }
 
       // Assert: Should be null
@@ -172,15 +167,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       const existingBuyDate: Date | null = null;
 
       // Act: Handle null
-      let monthInputValue = '';
-      if (existingBuyDate) {
-        const year = (existingBuyDate as any).getFullYear();
-        const month = String((existingBuyDate as any).getMonth() + 1).padStart(
-          2,
-          '0',
-        );
-        monthInputValue = `${year}-${month}`;
-      }
+      const monthInputValue = toMonthInputValue(existingBuyDate);
 
       // Assert
       expect(monthInputValue).toBe('');
