@@ -21,7 +21,7 @@ const config = [
   },
   prettierConfig,
   {
-    ignores: ['node_modules/', '.next/', 'dist/', 'e2e/', 'prisma/'],
+    ignores: ['node_modules/', '.next/', 'dist/', 'prisma/'],
   },
 ];
 

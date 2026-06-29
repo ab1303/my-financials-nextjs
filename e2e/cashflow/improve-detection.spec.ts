@@ -14,7 +14,7 @@
  * URL: /account/bank-accounts
  */
 
-import { test, expect } from '@playwright/test';
+import { expect,test } from '@playwright/test';
 
 const BANK_ACCOUNTS_URL = '/account/bank-accounts';
 

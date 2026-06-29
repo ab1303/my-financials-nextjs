@@ -14,7 +14,7 @@
  * URL: /cashflow/transactions?tab=transfers
  */
 
-import { test, expect } from '@playwright/test';
+import { expect,test } from '@playwright/test';
 import { PrismaClient } from '@prisma/client';
 
 const TRANSACTIONS_URL = '/cashflow/transactions';

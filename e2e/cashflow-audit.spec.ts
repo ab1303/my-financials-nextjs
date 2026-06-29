@@ -6,7 +6,7 @@
  *   pnpm exec playwright test --reporter=line --project=chromium e2e/cashflow-audit.spec.ts
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { expect, type Page,test } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 

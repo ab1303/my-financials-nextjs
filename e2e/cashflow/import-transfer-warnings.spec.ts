@@ -20,7 +20,8 @@
  *  - Structural tests (wizard opens, steps visible) run without API keys.
  */
 
-import { test, expect } from '@playwright/test';
+import { expect,test } from '@playwright/test';
+
 import { dropFileOnZone } from '../helpers/drop-file';
 
 const EXPENSE_URL = '/cashflow/expense';

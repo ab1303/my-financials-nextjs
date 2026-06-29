@@ -1,5 +1,5 @@
-import fs from 'fs';
 import type { Page } from '@playwright/test';
+import fs from 'fs';
 
 /**
  * Drop a file onto a react-dropzone element.

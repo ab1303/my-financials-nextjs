@@ -14,7 +14,7 @@
  *  - Labels: "Fiscal Year" and "Bank Account" on both pages
  */
 
-import { test, expect } from '@playwright/test';
+import { expect,test } from '@playwright/test';
 
 const EXPENSE_URL = '/cashflow/expense?fromYear=2025&toYear=2026';
 const INCOME_URL = '/cashflow/income?fromYear=2025&toYear=2026';

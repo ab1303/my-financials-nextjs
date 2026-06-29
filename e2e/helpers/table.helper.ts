@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import type { Locator,Page } from '@playwright/test';
 
 export async function findTableCell(
   page: Page,

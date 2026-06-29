@@ -17,7 +17,7 @@
  * URL: /cashflow/expense?fromYear=2025&toYear=2026
  */
 
-import { test, expect } from '@playwright/test';
+import { expect,test } from '@playwright/test';
 import { PrismaClient } from '@prisma/client';
 
 const EXPENSE_URL = '/cashflow/expense?fromYear=2025&toYear=2026';

@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface CategoryTransactionFiltersProps {

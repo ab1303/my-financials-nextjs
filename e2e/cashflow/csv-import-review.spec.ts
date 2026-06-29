@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { expect,test } from '@playwright/test';
+
 import { dropFileOnZone } from '../helpers/drop-file';
 
 const hasApiKey = !!process.env.OPENAI_API_KEY;
@@ -10,7 +11,7 @@ test.describe('CSV Import — Review & Category Override', () => {
    */
   test.beforeAll(() => {
     if (!hasApiKey) {
-      // eslint-disable-next-line no-console
+       
       console.log('CSV import review tests skipped — set OPENAI_API_KEY to enable');
     }
   });

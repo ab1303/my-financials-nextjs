@@ -1,5 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { expect,test } from '@playwright/test';
 import path from 'path';
+
 import { dropFileOnZone } from '../helpers/drop-file';
 
 const COMMBANK_FIXTURE = path.resolve('e2e/fixtures/commbank-sample.csv');

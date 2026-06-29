@@ -1,6 +1,8 @@
-import { test, expect } from '@playwright/test';
-import { prisma } from '@/server/db/client';
+import { expect,test } from '@playwright/test';
 import { CategoryRuleMatchType } from '@prisma/client';
+
+import { prisma } from '@/server/db/client';
+
 import { dropFileOnZone } from '../helpers/drop-file';
 
 test.describe('CSV Pre-apply Category Rules', () => {

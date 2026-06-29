@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 export async function fillFormField(page: Page, label: string, value: string) {
   // Try to find by label

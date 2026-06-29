@@ -7,7 +7,7 @@
  *   pnpm exec playwright test e2e/site-audit.spec.ts --project=chromium
  */
 
-import { test, expect, type Page, type Browser } from '@playwright/test';
+import { type Browser,expect, type Page, test } from '@playwright/test';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface PageAuditResult {
