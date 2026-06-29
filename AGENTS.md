@@ -1,318 +1,106 @@
 # AGENTS.md
 
-Rules for all AI agents working in this repository.
+Universal rules for all AI agents. Agent tweaks → `CLAUDE.md` / `GEMINI.md`. Detail → `.ai/instructions/`.
+Universal rules here **only** — never duplicate in agent-specific files. Governance: `.ai/instructions/instruction-governance.md`.
 
 ---
 
-## File Governance: AGENTS.md vs CLAUDE.md vs GEMINI.md
+## Operation Risk Tiers
 
-**This section prevents conflicting/duplicate advice across instruction files.**
+Every action falls into one tier. When in doubt, use the higher tier.
 
-| File          | Audience                               | Content                                                                                                             | When to Update                               |
-| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| **AGENTS.md** | All agents (universal rules)           | Foundational mandates, safety, standards, persona, specs, interactions, DB safety, dev server safety, scope control | Any change affecting all agents              |
-| **CLAUDE.md** | Copilot CLI sessions powered by Claude | Persona tweaks, MCP tools                                                                                           | Claude-specific behavior or MCP changes only |
-| **GEMINI.md** | Gemini CLI sessions                    | Persona tweaks                                                                                                      | Gemini-specific behavior changes only        |
+| Tier                          | Risk   | Examples                                                                    | Gate                                          |
+| ----------------------------- | ------ | --------------------------------------------------------------------------- | --------------------------------------------- |
+| **Tier 1 — Always OK**        | Low    | Read files, `type-check`, `lint`, `git log`, search codebase                | None — proceed immediately                    |
+| **Tier 2 — Ask First**        | Medium | Edit source files, create/modify specs, run migrations, create branches     | Human review of plan before starting          |
+| **Tier 3 — Never Autonomous** | High   | `git push`, `git reset --hard`, `prisma migrate reset`, deploy, delete data | Explicit confirmation + verification evidence |
 
-**Golden Rule:**
+See `.ai/instructions/compaction.md` for the compaction protocol that applies after Tier 2 operations.
 
-- **Universal rules** (database, form patterns, auth, pnpm, migrations, spec workflow, interaction logic) → `AGENTS.md` **ONLY**
-- **Agent-specific tweaks** → Their respective files (e.g., `CLAUDE.md` for MCP tools, `GEMINI.md` for Gemini-specific persona)
-- **Never duplicate** a rule across files — leads to agent confusion and maintenance drift
-
-**For detailed governance rules and maintenance procedures, see `.ai/instructions/instruction-governance.md`.**
-
----
-
-## Interaction Logic (Universal)
-
-- **Directives**:
-  - Perform implementation/testing with minimal confirmation unless critically underspecified.
-  - Require explicit user confirmation before committing or pushing changes. Ask before creating commits or pull requests; do not auto-commit.
-- **Inquiries**: Provide analysis or advice only when explicitly asked; do not modify files.
-- **Ask Clarifying Questions**: Follow the `prd-mode` workflow for any new feature requests.
-
-## Project Context (Universal)
+## Project Context
 
 - **Framework**: Next.js App Router (T3 Stack) — tRPC, Prisma, NextAuth v5 beta, Tailwind, Flowbite.
-- **Directory**: All source code in `src/`. Prisma schema in `prisma/`. Specs in `spec/`.
-- **CI/CD**: GitHub Actions → Render.com. See `.github/instructions/deployment.instructions.md`.
-- **Environment**: Document all required env vars in `.env-example`. Never expose secrets to the client.
-- **Testing**: Playwright e2e in `e2e/`. Vitest unit tests in `src/__tests__/`.
+- **Directory**: Source → `src/`. Schema → `prisma/`. Specs → `spec/`. Harness state → `.harness/`.
+- **CI/CD**: GitHub Actions → Render.com. **Testing**: Playwright `e2e/`, Vitest `src/__tests__/`.
 
-## Database Access Scope (Universal)
+## Hard Constraints
 
-- **Constraint:** Access is strictly limited to databases used by the `my-financials-nextjs` application and its integration tests.
-- **Prohibition:** Accessing, listing, or querying other databases (e.g., `CapacityDb`, `local`) is strictly prohibited.
-- **Action:** Any attempt to list or interact with databases outside this scope is a violation of protocol.
+- **No auto-commit/push**: Require explicit user confirmation before any `git commit` or `git push`. Do not auto-commit.
+- **New features**: Follow `prd-mode` workflow before implementation — never jump straight to code.
+- **DB scope**: `my-financials-nextjs` only — never list or query other DBs (e.g. `CapacityDb`).
+- **Dev server**: NEVER auto-kill Node. After `pnpm run build`, tell user Ctrl+C + restart manually. _Excuse to reject: "I'll just restart it" → wrong, always ask._ See `.ai/instructions/dev-server-safety.md`.
+- **Schema**: NEVER `prisma db push`. Always `prisma migrate dev --name <name>`. _Excuse to reject: "db push is faster" → wrong, it causes irreversible drift._ See `.ai/instructions/database-safety.md`.
 
-## Windows 11 & Token Optimization
+## Environment (Windows 11)
 
-- Use `bash` over powershell for file operations.
-- File Ops: NEVER use shell commands (`echo`, `Out-File`, `New-Item`, `mkdir`) to manage files. Use native workspace file tools exclusively.
-- Path Syntax: All shell execution paths must use Windows backslashes (`\`).
-- Suppress Noise: Always pass `--quiet` or `--silent` flags to terminal commands (`pnpm`, `prisma`) to minimize token-wasting stdout/stderr.
+- Use `bash`. Never `echo` / `Out-File` / `mkdir` — use workspace file tools exclusively.
+- Paths use `\` backslashes. Pass `--quiet` / `--silent` to `pnpm` and `prisma`.
 
----
+## Session Lifecycle
 
-## Efficiency (Universal)
+Specs → `spec/{domain}/{feature}/`. `plan.md` → session only, never commit.
 
-- Read files yourself before delegating — only launch sub-agents for work you haven't done.
-- Pass only the smallest complete slice in sub-agent prompts; don't tell them to read the codebase.
-- If the slice is insufficient to form a true picture, ask the user for more context instead of widening the search.
-- Batch all independent file reads into one parallel tool-call turn.
+### Session Start — before any implementation work
 
-## Skill Delegation Mandate
+1. Read `.harness/progress.md` — most recent entry says where the last session stopped.
+2. Run `git log --oneline -5` — confirm branch and recent commits.
+3. Check `.harness/feature-status.json` — which feature is `in-progress`.
+4. Announce: "Last session worked on X. Continuing from Y."
 
-**When `implement-from-spec` is active, the orchestrator writes ZERO production code.**
+### Session End — before stopping
 
-- ❌ Never call `edit` or `create` on `.ts`, `.tsx`, `.prisma`, or any source file
-- ❌ Never run `prisma migrate` or `prisma generate` in the main conversation
-- ❌ Never rationalize "I'll just do this small change myself" — all code changes go through agents
-- ✅ Spawn `Next.js Expert` background agents with `model: "claude-haiku-4.5"` for every phase
-- ✅ Pass only the exact spec slice and touched excerpts inline — never say "read the codebase"
-- ✅ Run `pnpm run build` AFTER all agents complete — this is the orchestrator's only code interaction
+1. Write a new entry to `.harness/progress.md` (format: see `.harness/README.md`).
+2. Update `status` in `.harness/feature-status.json` if a phase or feature completed.
+3. Ensure no half-applied migrations or incomplete schema changes remain.
 
-**Enforcement**: The SKILL.md requires a public delegation declaration to the user before any source files are read for bundles. If that declaration was not posted, the orchestrator skipped the guardrail — stop and post it now.
+### Context Threshold (>50% utilization)
 
-## Planning (Universal)
+Compact the active `lld.md` → write `.harness/progress.md` → start a fresh session.
+See `.ai/instructions/compaction.md`.
 
-- Spec and PRD files → `spec/{domain}/{feature}/` only (see Spec Documents below).
-- `plan.md` → session workspace only; never commit planning files to the repo.
-- Track todo status in the SQL session database throughout implementation.
+## Code
 
-### Spec Migration When Touching a Feature
+- Package manager: `pnpm` only — never `npm` or `yarn`.
+- Lint reports: `reports/lint/` only. Command: `pnpm run lint:evaluate:json`.
+- Schema: edit `prisma/schema.prisma` → `pnpm prisma migrate dev --name <name>` → commit both files together.
 
-**When you work on a feature, migrate its spec FIRST:**
+## Verification Gate
 
-If the feature spec is in the old location (`spec/{feature}/`), migrate it to the new structure (`spec/{domain}/{feature}/`) before starting implementation. This is not optional — it ensures:
+A task is **not done** until this sequence passes — run it, then show the terminal output:
 
-- Consistent spec organization across all features
-- No "ghost" specs in old locations
-- Clean git history (migration is a separate commit from implementation)
+1. `pnpm run type-check` — zero type errors
+2. `pnpm run lint` — zero lint errors
+3. `pnpm run build` — ask user to confirm (never run autonomously; see Hard Constraints)
 
-**Spec consolidation is part of migration:**
+_Excuse to reject: "it looks right / it should work" → wrong. Checks must pass and output must be shown._
+For UI changes: describe what changed visually, or attach a screenshot.
 
-When migrating, consolidate all content (hld.md, lld.md, context.md, any implementation summaries) into the new 2-level structure:
+## Subagents & Delegation
 
-- Extract shared schema/patterns → domain `hld.md` (write once if new domain)
-- Problem + scope → feature `context.md` (no file inventory)
-- Implementation detail + file inventory → feature `lld.md`
+When `implement-from-spec` is active, the **orchestrator writes ZERO production code** — all phases go to `Next.js Expert` (haiku) agents. Every subagent prompt **must** include the `⚠️ CRITICAL CONSTRAINTS` block (explicit file list, no global lint/format, no auto-commit).
 
-**Migration workflow:**
-
-1. Agent checks: does `spec/{domain}/{feature}/` exist? (new location)
-2. If NO: check `spec/{feature}/` (old location exists)
-3. If old location found: delegate spec migration to gpt-4.1 background agent
-4. Wait for migration to complete
-5. Validate structure (file counts, no duplication)
-6. Commit migration as separate "refactor: migrate {feature} spec" commit
-7. Proceed with implementation
-
-**Reference:** `.ai/instructions/migration-agent-template.md` has the migration template; `.ai/instructions/spec-migration-map.md` lists all 48 features with target domains. See `.ai/instructions/spec-consolidation.md` for the full workflow.
-
-## Spec Documents
-
-The spec tree uses **2 levels by default**, promoting to **3 levels only when a feature has 3 or more independently-implementable phases**.
-
-### Tree Shapes
-
-**2-level (default)** — one feature, one implementation scope:
-
-```
-spec/
-  {domain}/
-    hld.md                  ← domain architecture, shared schema, decisions
-    {feature}/
-      context.md            ← what the feature does and what domain concepts it relies on
-      lld.md                ← implementation detail: interfaces, API contracts, DB patterns
-```
-
-**3-level (promoted)** — feature has 3+ phases that can be delegated to independent agents:
-
-```
-spec/
-  {domain}/
-    hld.md
-    {feature}/
-      context.md            ← feature scope and domain dependencies (no file inventory)
-      {sub-feature}/
-        lld.md              ← atomic vertical slice for this phase only
-      {sub-feature}/
-        lld.md
-```
-
-**Standalone (no domain grouping)** — truly independent, single-phase feature:
-
-```
-spec/
-  standalone/
-    {feature}/
-      hld.md                ← feature-level architecture and decisions
-      context.md            ← problem statement, scope boundary
-      lld.md                ← implementation detail: interfaces, API contracts, DB patterns
-```
-
-### Document Responsibilities
-
-| File         | Scope                                      | Contains                                                                                             | Never contains                             |
-| ------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `hld.md`     | Domain                                     | Shared schema, architecture decisions, patterns common to all features in this domain                | File lists, implementation steps           |
-| `context.md` | Feature                                    | Problem statement, domain dependencies (links to `hld.md` sections), scope boundary (in/out)         | File inventory, schema copy-paste from HLD |
-| `lld.md`     | Feature (2-level) or Sub-feature (3-level) | Interfaces, Zod schemas, API contracts, DB patterns, acceptance criteria — scoped to this slice only | Anything outside this slice's scope        |
-
-### When to Promote from 2-level to 3-level
-
-> Promote if and only if: **the feature has 3 or more phases that can be assigned to independent agents without blocking each other.**
-
-If in doubt, stay at 2-level. A well-sectioned `lld.md` with clear H2 headings is functionally equivalent to multiple sub-feature LLDs.
-
-### Sub-feature Naming Convention
-
-Sub-feature folder names must use **verb-noun** format: `match-transfers/`, `review-ui/`, `parse-csv/`.  
-Never use layer names: ~~`schema/`~~, ~~`api/`~~, ~~`ui/`~~ — these recreate horizontal layering.
-
-### Context Bundle by Task
-
-| Task                                | Pass                                                                        |
-| ----------------------------------- | --------------------------------------------------------------------------- |
-| Domain architecture review          | `{domain}/hld.md`                                                           |
-| Feature planning / orientation      | `{domain}/hld.md` + `{feature}/context.md`                                  |
-| Implement a 2-level feature         | `{feature}/context.md` + `{feature}/lld.md`                                 |
-| Implement one sub-feature (3-level) | `{feature}/context.md` + `{sub-feature}/lld.md`                             |
-| Debug                               | Relevant `lld.md` + affected files                                          |
-| New session on active feature       | `{domain}/hld.md` + `{feature}/context.md`, then scoped `lld.md` on request |
-
-Never pass all three docs at once for a single implementation task — context.md alone is enough orientation; lld.md is the implementation contract.
-
-## Code (Universal)
-
-- Use `pnpm` exclusively — never `npm` or `yarn`.
-- **Validation Workflow**:
-  1. **Run `pnpm run type-check` (tsc)**: Fast type validation.
-  2. **Run `pnpm run lint`**: Fast style/convention validation.
-  3. **Prompt the user to run `pnpm run build`**: Final deployment verification only (perform locally).
-- Stop the dev server before any Prisma CLI operation (prevents EPERM on Windows).
-- Never run `prisma migrate reset` without explicit user consent and a confirmed backup.
-- **NEVER use `prisma db push` for schema changes** — it modifies the DB without creating a migration file, causing irreversible schema drift. Always use `pnpm prisma migrate dev --name <descriptive-name>`. See `.ai/instructions/database-safety.md`.
-- **NEVER modify the DB schema directly** via MCP Postgres tools, Prisma Studio, or raw SQL — all schema changes must go through `prisma migrate dev`.
-- **Schema change workflow (mandatory)**:
-  1. Edit `prisma/schema.prisma`
-  2. Run `pnpm prisma migrate dev --name <descriptive-name>`
-  3. Commit `schema.prisma` AND the new `prisma/migrations/<name>/migration.sql` together
-
-### Lint Artifact Placement
-
-- Do not write ad-hoc lint JSON artifacts in repository root (for example `eslint-*.json`).
-- Store generated lint reports under `reports/lint/`.
-- Preferred command: `pnpm run lint:evaluate:json` (writes `reports/lint/eslint-scope.json`).
-- Temporary investigative artifacts should be deleted before handoff unless explicitly requested.
-
-## Subagent Scope Control (Critical Lesson)
-
-**Problem**: Subagents will globally format, lint, and rewrite unrelated files unless explicitly constrained. This causes 300+ file modifications that pollute git history.
-
-**Solution**: Every subagent prompt must include hard scope boundaries:
-
-```
-⚠️ CRITICAL CONSTRAINTS (NON-NEGOTIABLE):
-- You may ONLY modify these exact files: [explicit list]
-- DO NOT run: pnpm lint --fix, pnpm format, prettier --write, or global formatting
-- DO NOT run: pnpm run build (orchestrator handles verification)
-- DO NOT commit code. Require explicit user confirmation before committing or creating a PR; do not auto-commit.
-- DO NOT modify test files except those explicitly listed
-- DO NOT run vitest --update or snapshot auto-update
-- DO NOT touch any files outside the scope above
-```
-
-**Why**: Without these constraints, agents interpret "implement Phase 1" as "optimize entire codebase". ESLint auto-fix, Prettier rewrites, and vitest snapshots reformat hundreds of unrelated files.
-
-**Result**: Always lead subagent prompts with hard file scope. If an agent reports warnings in unscoped files, instruct it to ignore them.
-
-## Dev Server Safety (CRITICAL)
-
-**NEVER auto-kill Node processes after running `pnpm run build`.** This terminates the CLI session and abandons the user.
-
-- ⛔ **FORBIDDEN**: `Stop-Process` on Node, killing Node processes, or any command that terminates Node
-- ✅ **REQUIRED**: After `pnpm run build`, ask the user to manually stop the dev server (Ctrl+C) and restart with `pnpm run dev`
-- ✅ **REQUIRED**: Tell the user the dev server is locked and needs manual restart (do not attempt auto-restart)
-- ✅ **REQUIRED**: When port conflicts occur, inform the user and request manual intervention
-
-**Pattern to avoid:**
-
-```
-# ❌ WRONG - This kills the CLI:
-Stop-Process -Name node
-pnpm run dev
-```
-
-**Correct pattern:**
-
-```
-# ✅ RIGHT - User restarts manually:
-"Please stop the dev server with Ctrl+C, then run: pnpm run dev"
-```
-
-## Shared Components
-
-- Components used by more than one feature belong in `src/components/`, not inside any feature's `_components/` folder.
-- Before deleting a feature directory, grep `src/` for all imports of its files. Extract anything imported outside the feature to `src/components/` first.
-- A file at `feature-a/_components/foo.tsx` is owned by `feature-a`. Cross-feature imports are hidden dependencies — they break silently on cleanup.
-
-## Shared UI Components
-
-- **Prioritize `src/components/ui/`**: New UI components that are domain-agnostic and reusable MUST be developed in `src/components/ui/`.
-- **Prefer Composition**: When building complex UI components, use composition patterns to ensure flexibility and avoid boolean prop anti-patterns.
-- **Refactor Early**: If you identify UI logic duplicated across multiple domains, factor it out into `src/components/ui/` immediately to maintain structural consistency.
+Full rules + model selection table + scope constraints block → `.ai/instructions/testing-and-subagents.md`.
 
 ## UI Rules (Recurring Issues)
 
-### Dark Mode
+- **Dark mode**: always add `dark:` variants for every color utility. See `.ai/instructions/dark-mode-and-react-select.md`.
+- **react-select**: `unstyled` + `classNames` **const** (not a function). See same file.
+- **Table headers**: use `THeadTH` component (`select-none cursor-default`). See `.ai/instructions/cursor-and-text-selection.md`.
+- **Nested forms**: never `<form>` inside `<form>`. Use `createPortal`. See `.ai/instructions/form-patterns.md`.
 
-- Always add `dark:` variants for every color utility. See `.ai/instructions/dark-mode-and-react-select.md`.
-
-### react-select dark mode
-
-- Always use `unstyled` + `classNames` **const** (not a function). See `.ai/instructions/dark-mode-and-react-select.md`.
-
-### Cursor on labels and table headers
-
-- Use the shared `THeadTH` component — it includes `select-none cursor-default`. See `.ai/instructions/cursor-and-text-selection.md`.
-
-### Nested forms
-
-- Never nest `<form>` inside `<form>`. Use `createPortal` for overlays/drawers. See `.ai/instructions/form-patterns.md`.
+---
 
 ## Canonical Instructions
 
-All coding standards live in `.ai/instructions/`. Read the relevant file before implementing:
+All in `.ai/instructions/`. Grouped by **when** to reach for them — read before implementing.
 
-| Topic                            | File                                              |
-| -------------------------------- | ------------------------------------------------- |
-| Auth / session                   | `.ai/instructions/auth.md`                        |
-| Database / Prisma safety         | `.ai/instructions/database-safety.md`             |
-| Forms (react-hook-form, zod)     | `.ai/instructions/form-patterns.md`               |
-| Middleware & icons               | `.ai/instructions/middleware-and-icons.md`        |
-| State management & notifications | `.ai/instructions/state-and-ui.md`                |
-| Dark mode & react-select         | `.ai/instructions/dark-mode-and-react-select.md`  |
-| Cursor & text selection          | `.ai/instructions/cursor-and-text-selection.md`   |
-| Performance                      | `.ai/instructions/performance.md`                 |
-| Transaction ledger patterns      | `.ai/instructions/transaction-ledger-patterns.md` |
-| Deployment                       | `.ai/instructions/deployment.md`                  |
-| Product / UX principles          | `.ai/instructions/product-owner-ux.md`            |
-| Testing & subagent orchestration | `.ai/instructions/testing-and-subagents.md`       |
-| Git worktree workflow            | `.ai/instructions/git-worktree.md`                |
+| When                       | Files                                                                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Touching DB / auth / infra | `auth.md` · `database-safety.md` · `dev-server-safety.md`                                                                                        |
+| Building a feature         | `form-patterns.md` · `state-and-ui.md` · `middleware-and-icons.md` · `transaction-ledger-patterns.md` · `performance.md` · `product-owner-ux.md` |
+| Building UI components     | `dark-mode-and-react-select.md` · `cursor-and-text-selection.md`                                                                                 |
+| Planning / spec work       | `spec-structure.md` · `spec-consolidation.md` · `spec-implementation.md` · `spec-migration-map.md` · `migration-agent-template.md`               |
+| Shipping / sessions        | `testing-and-subagents.md` · `compaction.md` · `git-worktree.md` · `deployment.md`                                                               |
+| Meta / governance          | `instruction-governance.md`                                                                                                                      |
 
-`.github/instructions/` contains GitHub Copilot **scoped** rules (file-pattern bound, `applyTo` frontmatter). Do not duplicate general rules there — add them to `.ai/instructions/` instead.
-
-### Spec Workflow Documentation
-
-Spec-related workflow and migration guides live in `.ai/instructions/` (accessible to all Copilot CLI agents):
-
-| Document                                       | Purpose                              | When to Read                                    |
-| ---------------------------------------------- | ------------------------------------ | ----------------------------------------------- |
-| `.ai/instructions/spec-structure.md`           | Why the new 2-level/3-level paradigm | Understanding the decision                      |
-| `.ai/instructions/spec-consolidation.md`       | When/how to migrate a feature spec   | Before starting work on a feature with old spec |
-| `.ai/instructions/spec-implementation.md`      | Complete guide with scenarios        | Comprehensive reference (read if unsure)        |
-| `.ai/instructions/spec-migration-map.md`       | All 48 features with target domains  | Finding what domain a feature belongs to        |
-| `.ai/instructions/migration-agent-template.md` | Agent template for spec migrations   | Delegating a spec migration to gpt-4.1          |
+`.github/instructions/` contains Copilot **scoped** rules (`applyTo` frontmatter) — do not duplicate general rules there.

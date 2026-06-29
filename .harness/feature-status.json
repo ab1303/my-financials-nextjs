@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "updatedAt": "2026-06-29T00:00:00Z",
+  "features": [
+    {
+      "id": "category-groups",
+      "domain": "architecture",
+      "status": "in-progress",
+      "branch": "category-groups",
+      "spec": "spec/architecture/category-filter-groups/",
+      "blockers": [],
+      "notes": "Active branch — implementing category group CRUD and cashflow filter integration"
+    }
+  ]
+}

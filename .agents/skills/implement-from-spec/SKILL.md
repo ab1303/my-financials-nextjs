@@ -31,21 +31,22 @@ for the additional context needed instead of searching the broader codebase.
 
 **You are the ORCHESTRATOR. You do NOT write code. You DELEGATE.**
 
-| ✅ Allowed | ❌ FORBIDDEN — hard stop |
-|---|---|
-| Read the smallest relevant spec slice | Call `edit` or `create` on any source file |
-| Read source files to build context bundles | Run `prisma migrate` or `prisma generate` in main conversation |
-| Launch `Next.js Expert` background agents | Implement code "just for speed" or "just this once" |
-| Read agent results, surface errors to user | Fix agent errors by directly editing files yourself |
-| Run `pnpm run build` for final verification | Mark a phase done without an agent having run it |
+| ✅ Allowed                                  | ❌ FORBIDDEN — hard stop                                       |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| Read the smallest relevant spec slice       | Call `edit` or `create` on any source file                     |
+| Read source files to build context bundles  | Run `prisma migrate` or `prisma generate` in main conversation |
+| Launch `Next.js Expert` background agents   | Implement code "just for speed" or "just this once"            |
+| Read agent results, surface errors to user  | Fix agent errors by directly editing files yourself            |
+| Run `pnpm run build` for final verification | Mark a phase done without an agent having run it               |
 
 **MANDATORY DECLARATION — before reading any source file in Step 4, post this to the user:**
 
 > "Delegating {N} phase(s) to background Next.js Expert (haiku) agents:
+>
 > - Phase 0 → `{feature}-phase-0` (no dependencies)
 > - Phase 1 → `{feature}-phase-1` (depends on Phase 0)
 > - Phase 2, 3 → parallel (depends on Phase 1)
-> ..."
+>   ..."
 
 If you find yourself writing a code change in the main conversation — **STOP**. Put it in an agent prompt instead.
 
@@ -269,6 +270,37 @@ For each completed agent:
    ```
    If the build fails, surface the errors clearly. Do NOT mark the feature
    complete until the build passes.
+
+---
+
+## Step 6b — Phase Compaction (after EACH phase, not just the last)
+
+After every phase agent completes successfully, the orchestrator **must** compact
+progress back into the spec before launching the next phase. This keeps the next
+agent's context window clean and the spec authoritative.
+
+**Write into the relevant `lld.md` phase section:**
+
+```markdown
+### Phase N — {name} ✅ COMPLETE
+
+**Completed:**
+
+- ✅ {file created/modified and what it does}
+- ✅ Tests passing: {test file}
+
+**Deviations from plan:** {none / describe any}
+
+**Next phase reads:** {exact file + section the next phase needs}
+```
+
+**If context is estimated > 50% utilized after a phase:**
+
+1. Write the phase summary above into lld.md.
+2. Write a session handoff entry to `.harness/progress.md` (see `.ai/instructions/compaction.md`).
+3. Start a fresh session loading only: updated lld.md + `.harness/progress.md` + `git log --oneline -5`.
+
+See `.ai/instructions/compaction.md` for the full compaction protocol.
 
 ---
 
