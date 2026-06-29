@@ -168,9 +168,7 @@ export async function updateCategoryGroup(params: {
     });
 
     if (duplicate) {
-      throw new Error(
-        `Category group "${name}" already exists for this scope`,
-      );
+      throw new Error(`Category group "${name}" already exists for this scope`);
     }
   }
 

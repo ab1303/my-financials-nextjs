@@ -30,7 +30,10 @@ export const CreateDonationPaymentSchema = z.object({
   }),
   beneficiaryId: z.string().nonempty('Please select a beneficiary'),
   transactionId: z.string().optional(),
-  donationPurpose: z.nativeEnum(DonationPurposeEnum).optional().default('VOLUNTARY'),
+  donationPurpose: z
+    .nativeEnum(DonationPurposeEnum)
+    .optional()
+    .default('VOLUNTARY'),
   calendarYearId: z.string().nonempty('Calendar year is required.'),
 });
 

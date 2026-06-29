@@ -109,9 +109,7 @@ describe('BanksForm - Phase 1 UI Redesign', () => {
   });
 
   it('should display banks in table format', () => {
-    mocks.getAllBanksState.data = [
-      { id: '1', name: 'Commonwealth Bank' },
-    ];
+    mocks.getAllBanksState.data = [{ id: '1', name: 'Commonwealth Bank' }];
     render(<BanksForm />);
     expect(screen.getByText('Commonwealth Bank')).toBeInTheDocument();
     expect(screen.getByText('Institution')).toBeInTheDocument();
@@ -131,9 +129,7 @@ describe('BanksForm - Phase 1 UI Redesign', () => {
   });
 
   it('should have delete button for each bank', () => {
-    mocks.getAllBanksState.data = [
-      { id: '1', name: 'Commonwealth Bank' },
-    ];
+    mocks.getAllBanksState.data = [{ id: '1', name: 'Commonwealth Bank' }];
     render(<BanksForm />);
     expect(screen.getByRole('button', { name: /Remove/i })).toBeInTheDocument();
   });

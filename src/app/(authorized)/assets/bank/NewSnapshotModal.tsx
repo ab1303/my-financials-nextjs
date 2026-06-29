@@ -6,9 +6,9 @@ import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
 
 import { Button } from '@/components';
-import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
 import { Modal } from '@/components/ui/Modal';
+import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
 import { trpc } from '@/server/trpc/client';
 
 type BankAssetEntry = {
@@ -98,7 +98,8 @@ export default function NewSnapshotModal({
     if (mostRecentSnapshot?.entries && entries.length === 0) {
       const snapshotEntries = mostRecentSnapshot.balanceRecords.map(
         (entry: any) => ({
-          institutionId: entry.account.institutionId || entry.account.institutionId,
+          institutionId:
+            entry.account.institutionId || entry.account.institutionId,
           accountId: entry.account.id,
           balance: Number(entry.balance),
         }),
@@ -250,7 +251,11 @@ export default function NewSnapshotModal({
                             id={`bank-${index}`}
                             value={entry.institutionId}
                             onChange={(e) =>
-                              handleEntryChange(index, 'institutionId', e.target.value)
+                              handleEntryChange(
+                                index,
+                                'institutionId',
+                                e.target.value,
+                              )
                             }
                             required
                             className='mt-1 block w-full px-3 py-2 border border-input rounded-lg shadow-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring'
@@ -299,7 +304,10 @@ export default function NewSnapshotModal({
                               }
 
                               // Call async function without awaiting in callback
-                              handleCreateAccount(entry.institutionId, inputValue)
+                              handleCreateAccount(
+                                entry.institutionId,
+                                inputValue,
+                              )
                                 .then((newAccountId) => {
                                   // Update entry with new account
                                   handleEntryChange(

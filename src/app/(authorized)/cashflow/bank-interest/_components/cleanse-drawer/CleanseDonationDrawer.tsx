@@ -39,7 +39,7 @@ function CleanseDonationPortalContent() {
     <>
       <div
         className={cn(
-          'fixed inset-0 z-50 flex justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm lg:ml-64'
+          'fixed inset-0 z-50 flex justify-end bg-black/40 dark:bg-black/60 backdrop-blur-sm lg:ml-64',
         )}
         onClick={(event) => {
           if (event.target === event.currentTarget) handleClose();

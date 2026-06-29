@@ -1,11 +1,12 @@
 'use client';
 
-import AsyncSelect, { type AsyncProps } from 'react-select/async';
 import { type GroupBase } from 'react-select';
+import { components as selectComponents } from 'react-select';
+import AsyncSelect, { type AsyncProps } from 'react-select/async';
 
 import { getCompactSelectStyles, getSelectStyles } from '@/lib/select-styles';
+
 import { PopperMenu } from './PopperMenu';
-import { components as selectComponents } from 'react-select';
 
 /**
  * Custom Option component that adds a title attribute for native browser tooltips on hover.
@@ -13,7 +14,10 @@ import { components as selectComponents } from 'react-select';
 function CustomOption(props: any) {
   const label = (props.data as { label?: string }).label;
   return (
-    <selectComponents.Option {...props} innerProps={{ ...props.innerProps, title: label }}>
+    <selectComponents.Option
+      {...props}
+      innerProps={{ ...props.innerProps, title: label }}
+    >
       {props.children}
     </selectComponents.Option>
   );
@@ -57,7 +61,7 @@ export function AsyncSelectWrapper<
     <AsyncSelect
       menuPosition={usePortal ? 'fixed' : undefined}
       menuPortalTarget={usePortal ? portalTarget : undefined}
-      menuPlacement="auto"
+      menuPlacement='auto'
       styles={
         styleOverrides ? { ...baseStyles, ...styleOverrides } : baseStyles
       }

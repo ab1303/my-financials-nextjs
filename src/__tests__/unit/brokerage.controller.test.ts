@@ -5,8 +5,8 @@ import {
   allBrokerageDetailsHandler,
   removeBrokerageDetailsHandler,
 } from '@/server/controllers/brokerage.controller';
-import * as brokerageService from '@/server/services/brokerage.service';
 import * as prismaUtils from '@/server/db/client';
+import * as brokerageService from '@/server/services/brokerage.service';
 
 // Mock the service layer
 vi.mock('@/server/services/brokerage.service');
@@ -31,7 +31,7 @@ describe('Brokerage Controller', () => {
       };
 
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockResolvedValue(
-        mockBrokerage as any
+        mockBrokerage as any,
       );
 
       // Act
@@ -60,7 +60,7 @@ describe('Brokerage Controller', () => {
       };
 
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockResolvedValue(
-        mockBrokerage as any
+        mockBrokerage as any,
       );
 
       // Act
@@ -86,7 +86,7 @@ describe('Brokerage Controller', () => {
       };
 
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockResolvedValue(
-        mockBrokerage as any
+        mockBrokerage as any,
       );
 
       // Act
@@ -105,7 +105,7 @@ describe('Brokerage Controller', () => {
       const error = new Error('Database connection failed');
 
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockRejectedValue(
-        error
+        error,
       );
       vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
         // Mock implementation that doesn't throw
@@ -126,7 +126,7 @@ describe('Brokerage Controller', () => {
       const validationError = new Error('Invalid input');
 
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockRejectedValue(
-        validationError
+        validationError,
       );
       vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
         return;
@@ -137,7 +137,7 @@ describe('Brokerage Controller', () => {
 
       // Assert
       expect(prismaUtils.handleCaughtError).toHaveBeenCalledWith(
-        validationError
+        validationError,
       );
     });
   });
@@ -165,7 +165,7 @@ describe('Brokerage Controller', () => {
       ];
 
       vi.spyOn(brokerageService, 'getBrokerageDetails').mockResolvedValue(
-        mockBrokerages as any
+        mockBrokerages as any,
       );
 
       // Act
@@ -192,7 +192,7 @@ describe('Brokerage Controller', () => {
     it('calls service with no parameters', async () => {
       // Arrange
       vi.spyOn(brokerageService, 'getBrokerageDetails').mockResolvedValue(
-        [] as any
+        [] as any,
       );
 
       // Act
@@ -207,7 +207,7 @@ describe('Brokerage Controller', () => {
       const error = new Error('Database error');
 
       vi.spyOn(brokerageService, 'getBrokerageDetails').mockRejectedValue(
-        error
+        error,
       );
       vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
         return;
@@ -228,7 +228,7 @@ describe('Brokerage Controller', () => {
       const params = { brokerageId: 'brokerage-1' };
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockResolvedValue(
-        undefined as any
+        undefined as any,
       );
 
       // Act
@@ -236,7 +236,7 @@ describe('Brokerage Controller', () => {
 
       // Assert
       expect(brokerageService.deleteBrokerageDetails).toHaveBeenCalledWith(
-        'brokerage-1'
+        'brokerage-1',
       );
     });
 
@@ -245,7 +245,7 @@ describe('Brokerage Controller', () => {
       const params = { brokerageId: 'brokerage-2' };
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockResolvedValue(
-        undefined as any
+        undefined as any,
       );
 
       // Act
@@ -254,7 +254,7 @@ describe('Brokerage Controller', () => {
       // Assert
       expect(result).toBeUndefined();
       expect(brokerageService.deleteBrokerageDetails).toHaveBeenCalledWith(
-        'brokerage-2'
+        'brokerage-2',
       );
     });
 
@@ -262,11 +262,11 @@ describe('Brokerage Controller', () => {
       // Arrange
       const params = { brokerageId: 'brokerage-3' };
       const error = new Error(
-        'Cannot delete brokerage: 5 account(s) depend on this institution'
+        'Cannot delete brokerage: 5 account(s) depend on this institution',
       );
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockRejectedValue(
-        error
+        error,
       );
       vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
         return;
@@ -284,11 +284,11 @@ describe('Brokerage Controller', () => {
       // Arrange
       const params = { brokerageId: 'brokerage-1' };
       const dependencyError = new Error(
-        'Cannot delete brokerage: 3 account(s) depend on this institution'
+        'Cannot delete brokerage: 3 account(s) depend on this institution',
       );
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockRejectedValue(
-        dependencyError
+        dependencyError,
       );
       vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
         return;
@@ -299,7 +299,7 @@ describe('Brokerage Controller', () => {
 
       // Assert
       expect(prismaUtils.handleCaughtError).toHaveBeenCalledWith(
-        dependencyError
+        dependencyError,
       );
       expect(result).toBeUndefined();
     });
@@ -310,7 +310,7 @@ describe('Brokerage Controller', () => {
       const dbError = new Error('Record not found');
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockRejectedValue(
-        dbError
+        dbError,
       );
       vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
         return;
@@ -330,7 +330,7 @@ describe('Brokerage Controller', () => {
       const params2 = { brokerageId: 'brokerage-2' };
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockResolvedValue(
-        undefined as any
+        undefined as any,
       );
 
       // Act
@@ -341,11 +341,11 @@ describe('Brokerage Controller', () => {
       expect(brokerageService.deleteBrokerageDetails).toHaveBeenCalledTimes(2);
       expect(brokerageService.deleteBrokerageDetails).toHaveBeenNthCalledWith(
         1,
-        'brokerage-1'
+        'brokerage-1',
       );
       expect(brokerageService.deleteBrokerageDetails).toHaveBeenNthCalledWith(
         2,
-        'brokerage-2'
+        'brokerage-2',
       );
     });
   });

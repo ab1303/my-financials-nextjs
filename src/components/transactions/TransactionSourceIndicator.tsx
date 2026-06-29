@@ -28,12 +28,17 @@ const SOURCE_META: Record<
   },
 };
 
-export default function TransactionSourceIndicator({ source }: TransactionSourceIndicatorProps) {
+export default function TransactionSourceIndicator({
+  source,
+}: TransactionSourceIndicatorProps) {
   const meta = SOURCE_META[source as keyof typeof SOURCE_META];
 
   if (!meta) {
     return (
-      <span className="inline-flex items-center justify-center text-xs text-gray-400 dark:text-gray-500" title={source}>
+      <span
+        className='inline-flex items-center justify-center text-xs text-gray-400 dark:text-gray-500'
+        title={source}
+      >
         ?
       </span>
     );
@@ -43,12 +48,12 @@ export default function TransactionSourceIndicator({ source }: TransactionSource
 
   return (
     <span
-      role="img"
+      role='img'
       aria-label={meta.label}
       title={meta.label}
       className={`inline-flex items-center justify-center ${meta.className}`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className='h-4 w-4' />
     </span>
   );
 }

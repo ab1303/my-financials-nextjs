@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 
-import { buttonStyles, colorStyles,inputStyles } from '@/styles/theme';
+import { buttonStyles, colorStyles, inputStyles } from '@/styles/theme';
 
 type EditableTableCellProps = {
   inProgress?: boolean;
@@ -36,9 +36,7 @@ export default function EditableTableCell({
       />
       <div className='flex items-center min-w-[5rem]'>
         {inProgress && (
-          <Loader2
-            className={clsx('animate-spin', colorStyles.primary.text)}
-          />
+          <Loader2 className={clsx('animate-spin', colorStyles.primary.text)} />
         )}
         {isEditing && !inProgress && (
           <div className='flex gap-1'>

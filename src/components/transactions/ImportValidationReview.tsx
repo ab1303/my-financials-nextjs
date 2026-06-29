@@ -13,7 +13,12 @@ export interface ImportValidationReviewProps {
   isLoading: boolean;
 }
 
-type TransactionStatus = 'IMPORTED' | 'VOIDED' | 'PENDING' | 'CONFIRMED' | 'EXCLUDED';
+type TransactionStatus =
+  | 'IMPORTED'
+  | 'VOIDED'
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'EXCLUDED';
 
 interface ImportSessionTransaction {
   id: string;
@@ -44,7 +49,13 @@ export const ImportValidationReview: React.FC<ImportValidationReviewProps> = ({
   isLoading,
 }) => {
   // Fetch import session details
-  const { data, isLoading: isFetching, isError, error, refetch } = trpc.transactionClearing.getImportSessionDetails.useQuery(
+  const {
+    data,
+    isLoading: isFetching,
+    isError,
+    error,
+    refetch,
+  } = trpc.transactionClearing.getImportSessionDetails.useQuery(
     { sessionId },
     {
       enabled: isOpen && !!sessionId,
@@ -80,31 +91,41 @@ export const ImportValidationReview: React.FC<ImportValidationReviewProps> = ({
   const formatAmount = (amtStr: string) => {
     try {
       const amt = parseFloat(amtStr);
-      return amt.toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
+      return amt.toLocaleString('en-AU', {
+        style: 'currency',
+        currency: 'AUD',
+      });
     } catch {
       return amtStr;
     }
   };
 
   return (
-    <Modal show={isOpen} onClose={onClose} panelClassName="max-w-2xl">
+    <Modal show={isOpen} onClose={onClose} panelClassName='max-w-2xl'>
       <Modal.Header>
-        <span className="text-lg font-semibold text-foreground">Review Import Undo</span>
-        <p className="text-sm text-muted-foreground mt-1">
-          Review the transactions that will be voided. This action cannot be undone.
+        <span className='text-lg font-semibold text-foreground'>
+          Review Import Undo
+        </span>
+        <p className='text-sm text-muted-foreground mt-1'>
+          Review the transactions that will be voided. This action cannot be
+          undone.
         </p>
       </Modal.Header>
 
-      <Modal.Body variant="spacious">
+      <Modal.Body variant='spacious'>
         {(isFetching || !data) && !isError ? (
-          <div className="flex items-center justify-center h-32">
-            <span className="text-muted-foreground">Loading import details…</span>
+          <div className='flex items-center justify-center h-32'>
+            <span className='text-muted-foreground'>
+              Loading import details…
+            </span>
           </div>
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center h-32 gap-3">
-            <span className="text-red-600 dark:text-red-400">Failed to load import details.</span>
+          <div className='flex flex-col items-center justify-center h-32 gap-3'>
+            <span className='text-red-600 dark:text-red-400'>
+              Failed to load import details.
+            </span>
             <button
-              className="px-3 py-1 rounded text-xs font-medium bg-muted hover:bg-muted/80 text-foreground"
+              className='px-3 py-1 rounded text-xs font-medium bg-muted hover:bg-muted/80 text-foreground'
               onClick={() => refetch()}
             >
               Retry
@@ -113,46 +134,68 @@ export const ImportValidationReview: React.FC<ImportValidationReviewProps> = ({
         ) : data ? (
           <>
             {/* Summary stats */}
-            <div className="mb-4 p-3 bg-muted rounded space-y-1">
-              <div className="text-sm text-foreground">
-                <span className="font-semibold">{toBeVoided}</span> transaction{toBeVoided !== 1 ? 's' : ''} will be voided
+            <div className='mb-4 p-3 bg-muted rounded space-y-1'>
+              <div className='text-sm text-foreground'>
+                <span className='font-semibold'>{toBeVoided}</span> transaction
+                {toBeVoided !== 1 ? 's' : ''} will be voided
               </div>
               {data.skippedCount > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  <span className="font-semibold">{data.skippedCount}</span> transaction{data.skippedCount !== 1 ? 's' : ''} were skipped during import
+                <div className='text-sm text-muted-foreground'>
+                  <span className='font-semibold'>{data.skippedCount}</span>{' '}
+                  transaction{data.skippedCount !== 1 ? 's' : ''} were skipped
+                  during import
                 </div>
               )}
               {alreadyVoided > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  <span className="font-semibold">{alreadyVoided}</span> transaction{alreadyVoided !== 1 ? 's are' : ' is'} already VOIDED
+                <div className='text-sm text-muted-foreground'>
+                  <span className='font-semibold'>{alreadyVoided}</span>{' '}
+                  transaction{alreadyVoided !== 1 ? 's are' : ' is'} already
+                  VOIDED
                 </div>
               )}
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="min-w-full text-sm">
-                <thead className="bg-muted">
+            <div className='overflow-x-auto rounded-lg border border-border'>
+              <table className='min-w-full text-sm'>
+                <thead className='bg-muted'>
                   <tr>
-                    <th className="px-4 py-3 text-left font-medium text-foreground">Date</th>
-                    <th className="px-4 py-3 text-left font-medium text-foreground">Description</th>
-                    <th className="px-4 py-3 text-right font-medium text-foreground">Amount</th>
-                    <th className="px-4 py-3 text-center font-medium text-foreground">Status</th>
+                    <th className='px-4 py-3 text-left font-medium text-foreground'>
+                      Date
+                    </th>
+                    <th className='px-4 py-3 text-left font-medium text-foreground'>
+                      Description
+                    </th>
+                    <th className='px-4 py-3 text-right font-medium text-foreground'>
+                      Amount
+                    </th>
+                    <th className='px-4 py-3 text-center font-medium text-foreground'>
+                      Status
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className='divide-y divide-border'>
                   {data.transactions.map((tx) => (
-                    <tr key={tx.id} className={getRowClass(tx.status) + ' hover:bg-muted/50'}>
-                      <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{formatDate(tx.date)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{tx.description}</td>
-                      <td className="px-4 py-3 text-right text-muted-foreground">{formatAmount(tx.amount)}</td>
-                      <td className="px-4 py-3 text-center">
+                    <tr
+                      key={tx.id}
+                      className={getRowClass(tx.status) + ' hover:bg-muted/50'}
+                    >
+                      <td className='px-4 py-3 whitespace-nowrap text-muted-foreground'>
+                        {formatDate(tx.date)}
+                      </td>
+                      <td className='px-4 py-3 text-muted-foreground'>
+                        {tx.description}
+                      </td>
+                      <td className='px-4 py-3 text-right text-muted-foreground'>
+                        {formatAmount(tx.amount)}
+                      </td>
+                      <td className='px-4 py-3 text-center'>
                         {tx.status === 'VOIDED' ? (
-                          <span className="inline-block text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 font-medium">
+                          <span className='inline-block text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 font-medium'>
                             VOIDED
                           </span>
                         ) : (
-                          <span className="inline-block text-xs px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-medium">
+                          <span className='inline-block text-xs px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-medium'>
                             IMPORTED
                           </span>
                         )}
@@ -168,16 +211,16 @@ export const ImportValidationReview: React.FC<ImportValidationReviewProps> = ({
 
       <Modal.Footer>
         <button
-          type="button"
-          className="px-4 py-2 rounded text-sm font-medium bg-muted text-foreground hover:bg-muted/80 disabled:opacity-60 disabled:cursor-not-allowed"
+          type='button'
+          className='px-4 py-2 rounded text-sm font-medium bg-muted text-foreground hover:bg-muted/80 disabled:opacity-60 disabled:cursor-not-allowed'
           onClick={onClose}
           disabled={isLoading || isFetching}
         >
           Cancel
         </button>
         <button
-          type="button"
-          className="px-4 py-2 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 disabled:opacity-60 disabled:cursor-not-allowed"
+          type='button'
+          className='px-4 py-2 rounded text-sm font-medium bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 disabled:opacity-60 disabled:cursor-not-allowed'
           onClick={onConfirm}
           disabled={isLoading || isFetching || isError}
         >

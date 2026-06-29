@@ -18,7 +18,6 @@ declare module '@tanstack/react-table' {
   }
 }
 
-
 type EditCellProps<TData, TValue> = {
   table: CellContext<TData, TValue>['table'];
   row: CellContext<TData, TValue>['row'];

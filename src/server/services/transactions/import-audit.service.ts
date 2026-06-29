@@ -41,7 +41,10 @@ export async function getImportSessionDetails(
   });
 
   if (!session) {
-    throw new TRPCError({ code: 'NOT_FOUND', message: 'Import session not found' });
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: 'Import session not found',
+    });
   }
   if (session.userId !== userId) {
     throw new TRPCError({
@@ -51,7 +54,9 @@ export async function getImportSessionDetails(
   }
 
   // Only count transactions that are not VOIDED
-  const importedTransactions = session.transactions.filter((t) => t.status !== 'VOIDED');
+  const importedTransactions = session.transactions.filter(
+    (t) => t.status !== 'VOIDED',
+  );
   const skippedCount = session.recordsCreated - importedTransactions.length;
 
   // Map transactions to TransactionSummary

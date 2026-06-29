@@ -1,7 +1,4 @@
-import type {
-  BeneficiaryEnumType,
-  DonationPurposeEnum,
-} from '@prisma/client';
+import type { BeneficiaryEnumType, DonationPurposeEnum } from '@prisma/client';
 
 import type { PaymentModel } from './payment';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2,ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   useCallback,
   useEffect,
@@ -10,10 +10,10 @@ import {
 } from 'react';
 import { useDebounce } from 'use-debounce';
 
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import InfoTooltip from '@/components/ui/InfoTooltip';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { cn } from '@/lib/utils';
 import { type Candidate } from '@/server/services/interest-cleansing/interest-cleansing.service';
 import { trpc } from '@/server/trpc/client';
@@ -186,8 +186,8 @@ export function CleansingCandidatePicker({
               No candidates found
             </p>
             <p className='text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[280px]'>
-              We couldn&apos;t find any DEBIT transactions matching your criteria.
-              Try adjusting your search or account filters.
+              We couldn&apos;t find any DEBIT transactions matching your
+              criteria. Try adjusting your search or account filters.
             </p>
           </div>
         )}
@@ -202,161 +202,177 @@ export function CleansingCandidatePicker({
                 selectedCandidateId === candidate.transactionId;
               const isFocused = focusedIndex === index;
               const isExpanded = expandedId === candidate.transactionId;
-                const isFullyAllocated = candidate.remainingAmount <= 0;
+              const isFullyAllocated = candidate.remainingAmount <= 0;
 
-                return (
-                  <li
-                    key={candidate.transactionId}
-                    role='option'
-                    aria-selected={isSelected}
-                    onClick={() => !isFullyAllocated && setSelectedCandidateId(candidate.transactionId)}
-                    className={cn(
-                      'group cursor-pointer transition-all duration-200',
-                      isSelected
-                        ? 'bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500'
-                        : 'hover:bg-white dark:hover:bg-gray-800/80 border-l-4 border-transparent',
-                      isFocused &&
-                        !isSelected &&
-                        'bg-gray-100/50 dark:bg-gray-800/50',
-                      isFullyAllocated && 'opacity-60 cursor-not-allowed',
-                    )}
-                  >
-                    <div className='p-4'>
-                      <div className='flex items-start justify-between gap-4'>
-                        <div className='flex flex-col min-w-0 flex-1'>
-                          <div className='flex items-center gap-2 mb-1.5'>
-                            <Badge
-                              variant='outline'
-                              className='text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider text-green-600 border-green-200 bg-green-50 dark:text-green-400 dark:border-green-900/50 dark:bg-green-950/30'
-                            >
-                              DEBIT
-                            </Badge>
-                            {isFullyAllocated && (
-                              <Badge
-                                variant='secondary'
-                                className='text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider bg-gray-200 text-gray-700'
-                              >
-                                Exhausted
-                              </Badge>
-                            )}
-                            <span className='text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-tight'>
-                              {candidate.accountName}
-                            </span>
-                          </div>
-
-                          <p
-                            className={cn(
-                              'text-sm font-semibold truncate leading-tight',
-                              isSelected
-                                ? 'text-amber-900 dark:text-amber-100'
-                                : 'text-gray-900 dark:text-gray-100',
-                            )}
+              return (
+                <li
+                  key={candidate.transactionId}
+                  role='option'
+                  aria-selected={isSelected}
+                  onClick={() =>
+                    !isFullyAllocated &&
+                    setSelectedCandidateId(candidate.transactionId)
+                  }
+                  className={cn(
+                    'group cursor-pointer transition-all duration-200',
+                    isSelected
+                      ? 'bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500'
+                      : 'hover:bg-white dark:hover:bg-gray-800/80 border-l-4 border-transparent',
+                    isFocused &&
+                      !isSelected &&
+                      'bg-gray-100/50 dark:bg-gray-800/50',
+                    isFullyAllocated && 'opacity-60 cursor-not-allowed',
+                  )}
+                >
+                  <div className='p-4'>
+                    <div className='flex items-start justify-between gap-4'>
+                      <div className='flex flex-col min-w-0 flex-1'>
+                        <div className='flex items-center gap-2 mb-1.5'>
+                          <Badge
+                            variant='outline'
+                            className='text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider text-green-600 border-green-200 bg-green-50 dark:text-green-400 dark:border-green-900/50 dark:bg-green-950/30'
                           >
-                            {candidate.description}
-                          </p>
-
-                          <div className='flex items-center gap-2 mt-2 text-[11px] font-medium text-gray-500 dark:text-gray-400'>
-                            <span className='bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded'>
-                              {candidate.date}
-                            </span>
-                            <span className='text-gray-300 dark:text-gray-700'>
-                              •
-                            </span>
-                            <span className='text-gray-600 dark:text-gray-300'>
-                              {candidate.reasonShort}
-                            </span>
-                            <button
-                              onClick={(e) =>
-                                toggleExpand(candidate.transactionId, e)
-                              }
-                              className='ml-1 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors'
+                            DEBIT
+                          </Badge>
+                          {isFullyAllocated && (
+                            <Badge
+                              variant='secondary'
+                              className='text-[10px] px-1.5 py-0 uppercase font-bold tracking-wider bg-gray-200 text-gray-700'
                             >
-                              {isExpanded ? (
-                                <ChevronUp className='h-3 w-3' />
-                              ) : (
-                                <ChevronDown className='h-3 w-3' />
-                              )}
-                            </button>
-                          </div>
+                              Exhausted
+                            </Badge>
+                          )}
+                          <span className='text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-tight'>
+                            {candidate.accountName}
+                          </span>
                         </div>
 
-                        <div className='flex flex-col items-end shrink-0 pt-1'>
-                          <span className='text-base font-bold text-gray-900 dark:text-gray-100 tabular-nums'>
-                            $
-                            {candidate.amount.toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })}
+                        <p
+                          className={cn(
+                            'text-sm font-semibold truncate leading-tight',
+                            isSelected
+                              ? 'text-amber-900 dark:text-amber-100'
+                              : 'text-gray-900 dark:text-gray-100',
+                          )}
+                        >
+                          {candidate.description}
+                        </p>
+
+                        <div className='flex items-center gap-2 mt-2 text-[11px] font-medium text-gray-500 dark:text-gray-400'>
+                          <span className='bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded'>
+                            {candidate.date}
                           </span>
-                          <span className='text-[10px] text-gray-500 dark:text-gray-400 mt-0.5'>
-                            {candidate.remainingAmount === 0
-                              ? 'Fully allocated'
-                              : `${candidate.remainingAmount.toLocaleString(undefined, {
-                                  style: 'currency',
-                                  currency: 'AUD',
-                                })} remaining`}
+                          <span className='text-gray-300 dark:text-gray-700'>
+                            •
                           </span>
-                          <div
-                            className={cn(
-                              'mt-2 flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold border shadow-sm',
-                              getScoreColorClass(candidate.matchPercent),
-                            )}
+                          <span className='text-gray-600 dark:text-gray-300'>
+                            {candidate.reasonShort}
+                          </span>
+                          <button
+                            onClick={(e) =>
+                              toggleExpand(candidate.transactionId, e)
+                            }
+                            className='ml-1 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors'
                           >
-                            {candidate.matchPercent}% Match
-                          </div>
+                            {isExpanded ? (
+                              <ChevronUp className='h-3 w-3' />
+                            ) : (
+                              <ChevronDown className='h-3 w-3' />
+                            )}
+                          </button>
                         </div>
                       </div>
 
-                      {isExpanded && (
-                        <div className='mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/50 animate-in fade-in slide-in-from-top-1 duration-200'>
-                          {candidate.existingAllocations.length > 0 && (
-                            <div className='mb-4'>
-                                <p className='text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2'>Existing Allocations</p>
-                                <div className='space-y-1'>
-                                    {candidate.existingAllocations.map(alloc => (
-                                        <div key={alloc.interestTxId} className='flex justify-between text-xs p-2 rounded bg-amber-50 dark:bg-amber-950/20 text-gray-700 dark:text-gray-300'>
-                                            <span>{alloc.description}</span>
-                                            <span className='font-mono font-medium'>{alloc.amountApplied.toLocaleString(undefined, {style: 'currency', currency: 'AUD'})}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                      <div className='flex flex-col items-end shrink-0 pt-1'>
+                        <span className='text-base font-bold text-gray-900 dark:text-gray-100 tabular-nums'>
+                          $
+                          {candidate.amount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                        <span className='text-[10px] text-gray-500 dark:text-gray-400 mt-0.5'>
+                          {candidate.remainingAmount === 0
+                            ? 'Fully allocated'
+                            : `${candidate.remainingAmount.toLocaleString(
+                                undefined,
+                                {
+                                  style: 'currency',
+                                  currency: 'AUD',
+                                },
+                              )} remaining`}
+                        </span>
+                        <div
+                          className={cn(
+                            'mt-2 flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold border shadow-sm',
+                            getScoreColorClass(candidate.matchPercent),
                           )}
-                          <p className='text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed mb-3'>
-                            {candidate.reasonLong}
-                          </p>
-                          <div className='grid grid-cols-4 gap-2'>
-                            {Object.entries(
-                              candidate.scoreBreakdown.contributionsPercent,
-                            ).map(([key, value]) => (
-                              <div
-                                key={key}
-                                className='flex flex-col p-2 rounded bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50'
-                              >
-                                <span className='text-[9px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold mb-1'>
-                                  {key}
-                                </span>
-                                <div className='flex items-end gap-1'>
-                                  <span className='text-xs font-bold text-gray-700 dark:text-gray-200'>
-                                    {value}%
+                        >
+                          {candidate.matchPercent}% Match
+                        </div>
+                      </div>
+                    </div>
+
+                    {isExpanded && (
+                      <div className='mt-4 pt-4 border-t border-gray-100 dark:border-gray-800/50 animate-in fade-in slide-in-from-top-1 duration-200'>
+                        {candidate.existingAllocations.length > 0 && (
+                          <div className='mb-4'>
+                            <p className='text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2'>
+                              Existing Allocations
+                            </p>
+                            <div className='space-y-1'>
+                              {candidate.existingAllocations.map((alloc) => (
+                                <div
+                                  key={alloc.interestTxId}
+                                  className='flex justify-between text-xs p-2 rounded bg-amber-50 dark:bg-amber-950/20 text-gray-700 dark:text-gray-300'
+                                >
+                                  <span>{alloc.description}</span>
+                                  <span className='font-mono font-medium'>
+                                    {alloc.amountApplied.toLocaleString(
+                                      undefined,
+                                      { style: 'currency', currency: 'AUD' },
+                                    )}
                                   </span>
-                                  <div className='flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-1'>
-                                    <div
-                                      className='h-full bg-amber-500 transition-all duration-500'
-                                      style={{
-                                        width: `${(value / candidate.matchPercent) * 100}%`,
-                                      }}
-                                    />
-                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <p className='text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed mb-3'>
+                          {candidate.reasonLong}
+                        </p>
+                        <div className='grid grid-cols-4 gap-2'>
+                          {Object.entries(
+                            candidate.scoreBreakdown.contributionsPercent,
+                          ).map(([key, value]) => (
+                            <div
+                              key={key}
+                              className='flex flex-col p-2 rounded bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50'
+                            >
+                              <span className='text-[9px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold mb-1'>
+                                {key}
+                              </span>
+                              <div className='flex items-end gap-1'>
+                                <span className='text-xs font-bold text-gray-700 dark:text-gray-200'>
+                                  {value}%
+                                </span>
+                                <div className='flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-1'>
+                                  <div
+                                    className='h-full bg-amber-500 transition-all duration-500'
+                                    style={{
+                                      width: `${(value / candidate.matchPercent) * 100}%`,
+                                    }}
+                                  />
                                 </div>
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  </li>
-                );
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
             })}
           </ul>
         )}

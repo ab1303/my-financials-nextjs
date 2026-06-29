@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET } from '@/app/api/cashflow/analytics/route';
 import { auth } from '@/server/auth';
@@ -25,7 +25,9 @@ describe('GET /api/cashflow/analytics', () => {
   it('should return 401 when user is not authenticated', async () => {
     (vi.mocked(auth) as any).mockResolvedValueOnce(null);
 
-    const request = new Request('http://localhost:3000/api/cashflow/analytics?calendarYearId=year-1');
+    const request = new Request(
+      'http://localhost:3000/api/cashflow/analytics?calendarYearId=year-1',
+    );
     const response = await GET(request);
     const body = await response.json();
 
@@ -46,7 +48,7 @@ describe('GET /api/cashflow/analytics', () => {
 
   it('should accept incomeGroupIds query parameter', async () => {
     vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
-    
+
     const { prisma } = await import('@/server/db/client');
     vi.mocked(prisma.calendarYear.findUnique).mockResolvedValueOnce({
       fromYear: 2024,
@@ -56,14 +58,22 @@ describe('GET /api/cashflow/analytics', () => {
     } as any);
 
     vi.mocked(incomeService.getTotalIncome).mockResolvedValueOnce(50000);
-    vi.mocked(incomeService.getMonthlyIncomeSummaryFiltered).mockResolvedValueOnce([]);
-    vi.mocked(incomeService.getIncomeSourceBreakdownForYear).mockResolvedValueOnce([]);
+    vi.mocked(
+      incomeService.getMonthlyIncomeSummaryFiltered,
+    ).mockResolvedValueOnce([]);
+    vi.mocked(
+      incomeService.getIncomeSourceBreakdownForYear,
+    ).mockResolvedValueOnce([]);
     vi.mocked(expenseService.getTotalExpenses).mockResolvedValueOnce(30000);
-    vi.mocked(expenseService.getMonthlyExpenseSummaries).mockResolvedValueOnce([]);
-    vi.mocked(expenseService.getExpenseCategoryBreakdownForYear).mockResolvedValueOnce([]);
+    vi.mocked(expenseService.getMonthlyExpenseSummaries).mockResolvedValueOnce(
+      [],
+    );
+    vi.mocked(
+      expenseService.getExpenseCategoryBreakdownForYear,
+    ).mockResolvedValueOnce([]);
 
     const request = new Request(
-      'http://localhost:3000/api/cashflow/analytics?calendarYearId=year-1&incomeGroupIds=group-1,group-2'
+      'http://localhost:3000/api/cashflow/analytics?calendarYearId=year-1&incomeGroupIds=group-1,group-2',
     );
     const response = await GET(request);
 
@@ -84,14 +94,22 @@ describe('GET /api/cashflow/analytics', () => {
     } as any);
 
     vi.mocked(incomeService.getTotalIncome).mockResolvedValueOnce(50000);
-    vi.mocked(incomeService.getMonthlyIncomeSummaryFiltered).mockResolvedValueOnce([]);
-    vi.mocked(incomeService.getIncomeSourceBreakdownForYear).mockResolvedValueOnce([]);
+    vi.mocked(
+      incomeService.getMonthlyIncomeSummaryFiltered,
+    ).mockResolvedValueOnce([]);
+    vi.mocked(
+      incomeService.getIncomeSourceBreakdownForYear,
+    ).mockResolvedValueOnce([]);
     vi.mocked(expenseService.getTotalExpenses).mockResolvedValueOnce(30000);
-    vi.mocked(expenseService.getMonthlyExpenseSummaries).mockResolvedValueOnce([]);
-    vi.mocked(expenseService.getExpenseCategoryBreakdownForYear).mockResolvedValueOnce([]);
+    vi.mocked(expenseService.getMonthlyExpenseSummaries).mockResolvedValueOnce(
+      [],
+    );
+    vi.mocked(
+      expenseService.getExpenseCategoryBreakdownForYear,
+    ).mockResolvedValueOnce([]);
 
     const request = new Request(
-      'http://localhost:3000/api/cashflow/analytics?calendarYearId=year-1&expenseGroupIds=group-1'
+      'http://localhost:3000/api/cashflow/analytics?calendarYearId=year-1&expenseGroupIds=group-1',
     );
     const response = await GET(request);
 

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 
 vi.mock('@/server/db/client', () => ({
@@ -10,14 +11,14 @@ import { findDuplicatesForClassifiedMonths } from '@/server/services/transaction
 describe('findDuplicatesForClassifiedMonths', () => {
   it('returns empty list when no duplicates found', async () => {
     prismaMock.transaction.findMany.mockResolvedValue([]);
-    
+
     const result = await findDuplicatesForClassifiedMonths({
       prisma: prismaMock,
       userId: 'user-1',
       bankAccountId: 'bank-1',
       classifiedMonths: [],
     });
-    
+
     expect(result).toEqual([]);
   });
 
@@ -30,26 +31,30 @@ describe('findDuplicatesForClassifiedMonths', () => {
       type: 'DEBIT',
     };
     prismaMock.transaction.findMany.mockResolvedValue([existingTx as any]);
-    
-    const classifiedMonths = [{
-      month: '2025-01',
-      transactions: [{
-        id: 'csv-1',
-        date: '2025-01-15',
-        description: 'Woolworths',
-        amount: 42.5,
-        type: 'DEBIT' as const,
-        llmCategory: 'Food',
-      }],
-    }];
-    
+
+    const classifiedMonths = [
+      {
+        month: '2025-01',
+        transactions: [
+          {
+            id: 'csv-1',
+            date: '2025-01-15',
+            description: 'Woolworths',
+            amount: 42.5,
+            type: 'DEBIT' as const,
+            llmCategory: 'Food',
+          },
+        ],
+      },
+    ];
+
     const result = await findDuplicatesForClassifiedMonths({
       prisma: prismaMock,
       userId: 'user-1',
       bankAccountId: 'bank-1',
       classifiedMonths: classifiedMonths as any,
     });
-    
+
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       csvId: 'csv-1',

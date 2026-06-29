@@ -1,8 +1,15 @@
-import type { Transaction, TransactionSourceEnum,TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
+import type {
+  Transaction,
+  TransactionSourceEnum,
+  TransactionStatusEnum,
+  TransactionTypeEnum,
+} from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 /** Creates a mock CREDIT Transaction representing an income entry */
-export const createMockIncomeTransaction = (overrides?: Partial<Transaction>): Transaction => ({
+export const createMockIncomeTransaction = (
+  overrides?: Partial<Transaction>,
+): Transaction => ({
   id: 'test-entry-id',
   userId: 'test-user-id',
   type: 'CREDIT' as TransactionTypeEnum,

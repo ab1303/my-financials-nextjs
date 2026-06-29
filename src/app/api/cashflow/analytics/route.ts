@@ -7,9 +7,7 @@ import type {
   CashflowKPIs,
   MonthlyTrendPoint,
 } from '@/server/models/cashflow-analytics';
-
 import type { MonthlyIncomeSummary } from '@/server/models/income';
-
 import {
   getExpenseCategoryBreakdownForYear,
   getMonthlyExpenseSummaries,

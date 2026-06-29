@@ -14,7 +14,10 @@ import { NumericFormat } from 'react-number-format';
 import AIUsageCard from '@/components/AIUsageCard';
 import Table from '@/components/table';
 import MONTHS_MAP from '@/constants/map';
-import type { CategoryBreakdown, MonthlyExpenseSummary } from '@/server/models/expense';
+import type {
+  CategoryBreakdown,
+  MonthlyExpenseSummary,
+} from '@/server/models/expense';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 
 import CategoryBreakdownModal from './_components/CategoryBreakdownModal';
@@ -52,8 +55,8 @@ type ExpenseTableClientProps = {
   fromYear: number;
   bankAccountId?: string;
   categoryBreakdown: CategoryBreakdown[];
-  yearDateFrom: string;  // YYYY-MM-DD
-  yearDateTo: string;    // YYYY-MM-DD
+  yearDateFrom: string; // YYYY-MM-DD
+  yearDateTo: string; // YYYY-MM-DD
   categoryGroups: CategoryGroupListItem[];
 };
 
@@ -86,9 +89,8 @@ export default function ExpenseTableClient({
     () => Array.from(selectedCategoryIds).sort().join(','),
     [selectedCategoryIds],
   );
-  const [displayMonthlySummaries, setDisplayMonthlySummaries] = useState(
-    monthlySummaries,
-  );
+  const [displayMonthlySummaries, setDisplayMonthlySummaries] =
+    useState(monthlySummaries);
   const [displayTotalAmount, setDisplayTotalAmount] = useState(
     monthlySummaries.reduce((sum, summary) => sum + summary.totalAmount, 0),
   );
@@ -159,7 +161,9 @@ export default function ExpenseTableClient({
     loadFilteredSummaries().catch((error) => {
       if (controller.signal.aborted) return;
       console.error('Expense summary refresh failed:', error);
-      setSummaryError('Unable to refresh monthly totals for the selected categories.');
+      setSummaryError(
+        'Unable to refresh monthly totals for the selected categories.',
+      );
     });
 
     return () => {
@@ -175,14 +179,19 @@ export default function ExpenseTableClient({
 
   // Build display rows in fiscal-year order, each annotated with its calendar year
   const orderedRows = useMemo<DisplayRow[]>(() => {
-    const summaryMap = new Map(displayMonthlySummaries.map((s) => [s.month, s]));
+    const summaryMap = new Map(
+      displayMonthlySummaries.map((s) => [s.month, s]),
+    );
     return getFiscalMonthsOrdered(fromMonth).map((month) => {
       const summary = summaryMap.get(month) ?? {
         month,
         totalAmount: 0,
         entryCount: 0,
       };
-      return { ...summary, calendarYear: getMonthCalendarYear(month, fromMonth, fromYear) };
+      return {
+        ...summary,
+        calendarYear: getMonthCalendarYear(month, fromMonth, fromYear),
+      };
     });
   }, [displayMonthlySummaries, fromMonth, fromYear]);
 
@@ -201,7 +210,10 @@ export default function ExpenseTableClient({
             aria-label={`Open transactions for ${label}`}
           >
             <span>{label}</span>
-            <ExternalLink className='h-3.5 w-3.5 opacity-70' aria-hidden='true' />
+            <ExternalLink
+              className='h-3.5 w-3.5 opacity-70'
+              aria-hidden='true'
+            />
           </Link>
         );
       },
@@ -224,7 +236,11 @@ export default function ExpenseTableClient({
     columnHelper.display({
       id: 'categoryBreakdown',
       size: 150,
-      header: () => <span className='inline-flex w-full justify-center'>Category Breakdown</span>,
+      header: () => (
+        <span className='inline-flex w-full justify-center'>
+          Category Breakdown
+        </span>
+      ),
       cell: ({ row }) => {
         const month = row.original.month;
         const year = row.original.calendarYear;

@@ -1,17 +1,17 @@
 'use client';
 
-import { usePathname, useRouter,useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import type { InputAttributes, NumericFormatProps } from 'react-number-format';
 import { NumericFormat } from 'react-number-format';
 import type { SingleValue } from 'react-select';
 
 import { Card } from '@/components';
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { stylingUtils } from '@/styles/styling';
 import { inputStyles } from '@/styles/theme';
-import type { CalendarYearType,OptionType } from '@/types';
+import type { CalendarYearType, OptionType } from '@/types';
 
 import type { FormInput } from './_schema';
 import type { ServerActionType } from './_types';
@@ -157,7 +157,7 @@ export default function ZakatForm({
       totalAmount: totalAmountDue,
     });
     setIsSavingAmount(false);
-    
+
     setIsSavedAmount(true);
     setTimeout(() => setIsSavedAmount(false), 2000);
   };

@@ -1,5 +1,9 @@
 import { TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
-import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
+
+import {
+  REIMBURSEMENT_CATEGORY,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
 
 export function determineNewStatus(
   transaction: {

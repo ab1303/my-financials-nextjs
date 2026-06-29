@@ -10,8 +10,8 @@ interface TransactionsErrorProps {
 export default function TransactionsError(_: TransactionsErrorProps) {
   return (
     <TransactionsUnavailable
-      title="Page unavailable"
-      message="The page is not available right now. Please try again later."
+      title='Page unavailable'
+      message='The page is not available right now. Please try again later.'
     />
   );
 }

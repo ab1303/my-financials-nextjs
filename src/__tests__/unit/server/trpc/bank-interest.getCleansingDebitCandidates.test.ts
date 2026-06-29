@@ -43,15 +43,23 @@ describe('bankInterest.getCleansingDebitCandidates integration-ish', () => {
 
     expect(result).toHaveLength(1);
     const candidate = result[0]!;
-    
+
     expect(candidate).toHaveProperty('transactionId');
     expect(candidate).toHaveProperty('matchPercent');
     expect(candidate).toHaveProperty('accountName');
     expect(candidate).toHaveProperty('scoreBreakdown');
     expect(candidate.scoreBreakdown).toHaveProperty('contributionsPercent');
-    expect(candidate.scoreBreakdown.contributionsPercent).toHaveProperty('amount');
-    expect(candidate.scoreBreakdown.contributionsPercent).toHaveProperty('date');
-    expect(candidate.scoreBreakdown.contributionsPercent).toHaveProperty('desc');
-    expect(candidate.scoreBreakdown.contributionsPercent).toHaveProperty('account');
+    expect(candidate.scoreBreakdown.contributionsPercent).toHaveProperty(
+      'amount',
+    );
+    expect(candidate.scoreBreakdown.contributionsPercent).toHaveProperty(
+      'date',
+    );
+    expect(candidate.scoreBreakdown.contributionsPercent).toHaveProperty(
+      'desc',
+    );
+    expect(candidate.scoreBreakdown.contributionsPercent).toHaveProperty(
+      'account',
+    );
   });
 });

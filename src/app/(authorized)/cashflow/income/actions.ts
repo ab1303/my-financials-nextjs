@@ -3,12 +3,12 @@
 import { revalidatePath } from 'next/cache';
 
 import { auth } from '@/server/auth';
+import { prisma } from '@/server/db/client';
 import {
   addIncomeEntry,
   deleteIncomeEntry,
   updateIncomeEntry,
 } from '@/server/services/income.service';
-import { prisma } from '@/server/db/client';
 
 import type {
   CreateIncomeEntryInput,

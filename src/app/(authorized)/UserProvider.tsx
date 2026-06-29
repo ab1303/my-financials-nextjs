@@ -9,17 +9,15 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | null>(null);
 
-export function UserProvider({ 
-  children, 
-  user 
-}: { 
-  children: React.ReactNode; 
+export function UserProvider({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
   user: AugmentedUser;
 }) {
   return (
-    <UserContext.Provider value={{ user }}>
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={{ user }}>{children}</UserContext.Provider>
   );
 }
 

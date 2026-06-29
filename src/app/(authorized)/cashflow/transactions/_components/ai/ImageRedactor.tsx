@@ -210,10 +210,7 @@ export default function ImageRedactor({
           many as needed.
         </div>
 
-        <div
-          ref={containerRef}
-          className='flex-1 overflow-auto p-4 bg-muted'
-        >
+        <div ref={containerRef} className='flex-1 overflow-auto p-4 bg-muted'>
           <canvas
             ref={canvasRef}
             className='block mx-auto cursor-crosshair rounded shadow select-none touch-none'

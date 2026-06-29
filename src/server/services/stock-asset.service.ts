@@ -1,11 +1,11 @@
 import type { Prisma } from '@prisma/client';
 
+import { prisma } from '@/server/db/client';
 import type {
   CreateStockHoldingInput,
   CreateStockSnapshotInput,
   UpdateStockHoldingInput,
 } from '@/server/schema/stock-asset.schema';
-import { prisma } from '@/server/db/client';
 
 // Stock Snapshot Service
 
@@ -18,7 +18,7 @@ export const createStockSnapshot = async (
     // Verify all accounts belong to the user and are BROKERAGE type (only if holdings present)
     const holdings = input.holdings ?? [];
     const accountIds = [...new Set(holdings.map((h) => h.accountId))];
-    
+
     if (accountIds.length > 0) {
       const accounts = await tx.financialAccount.findMany({
         where: {
@@ -76,8 +76,10 @@ export const createStockSnapshot = async (
 
     // Create cash balance records if provided (filter out amounts <= 0)
     if (input.cashBalances && input.cashBalances.length > 0) {
-      const validCashBalances = input.cashBalances.filter((cb) => cb.amount > 0);
-      
+      const validCashBalances = input.cashBalances.filter(
+        (cb) => cb.amount > 0,
+      );
+
       if (validCashBalances.length > 0) {
         await tx.brokerageCashBalance.createMany({
           data: validCashBalances.map((cb) => ({
@@ -117,7 +119,7 @@ export const updateStockSnapshot = async (
     // 2. Verify new account IDs (same as create)
     const holdings = input.holdings ?? [];
     const accountIds = [...new Set(holdings.map((h) => h.accountId))];
-    
+
     if (accountIds.length > 0) {
       const accounts = await tx.financialAccount.findMany({
         where: {
@@ -167,8 +169,10 @@ export const updateStockSnapshot = async (
 
     // 6. Create new cash balances
     if (input.cashBalances && input.cashBalances.length > 0) {
-      const validCashBalances = input.cashBalances.filter((cb) => cb.amount > 0);
-      
+      const validCashBalances = input.cashBalances.filter(
+        (cb) => cb.amount > 0,
+      );
+
       if (validCashBalances.length > 0) {
         await tx.brokerageCashBalance.createMany({
           data: validCashBalances.map((cb) => ({
@@ -305,7 +309,7 @@ export const getSnapshotById = async (snapshotId: string, userId: string) => {
   });
 };
 
-export const createStockHolding= async (
+export const createStockHolding = async (
   userId: string,
   input: CreateStockHoldingInput,
 ) => {
@@ -331,9 +335,7 @@ export const createStockHolding= async (
   });
 
   if (!account) {
-    throw new Error(
-      'Brokerage sub-account not found or not owned by user',
-    );
+    throw new Error('Brokerage sub-account not found or not owned by user');
   }
 
   // Phase 3: buyDate is optional/nullable - holdings can be created without a buy date
@@ -419,7 +421,7 @@ export const updateStockHolding = async (
   });
 };
 
-export const deleteStockHolding= async (holdingId: string, userId: string) => {
+export const deleteStockHolding = async (holdingId: string, userId: string) => {
   // Verify the holding belongs to the user's snapshot
   const holding = await prisma.stockHolding.findFirst({
     where: {
@@ -700,10 +702,7 @@ export const getBrokerageAccounts = async (userId: string) => {
       name: true,
       institution: { select: { id: true, name: true } },
     },
-    orderBy: [
-      { institution: { name: 'asc' } },
-      { name: 'asc' },
-    ],
+    orderBy: [{ institution: { name: 'asc' } }, { name: 'asc' }],
   });
 };
 
@@ -722,8 +721,8 @@ export const createBrokerageSubAccount = async (
       id: input.businessId,
       type: 'BROKERAGE',
       OR: [
-        { userId: null },        // Global institution
-        { userId },              // User-owned institution
+        { userId: null }, // Global institution
+        { userId }, // User-owned institution
       ],
     },
   });

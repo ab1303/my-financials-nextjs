@@ -60,5 +60,5 @@ export const zakatPaymentReducer = produce<ZakatPaymentsState, [Actions]>(
       default:
         return draft;
     }
-  }
+  },
 );

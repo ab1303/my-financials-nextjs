@@ -17,7 +17,10 @@ import type { MonthlyTrendPoint } from '@/server/models/cashflow-analytics';
 
 type IncomeExpenseTrendChartProps = {
   data: MonthlyTrendPoint[];
-  onMonthClick?: (point: MonthlyTrendPoint, series: 'income' | 'expenses') => void;
+  onMonthClick?: (
+    point: MonthlyTrendPoint,
+    series: 'income' | 'expenses',
+  ) => void;
 };
 
 const formatTick = (v: number) =>
@@ -30,23 +33,23 @@ export function IncomeExpenseTrendChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">
+        <CardTitle className='text-sm font-medium'>
           Income vs Expenses — Monthly Trend
         </CardTitle>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-8">
+          <p className='text-center text-sm text-muted-foreground py-8'>
             No data for this period
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width='100%' height={300}>
             <ComposedChart
               data={data}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} tickLine={false} />
+              <CartesianGrid vertical={false} strokeDasharray='3 3' />
+              <XAxis dataKey='label' tick={{ fontSize: 11 }} tickLine={false} />
               <YAxis tickFormatter={formatTick} tick={{ fontSize: 11 }} />
               <Tooltip
                 formatter={(value, name) => [
@@ -57,23 +60,27 @@ export function IncomeExpenseTrendChart({
               <Legend />
               <ReferenceLine
                 y={0}
-                stroke="hsl(var(--muted-foreground))"
+                stroke='hsl(var(--muted-foreground))'
                 opacity={0.3}
               />
               <Bar
-                dataKey="income"
-                name="Income"
-                fill="#16a34a"
+                dataKey='income'
+                name='Income'
+                fill='#16a34a'
                 radius={[4, 4, 0, 0]}
-                onClick={(d) => onMonthClick?.(d as unknown as MonthlyTrendPoint, 'income')}
+                onClick={(d) =>
+                  onMonthClick?.(d as unknown as MonthlyTrendPoint, 'income')
+                }
                 cursor={onMonthClick ? 'pointer' : 'default'}
               />
               <Bar
-                dataKey="expenses"
-                name="Expenses"
-                fill="#dc2626"
+                dataKey='expenses'
+                name='Expenses'
+                fill='#dc2626'
                 radius={[4, 4, 0, 0]}
-                onClick={(d) => onMonthClick?.(d as unknown as MonthlyTrendPoint, 'expenses')}
+                onClick={(d) =>
+                  onMonthClick?.(d as unknown as MonthlyTrendPoint, 'expenses')
+                }
                 cursor={onMonthClick ? 'pointer' : 'default'}
               />
             </ComposedChart>

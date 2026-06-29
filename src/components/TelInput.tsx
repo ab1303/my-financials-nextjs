@@ -36,7 +36,7 @@ export default function TelInput({ propertyName }: TelInputComponentProps) {
             if (!fieldState.isDirty) return true;
 
             const selectedCountry = countries.find(
-              (c: any) => c.dialCode === country.dialCode
+              (c: any) => c.dialCode === country.dialCode,
             ) as any;
 
             if (!selectedCountry) {
@@ -44,7 +44,7 @@ export default function TelInput({ propertyName }: TelInputComponentProps) {
             }
 
             const numberExDialCode = inputNumber.split(
-              selectedCountry.dialCode
+              selectedCountry.dialCode,
             )[1];
 
             const phoneLength = numberExDialCode?.length;

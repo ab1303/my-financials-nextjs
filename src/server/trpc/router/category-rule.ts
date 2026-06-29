@@ -1,5 +1,5 @@
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
 import {
   applyRuleToPast,
@@ -8,8 +8,8 @@ import {
   findSimilarTransactions,
   listRules,
   toggleRule,
-} from "@/server/services/transactions/category-rule.service";
-import { protectedProcedure, router } from "@/server/trpc/trpc";
+} from '@/server/services/transactions/category-rule.service';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const categoryRuleRouter = router({
   create: protectedProcedure
@@ -17,7 +17,7 @@ export const categoryRuleRouter = router({
       z.object({
         name: z.string().min(1),
         pattern: z.string().min(1),
-        matchType: z.enum(["CONTAINS", "STARTS_WITH", "EXACT"]),
+        matchType: z.enum(['CONTAINS', 'STARTS_WITH', 'EXACT']),
         category: z.string().min(1),
       }),
     )
@@ -33,8 +33,8 @@ export const categoryRuleRouter = router({
         });
       } catch (err) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: err instanceof Error ? err.message : "Failed to create rule",
+          code: 'BAD_REQUEST',
+          message: err instanceof Error ? err.message : 'Failed to create rule',
         });
       }
     }),
@@ -58,8 +58,8 @@ export const categoryRuleRouter = router({
         });
       } catch (err) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: err instanceof Error ? err.message : "Failed to toggle rule",
+          code: 'BAD_REQUEST',
+          message: err instanceof Error ? err.message : 'Failed to toggle rule',
         });
       }
     }),
@@ -75,8 +75,8 @@ export const categoryRuleRouter = router({
         });
       } catch (err) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: err instanceof Error ? err.message : "Failed to delete rule",
+          code: 'NOT_FOUND',
+          message: err instanceof Error ? err.message : 'Failed to delete rule',
         });
       }
     }),
@@ -110,8 +110,8 @@ export const categoryRuleRouter = router({
         return { updatedCount };
       } catch (err) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: err instanceof Error ? err.message : "Failed to apply rule",
+          code: 'BAD_REQUEST',
+          message: err instanceof Error ? err.message : 'Failed to apply rule',
         });
       }
     }),

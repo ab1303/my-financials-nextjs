@@ -1,6 +1,6 @@
 'use client';
 
-import { type ChangeEvent,useRef, useState } from 'react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';

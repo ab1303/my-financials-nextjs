@@ -61,5 +61,5 @@ export const bankInterestReducer = produce<BankInterestState, [Actions]>(
       default:
         return draft;
     }
-  }
+  },
 );

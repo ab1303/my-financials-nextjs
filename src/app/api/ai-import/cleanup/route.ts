@@ -10,7 +10,7 @@
  * For local/non-Vercel deployments the upload route triggers the same cleanup
  * as a fire-and-forget background task on every upload.
  */
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { deleteExpiredImages } from '@/server/services/ai-import/cleanup.service';

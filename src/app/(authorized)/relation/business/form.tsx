@@ -11,9 +11,12 @@ import { components } from 'react-select';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-import { AddressComponent, Button,Card } from '@/components';
+import { AddressComponent, Button, Card } from '@/components';
 import { Label, TextInput } from '@/components/ui';
-import { DeletableOption, SelectWrapper as Select } from '@/components/ui/Select';
+import {
+  DeletableOption,
+  SelectWrapper as Select,
+} from '@/components/ui/Select';
 import { trpc } from '@/server/trpc/client';
 import { BusinessEnumType } from '@/types/enum';
 
@@ -166,7 +169,7 @@ export default function BusinessForm() {
           onSuccess: () => {
             // Don't reset form for updates — keep updated data visible
           },
-        }
+        },
       );
     } else {
       // Create new business
@@ -193,7 +196,10 @@ export default function BusinessForm() {
     if (option.value) {
       formFieldSetValue('businessName', option.value.businessName);
       formFieldSetValue('type', option.value.type);
-      formFieldSetValue('isDgrRegistered', option.value.isDgrRegistered ?? false);
+      formFieldSetValue(
+        'isDgrRegistered',
+        option.value.isDgrRegistered ?? false,
+      );
       setSelectedBusiness(option);
     }
     return;
@@ -286,7 +292,8 @@ export default function BusinessForm() {
                   >
                     {Object.values(BusinessEnumType).map((val) => (
                       <option key={val} value={val}>
-                        {val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()}
+                        {val.charAt(0).toUpperCase() +
+                          val.slice(1).toLowerCase()}
                       </option>
                     ))}
                   </select>
@@ -303,11 +310,15 @@ export default function BusinessForm() {
                       {...register('isDgrRegistered')}
                     />
                     <div>
-                      <Label htmlFor='isDgrRegistered' className='cursor-pointer'>
+                      <Label
+                        htmlFor='isDgrRegistered'
+                        className='cursor-pointer'
+                      >
                         Tax deductible (DGR registered)
                       </Label>
                       <p className='mt-1 text-sm text-muted-foreground'>
-                        Payments to this business will be marked deductible when this is enabled.
+                        Payments to this business will be marked deductible when
+                        this is enabled.
                       </p>
                     </div>
                   </div>

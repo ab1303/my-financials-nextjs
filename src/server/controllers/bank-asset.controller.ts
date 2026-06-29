@@ -1,3 +1,4 @@
+import { handleCaughtError } from '@/server/db/client';
 import type {
   AddEntryToSnapshotInput,
   CreateBankAccountInput,
@@ -22,7 +23,6 @@ import {
   getSnapshotTotals,
   updateBankAssetEntry,
 } from '@/server/services/bank-asset.service';
-import { handleCaughtError } from '@/server/db/client';
 
 // Bank Account Controllers
 

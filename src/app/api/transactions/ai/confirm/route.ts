@@ -1,5 +1,5 @@
 import { ImportStatusEnum, ImportTypeEnum } from '@prisma/client';
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -51,7 +51,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { sessionId, calendarYearId, month, bankAccountId, images } = parse.data;
+  const { sessionId, calendarYearId, month, bankAccountId, images } =
+    parse.data;
 
   const importSession = await prisma.importSession.findUnique({
     where: { id: sessionId },
@@ -109,11 +110,12 @@ export async function POST(req: NextRequest) {
           activeCategories,
         );
         const categoryId = match.categoryName
-          ? categoryByName.get(match.categoryName) ?? null
+          ? (categoryByName.get(match.categoryName) ?? null)
           : null;
 
         imageEmbeddingUsage.promptTokens += match.embeddingUsage.promptTokens;
-        imageEmbeddingUsage.completionTokens += match.embeddingUsage.completionTokens;
+        imageEmbeddingUsage.completionTokens +=
+          match.embeddingUsage.completionTokens;
         imageEmbeddingUsage.totalTokens += match.embeddingUsage.totalTokens;
 
         if (!categoryId) continue;
@@ -188,7 +190,7 @@ export async function POST(req: NextRequest) {
         status: ImportStatusEnum.COMPLETED,
         recordsCreated,
         startDate: dateRange._min.date ?? null,
-        endDate:   dateRange._max.date ?? null,
+        endDate: dateRange._max.date ?? null,
       },
     });
   } catch (err) {
@@ -199,7 +201,10 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ success: true, recordsCreated, sessionId, status });
+  return NextResponse.json({
+    success: true,
+    recordsCreated,
+    sessionId,
+    status,
+  });
 }
-
-

@@ -8,10 +8,7 @@ import { toast } from 'sonner';
 
 import { trpc } from '@/server/trpc/client';
 
-import {
-  type UpdateProfileFormValues,
-  updateProfileSchema,
-} from '../_schema';
+import { type UpdateProfileFormValues, updateProfileSchema } from '../_schema';
 import type { UserProfileData } from '../_types';
 
 interface ProfileFormProps {

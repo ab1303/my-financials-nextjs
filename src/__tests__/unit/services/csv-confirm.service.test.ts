@@ -5,7 +5,10 @@ vi.mock('@/server/db/client', () => ({
   prisma: prismaMock,
 }));
 
-import { confirmCreditTransactions, confirmDebitTransactions } from '@/server/services/transactions/csv-confirm.service';
+import {
+  confirmCreditTransactions,
+  confirmDebitTransactions,
+} from '@/server/services/transactions/csv-confirm.service';
 import { appRouter } from '@/server/trpc/router/_app';
 
 const mockCredits = [
@@ -29,13 +32,27 @@ const mockCredits = [
 describe('csv-confirm.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    prismaMock.calendarYear.findFirst.mockResolvedValue({ id: 'calendar-1', type: 'FISCAL', fromYear: 2024, fromMonth: 1, toYear: 2024, toMonth: 12 } as never);
+    prismaMock.calendarYear.findFirst.mockResolvedValue({
+      id: 'calendar-1',
+      type: 'FISCAL',
+      fromYear: 2024,
+      fromMonth: 1,
+      toYear: 2024,
+      toMonth: 12,
+    } as never);
     prismaMock.transaction.findMany.mockResolvedValue([]);
-    prismaMock.transaction.create.mockResolvedValue({ id: 'transaction-1' } as never);
+    prismaMock.transaction.create.mockResolvedValue({
+      id: 'transaction-1',
+    } as never);
   });
 
   it('creates a CONFIRMED CREDIT Transaction for confirmed income (no IncomeRecord created)', async () => {
-    await confirmCreditTransactions(mockCredits as never, 'user-1', 'bank-1', 'session-1');
+    await confirmCreditTransactions(
+      mockCredits as never,
+      'user-1',
+      'bank-1',
+      'session-1',
+    );
 
     expect(prismaMock.transaction.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -70,7 +87,12 @@ describe('csv-confirm.service', () => {
       },
     ];
 
-    await confirmCreditTransactions(excludedCredits as never, 'user-1', 'bank-1', 'session-1');
+    await confirmCreditTransactions(
+      excludedCredits as never,
+      'user-1',
+      'bank-1',
+      'session-1',
+    );
 
     expect(prismaMock.transaction.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -85,8 +107,12 @@ describe('csv-confirm.service', () => {
 
   describe('confirmDebitTransactions — Transfer exclusion guard', () => {
     beforeEach(() => {
-      prismaMock.expenseLedger.findUnique.mockResolvedValue({ id: 'ledger-1' } as never);
-      prismaMock.expenseLedger.create.mockResolvedValue({ id: 'ledger-1' } as never);
+      prismaMock.expenseLedger.findUnique.mockResolvedValue({
+        id: 'ledger-1',
+      } as never);
+      prismaMock.expenseLedger.create.mockResolvedValue({
+        id: 'ledger-1',
+      } as never);
       prismaMock.expenseCategory.findMany.mockResolvedValue([
         { id: 'cat-groceries', name: 'Groceries', isActive: true },
         { id: 'cat-other', name: 'Other', isActive: true },

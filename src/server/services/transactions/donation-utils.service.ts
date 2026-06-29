@@ -1,5 +1,5 @@
-import { getLinkedTransactionIds as getVoluntaryLinkedTransactionIds } from '@/server/services/voluntary-donations/voluntary-donation.service';
 import { getLinkedTransactionIds as getInterestLinkedTransactionIds } from '@/server/services/interest-cleansing/interest-cleansing.service';
+import { getLinkedTransactionIds as getVoluntaryLinkedTransactionIds } from '@/server/services/voluntary-donations/voluntary-donation.service';
 import { getLinkedTransactionIds as getZakatLinkedTransactionIds } from '@/server/services/zakat/zakat.service';
 
 export const DONATION_PURPOSES = {
@@ -8,9 +8,12 @@ export const DONATION_PURPOSES = {
   ZAKAT: 'ZAKAT',
 } as const;
 
-export type DonationPurpose = typeof DONATION_PURPOSES[keyof typeof DONATION_PURPOSES];
+export type DonationPurpose =
+  (typeof DONATION_PURPOSES)[keyof typeof DONATION_PURPOSES];
 
-export async function getLinkedTransactionIds(purpose: DonationPurpose): Promise<Set<string>> {
+export async function getLinkedTransactionIds(
+  purpose: DonationPurpose,
+): Promise<Set<string>> {
   switch (purpose) {
     case DONATION_PURPOSES.VOLUNTARY: {
       return new Set(await getVoluntaryLinkedTransactionIds());
@@ -26,7 +29,9 @@ export async function getLinkedTransactionIds(purpose: DonationPurpose): Promise
   }
 }
 
-export async function getAllLinkedTransactionIds(purposes: DonationPurpose[]): Promise<Set<string>> {
+export async function getAllLinkedTransactionIds(
+  purposes: DonationPurpose[],
+): Promise<Set<string>> {
   const sets = await Promise.all(purposes.map(getLinkedTransactionIds));
   const allIds = new Set<string>();
   for (const set of sets) {

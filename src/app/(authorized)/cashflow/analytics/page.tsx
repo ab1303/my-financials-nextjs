@@ -21,18 +21,19 @@ export default async function CashflowAnalyticsPage() {
   const session = await auth();
   if (!session?.user?.id) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-red-800 font-medium">Authentication required</p>
+      <div className='p-4 bg-red-50 border border-red-200 rounded-md'>
+        <p className='text-red-800 font-medium'>Authentication required</p>
       </div>
     );
   }
 
-  const [calendarYears, bankAccounts, fiscalYearType, categoryGroups] = await Promise.all([
-    getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
-    listBankAccountsHandler(session.user.id),
-    getUserFiscalYearType(prisma, session.user.id),
-    listCategoryGroups({ prisma, userId: session.user.id }),
-  ]);
+  const [calendarYears, bankAccounts, fiscalYearType, categoryGroups] =
+    await Promise.all([
+      getCalendarYearsHandler(['FISCAL', 'ANNUAL']),
+      listBankAccountsHandler(session.user.id),
+      getUserFiscalYearType(prisma, session.user.id),
+      listCategoryGroups({ prisma, userId: session.user.id }),
+    ]);
 
   const [incomeSources, expenseCategories] = await Promise.all([
     prisma.incomeSource.findMany({
@@ -47,7 +48,10 @@ export default async function CashflowAnalyticsPage() {
     }),
   ]);
 
-  const defaultCalendarYear = getDefaultCalendarYear(calendarYears, fiscalYearType);
+  const defaultCalendarYear = getDefaultCalendarYear(
+    calendarYears,
+    fiscalYearType,
+  );
 
   const bankOptions: OptionType[] = bankAccounts.map((a) => ({
     id: a.id,
@@ -55,12 +59,12 @@ export default async function CashflowAnalyticsPage() {
   }));
 
   return (
-    <main className="px-4 sm:px-6 lg:px-8 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+    <main className='px-4 sm:px-6 lg:px-8 py-6'>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold tracking-tight text-foreground'>
           Cashflow Analytics
         </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
+        <p className='text-muted-foreground mt-1 text-sm'>
           Income vs expenses trends, category breakdowns, and financial KPIs
         </p>
       </div>
@@ -71,7 +75,10 @@ export default async function CashflowAnalyticsPage() {
         defaultCalendarType={(fiscalYearType ?? 'FISCAL') as CalendarEnumType}
         bankOptions={bankOptions}
         categoryGroups={categoryGroups}
-        incomeSources={incomeSources.map((source) => ({ id: source.id, label: source.name }))}
+        incomeSources={incomeSources.map((source) => ({
+          id: source.id,
+          label: source.name,
+        }))}
         expenseCategories={expenseCategories.map((category) => ({
           id: category.id,
           label: category.name,

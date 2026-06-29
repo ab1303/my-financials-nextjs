@@ -4,18 +4,18 @@ import { Disclosure } from '@headlessui/react';
 import clsx from 'clsx';
 import { Check, ChevronDown, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useId, useMemo,useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import type { SingleValue } from 'react-select';
 import { toast } from 'sonner';
 
 import AIUsageCard from '@/components/AIUsageCard';
 import ImportAuditIcon from '@/components/ImportAuditIcon';
-import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/Label';
 import { Modal } from '@/components/ui/Modal';
+import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Select';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { trpc } from '@/server/trpc/client';
 import type { CalendarYearType, OptionType } from '@/types';
 import type {
@@ -110,9 +110,9 @@ export default function BankAssetsClient({ initialData }: Props) {
   } | null>(null);
   const [newAccountName, setNewAccountName] = useState('');
   const [accountNameError, setAccountNameError] = useState('');
-  const [addingEntryForBankId, setAddingEntryForBankId] = useState<string | null>(
-    null,
-  );
+  const [addingEntryForBankId, setAddingEntryForBankId] = useState<
+    string | null
+  >(null);
   const [newEntryAccountId, setNewEntryAccountId] = useState<string>('');
   const [newEntryBalance, setNewEntryBalance] = useState<number>(0);
   const [newEntryError, setNewEntryError] = useState<string>('');
@@ -176,10 +176,8 @@ export default function BankAssetsClient({ initialData }: Props) {
   const { data: banks = [] } = trpc.business.getBusinessesByType.useQuery({
     type: 'BANK',
   });
-  const { data: allBankAccounts = [] } = trpc.bankAsset.getBankAccounts.useQuery(
-    {},
-    { enabled: !!snapshot },
-  );
+  const { data: allBankAccounts = [] } =
+    trpc.bankAsset.getBankAccounts.useQuery({}, { enabled: !!snapshot });
 
   // Loading state - true only if query is actively fetching
   const isLoading = isLoadingSnapshots && !!selectedYear?.id;
@@ -221,14 +219,21 @@ export default function BankAssetsClient({ initialData }: Props) {
   const totalsMap = useMemo(
     () =>
       new Map(
-        (totals as SnapshotTotals | undefined)?.banks.map((b) => [b.institutionId, b]) ?? [],
+        (totals as SnapshotTotals | undefined)?.banks.map((b) => [
+          b.institutionId,
+          b,
+        ]) ?? [],
       ),
     [totals],
   );
 
   const getAddableAccountsForBank = (institutionId: string) =>
     allBankAccounts
-      .filter((acc) => acc.institutionId === institutionId && !accountsAlreadyInSnapshot.has(acc.id))
+      .filter(
+        (acc) =>
+          acc.institutionId === institutionId &&
+          !accountsAlreadyInSnapshot.has(acc.id),
+      )
       .map((acc) => ({ value: acc.id, label: acc.name }));
 
   // Update entry mutation
@@ -281,35 +286,41 @@ export default function BankAssetsClient({ initialData }: Props) {
     },
   });
 
-  const createAccountForEntryMutation = trpc.bankAsset.createBankAccount.useMutation({
-    onSuccess: () => {
-      utils.bankAsset.getBankAccounts.invalidate();
-    },
-    onError: (error) => {
-      toast.error((error as any)?.message || 'Failed to create account');
-    },
-  });
+  const createAccountForEntryMutation =
+    trpc.bankAsset.createBankAccount.useMutation({
+      onSuccess: () => {
+        utils.bankAsset.getBankAccounts.invalidate();
+      },
+      onError: (error) => {
+        toast.error((error as any)?.message || 'Failed to create account');
+      },
+    });
 
-  const addEntryToSnapshotMutation = trpc.bankAsset.addEntryToSnapshot.useMutation({
-    onSuccess: () => {
-      toast.success('Account added to snapshot!');
-      setAddingEntryForBankId(null);
-      setNewEntryAccountId('');
-      setNewEntryBalance(0);
-      setNewEntryError('');
-      utils.bankAsset.getSnapshots.invalidate();
-      utils.bankAsset.getMostRecentSnapshot.invalidate();
-      utils.bankAsset.getSnapshotTotals.invalidate();
-    },
-    onError: (error: any) => {
-      const msg: string = error?.message || 'Failed to add account to snapshot';
-      if (msg.toLowerCase().includes('unique') || msg.toLowerCase().includes('already')) {
-        setNewEntryError('This account is already in the snapshot.');
-      } else {
-        toast.error(msg);
-      }
-    },
-  });
+  const addEntryToSnapshotMutation =
+    trpc.bankAsset.addEntryToSnapshot.useMutation({
+      onSuccess: () => {
+        toast.success('Account added to snapshot!');
+        setAddingEntryForBankId(null);
+        setNewEntryAccountId('');
+        setNewEntryBalance(0);
+        setNewEntryError('');
+        utils.bankAsset.getSnapshots.invalidate();
+        utils.bankAsset.getMostRecentSnapshot.invalidate();
+        utils.bankAsset.getSnapshotTotals.invalidate();
+      },
+      onError: (error: any) => {
+        const msg: string =
+          error?.message || 'Failed to add account to snapshot';
+        if (
+          msg.toLowerCase().includes('unique') ||
+          msg.toLowerCase().includes('already')
+        ) {
+          setNewEntryError('This account is already in the snapshot.');
+        } else {
+          toast.error(msg);
+        }
+      },
+    });
 
   // Server action state for updating account name
   const [isUpdatingAccountName, setIsUpdatingAccountName] = useState(false);
@@ -339,7 +350,13 @@ export default function BankAssetsClient({ initialData }: Props) {
     accountName: string,
     balance: number,
   ) => {
-    setEditingEntry({ entryId, accountId, institutionId, accountName, balance });
+    setEditingEntry({
+      entryId,
+      accountId,
+      institutionId,
+      accountName,
+      balance,
+    });
     setEditBalance(balance);
     setEditAccountName(accountName);
     setIsEditingModalName(false);
@@ -674,7 +691,9 @@ export default function BankAssetsClient({ initialData }: Props) {
         <div className='space-y-4'>
           {banks.map((bank) => {
             const bankTotals = totalsMap.get(bank.id);
-            const hasBankAccounts = allBankAccounts.some((a) => a.institutionId === bank.id);
+            const hasBankAccounts = allBankAccounts.some(
+              (a) => a.institutionId === bank.id,
+            );
             return (
               <Disclosure key={bank.id}>
                 {({ open }) => (
@@ -728,125 +747,140 @@ export default function BankAssetsClient({ initialData }: Props) {
                                 </tr>
                               </thead>
                               <tbody className='bg-card divide-y divide-border'>
-                                {bankTotals.accounts.map((account: AccountBalance) => {
-                                  const snapshotEntry = snapshot?.balanceRecords.find(
-                                    (e) => e.accountId === account.accountId,
-                                  );
-                                  return (
-                                    <tr key={account.accountId}>
-                                      <td className='px-4 py-3 text-sm text-foreground'>
-                                        {editingAccountName?.accountId ===
-                                        account.accountId ? (
-                                          <div className='flex items-center gap-2'>
-                                            <input
-                                              type='text'
-                                              value={newAccountName}
-                                              onChange={(e) => {
-                                                setNewAccountName(e.target.value);
-                                                setAccountNameError('');
-                                              }}
-                                              onKeyDown={handleAccountNameKeyDown}
-                                              autoFocus
-                                              className='flex-1 px-2 py-1 border border-ring rounded text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
-                                              placeholder='Account name'
-                                            />
-                                            <button
-                                              onClick={handleSaveAccountName}
-                                              disabled={isUpdatingAccountName}
-                                              className='px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors'
-                                              title='Save'
-                                            >
-                                              <Check className='w-3 h-3' />
-                                            </button>
-                                            <button
-                                              onClick={handleCancelEditAccountName}
-                                              disabled={isUpdatingAccountName}
-                                              className='px-2 py-1 text-xs bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 transition-colors'
-                                              title='Cancel'
-                                            >
-                                              <X className='w-3 h-3' />
-                                            </button>
-                                          </div>
-                                        ) : (
-                                          <div className='flex items-center justify-between group'>
-                                            <span>{account.accountName}</span>
+                                {bankTotals.accounts.map(
+                                  (account: AccountBalance) => {
+                                    const snapshotEntry =
+                                      snapshot?.balanceRecords.find(
+                                        (e) =>
+                                          e.accountId === account.accountId,
+                                      );
+                                    return (
+                                      <tr key={account.accountId}>
+                                        <td className='px-4 py-3 text-sm text-foreground'>
+                                          {editingAccountName?.accountId ===
+                                          account.accountId ? (
+                                            <div className='flex items-center gap-2'>
+                                              <input
+                                                type='text'
+                                                value={newAccountName}
+                                                onChange={(e) => {
+                                                  setNewAccountName(
+                                                    e.target.value,
+                                                  );
+                                                  setAccountNameError('');
+                                                }}
+                                                onKeyDown={
+                                                  handleAccountNameKeyDown
+                                                }
+                                                autoFocus
+                                                className='flex-1 px-2 py-1 border border-ring rounded text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
+                                                placeholder='Account name'
+                                              />
+                                              <button
+                                                onClick={handleSaveAccountName}
+                                                disabled={isUpdatingAccountName}
+                                                className='px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors'
+                                                title='Save'
+                                              >
+                                                <Check className='w-3 h-3' />
+                                              </button>
+                                              <button
+                                                onClick={
+                                                  handleCancelEditAccountName
+                                                }
+                                                disabled={isUpdatingAccountName}
+                                                className='px-2 py-1 text-xs bg-muted text-muted-foreground rounded hover:bg-muted/80 disabled:opacity-50 transition-colors'
+                                                title='Cancel'
+                                              >
+                                                <X className='w-3 h-3' />
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <div className='flex items-center justify-between group'>
+                                              <span>{account.accountName}</span>
+                                              <button
+                                                onClick={() =>
+                                                  handleStartEditAccountName(
+                                                    account.accountId,
+                                                    bankTotals.institutionId,
+                                                    account.accountName,
+                                                  )
+                                                }
+                                                className='ml-2 p-1 text-muted-foreground opacity-40 group-hover:opacity-100 hover:text-foreground hover:bg-muted rounded transition-all'
+                                                aria-label={`Edit ${account.accountName}`}
+                                                title='Edit account name'
+                                              >
+                                                <Pencil className='w-4 h-4' />
+                                              </button>
+                                            </div>
+                                          )}
+                                          {accountNameError &&
+                                            editingAccountName?.accountId ===
+                                              account.accountId && (
+                                              <p className='text-xs text-red-600 mt-1'>
+                                                {accountNameError}
+                                              </p>
+                                            )}
+                                        </td>
+                                        <td className='px-4 py-3 text-sm text-right font-mono text-foreground'>
+                                          <NumericFormat
+                                            value={Number(account.balance)}
+                                            displayType='text'
+                                            thousandSeparator=','
+                                            prefix='$'
+                                            decimalScale={2}
+                                            fixedDecimalScale
+                                          />
+                                        </td>
+                                        <td className='px-4 py-3 text-sm text-right'>
+                                          <div className='flex justify-end gap-2'>
                                             <button
                                               onClick={() =>
-                                                handleStartEditAccountName(
+                                                handleEditEntry(
+                                                  snapshotEntry?.id || '',
                                                   account.accountId,
                                                   bankTotals.institutionId,
                                                   account.accountName,
+                                                  Number(account.balance),
                                                 )
                                               }
-                                              className='ml-2 p-1 text-muted-foreground opacity-40 group-hover:opacity-100 hover:text-foreground hover:bg-muted rounded transition-all'
+                                              className='p-1 text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors'
                                               aria-label={`Edit ${account.accountName}`}
-                                              title='Edit account name'
+                                              title='Edit balance'
                                             >
                                               <Pencil className='w-4 h-4' />
                                             </button>
+                                            <button
+                                              onClick={() =>
+                                                handleDeleteEntry(
+                                                  snapshotEntry?.id || '',
+                                                  account.accountName,
+                                                  snapshot?.id || '',
+                                                )
+                                              }
+                                              className='p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors'
+                                              aria-label={`Delete ${account.accountName}`}
+                                              title='Delete account'
+                                            >
+                                              <Trash2 className='w-4 h-4' />
+                                            </button>
+                                            {snapshotEntry?.importImageId && (
+                                              <ImportAuditIcon
+                                                importImageId={
+                                                  snapshotEntry.importImageId
+                                                }
+                                                fileName={
+                                                  snapshotEntry.importImage
+                                                    ?.fileName
+                                                }
+                                              />
+                                            )}
                                           </div>
-                                        )}
-                                        {accountNameError &&
-                                          editingAccountName?.accountId ===
-                                            account.accountId && (
-                                            <p className='text-xs text-red-600 mt-1'>
-                                              {accountNameError}
-                                            </p>
-                                          )}
-                                      </td>
-                                      <td className='px-4 py-3 text-sm text-right font-mono text-foreground'>
-                                        <NumericFormat
-                                          value={Number(account.balance)}
-                                          displayType='text'
-                                          thousandSeparator=','
-                                          prefix='$'
-                                          decimalScale={2}
-                                          fixedDecimalScale
-                                        />
-                                      </td>
-                                      <td className='px-4 py-3 text-sm text-right'>
-                                        <div className='flex justify-end gap-2'>
-                                          <button
-                                            onClick={() =>
-                                              handleEditEntry(
-                                                snapshotEntry?.id || '',
-                                                account.accountId,
-                                                bankTotals.institutionId,
-                                                account.accountName,
-                                                Number(account.balance),
-                                              )
-                                            }
-                                            className='p-1 text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors'
-                                            aria-label={`Edit ${account.accountName}`}
-                                            title='Edit balance'
-                                          >
-                                            <Pencil className='w-4 h-4' />
-                                          </button>
-                                          <button
-                                            onClick={() =>
-                                              handleDeleteEntry(
-                                                snapshotEntry?.id || '',
-                                                account.accountName,
-                                                snapshot?.id || '',
-                                              )
-                                            }
-                                            className='p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors'
-                                            aria-label={`Delete ${account.accountName}`}
-                                            title='Delete account'
-                                          >
-                                            <Trash2 className='w-4 h-4' />
-                                          </button>
-                                          {snapshotEntry?.importImageId && (
-                                            <ImportAuditIcon
-                                              importImageId={snapshotEntry.importImageId}
-                                              fileName={snapshotEntry.importImage?.fileName}
-                                            />
-                                          )}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
+                                        </td>
+                                      </tr>
+                                    );
+                                  },
+                                )}
                               </tbody>
                             </table>
                           </div>
@@ -866,7 +900,8 @@ export default function BankAssetsClient({ initialData }: Props) {
                                             value: newEntryAccountId,
                                             label:
                                               allBankAccounts.find(
-                                                (a) => a.id === newEntryAccountId,
+                                                (a) =>
+                                                  a.id === newEntryAccountId,
                                               )?.name ?? newEntryAccountId,
                                           }
                                         : null
@@ -876,16 +911,23 @@ export default function BankAssetsClient({ initialData }: Props) {
                                       setNewEntryError('');
                                     }}
                                     onCreateOption={(inputValue) => {
-                                      handleCreateAccountForEntry(bank.id, inputValue)
+                                      handleCreateAccountForEntry(
+                                        bank.id,
+                                        inputValue,
+                                      )
                                         .then((newAccountId) => {
                                           setNewEntryAccountId(newAccountId);
-                                          toast.success(`Account "${inputValue}" created!`);
+                                          toast.success(
+                                            `Account "${inputValue}" created!`,
+                                          );
                                         })
                                         .catch(() => {});
                                     }}
                                     isClearable
                                     placeholder='Select or type to create...'
-                                    isLoading={createAccountForEntryMutation.isPending}
+                                    isLoading={
+                                      createAccountForEntryMutation.isPending
+                                    }
                                   />
                                 </div>
                                 <div className='w-40'>
@@ -909,16 +951,22 @@ export default function BankAssetsClient({ initialData }: Props) {
                                     type='button'
                                     variant='default'
                                     onClick={handleSaveAddEntry}
-                                    disabled={addEntryToSnapshotMutation.isPending}
+                                    disabled={
+                                      addEntryToSnapshotMutation.isPending
+                                    }
                                   >
                                     <Check className='w-4 h-4 mr-1' />
-                                    {addEntryToSnapshotMutation.isPending ? 'Adding...' : 'Add'}
+                                    {addEntryToSnapshotMutation.isPending
+                                      ? 'Adding...'
+                                      : 'Add'}
                                   </Button>
                                   <Button
                                     type='button'
                                     variant='secondary'
                                     onClick={handleCancelAddEntry}
-                                    disabled={addEntryToSnapshotMutation.isPending}
+                                    disabled={
+                                      addEntryToSnapshotMutation.isPending
+                                    }
                                   >
                                     <X className='w-4 h-4 mr-1' />
                                     Cancel
@@ -926,7 +974,9 @@ export default function BankAssetsClient({ initialData }: Props) {
                                 </div>
                               </div>
                               {newEntryError && (
-                                <p className='mt-2 text-xs text-red-600'>{newEntryError}</p>
+                                <p className='mt-2 text-xs text-red-600'>
+                                  {newEntryError}
+                                </p>
                               )}
                             </div>
                           ) : (
@@ -968,16 +1018,23 @@ export default function BankAssetsClient({ initialData }: Props) {
                                   setNewEntryError('');
                                 }}
                                 onCreateOption={(inputValue) => {
-                                  handleCreateAccountForEntry(bank.id, inputValue)
+                                  handleCreateAccountForEntry(
+                                    bank.id,
+                                    inputValue,
+                                  )
                                     .then((newAccountId) => {
                                       setNewEntryAccountId(newAccountId);
-                                      toast.success(`Account "${inputValue}" created!`);
+                                      toast.success(
+                                        `Account "${inputValue}" created!`,
+                                      );
                                     })
                                     .catch(() => {});
                                 }}
                                 isClearable
                                 placeholder='Select or type to create...'
-                                isLoading={createAccountForEntryMutation.isPending}
+                                isLoading={
+                                  createAccountForEntryMutation.isPending
+                                }
                               />
                             </div>
                             <div className='w-40'>
@@ -1004,7 +1061,9 @@ export default function BankAssetsClient({ initialData }: Props) {
                                 disabled={addEntryToSnapshotMutation.isPending}
                               >
                                 <Check className='w-4 h-4 mr-1' />
-                                {addEntryToSnapshotMutation.isPending ? 'Adding...' : 'Add'}
+                                {addEntryToSnapshotMutation.isPending
+                                  ? 'Adding...'
+                                  : 'Add'}
                               </Button>
                               <Button
                                 type='button'
@@ -1018,7 +1077,9 @@ export default function BankAssetsClient({ initialData }: Props) {
                             </div>
                           </div>
                           {newEntryError && (
-                            <p className='mt-2 text-xs text-red-600'>{newEntryError}</p>
+                            <p className='mt-2 text-xs text-red-600'>
+                              {newEntryError}
+                            </p>
                           )}
                         </div>
                       ) : (

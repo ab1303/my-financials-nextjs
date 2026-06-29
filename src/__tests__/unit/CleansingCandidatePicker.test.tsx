@@ -1,5 +1,5 @@
-import { fireEvent,render, screen } from '@testing-library/react';
-import { afterEach,beforeEach, describe, expect, test, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CleansingCandidatePicker } from '@/app/(authorized)/cashflow/bank-interest/_components/CleansingCandidatePicker';
 // We'll need to mock trpc
@@ -35,7 +35,12 @@ describe('CleansingCandidatePicker', () => {
       reasonShort: 'Perfect match',
       reasonLong: 'Detailed reason 1',
       scoreBreakdown: {
-        rawNormalized: { amountScore: 1, dateScore: 1, descScore: 1, accountScore: 1 },
+        rawNormalized: {
+          amountScore: 1,
+          dateScore: 1,
+          descScore: 1,
+          accountScore: 1,
+        },
         contributionsPercent: { amount: 40, date: 20, desc: 30, account: 10 },
       },
     },
@@ -52,7 +57,12 @@ describe('CleansingCandidatePicker', () => {
       reasonShort: 'Partial match',
       reasonLong: 'Detailed reason 2',
       scoreBreakdown: {
-        rawNormalized: { amountScore: 0.5, dateScore: 0.2, descScore: 0.3, accountScore: 0 },
+        rawNormalized: {
+          amountScore: 0.5,
+          dateScore: 0.2,
+          descScore: 0.3,
+          accountScore: 0,
+        },
         contributionsPercent: { amount: 20, date: 10, desc: 15, account: 0 },
       },
     },
@@ -64,7 +74,9 @@ describe('CleansingCandidatePicker', () => {
   ];
 
   beforeEach(() => {
-    (trpc.bankInterest.getCleansingDebitCandidates.useQuery as any).mockReturnValue({
+    (
+      trpc.bankInterest.getCleansingDebitCandidates.useQuery as any
+    ).mockReturnValue({
       data: mockCandidates,
       isLoading: false,
     });
@@ -75,8 +87,8 @@ describe('CleansingCandidatePicker', () => {
   });
 
   test('renders candidate rows with match badges', () => {
-    render(<CleansingCandidatePicker creditId="credit1" onSelect={() => {}} />);
-    
+    render(<CleansingCandidatePicker creditId='credit1' onSelect={() => {}} />);
+
     expect(screen.getByText('95% Match')).toBeDefined();
     expect(screen.getByText('45% Match')).toBeDefined();
     expect(screen.getByText('Main Account')).toBeDefined();
@@ -85,23 +97,23 @@ describe('CleansingCandidatePicker', () => {
 
   test('selection enables Confirm button', () => {
     const onSelect = vi.fn();
-    render(<CleansingCandidatePicker creditId="credit1" onSelect={onSelect} />);
-    
+    render(<CleansingCandidatePicker creditId='credit1' onSelect={onSelect} />);
+
     const confirmButton = screen.getByRole('button', { name: /confirm/i });
     expect(confirmButton).toBeDisabled();
-    
+
     const row = screen.getByText('Test Debit 1').closest('li');
     fireEvent.click(row!);
-    
+
     expect(confirmButton).not.toBeDisabled();
-    
+
     fireEvent.click(confirmButton);
     expect(onSelect).toHaveBeenCalledWith(mockCandidates[0]);
   });
 
   test('keyboard navigation selects candidates', () => {
-    render(<CleansingCandidatePicker creditId="credit1" onSelect={() => {}} />);
-    
+    render(<CleansingCandidatePicker creditId='credit1' onSelect={() => {}} />);
+
     const rows = screen.getAllByRole('option');
     fireEvent.keyDown(window, { key: 'ArrowDown' });
     // First row should be highlighted (visual check might be hard here, but we can check implementation details if needed)

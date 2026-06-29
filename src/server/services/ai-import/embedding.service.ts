@@ -13,11 +13,15 @@ import type { AITokenUsage } from './_types';
 // --- 1. Pure Functions ---
 
 export function cosineSimilarity(a: number[], b: number[]): number {
-  if (!Array.isArray(a) || !Array.isArray(b)) throw new Error('Inputs must be arrays');
-  if (a.length !== b.length) throw new Error(`Vector dimension mismatch: ${a.length} vs ${b.length}`);
+  if (!Array.isArray(a) || !Array.isArray(b))
+    throw new Error('Inputs must be arrays');
+  if (a.length !== b.length)
+    throw new Error(`Vector dimension mismatch: ${a.length} vs ${b.length}`);
   if (a.length === 0) return 0;
 
-  let dot = 0, normA = 0, normB = 0;
+  let dot = 0,
+    normA = 0,
+    normB = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i]! * b[i]!;
     normA += a[i]! * a[i]!;
@@ -48,7 +52,9 @@ export function getEmbeddingProvider() {
     apiKey,
     ...(baseURL
       ? { baseURL }
-      : provider === 'github' && { baseURL: 'https://models.inference.ai.azure.com' }),
+      : provider === 'github' && {
+          baseURL: 'https://models.inference.ai.azure.com',
+        }),
   });
 
   return openai.embedding(model);
@@ -69,7 +75,7 @@ let initializationPromise: Promise<AITokenUsage> | null = null;
 type CategoryLike = { name: string };
 
 export async function ensureCategoryEmbeddings(
-  categories: CategoryLike[]
+  categories: CategoryLike[],
 ): Promise<AITokenUsage> {
   const fingerprint = getCategoryFingerprint(categories as ExpenseCategory[]);
 
@@ -108,7 +114,9 @@ export async function ensureCategoryEmbeddings(
 
       const promptTokens = usage?.tokens ?? 0;
       const totalTokens = usage?.tokens ?? 0;
-      const estimatedCostUSD = Number(((totalTokens / 1_000_000) * 0.02).toFixed(6));
+      const estimatedCostUSD = Number(
+        ((totalTokens / 1_000_000) * 0.02).toFixed(6),
+      );
 
       return {
         promptTokens,
@@ -133,7 +141,7 @@ function getSimilarityThreshold(): number {
   const parsed = parseFloat(envThreshold);
   if (isNaN(parsed) || parsed < 0 || parsed > 1) {
     console.warn(
-      `Invalid AI_EMBEDDING_SIMILARITY_THRESHOLD: "${envThreshold}". Using default ${DEFAULT_SIMILARITY_THRESHOLD}.`
+      `Invalid AI_EMBEDDING_SIMILARITY_THRESHOLD: "${envThreshold}". Using default ${DEFAULT_SIMILARITY_THRESHOLD}.`,
     );
     return DEFAULT_SIMILARITY_THRESHOLD;
   }
@@ -144,7 +152,7 @@ function getSimilarityThreshold(): number {
 
 export async function findBestCategoryMatch<T extends { name: string }>(
   text: string,
-  categories: T[]
+  categories: T[],
 ): Promise<{ category: T; similarity: number } | null> {
   if (!categories || categories.length === 0) return null;
 
@@ -186,10 +194,12 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function findBestCategoryMatchWithRetry<T extends { name: string }>(
+export async function findBestCategoryMatchWithRetry<
+  T extends { name: string },
+>(
   text: string,
   categories: T[],
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<{ category: T; similarity: number } | null> {
   const backoffs = [1000, 2000, 4000];
   for (let attempt = 0; attempt <= maxRetries; attempt++) {

@@ -81,7 +81,7 @@ describe('Brokerage Service', () => {
 
       // Act
       const results = await Promise.all(
-        inputs.map((input) => addBrokerageDetails(input))
+        inputs.map((input) => addBrokerageDetails(input)),
       );
 
       // Assert
@@ -250,7 +250,7 @@ describe('Brokerage Service', () => {
 
       // Act & Assert
       await expect(deleteBrokerageDetails(brokerageId)).rejects.toThrow(
-        'Cannot delete brokerage: 1 account(s) depend on this institution'
+        'Cannot delete brokerage: 1 account(s) depend on this institution',
       );
       expect(prismaMock.business.delete).not.toHaveBeenCalled();
     });
@@ -262,7 +262,7 @@ describe('Brokerage Service', () => {
 
       // Act & Assert
       await expect(deleteBrokerageDetails(brokerageId)).rejects.toThrow(
-        'Cannot delete brokerage: 5 account(s) depend on this institution'
+        'Cannot delete brokerage: 5 account(s) depend on this institution',
       );
       expect(prismaMock.business.delete).not.toHaveBeenCalled();
     });
@@ -275,7 +275,7 @@ describe('Brokerage Service', () => {
 
       // Act & Assert
       await expect(deleteBrokerageDetails(brokerageId)).rejects.toThrow(
-        `Cannot delete brokerage: ${accountCount} account(s) depend on this institution`
+        `Cannot delete brokerage: ${accountCount} account(s) depend on this institution`,
       );
       expect(prismaMock.financialAccount.count).toHaveBeenCalledWith({
         where: { institutionId: brokerageId },
@@ -288,9 +288,7 @@ describe('Brokerage Service', () => {
       prismaMock.financialAccount.count.mockResolvedValue(3);
 
       // Act & Assert
-      await expect(
-        deleteBrokerageDetails(brokerageId)
-      ).rejects.toThrow();
+      await expect(deleteBrokerageDetails(brokerageId)).rejects.toThrow();
 
       // Verify count was called and delete was NOT called (rejection prevents deletion)
       expect(prismaMock.financialAccount.count).toHaveBeenCalled();

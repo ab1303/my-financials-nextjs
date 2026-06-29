@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft,X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,29 +38,43 @@ export function FullPageCleansingPanel({
             aria-label='Back'
           >
             <ArrowLeft className='h-5 w-5 text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors' />
-            <span className='text-sm font-bold text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'>Back to Ledger</span>
+            <span className='text-sm font-bold text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100'>
+              Back to Ledger
+            </span>
           </button>
-          
+
           <div className='h-8 w-px bg-gray-200 dark:bg-gray-800' />
-          
+
           <div>
             <h2 className='text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight'>
               Evidence Retrieval
             </h2>
             <div className='flex items-center gap-2.5 mt-1'>
-              <Badge variant='outline' className='bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800 font-bold'>
+              <Badge
+                variant='outline'
+                className='bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800 font-bold'
+              >
                 Interest ${creditAmount.toFixed(2)}
               </Badge>
-              <span className='text-gray-300 dark:text-gray-700 font-light'>|</span>
-              <span className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>{creditDate}</span>
-              <span className='text-gray-300 dark:text-gray-700 font-light'>|</span>
-              <span className='text-xs font-medium text-gray-400 truncate max-w-[400px] italic' title={creditDescription}>
+              <span className='text-gray-300 dark:text-gray-700 font-light'>
+                |
+              </span>
+              <span className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>
+                {creditDate}
+              </span>
+              <span className='text-gray-300 dark:text-gray-700 font-light'>
+                |
+              </span>
+              <span
+                className='text-xs font-medium text-gray-400 truncate max-w-[400px] italic'
+                title={creditDescription}
+              >
                 &quot;{creditDescription}&quot;
               </span>
             </div>
           </div>
         </div>
-        
+
         <button
           onClick={onClose}
           className='rounded-xl p-2.5 text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-gray-100 transition-all'
@@ -76,10 +90,13 @@ export function FullPageCleansingPanel({
             <div className='px-8 py-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-950/30'>
               <h3 className='text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2'>
                 Select Candidate DEBITs
-                <Badge className='ml-2 bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300 border-none text-[10px] font-black'>FUZZY MATCHING ACTIVE</Badge>
+                <Badge className='ml-2 bg-blue-100 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/40 dark:text-blue-300 border-none text-[10px] font-black'>
+                  FUZZY MATCHING ACTIVE
+                </Badge>
               </h3>
               <p className='text-sm text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed'>
-                Ranked candidates based on amount proximity, date variance, and tokenized description analysis.
+                Ranked candidates based on amount proximity, date variance, and
+                tokenized description analysis.
               </p>
             </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import Image from "next/image";
+import Image from 'next/image';
 import Link from 'next/link';
 import React, { useRef, useState } from 'react';
 
@@ -69,29 +69,29 @@ const Navbar = ({ logo }: NavbarProps) => {
             />
           </div>
           <div className='flex h-full flex-col items-center justify-around pt-5'>
-            <Link 
-              href='/' 
+            <Link
+              href='/'
               className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
               onClick={() => setOpenNav(false)}
             >
               Home
             </Link>
-            <Link 
-              href='#product' 
+            <Link
+              href='#product'
               className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
               onClick={() => setOpenNav(false)}
             >
               Product
             </Link>
-            <Link 
-              href='#faq' 
+            <Link
+              href='#faq'
               className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
               onClick={() => setOpenNav(false)}
             >
               Faq
             </Link>
-            <Link 
-              href='#contact' 
+            <Link
+              href='#contact'
               className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
               onClick={() => setOpenNav(false)}
             >
@@ -104,16 +104,28 @@ const Navbar = ({ logo }: NavbarProps) => {
       {/* Desktop Nav */}
 
       <div className='mr-12 flex w-2/5 justify-around sm:invisible lg:visible'>
-        <Link href='#home' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+        <Link
+          href='#home'
+          className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+        >
           Home
         </Link>
-        <Link href='#product' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+        <Link
+          href='#product'
+          className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+        >
           Product
         </Link>
-        <Link href='#faq' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+        <Link
+          href='#faq'
+          className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+        >
           Faq
         </Link>
-        <Link href='#contact' className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'>
+        <Link
+          href='#contact'
+          className='text-lg font-semibold text-blue-800 transition-all hover:text-cyan-500'
+        >
           Contact
         </Link>
       </div>

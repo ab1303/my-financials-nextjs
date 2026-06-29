@@ -9,7 +9,8 @@ vi.mock('next/navigation', () => ({
     replace: replaceMock,
     push: pushMock,
   }),
-  useSearchParams: () => new URLSearchParams('category=groceries&month=2&year=2025'),
+  useSearchParams: () =>
+    new URLSearchParams('category=groceries&month=2&year=2025'),
 }));
 
 import { CategoryTransactionFilters } from '@/app/(authorized)/cashflow/transactions/_components/CategoryTransactionFilters';

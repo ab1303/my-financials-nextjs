@@ -7,7 +7,9 @@ function makeEntry(
   overrides: Partial<IncomeEntryType> & { dateEarned: Date; amount: number },
 ): IncomeEntryType {
   return {
-    id: overrides.id ?? `entry-${overrides.amount}-${overrides.dateEarned.getTime()}`,
+    id:
+      overrides.id ??
+      `entry-${overrides.amount}-${overrides.dateEarned.getTime()}`,
     dateEarned: overrides.dateEarned,
     amount: overrides.amount,
     incomeSourceId: overrides.incomeSourceId ?? 'source-1',
@@ -47,7 +49,9 @@ describe('groupByMonth', () => {
     const groups = groupByMonth(entries);
 
     expect(groups).toHaveLength(1);
-    expect(groups[0]?.entries.map((item) => item.originalIndex)).toEqual([0, 1, 2]);
+    expect(groups[0]?.entries.map((item) => item.originalIndex)).toEqual([
+      0, 1, 2,
+    ]);
   });
 
   it('returns empty array for empty input', () => {

@@ -41,9 +41,15 @@ describe('Income Server Actions', () => {
         toYear: 2024,
         toMonth: 12,
       } as any);
-      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() } as any);
+      prismaMock.incomeSource.findUnique.mockResolvedValue({
+        id: 'src-1',
+        name: 'Employment',
+        description: null,
+        isActive: true,
+        createdAt: new Date(),
+      } as any);
       prismaMock.transaction.create.mockResolvedValue(
-        createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' })
+        createMockIncomeTransaction({ id: 'txn-1', category: 'Employment' }),
       );
 
       const input = {
@@ -98,7 +104,13 @@ describe('Income Server Actions', () => {
         source: 'USER_MANUAL',
         userId,
       } as any);
-      prismaMock.incomeSource.findUnique.mockResolvedValue({ id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() } as any);
+      prismaMock.incomeSource.findUnique.mockResolvedValue({
+        id: 'src-1',
+        name: 'Employment',
+        description: null,
+        isActive: true,
+        createdAt: new Date(),
+      } as any);
       prismaMock.transaction.update.mockResolvedValue({} as any);
 
       const input = {
@@ -179,7 +191,9 @@ describe('Income Server Actions', () => {
       const result = await deleteRow(input);
 
       expect(result.success).toBe(true);
-      expect(prismaMock.transaction.delete).toHaveBeenCalledWith({ where: { id: 'txn-1' } });
+      expect(prismaMock.transaction.delete).toHaveBeenCalledWith({
+        where: { id: 'txn-1' },
+      });
       expect(revalidatePath).toHaveBeenCalledWith('/cashflow/income');
     });
 

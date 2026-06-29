@@ -1,3 +1,4 @@
+import { handleCaughtError } from '@/server/db/client';
 import type {
   CreateBusinessInput,
   ParamsInput,
@@ -11,7 +12,6 @@ import {
   updateBusinessDetails,
   validateBusinessNameUniqueness,
 } from '@/server/services/business.service';
-import { handleCaughtError } from '@/server/db/client';
 import type { BusinessEnumType } from '@/types/enum';
 
 export const addBusinessDetailsHandler = async ({
@@ -42,9 +42,7 @@ export const addBusinessDetailsHandler = async ({
         type: input.type as BusinessEnumType,
       });
       if (existing && existing.length > 0) {
-        throw new Error(
-          'An institution with this name already exists.',
-        );
+        throw new Error('An institution with this name already exists.');
       }
     }
     const businessResult = await addBusinessDetails({

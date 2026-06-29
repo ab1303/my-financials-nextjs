@@ -41,7 +41,10 @@ export default function CategoriesClient() {
       </div>
 
       {/* Special Categories - Full Width Below */}
-      <section aria-labelledby='special-categories-heading' className='border-t border-border pt-8'>
+      <section
+        aria-labelledby='special-categories-heading'
+        className='border-t border-border pt-8'
+      >
         <div className='mb-4'>
           <h2
             id='special-categories-heading'
@@ -50,7 +53,8 @@ export default function CategoriesClient() {
             Special Categories
           </h2>
           <p className='mt-0.5 text-xs text-muted-foreground'>
-            System-managed categories used for transfers, exclusions, and special transaction handling
+            System-managed categories used for transfers, exclusions, and
+            special transaction handling
           </p>
         </div>
         <SpecialCategories />

@@ -1,4 +1,4 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
 
 import { createBankSchema, params } from '@/server/schema/bank.schema';

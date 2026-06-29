@@ -1,7 +1,11 @@
 'use client';
 
-import { flexRender,getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { ChevronDown, ChevronRight, ExternalLink,Plus } from 'lucide-react';
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { ChevronDown, ChevronRight, ExternalLink, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React from 'react';
@@ -18,7 +22,7 @@ import type {
   UpdateIncomeEntryInput,
 } from '../_schema';
 import { getTableColumns } from '../_table/columns';
-import type { IncomeEntryType,ServerActionType } from '../_types';
+import type { IncomeEntryType, ServerActionType } from '../_types';
 import { useIncomeEntryState } from '../StateProvider';
 
 type MonthAccordionPanelProps = {
@@ -49,9 +53,9 @@ export default function MonthAccordionPanel({
   defaultOpen = false,
 }: MonthAccordionPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const [editedRows, setEditedRows] = useState<Map<string | number, IncomeEntryType>>(
-    new Map(),
-  );
+  const [editedRows, setEditedRows] = useState<
+    Map<string | number, IncomeEntryType>
+  >(new Map());
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const validRows = {};
@@ -76,9 +80,14 @@ export default function MonthAccordionPanel({
       incomeLedgerId: '',
       source: 'USER_MANUAL',
     };
-    dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: tempId, entry: newRow } });
+    dispatch({
+      type: 'INCOME/Entries/ADD_ENTRY',
+      payload: { incomeEntryId: tempId, entry: newRow },
+    });
     setEditedRows(new Map([[entries.length, newRow]]));
-    toast.info(`New income row added to ${label}. Fill in the details and save.`);
+    toast.info(
+      `New income row added to ${label}. Fill in the details and save.`,
+    );
   };
 
   const columns = useMemo(() => getTableColumns(), []);
@@ -94,7 +103,10 @@ export default function MonthAccordionPanel({
       revertData: (rowIndex: number) => {
         const row = entries[rowIndex];
         if (row && row.id.startsWith('temp-')) {
-          dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
+          dispatch({
+            type: 'INCOME/Entries/REMOVE_ENTRY',
+            payload: { incomeEntryId: row.id },
+          });
           toast.info('New income entry cancelled');
         }
       },
@@ -120,8 +132,17 @@ export default function MonthAccordionPanel({
               calendarYearId: calendarYearId,
             });
             if (createResult.success && createResult.data) {
-              dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: updatedRecord.id } });
-              dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: createResult.data.id, entry: createResult.data as IncomeEntryType } });
+              dispatch({
+                type: 'INCOME/Entries/REMOVE_ENTRY',
+                payload: { incomeEntryId: updatedRecord.id },
+              });
+              dispatch({
+                type: 'INCOME/Entries/ADD_ENTRY',
+                payload: {
+                  incomeEntryId: createResult.data.id,
+                  entry: createResult.data as IncomeEntryType,
+                },
+              });
               setEditedRows((prev) => {
                 const m = new Map(prev);
                 m.delete(rowIndex);
@@ -148,7 +169,10 @@ export default function MonthAccordionPanel({
             if (updateResult.success) {
               dispatch({
                 type: 'INCOME/Entries/EDIT_ENTRY',
-                payload: { incomeEntryId: updatedRecord.id, entry: updatedRecord },
+                payload: {
+                  incomeEntryId: updatedRecord.id,
+                  entry: updatedRecord,
+                },
               });
               setEditedRows((prev) => {
                 const m = new Map(prev);
@@ -171,16 +195,24 @@ export default function MonthAccordionPanel({
         const row = entries[rowIndex];
         if (!row) return;
         if (row.id.startsWith('temp-')) {
-          dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
+          dispatch({
+            type: 'INCOME/Entries/REMOVE_ENTRY',
+            payload: { incomeEntryId: row.id },
+          });
           toast.info('Temporary entry removed');
           return;
         }
-        const confirmed = confirm('Are you sure you want to delete this income entry?');
+        const confirmed = confirm(
+          'Are you sure you want to delete this income entry?',
+        );
         if (!confirmed) return;
         startTransition(async () => {
           const deleteResult = await deleteRow({ id: row.id });
           if (deleteResult.success) {
-            dispatch({ type: 'INCOME/Entries/REMOVE_ENTRY', payload: { incomeEntryId: row.id } });
+            dispatch({
+              type: 'INCOME/Entries/REMOVE_ENTRY',
+              payload: { incomeEntryId: row.id },
+            });
             toast.success('Income entry deleted successfully');
             router.refresh();
           } else {
@@ -253,7 +285,10 @@ export default function MonthAccordionPanel({
 
       {/* Expanded Content */}
       {isOpen && (
-        <div id={panelId} className='px-4 pb-4 pt-2 bg-card/50 dark:bg-card/50 border-t border-border'>
+        <div
+          id={panelId}
+          className='px-4 pb-4 pt-2 bg-card/50 dark:bg-card/50 border-t border-border'
+        >
           <Table>
             <Table.THead>
               {table.getHeaderGroups().map((headerGroup) => (

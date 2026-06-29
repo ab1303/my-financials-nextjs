@@ -47,9 +47,9 @@ export default function ZakatTableClient({
   deleteRow,
   calendarYearId,
 }: ZakatTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<string | number, ZakatPaymentType>>(
-    new Map(),
-  );
+  const [editedRows, setEditedRows] = useState<
+    Map<string | number, ZakatPaymentType>
+  >(new Map());
   const [validRows, setValidRows] = useState({});
   const router = useRouter();
 

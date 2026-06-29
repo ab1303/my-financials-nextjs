@@ -1,6 +1,8 @@
 import type { CellContext } from '@tanstack/react-table';
-import type { ZakatPaymentType } from '../../_types';
+
 import { AmountCell } from '@/components/table/cells/AmountCell';
+
+import type { ZakatPaymentType } from '../../_types';
 
 type ZakatAmountCellProps = {
   row: CellContext<ZakatPaymentType, unknown>['row'];

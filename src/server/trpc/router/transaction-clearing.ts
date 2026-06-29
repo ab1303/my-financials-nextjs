@@ -7,7 +7,7 @@ import {
   undoImportSession,
   voidSingleTransaction,
 } from '@/server/services/transactions/void.service';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 async function deriveYearFlags(
   prisma: PrismaClient,
@@ -19,7 +19,10 @@ async function deriveYearFlags(
     where: {
       type: 'FISCAL',
       OR: [
-        { fromYear: sessionCreatedAt.getFullYear(), fromMonth: { lte: monthNum } },
+        {
+          fromYear: sessionCreatedAt.getFullYear(),
+          fromMonth: { lte: monthNum },
+        },
         { toYear: sessionCreatedAt.getFullYear(), toMonth: { gte: monthNum } },
       ],
     },
@@ -30,7 +33,8 @@ async function deriveYearFlags(
   const now = new Date();
   const yearEnded =
     fiscal.toYear < now.getFullYear() ||
-    (fiscal.toYear === now.getFullYear() && fiscal.toMonth < now.getMonth() + 1);
+    (fiscal.toYear === now.getFullYear() &&
+      fiscal.toMonth < now.getMonth() + 1);
 
   const isLocked = fiscal.lockedAt != null;
   void userId;
@@ -54,7 +58,10 @@ export const transactionClearingRouter = router({
           select: { id: true, userId: true, createdAt: true },
         });
         if (!session || session.userId !== userId) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Import session not found' });
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Import session not found',
+          });
         }
 
         const yearFlags = await deriveYearFlags(
@@ -133,12 +140,16 @@ export const transactionClearingRouter = router({
         include: { _count: { select: { transactions: true } } },
       });
       if (!session || session.userId !== ctx.session.user.id) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Session not found',
+        });
       }
       if (session.status !== 'PENDING') {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Only PENDING sessions can be deleted. Use Undo for completed imports.',
+          message:
+            'Only PENDING sessions can be deleted. Use Undo for completed imports.',
         });
       }
       if (session._count.transactions > 0) {
@@ -147,7 +158,9 @@ export const transactionClearingRouter = router({
           message: 'This session has transactions — use Undo instead.',
         });
       }
-      await ctx.prisma.importSession.delete({ where: { id: input.importSessionId } });
+      await ctx.prisma.importSession.delete({
+        where: { id: input.importSessionId },
+      });
       return { success: true };
     }),
 
@@ -178,7 +191,7 @@ export const transactionClearingRouter = router({
             transactionCount: s._count.transactions,
             createdAt: s.createdAt.toISOString(),
             startDate: s.startDate?.toISOString() ?? null,
-            endDate:   s.endDate?.toISOString()   ?? null,
+            endDate: s.endDate?.toISOString() ?? null,
             yearWarning: yearFlags.yearWarning,
             isLocked: yearFlags.isLocked,
           };
@@ -191,10 +204,15 @@ export const transactionClearingRouter = router({
     .query(async ({ ctx, input }) => {
       const { sessionId } = input;
       const userId = ctx.session.user.id;
-      const detail = await getImportSessionDetails(sessionId, userId, ctx.prisma);
+      const detail = await getImportSessionDetails(
+        sessionId,
+        userId,
+        ctx.prisma,
+      );
       // Validate response against Zod schema
       // Import Zod schema inline to avoid circular deps
-      const { ImportSessionDetailSchema } = await import('@/server/trpc/schemas/import-audit');
+      const { ImportSessionDetailSchema } =
+        await import('@/server/trpc/schemas/import-audit');
       return ImportSessionDetailSchema.parse(detail);
     }),
 });

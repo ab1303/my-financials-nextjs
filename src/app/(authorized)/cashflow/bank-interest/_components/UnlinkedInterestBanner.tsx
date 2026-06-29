@@ -1,6 +1,5 @@
 'use client';
 
-
 type UnlinkedInterestBannerProps = {
   unlinkedCount: number;
   onCleanse?: () => void;

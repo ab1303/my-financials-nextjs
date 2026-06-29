@@ -1,9 +1,6 @@
 // next.d.ts
 
-import type {
-  NextComponentType,
-  NextPageContext,
-} from 'next';
+import type { NextComponentType, NextPageContext } from 'next';
 import type { AppProps } from 'next/app';
 
 declare module 'next' {

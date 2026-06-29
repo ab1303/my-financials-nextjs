@@ -9,7 +9,9 @@ const mockSearchDebitTransactionsFetch = vi.fn();
 
 vi.mock('react-select/async', () => ({
   default: (props: Record<string, unknown>) => (
-    <div aria-label={(props['aria-label'] as string | undefined) ?? 'async-select'} />
+    <div
+      aria-label={(props['aria-label'] as string | undefined) ?? 'async-select'}
+    />
   ),
 }));
 
@@ -32,15 +34,18 @@ vi.mock('react-select', () => ({
   } & Record<string, unknown>) => (
     <select
       id={inputId}
-      aria-label={(props['aria-label'] as string | undefined) ?? placeholder ?? 'select'}
+      aria-label={
+        (props['aria-label'] as string | undefined) ?? placeholder ?? 'select'
+      }
       value={value?.value ?? ''}
       disabled={isDisabled}
       onChange={(event) => {
-        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        const selected =
+          options.find((option) => option.value === event.target.value) ?? null;
         onChange?.(selected);
       }}
     >
-      {placeholder ? <option value="">{placeholder}</option> : null}
+      {placeholder ? <option value=''>{placeholder}</option> : null}
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
@@ -55,7 +60,8 @@ vi.mock('@/server/trpc/client', () => ({
     useUtils: () => ({
       transactionLedger: {
         searchDebitTransactions: {
-          fetch: (...args: unknown[]) => mockSearchDebitTransactionsFetch(...args),
+          fetch: (...args: unknown[]) =>
+            mockSearchDebitTransactionsFetch(...args),
         },
       },
       categoryRule: {
@@ -93,7 +99,7 @@ vi.mock('@/server/trpc/client', () => ({
 
 vi.mock('@/components/transactions/UnlinkTransferButton', () => ({
   UnlinkTransferButton: ({ transactionId }: { transactionId: string }) => (
-    <button type="button" aria-label="Unlink transfer">
+    <button type='button' aria-label='Unlink transfer'>
       unlink-{transactionId}
     </button>
   ),
@@ -111,7 +117,7 @@ vi.mock('@/components/transactions/PreviewMatchesModal', () => ({
   }) =>
     open
       ? createPortal(
-          <div data-testid="preview-modal">
+          <div data-testid='preview-modal'>
             <button onClick={onCancel}>Cancel</button>
             <button onClick={() => onApply([])}>Apply</button>
           </div>,
@@ -209,7 +215,9 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByRole('combobox', { name: /category for supermarket/i })).toBeDefined();
+    expect(
+      screen.getByRole('combobox', { name: /category for supermarket/i }),
+    ).toBeDefined();
     expect(screen.getByText('Groceries')).toBeDefined();
   });
 
@@ -227,7 +235,9 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByRole('combobox', { name: /category for supermarket/i })).toBeDefined();
+    expect(
+      screen.getByRole('combobox', { name: /category for supermarket/i }),
+    ).toBeDefined();
     expect(screen.getByText('EMPLOYMENT')).toBeDefined();
     expect(screen.getByLabelText(/set by you/i)).toBeDefined();
     expect(screen.queryByText('USER_OVERRIDE')).toBeNull();
@@ -249,12 +259,21 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    fireEvent.change(screen.getByRole('combobox', { name: /category for supermarket/i }), {
-      target: { value: 'Transport' },
-    });
+    fireEvent.change(
+      screen.getByRole('combobox', { name: /category for supermarket/i }),
+      {
+        target: { value: 'Transport' },
+      },
+    );
 
     // The hook now calls with applyToMatching=false (no automatic bulk apply)
-    expect(onCategoryChange).toHaveBeenCalledWith('tx-1', 'Transport', undefined, undefined, false);
+    expect(onCategoryChange).toHaveBeenCalledWith(
+      'tx-1',
+      'Transport',
+      undefined,
+      undefined,
+      false,
+    );
   });
 
   it('lets the user exit the link picker with reset', () => {
@@ -271,14 +290,18 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /link to original expense/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /link to original expense/i }),
+    );
 
     expect(screen.getByRole('button', { name: /reset/i })).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: /reset/i }));
 
     expect(screen.queryByRole('button', { name: /reset/i })).toBeNull();
-    expect(screen.getByRole('button', { name: /link to original expense/i })).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: /link to original expense/i }),
+    ).toBeDefined();
   });
 
   it('shows the suggestion actions when the parent pins a match count', () => {
@@ -297,8 +320,12 @@ describe('TransactionRow', () => {
     );
 
     expect(screen.getByText(/similar transactions found \(3\)/i)).toBeDefined();
-    expect(screen.getByRole('button', { name: /preview matches/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /apply to these/i })).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: /preview matches/i }),
+    ).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: /apply to these/i }),
+    ).toBeDefined();
     expect(screen.getByRole('button', { name: /create rule/i })).toBeDefined();
   });
 
@@ -316,7 +343,9 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByText('$123.45').closest('td')).toHaveClass('text-red-600');
+    expect(screen.getByText('$123.45').closest('td')).toHaveClass(
+      'text-red-600',
+    );
 
     rerender(
       <table>
@@ -331,7 +360,9 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByText('$5,000.00').closest('td')).toHaveClass('text-green-600');
+    expect(screen.getByText('$5,000.00').closest('td')).toHaveClass(
+      'text-green-600',
+    );
   });
 
   it('renders CONFIRMED badge in green', () => {
@@ -356,7 +387,10 @@ describe('TransactionRow', () => {
       <table>
         <tbody>
           <TransactionRow
-            transaction={{ ...debitTransaction, transferLinkedTransactionId: 'tx-linked' }}
+            transaction={{
+              ...debitTransaction,
+              transferLinkedTransactionId: 'tx-linked',
+            }}
             expenseCategories={expenseCategories}
             incomeSourceLabels={incomeSourceLabels}
             onCategoryChange={vi.fn()}
@@ -365,7 +399,9 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.getByRole('button', { name: /unlink transfer/i })).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: /unlink transfer/i }),
+    ).toBeDefined();
   });
 
   it('does not render unlink button when transferLinkedTransactionId is null', () => {
@@ -382,7 +418,9 @@ describe('TransactionRow', () => {
       </table>,
     );
 
-    expect(screen.queryByRole('button', { name: /unlink transfer/i })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /unlink transfer/i }),
+    ).toBeNull();
   });
 
   it('does not render Link button when transaction is already linked', () => {
@@ -390,7 +428,10 @@ describe('TransactionRow', () => {
       <table>
         <tbody>
           <TransactionRow
-            transaction={{ ...debitTransaction, transferCounterpartId: 'tx-counterpart' }}
+            transaction={{
+              ...debitTransaction,
+              transferCounterpartId: 'tx-counterpart',
+            }}
             expenseCategories={expenseCategories}
             incomeSourceLabels={incomeSourceLabels}
             onCategoryChange={vi.fn()}
@@ -470,11 +511,20 @@ describe('TransactionRow', () => {
       );
 
       // When the category changes, applyToMatching should NOT be true automatically
-      fireEvent.change(screen.getByRole('combobox', { name: /category for supermarket/i }), {
-        target: { value: 'Transport' },
-      });
+      fireEvent.change(
+        screen.getByRole('combobox', { name: /category for supermarket/i }),
+        {
+          target: { value: 'Transport' },
+        },
+      );
 
-      expect(onCategoryChange).toHaveBeenCalledWith('tx-1', 'Transport', undefined, undefined, false);
+      expect(onCategoryChange).toHaveBeenCalledWith(
+        'tx-1',
+        'Transport',
+        undefined,
+        undefined,
+        false,
+      );
     });
 
     it('renders "Create rule" button that opens rule drawer', () => {
@@ -575,8 +625,9 @@ describe('TransactionRow', () => {
       expect(onCategoryChange).toHaveBeenCalled();
       const calls = onCategoryChange.mock.calls;
       expect(calls).toHaveLength(1);
-      
-      const [id, newCategory, , , applyToMatching, selectedTransactionIds] = calls[0]!;
+
+      const [id, newCategory, , , applyToMatching, selectedTransactionIds] =
+        calls[0]!;
       expect(id).toBe('tx-1');
       expect(newCategory).toBe('Groceries');
       expect(applyToMatching).toBe(true);

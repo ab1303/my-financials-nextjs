@@ -7,12 +7,8 @@ import { BeneficiaryFormFields } from './BeneficiaryFormFields';
 import { useCleanseDonation } from './CleanseDonationContext';
 
 export function ManualModeBody() {
-  const {
-    manualForm,
-    isSaving,
-    handleManualSave,
-    handleClose,
-  } = useCleanseDonation();
+  const { manualForm, isSaving, handleManualSave, handleClose } =
+    useCleanseDonation();
 
   const {
     control,

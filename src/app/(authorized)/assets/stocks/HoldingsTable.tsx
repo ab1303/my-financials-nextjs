@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { Pencil, Plus,Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { Button } from '@/components';
@@ -24,7 +24,11 @@ interface HoldingsTableProps {
   snapshotId: string;
   accountId: string;
   onEdit: (holding: StockHoldingWithAccount) => void;
-  onDeleteConfirm: (holdingId: string, ticker: string, snapshotId: string) => void;
+  onDeleteConfirm: (
+    holdingId: string,
+    ticker: string,
+    snapshotId: string,
+  ) => void;
   onAddHolding: (accountId: string) => void;
 }
 
@@ -109,7 +113,10 @@ export default function HoldingsTable({
             {holdingRows.map(({ holding, metrics }) => (
               <tr
                 key={holding.id}
-                className={clsx('hover:bg-muted/50', metrics.isSold && 'opacity-75')}
+                className={clsx(
+                  'hover:bg-muted/50',
+                  metrics.isSold && 'opacity-75',
+                )}
               >
                 {/* Stock: ticker + company */}
                 <td className='px-6 py-4 text-sm'>
@@ -121,7 +128,9 @@ export default function HoldingsTable({
                       </span>
                     )}
                   </div>
-                  <div className='text-xs text-muted-foreground'>{holding.companyName}</div>
+                  <div className='text-xs text-muted-foreground'>
+                    {holding.companyName}
+                  </div>
                 </td>
 
                 {/* Quantity */}
@@ -215,7 +224,9 @@ export default function HoldingsTable({
                     <Pencil size={16} />
                   </button>
                   <button
-                    onClick={() => onDeleteConfirm(holding.id, holding.ticker, snapshotId)}
+                    onClick={() =>
+                      onDeleteConfirm(holding.id, holding.ticker, snapshotId)
+                    }
                     className='text-red-600 hover:text-red-700 inline-block'
                     title='Delete holding'
                     aria-label={`Delete ${holding.ticker}`}
@@ -257,8 +268,8 @@ export default function HoldingsTable({
 
       {/* Add Holding button */}
       <div className='mt-4 flex justify-end'>
-        <Button 
-          variant='secondary' 
+        <Button
+          variant='secondary'
           onClick={() => onAddHolding(accountId)}
           title='Quick-add one stock holding to this account (same snapshot date)'
           data-testid='add-holding-button'

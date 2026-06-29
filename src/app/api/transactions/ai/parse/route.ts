@@ -1,13 +1,10 @@
 import { ImportStatusEnum, ImportTypeEnum } from '@prisma/client';
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { after } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import {
-  AI_MODEL_NAME,
-  calculateEstimatedCost,
-} from '@/constants/ai-pricing';
+import { AI_MODEL_NAME, calculateEstimatedCost } from '@/constants/ai-pricing';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
 import { extractExpenseData } from '@/server/services/ai-import/ai-vision.service';
@@ -48,7 +45,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { imageIds, importType, context, bankAccountId } = validationResult.data;
+    const { imageIds, importType, context, bankAccountId } =
+      validationResult.data;
 
     if (importType !== 'EXPENSE') {
       return NextResponse.json(
@@ -147,8 +145,13 @@ export async function POST(request: NextRequest) {
                 continue;
               }
 
-              const imageBuffer = await storage.getImageBuffer(image.storageUrl);
-              const extractionResult = await extractExpenseData(imageBuffer, []);
+              const imageBuffer = await storage.getImageBuffer(
+                image.storageUrl,
+              );
+              const extractionResult = await extractExpenseData(
+                imageBuffer,
+                [],
+              );
 
               after(async () => {
                 try {
@@ -225,7 +228,11 @@ export async function POST(request: NextRequest) {
             where: { id: importSession.id },
             data: {
               status: ImportStatusEnum.PROCESSING,
-              metadata: { context, bankAccountId: bankAccountId ?? null, imageResults },
+              metadata: {
+                context,
+                bankAccountId: bankAccountId ?? null,
+                imageResults,
+              },
             },
           });
 

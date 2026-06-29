@@ -116,10 +116,26 @@ export async function deleteRule(params: {
   });
   if (!rule || rule.userId !== params.userId)
     throw new Error('Rule not found or not authorized');
-  await (params.prisma.transferMatchRule as any).delete({ where: { id: params.ruleId } });
+  await (params.prisma.transferMatchRule as any).delete({
+    where: { id: params.ruleId },
+  });
 }
 
-const STOP_WORDS = new Set(['to', 'from', 'the', 'a', 'an', 'and', 'or', 'of', 'in', 'at', 'on', 'for', 'by']);
+const STOP_WORDS = new Set([
+  'to',
+  'from',
+  'the',
+  'a',
+  'an',
+  'and',
+  'or',
+  'of',
+  'in',
+  'at',
+  'on',
+  'for',
+  'by',
+]);
 
 function extractKeywords(description: string): string[] {
   return description
@@ -142,15 +158,23 @@ export async function createRuleFromPair(params: {
   confidenceThreshold?: number;
 }): Promise<RuleListItem> {
   const [debit, credit] = await Promise.all([
-    params.prisma.transaction.findUnique({ where: { id: params.debitTransactionId } }),
-    params.prisma.transaction.findUnique({ where: { id: params.creditTransactionId } }),
+    params.prisma.transaction.findUnique({
+      where: { id: params.debitTransactionId },
+    }),
+    params.prisma.transaction.findUnique({
+      where: { id: params.creditTransactionId },
+    }),
   ]);
 
-  if (!debit || debit.userId !== params.userId) throw new Error('Debit transaction not found');
-  if (!credit || credit.userId !== params.userId) throw new Error('Credit transaction not found');
+  if (!debit || debit.userId !== params.userId)
+    throw new Error('Debit transaction not found');
+  if (!credit || credit.userId !== params.userId)
+    throw new Error('Credit transaction not found');
 
   const dayGap = Math.abs(
-    Math.round((debit.date.getTime() - credit.date.getTime()) / (1000 * 60 * 60 * 24)),
+    Math.round(
+      (debit.date.getTime() - credit.date.getTime()) / (1000 * 60 * 60 * 24),
+    ),
   );
 
   return createRule({
@@ -199,6 +223,8 @@ export async function updateRule(params: {
     maxDayGap: updated.maxDayGap,
     confidenceThreshold: updated.confidenceThreshold,
     matchCount: updated.matchCount,
-    lastMatchedAt: updated.lastMatchedAt ? updated.lastMatchedAt.toISOString() : null,
+    lastMatchedAt: updated.lastMatchedAt
+      ? updated.lastMatchedAt.toISOString()
+      : null,
   };
 }

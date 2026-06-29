@@ -42,12 +42,15 @@ describe('UnlinkedTransactionsBanner', () => {
     render(element);
 
     expect(
-      screen.getByText((_, node) =>
-        node?.textContent ===
-        '🔗 2 "Gifts & donations" transactions from your bank import need recipient details.',
+      screen.getByText(
+        (_, node) =>
+          node?.textContent ===
+          '🔗 2 "Gifts & donations" transactions from your bank import need recipient details.',
       ),
     ).toBeDefined();
-    expect(screen.getByRole('button', { name: /link transactions/i })).toBeDefined();
+    expect(
+      screen.getByRole('button', { name: /link transactions/i }),
+    ).toBeDefined();
   });
 
   it('returns null when count === 0', async () => {
@@ -78,9 +81,10 @@ describe('UnlinkedTransactionsBanner', () => {
     render(element);
 
     expect(
-      screen.getByText((_, node) =>
-        node?.textContent ===
-        '🔗 1 "Gifts & donations" transaction from your bank import need recipient details.',
+      screen.getByText(
+        (_, node) =>
+          node?.textContent ===
+          '🔗 1 "Gifts & donations" transaction from your bank import need recipient details.',
       ),
     ).toBeDefined();
   });

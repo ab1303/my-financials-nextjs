@@ -47,7 +47,6 @@ export default function NetWorthDashboardClient({
     }
 
     if (!selectedCalendarYearId && filteredCalendarYears[0]?.id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCalendarYearId(filteredCalendarYears[0].id);
       return;
     }
@@ -56,7 +55,6 @@ export default function NetWorthDashboardClient({
       selectedCalendarYearId &&
       !filteredCalendarYears.some((year) => year.id === selectedCalendarYearId)
     ) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCalendarYearId(filteredCalendarYears[0]?.id ?? null);
     }
   }, [filteredCalendarYears, selectedCalendarYearId, selectedType]);
@@ -65,7 +63,9 @@ export default function NetWorthDashboardClient({
     trpc.assetDashboard.getNetWorthTrend.useQuery(
       {
         calendarYearId:
-          selectedType === 'ALL' ? undefined : selectedCalendarYearId ?? undefined,
+          selectedType === 'ALL'
+            ? undefined
+            : (selectedCalendarYearId ?? undefined),
       },
       {
         enabled: selectedType === 'ALL' || Boolean(selectedCalendarYearId),
@@ -191,7 +191,10 @@ export default function NetWorthDashboardClient({
             {error.message || 'Failed to load net worth trend.'}
           </div>
         ) : (
-          <NetWorthChart data={data?.dataPoints ?? []} visibility={visibility} />
+          <NetWorthChart
+            data={data?.dataPoints ?? []}
+            visibility={visibility}
+          />
         )}
       </section>
 

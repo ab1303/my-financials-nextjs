@@ -42,7 +42,10 @@ describe('categoryTransactionsRouter.getByCategory', () => {
           userId: 'user-1',
           type: 'DEBIT',
           status: 'CONFIRMED',
-          category: expect.objectContaining({ equals: 'groceries', mode: 'insensitive' }),
+          category: expect.objectContaining({
+            equals: 'groceries',
+            mode: 'insensitive',
+          }),
         }),
         skip: 0,
         take: 50,
@@ -117,7 +120,9 @@ describe('categoryTransactionsRouter.getByCategory', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           AND: expect.objectContaining({
-            category: expect.objectContaining({ notIn: expect.arrayContaining(['Transfer']) }),
+            category: expect.objectContaining({
+              notIn: expect.arrayContaining(['Transfer']),
+            }),
           }),
         }),
       }),
@@ -136,8 +141,9 @@ describe('categoryTransactionsRouter.getByCategory', () => {
       offset: 0,
     });
 
-    const callArgs = prismaMock.transaction.findMany.mock.calls[0]![0] as { where: Record<string, unknown> };
+    const callArgs = prismaMock.transaction.findMany.mock.calls[0]![0] as {
+      where: Record<string, unknown>;
+    };
     expect(callArgs.where).not.toHaveProperty('AND');
   });
 });
-

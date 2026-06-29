@@ -30,9 +30,10 @@ export default async function UnlinkedZakatTransactionsBanner({
   if (count === 0) return null;
 
   return (
-    <div className="mb-4 flex items-center justify-between rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 dark:border-blue-700 dark:bg-blue-950">
-      <p className="text-sm text-blue-800 dark:text-blue-200">
-        🔗 <strong>{count}</strong> &quot;Gifts &amp; donations&quot; transaction
+    <div className='mb-4 flex items-center justify-between rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 dark:border-blue-700 dark:bg-blue-950'>
+      <p className='text-sm text-blue-800 dark:text-blue-200'>
+        🔗 <strong>{count}</strong> &quot;Gifts &amp; donations&quot;
+        transaction
         {count !== 1 ? 's' : ''} from your bank import could be Zakat payments.
       </p>
       <LinkZakatTransactionsDrawerTrigger

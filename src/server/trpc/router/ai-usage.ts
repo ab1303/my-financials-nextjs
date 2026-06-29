@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { prisma } from '@/server/db/client';
 import { getUSDtoAUDRate } from '@/server/services/exchange-rate.service';
-import { adminProcedure,protectedProcedure, router } from '@/server/trpc/trpc';
+import { adminProcedure, protectedProcedure, router } from '@/server/trpc/trpc';
 
 const dateRangeSchema = z.object({
   dateFrom: z.date(),

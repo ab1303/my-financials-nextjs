@@ -125,7 +125,9 @@ export default function ReviewStep({
           </div>
 
           {img.entries.length === 0 ? (
-            <p className='text-xs text-muted-foreground'>No entries extracted</p>
+            <p className='text-xs text-muted-foreground'>
+              No entries extracted
+            </p>
           ) : (
             <table className='w-full text-sm'>
               <thead>
@@ -210,7 +212,9 @@ export default function ReviewStep({
           disabled={isConfirming || totalConfirmed === 0}
           className='px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:opacity-50 text-sm font-medium'
         >
-          {isConfirming ? 'Saving…' : `Confirm & Save (${totalConfirmed} entries)`}
+          {isConfirming
+            ? 'Saving…'
+            : `Confirm & Save (${totalConfirmed} entries)`}
         </button>
       </div>
     </div>

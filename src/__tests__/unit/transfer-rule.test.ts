@@ -106,7 +106,10 @@ describe('transfer-rule service', () => {
   });
 
   it('deleteRule owned by different user throws error', async () => {
-    mockRuleFindUnique.mockResolvedValue({ id: 'rule-1', userId: 'other-user' });
+    mockRuleFindUnique.mockResolvedValue({
+      id: 'rule-1',
+      userId: 'other-user',
+    });
 
     await expect(
       deleteRule({ prisma: mockPrisma, userId: 'user-1', ruleId: 'rule-1' }),

@@ -27,11 +27,13 @@ vi.mock('react-select', () => ({
 }));
 
 vi.mock('react-select/async', () => ({
-  default: ({ 'aria-label': ariaLabel }: any) => <div aria-label={ariaLabel}>async-select</div>,
+  default: ({ 'aria-label': ariaLabel }: any) => (
+    <div aria-label={ariaLabel}>async-select</div>
+  ),
 }));
 
 vi.mock('@/components/transactions/TransactionSourceIndicator', () => ({
-  default: () => <span data-testid="transaction-source-indicator" />,
+  default: () => <span data-testid='transaction-source-indicator' />,
 }));
 
 vi.mock('@/components/transactions/ReimbursementSubRow', () => ({
@@ -59,7 +61,12 @@ function renderRow(transaction: Partial<LedgerTransactionRow>) {
     <table>
       <tbody>
         <TransactionRow
-          transaction={{ ...baseTransaction, ...transaction } as unknown as LedgerTransactionRow}
+          transaction={
+            {
+              ...baseTransaction,
+              ...transaction,
+            } as unknown as LedgerTransactionRow
+          }
           expenseCategories={[{ id: '1', name: 'Travel' }]}
           incomeSourceLabels={[{ id: '2', name: 'Salary' }]}
           onCategoryChange={vi.fn()}
@@ -71,19 +78,33 @@ function renderRow(transaction: Partial<LedgerTransactionRow>) {
 
 describe('TransactionRow donation badge', () => {
   it('renders the linked badge for linked donation debits', () => {
-    renderRow({ category: 'Gifts & donations', type: 'DEBIT', isDonationLinked: true });
+    renderRow({
+      category: 'Gifts & donations',
+      type: 'DEBIT',
+      isDonationLinked: true,
+    });
 
     expect(screen.getByText('🔗 Donation linked')).toBeInTheDocument();
   });
 
   it('renders the needs recipient badge for unlinked donation debits', () => {
-    renderRow({ category: 'Gifts & donations', type: 'DEBIT', isDonationLinked: false, isZakatLinked: false, isInterestLinked: false });
+    renderRow({
+      category: 'Gifts & donations',
+      type: 'DEBIT',
+      isDonationLinked: false,
+      isZakatLinked: false,
+      isInterestLinked: false,
+    });
 
     expect(screen.getByText('⚠️ Needs classification')).toBeInTheDocument();
   });
 
   it('renders the cleansed interest linked badge for linked interest debits', () => {
-    renderRow({ category: 'Gifts & donations', type: 'DEBIT', isInterestLinked: true });
+    renderRow({
+      category: 'Gifts & donations',
+      type: 'DEBIT',
+      isInterestLinked: true,
+    });
 
     expect(screen.getByText('🔗 Cleansed interest linked')).toBeInTheDocument();
   });
@@ -102,14 +123,22 @@ describe('TransactionRow donation badge', () => {
   });
 
   it('does not render a badge for a non-donation debit row', () => {
-    renderRow({ category: 'Office supplies', type: 'DEBIT', isDonationLinked: true });
+    renderRow({
+      category: 'Office supplies',
+      type: 'DEBIT',
+      isDonationLinked: true,
+    });
 
     expect(screen.queryByText('🔗 Linked')).not.toBeInTheDocument();
     expect(screen.queryByText('⚠️ Needs recipient')).not.toBeInTheDocument();
   });
 
   it('does not render a badge for a credit donation row', () => {
-    renderRow({ category: 'Gifts & donations', type: 'CREDIT', isDonationLinked: true });
+    renderRow({
+      category: 'Gifts & donations',
+      type: 'CREDIT',
+      isDonationLinked: true,
+    });
 
     expect(screen.queryByText('🔗 Linked')).not.toBeInTheDocument();
     expect(screen.queryByText('⚠️ Needs recipient')).not.toBeInTheDocument();

@@ -22,7 +22,7 @@ import {
   getSnapshotsSchema,
   updateBankAssetEntrySchema,
 } from '@/server/schema/bank-asset.schema';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const bankAssetRouter = router({
   // Bank Account routes

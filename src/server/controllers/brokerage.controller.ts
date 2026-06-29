@@ -1,3 +1,4 @@
+import { handleCaughtError } from '@/server/db/client';
 import type {
   CreateBrokerageInput,
   ParamsInput,
@@ -9,7 +10,6 @@ import {
   getBrokerageDetails,
   updateBrokerageDetails,
 } from '@/server/services/brokerage.service';
-import { handleCaughtError } from '@/server/db/client';
 
 export const addBrokerageDetailsHandler = async ({
   input,

@@ -78,7 +78,13 @@ export default function BankAccountsSection() {
               <table className='w-full text-left text-sm'>
                 <thead className='bg-muted'>
                   <tr>
-                    {['Bank', 'Account Name', 'Transactions', 'Tracked', ''].map((h) => (
+                    {[
+                      'Bank',
+                      'Account Name',
+                      'Transactions',
+                      'Tracked',
+                      '',
+                    ].map((h) => (
                       <th
                         key={h}
                         className='cursor-default select-none px-4 py-3 font-medium text-foreground'
@@ -121,7 +127,9 @@ export default function BankAccountsSection() {
                         >
                           <span
                             className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                              (acc as any).isTracked !== false ? 'translate-x-5' : 'translate-x-1'
+                              (acc as any).isTracked !== false
+                                ? 'translate-x-5'
+                                : 'translate-x-1'
                             }`}
                           />
                         </button>
@@ -148,7 +156,10 @@ export default function BankAccountsSection() {
               Add a bank institution above before creating a bank account.
             </p>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className='space-y-4 max-w-md'>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className='space-y-4 max-w-md'
+            >
               <div>
                 <Label htmlFor='institutionId'>Bank</Label>
                 <select

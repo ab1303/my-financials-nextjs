@@ -10,9 +10,13 @@ interface DuplicatesReviewTableProps {
   onToggleId: (id: string) => void;
 }
 
-export default function DuplicatesReviewTable({ candidates, selectedIds, onToggleId }: DuplicatesReviewTableProps) {
+export default function DuplicatesReviewTable({
+  candidates,
+  selectedIds,
+  onToggleId,
+}: DuplicatesReviewTableProps) {
   return (
-    <table className="w-full text-sm">
+    <table className='w-full text-sm'>
       <thead>
         <tr>
           <th>Select</th>
@@ -25,7 +29,7 @@ export default function DuplicatesReviewTable({ candidates, selectedIds, onToggl
           <tr key={c.csvId}>
             <td>
               <input
-                type="checkbox"
+                type='checkbox'
                 checked={selectedIds.includes(c.csvId)}
                 onChange={() => onToggleId(c.csvId)}
               />

@@ -28,7 +28,9 @@ export default function PastCalendarYears({
 
   return (
     <div className='mt-12'>
-      <div className='font-mono text-muted-foreground mb-4'>Past calendar year(s)</div>
+      <div className='font-mono text-muted-foreground mb-4'>
+        Past calendar year(s)
+      </div>
       <div className='space-y-3'>
         {groups.map((group) => (
           <Disclosure key={`${group.fromYear}-${group.toYear}`}>

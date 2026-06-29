@@ -18,7 +18,11 @@ export function CreatableSelectWrapper<
   Option = unknown,
   IsMulti extends boolean = false,
   Group extends GroupBase<Option> = GroupBase<Option>,
->({ compact = false, styles: styleOverrides, ...props }: CreatableAppSelectProps<Option, IsMulti, Group>) {
+>({
+  compact = false,
+  styles: styleOverrides,
+  ...props
+}: CreatableAppSelectProps<Option, IsMulti, Group>) {
   const baseStyles = compact
     ? getCompactSelectStyles<Option, IsMulti, Group>()
     : getSelectStyles<Option, IsMulti, Group>();
@@ -26,7 +30,9 @@ export function CreatableSelectWrapper<
   return (
     <CreatableSelect
       menuPosition='fixed'
-      styles={styleOverrides ? { ...baseStyles, ...styleOverrides } : baseStyles}
+      styles={
+        styleOverrides ? { ...baseStyles, ...styleOverrides } : baseStyles
+      }
       {...props}
     />
   );

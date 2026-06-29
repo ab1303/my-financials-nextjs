@@ -150,7 +150,13 @@ import {
  */
 export async function matchCategoryWithEmbedding(
   extractedName: string,
-  availableCategories: { name: string; id: string; createdAt: Date; iconName: string | null; isActive: boolean }[],
+  availableCategories: {
+    name: string;
+    id: string;
+    createdAt: Date;
+    iconName: string | null;
+    isActive: boolean;
+  }[],
 ): Promise<{
   categoryName: string | null;
   embeddingUsage: AITokenUsage;
@@ -185,7 +191,10 @@ export async function matchCategoryWithEmbedding(
     // Ensure category embeddings are cached (no-op if already cached)
     const cacheUsage = await ensureCategoryEmbeddings(availableCategories);
 
-    const result = await findBestCategoryMatchWithRetry(extractedName, availableCategories);
+    const result = await findBestCategoryMatchWithRetry(
+      extractedName,
+      availableCategories,
+    );
 
     if (!result) {
       // No match found above threshold
@@ -210,7 +219,9 @@ export async function matchCategoryWithEmbedding(
       extractedName,
       availableCategories.map((c) => c.name),
     );
-    return { categoryName: fuzzyMatch, embeddingUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } };
+    return {
+      categoryName: fuzzyMatch,
+      embeddingUsage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    };
   }
 }
-

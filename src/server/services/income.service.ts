@@ -1,4 +1,5 @@
 import { prisma } from '@/server/db/client';
+
 import type {
   IncomeEntryInput,
   IncomeEntryModel,
@@ -6,7 +7,6 @@ import type {
   MonthlyIncomeSummary,
   SourceBreakdown,
 } from '../models/income';
-
 import {
   REIMBURSEMENT_CATEGORY,
   TRANSFER_CATEGORY,

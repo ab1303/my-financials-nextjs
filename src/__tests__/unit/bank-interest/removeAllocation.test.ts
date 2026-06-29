@@ -1,4 +1,4 @@
-import { beforeEach,describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import { removeAllocation } from '@/server/services/interest-cleansing/interest-cleansing.service';
@@ -12,7 +12,7 @@ describe('removeAllocation bug reproduction', () => {
   it('should remove the evidence and clear the InterestCleansing record if no evidence remains', async () => {
     const allocationId = 'alloc-1';
     const cleansingId = 'cleansing-1';
-    
+
     // Setup: removeAllocation finds the evidence record
     prismaMock.interestCleansingEvidence.findUniqueOrThrow.mockResolvedValue({
       interestCleansingId: cleansingId,

@@ -5,7 +5,11 @@ export const createBankAccount = async (
   input: CreateBankAccountInput & { userId: string },
 ) => {
   return prisma.financialAccount.create({
-    data: { name: input.name, institutionId: input.institutionId, userId: input.userId },
+    data: {
+      name: input.name,
+      institutionId: input.institutionId,
+      userId: input.userId,
+    },
     include: { institution: { select: { name: true } } },
   });
 };

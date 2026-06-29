@@ -32,7 +32,9 @@ function getAIProvider() {
     apiKey,
     ...(baseURL
       ? { baseURL }
-      : provider === 'github' && { baseURL: 'https://models.inference.ai.azure.com' }),
+      : provider === 'github' && {
+          baseURL: 'https://models.inference.ai.azure.com',
+        }),
   });
 
   return openai.chat(modelId);

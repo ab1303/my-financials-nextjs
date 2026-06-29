@@ -37,7 +37,9 @@ export function getDeductibilityLabel(isDeductible: boolean): string {
 }
 
 // Backwards-compatible alias for UI code migrating off taxCategory naming.
-export function getTaxCategoryLabel(taxCategoryOrFlag: string | boolean): string {
+export function getTaxCategoryLabel(
+  taxCategoryOrFlag: string | boolean,
+): string {
   const isDeductible =
     typeof taxCategoryOrFlag === 'boolean'
       ? taxCategoryOrFlag

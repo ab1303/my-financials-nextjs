@@ -17,7 +17,7 @@ import type {
   DeleteIncomeEntryInput,
   UpdateIncomeEntryInput,
 } from './_schema';
-import type { IncomeEntryType,ServerActionType } from './_types';
+import type { IncomeEntryType, ServerActionType } from './_types';
 import { useIncomeEntryState } from './StateProvider';
 
 type IncomeTableClientProps = {
@@ -43,7 +43,10 @@ export function groupByMonth(entries: IncomeEntryType[]): MonthGroup[] {
   entries.forEach((entry, originalIndex) => {
     const d = new Date(entry.dateEarned);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = d.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+    const label = d.toLocaleDateString('en-AU', {
+      month: 'long',
+      year: 'numeric',
+    });
     if (!map.has(key)) map.set(key, { key, label, subtotal: 0, entries: [] });
     const group = map.get(key)!;
     group.subtotal += entry.amount;
@@ -92,7 +95,10 @@ export default function IncomeTableClient({
       incomeLedgerId: '',
       source: 'USER_MANUAL',
     };
-    dispatch({ type: 'INCOME/Entries/ADD_ENTRY', payload: { incomeEntryId: tempId, entry: newRow } });
+    dispatch({
+      type: 'INCOME/Entries/ADD_ENTRY',
+      payload: { incomeEntryId: tempId, entry: newRow },
+    });
     toast.info('New income row added. Fill in the details and save.');
   };
 
@@ -113,8 +119,8 @@ export default function IncomeTableClient({
 
       {/* Source Breakdown Widget */}
       {data.length > 0 && (
-        <SourceBreakdownWidget 
-          entries={data} 
+        <SourceBreakdownWidget
+          entries={data}
           yearDateFrom={yearDateFrom}
           yearDateTo={yearDateTo}
         />
@@ -123,7 +129,9 @@ export default function IncomeTableClient({
       {/* Empty State */}
       {monthGroups.length === 0 && (
         <div className='text-center py-8'>
-          <p className='text-muted-foreground'>No income entries yet. Add one to get started.</p>
+          <p className='text-muted-foreground'>
+            No income entries yet. Add one to get started.
+          </p>
         </div>
       )}
 
@@ -150,4 +158,3 @@ export default function IncomeTableClient({
     </div>
   );
 }
-

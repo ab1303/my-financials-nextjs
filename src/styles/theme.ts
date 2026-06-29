@@ -124,7 +124,8 @@ export const tableStyles = {
   // Table wrapper (the div that contains the table)
   wrapper: {
     base: 'overflow-x-auto shadow-sm border border-gray-200 rounded-lg dark:border-gray-700',
-    withBorder: 'overflow-x-auto shadow-sm border border-gray-200 rounded-lg dark:border-gray-700',
+    withBorder:
+      'overflow-x-auto shadow-sm border border-gray-200 rounded-lg dark:border-gray-700',
     simple: 'overflow-x-auto rounded-lg',
   },
   // Table element itself
@@ -140,7 +141,8 @@ export const cardStyles = {
   base: 'bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700',
   interactive:
     'bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700',
-  elevated: 'bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700',
+  elevated:
+    'bg-white border border-gray-200 rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700',
   flat: 'bg-white border border-gray-200 rounded-lg dark:bg-gray-800 dark:border-gray-700',
   /**
    * Use for display-only tile rows (e.g. expense entries, income rows).

@@ -1,9 +1,10 @@
+import { BeneficiaryEnumType } from '@prisma/client';
+
 import { auth } from '@/server/auth';
 import { allBusinessDetailsHandler } from '@/server/controllers/business.controller';
 import { donationPaymentsHandler } from '@/server/controllers/donation.controller';
 import { allIndividualDetailsHandler } from '@/server/controllers/individual.controller';
 import type { OptionType } from '@/types';
-import { BeneficiaryEnumType } from '@prisma/client';
 
 import type { DonationPaymentType } from './_types';
 import { addRow, deleteRow, editRow } from './actions';
@@ -30,7 +31,10 @@ export default async function DonationPaymentsTableServer({
       throw new Error('User session not found');
     }
 
-    const donationPayments = await donationPaymentsHandler(calendarYearId, beneficiaryId);
+    const donationPayments = await donationPaymentsHandler(
+      calendarYearId,
+      beneficiaryId,
+    );
     const individuals = await allIndividualDetailsHandler(session.user.id);
     const businesses = await allBusinessDetailsHandler(session.user.id);
 
@@ -53,22 +57,27 @@ export default async function DonationPaymentsTableServer({
     const data =
       donationPayments?.map<DonationPaymentType>((dp) => {
         // Need to narrow type to extract specific fields
-        const isVoluntary = 'beneficiaryType' in dp && dp.beneficiaryType !== undefined;
-        const isZakat = 'beneficiaryType' in dp && dp.donationPurpose === 'ZAKAT';
-        
+        const isVoluntary =
+          'beneficiaryType' in dp && dp.beneficiaryType !== undefined;
+        const isZakat =
+          'beneficiaryType' in dp && dp.donationPurpose === 'ZAKAT';
+
         let beneficiaryId = '';
         let beneficiaryType: BeneficiaryEnumType = BeneficiaryEnumType.BUSINESS;
         let isDeductible = false;
 
         if ('beneficiaryType' in dp) {
-           beneficiaryType = dp.beneficiaryType;
-           beneficiaryId = (dp.beneficiaryType === 'BUSINESS' ? (dp as any).businessId : (dp as any).individualId) || '';
-           isDeductible = dp.isDeductible;
+          beneficiaryType = dp.beneficiaryType;
+          beneficiaryId =
+            (dp.beneficiaryType === 'BUSINESS'
+              ? (dp as any).businessId
+              : (dp as any).individualId) || '';
+          isDeductible = dp.isDeductible;
         } else {
-           // Interest Cleansing
-           beneficiaryType = BeneficiaryEnumType.BUSINESS;
-           beneficiaryId = (dp as any).sourceBusinessId || '';
-           isDeductible = dp.isDeductible;
+          // Interest Cleansing
+          beneficiaryType = BeneficiaryEnumType.BUSINESS;
+          beneficiaryId = (dp as any).sourceBusinessId || '';
+          isDeductible = dp.isDeductible;
         }
 
         return {

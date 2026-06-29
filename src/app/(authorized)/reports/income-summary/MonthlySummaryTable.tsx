@@ -1,7 +1,13 @@
 'use client';
 
-import { ArrowDown,ArrowUp, ArrowUpDown, ChevronDown, ChevronRight } from 'lucide-react';
-import { Fragment, useCallback,useMemo, useState } from 'react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
+import { Fragment, useCallback, useMemo, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 
 import type {
@@ -137,7 +143,11 @@ export default function MonthlySummaryTable({
               >
                 Total Income
                 {sortField === 'totalAmount' ? (
-                  sortOrder === 'asc' ? <ArrowUp className='h-3 w-3' /> : <ArrowDown className='h-3 w-3' />
+                  sortOrder === 'asc' ? (
+                    <ArrowUp className='h-3 w-3' />
+                  ) : (
+                    <ArrowDown className='h-3 w-3' />
+                  )
                 ) : (
                   <ArrowUpDown className='h-3 w-3 opacity-40' />
                 )}
@@ -150,7 +160,11 @@ export default function MonthlySummaryTable({
               >
                 Entries
                 {sortField === 'entryCount' ? (
-                  sortOrder === 'asc' ? <ArrowUp className='h-3 w-3' /> : <ArrowDown className='h-3 w-3' />
+                  sortOrder === 'asc' ? (
+                    <ArrowUp className='h-3 w-3' />
+                  ) : (
+                    <ArrowDown className='h-3 w-3' />
+                  )
                 ) : (
                   <ArrowUpDown className='h-3 w-3 opacity-40' />
                 )}

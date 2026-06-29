@@ -45,22 +45,27 @@ export function AssetBalanceCards({
   return (
     <>
       {/* Bank Balance Card */}
-      <Card className="dark:border-slate-700">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <Wallet className="h-4 w-4 text-blue-500 dark:text-blue-400" aria-hidden="true" />
+      <Card className='dark:border-slate-700'>
+        <CardHeader className='pb-2'>
+          <CardTitle className='flex items-center gap-2 text-sm font-medium text-muted-foreground'>
+            <Wallet
+              className='h-4 w-4 text-blue-500 dark:text-blue-400'
+              aria-hidden='true'
+            />
             Bank Balance
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-1">
+        <CardContent className='space-y-1'>
           {!latestCashDate ? (
-            <p className="text-sm text-muted-foreground">No snapshots recorded yet</p>
+            <p className='text-sm text-muted-foreground'>
+              No snapshots recorded yet
+            </p>
           ) : (
             <>
-              <p className="text-2xl font-bold tabular-nums text-foreground">
+              <p className='text-2xl font-bold tabular-nums text-foreground'>
                 {formatAUD(latestCashTotal)}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className='text-xs text-muted-foreground'>
                 as of {formatDate(latestCashDate)}
               </p>
             </>
@@ -69,22 +74,27 @@ export function AssetBalanceCards({
       </Card>
 
       {/* Stock Portfolio Card */}
-      <Card className="dark:border-slate-700">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <DollarSign className="h-4 w-4 text-green-500 dark:text-green-400" aria-hidden="true" />
+      <Card className='dark:border-slate-700'>
+        <CardHeader className='pb-2'>
+          <CardTitle className='flex items-center gap-2 text-sm font-medium text-muted-foreground'>
+            <DollarSign
+              className='h-4 w-4 text-green-500 dark:text-green-400'
+              aria-hidden='true'
+            />
             Stock Portfolio
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-1">
+        <CardContent className='space-y-1'>
           {!latestStockDate ? (
-            <p className="text-sm text-muted-foreground">No snapshots recorded yet</p>
+            <p className='text-sm text-muted-foreground'>
+              No snapshots recorded yet
+            </p>
           ) : (
             <>
-              <p className="text-2xl font-bold tabular-nums text-foreground">
+              <p className='text-2xl font-bold tabular-nums text-foreground'>
                 {formatAUD(latestStockTotal)}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className='text-xs text-muted-foreground'>
                 as of {formatDate(latestStockDate)}
               </p>
             </>

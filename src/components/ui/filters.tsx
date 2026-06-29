@@ -3,10 +3,14 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { GroupBase } from 'react-select';
 
-import { useCategoryFilters } from '@/hooks/useCategoryFilters';
-import mockGroups, { type Category as MockCategory, type CategoryGroup, type GroupedCategoryOption } from '@/lib/mockFilterData';
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import { useCategoryFilters } from '@/hooks/useCategoryFilters';
+import mockGroups, {
+  type Category as MockCategory,
+  type CategoryGroup,
+  type GroupedCategoryOption,
+} from '@/lib/mockFilterData';
 
 /**
  * PreviewTotals component - memoized computation of income, expense, net
@@ -27,26 +31,26 @@ export function PreviewTotals({
         if (!selectedCategories.has(c.id)) return;
         if (c.type === 'income') income += c.amount;
         else if (c.type === 'expense') expense += c.amount;
-      })
+      }),
     );
     return { income, expense, net: income - expense };
   }, [groups, selectedCategories]);
 
   return (
-    <div className="p-4 bg-white dark:bg-slate-800 rounded-md shadow-sm w-full">
-      <div className="text-sm text-slate-500">Preview Totals</div>
-      <div className="mt-2 flex gap-4 items-baseline">
+    <div className='p-4 bg-white dark:bg-slate-800 rounded-md shadow-sm w-full'>
+      <div className='text-sm text-slate-500'>Preview Totals</div>
+      <div className='mt-2 flex gap-4 items-baseline'>
         <div>
-          <div className="text-xs text-slate-400">Income</div>
-          <div className="text-lg font-semibold">${totals.income}</div>
+          <div className='text-xs text-slate-400'>Income</div>
+          <div className='text-lg font-semibold'>${totals.income}</div>
         </div>
         <div>
-          <div className="text-xs text-slate-400">Expenses</div>
-          <div className="text-lg font-semibold">${totals.expense}</div>
+          <div className='text-xs text-slate-400'>Expenses</div>
+          <div className='text-lg font-semibold'>${totals.expense}</div>
         </div>
         <div>
-          <div className="text-xs text-slate-400">Net</div>
-          <div className="text-lg font-semibold">${totals.net}</div>
+          <div className='text-xs text-slate-400'>Net</div>
+          <div className='text-lg font-semibold'>${totals.net}</div>
         </div>
       </div>
     </div>
@@ -58,7 +62,7 @@ export function PreviewTotals({
  * Groups categories by their group heading with Ungrouped bucket
  */
 function buildGroupedSelectOptions(
-  groups: CategoryGroup[]
+  groups: CategoryGroup[],
 ): Array<GroupBase<GroupedCategoryOption>> {
   return groups.map((group) => ({
     label: group.name,
@@ -85,20 +89,20 @@ function CategoryItem({
   onToggle: (id: string) => void;
 }) {
   return (
-    <label className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-700 rounded cursor-pointer">
+    <label className='flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-700 rounded cursor-pointer'>
       <input
-        type="checkbox"
+        type='checkbox'
         checked={checked}
         onChange={() => onToggle(category.id)}
-        className="h-4 w-4 cursor-pointer"
+        className='h-4 w-4 cursor-pointer'
         aria-label={category.name}
       />
       <span
         className={`w-2 h-2 rounded-full ${category.color ?? 'bg-gray-300'}`}
         aria-hidden
       />
-      <span className="flex-1 text-sm">{category.name}</span>
-      <span className="text-xs text-slate-400">${category.amount}</span>
+      <span className='flex-1 text-sm'>{category.name}</span>
+      <span className='text-xs text-slate-400'>${category.amount}</span>
     </label>
   );
 }
@@ -120,8 +124,9 @@ function GroupRow({
   groupState: { checked: boolean; indeterminate: boolean };
 }) {
   const total = group.categories.length;
-  const checkedCount = group.categories.filter((c) => selectedCategories.has(c.id))
-    .length;
+  const checkedCount = group.categories.filter((c) =>
+    selectedCategories.has(c.id),
+  ).length;
   const ref = useRef<HTMLInputElement | null>(null);
 
   // Update indeterminate property on DOM element
@@ -132,25 +137,27 @@ function GroupRow({
   }, [groupState.indeterminate]);
 
   return (
-    <div className="border-b last:border-b-0">
-      <div className="flex items-center justify-between p-3">
-        <div className="flex items-center gap-3">
+    <div className='border-b last:border-b-0'>
+      <div className='flex items-center justify-between p-3'>
+        <div className='flex items-center gap-3'>
           <input
             ref={ref}
-            type="checkbox"
+            type='checkbox'
             checked={groupState.checked}
             onChange={() => toggleGroup(group.id, !groupState.checked)}
-            className="h-4 w-4 cursor-pointer"
-            aria-checked={groupState.indeterminate ? 'mixed' : groupState.checked}
+            className='h-4 w-4 cursor-pointer'
+            aria-checked={
+              groupState.indeterminate ? 'mixed' : groupState.checked
+            }
             aria-label={`${group.name} group`}
           />
-          <div className="font-medium">{group.name}</div>
+          <div className='font-medium'>{group.name}</div>
         </div>
-        <div className="text-sm text-slate-400">
+        <div className='text-sm text-slate-400'>
           {checkedCount}/{total}
         </div>
       </div>
-      <div className="pl-8 pr-3 pb-3">
+      <div className='pl-8 pr-3 pb-3'>
         {group.categories.map((c) => (
           <CategoryItem
             key={c.id}
@@ -218,27 +225,27 @@ export function FiltersPanel({
   // Build grouped options for react-select
   const groupedOptions = useMemo(
     () => buildGroupedSelectOptions(initialGroups),
-    [initialGroups]
+    [initialGroups],
   );
 
   // Build selected values for react-select
   const selectedValues = useMemo(() => {
     return groupedOptions.flatMap((group) =>
-      group.options.filter((opt) => selectedCategories.has(opt.value))
+      group.options.filter((opt) => selectedCategories.has(opt.value)),
     );
   }, [groupedOptions, selectedCategories]);
 
   const handleSelectChange = (
-    newValues: readonly GroupedCategoryOption[] | null
+    newValues: readonly GroupedCategoryOption[] | null,
   ) => {
     const newSelectedIds = new Set(newValues?.map((v) => v.value) ?? []);
-    
+
     // Determine which categories to add and remove
     const toAdd = Array.from(newSelectedIds).filter(
-      (id) => !selectedCategories.has(id)
+      (id) => !selectedCategories.has(id),
     );
     const toRemove = Array.from(selectedCategories).filter(
-      (id) => !newSelectedIds.has(id)
+      (id) => !newSelectedIds.has(id),
     );
 
     // Toggle added categories
@@ -250,50 +257,61 @@ export function FiltersPanel({
   // Use grouped select (Phase 2) or legacy checkbox panel
   if (useGroupedSelect) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="rounded-lg border border-border bg-card shadow-sm p-4">
-          <div className="space-y-4">
+      <div className='flex flex-col gap-6'>
+        <div className='rounded-lg border border-border bg-card shadow-sm p-4'>
+          <div className='space-y-4'>
             <div>
-              <Label htmlFor="category-selector" className="text-base font-semibold">
+              <Label
+                htmlFor='category-selector'
+                className='text-base font-semibold'
+              >
                 Category Filter
               </Label>
-              <p className="text-xs text-muted-foreground mt-1">
-                Select categories to include in your analysis. Organized by group.
+              <p className='text-xs text-muted-foreground mt-1'>
+                Select categories to include in your analysis. Organized by
+                group.
               </p>
             </div>
-            <Select<GroupedCategoryOption, true, GroupBase<GroupedCategoryOption>>
-              inputId="category-selector"
-              instanceId="category-selector"
+            <Select<
+              GroupedCategoryOption,
+              true,
+              GroupBase<GroupedCategoryOption>
+            >
+              inputId='category-selector'
+              instanceId='category-selector'
               options={groupedOptions}
               value={selectedValues}
               onChange={handleSelectChange}
               isMulti
               isClearable
-              placeholder="Select categories..."
-              className="w-full"
+              placeholder='Select categories...'
+              className='w-full'
               getOptionValue={(opt) => opt.value}
               getOptionLabel={(opt) => opt.label}
               formatGroupLabel={(group) => (
-                <div className="text-sm font-semibold text-foreground py-2">
+                <div className='text-sm font-semibold text-foreground py-2'>
                   {group.label}
                 </div>
               )}
             />
           </div>
 
-          <div className="mt-4 flex items-center gap-2">
+          <div className='mt-4 flex items-center gap-2'>
             <button
               onClick={clearSelection}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Clear all category filters"
+              className='text-sm text-muted-foreground hover:text-foreground transition-colors'
+              aria-label='Clear all category filters'
             >
               Clear all
             </button>
           </div>
         </div>
 
-        <div className="max-w-md">
-          <PreviewTotals groups={initialGroups} selectedCategories={selectedCategories} />
+        <div className='max-w-md'>
+          <PreviewTotals
+            groups={initialGroups}
+            selectedCategories={selectedCategories}
+          />
         </div>
       </div>
     );
@@ -301,15 +319,15 @@ export function FiltersPanel({
 
   // Legacy checkbox panel (for backward compatibility)
   return (
-    <div className="flex gap-6">
-      <aside className="w-80 bg-slate-50 dark:bg-slate-900 p-4 rounded shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Category Groups</h3>
-          <button className="text-sm text-sky-600 hover:text-sky-700">
+    <div className='flex gap-6'>
+      <aside className='w-80 bg-slate-50 dark:bg-slate-900 p-4 rounded shadow-sm'>
+        <div className='flex items-center justify-between mb-3'>
+          <h3 className='text-lg font-semibold'>Category Groups</h3>
+          <button className='text-sm text-sky-600 hover:text-sky-700'>
             Save View
           </button>
         </div>
-        <div className="space-y-2 overflow-auto max-h-[60vh]">
+        <div className='space-y-2 overflow-auto max-h-[60vh]'>
           {initialGroups.map((g) => (
             <GroupRow
               key={g.id}
@@ -321,19 +339,22 @@ export function FiltersPanel({
             />
           ))}
         </div>
-        <div className="mt-4">
+        <div className='mt-4'>
           <button
             onClick={clearSelection}
-            className="text-sm text-slate-600 hover:text-slate-700"
+            className='text-sm text-slate-600 hover:text-slate-700'
           >
             Clear filters
           </button>
         </div>
       </aside>
 
-      <main className="flex-1">
-        <div className="max-w-md">
-          <PreviewTotals groups={initialGroups} selectedCategories={selectedCategories} />
+      <main className='flex-1'>
+        <div className='max-w-md'>
+          <PreviewTotals
+            groups={initialGroups}
+            selectedCategories={selectedCategories}
+          />
         </div>
       </main>
     </div>

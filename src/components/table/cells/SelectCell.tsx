@@ -27,7 +27,9 @@ export const SelectCell = ({
         getOptionValue={(option) => option.id}
         getOptionLabel={(option) => option.label}
         onChange={(option) => onChange(option?.id)}
-        menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+        menuPortalTarget={
+          typeof document !== 'undefined' ? document.body : undefined
+        }
         menuPosition='fixed'
         placeholder={placeholder}
         compact

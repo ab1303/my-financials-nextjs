@@ -34,7 +34,10 @@ interface PortalProps {
   containerId?: string;
 }
 
-export default function Portal({ children, containerId = 'portal-root' }: PortalProps) {
+export default function Portal({
+  children,
+  containerId = 'portal-root',
+}: PortalProps) {
   // `mounted` gates the portal so it only renders in the browser.
   // During SSR and the initial hydration pass this component returns null,
   // which is safe because createPortal is browser-only.
@@ -60,7 +63,10 @@ export default function Portal({ children, containerId = 'portal-root' }: Portal
     return () => {
       // Only remove the container from the DOM when it has no remaining
       // children (i.e. this was the last Portal using this containerId).
-      if (containerRef.current && containerRef.current.childNodes.length === 0) {
+      if (
+        containerRef.current &&
+        containerRef.current.childNodes.length === 0
+      ) {
         containerRef.current.remove();
       }
     };

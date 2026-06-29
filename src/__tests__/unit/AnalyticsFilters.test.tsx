@@ -17,59 +17,87 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock the components
-vi.mock('@/app/(authorized)/cashflow/analytics/_components/IncomeExpenseTrendChart', () => ({
-  IncomeExpenseTrendChart: ({ data }: any) => (
-    <div
-      data-testid="trend-chart"
-      data-count={data.length}
-      data-income-total={data.reduce((sum: number, point: any) => sum + point.income, 0)}
-      data-expense-total={data.reduce((sum: number, point: any) => sum + point.expenses, 0)}
-    >
-      Trend Chart
-    </div>
-  ),
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/analytics/_components/IncomeExpenseTrendChart',
+  () => ({
+    IncomeExpenseTrendChart: ({ data }: any) => (
+      <div
+        data-testid='trend-chart'
+        data-count={data.length}
+        data-income-total={data.reduce(
+          (sum: number, point: any) => sum + point.income,
+          0,
+        )}
+        data-expense-total={data.reduce(
+          (sum: number, point: any) => sum + point.expenses,
+          0,
+        )}
+      >
+        Trend Chart
+      </div>
+    ),
+  }),
+);
 
-vi.mock('@/app/(authorized)/cashflow/analytics/_components/NetCashflowChart', () => ({
-  NetCashflowChart: () => <div data-testid="net-chart">Net Chart</div>,
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/analytics/_components/NetCashflowChart',
+  () => ({
+    NetCashflowChart: () => <div data-testid='net-chart'>Net Chart</div>,
+  }),
+);
 
-vi.mock('@/app/(authorized)/cashflow/analytics/_components/ExpenseCategoryChart', () => ({
-  ExpenseCategoryChart: ({ data }: any) => (
-    <div data-testid="expense-chart" data-count={data.length}>
-      Expense Chart
-    </div>
-  ),
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/analytics/_components/ExpenseCategoryChart',
+  () => ({
+    ExpenseCategoryChart: ({ data }: any) => (
+      <div data-testid='expense-chart' data-count={data.length}>
+        Expense Chart
+      </div>
+    ),
+  }),
+);
 
-vi.mock('@/app/(authorized)/cashflow/analytics/_components/IncomeSourceChart', () => ({
-  IncomeSourceChart: ({ data }: any) => (
-    <div data-testid="income-chart" data-count={data.length}>
-      Income Chart
-    </div>
-  ),
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/analytics/_components/IncomeSourceChart',
+  () => ({
+    IncomeSourceChart: ({ data }: any) => (
+      <div data-testid='income-chart' data-count={data.length}>
+        Income Chart
+      </div>
+    ),
+  }),
+);
 
-vi.mock('@/app/(authorized)/cashflow/analytics/_components/KPISummaryCards', () => ({
-  KPISummaryCards: () => <div data-testid="kpi-cards">KPI Cards</div>,
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/analytics/_components/KPISummaryCards',
+  () => ({
+    KPISummaryCards: () => <div data-testid='kpi-cards'>KPI Cards</div>,
+  }),
+);
 
-vi.mock('@/app/(authorized)/cashflow/analytics/_components/AnalyticsDrillDownDrawer', () => ({
-  default: () => <div data-testid="drill-down-drawer">Drill Down Drawer</div>,
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/analytics/_components/AnalyticsDrillDownDrawer',
+  () => ({
+    default: () => <div data-testid='drill-down-drawer'>Drill Down Drawer</div>,
+  }),
+);
 
-vi.mock('@/app/(authorized)/cashflow/analytics/_components/ChartSkeleton', () => ({
-  ChartSkeleton: () => <div data-testid="chart-skeleton">Loading Chart</div>,
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/analytics/_components/ChartSkeleton',
+  () => ({
+    ChartSkeleton: () => <div data-testid='chart-skeleton'>Loading Chart</div>,
+  }),
+);
 
 vi.mock('@/components/ui/Select', () => ({
   SelectWrapper: (props: any) => {
-    const groupLabels = Array.isArray(props.options) && props.options[0]?.options
-      ? props.options.map((group: any) => group.label).join('|')
-      : '';
+    const groupLabels =
+      Array.isArray(props.options) && props.options[0]?.options
+        ? props.options.map((group: any) => group.label).join('|')
+        : '';
     const selectedIds = Array.isArray(props.value)
       ? props.value.map((option: any) => option.id).join('|')
-      : props.value?.id ?? '';
+      : (props.value?.id ?? '');
 
     return (
       <div
@@ -78,11 +106,11 @@ vi.mock('@/components/ui/Select', () => ({
         data-selected={selectedIds}
       >
         <button
-          type="button"
+          type='button'
           data-testid={`${props.inputId}-select-first`}
           onClick={() => {
             const firstOption = Array.isArray(props.options)
-              ? props.options[0]?.options?.[0] ?? props.options[0]
+              ? (props.options[0]?.options?.[0] ?? props.options[0])
               : null;
             if (!firstOption) return;
             props.onChange?.([firstOption]);
@@ -91,7 +119,7 @@ vi.mock('@/components/ui/Select', () => ({
           select-first
         </button>
         <button
-          type="button"
+          type='button'
           data-testid={`${props.inputId}-clear`}
           onClick={() => props.onChange?.([])}
         >
@@ -104,7 +132,7 @@ vi.mock('@/components/ui/Select', () => ({
 
 vi.mock('@/components/CalendarYearPicker', () => ({
   CalendarYearPicker: ({ onYearChange }: any) => (
-    <div data-testid="calendar-picker">
+    <div data-testid='calendar-picker'>
       <button onClick={() => onYearChange('year-1')}>Pick Year</button>
     </div>
   ),
@@ -339,13 +367,13 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
     render(
       <CashflowAnalyticsClient
         calendarYears={mockCalendarYears}
-        defaultCalendarYearId="year-1"
-        defaultCalendarType="FISCAL"
+        defaultCalendarYearId='year-1'
+        defaultCalendarType='FISCAL'
         bankOptions={mockBankOptions}
         categoryGroups={mockCategoryGroups}
         incomeSources={mockIncomeSources}
         expenseCategories={mockExpenseCategories}
-      />
+      />,
     );
 
     await waitFor(() => {
@@ -370,8 +398,14 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
         'data-selected',
         'cat-1|cat-2|cat-3',
       );
-      expect(screen.getByTestId('income-chart')).toHaveAttribute('data-count', '2');
-      expect(screen.getByTestId('expense-chart')).toHaveAttribute('data-count', '3');
+      expect(screen.getByTestId('income-chart')).toHaveAttribute(
+        'data-count',
+        '2',
+      );
+      expect(screen.getByTestId('expense-chart')).toHaveAttribute(
+        'data-count',
+        '3',
+      );
     });
   });
 
@@ -379,13 +413,13 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
     render(
       <CashflowAnalyticsClient
         calendarYears={mockCalendarYears}
-        defaultCalendarYearId="year-1"
-        defaultCalendarType="FISCAL"
+        defaultCalendarYearId='year-1'
+        defaultCalendarType='FISCAL'
         bankOptions={mockBankOptions}
         categoryGroups={mockCategoryGroups}
         incomeSources={mockIncomeSources}
         expenseCategories={mockExpenseCategories}
-      />
+      />,
     );
 
     await waitFor(() => {
@@ -407,13 +441,13 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
     render(
       <CashflowAnalyticsClient
         calendarYears={mockCalendarYears}
-        defaultCalendarYearId="year-1"
-        defaultCalendarType="FISCAL"
+        defaultCalendarYearId='year-1'
+        defaultCalendarType='FISCAL'
         bankOptions={mockBankOptions}
         categoryGroups={mockCategoryGroups}
         incomeSources={mockIncomeSources}
         expenseCategories={mockExpenseCategories}
-      />
+      />,
     );
 
     // Wait for initial fetch
@@ -429,13 +463,13 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
     render(
       <CashflowAnalyticsClient
         calendarYears={mockCalendarYears}
-        defaultCalendarYearId="year-1"
-        defaultCalendarType="FISCAL"
+        defaultCalendarYearId='year-1'
+        defaultCalendarType='FISCAL'
         bankOptions={mockBankOptions}
         categoryGroups={mockCategoryGroups}
         incomeSources={mockIncomeSources}
         expenseCategories={mockExpenseCategories}
-      />
+      />,
     );
 
     // Wait for initial render
@@ -462,13 +496,13 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
     render(
       <CashflowAnalyticsClient
         calendarYears={mockCalendarYears}
-        defaultCalendarYearId="year-1"
-        defaultCalendarType="FISCAL"
+        defaultCalendarYearId='year-1'
+        defaultCalendarType='FISCAL'
         bankOptions={[]}
         categoryGroups={[]}
         incomeSources={[]}
         expenseCategories={[]}
-      />
+      />,
     );
 
     await waitFor(() => {
@@ -487,13 +521,13 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
     render(
       <CashflowAnalyticsClient
         calendarYears={mockCalendarYears}
-        defaultCalendarYearId="year-1"
-        defaultCalendarType="FISCAL"
+        defaultCalendarYearId='year-1'
+        defaultCalendarType='FISCAL'
         bankOptions={mockBankOptions}
         categoryGroups={mockCategoryGroups}
         incomeSources={mockIncomeSources}
         expenseCategories={mockExpenseCategories}
-      />
+      />,
     );
 
     await waitFor(() => {
@@ -501,50 +535,62 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
     });
 
     expect(screen.getByTestId('trend-chart')).toHaveAttribute(
-     'data-income-total',
-     '300',
+      'data-income-total',
+      '300',
     );
     expect(screen.getByTestId('trend-chart')).toHaveAttribute(
-     'data-expense-total',
-     '110',
+      'data-expense-total',
+      '110',
     );
 
     await user.click(screen.getByTestId('income-category-filter-select-first'));
 
     await waitFor(() => {
-     expect(global.fetch).toHaveBeenCalledTimes(2);
-     expect(screen.getByTestId('income-chart')).toHaveAttribute('data-count', '1');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(screen.getByTestId('income-chart')).toHaveAttribute(
+        'data-count',
+        '1',
+      );
     });
 
     await user.click(screen.getByTestId('income-category-filter-clear'));
 
     await waitFor(() => {
-     expect(global.fetch).toHaveBeenCalledTimes(3);
-     expect(screen.getByTestId('trend-chart')).toHaveAttribute(
-       'data-income-total',
-       '0',
-     );
-     expect(screen.getByTestId('trend-chart')).toHaveAttribute(
-       'data-expense-total',
-       '110',
-     );
-     expect(screen.getByTestId('income-chart')).toHaveAttribute('data-count', '0');
-     expect(screen.getByTestId('expense-chart')).toHaveAttribute('data-count', '3');
+      expect(global.fetch).toHaveBeenCalledTimes(3);
+      expect(screen.getByTestId('trend-chart')).toHaveAttribute(
+        'data-income-total',
+        '0',
+      );
+      expect(screen.getByTestId('trend-chart')).toHaveAttribute(
+        'data-expense-total',
+        '110',
+      );
+      expect(screen.getByTestId('income-chart')).toHaveAttribute(
+        'data-count',
+        '0',
+      );
+      expect(screen.getByTestId('expense-chart')).toHaveAttribute(
+        'data-count',
+        '3',
+      );
     });
 
     await user.click(screen.getByTestId('expense-category-filter-clear'));
 
     await waitFor(() => {
-     expect(global.fetch).toHaveBeenCalledTimes(4);
-     expect(screen.getByTestId('trend-chart')).toHaveAttribute(
-       'data-income-total',
-       '0',
-     );
-     expect(screen.getByTestId('trend-chart')).toHaveAttribute(
-       'data-expense-total',
-       '0',
-     );
-     expect(screen.getByTestId('expense-chart')).toHaveAttribute('data-count', '0');
+      expect(global.fetch).toHaveBeenCalledTimes(4);
+      expect(screen.getByTestId('trend-chart')).toHaveAttribute(
+        'data-income-total',
+        '0',
+      );
+      expect(screen.getByTestId('trend-chart')).toHaveAttribute(
+        'data-expense-total',
+        '0',
+      );
+      expect(screen.getByTestId('expense-chart')).toHaveAttribute(
+        'data-count',
+        '0',
+      );
     });
   });
 });

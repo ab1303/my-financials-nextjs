@@ -1,28 +1,56 @@
 'use client';
 
 import { Dialog, Transition } from '@headlessui/react';
-import { ChevronDown, ChevronUp, ExternalLink, LayoutList, Search, X } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  LayoutList,
+  Search,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Fragment, useMemo, useRef, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import type { GroupBase } from 'react-select';
 
 import Portal from '@/components/Portal';
-import { DistributionWidget, type DistributionItem } from '@/components/ui/DistributionWidget';
+import {
+  type DistributionItem,
+  DistributionWidget,
+} from '@/components/ui/DistributionWidget';
 import { GroupCategoryPopover } from '@/components/ui/GroupCategoryPopover';
 import { GroupedCategorySelect } from '@/components/ui/GroupedCategorySelect';
-import { groupExpenseBreakdown, type GroupedBreakdown } from '@/lib/category-group-utils';
+import {
+  type GroupedBreakdown,
+  groupExpenseBreakdown,
+} from '@/lib/category-group-utils';
 import type { CategoryBreakdown } from '@/server/models/expense';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 import type { OptionType } from '@/types';
 
 // Fixed ordered palette — assigned by rank (index 0 = highest spend)
 const BAR_COLORS = [
-  'bg-red-500',    'bg-orange-500',  'bg-amber-500',   'bg-yellow-400',
-  'bg-lime-500',   'bg-green-500',   'bg-emerald-500', 'bg-teal-500',
-  'bg-cyan-500',   'bg-sky-500',     'bg-blue-500',    'bg-indigo-500',
-  'bg-violet-500', 'bg-purple-500',  'bg-fuchsia-500', 'bg-pink-500',
-  'bg-rose-500',   'bg-slate-500',   'bg-zinc-500',    'bg-stone-400',
+  'bg-red-500',
+  'bg-orange-500',
+  'bg-amber-500',
+  'bg-yellow-400',
+  'bg-lime-500',
+  'bg-green-500',
+  'bg-emerald-500',
+  'bg-teal-500',
+  'bg-cyan-500',
+  'bg-sky-500',
+  'bg-blue-500',
+  'bg-indigo-500',
+  'bg-violet-500',
+  'bg-purple-500',
+  'bg-fuchsia-500',
+  'bg-pink-500',
+  'bg-rose-500',
+  'bg-slate-500',
+  'bg-zinc-500',
+  'bg-stone-400',
 ];
 
 const BADGE_COLORS = [
@@ -73,9 +101,13 @@ export default function ExpenseCategoryBreakdownWidget({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'categories' | 'groups'>('categories');
+  const [viewMode, setViewMode] = useState<'categories' | 'groups'>(
+    'categories',
+  );
   const [filterOpen, setFilterOpen] = useState(false);
-  const [openPopoverGroupId, setOpenPopoverGroupId] = useState<string | null>(null);
+  const [openPopoverGroupId, setOpenPopoverGroupId] = useState<string | null>(
+    null,
+  );
   const _groupBadgeRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const expenseGroups = categoryGroups.filter((g) => g.scope === 'EXPENSE');
@@ -95,17 +127,21 @@ export default function ExpenseCategoryBreakdownWidget({
     [breakdown, selectedCategoryIds],
   );
 
-  const distributionItems: ExpenseDistributionItem[] = filteredBreakdown.map((item, i) => ({
-    name: item.categoryName,
-    total: item.amount,
-    percentage: item.percentage,
-    color: BAR_COLORS[i % BAR_COLORS.length] ?? 'bg-gray-400',
-    categoryId: item.categoryId,
-    categoryName: item.categoryName,
-    amount: item.amount,
-  }));
+  const distributionItems: ExpenseDistributionItem[] = filteredBreakdown.map(
+    (item, i) => ({
+      name: item.categoryName,
+      total: item.amount,
+      percentage: item.percentage,
+      color: BAR_COLORS[i % BAR_COLORS.length] ?? 'bg-gray-400',
+      categoryId: item.categoryId,
+      categoryName: item.categoryName,
+      amount: item.amount,
+    }),
+  );
 
-  const visibleItems = expanded ? distributionItems : distributionItems.slice(0, TOP_N);
+  const visibleItems = expanded
+    ? distributionItems
+    : distributionItems.slice(0, TOP_N);
   const hiddenCount = distributionItems.length - TOP_N;
 
   // Groups mode
@@ -114,23 +150,24 @@ export default function ExpenseCategoryBreakdownWidget({
     [breakdown, expenseGroups, selectedCategoryIds],
   );
 
-  const groupDistributionItems: (DistributionItem & GroupedBreakdown)[] = groupedBreakdown.map(
-    (g, i) => ({
+  const groupDistributionItems: (DistributionItem & GroupedBreakdown)[] =
+    groupedBreakdown.map((g, i) => ({
       ...g,
       name: g.groupName,
       total: g.totalAmount,
       color: BAR_COLORS[i % BAR_COLORS.length] ?? 'bg-gray-400',
-    }),
-  );
+    }));
 
   // Cross-group filter panel options
   const crossGroupOptions: GroupBase<OptionType>[] = useMemo(() => {
-    const grouped = expenseGroups.map((g) => ({
-      label: g.name,
-      options: breakdown
-        .filter((b) => g.memberIds.includes(b.categoryId))
-        .map((b) => ({ id: b.categoryId, label: b.categoryName })),
-    })).filter((g) => g.options.length > 0);
+    const grouped = expenseGroups
+      .map((g) => ({
+        label: g.name,
+        options: breakdown
+          .filter((b) => g.memberIds.includes(b.categoryId))
+          .map((b) => ({ id: b.categoryId, label: b.categoryName })),
+      }))
+      .filter((g) => g.options.length > 0);
 
     const groupedIds = new Set(expenseGroups.flatMap((g) => g.memberIds));
     const ungrouped = breakdown
@@ -172,7 +209,10 @@ export default function ExpenseCategoryBreakdownWidget({
               </button>
               <button
                 type='button'
-                onClick={() => { setViewMode('groups'); setFilterOpen(false); }}
+                onClick={() => {
+                  setViewMode('groups');
+                  setFilterOpen(false);
+                }}
                 className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
                   viewMode === 'groups'
                     ? 'bg-card text-foreground shadow-sm'
@@ -236,7 +276,9 @@ export default function ExpenseCategoryBreakdownWidget({
               instanceId='expense-category-filter-widget'
               options={crossGroupOptions}
               value={selectedOptions}
-              onChange={(values) => onCategorySelectionChange(new Set(values.map((v) => v.id)))}
+              onChange={(values) =>
+                onCategorySelectionChange(new Set(values.map((v) => v.id)))
+              }
               placeholder='Search categories...'
               hideSelectedValues
               hideLabel
@@ -265,12 +307,20 @@ export default function ExpenseCategoryBreakdownWidget({
                   type='button'
                   onClick={() => setExpanded((prev) => !prev)}
                   className='flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors'
-                  aria-label={expanded ? 'Show fewer categories' : `Show ${hiddenCount} more categories`}
+                  aria-label={
+                    expanded
+                      ? 'Show fewer categories'
+                      : `Show ${hiddenCount} more categories`
+                  }
                 >
                   {expanded ? (
-                    <><ChevronUp size={12} /> {hiddenCount} fewer</>
+                    <>
+                      <ChevronUp size={12} /> {hiddenCount} fewer
+                    </>
                   ) : (
-                    <><ChevronDown size={12} /> + {hiddenCount} more</>
+                    <>
+                      <ChevronDown size={12} /> + {hiddenCount} more
+                    </>
                   )}
                 </button>
               )}
@@ -312,12 +362,16 @@ export default function ExpenseCategoryBreakdownWidget({
                 return (
                   <div
                     key={g.groupName}
-                    ref={(el) => { _groupBadgeRefs.current[popoverId] = el; }}
+                    ref={(el) => {
+                      _groupBadgeRefs.current[popoverId] = el;
+                    }}
                     className='relative'
                   >
                     <button
                       type='button'
-                      onClick={() => setOpenPopoverGroupId(isOpen ? null : popoverId)}
+                      onClick={() =>
+                        setOpenPopoverGroupId(isOpen ? null : popoverId)
+                      }
                       className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
                         BADGE_COLORS[i % BADGE_COLORS.length] ?? ''
                       } border-transparent hover:border-current`}
@@ -341,10 +395,16 @@ export default function ExpenseCategoryBreakdownWidget({
                         prefix='$'
                         decimalScale={0}
                       />
-                      <span className='opacity-60'>({g.percentage.toFixed(1)}%)</span>
+                      <span className='opacity-60'>
+                        ({g.percentage.toFixed(1)}%)
+                      </span>
                       <ChevronDown
                         size={10}
-                        className={isOpen ? 'rotate-180 transition-transform' : 'transition-transform'}
+                        className={
+                          isOpen
+                            ? 'rotate-180 transition-transform'
+                            : 'transition-transform'
+                        }
                       />
                     </button>
 
@@ -387,11 +447,20 @@ type DialogProps = {
   calendarLabel?: string;
 };
 
-function CategorySummaryDialog({ isOpen, onClose, breakdown, yearDateFrom, yearDateTo, calendarLabel }: DialogProps) {
+function CategorySummaryDialog({
+  isOpen,
+  onClose,
+  breakdown,
+  yearDateFrom,
+  yearDateTo,
+  calendarLabel,
+}: DialogProps) {
   const [search, setSearch] = useState('');
 
   const filtered = search.trim()
-    ? breakdown.filter((item) => item.categoryName.toLowerCase().includes(search.toLowerCase()))
+    ? breakdown.filter((item) =>
+        item.categoryName.toLowerCase().includes(search.toLowerCase()),
+      )
     : breakdown;
 
   const totalAmount = breakdown.reduce((sum, item) => sum + item.amount, 0);
@@ -424,11 +493,14 @@ function CategorySummaryDialog({ isOpen, onClose, breakdown, yearDateFrom, yearD
               leaveTo='opacity-0 scale-95'
             >
               <Dialog.Panel className='flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden rounded-xl bg-background shadow-2xl ring-1 ring-border'>
-
                 {/* Header */}
                 <div className='flex items-center justify-between border-b border-border px-5 py-4'>
-                  <Dialog.Title as='h2' className='text-base font-semibold text-foreground'>
-                    {calendarLabel ? `${calendarLabel} — ` : ''}Expense Breakdown
+                  <Dialog.Title
+                    as='h2'
+                    className='text-base font-semibold text-foreground'
+                  >
+                    {calendarLabel ? `${calendarLabel} — ` : ''}Expense
+                    Breakdown
                   </Dialog.Title>
                   <button
                     type='button'
@@ -457,7 +529,10 @@ function CategorySummaryDialog({ isOpen, onClose, breakdown, yearDateFrom, yearD
                 {/* Search */}
                 <div className='px-5 pb-3'>
                   <div className='relative'>
-                    <Search size={14} className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground' />
+                    <Search
+                      size={14}
+                      className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground'
+                    />
                     <input
                       type='text'
                       value={search}
@@ -471,7 +546,9 @@ function CategorySummaryDialog({ isOpen, onClose, breakdown, yearDateFrom, yearD
                 {/* Category list */}
                 <div className='flex-1 overflow-y-auto px-5 pb-2'>
                   {filtered.length === 0 ? (
-                    <p className='py-6 text-center text-sm text-muted-foreground'>No categories match your search.</p>
+                    <p className='py-6 text-center text-sm text-muted-foreground'>
+                      No categories match your search.
+                    </p>
                   ) : (
                     <table className='w-full text-sm'>
                       <thead>
@@ -487,9 +564,14 @@ function CategorySummaryDialog({ isOpen, onClose, breakdown, yearDateFrom, yearD
                           const originalIndex = breakdown.indexOf(item);
                           const url = `/cashflow/transactions?tab=expenses&categoryName=${encodeURIComponent(item.categoryName)}&dateFrom=${yearDateFrom}&dateTo=${yearDateTo}`;
                           return (
-                            <tr key={item.categoryName} className='group hover:bg-muted/30 transition-colors'>
+                            <tr
+                              key={item.categoryName}
+                              className='group hover:bg-muted/30 transition-colors'
+                            >
                               <td className='py-2 pr-3'>
-                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_COLORS[originalIndex % BADGE_COLORS.length]}`}>
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_COLORS[originalIndex % BADGE_COLORS.length]}`}
+                                >
                                   {item.categoryName}
                                 </span>
                               </td>
@@ -544,7 +626,6 @@ function CategorySummaryDialog({ isOpen, onClose, breakdown, yearDateFrom, yearD
                     />
                   </span>
                 </div>
-
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -578,7 +659,9 @@ function CategoryBadgeLink({
       className='flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted/50 rounded-md px-1.5 py-0.5 transition-colors'
       title={`View ${item.categoryName} transactions`}
     >
-      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_COLORS[colorIndex % BADGE_COLORS.length]}`}>
+      <span
+        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${BADGE_COLORS[colorIndex % BADGE_COLORS.length]}`}
+      >
         {item.categoryName}
       </span>
       <NumericFormat

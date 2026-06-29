@@ -1,4 +1,4 @@
-import { act,renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useCategoryFilters } from '@/hooks/useCategoryFilters';
@@ -251,7 +251,9 @@ describe('useCategoryFilters', () => {
       });
 
       const activeFilters = result.current.getActiveFilters();
-      expect(activeFilters).toEqual(expect.arrayContaining(['c-rent', 'c-salary']));
+      expect(activeFilters).toEqual(
+        expect.arrayContaining(['c-rent', 'c-salary']),
+      );
       expect(activeFilters.length).toBe(2);
     });
 

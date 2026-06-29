@@ -17,16 +17,16 @@ export default async function CategoryGroupsPage() {
   const groups = await listCategoryGroups({ prisma, userId: session.user.id });
 
   return (
-    <main className="px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-center justify-between">
+    <main className='px-4 py-6 sm:px-6 lg:px-8'>
+      <div className='mb-6 flex items-center justify-between'>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className='text-2xl font-bold tracking-tight text-foreground'>
             Category Groups
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className='mt-1 text-sm text-muted-foreground'>
             Define reusable category groups to organize your income sources and
-            expense categories. Use these groups for filtering and analysis across
-            the app.
+            expense categories. Use these groups for filtering and analysis
+            across the app.
           </p>
         </div>
       </div>

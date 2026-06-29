@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import SourceBadge, { SOURCE_COLOR_MAP } from '@/app/(authorized)/cashflow/income/_components/SourceBadge';
+import SourceBadge, {
+  SOURCE_COLOR_MAP,
+} from '@/app/(authorized)/cashflow/income/_components/SourceBadge';
 
 describe('SourceBadge', () => {
   it('renders the source name text', () => {

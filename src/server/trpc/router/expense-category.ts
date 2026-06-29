@@ -2,10 +2,13 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 import { updateTransactionCategory } from '@/server/services/transaction.service';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 const createSchema = z.object({ name: z.string().min(1).max(100) });
-const updateSchema = z.object({ id: z.string(), name: z.string().min(1).max(100) });
+const updateSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1).max(100),
+});
 const removeSchema = z.object({ id: z.string() });
 
 export type ExpenseCategoryRecord = {
@@ -17,20 +20,22 @@ export type ExpenseCategoryRecord = {
 };
 
 export const expenseCategoryRouter = router({
-  getAll: protectedProcedure.query(async ({ ctx }): Promise<ExpenseCategoryRecord[]> => {
-    // Returns ALL categories (including inactive) with usageCount from MonthlyExpenseSummary
-    const categories = await ctx.prisma.expenseCategory.findMany({
-      orderBy: { name: 'asc' },
-      include: { _count: { select: { monthlyExpenseSummaries: true } } },
-    });
-    return categories.map((c) => ({
-      id: c.id,
-      name: c.name,
-      description: c.description || undefined,
-      isActive: c.isActive,
-      usageCount: c._count.monthlyExpenseSummaries,
-    }));
-  }),
+  getAll: protectedProcedure.query(
+    async ({ ctx }): Promise<ExpenseCategoryRecord[]> => {
+      // Returns ALL categories (including inactive) with usageCount from MonthlyExpenseSummary
+      const categories = await ctx.prisma.expenseCategory.findMany({
+        orderBy: { name: 'asc' },
+        include: { _count: { select: { monthlyExpenseSummaries: true } } },
+      });
+      return categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description || undefined,
+        isActive: c.isActive,
+        usageCount: c._count.monthlyExpenseSummaries,
+      }));
+    },
+  ),
 
   getAllActive: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.expenseCategory.findMany({
@@ -40,69 +45,80 @@ export const expenseCategoryRouter = router({
     });
   }),
 
-  create: protectedProcedure.input(createSchema).mutation(async ({ ctx, input }) => {
-    const existing = await ctx.prisma.expenseCategory.findFirst({
-      where: { name: { equals: input.name, mode: 'insensitive' } },
-    });
-    if (existing) {
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'An expense category with this name already exists',
+  create: protectedProcedure
+    .input(createSchema)
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prisma.expenseCategory.findFirst({
+        where: { name: { equals: input.name, mode: 'insensitive' } },
       });
-    }
-    return ctx.prisma.expenseCategory.create({
-      data: { name: input.name },
-    });
-  }),
-
-  update: protectedProcedure.input(updateSchema).mutation(async ({ ctx, input }) => {
-    // Check for duplicate names
-    const existing = await ctx.prisma.expenseCategory.findFirst({
-      where: { name: { equals: input.name, mode: 'insensitive' }, NOT: { id: input.id } },
-    });
-    if (existing) {
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'An expense category with this name already exists',
+      if (existing) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'An expense category with this name already exists',
+        });
+      }
+      return ctx.prisma.expenseCategory.create({
+        data: { name: input.name },
       });
-    }
+    }),
 
-    // Get the old category name before updating
-    const oldCategory = await ctx.prisma.expenseCategory.findUniqueOrThrow({
-      where: { id: input.id },
-    });
+  update: protectedProcedure
+    .input(updateSchema)
+    .mutation(async ({ ctx, input }) => {
+      // Check for duplicate names
+      const existing = await ctx.prisma.expenseCategory.findFirst({
+        where: {
+          name: { equals: input.name, mode: 'insensitive' },
+          NOT: { id: input.id },
+        },
+      });
+      if (existing) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'An expense category with this name already exists',
+        });
+      }
 
-    // Update the category
-    const updated = await ctx.prisma.expenseCategory.update({
-      where: { id: input.id },
-      data: { name: input.name },
-    });
-
-    // Sync all transactions with the old category name to the new one
-    await updateTransactionCategory(oldCategory.name, input.name);
-
-    return updated;
-  }),
-
-  restore: protectedProcedure.input(removeSchema).mutation(async ({ ctx, input }) => {
-    return ctx.prisma.expenseCategory.update({
-      where: { id: input.id },
-      data: { isActive: true },
-    });
-  }),
-
-  remove: protectedProcedure.input(removeSchema).mutation(async ({ ctx, input }) => {
-    const usageCount = await ctx.prisma.monthlyExpenseSummary.count({
-      where: { categoryId: input.id },
-    });
-    if (usageCount > 0) {
-      await ctx.prisma.expenseCategory.update({
+      // Get the old category name before updating
+      const oldCategory = await ctx.prisma.expenseCategory.findUniqueOrThrow({
         where: { id: input.id },
-        data: { isActive: false },
       });
-      return { softDeleted: true };
-    }
-    await ctx.prisma.expenseCategory.delete({ where: { id: input.id } });
-    return { softDeleted: false };
-  }),
+
+      // Update the category
+      const updated = await ctx.prisma.expenseCategory.update({
+        where: { id: input.id },
+        data: { name: input.name },
+      });
+
+      // Sync all transactions with the old category name to the new one
+      await updateTransactionCategory(oldCategory.name, input.name);
+
+      return updated;
+    }),
+
+  restore: protectedProcedure
+    .input(removeSchema)
+    .mutation(async ({ ctx, input }) => {
+      return ctx.prisma.expenseCategory.update({
+        where: { id: input.id },
+        data: { isActive: true },
+      });
+    }),
+
+  remove: protectedProcedure
+    .input(removeSchema)
+    .mutation(async ({ ctx, input }) => {
+      const usageCount = await ctx.prisma.monthlyExpenseSummary.count({
+        where: { categoryId: input.id },
+      });
+      if (usageCount > 0) {
+        await ctx.prisma.expenseCategory.update({
+          where: { id: input.id },
+          data: { isActive: false },
+        });
+        return { softDeleted: true };
+      }
+      await ctx.prisma.expenseCategory.delete({ where: { id: input.id } });
+      return { softDeleted: false };
+    }),
 });

@@ -63,8 +63,12 @@ describe('ledger.service', () => {
       prismaMock.monthlyExpenseSummary.findFirst.mockResolvedValue({
         id: 'summary-new',
       } as never);
-      prismaMock.monthlyExpenseSummary.updateMany.mockResolvedValue({ count: 1 });
-      prismaMock.monthlyExpenseSummary.update.mockResolvedValue({ id: 'summary-new' } as never);
+      prismaMock.monthlyExpenseSummary.updateMany.mockResolvedValue({
+        count: 1,
+      });
+      prismaMock.monthlyExpenseSummary.update.mockResolvedValue({
+        id: 'summary-new',
+      } as never);
 
       await rerollupExpenseSummary({
         prismaClient: prismaMock,
@@ -111,7 +115,9 @@ describe('ledger.service', () => {
         .mockResolvedValueOnce({ id: 'cat-old', name: 'Groceries' } as never)
         .mockResolvedValueOnce({ id: 'cat-new', name: 'Dining Out' } as never);
       prismaMock.monthlyExpenseSummary.findFirst.mockResolvedValue(null);
-      prismaMock.monthlyExpenseSummary.updateMany.mockResolvedValue({ count: 1 });
+      prismaMock.monthlyExpenseSummary.updateMany.mockResolvedValue({
+        count: 1,
+      });
       prismaMock.monthlyExpenseSummary.create.mockResolvedValue({
         id: 'summary-new',
       } as never);

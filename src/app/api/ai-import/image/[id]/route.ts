@@ -1,4 +1,4 @@
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/server/auth';
@@ -69,8 +69,8 @@ export async function GET(
         'Content-Type': image.mimeType,
         'Content-Length': imageBuffer.length.toString(),
         'Cache-Control': 'no-cache, no-store, must-revalidate, private',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        Pragma: 'no-cache',
+        Expires: '0',
         // Prevent MIME type sniffing
         'X-Content-Type-Options': 'nosniff',
         // Prevent framing in other sites

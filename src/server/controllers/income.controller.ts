@@ -1,3 +1,5 @@
+import { handleCaughtError } from '@/server/db/client';
+
 import {
   addIncomeCalendarYearDetails,
   getIncome,
@@ -6,7 +8,6 @@ import {
   getSourceBreakdown,
   getTotalIncome,
 } from '../services/income.service';
-import { handleCaughtError } from '@/server/db/client';
 
 /**
  * Create or retrieve Income record for a calendar year and user

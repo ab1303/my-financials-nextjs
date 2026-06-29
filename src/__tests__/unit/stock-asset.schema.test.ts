@@ -25,7 +25,7 @@ describe('stock-asset.schema', () => {
 
       // Act
       const result = stockHoldingEntrySchema.safeParse(
-        validHoldingWithoutBuyDate
+        validHoldingWithoutBuyDate,
       );
 
       // Assert
@@ -52,7 +52,7 @@ describe('stock-asset.schema', () => {
 
       // Act
       const result = stockHoldingEntrySchema.safeParse(
-        validHoldingWithNullBuyDate
+        validHoldingWithNullBuyDate,
       );
 
       // Assert
@@ -82,7 +82,7 @@ describe('stock-asset.schema', () => {
 
       // Act
       const result = stockHoldingEntrySchema.safeParse(
-        validHoldingWithEmptySaleDate
+        validHoldingWithEmptySaleDate,
       );
 
       // Assert: Should pass validation (not throw "Invalid date" error)
@@ -109,7 +109,7 @@ describe('stock-asset.schema', () => {
 
       // Act
       const result = stockHoldingEntrySchema.safeParse(
-        validHoldingWithNullSaleDate
+        validHoldingWithNullSaleDate,
       );
 
       // Assert
@@ -136,7 +136,7 @@ describe('stock-asset.schema', () => {
 
       // Act
       const result = stockHoldingEntrySchema.safeParse(
-        validHoldingWithUndefinedSaleDate
+        validHoldingWithUndefinedSaleDate,
       );
 
       // Assert
@@ -165,7 +165,7 @@ describe('stock-asset.schema', () => {
 
       // Act
       const result = stockHoldingEntrySchema.safeParse(
-        validHoldingWithValidSaleDate
+        validHoldingWithValidSaleDate,
       );
 
       // Assert
@@ -209,7 +209,7 @@ describe('stock-asset.schema', () => {
 
       // Act
       const result = createStockSnapshotSchema.safeParse(
-        snapshotWithOptionalBuyDates
+        snapshotWithOptionalBuyDates,
       );
 
       // Assert

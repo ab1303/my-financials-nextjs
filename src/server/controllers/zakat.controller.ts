@@ -1,13 +1,14 @@
+import { handleCaughtError } from '@/server/db/client';
+
 import {
   addZakatCalendarYearDetails,
   getZakat,
   getZakatPayments,
-  getZakatTotalsByCategory,
-  getZakatTotalsByBeneficiary,
   getZakatTotalPaid,
+  getZakatTotalsByBeneficiary,
+  getZakatTotalsByCategory,
   updateZakatObligation,
 } from '../services/zakat/zakat.service';
-import { handleCaughtError } from '@/server/db/client';
 // ... (rest of imports)
 
 export const zakatTotalPaidHandler = async (calendarYearId: string) => {

@@ -16,7 +16,11 @@ export const userProfileRouter = router({
   updateProfile: protectedProcedure
     .input(updateProfileSchema)
     .mutation(async ({ ctx, input }) => {
-      return profileService.updateProfile(ctx.prisma, ctx.session.user.id, input);
+      return profileService.updateProfile(
+        ctx.prisma,
+        ctx.session.user.id,
+        input,
+      );
     }),
 
   uploadAvatar: protectedProcedure

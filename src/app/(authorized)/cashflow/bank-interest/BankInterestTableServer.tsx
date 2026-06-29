@@ -16,13 +16,17 @@ export default async function BankInterestTableServer({
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const data = await getYearlyCleansingData(institutionId, calendarYearId, session.user.id);
+  const data = await getYearlyCleansingData(
+    institutionId,
+    calendarYearId,
+    session.user.id,
+  );
 
   // FIX: Use dateFrom/dateTo from service (respects fromMonth/toMonth from calendarYear)
   const { dateFrom, dateTo } = data;
 
   return (
-    <div className="space-y-8">
+    <div className='space-y-8'>
       <CleansingDonationsList
         donations={data.cleansingDonations}
         yearlySummary={data.yearlySummary}
@@ -32,9 +36,7 @@ export default async function BankInterestTableServer({
         dateTo={dateTo}
         unlinkedInterestCount={data.unlinkedInterestCount}
       />
-      <InterestCreditsTable
-        credits={data.monthlyCredits}
-      />
+      <InterestCreditsTable credits={data.monthlyCredits} />
     </div>
   );
 }

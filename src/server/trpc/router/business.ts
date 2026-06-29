@@ -9,17 +9,26 @@ import {
   updateBusinessDetailsHandler,
 } from '@/server/controllers/business.controller';
 import { prisma } from '@/server/db/client';
-import { createBusinessSchema, params, updateBusinessSchema } from '@/server/schema/business.schema';
-import { addBusinessDetails, getBusinessDetails } from '@/server/services/business.service';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import {
+  createBusinessSchema,
+  params,
+  updateBusinessSchema,
+} from '@/server/schema/business.schema';
+import {
+  addBusinessDetails,
+  getBusinessDetails,
+} from '@/server/services/business.service';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const businessRouter = router({
   // Quick-create: name only — used by CreateBeneficiaryModal in the donation linking drawer
   create: protectedProcedure
-    .input(z.object({
-      name: z.string().min(1, 'Name is required'),
-      type: z.enum(['PHILANTHROPY', 'BROKERAGE']).optional(),
-    }))
+    .input(
+      z.object({
+        name: z.string().min(1, 'Name is required'),
+        type: z.enum(['PHILANTHROPY', 'BROKERAGE']).optional(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const userId = ctx.session.user.id;
       const resolvedType = input.type ?? 'PHILANTHROPY';
@@ -29,11 +38,18 @@ export const businessRouter = router({
       // User-specific types (PHILANTHROPY) are scoped per user.
       const existing = await getBusinessDetails(
         isGlobalType
-          ? { userId: null, name: { equals: input.name, mode: 'insensitive' }, type: resolvedType }
-          : { userId, name: { equals: input.name, mode: 'insensitive' } }
+          ? {
+              userId: null,
+              name: { equals: input.name, mode: 'insensitive' },
+              type: resolvedType,
+            }
+          : { userId, name: { equals: input.name, mode: 'insensitive' } },
       );
       if (existing && existing.length > 0) {
-        throw new TRPCError({ code: 'CONFLICT', message: 'A business with this name already exists.' });
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'A business with this name already exists.',
+        });
       }
       const business = await addBusinessDetails({
         name: input.name,
@@ -72,10 +88,7 @@ export const businessRouter = router({
     return await prisma.business.findMany({
       where: {
         type: 'BROKERAGE',
-        OR: [
-          { userId: null },
-          { userId: userId },
-        ],
+        OR: [{ userId: null }, { userId: userId }],
       },
       select: {
         id: true,

@@ -1,13 +1,21 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/app/(authorized)/cashflow/transactions/_components/ai/ConfidenceBadge', () => ({
-  default: ({ score }: { score: number }) => <span>{score}</span>,
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/transactions/_components/ai/ConfidenceBadge',
+  () => ({
+    default: ({ score }: { score: number }) => <span>{score}</span>,
+  }),
+);
 
 global.fetch = vi.fn().mockResolvedValue({
   ok: true,
-  json: () => Promise.resolve({ sessionId: 's1', recordsCreated: 2, status: 'COMPLETED' }),
+  json: () =>
+    Promise.resolve({
+      sessionId: 's1',
+      recordsCreated: 2,
+      status: 'COMPLETED',
+    }),
 }) as any;
 
 import ReviewStep from '@/app/(authorized)/cashflow/transactions/_components/ai/ReviewStep';
@@ -63,4 +71,3 @@ describe('ReviewStep', () => {
     expect(screen.getByText(/1 entries to import/)).toBeDefined();
   });
 });
-

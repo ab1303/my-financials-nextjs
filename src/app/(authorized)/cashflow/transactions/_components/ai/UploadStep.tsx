@@ -1,6 +1,6 @@
 'use client';
 
-import { Shield,UploadCloud, X } from 'lucide-react';
+import { Shield, UploadCloud, X } from 'lucide-react';
 import Image from 'next/image';
 import { useCallback, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -113,7 +113,8 @@ export default function UploadStep({
 
       <div className='mb-4'>
         <label className='block text-sm font-medium text-foreground mb-1'>
-          Bank Account <span className='text-muted-foreground text-xs'>(optional)</span>
+          Bank Account{' '}
+          <span className='text-muted-foreground text-xs'>(optional)</span>
         </label>
         <select
           value={selectedBankAccountId ?? ''}

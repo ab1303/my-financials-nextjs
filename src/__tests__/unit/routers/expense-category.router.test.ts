@@ -21,7 +21,9 @@ describe('expenseCategory router', () => {
       isActive: true,
     } as any);
 
-    await expect(caller.expenseCategory.create({ name: 'Food' })).resolves.toEqual({
+    await expect(
+      caller.expenseCategory.create({ name: 'Food' }),
+    ).resolves.toEqual({
       id: '1',
       name: 'Food',
       isActive: true,
@@ -30,9 +32,14 @@ describe('expenseCategory router', () => {
 
   it('remove soft-deletes in-use category', async () => {
     prismaMock.monthlyExpenseSummary.count.mockResolvedValue(1);
-    prismaMock.expenseCategory.update.mockResolvedValue({ id: '1', isActive: false } as any);
+    prismaMock.expenseCategory.update.mockResolvedValue({
+      id: '1',
+      isActive: false,
+    } as any);
 
-    await expect(caller.expenseCategory.remove({ id: '1' })).resolves.toEqual({ softDeleted: true });
+    await expect(caller.expenseCategory.remove({ id: '1' })).resolves.toEqual({
+      softDeleted: true,
+    });
     expect(prismaMock.expenseCategory.update).toHaveBeenCalledWith({
       where: { id: '1' },
       data: { isActive: false },

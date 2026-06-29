@@ -8,10 +8,10 @@ interface InfoTooltipProps {
 
 export default function InfoTooltip({ text }: InfoTooltipProps) {
   return (
-    <span className="group relative shrink-0">
-      <Info className="h-3.5 w-3.5 opacity-50" aria-hidden="true" />
+    <span className='group relative shrink-0'>
+      <Info className='h-3.5 w-3.5 opacity-50' aria-hidden='true' />
       <span
-        role="tooltip"
+        role='tooltip'
         className={[
           // positioning: centred above the icon
           'absolute bottom-full left-1/2 mb-2 -translate-x-1/2',

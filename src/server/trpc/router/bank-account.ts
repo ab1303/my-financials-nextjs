@@ -10,7 +10,7 @@ import {
   createBankAccountSchema,
   deleteBankAccountSchema,
 } from '@/server/schema/bank-account.schema';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const bankAccountRouter = router({
   list: protectedProcedure.query(({ ctx }) =>
@@ -30,10 +30,12 @@ export const bankAccountRouter = router({
     ),
 
   updateTracking: protectedProcedure
-    .input(z.object({
-      accountId: z.string(),
-      isTracked: z.boolean(),
-    }))
+    .input(
+      z.object({
+        accountId: z.string(),
+        isTracked: z.boolean(),
+      }),
+    )
     .mutation(({ input, ctx }) =>
       updateTrackingHandler(input, ctx.session.user.id),
     ),

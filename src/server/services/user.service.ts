@@ -1,4 +1,5 @@
 import type { Prisma, User } from '@prisma/client';
+
 import { prisma } from '@/server/db/client';
 
 import customConfig from '../config/default';

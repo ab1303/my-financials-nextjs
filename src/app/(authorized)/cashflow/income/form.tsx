@@ -1,17 +1,17 @@
 'use client';
 
 import type { CalendarEnumType } from '@prisma/client';
-import { usePathname, useRouter,useSearchParams } from 'next/navigation';
-import { useId } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { useId } from 'react';
 import { NumericFormat } from 'react-number-format';
 import type { SingleValue } from 'react-select';
 
 import { Card } from '@/components';
 import CalendarYearPicker from '@/components/CalendarYearPicker';
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
-import type { CalendarYearType,OptionType } from '@/types';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import type { CalendarYearType, OptionType } from '@/types';
 
 type InitialDataType = {
   incomeYearData: Array<CalendarYearType>;
@@ -39,7 +39,9 @@ export default function IncomeForm({
 
   const selectedBank =
     initialData.selectedBankId && initialData.bankOptions?.length
-      ? initialData.bankOptions.find((b) => b.id === initialData.selectedBankId) ?? null
+      ? (initialData.bankOptions.find(
+          (b) => b.id === initialData.selectedBankId,
+        ) ?? null)
       : null;
 
   const updateURLSearchParams = (key: 'year' | 'bank', value?: string) => {

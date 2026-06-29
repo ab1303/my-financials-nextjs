@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import type { Metadata } from 'next';
-import { notFound,redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { auth } from '@/server/auth';

@@ -24,16 +24,13 @@ export function NetWorthSparkline({ data }: Props) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={60}>
-      <AreaChart
-        data={data}
-        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-      >
+    <ResponsiveContainer width='100%' height={60}>
+      <AreaChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
         <Area
-          type="monotone"
-          dataKey="value"
-          stroke="#7c3aed"
-          fill="#7c3aed"
+          type='monotone'
+          dataKey='value'
+          stroke='#7c3aed'
+          fill='#7c3aed'
           fillOpacity={0.15}
           strokeWidth={2}
           dot={false}

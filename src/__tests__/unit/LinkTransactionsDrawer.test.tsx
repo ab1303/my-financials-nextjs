@@ -60,7 +60,9 @@ vi.mock('react-select/creatable', () => ({
       id={inputId}
       value={value?.value ?? ''}
       onChange={(event) => {
-        const selected = options.find((option: any) => option.value === event.target.value) ?? null;
+        const selected =
+          options.find((option: any) => option.value === event.target.value) ??
+          null;
         onChange?.(selected);
       }}
     >
@@ -79,7 +81,9 @@ vi.mock('@/components/ui/AppSelect', () => ({
       id={inputId}
       value={value?.value ?? ''}
       onChange={(event) => {
-        const selected = options.find((option: any) => option.value === event.target.value) ?? null;
+        const selected =
+          options.find((option: any) => option.value === event.target.value) ??
+          null;
         onChange?.(selected);
       }}
     >
@@ -109,9 +113,18 @@ describe('LinkTransactionsDrawer', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    transactionQueryMock.mockReturnValue({ data: transactions, isLoading: false });
-    individualQueryMock.mockReturnValue({ data: [{ id: 'ind-1', name: 'John Citizen' }], isLoading: false });
-    businessQueryMock.mockReturnValue({ data: [{ id: 'biz-1', name: 'Charity Business' }], isLoading: false });
+    transactionQueryMock.mockReturnValue({
+      data: transactions,
+      isLoading: false,
+    });
+    individualQueryMock.mockReturnValue({
+      data: [{ id: 'ind-1', name: 'John Citizen' }],
+      isLoading: false,
+    });
+    businessQueryMock.mockReturnValue({
+      data: [{ id: 'biz-1', name: 'Charity Business' }],
+      isLoading: false,
+    });
     addRowMock.mockResolvedValue({ success: true, error: null });
   });
 
@@ -120,9 +133,9 @@ describe('LinkTransactionsDrawer', () => {
       <LinkTransactionsDrawer
         isOpen
         onClose={vi.fn()}
-        dateFrom="2024-07-01"
-        dateTo="2025-06-30"
-        calendarYearId="cal-1"
+        dateFrom='2024-07-01'
+        dateTo='2025-06-30'
+        calendarYearId='cal-1'
       />,
     );
 
@@ -135,7 +148,9 @@ describe('LinkTransactionsDrawer', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /link donation/i })).not.toHaveAttribute('disabled');
+      expect(
+        screen.getByRole('button', { name: /link donation/i }),
+      ).not.toHaveAttribute('disabled');
     });
 
     fireEvent.click(screen.getByRole('button', { name: /link donation/i }));

@@ -4,8 +4,8 @@ import { Suspense } from 'react';
 
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
-import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { prisma } from '@/server/db/client';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
 import IncomeSummaryClient from './IncomeSummaryClient';
@@ -34,7 +34,9 @@ export default async function IncomeSummaryPage({
   const userId = session.user.id;
 
   const fiscalYearType = await getUserFiscalYearType(prisma, userId);
-  const allCalendarYears = await getCalendarYearsHandler([fiscalYearType ?? 'FISCAL']);
+  const allCalendarYears = await getCalendarYearsHandler([
+    fiscalYearType ?? 'FISCAL',
+  ]);
   const defaultYear = getDefaultCalendarYear(allCalendarYears, fiscalYearType);
   const initialCalendarYearId = params.calendarYearId ?? defaultYear?.id;
 

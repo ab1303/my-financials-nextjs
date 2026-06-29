@@ -44,10 +44,15 @@ export default function Breadcrumb() {
   if (crumbs.length <= 1) return null;
 
   return (
-    <nav aria-label='Breadcrumb' className='hidden md:flex items-center gap-1 text-sm'>
+    <nav
+      aria-label='Breadcrumb'
+      className='hidden md:flex items-center gap-1 text-sm'
+    >
       {crumbs.map((crumb, i) => (
         <span key={crumb.href} className='flex items-center gap-1'>
-          {i > 0 && <ChevronRight className='h-3.5 w-3.5 text-muted-foreground/50' />}
+          {i > 0 && (
+            <ChevronRight className='h-3.5 w-3.5 text-muted-foreground/50' />
+          )}
           {crumb.isLast ? (
             <span className='text-foreground font-medium'>{crumb.label}</span>
           ) : (

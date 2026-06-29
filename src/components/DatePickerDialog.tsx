@@ -143,7 +143,8 @@ export default function DatePickerDialog({
                       'bg-teal-600 text-white hover:bg-teal-600 hover:text-white focus:bg-teal-600 focus:text-white',
                     day_today: 'bg-muted text-foreground font-semibold',
                     day_outside: 'text-muted-foreground opacity-50',
-                    day_disabled: 'text-muted-foreground opacity-50 cursor-not-allowed',
+                    day_disabled:
+                      'text-muted-foreground opacity-50 cursor-not-allowed',
                     day_hidden: 'invisible',
                   }}
                 />

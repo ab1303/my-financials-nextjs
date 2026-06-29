@@ -6,38 +6,65 @@ import CategoryGroupsDashboard from '@/app/(authorized)/cashflow/category-groups
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 
 // Mock the child components to isolate dashboard tests
-vi.mock('@/app/(authorized)/cashflow/category-groups/_components/CategoryGroupCard', () => ({
-  default: ({ group, onEdit, onDelete }: {
-    group: CategoryGroupListItem;
-    onEdit: (group: CategoryGroupListItem) => void;
-    onDelete: (groupId: string) => void;
-  }) => (
-    <div data-testid={`card-${group.id}`}>
-      <h3>{group.name}</h3>
-      <p data-testid={`member-count-${group.id}`}>{group.memberCount} members</p>
-      <button onClick={() => onEdit(group)} data-testid={`edit-${group.id}`}>Edit</button>
-      <button onClick={() => onDelete(group.id)} data-testid={`delete-${group.id}`}>Delete</button>
-    </div>
-  ),
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/category-groups/_components/CategoryGroupCard',
+  () => ({
+    default: ({
+      group,
+      onEdit,
+      onDelete,
+    }: {
+      group: CategoryGroupListItem;
+      onEdit: (group: CategoryGroupListItem) => void;
+      onDelete: (groupId: string) => void;
+    }) => (
+      <div data-testid={`card-${group.id}`}>
+        <h3>{group.name}</h3>
+        <p data-testid={`member-count-${group.id}`}>
+          {group.memberCount} members
+        </p>
+        <button onClick={() => onEdit(group)} data-testid={`edit-${group.id}`}>
+          Edit
+        </button>
+        <button
+          onClick={() => onDelete(group.id)}
+          data-testid={`delete-${group.id}`}
+        >
+          Delete
+        </button>
+      </div>
+    ),
+  }),
+);
 
-vi.mock('@/app/(authorized)/cashflow/category-groups/_components/CategoryGroupsDrawer', () => ({
-  default: ({ isOpen, editingGroup, onClose, onGroupAdded, onGroupUpdated }: {
-    isOpen: boolean;
-    editingGroup?: CategoryGroupListItem | null;
-    onClose: () => void;
-    onGroupAdded?: (group: CategoryGroupListItem) => void;
-    onGroupUpdated?: (group: CategoryGroupListItem) => void;
-  }) => (
-    <>
-      {isOpen && (
-        <div data-testid="drawer-open">
-          <button onClick={onClose} data-testid="drawer-close">Close</button>
-        </div>
-      )}
-    </>
-  ),
-}));
+vi.mock(
+  '@/app/(authorized)/cashflow/category-groups/_components/CategoryGroupsDrawer',
+  () => ({
+    default: ({
+      isOpen,
+      editingGroup,
+      onClose,
+      onGroupAdded,
+      onGroupUpdated,
+    }: {
+      isOpen: boolean;
+      editingGroup?: CategoryGroupListItem | null;
+      onClose: () => void;
+      onGroupAdded?: (group: CategoryGroupListItem) => void;
+      onGroupUpdated?: (group: CategoryGroupListItem) => void;
+    }) => (
+      <>
+        {isOpen && (
+          <div data-testid='drawer-open'>
+            <button onClick={onClose} data-testid='drawer-close'>
+              Close
+            </button>
+          </div>
+        )}
+      </>
+    ),
+  }),
+);
 
 describe('CategoryGroupsDashboard', () => {
   const mockIncomeGroup: CategoryGroupListItem = {
@@ -83,28 +110,24 @@ describe('CategoryGroupsDashboard', () => {
     render(<CategoryGroupsDashboard initialGroups={[]} />);
 
     // Check for both the header action button and empty state button
-    const createButtons = screen.getAllByRole('button', { name: /\+ New Group/i });
+    const createButtons = screen.getAllByRole('button', {
+      name: /\+ New Group/i,
+    });
     expect(createButtons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders Income Groups section with cards when income groups exist', () => {
-    render(
-      <CategoryGroupsDashboard
-        initialGroups={[mockIncomeGroup]}
-      />,
-    );
+    render(<CategoryGroupsDashboard initialGroups={[mockIncomeGroup]} />);
 
     expect(screen.getByText('Income Groups')).toBeInTheDocument();
     expect(screen.getByText('Primary Income')).toBeInTheDocument();
-    expect(screen.getByTestId('member-count-income-1')).toHaveTextContent('2 members');
+    expect(screen.getByTestId('member-count-income-1')).toHaveTextContent(
+      '2 members',
+    );
   });
 
   it('renders Expense Groups section with cards when expense groups exist', () => {
-    render(
-      <CategoryGroupsDashboard
-        initialGroups={[mockExpenseGroup]}
-      />,
-    );
+    render(<CategoryGroupsDashboard initialGroups={[mockExpenseGroup]} />);
 
     expect(screen.getByText('Expense Groups')).toBeInTheDocument();
     expect(screen.getByText('Recurring Expenses')).toBeInTheDocument();
@@ -128,13 +151,11 @@ describe('CategoryGroupsDashboard', () => {
 
   it('opens drawer when + New Group button is clicked', async () => {
     const user = userEvent.setup();
-    render(
-      <CategoryGroupsDashboard
-        initialGroups={[mockIncomeGroup]}
-      />,
-    );
+    render(<CategoryGroupsDashboard initialGroups={[mockIncomeGroup]} />);
 
-    const newGroupButton = screen.getByRole('button', { name: /\+ New Group/i });
+    const newGroupButton = screen.getByRole('button', {
+      name: /\+ New Group/i,
+    });
     await user.click(newGroupButton);
 
     expect(screen.getByTestId('drawer-open')).toBeInTheDocument();
@@ -142,13 +163,11 @@ describe('CategoryGroupsDashboard', () => {
 
   it('closes drawer when onClose is called', async () => {
     const user = userEvent.setup();
-    render(
-      <CategoryGroupsDashboard
-        initialGroups={[mockIncomeGroup]}
-      />,
-    );
+    render(<CategoryGroupsDashboard initialGroups={[mockIncomeGroup]} />);
 
-    const newGroupButton = screen.getByRole('button', { name: /\+ New Group/i });
+    const newGroupButton = screen.getByRole('button', {
+      name: /\+ New Group/i,
+    });
     await user.click(newGroupButton);
 
     expect(screen.getByTestId('drawer-open')).toBeInTheDocument();
@@ -177,22 +196,14 @@ describe('CategoryGroupsDashboard', () => {
   });
 
   it('does not show Income Groups section when no income groups exist', () => {
-    render(
-      <CategoryGroupsDashboard
-        initialGroups={[mockExpenseGroup]}
-      />,
-    );
+    render(<CategoryGroupsDashboard initialGroups={[mockExpenseGroup]} />);
 
     expect(screen.queryByText('Income Groups')).not.toBeInTheDocument();
     expect(screen.getByText('Expense Groups')).toBeInTheDocument();
   });
 
   it('does not show Expense Groups section when no expense groups exist', () => {
-    render(
-      <CategoryGroupsDashboard
-        initialGroups={[mockIncomeGroup]}
-      />,
-    );
+    render(<CategoryGroupsDashboard initialGroups={[mockIncomeGroup]} />);
 
     expect(screen.getByText('Income Groups')).toBeInTheDocument();
     expect(screen.queryByText('Expense Groups')).not.toBeInTheDocument();

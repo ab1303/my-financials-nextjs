@@ -90,7 +90,11 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Validate ANNUAL year window
       expect(result.dateFrom).toBe('2022-01-01');
@@ -98,9 +102,9 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
 
       // Validate totals:  +  +  =  received
       expect(result.yearlySummary.totalReceived).toBe(225);
-      // Cleansed:  +  = 
+      // Cleansed:  +  =
       expect(result.yearlySummary.totalCleansed).toBe(125);
-      // Balance:  -  = 
+      // Balance:  -  =
       expect(result.yearlySummary.balance).toBe(100);
 
       // Validate unlinked interest (tx-2022-003 is not linked to any donation)
@@ -201,7 +205,11 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Validate FISCAL year window (Jul 2021 - Jun 2022)
       expect(result.dateFrom).toBe('2021-07-01');
@@ -209,9 +217,9 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
 
       // Validate totals:  +  +  +  =  received
       expect(result.yearlySummary.totalReceived).toBe(300);
-      // Cleansed:  +  = 
+      // Cleansed:  +  =
       expect(result.yearlySummary.totalCleansed).toBe(140);
-      // Balance:  -  = 
+      // Balance:  -  =
       expect(result.yearlySummary.balance).toBe(160);
 
       // Validate unlinked interest (tx-fy-002 and tx-fy-004 are not linked)
@@ -316,7 +324,11 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Validate back-dated fiscal window (Oct 2022 - Sep 2023)
       expect(result.dateFrom).toBe('2022-10-01');
@@ -335,9 +347,9 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
 
       // Validate totals:  +  +  +  =  received
       expect(result.yearlySummary.totalReceived).toBe(90);
-      // Cleansed:  +  = 
+      // Cleansed:  +  =
       expect(result.yearlySummary.totalCleansed).toBe(40);
-      // Balance:  -  = 
+      // Balance:  -  =
       expect(result.yearlySummary.balance).toBe(50);
 
       // Validate unlinked interest (tx-bd-002 and tx-bd-004 are not linked)
@@ -395,10 +407,15 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify donation query was called with correct window
-      const donationCallArg = (prismaMock.interestCleansing.findMany as any)?.mock?.calls?.[0]?.[0];
+      const donationCallArg = (prismaMock.interestCleansing.findMany as any)
+        ?.mock?.calls?.[0]?.[0];
       const dateFromQuery = donationCallArg?.where?.datePaid?.gte;
       const dateToQuery = donationCallArg?.where?.datePaid?.lte;
 
@@ -457,7 +474,11 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
 
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify custom window is used (Apr 2022 - Mar 2023), NOT Jan-Dec
       expect(result.dateFrom).toBe('2022-04-01');
@@ -508,14 +529,20 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       prismaMock.transaction.findMany.mockResolvedValue(transactions);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify exactly 12 monthly credits
       expect(result.monthlyCredits).toHaveLength(12);
 
       // Verify correct months: Oct, Nov, Dec, Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep
       const expectedMonths = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-      const expectedYears = [2022, 2022, 2022, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023];
+      const expectedYears = [
+        2022, 2022, 2022, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023, 2023,
+      ];
 
       result.monthlyCredits.forEach((credit, index) => {
         expect(credit.month).toBe(expectedMonths[index]);
@@ -524,7 +551,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       });
 
       // Verify total
-      expect(result.yearlySummary.totalReceived).toBe(120); // 12 months × 
+      expect(result.yearlySummary.totalReceived).toBe(120); // 12 months ×
     });
 
     // PHASE 3 TEST 7: Validate totals computation (totalReceived, totalCleansed, balance)
@@ -606,17 +633,21 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Calculate expected values
       // totalReceived = 100.50 + 250.75 + 300.25 = 651.50
-      expect(result.yearlySummary.totalReceived).toBe(651.50);
+      expect(result.yearlySummary.totalReceived).toBe(651.5);
 
       // totalCleansed = 100.50 + 150.00 = 250.50
-      expect(result.yearlySummary.totalCleansed).toBe(250.50);
+      expect(result.yearlySummary.totalCleansed).toBe(250.5);
 
       // balance = 651.50 - 250.50 = 401.00
-      expect(result.yearlySummary.balance).toBe(401.00);
+      expect(result.yearlySummary.balance).toBe(401.0);
     });
 
     // PHASE 3 TEST 8: Multiple back-dated years can be queried independently
@@ -651,7 +682,11 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       ]);
       prismaMock.interestCleansing.findMany.mockResolvedValueOnce([]);
 
-      const result2021 = await getYearlyCleansingData(institutionId, calendarYear2021, userId);
+      const result2021 = await getYearlyCleansingData(
+        institutionId,
+        calendarYear2021,
+        userId,
+      );
       expect(result2021.dateFrom).toBe('2021-01-01');
       expect(result2021.dateTo).toBe('2021-12-31');
       expect(result2021.yearlySummary.totalReceived).toBe(50);
@@ -685,7 +720,11 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       ]);
       prismaMock.interestCleansing.findMany.mockResolvedValueOnce([]);
 
-      const result2022 = await getYearlyCleansingData(institutionId, calendarYear2022, userId);
+      const result2022 = await getYearlyCleansingData(
+        institutionId,
+        calendarYear2022,
+        userId,
+      );
       expect(result2022.dateFrom).toBe('2022-01-01');
       expect(result2022.dateTo).toBe('2022-12-31');
       expect(result2022.yearlySummary.totalReceived).toBe(100);

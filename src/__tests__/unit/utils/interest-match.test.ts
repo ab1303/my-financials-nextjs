@@ -1,6 +1,9 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { scoreInterestMatch, tokenSetRatio } from '../../../server/utils/interest-match';
+import {
+  scoreInterestMatch,
+  tokenSetRatio,
+} from '../../../server/utils/interest-match';
 
 describe('tokenSetRatio', () => {
   it('should return 1 for identical strings', () => {
@@ -38,9 +41,9 @@ describe('scoreInterestMatch', () => {
   });
 
   it('should penalize date difference', () => {
-    const evidence = { 
-      ...credit, 
-      date: new Date('2025-01-31') // 30 days diff
+    const evidence = {
+      ...credit,
+      date: new Date('2025-01-31'), // 30 days diff
     };
     const score = scoreInterestMatch(credit, evidence);
     // Date score: 1 - 30/90 = 0.666...
@@ -50,9 +53,9 @@ describe('scoreInterestMatch', () => {
   });
 
   it('should penalize amount difference', () => {
-    const evidence = { 
-      ...credit, 
-      amount: 50 // 50% diff
+    const evidence = {
+      ...credit,
+      amount: 50, // 50% diff
     };
     const score = scoreInterestMatch(credit, evidence);
     // Amount score: 1 - 50/100 = 0.5

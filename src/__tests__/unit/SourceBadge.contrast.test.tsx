@@ -9,7 +9,9 @@ vi.mock('@/components/DatePickerDialog', () => ({
   default: () => <div data-testid='date-picker-dialog' />,
 }));
 
-import SourceBadge, { SOURCE_COLOR_MAP } from '@/app/(authorized)/cashflow/income/_components/SourceBadge';
+import SourceBadge, {
+  SOURCE_COLOR_MAP,
+} from '@/app/(authorized)/cashflow/income/_components/SourceBadge';
 import { TableCell } from '@/components/react-table/TableCell';
 
 describe('SourceBadge contrast fixes', () => {

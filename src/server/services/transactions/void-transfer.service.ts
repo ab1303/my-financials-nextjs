@@ -47,7 +47,13 @@ async function _clearDebitSide(
 
   const credit = await (db.transaction as any).findUnique({
     where: { id: debit.transferLinkedTransactionId },
-    select: { id: true, preLinkCategory: true, preLinkStatus: true, category: true, status: true },
+    select: {
+      id: true,
+      preLinkCategory: true,
+      preLinkStatus: true,
+      category: true,
+      status: true,
+    },
   });
   if (!credit || credit.status === 'VOIDED') return;
 
@@ -88,7 +94,11 @@ async function _clearCreditSide(
   if (sessionTxIds.has(debit.id)) {
     await (db.transaction as any).update({
       where: { id: debit.id },
-      data: { transferLinkedTransactionId: null, preLinkCategory: null, preLinkStatus: null },
+      data: {
+        transferLinkedTransactionId: null,
+        preLinkCategory: null,
+        preLinkStatus: null,
+      },
     });
     return;
   }
@@ -104,7 +114,10 @@ async function _clearCreditSide(
     },
   });
 
-  if (debit.preLinkStatus === 'CONFIRMED' && restoredCategory !== TRANSFER_CATEGORY) {
+  if (
+    debit.preLinkStatus === 'CONFIRMED' &&
+    restoredCategory !== TRANSFER_CATEGORY
+  ) {
     await rerollupExpenseSummary({
       prismaClient: db,
       userId,

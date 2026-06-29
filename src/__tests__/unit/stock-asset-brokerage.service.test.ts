@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
-import { createBrokerageSubAccount,getBrokerageAccounts } from '@/server/services/stock-asset.service';
+import {
+  createBrokerageSubAccount,
+  getBrokerageAccounts,
+} from '@/server/services/stock-asset.service';
 
 const userId = 'user-123';
 
@@ -25,10 +28,7 @@ describe('stock-asset.service — brokerage functions', () => {
           name: true,
           institution: { select: { id: true, name: true } },
         },
-        orderBy: [
-          { institution: { name: 'asc' } },
-          { name: 'asc' },
-        ],
+        orderBy: [{ institution: { name: 'asc' } }, { name: 'asc' }],
       });
     });
 
@@ -45,7 +45,9 @@ describe('stock-asset.service — brokerage functions', () => {
           institution: { id: 'inst-2', name: 'Vanguard' },
         },
       ];
-      prismaMock.financialAccount.findMany.mockResolvedValueOnce(accounts as never);
+      prismaMock.financialAccount.findMany.mockResolvedValueOnce(
+        accounts as never,
+      );
       const result = await getBrokerageAccounts(userId);
       expect(result).toEqual(accounts);
     });
@@ -63,10 +65,7 @@ describe('stock-asset.service — brokerage functions', () => {
           name: true,
           institution: { select: { id: true, name: true } },
         },
-        orderBy: [
-          { institution: { name: 'asc' } },
-          { name: 'asc' },
-        ],
+        orderBy: [{ institution: { name: 'asc' } }, { name: 'asc' }],
       });
     });
   });
@@ -76,14 +75,16 @@ describe('stock-asset.service — brokerage functions', () => {
 
     it('throws when business not found', async () => {
       prismaMock.business.findFirst.mockResolvedValueOnce(null as never);
-      await expect(createBrokerageSubAccount(userId, input)).rejects.toThrow('Brokerage institution not found or not owned by user');
+      await expect(createBrokerageSubAccount(userId, input)).rejects.toThrow(
+        'Brokerage institution not found or not owned by user',
+      );
       expect(prismaMock.business.findFirst).toHaveBeenCalledWith({
         where: {
           id: input.businessId,
           type: 'BROKERAGE',
           OR: [
-            { userId: null },        // Global institution
-            { userId },              // User-owned institution
+            { userId: null }, // Global institution
+            { userId }, // User-owned institution
           ],
         },
       });
@@ -97,7 +98,9 @@ describe('stock-asset.service — brokerage functions', () => {
         institution: { id: input.businessId, name: 'Fidelity' },
       };
       prismaMock.business.findFirst.mockResolvedValueOnce(business as never);
-      prismaMock.financialAccount.create.mockResolvedValueOnce(created as never);
+      prismaMock.financialAccount.create.mockResolvedValueOnce(
+        created as never,
+      );
       const result = await createBrokerageSubAccount(userId, input);
       expect(result).toEqual(created);
     });
@@ -110,7 +113,9 @@ describe('stock-asset.service — brokerage functions', () => {
         institution: { id: input.businessId, name: 'Vanguard' },
       };
       prismaMock.business.findFirst.mockResolvedValueOnce(business as never);
-      prismaMock.financialAccount.create.mockResolvedValueOnce(created as never);
+      prismaMock.financialAccount.create.mockResolvedValueOnce(
+        created as never,
+      );
       const result = await createBrokerageSubAccount(userId, input);
       expect(result).toEqual(created);
     });
@@ -123,7 +128,9 @@ describe('stock-asset.service — brokerage functions', () => {
         institution: { id: input.businessId, name: 'Vanguard' },
       };
       prismaMock.business.findFirst.mockResolvedValueOnce(business as never);
-      prismaMock.financialAccount.create.mockResolvedValueOnce(created as never);
+      prismaMock.financialAccount.create.mockResolvedValueOnce(
+        created as never,
+      );
       await createBrokerageSubAccount(userId, input);
       expect(prismaMock.financialAccount.create).toHaveBeenCalledWith({
         data: {

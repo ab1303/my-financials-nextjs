@@ -15,7 +15,7 @@ import {
   updateIndividualSchema,
 } from '@/server/schema/individual.schema';
 import { getRelationships } from '@/server/services/relationship.service';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const individualRouter = router({
   // Quick-create: name only — used by CreateBeneficiaryModal in the donation linking drawer
@@ -28,7 +28,10 @@ export const individualRouter = router({
       });
       const individual = result?.data?.individual;
       if (!individual) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create individual' });
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create individual',
+        });
       }
       return { id: individual.id, name: individual.name };
     }),

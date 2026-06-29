@@ -5,13 +5,13 @@ import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.cont
 import {
   createZakatYearHandler,
   zakatHandler,
-  zakatTotalsByCategoryHandler,
-  zakatTotalsByBeneficiaryHandler,
   zakatTotalPaidHandler,
+  zakatTotalsByBeneficiaryHandler,
+  zakatTotalsByCategoryHandler,
 } from '@/server/controllers/zakat.controller';
 
-import ZakatBeneficiaryBreakdownWidget from './_components/ZakatBeneficiaryBreakdownWidget';
 import UnlinkedZakatTransactionsBanner from './_components/UnlinkedZakatTransactionsBanner';
+import ZakatBeneficiaryBreakdownWidget from './_components/ZakatBeneficiaryBreakdownWidget';
 import type { FormInput } from './_schema';
 import ZakatForm from './form';
 import ZakatPaymentsTableServer from './ZakatTableServer';
@@ -58,12 +58,16 @@ export default async function ZakatPage({
   const selectedCalendarYearId = selectedCalendarYear
     ? selectedCalendarYear.id
     : '';
-  
+
   const beneficiaryId = getSelectedParam(params?.beneficiaryId) || undefined;
 
   const zakat = await zakatHandler(selectedCalendarYearId);
-  const zakatTotals = await zakatTotalsByCategoryHandler(selectedCalendarYearId);
-  const beneficiaryBreakdown = await zakatTotalsByBeneficiaryHandler(selectedCalendarYearId);
+  const zakatTotals = await zakatTotalsByCategoryHandler(
+    selectedCalendarYearId,
+  );
+  const beneficiaryBreakdown = await zakatTotalsByBeneficiaryHandler(
+    selectedCalendarYearId,
+  );
   const totalPaid = await zakatTotalPaidHandler(selectedCalendarYearId);
 
   const initialData = {
@@ -100,9 +104,7 @@ export default async function ZakatPage({
               />
             </Suspense>
           )}
-          <ZakatBeneficiaryBreakdownWidget
-            breakdown={beneficiaryBreakdown}
-          />
+          <ZakatBeneficiaryBreakdownWidget breakdown={beneficiaryBreakdown} />
           <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
             <p className='text-sm font-semibold text-foreground mb-4'>
               {selectedCalendarYear?.description} Payments

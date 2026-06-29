@@ -78,7 +78,9 @@ describe('category-groups router', () => {
 
     it('returns error when duplicate group name exists', async () => {
       mockCreateGroup.mockRejectedValue(
-        new Error('Category group "Primary Income" already exists for income scope'),
+        new Error(
+          'Category group "Primary Income" already exists for income scope',
+        ),
       );
 
       await expect(mockCreateGroup()).rejects.toThrow();
@@ -138,7 +140,9 @@ describe('category-groups router', () => {
 
     it('returns error when duplicate name would be created', async () => {
       mockUpdateGroup.mockRejectedValue(
-        new Error('Category group "Primary Income" already exists for this scope'),
+        new Error(
+          'Category group "Primary Income" already exists for this scope',
+        ),
       );
 
       await expect(mockUpdateGroup()).rejects.toThrow();

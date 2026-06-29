@@ -65,7 +65,9 @@ export default function AssetSummaryCards({
       </article>
 
       <article className={cardClassName}>
-        <p className='text-sm font-medium text-gray-600 dark:text-gray-300'>Cash</p>
+        <p className='text-sm font-medium text-gray-600 dark:text-gray-300'>
+          Cash
+        </p>
         <p className='mt-3 text-2xl font-semibold text-blue-700 dark:text-blue-400'>
           {formatAudCurrency(latestCashTotal)}
         </p>

@@ -12,9 +12,12 @@ import CreatableSelect from 'react-select/creatable';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-import { AddressComponent, Button,Card } from '@/components';
+import { AddressComponent, Button, Card } from '@/components';
 import { Label, TextInput } from '@/components/ui';
-import { DeletableOption, SelectWrapper as Select } from '@/components/ui/Select';
+import {
+  DeletableOption,
+  SelectWrapper as Select,
+} from '@/components/ui/Select';
 import { getSelectStyles } from '@/lib/select-styles';
 import { trpc } from '@/server/trpc/client';
 
@@ -391,7 +394,10 @@ export default function IndividualForm() {
                     }}
                     onChange={(option) => {
                       setSelectedRelationship(option);
-                      formFieldSetValue('relationshipName', option?.value || '');
+                      formFieldSetValue(
+                        'relationshipName',
+                        option?.value || '',
+                      );
                     }}
                     formatCreateLabel={(inputValue: string) =>
                       `Create "${inputValue}"`

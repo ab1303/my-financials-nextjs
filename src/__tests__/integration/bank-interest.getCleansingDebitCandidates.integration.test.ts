@@ -52,18 +52,21 @@ describe('bankInterest.getCleansingDebitCandidates', () => {
     });
 
     expect(result.length).toBe(2);
-    
+
     // First candidate should be high match
     const best = result[0]!;
     expect(best.transactionId).toBe('debit-1');
     expect(best.matchPercent).toBeGreaterThan(80);
     expect(best.accountName).toBe('Main Account');
     expect(best.scoreBreakdown.contributionsPercent.amount).toBeGreaterThan(0);
-    
+
     // Sum of contributions should equal matchPercent
-    const sum = Object.values(best.scoreBreakdown.contributionsPercent).reduce((a, b) => a + b, 0);
+    const sum = Object.values(best.scoreBreakdown.contributionsPercent).reduce(
+      (a, b) => a + b,
+      0,
+    );
     expect(sum).toBe(best.matchPercent);
-    
+
     // Verify Prisma call
     expect(prismaMock.transaction.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -71,9 +74,12 @@ describe('bankInterest.getCleansingDebitCandidates', () => {
           userId: 'user-1',
           type: 'DEBIT',
           status: 'CONFIRMED',
-          category: expect.objectContaining({ equals: 'Interest Cleansing', mode: 'insensitive' }),
+          category: expect.objectContaining({
+            equals: 'Interest Cleansing',
+            mode: 'insensitive',
+          }),
         }),
-      })
+      }),
     );
   });
 
@@ -104,7 +110,7 @@ describe('bankInterest.getCleansingDebitCandidates', () => {
             }),
           ]),
         }),
-      })
+      }),
     );
   });
 });

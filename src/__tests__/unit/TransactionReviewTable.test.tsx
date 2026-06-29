@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach,describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
   ClassifiedMonth,
@@ -97,8 +97,6 @@ describe('TransactionReviewTable', () => {
     });
   });
 
-
-
   it('should render warning flag for unknown merchant', () => {
     const unknownMerchantTx: ClassifiedTransaction = {
       id: 'tx3',
@@ -121,10 +119,7 @@ describe('TransactionReviewTable', () => {
     };
 
     const { container } = render(
-      <TransactionReviewTable
-        {...mockProps}
-        months={[monthWithUnknown]}
-      />,
+      <TransactionReviewTable {...mockProps} months={[monthWithUnknown]} />,
     );
 
     // Look for warning icon via CSS (lucide SVGs don't have role="img")
@@ -154,22 +149,13 @@ describe('TransactionReviewTable', () => {
     };
 
     const { container } = render(
-      <TransactionReviewTable
-        {...mockProps}
-        months={[monthWithKnown]}
-      />,
+      <TransactionReviewTable {...mockProps} months={[monthWithKnown]} />,
     );
 
     // Known merchant should not have warning icon
     const warnings = container.querySelectorAll('svg.text-amber-500');
     expect(warnings.length).toBe(0);
   });
-
-
-
-
-
-
 
   it('should have Accept All button that resets changes', async () => {
     render(<TransactionReviewTable {...mockProps} />);
@@ -201,9 +187,7 @@ describe('TransactionReviewTable', () => {
     const selects = screen.getAllByRole('combobox');
     fireEvent.change(selects[0]!, { target: { value: 'Home' } });
 
-    rerender(
-      <TransactionReviewTable {...mockProps} months={[mockMonth]} />,
-    );
+    rerender(<TransactionReviewTable {...mockProps} months={[mockMonth]} />);
 
     // Component renders "1 changes applied" (plural)
     const overrideText = screen.getByText(/1 changes applied/i);

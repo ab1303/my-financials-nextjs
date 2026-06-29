@@ -1,21 +1,27 @@
 'use client';
 
 import Select, {
-  type GroupBase,
-  type Props as SelectProps,
-  type OptionProps,
   components as selectComponents,
+  type GroupBase,
+  type OptionProps,
+  type Props as SelectProps,
 } from 'react-select';
 
 import { getCompactSelectStyles, getSelectStyles } from '@/lib/select-styles';
+
 import { PopperMenu } from './PopperMenu';
 
-function CustomOption<Option, IsMulti extends boolean, Group extends GroupBase<Option>>(
-  props: OptionProps<Option, IsMulti, Group>,
-) {
+function CustomOption<
+  Option,
+  IsMulti extends boolean,
+  Group extends GroupBase<Option>,
+>(props: OptionProps<Option, IsMulti, Group>) {
   const label = (props.data as { label?: string }).label;
   return (
-    <selectComponents.Option {...props} innerProps={{ ...props.innerProps, title: label }}>
+    <selectComponents.Option
+      {...props}
+      innerProps={{ ...props.innerProps, title: label }}
+    >
       <div
         className={`flex w-full items-center gap-2 ${
           props.isSelected ? 'text-foreground' : 'text-muted-foreground'
@@ -30,7 +36,9 @@ function CustomOption<Option, IsMulti extends boolean, Group extends GroupBase<O
                 : 'border-border bg-background/60 text-muted-foreground'
             }`}
           >
-            {props.isSelected && <span className='text-[10px] leading-none'>✓</span>}
+            {props.isSelected && (
+              <span className='text-[10px] leading-none'>✓</span>
+            )}
           </span>
         )}
         <span className='min-w-0 flex-1 truncate'>{props.children}</span>
@@ -79,7 +87,7 @@ export function SelectWrapper<
     <Select
       menuPosition={usePortal ? 'fixed' : undefined}
       menuPortalTarget={usePortal ? portalTarget : undefined}
-      menuPlacement="auto"
+      menuPlacement='auto'
       styles={
         styleOverrides ? { ...baseStyles, ...styleOverrides } : baseStyles
       }

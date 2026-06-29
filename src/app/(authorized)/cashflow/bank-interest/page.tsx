@@ -7,9 +7,9 @@ import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
+import { prisma } from '@/server/db/client';
 import { getYearlyCleansingData } from '@/server/services/interest-cleansing/interest-cleansing.service';
 import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
-import { prisma } from '@/server/db/client';
 import type { OptionType } from '@/types';
 
 import CleansingDonationsList from './_components/CleansingDonationsList';
@@ -179,21 +179,21 @@ export default async function BanksPage({
             {selectedBankId && selectedCalendarYearId ? (
               <div className='h-full overflow-y-auto'>
                 <CleansingDonationsList
-                donations={yearlyCleansingData?.cleansingDonations ?? []}
-                yearlySummary={
-                  yearlyCleansingData?.yearlySummary ?? {
-                    totalReceived: 0,
-                    totalCleansed: 0,
-                    balance: 0,
+                  donations={yearlyCleansingData?.cleansingDonations ?? []}
+                  yearlySummary={
+                    yearlyCleansingData?.yearlySummary ?? {
+                      totalReceived: 0,
+                      totalCleansed: 0,
+                      balance: 0,
+                    }
                   }
-                }
-                institutionId={selectedBankId}
-                calendarYearId={selectedCalendarYearId}
-                dateFrom={yearlyCleansingData?.dateFrom ?? ''}
-                dateTo={yearlyCleansingData?.dateTo ?? ''}
-                unlinkedInterestCount={
-                  yearlyCleansingData?.unlinkedInterestCount ?? 0
-                }
+                  institutionId={selectedBankId}
+                  calendarYearId={selectedCalendarYearId}
+                  dateFrom={yearlyCleansingData?.dateFrom ?? ''}
+                  dateTo={yearlyCleansingData?.dateTo ?? ''}
+                  unlinkedInterestCount={
+                    yearlyCleansingData?.unlinkedInterestCount ?? 0
+                  }
                 />
               </div>
             ) : (

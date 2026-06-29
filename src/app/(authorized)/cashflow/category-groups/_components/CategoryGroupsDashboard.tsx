@@ -22,7 +22,8 @@ export default function CategoryGroupsDashboard({
 }: CategoryGroupsDashboardProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [groups, setGroups] = useState(initialGroups);
-  const [editingGroup, setEditingGroup] = useState<CategoryGroupListItem | null>(null);
+  const [editingGroup, setEditingGroup] =
+    useState<CategoryGroupListItem | null>(null);
 
   // Split groups by scope
   const incomeGroups = groups.filter((g) => g.scope === 'INCOME');
@@ -59,28 +60,26 @@ export default function CategoryGroupsDashboard({
 
   return (
     <>
-      <div className="mb-6 flex justify-end">
-        <Button
-          onClick={handleOpenDrawer}
-          className="gap-2"
-          size="lg"
-        >
+      <div className='mb-6 flex justify-end'>
+        <Button onClick={handleOpenDrawer} className='gap-2' size='lg'>
           <span>+</span> New Group
         </Button>
       </div>
 
       {/* Empty State */}
       {groups.length === 0 && (
-        <div className="rounded-lg border border-dashed border-border bg-muted/50 p-12 text-center">
-          <h3 className="font-semibold text-foreground">No category groups yet</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <div className='rounded-lg border border-dashed border-border bg-muted/50 p-12 text-center'>
+          <h3 className='font-semibold text-foreground'>
+            No category groups yet
+          </h3>
+          <p className='mt-1 text-sm text-muted-foreground'>
             Create your first category group to organize your income sources and
             expense categories.
           </p>
           <Button
             onClick={handleOpenDrawer}
-            variant="default"
-            className="mt-4 gap-2"
+            variant='default'
+            className='mt-4 gap-2'
           >
             <span>+</span> Create Group
           </Button>
@@ -89,11 +88,11 @@ export default function CategoryGroupsDashboard({
 
       {/* Income Groups Section */}
       {incomeGroups.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
+        <div className='mb-8'>
+          <h2 className='mb-4 text-lg font-semibold text-foreground'>
             Income Groups
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
             {incomeGroups.map((group) => (
               <CategoryGroupCard
                 key={group.id}
@@ -108,11 +107,11 @@ export default function CategoryGroupsDashboard({
 
       {/* Expense Groups Section */}
       {expenseGroups.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
+        <div className='mb-8'>
+          <h2 className='mb-4 text-lg font-semibold text-foreground'>
             Expense Groups
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
             {expenseGroups.map((group) => (
               <CategoryGroupCard
                 key={group.id}

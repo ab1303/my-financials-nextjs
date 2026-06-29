@@ -1,4 +1,9 @@
-export type { CleansingDonation, MonthlyCredit, YearlyCleansingData, YearlySummary } from '@/server/services/interest-cleansing/interest-cleansing.service';
+export type {
+  CleansingDonation,
+  MonthlyCredit,
+  YearlyCleansingData,
+  YearlySummary,
+} from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 export type BankInterestType = {
   id: string;

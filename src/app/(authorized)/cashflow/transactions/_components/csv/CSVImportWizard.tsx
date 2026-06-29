@@ -2,7 +2,7 @@
 
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import type { ClassifiedMonth } from '@/components/csv-import/TransactionReviewTable';
@@ -34,7 +34,10 @@ const STEP_KEYS = STEPS.map((s) => s.key);
  * Detect transfer likelihood based on description and amount patterns.
  * Returns 'HIGH', 'MEDIUM', or 'LOW'.
  */
-function detectTransferLikelihood(description: string, amount: number): 'HIGH' | 'MEDIUM' | 'LOW' {
+function detectTransferLikelihood(
+  description: string,
+  amount: number,
+): 'HIGH' | 'MEDIUM' | 'LOW' {
   const desc = description.toLowerCase();
 
   // HIGH: explicit transfer keywords or account/BSB number patterns
@@ -51,7 +54,8 @@ function detectTransferLikelihood(description: string, amount: number): 'HIGH' |
   if (highPatterns.some((p) => p.test(desc))) return 'HIGH';
 
   // MEDIUM: large round amounts with vague descriptions
-  if (amount >= 1000 && amount % 100 === 0 && desc.split(' ').length <= 3) return 'MEDIUM';
+  if (amount >= 1000 && amount % 100 === 0 && desc.split(' ').length <= 3)
+    return 'MEDIUM';
 
   return 'LOW';
 }
@@ -64,16 +68,26 @@ export default function CSVImportWizard({
 }: CSVImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<CSVWizardStep>('upload');
   const [file, setFile] = useState<UploadedCSVFile | null>(null);
-  const [importResult, setImportResult] = useState<CSVImportResult | null>(null);
-  const [classifiedMonths, setClassifiedMonths] = useState<ClassifiedMonth[]>([]);
-  const [classifiedCreditMonths, setClassifiedCreditMonths] = useState<ClassifiedCreditMonth[]>([]);
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [importResult, setImportResult] = useState<CSVImportResult | null>(
+    null,
+  );
+  const [classifiedMonths, setClassifiedMonths] = useState<ClassifiedMonth[]>(
+    [],
+  );
+  const [classifiedCreditMonths, setClassifiedCreditMonths] = useState<
+    ClassifiedCreditMonth[]
+  >([]);
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const [incomeSourceLabels, setIncomeSourceLabels] = useState<string[]>([]);
   const [llmModel, setLlmModel] = useState<string>('gpt-4o-mini');
   const [bankAccountId, setBankAccountId] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
-  const [showTransferWarningModal, setShowTransferWarningModal] = useState(false);
-  const [transferWarningAcknowledged, setTransferWarningAcknowledged] = useState(false);
+  const [showTransferWarningModal, setShowTransferWarningModal] =
+    useState(false);
+  const [transferWarningAcknowledged, setTransferWarningAcknowledged] =
+    useState(false);
 
   const context: CSVImportContext = {
     importType: 'EXPENSE',
@@ -110,7 +124,8 @@ export default function CSVImportWizard({
       transactions: month.transactions.map((tx) => ({
         ...tx,
         transferLikelihood:
-          tx.transferLikelihood ?? detectTransferLikelihood(tx.description, tx.amount),
+          tx.transferLikelihood ??
+          detectTransferLikelihood(tx.description, tx.amount),
       })),
     }));
 
@@ -120,7 +135,8 @@ export default function CSVImportWizard({
       transactions: month.transactions.map((tx) => ({
         ...tx,
         transferLikelihood:
-          tx.transferLikelihood ?? detectTransferLikelihood(tx.description, tx.amount),
+          tx.transferLikelihood ??
+          detectTransferLikelihood(tx.description, tx.amount),
       })),
     }));
 
@@ -143,17 +159,21 @@ export default function CSVImportWizard({
       (sum, month) =>
         sum +
         month.transactions.filter(
-          (tx) => tx.transferLikelihood === 'HIGH' || tx.transferLikelihood === 'MEDIUM'
+          (tx) =>
+            tx.transferLikelihood === 'HIGH' ||
+            tx.transferLikelihood === 'MEDIUM',
         ).length,
-      0
+      0,
     );
     const creditFlagged = classifiedCreditMonths.reduce(
       (sum, month) =>
         sum +
         month.transactions.filter(
-          (tx) => tx.transferLikelihood === 'HIGH' || tx.transferLikelihood === 'MEDIUM'
+          (tx) =>
+            tx.transferLikelihood === 'HIGH' ||
+            tx.transferLikelihood === 'MEDIUM',
         ).length,
-      0
+      0,
     );
     return debitFlagged + creditFlagged;
   }, [classifiedMonths, classifiedCreditMonths]);
@@ -165,10 +185,14 @@ export default function CSVImportWizard({
   ) => {
     if (!file || !bankAccountId) return;
 
-    const totalLlmUsage = [...confirmedDebitMonths, ...confirmedCreditMonths].reduce(
+    const totalLlmUsage = [
+      ...confirmedDebitMonths,
+      ...confirmedCreditMonths,
+    ].reduce(
       (acc, month) => ({
         promptTokens: acc.promptTokens + (month.totalUsage?.promptTokens ?? 0),
-        completionTokens: acc.completionTokens + (month.totalUsage?.completionTokens ?? 0),
+        completionTokens:
+          acc.completionTokens + (month.totalUsage?.completionTokens ?? 0),
         totalTokens: acc.totalTokens + (month.totalUsage?.totalTokens ?? 0),
       }),
       { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
@@ -188,7 +212,9 @@ export default function CSVImportWizard({
         }),
       });
 
-      const data = (await res.json()) as Partial<CSVImportResult> & { error?: string };
+      const data = (await res.json()) as Partial<CSVImportResult> & {
+        error?: string;
+      };
 
       if (!res.ok) {
         throw new Error(data.error ?? 'Confirm request failed');
@@ -196,14 +222,19 @@ export default function CSVImportWizard({
 
       const debitsSaved =
         data.debitsSaved ??
-        confirmedDebitMonths.reduce((sum, month) => sum + month.transactions.length, 0);
+        confirmedDebitMonths.reduce(
+          (sum, month) => sum + month.transactions.length,
+          0,
+        );
       const creditsSaved =
         data.creditsSaved ??
         confirmedCreditMonths.reduce(
           (sum, month) =>
             sum +
             month.transactions.filter(
-              (tx) => tx.confirmedCategory !== 'Transfer' && tx.confirmedCategory !== 'Excluded'
+              (tx) =>
+                tx.confirmedCategory !== 'Transfer' &&
+                tx.confirmedCategory !== 'Excluded',
             ).length,
           0,
         );
@@ -213,7 +244,9 @@ export default function CSVImportWizard({
           (sum, month) =>
             sum +
             month.transactions.filter(
-              (tx) => tx.confirmedCategory === 'Transfer' || tx.confirmedCategory === 'Excluded'
+              (tx) =>
+                tx.confirmedCategory === 'Transfer' ||
+                tx.confirmedCategory === 'Excluded',
             ).length,
           0,
         );
@@ -226,7 +259,8 @@ export default function CSVImportWizard({
         creditsSaved,
         creditsExcluded,
         duplicatesSkipped,
-        totalEntries: data.totalEntries ?? debitsSaved + creditsSaved + creditsExcluded,
+        totalEntries:
+          data.totalEntries ?? debitsSaved + creditsSaved + creditsExcluded,
         errors: data.errors ?? [],
         matchJobSummary: data.matchJobSummary ?? null,
       };
@@ -235,7 +269,8 @@ export default function CSVImportWizard({
       setCurrentStep('results');
       toast.success(`Imported ${result.totalEntries} entries successfully`);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to save transactions';
+      const message =
+        err instanceof Error ? err.message : 'Failed to save transactions';
       toast.error(message);
     } finally {
       setIsConfirming(false);
@@ -338,7 +373,10 @@ export default function CSVImportWizard({
               leaveTo='opacity-0 scale-95'
             >
               <div className='w-full max-w-5xl'>
-                <Dialog.Panel data-testid="csv-import-wizard" className='flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'>
+                <Dialog.Panel
+                  data-testid='csv-import-wizard'
+                  className='flex max-h-[90vh] w-full flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900'
+                >
                   <div className='flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700'>
                     <div>
                       <Dialog.Title className='text-lg font-semibold text-gray-900 dark:text-white'>
@@ -351,7 +389,7 @@ export default function CSVImportWizard({
                     {canClose && (
                       <button
                         onClick={handleClose}
-                        data-testid="close-csv-import-wizard"
+                        data-testid='close-csv-import-wizard'
                         className='text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
                         aria-label='Close wizard'
                       >
@@ -452,13 +490,16 @@ export default function CSVImportWizard({
                   Possible transfers detected
                 </h3>
                 <p className='mb-2 text-sm text-gray-600 dark:text-gray-300'>
-                  <span className='font-semibold dark:text-gray-100'>{flaggedCount} transaction{flaggedCount > 1 ? 's' : ''}</span>{' '}
-                  look like inter-account transfers. Confirming them now may inflate your expense
-                  figures if the matching counterpart hasn&apos;t been imported yet.
+                  <span className='font-semibold dark:text-gray-100'>
+                    {flaggedCount} transaction{flaggedCount > 1 ? 's' : ''}
+                  </span>{' '}
+                  look like inter-account transfers. Confirming them now may
+                  inflate your expense figures if the matching counterpart
+                  hasn&apos;t been imported yet.
                 </p>
                 <p className='mb-4 text-xs text-gray-500 dark:text-gray-400'>
-                  You can still confirm and resolve any unmatched transfers in the Transfers tab
-                  after import.
+                  You can still confirm and resolve any unmatched transfers in
+                  the Transfers tab after import.
                 </p>
                 <div className='flex justify-end gap-3'>
                   <button

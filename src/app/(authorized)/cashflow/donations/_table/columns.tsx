@@ -12,7 +12,15 @@ const beneficiaryOptions = Object.entries(
   BeneficiaryEnumType,
 ).flatMap<OptionType>(([k, v]) => ({ id: k, label: v }));
 const donationPurposeOptions = Object.entries(DonationPurposeEnum).map(
-  ([k, v]) => ({ id: v, label: k === 'VOLUNTARY' ? 'Voluntary' : k === 'INTEREST_CLEANSING' ? 'Interest Cleansing' : k })
+  ([k, v]) => ({
+    id: v,
+    label:
+      k === 'VOLUNTARY'
+        ? 'Voluntary'
+        : k === 'INTEREST_CLEANSING'
+          ? 'Interest Cleansing'
+          : k,
+  }),
 );
 
 const columnHelper = createColumnHelper<DonationPaymentType>();

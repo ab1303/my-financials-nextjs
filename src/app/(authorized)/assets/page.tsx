@@ -43,7 +43,9 @@ export default async function AssetsOverviewPage() {
       <div className='mt-4 rounded-lg bg-white px-6 py-8 shadow dark:bg-gray-950 sm:px-10'>
         <Suspense
           fallback={
-            <p className='text-sm text-gray-600 dark:text-gray-300'>Loading...</p>
+            <p className='text-sm text-gray-600 dark:text-gray-300'>
+              Loading...
+            </p>
           }
         >
           <NetWorthDashboardClient calendarYears={calendarYears} />

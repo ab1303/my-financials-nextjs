@@ -1,7 +1,7 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { Lock } from 'lucide-react';
 
-import { EditCell,TableCell } from '@/components/react-table';
+import { EditCell, TableCell } from '@/components/react-table';
 
 import SourceBadge from '../_components/SourceBadge';
 import type { IncomeEntryType } from '../_types';

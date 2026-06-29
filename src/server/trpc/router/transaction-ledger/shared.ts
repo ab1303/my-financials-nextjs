@@ -1,6 +1,11 @@
-import { Prisma, TransactionSourceEnum, TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
+import type { Prisma, TransactionSourceEnum } from '@prisma/client';
+import { TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
 import { z } from 'zod';
-import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
+
+import {
+  REIMBURSEMENT_CATEGORY,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
 
 export interface TransactionRow {
   id: string;
@@ -68,7 +73,7 @@ export const getAllInputSchema = z.object({
   transferOnly: z.boolean().optional(),
   unmatchedTransferOnly: z.boolean().optional(),
   excludeTransferCategory: z.boolean().optional(),
-  ids: z.array(z.string()).optional(), 
+  ids: z.array(z.string()).optional(),
 });
 
 export function buildTransactionWhere(

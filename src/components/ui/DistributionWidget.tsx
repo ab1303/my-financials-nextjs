@@ -32,9 +32,7 @@ export function DistributionWidget<T extends DistributionItem>({
       </div>
       <div className='mt-2 flex flex-wrap gap-3'>
         {items.map((item) => (
-          <React.Fragment key={item.name}>
-            {renderItem(item)}
-          </React.Fragment>
+          <React.Fragment key={item.name}>{renderItem(item)}</React.Fragment>
         ))}
       </div>
     </div>

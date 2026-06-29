@@ -49,7 +49,9 @@ export default function CSVResultsStep({
   return (
     <div className='space-y-6'>
       {!bannerDismissed &&
-        (matchJobSummary?.autoLinkedCount ?? 0) + (matchJobSummary?.flaggedCount ?? 0) > 0 && (
+        (matchJobSummary?.autoLinkedCount ?? 0) +
+          (matchJobSummary?.flaggedCount ?? 0) >
+          0 && (
           <PostImportMatchBanner
             importSessionId={result.sessionId}
             autoLinkedCount={matchJobSummary?.autoLinkedCount ?? 0}
@@ -61,10 +63,13 @@ export default function CSVResultsStep({
       {/* Post-import transfer alert for unmatched flagged transfers */}
       {(matchJobSummary?.flaggedCount ?? 0) > 0 && (
         <div className='flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950'>
-          <span className='mt-0.5 flex-shrink-0 text-lg text-yellow-600 dark:text-yellow-400'>↔</span>
+          <span className='mt-0.5 flex-shrink-0 text-lg text-yellow-600 dark:text-yellow-400'>
+            ↔
+          </span>
           <p className='text-sm text-yellow-800 dark:text-yellow-200'>
             <span className='font-medium dark:text-yellow-100'>
-              {matchJobSummary!.flaggedCount} possible transfer{matchJobSummary!.flaggedCount > 1 ? 's' : ''}
+              {matchJobSummary!.flaggedCount} possible transfer
+              {matchJobSummary!.flaggedCount > 1 ? 's' : ''}
             </span>{' '}
             were detected but could not be automatically matched.{' '}
             <a
@@ -78,47 +83,80 @@ export default function CSVResultsStep({
         </div>
       )}
 
-      <div className={`${config.bgColor} border ${config.borderColor} flex items-start space-x-3 rounded-lg p-4`}>
+      <div
+        className={`${config.bgColor} border ${config.borderColor} flex items-start space-x-3 rounded-lg p-4`}
+      >
         <Icon className='mt-0.5 h-5 w-5 flex-shrink-0 text-current' />
         <div>
-          <h3 className={`text-sm font-semibold ${config.textColor}`}>{config.label}</h3>
-          <p className={`mt-1 text-sm ${config.textColor.replace('900', '800')}`}>{config.description}</p>
+          <h3 className={`text-sm font-semibold ${config.textColor}`}>
+            {config.label}
+          </h3>
+          <p
+            className={`mt-1 text-sm ${config.textColor.replace('900', '800')}`}
+          >
+            {config.description}
+          </p>
         </div>
       </div>
 
       <div className='space-y-3 rounded-lg border border-border bg-muted p-4'>
         <div className='flex items-center justify-between'>
-          <span className='text-sm font-medium text-foreground'>Expenses Saved</span>
-          <span className='text-lg font-bold text-foreground'>{result.debitsSaved}</span>
+          <span className='text-sm font-medium text-foreground'>
+            Expenses Saved
+          </span>
+          <span className='text-lg font-bold text-foreground'>
+            {result.debitsSaved}
+          </span>
         </div>
         <div className='flex items-center justify-between'>
-          <span className='text-sm font-medium text-foreground'>Income Records Saved</span>
-          <span className='text-lg font-bold text-foreground'>{result.creditsSaved}</span>
+          <span className='text-sm font-medium text-foreground'>
+            Income Records Saved
+          </span>
+          <span className='text-lg font-bold text-foreground'>
+            {result.creditsSaved}
+          </span>
         </div>
         {result.creditsExcluded > 0 && (
           <div className='flex items-center justify-between'>
-            <span className='text-sm font-medium text-foreground'>Transfers/Excluded</span>
-            <span className='text-lg font-bold text-muted-foreground'>{result.creditsExcluded}</span>
+            <span className='text-sm font-medium text-foreground'>
+              Transfers/Excluded
+            </span>
+            <span className='text-lg font-bold text-muted-foreground'>
+              {result.creditsExcluded}
+            </span>
           </div>
         )}
         {result.duplicatesSkipped > 0 && (
           <div className='flex items-center justify-between'>
-            <span className='text-sm font-medium text-foreground'>Duplicates Skipped</span>
-            <span className='text-lg font-bold text-muted-foreground'>{result.duplicatesSkipped}</span>
+            <span className='text-sm font-medium text-foreground'>
+              Duplicates Skipped
+            </span>
+            <span className='text-lg font-bold text-muted-foreground'>
+              {result.duplicatesSkipped}
+            </span>
           </div>
         )}
         <div className='flex items-center justify-between pt-3 border-t border-border'>
-          <span className='text-sm font-medium text-foreground'>Total Entries</span>
-          <span className='text-lg font-bold text-foreground'>{result.totalEntries}</span>
+          <span className='text-sm font-medium text-foreground'>
+            Total Entries
+          </span>
+          <span className='text-lg font-bold text-foreground'>
+            {result.totalEntries}
+          </span>
         </div>
       </div>
 
       {result.errors.length > 0 && (
         <div className='rounded-lg border border-red-200 bg-red-50 p-4'>
-          <h4 className='mb-3 text-sm font-semibold text-red-900'>Errors Encountered</h4>
+          <h4 className='mb-3 text-sm font-semibold text-red-900'>
+            Errors Encountered
+          </h4>
           <div className='space-y-2'>
             {result.errors.map((error, idx) => (
-              <div key={idx} className='rounded border border-red-200 bg-red-50/50 p-2 text-xs text-red-800 dark:text-red-300'>
+              <div
+                key={idx}
+                className='rounded border border-red-200 bg-red-50/50 p-2 text-xs text-red-800 dark:text-red-300'
+              >
                 <div className='font-medium'>Month {error.month}</div>
                 <div className='mt-1 text-red-700'>{error.message}</div>
               </div>
@@ -128,7 +166,9 @@ export default function CSVResultsStep({
       )}
 
       <div className='rounded-lg border border-border bg-muted p-4'>
-        <h4 className='mb-2 text-sm font-semibold text-foreground'>File Summary</h4>
+        <h4 className='mb-2 text-sm font-semibold text-foreground'>
+          File Summary
+        </h4>
         <div className='space-y-1 text-xs text-muted-foreground'>
           <div className='flex justify-between'>
             <span>File Name:</span>
@@ -136,7 +176,9 @@ export default function CSVResultsStep({
           </div>
           <div className='flex justify-between'>
             <span>File Size:</span>
-            <span className='font-medium text-foreground'>{(file.fileSize / 1024).toFixed(1)} KB</span>
+            <span className='font-medium text-foreground'>
+              {(file.fileSize / 1024).toFixed(1)} KB
+            </span>
           </div>
           <div className='flex justify-between'>
             <span>Total Rows:</span>
@@ -144,7 +186,9 @@ export default function CSVResultsStep({
           </div>
           <div className='flex justify-between'>
             <span>Session ID:</span>
-            <span className='truncate font-mono text-xs text-foreground'>{result.sessionId}</span>
+            <span className='truncate font-mono text-xs text-foreground'>
+              {result.sessionId}
+            </span>
           </div>
         </div>
       </div>

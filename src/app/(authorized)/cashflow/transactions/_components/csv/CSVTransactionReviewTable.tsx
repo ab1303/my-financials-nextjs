@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react';
 
-import TransactionReviewTable, { type ClassifiedMonth as SharedClassifiedMonth } from '@/components/csv-import/TransactionReviewTable';
+import TransactionReviewTable, {
+  type ClassifiedMonth as SharedClassifiedMonth,
+} from '@/components/csv-import/TransactionReviewTable';
 import type { ClassifiedCreditMonth } from '@/server/services/ai-import/_types';
 
 import type { ClassifiedMonth } from './_types';
@@ -13,7 +15,11 @@ interface CSVTransactionReviewTableProps {
   categories: Array<{ id: string; name: string }>;
   incomeSourceLabels: string[];
   llmModel: string;
-  onConfirm: (debitMonths: ClassifiedMonth[], creditMonths: ClassifiedCreditMonth[], forceCreateIds: string[]) => Promise<void>;
+  onConfirm: (
+    debitMonths: ClassifiedMonth[],
+    creditMonths: ClassifiedCreditMonth[],
+    forceCreateIds: string[],
+  ) => Promise<void>;
   isConfirming: boolean;
 }
 
@@ -28,7 +34,11 @@ function CreditReviewPanel({
   onUpdate: (months: ClassifiedCreditMonth[]) => void;
   filterMode?: 'income' | 'excluded';
 }) {
-  const handleCategoryChange = (monthIdx: number, txIdx: number, newCategory: string) => {
+  const handleCategoryChange = (
+    monthIdx: number,
+    txIdx: number,
+    newCategory: string,
+  ) => {
     const updated = months.map((m, mi) => {
       if (mi !== monthIdx) return m;
       return {
@@ -54,7 +64,9 @@ function CreditReviewPanel({
       month,
       monthIdx,
       visible: month.transactions.filter((tx) =>
-        filterMode === 'excluded' ? isExcludedTx(tx.confirmedCategory) : !isExcludedTx(tx.confirmedCategory),
+        filterMode === 'excluded'
+          ? isExcludedTx(tx.confirmedCategory)
+          : !isExcludedTx(tx.confirmedCategory),
       ),
     }))
     .filter(({ visible }) => visible.length > 0);
@@ -62,7 +74,9 @@ function CreditReviewPanel({
   if (filteredMonths.length === 0) {
     return (
       <p className='py-4 text-sm text-gray-500 dark:text-gray-400'>
-        {filterMode === 'excluded' ? 'No excluded transactions.' : 'No income / credit transactions found.'}
+        {filterMode === 'excluded'
+          ? 'No excluded transactions.'
+          : 'No income / credit transactions found.'}
       </p>
     );
   }
@@ -71,15 +85,27 @@ function CreditReviewPanel({
     <div className='space-y-6'>
       {filteredMonths.map(({ month, monthIdx, visible }) => (
         <div key={month.month}>
-          <h3 className='mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200'>{month.month}</h3>
+          <h3 className='mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200'>
+            {month.month}
+          </h3>
           <table className='w-full border-collapse text-sm'>
             <thead>
               <tr className='border-b border-gray-200 dark:border-gray-700'>
-                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>Date</th>
-                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>Description</th>
-                <th className='py-2 pr-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400'>Amount</th>
-                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>LLM Suggested</th>
-                <th className='py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>Your Classification</th>
+                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>
+                  Date
+                </th>
+                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>
+                  Description
+                </th>
+                <th className='py-2 pr-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400'>
+                  Amount
+                </th>
+                <th className='py-2 pr-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>
+                  LLM Suggested
+                </th>
+                <th className='py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400'>
+                  Your Classification
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -91,24 +117,36 @@ function CreditReviewPanel({
                     key={tx.id}
                     className={`border-b border-gray-100 dark:border-gray-700 ${tx.overridden ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`}
                   >
-                    <td className={`py-2 pr-4 ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'}`}>
+                    <td
+                      className={`py-2 pr-4 ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'}`}
+                    >
                       {tx.date}
                     </td>
-                    <td className={`max-w-[200px] truncate py-2 pr-4 ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
+                    <td
+                      className={`max-w-[200px] truncate py-2 pr-4 ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}
+                    >
                       {tx.description}
                     </td>
-                    <td className={`py-2 pr-4 text-right ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
+                    <td
+                      className={`py-2 pr-4 text-right ${excluded ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}
+                    >
                       ${tx.amount.toFixed(2)}
                     </td>
-                    <td className='py-2 pr-4 text-xs text-gray-500 dark:text-gray-400'>{tx.llmCategory}</td>
+                    <td className='py-2 pr-4 text-xs text-gray-500 dark:text-gray-400'>
+                      {tx.llmCategory}
+                    </td>
                     <td className='py-2'>
                       <select
                         value={tx.confirmedCategory}
-                        onChange={(e) => handleCategoryChange(monthIdx, txIdx, e.target.value)}
+                        onChange={(e) =>
+                          handleCategoryChange(monthIdx, txIdx, e.target.value)
+                        }
                         className='w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
                       >
                         {!incomeSourceLabels.includes(tx.confirmedCategory) && (
-                          <option value={tx.confirmedCategory}>{tx.confirmedCategory}</option>
+                          <option value={tx.confirmedCategory}>
+                            {tx.confirmedCategory}
+                          </option>
                         )}
                         {incomeSourceLabels.map((label) => (
                           <option key={label} value={label}>
@@ -140,30 +178,45 @@ export default function CSVTransactionReviewTable({
   onConfirm,
   isConfirming,
 }: CSVTransactionReviewTableProps) {
-  const [activeTab, setActiveTab] = useState<'debits' | 'credits' | 'excluded' | 'duplicates'>('debits');
+  const [activeTab, setActiveTab] = useState<
+    'debits' | 'credits' | 'excluded' | 'duplicates'
+  >('debits');
   const [localDebitMonths, setLocalDebitMonths] = useState(debitMonths);
   const [localCreditMonths, setLocalCreditMonths] = useState(creditMonths);
   const [forceCreateIds, setForceCreateIds] = useState<string[]>([]);
 
   const toggleForceCreateId = (id: string) => {
-    setForceCreateIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    setForceCreateIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
   const totalDebitCount = useMemo(
-    () => localDebitMonths.reduce((sum, month) => sum + month.transactions.length, 0),
+    () =>
+      localDebitMonths.reduce(
+        (sum, month) => sum + month.transactions.length,
+        0,
+      ),
     [localDebitMonths],
   );
   const totalCreditCount = useMemo(
-    () => localCreditMonths.reduce((sum, month) => sum + month.transactions.length, 0),
+    () =>
+      localCreditMonths.reduce(
+        (sum, month) => sum + month.transactions.length,
+        0,
+      ),
     [localCreditMonths],
   );
   const excludedCount = useMemo(
     () =>
       localCreditMonths.reduce(
         (sum, month) =>
-          sum + month.transactions.filter((tx) => tx.confirmedCategory === 'Transfer' || tx.confirmedCategory === 'Excluded').length,
+          sum +
+          month.transactions.filter(
+            (tx) =>
+              tx.confirmedCategory === 'Transfer' ||
+              tx.confirmedCategory === 'Excluded',
+          ).length,
         0,
       ),
     [localCreditMonths],
@@ -180,33 +233,43 @@ export default function CSVTransactionReviewTable({
       (sum, month) =>
         sum +
         month.transactions.filter(
-          (tx) => tx.transferLikelihood === 'HIGH' || tx.transferLikelihood === 'MEDIUM'
+          (tx) =>
+            tx.transferLikelihood === 'HIGH' ||
+            tx.transferLikelihood === 'MEDIUM',
         ).length,
-      0
+      0,
     );
     const creditFlagged = localCreditMonths.reduce(
       (sum, month) =>
         sum +
         month.transactions.filter(
-          (tx) => tx.transferLikelihood === 'HIGH' || tx.transferLikelihood === 'MEDIUM'
+          (tx) =>
+            tx.transferLikelihood === 'HIGH' ||
+            tx.transferLikelihood === 'MEDIUM',
         ).length,
-      0
+      0,
     );
     return debitFlagged + creditFlagged;
   }, [localDebitMonths, localCreditMonths]);
 
   return (
-    <div data-testid="csv-review-table" className='flex h-full min-h-0 flex-col'>
+    <div
+      data-testid='csv-review-table'
+      className='flex h-full min-h-0 flex-col'
+    >
       {/* Transfer Likelihood Warning Banner */}
       {flaggedCount > 0 && (
         <div className='mb-4 flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-950'>
-          <span className='mt-0.5 flex-shrink-0 text-lg text-yellow-600 dark:text-yellow-400'>↔</span>
+          <span className='mt-0.5 flex-shrink-0 text-lg text-yellow-600 dark:text-yellow-400'>
+            ↔
+          </span>
           <p className='text-sm text-yellow-800 dark:text-yellow-200'>
             <span className='font-medium dark:text-yellow-100'>
               {flaggedCount} transaction{flaggedCount > 1 ? 's' : ''}
             </span>{' '}
-            look like possible transfers. Review them before confirming — or continue and resolve any unmatched transfers in the Transfers
-            tab after import.
+            look like possible transfers. Review them before confirming — or
+            continue and resolve any unmatched transfers in the Transfers tab
+            after import.
           </p>
         </div>
       )}
@@ -262,7 +325,9 @@ export default function CSVTransactionReviewTable({
             months={localDebitMonths as SharedClassifiedMonth[]}
             categories={categories}
             llmModel={llmModel}
-            onUpdateMonths={(months) => setLocalDebitMonths(months as ClassifiedMonth[])}
+            onUpdateMonths={(months) =>
+              setLocalDebitMonths(months as ClassifiedMonth[])
+            }
           />
         )}
         {activeTab === 'credits' && (
@@ -270,7 +335,7 @@ export default function CSVTransactionReviewTable({
             months={localCreditMonths}
             incomeSourceLabels={incomeSourceLabels}
             onUpdate={setLocalCreditMonths}
-            filterMode="income"
+            filterMode='income'
           />
         )}
         {activeTab === 'excluded' && (
@@ -278,18 +343,24 @@ export default function CSVTransactionReviewTable({
             months={localCreditMonths}
             incomeSourceLabels={incomeSourceLabels}
             onUpdate={setLocalCreditMonths}
-            filterMode="excluded"
+            filterMode='excluded'
           />
         )}
         {activeTab === 'duplicates' && (
-          <DuplicatesTab debitMonths={localDebitMonths} forceCreateIds={forceCreateIds} onToggleForceCreateId={toggleForceCreateId} />
+          <DuplicatesTab
+            debitMonths={localDebitMonths}
+            forceCreateIds={forceCreateIds}
+            onToggleForceCreateId={toggleForceCreateId}
+          />
         )}
       </div>
 
       <div className='flex flex-shrink-0 justify-end border-t pt-4'>
         <button
-          data-testid="csv-confirm-import"
-          onClick={() => void onConfirm(localDebitMonths, localCreditMonths, forceCreateIds)}
+          data-testid='csv-confirm-import'
+          onClick={() =>
+            void onConfirm(localDebitMonths, localCreditMonths, forceCreateIds)
+          }
           disabled={isConfirming}
           className='rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50'
         >
@@ -299,5 +370,3 @@ export default function CSVTransactionReviewTable({
     </div>
   );
 }
-
-

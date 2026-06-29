@@ -226,8 +226,8 @@ describe('AssetBalanceCards', () => {
       <AssetBalanceCards
         latestCashTotal={50000}
         latestStockTotal={75000}
-        latestCashDate="2025-01-15"
-        latestStockDate="2025-01-15"
+        latestCashDate='2025-01-15'
+        latestStockDate='2025-01-15'
       />,
     );
 

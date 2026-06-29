@@ -41,7 +41,10 @@ export const categoryGroupRouter = router({
       } catch (err) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: err instanceof Error ? err.message : 'Failed to create category group',
+          message:
+            err instanceof Error
+              ? err.message
+              : 'Failed to create category group',
         });
       }
     }),
@@ -74,7 +77,10 @@ export const categoryGroupRouter = router({
         }
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: err instanceof Error ? err.message : 'Failed to update category group',
+          message:
+            err instanceof Error
+              ? err.message
+              : 'Failed to update category group',
         });
       }
     }),
@@ -97,7 +103,10 @@ export const categoryGroupRouter = router({
         }
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: err instanceof Error ? err.message : 'Failed to delete category group',
+          message:
+            err instanceof Error
+              ? err.message
+              : 'Failed to delete category group',
         });
       }
     }),

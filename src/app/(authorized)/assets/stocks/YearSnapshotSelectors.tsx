@@ -4,8 +4,8 @@ import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import type { SingleValue } from 'react-select';
 
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import type { OptionType } from '@/types';
 
 interface YearSnapshotSelectorsProps {
@@ -26,30 +26,30 @@ function YearSnapshotSelectorsContent({
   onSnapshotChange,
 }: YearSnapshotSelectorsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
       <div>
-        <Label htmlFor="year-select">Fiscal Year</Label>
+        <Label htmlFor='year-select'>Fiscal Year</Label>
         <Select
-          inputId="year-select"
+          inputId='year-select'
           options={yearOptions}
           value={selectedYear}
           onChange={onYearChange}
           getOptionValue={(option: OptionType) => option.id}
           isDisabled={yearOptions.length === 0}
-          className="mt-1"
+          className='mt-1'
         />
       </div>
 
       {snapshotOptions.length > 0 && (
         <div>
-          <Label htmlFor="snapshot-select">Snapshot Date</Label>
+          <Label htmlFor='snapshot-select'>Snapshot Date</Label>
           <Select
-            inputId="snapshot-select"
+            inputId='snapshot-select'
             options={snapshotOptions}
             value={selectedSnapshot}
             onChange={onSnapshotChange}
             getOptionValue={(option: OptionType) => option.id}
-            className="mt-1"
+            className='mt-1'
           />
         </div>
       )}
@@ -62,13 +62,15 @@ const DynamicYearSnapshotSelectors = dynamic(
   () => Promise.resolve(YearSnapshotSelectorsContent),
   {
     ssr: false,
-    loading: () => <div className="h-20 bg-muted rounded animate-pulse" />,
-  }
+    loading: () => <div className='h-20 bg-muted rounded animate-pulse' />,
+  },
 );
 
 export function YearSnapshotSelectors(props: YearSnapshotSelectorsProps) {
   return (
-    <Suspense fallback={<div className="h-20 bg-muted rounded animate-pulse" />}>
+    <Suspense
+      fallback={<div className='h-20 bg-muted rounded animate-pulse' />}
+    >
       <DynamicYearSnapshotSelectors {...props} />
     </Suspense>
   );

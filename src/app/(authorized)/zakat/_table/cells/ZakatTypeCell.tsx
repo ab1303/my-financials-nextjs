@@ -1,9 +1,10 @@
 import type { BeneficiaryEnumType } from '@prisma/client';
 import type { CellContext } from '@tanstack/react-table';
 
-import type { OptionType } from '@/types';
-import type { ZakatPaymentType } from '../../_types';
 import { SelectCell } from '@/components/table/cells/SelectCell';
+import type { OptionType } from '@/types';
+
+import type { ZakatPaymentType } from '../../_types';
 
 type ZakatTypeCellProps = {
   row: CellContext<ZakatPaymentType, unknown>['row'];
@@ -19,14 +20,16 @@ export default function ZakatTypeCell({
   const meta = table.options.meta;
   const editedRecord = meta?.editedRows?.get(row.original.id);
   const isEditing = !!editedRecord;
-  const value = editedRecord ? editedRecord.beneficiaryType : row.original.beneficiaryType;
+  const value = editedRecord
+    ? editedRecord.beneficiaryType
+    : row.original.beneficiaryType;
 
   return (
     <SelectCell
       value={value}
       options={options}
       isEditing={isEditing}
-      placeholder="Select beneficiary type..."
+      placeholder='Select beneficiary type...'
       onChange={(newValue) => {
         if (editedRecord && newValue) {
           meta?.setEditedRows((prev) => {

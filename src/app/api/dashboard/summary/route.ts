@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 
 import { auth } from '@/server/auth';
+import { prisma } from '@/server/db/client';
 import type { DashboardSummaryResponse } from '@/server/models/dashboard';
 import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
 import { getCalendarYears } from '@/server/services/calendar-year.service';
-import { getMonthlyIncomeExpenseTrend, getTopExpenseCategories } from '@/server/services/dashboard.service';
+import {
+  getMonthlyIncomeExpenseTrend,
+  getTopExpenseCategories,
+} from '@/server/services/dashboard.service';
 import { getTotalExpenses } from '@/server/services/expense.service';
 import { getTotalIncome } from '@/server/services/income.service';
-import { prisma } from '@/server/db/client';
 
 /**
  * GET /api/dashboard/summary
@@ -24,30 +27,31 @@ export async function GET(request: Request) {
     const userId = session.user.id;
 
     // Fetch net worth trend, calendar years, and transactions in parallel
-    const [netWorthData, calendarYears, recentTransactionsData] = await Promise.all([
-      getNetWorthTrend(userId),
-      getCalendarYears(['FISCAL', 'ANNUAL']),
-      prisma.transaction.findMany({
-        where: {
-          userId,
-          status: 'CONFIRMED',
-          category: {
-            not: 'Transfer',
-          },
-        },
-        include: {
-          financialAccount: {
-            select: {
-              name: true,
+    const [netWorthData, calendarYears, recentTransactionsData] =
+      await Promise.all([
+        getNetWorthTrend(userId),
+        getCalendarYears(['FISCAL', 'ANNUAL']),
+        prisma.transaction.findMany({
+          where: {
+            userId,
+            status: 'CONFIRMED',
+            category: {
+              not: 'Transfer',
             },
           },
-        },
-        orderBy: {
-          date: 'desc',
-        },
-        take: 5,
-      }),
-    ]);
+          include: {
+            financialAccount: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            date: 'desc',
+          },
+          take: 5,
+        }),
+      ]);
 
     // Extract net worth data - use latest values
     const latestTotal = netWorthData.latestNetWorth;
@@ -57,12 +61,10 @@ export async function GET(request: Request) {
     const latestStockDate = netWorthData.latestStockDate;
 
     // Extract sparkline: last 6 data points from netWorthTrend
-    const sparklinePoints = netWorthData.dataPoints
-      .slice(-6)
-      .map((point) => ({
-        date: point.date,
-        value: point.netWorthTotal,
-      }));
+    const sparklinePoints = netWorthData.dataPoints.slice(-6).map((point) => ({
+      date: point.date,
+      value: point.netWorthTotal,
+    }));
 
     // Build cashflow YTD - use most recent calendar year if it exists
     let cashflowYTD: DashboardSummaryResponse['cashflowYTD'] = null;
@@ -82,9 +84,7 @@ export async function GET(request: Request) {
 
       const netCashflow = totalIncome - totalExpenses;
       const savingsRate =
-        totalIncome > 0
-          ? Math.round((netCashflow / totalIncome) * 100)
-          : 0;
+        totalIncome > 0 ? Math.round((netCashflow / totalIncome) * 100) : 0;
 
       // Clamp savings rate to 0-100
       const clampedSavingsRate = Math.max(0, Math.min(100, savingsRate));
@@ -113,7 +113,15 @@ export async function GET(request: Request) {
     // Fetch monthly trend and top expense categories for current month
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const monthEnd = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
 
     const [monthlyTrend, topExpenseCategories] = await Promise.all([
       getMonthlyIncomeExpenseTrend(userId, 6),

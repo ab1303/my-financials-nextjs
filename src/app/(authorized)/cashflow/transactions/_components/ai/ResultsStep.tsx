@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle,Check } from 'lucide-react';
+import { AlertCircle, Check } from 'lucide-react';
 
 import type { AIImportSessionResult } from './_types';
 
@@ -31,7 +31,9 @@ export default function ResultsStep({
 
       <div className='bg-muted border border-border rounded-lg p-4 space-y-3'>
         <div className='flex items-center justify-between'>
-          <span className='text-sm font-medium text-foreground'>Entries Created</span>
+          <span className='text-sm font-medium text-foreground'>
+            Entries Created
+          </span>
           <span className='text-lg font-bold text-foreground'>
             {result.recordsCreated}
           </span>

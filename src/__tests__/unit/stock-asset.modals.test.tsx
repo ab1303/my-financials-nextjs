@@ -17,14 +17,14 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should parse month/year input to first day of month', () => {
       // Arrange: month input in format "YYYY-MM"
       const monthInput = '2023-06';
-      
+
       // Act: Parse the month input
       const parts = (monthInput as any).split('-') as string[];
       if (parts.length !== 2) throw new Error('Invalid format');
       const [year, month] = parts;
       if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
-      
+
       // Assert: Should be June 1, 2023
       expect((result as any).getFullYear()).toBe(2023);
       expect((result as any).getMonth()).toBe(5); // 0-indexed (5 = June)
@@ -38,7 +38,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       const [year, month] = parts;
       if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
-      
+
       expect((result as any).getMonth()).toBe(0); // January is 0
       expect(result.getDate()).toBe(1);
       expect((result as any).getFullYear()).toBe(2024);
@@ -51,7 +51,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       const [year, month] = parts;
       if (!year || !month) throw new Error('Invalid format');
       const result = new Date(parseInt(year), parseInt(month) - 1, 1);
-      
+
       expect((result as any).getMonth()).toBe(11); // December is 11
       expect(result.getDate()).toBe(1);
       expect((result as any).getFullYear()).toBe(2023);
@@ -66,7 +66,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should handle empty month input as null buyDate', () => {
       // Arrange
       const monthInput: string | undefined = '';
-      
+
       // Act: Parse empty input
       let result = null;
       if (monthInput !== undefined && monthInput !== '') {
@@ -76,7 +76,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
           result = new Date(parseInt(year!), parseInt(month!) - 1, 1);
         }
       }
-      
+
       // Assert: Should be null
       expect(result).toBeNull();
     });
@@ -84,7 +84,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should handle undefined month input as null buyDate', () => {
       // Arrange
       const monthInput: string | undefined = undefined;
-      
+
       // Act: Parse undefined input
       let result = null;
       if (monthInput !== undefined && monthInput !== '') {
@@ -94,7 +94,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
           result = new Date(parseInt(year!), parseInt(month!) - 1, 1);
         }
       }
-      
+
       // Assert: Should be null
       expect(result).toBeNull();
     });
@@ -108,7 +108,7 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should start with month mode as default', () => {
       // Arrange: Initial state
       const initialMode = 'month';
-      
+
       // Assert
       expect(initialMode).toBe('month');
     });
@@ -116,10 +116,10 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should toggle from month mode to exact mode', () => {
       // Arrange: Start in month mode
       let buyDateMode: 'exact' | 'month' = 'month';
-      
+
       // Act: Toggle to exact
       buyDateMode = 'exact';
-      
+
       // Assert
       expect(buyDateMode).toBe('exact');
     });
@@ -127,10 +127,10 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should toggle from exact mode back to month mode', () => {
       // Arrange: Start in exact mode
       let buyDateMode: 'exact' | 'month' = 'exact';
-      
+
       // Act: Toggle to month
       buyDateMode = 'month';
-      
+
       // Assert
       expect(buyDateMode).toBe('month');
     });
@@ -144,12 +144,12 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should convert existing Date to month input format (YYYY-MM)', () => {
       // Arrange: Existing date from database
       const existingBuyDate = new Date(2023, 5, 15); // June 15, 2023
-      
+
       // Act: Convert to month input format
       const year = existingBuyDate.getFullYear();
       const month = String(existingBuyDate.getMonth() + 1).padStart(2, '0');
       const monthInputValue = `${year}-${month}`;
-      
+
       // Assert: Should be in YYYY-MM format
       expect(monthInputValue).toBe('2023-06');
     });
@@ -157,12 +157,12 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should handle January date correctly in edit mode', () => {
       // Arrange
       const existingBuyDate = new Date(2024, 0, 10); // January 10, 2024
-      
+
       // Act
       const year = existingBuyDate.getFullYear();
       const month = String(existingBuyDate.getMonth() + 1).padStart(2, '0');
       const monthInputValue = `${year}-${month}`;
-      
+
       // Assert
       expect(monthInputValue).toBe('2024-01');
     });
@@ -170,15 +170,18 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
     it('should handle null buyDate on edit (leave blank)', () => {
       // Arrange
       const existingBuyDate: Date | null = null;
-      
+
       // Act: Handle null
       let monthInputValue = '';
       if (existingBuyDate) {
         const year = (existingBuyDate as any).getFullYear();
-        const month = String((existingBuyDate as any).getMonth() + 1).padStart(2, '0');
+        const month = String((existingBuyDate as any).getMonth() + 1).padStart(
+          2,
+          '0',
+        );
         monthInputValue = `${year}-${month}`;
       }
-      
+
       // Assert
       expect(monthInputValue).toBe('');
     });
@@ -192,10 +195,16 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       // Arrange
       const monthInput = '2023-06';
       const buyDateMode: 'exact' | 'month' = 'month';
-      const formData: { buyDate: string | Date | null } = { buyDate: monthInput };
+      const formData: { buyDate: string | Date | null } = {
+        buyDate: monthInput,
+      };
 
       // Act: Simulate form submission with month mode
-      if (buyDateMode === 'month' && typeof formData.buyDate === 'string' && formData.buyDate) {
+      if (
+        buyDateMode === 'month' &&
+        typeof formData.buyDate === 'string' &&
+        formData.buyDate
+      ) {
         const parts = formData.buyDate.split('-');
         if (parts.length === 2) {
           const [year, month] = parts;
@@ -216,10 +225,16 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       // Arrange
       const monthInput: string | undefined = '';
       const buyDateMode: 'exact' | 'month' = 'month';
-      const formData: { buyDate: string | Date | null } = { buyDate: monthInput || null };
+      const formData: { buyDate: string | Date | null } = {
+        buyDate: monthInput || null,
+      };
 
       // Act: Simulate form submission with empty month
-      if (buyDateMode === 'month' && typeof formData.buyDate === 'string' && formData.buyDate) {
+      if (
+        buyDateMode === 'month' &&
+        typeof formData.buyDate === 'string' &&
+        formData.buyDate
+      ) {
         const parts = formData.buyDate.split('-');
         if (parts.length === 2) {
           const [year, month] = parts;
@@ -235,7 +250,9 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
       // Arrange
       const exactDateInput = '2023-06-15';
       const buyDateMode: 'exact' | 'month' = 'exact';
-      const formData: { buyDate: string | Date | null } = { buyDate: exactDateInput };
+      const formData: { buyDate: string | Date | null } = {
+        buyDate: exactDateInput,
+      };
 
       // Act: Simulate form submission with exact date mode
       if (buyDateMode === 'exact' && typeof formData.buyDate === 'string') {
@@ -257,8 +274,9 @@ describe('Stock Asset Modals - Month/Year Picker UI', () => {
      */
     it('should display CGT warning message', () => {
       // Arrange
-      const warningMessage = '⚠️ CGT eligibility requires 12+ months holding. Leave blank to use snapshot date.';
-      
+      const warningMessage =
+        '⚠️ CGT eligibility requires 12+ months holding. Leave blank to use snapshot date.';
+
       // Assert
       expect(warningMessage).toContain('12+');
       expect(warningMessage).toContain('CGT');

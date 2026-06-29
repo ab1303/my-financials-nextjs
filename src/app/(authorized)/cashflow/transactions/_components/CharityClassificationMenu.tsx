@@ -21,18 +21,18 @@ export default function CharityClassificationMenu({
   return (
     <Fragment>
       <button
-        type="button"
+        type='button'
         onClick={() => onSelectDonation(transactionId)}
-        className="rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20"
-        title="Classify as Donation"
+        className='rounded px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900/20'
+        title='Classify as Donation'
       >
         🎁 Donation
       </button>
       <button
-        type="button"
+        type='button'
         onClick={() => onSelectZakat(transactionId)}
-        className="rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
-        title="Classify as Zakat"
+        className='rounded px-2 py-1 text-xs font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20'
+        title='Classify as Zakat'
       >
         🕌 Zakat
       </button>

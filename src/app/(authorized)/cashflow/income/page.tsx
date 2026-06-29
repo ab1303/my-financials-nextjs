@@ -8,9 +8,12 @@ import { auth } from '@/server/auth';
 import { listBankAccountsHandler } from '@/server/controllers/bank-account.controller';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import { totalIncomeHandler } from '@/server/controllers/income.controller';
-import { ORPHAN_RESOLUTION_DAYS,TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
-import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { prisma } from '@/server/db/client';
+import {
+  ORPHAN_RESOLUTION_DAYS,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import type { OptionType } from '@/types';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
@@ -72,7 +75,8 @@ export default async function IncomePage({
     id: a.id,
     label: `${a.name} (${a.institution.name})`,
   }));
-  const selectedBankId = bankOptions.find((b) => b.id === bankIdParam)?.id ?? '';
+  const selectedBankId =
+    bankOptions.find((b) => b.id === bankIdParam)?.id ?? '';
 
   const totalIncome = await totalIncomeHandler(
     selectedCalendarYearId,
@@ -97,12 +101,25 @@ export default async function IncomePage({
       const where = {
         userId: session.user.id,
         category: TRANSFER_CATEGORY,
-        ...(selectedCalendarYear ? {
-          date: {
-            gte: new Date(selectedCalendarYear.fromYear, selectedCalendarYear.fromMonth - 1, 1),
-            lte: new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0, 23, 59, 59),
-          },
-        } : {}),
+        ...(selectedCalendarYear
+          ? {
+              date: {
+                gte: new Date(
+                  selectedCalendarYear.fromYear,
+                  selectedCalendarYear.fromMonth - 1,
+                  1,
+                ),
+                lte: new Date(
+                  selectedCalendarYear.toYear,
+                  selectedCalendarYear.toMonth,
+                  0,
+                  23,
+                  59,
+                  59,
+                ),
+              },
+            }
+          : {}),
       };
       const [count, agg] = await Promise.all([
         prisma.transaction.count({ where }),
@@ -126,7 +143,11 @@ export default async function IncomePage({
     : undefined;
   const yearDateTo = selectedCalendarYear
     ? (() => {
-        const lastDay = new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate();
+        const lastDay = new Date(
+          selectedCalendarYear.toYear,
+          selectedCalendarYear.toMonth,
+          0,
+        ).getDate();
         return `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
       })()
     : undefined;
@@ -144,12 +165,12 @@ export default async function IncomePage({
       <div className='rounded-xl border border-border bg-card shadow p-6'>
         <UnresolvedTransfersBanner
           count={orphanedCount}
-          href="/cashflow/transactions?tab=transfers"
+          href='/cashflow/transactions?tab=transfers'
         />
         <TransferExclusionSummary
           count={transferSummary.count}
           totalAmount={transferSummary.totalAmount}
-          href="/cashflow/transactions?tab=transfers"
+          href='/cashflow/transactions?tab=transfers'
         />
         <IncomeForm
           initialData={initialData}
@@ -168,11 +189,11 @@ export default async function IncomePage({
               </h2>
             )}
 
-            <IncomeTableServer 
-             calendarYearId={selectedCalendarYearId} 
-             bankAccountId={selectedBankId || undefined}
-             yearDateFrom={yearDateFrom}
-             yearDateTo={yearDateTo}
+            <IncomeTableServer
+              calendarYearId={selectedCalendarYearId}
+              bankAccountId={selectedBankId || undefined}
+              yearDateFrom={yearDateFrom}
+              yearDateTo={yearDateTo}
             />
           </Suspense>
         </IncomeForm>

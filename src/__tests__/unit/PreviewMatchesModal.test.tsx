@@ -19,7 +19,7 @@ describe('PreviewMatchesModal', () => {
       id: 'match-1',
       date: '2024-01-10',
       description: 'Supermarket Purchase',
-      amount: -50.00,
+      amount: -50.0,
       type: 'DEBIT',
       category: 'Groceries',
       status: 'CONFIRMED',
@@ -28,7 +28,7 @@ describe('PreviewMatchesModal', () => {
       id: 'match-2',
       date: '2024-01-20',
       description: 'Supermarket Purchase',
-      amount: -75.50,
+      amount: -75.5,
       type: 'DEBIT',
       category: 'Groceries',
       status: 'CONFIRMED',
@@ -64,10 +64,7 @@ describe('PreviewMatchesModal', () => {
 
   it('renders nothing when open is false', () => {
     const { container } = render(
-      <PreviewMatchesModal
-        {...defaultProps}
-        open={false}
-      />
+      <PreviewMatchesModal {...defaultProps} open={false} />,
     );
 
     expect(container.firstChild).toBeNull();
@@ -99,7 +96,7 @@ describe('PreviewMatchesModal', () => {
     // Check that all transactions are rendered by finding the table cells
     const dateElements = screen.getAllByText('2024-01-10');
     expect(dateElements).toHaveLength(1);
-    
+
     const descriptions = screen.getAllByText('Supermarket Purchase');
     expect(descriptions).toHaveLength(3); // One for each row
   });
@@ -132,7 +129,7 @@ describe('PreviewMatchesModal', () => {
     await waitFor(() => {
       expect((checkboxes[0] as HTMLInputElement).checked).toBe(true);
     });
-    
+
     expect((checkboxes[1] as HTMLInputElement).checked).toBe(false);
   });
 
@@ -166,15 +163,10 @@ describe('PreviewMatchesModal', () => {
   it('calls onApply with selected transaction IDs when Apply is clicked', async () => {
     const onApply = vi.fn();
 
-    render(
-      <PreviewMatchesModal
-        {...defaultProps}
-        onApply={onApply}
-      />
-    );
+    render(<PreviewMatchesModal {...defaultProps} onApply={onApply} />);
 
     const checkboxes = screen.getAllByRole('checkbox');
-    
+
     // Select first and third transactions
     const firstCheckbox = checkboxes[0];
     const thirdCheckbox = checkboxes[2];
@@ -184,11 +176,11 @@ describe('PreviewMatchesModal', () => {
     fireEvent.click(thirdCheckbox!);
 
     const applyButton = screen.getByRole('button', { name: /apply/i });
-    
+
     await waitFor(() => {
       expect(applyButton).not.toHaveAttribute('disabled');
     });
-    
+
     fireEvent.click(applyButton);
 
     expect(onApply).toHaveBeenCalledWith(['match-1', 'match-3']);
@@ -197,15 +189,10 @@ describe('PreviewMatchesModal', () => {
   it('calls onApply with all selected IDs when multiple checkboxes are selected', () => {
     const onApply = vi.fn();
 
-    render(
-      <PreviewMatchesModal
-        {...defaultProps}
-        onApply={onApply}
-      />
-    );
+    render(<PreviewMatchesModal {...defaultProps} onApply={onApply} />);
 
     const checkboxes = screen.getAllByRole('checkbox');
-    
+
     // Select all transactions
     checkboxes.forEach((checkbox) => {
       fireEvent.click(checkbox);
@@ -220,12 +207,7 @@ describe('PreviewMatchesModal', () => {
   it('calls onCancel when Cancel button is clicked', () => {
     const onCancel = vi.fn();
 
-    render(
-      <PreviewMatchesModal
-        {...defaultProps}
-        onCancel={onCancel}
-      />
-    );
+    render(<PreviewMatchesModal {...defaultProps} onCancel={onCancel} />);
 
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     fireEvent.click(cancelButton);
@@ -239,9 +221,9 @@ describe('PreviewMatchesModal', () => {
     render(
       <PreviewMatchesModal
         {...defaultProps}
-        matchScope="recent"
+        matchScope='recent'
         onMatchScopeChange={onMatchScopeChange}
-      />
+      />,
     );
 
     const allTimeButton = screen.getByRole('button', { name: /all time/i });
@@ -258,7 +240,7 @@ describe('PreviewMatchesModal', () => {
         {...defaultProps}
         hasMore={true}
         onLoadMore={onLoadMore}
-      />
+      />,
     );
 
     const loadMoreButton = screen.getByRole('button', { name: /load more/i });
@@ -281,53 +263,45 @@ describe('PreviewMatchesModal', () => {
     rerender(
       <PreviewMatchesModal
         {...defaultProps}
-        matches={[...mockMatches, {
-          id: 'match-4',
-          date: '2024-02-10',
-          description: 'Supermarket Purchase',
-          amount: -42.25,
-          type: 'DEBIT',
-          category: 'Groceries',
-          status: 'CONFIRMED',
-        }]}
+        matches={[
+          ...mockMatches,
+          {
+            id: 'match-4',
+            date: '2024-02-10',
+            description: 'Supermarket Purchase',
+            amount: -42.25,
+            type: 'DEBIT',
+            category: 'Groceries',
+            status: 'CONFIRMED',
+          },
+        ]}
         totalCount={4}
-      />
+      />,
     );
 
-    expect((screen.getAllByRole('checkbox')[0] as HTMLInputElement).checked).toBe(true);
-    expect((screen.getAllByRole('checkbox')[3] as HTMLInputElement).checked).toBe(false);
+    expect(
+      (screen.getAllByRole('checkbox')[0] as HTMLInputElement).checked,
+    ).toBe(true);
+    expect(
+      (screen.getAllByRole('checkbox')[3] as HTMLInputElement).checked,
+    ).toBe(false);
   });
 
   it('shows message when no matches found', () => {
-    render(
-      <PreviewMatchesModal
-        {...defaultProps}
-        matches={[]}
-      />
-    );
+    render(<PreviewMatchesModal {...defaultProps} matches={[]} />);
 
     expect(screen.getByText('No matching transactions found')).toBeDefined();
   });
 
   it('disables Apply button when matches are empty', () => {
-    render(
-      <PreviewMatchesModal
-        {...defaultProps}
-        matches={[]}
-      />
-    );
+    render(<PreviewMatchesModal {...defaultProps} matches={[]} />);
 
     const applyButton = screen.getByRole('button', { name: /apply/i });
     expect(applyButton).toHaveAttribute('disabled');
   });
 
   it('disables buttons when isLoading is true', () => {
-    render(
-      <PreviewMatchesModal
-        {...defaultProps}
-        isLoading={true}
-      />
-    );
+    render(<PreviewMatchesModal {...defaultProps} isLoading={true} />);
 
     const applyButton = screen.getByRole('button', { name: /applying/i });
     const cancelButton = screen.getByRole('button', { name: /cancel/i });

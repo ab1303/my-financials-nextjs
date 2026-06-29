@@ -44,21 +44,24 @@ describe('interest-cleansing.service - scoring', () => {
 
     expect(candidates).toHaveLength(1);
     const c = candidates[0]!;
-    
+
     // Perfect match (amount, date, account). Description tokens 'monthly' vs 'to' 'beneficiary' - 'interest' and 'payment' match.
     // tokenize removes words <= 2 chars.
     // credit: ['monthly', 'interest', 'payment']
     // debit: ['interest', 'payment', 'beneficiary']
     // common: ['interest', 'payment'] (2/3 = 0.66)
-    
+
     // amountScore: 1.0 (60% weight -> 60)
     // dateScore: 1.0 (10% weight -> 10)
     // descScore: 0.66 (20% weight -> 13)
     // accountScore: 1.0 (10% weight -> 10)
     // combined: 60 + 10 + 13 + 10 = 93
-    
+
     expect(c.matchPercent).toBeGreaterThanOrEqual(90);
-    const sum = Object.values(c.scoreBreakdown.contributionsPercent).reduce((a, b) => a + b, 0);
+    const sum = Object.values(c.scoreBreakdown.contributionsPercent).reduce(
+      (a, b) => a + b,
+      0,
+    );
     expect(sum).toBe(c.matchPercent);
     expect(c.accountName).toBe('Savings Account');
     expect(c.reasonShort).toBe('Strong match');

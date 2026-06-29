@@ -1,8 +1,9 @@
+import { prisma } from '@/server/db/client';
+
 import type {
   MonthlyTrendPoint,
   TopExpenseCategory,
 } from '../models/dashboard';
-import { prisma } from '@/server/db/client';
 import { TRANSFER_CATEGORY } from './transactions/constants';
 
 // Month names for label formatting

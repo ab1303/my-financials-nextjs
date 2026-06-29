@@ -43,20 +43,22 @@ export function RecentTransactionsWidget({ transactions }: Props) {
   // Empty state
   if (transactions.length === 0) {
     return (
-      <Card className="col-span-full dark:border-slate-700">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+      <Card className='col-span-full dark:border-slate-700'>
+        <CardHeader className='pb-2'>
+          <CardTitle className='text-sm font-medium text-muted-foreground'>
             Recent Transactions
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="mb-3 text-sm text-muted-foreground">No transactions yet</p>
+          <p className='mb-3 text-sm text-muted-foreground'>
+            No transactions yet
+          </p>
           <Link
-            href="/cashflow/transactions"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            href='/cashflow/transactions'
+            className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline'
           >
             View all transactions
-            <ArrowRight className="h-3 w-3" />
+            <ArrowRight className='h-3 w-3' />
           </Link>
         </CardContent>
       </Card>
@@ -64,36 +66,36 @@ export function RecentTransactionsWidget({ transactions }: Props) {
   }
 
   return (
-    <Card className="col-span-full dark:border-slate-700">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+    <Card className='col-span-full dark:border-slate-700'>
+      <CardHeader className='pb-3'>
+        <CardTitle className='text-sm font-medium text-muted-foreground'>
           Recent Transactions
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className='space-y-3'>
         {/* Transaction List */}
-        <div className="space-y-2">
+        <div className='space-y-2'>
           {transactions.map((tx) => (
             <div
               key={tx.id}
-              className="flex items-center justify-between gap-2 rounded-sm border border-border/50 p-2 dark:border-slate-700/50"
+              className='flex items-center justify-between gap-2 rounded-sm border border-border/50 p-2 dark:border-slate-700/50'
             >
               {/* Left: Date, Description, Category */}
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-muted-foreground">
+              <div className='flex-1 space-y-1'>
+                <div className='flex items-center gap-2'>
+                  <p className='text-xs text-muted-foreground'>
                     {formatDate(tx.date)}
                   </p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className='text-sm font-medium text-foreground'>
                     {truncateDescription(tx.description)}
                   </p>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="inline-block rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground dark:bg-slate-700">
+                <div className='flex items-center gap-1'>
+                  <span className='inline-block rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground dark:bg-slate-700'>
                     {tx.category}
                   </span>
                   {tx.bankAccountName && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className='text-xs text-muted-foreground'>
                       {tx.bankAccountName}
                     </span>
                   )}
@@ -101,7 +103,7 @@ export function RecentTransactionsWidget({ transactions }: Props) {
               </div>
 
               {/* Right: Amount */}
-              <div className="flex-shrink-0">
+              <div className='flex-shrink-0'>
                 <p
                   className={`whitespace-nowrap text-sm font-semibold tabular-nums ${
                     tx.type === 'CREDIT'
@@ -118,13 +120,13 @@ export function RecentTransactionsWidget({ transactions }: Props) {
         </div>
 
         {/* View All Link */}
-        <div className="border-t border-border pt-3 dark:border-slate-700">
+        <div className='border-t border-border pt-3 dark:border-slate-700'>
           <Link
-            href="/cashflow/transactions"
-            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            href='/cashflow/transactions'
+            className='inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline'
           >
             View all transactions
-            <ArrowRight className="h-3 w-3" />
+            <ArrowRight className='h-3 w-3' />
           </Link>
         </div>
       </CardContent>

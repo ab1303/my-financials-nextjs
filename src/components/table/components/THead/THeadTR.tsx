@@ -1,6 +1,5 @@
 import React from 'react';
 
-
 const THeadTR: React.FC<{
   // headerGroupProps?: TableHeaderGroupProps;
   children?: React.ReactNode;

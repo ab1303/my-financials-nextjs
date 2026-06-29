@@ -79,7 +79,9 @@ export async function addRow(input: CreateExpenseEntryInput) {
   } catch (error) {
     console.error('Error adding expense entry:', error);
     const errorMessage =
-      error instanceof Error ? error.message : 'Failed to add expense entry. Please try again.';
+      error instanceof Error
+        ? error.message
+        : 'Failed to add expense entry. Please try again.';
     return { success: false, error: errorMessage };
   } finally {
     revalidatePath('/cashflow/expense');
@@ -107,7 +109,10 @@ export async function editRow(input: UpdateExpenseEntryInput) {
       return { success: false, error: 'Not authorised.' };
     }
     if (existing.source !== 'USER_MANUAL') {
-      return { success: false, error: 'Only manually entered expenses can be edited.' };
+      return {
+        success: false,
+        error: 'Only manually entered expenses can be edited.',
+      };
     }
 
     // Resolve new category name if categoryId was provided
@@ -126,7 +131,9 @@ export async function editRow(input: UpdateExpenseEntryInput) {
     const updatedTx = await prisma.transaction.update({
       where: { id: validatedInput.id },
       data: {
-        ...(validatedInput.amount !== undefined && { amount: validatedInput.amount }),
+        ...(validatedInput.amount !== undefined && {
+          amount: validatedInput.amount,
+        }),
         ...(categoryName !== undefined && {
           category: categoryName,
           description: `Manual expense: ${categoryName}`,
@@ -149,7 +156,9 @@ export async function editRow(input: UpdateExpenseEntryInput) {
   } catch (error) {
     console.error('Error editing expense entry:', error);
     const errorMessage =
-      error instanceof Error ? error.message : 'Failed to update expense entry. Please try again.';
+      error instanceof Error
+        ? error.message
+        : 'Failed to update expense entry. Please try again.';
     return { success: false, error: errorMessage };
   } finally {
     revalidatePath('/cashflow/expense');
@@ -177,7 +186,10 @@ export async function deleteRow(input: DeleteExpenseEntryInput) {
       return { success: false, error: 'Not authorised.' };
     }
     if (existing.source !== 'USER_MANUAL') {
-      return { success: false, error: 'Only manually entered expenses can be deleted.' };
+      return {
+        success: false,
+        error: 'Only manually entered expenses can be deleted.',
+      };
     }
 
     // Void the transaction (preserve audit trail — do not hard delete)
@@ -193,7 +205,9 @@ export async function deleteRow(input: DeleteExpenseEntryInput) {
   } catch (error) {
     console.error('Error deleting expense entry:', error);
     const errorMessage =
-      error instanceof Error ? error.message : 'Failed to delete expense entry. Please try again.';
+      error instanceof Error
+        ? error.message
+        : 'Failed to delete expense entry. Please try again.';
     return { success: false, error: errorMessage };
   } finally {
     revalidatePath('/cashflow/expense');
@@ -209,9 +223,8 @@ export async function getExpenseCategories() {
       return { success: false, error: 'User not authenticated', data: [] };
     }
 
-    const { getExpenseCategories } = await import(
-      '@/server/services/expense.service'
-    );
+    const { getExpenseCategories } =
+      await import('@/server/services/expense.service');
     const categories = await getExpenseCategories();
 
     return {
@@ -238,9 +251,8 @@ export async function getMonthEntries(calendarYearId: string, month: number) {
       return { success: false, error: 'User not authenticated', data: [] };
     }
 
-    const { getExpenseEntriesForMonth } = await import(
-      '@/server/services/expense.service'
-    );
+    const { getExpenseEntriesForMonth } =
+      await import('@/server/services/expense.service');
     const entries = await getExpenseEntriesForMonth(
       calendarYearId,
       session.user.id,
@@ -261,4 +273,3 @@ export async function getMonthEntries(calendarYearId: string, month: number) {
     };
   }
 }
-

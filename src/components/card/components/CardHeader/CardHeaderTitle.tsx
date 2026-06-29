@@ -3,7 +3,12 @@ import React from 'react';
 const CardHeaderTitle: React.FC<
   { children?: React.ReactNode } & React.ComponentPropsWithoutRef<'span'>
 > = (props) => {
-  return <span className='text-xl font-semibold text-gray-900 dark:text-white' {...props} />;
+  return (
+    <span
+      className='text-xl font-semibold text-gray-900 dark:text-white'
+      {...props}
+    />
+  );
 };
 
 export default CardHeaderTitle;

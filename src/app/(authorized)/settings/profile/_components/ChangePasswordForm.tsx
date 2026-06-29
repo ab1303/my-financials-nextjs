@@ -76,7 +76,9 @@ export function ChangePasswordForm() {
           Must be 8+ characters with uppercase, lowercase, and a number
         </p>
         {errors.newPassword && (
-          <p className='mt-1 text-xs text-red-500'>{errors.newPassword.message}</p>
+          <p className='mt-1 text-xs text-red-500'>
+            {errors.newPassword.message}
+          </p>
         )}
       </div>
 

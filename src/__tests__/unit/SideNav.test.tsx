@@ -47,15 +47,21 @@ describe('SideNav cashflow navigation', () => {
     ledgerLinks.forEach((link) =>
       expect(link).toHaveAttribute('href', '/cashflow/transactions'),
     );
-    screen.getAllByRole('link', { name: 'Analytics' }).forEach((link) =>
-      expect(link).toHaveAttribute('href', '/cashflow/analytics'),
-    );
-    screen.getAllByRole('link', { name: 'Transfer Rules' }).forEach((link) =>
-      expect(link).toHaveAttribute('href', '/cashflow/transfer-rules'),
-    );
-    screen.getAllByRole('link', { name: 'Category Rules' }).forEach((link) =>
-      expect(link).toHaveAttribute('href', '/cashflow/category-rules'),
-    );
+    screen
+      .getAllByRole('link', { name: 'Analytics' })
+      .forEach((link) =>
+        expect(link).toHaveAttribute('href', '/cashflow/analytics'),
+      );
+    screen
+      .getAllByRole('link', { name: 'Transfer Rules' })
+      .forEach((link) =>
+        expect(link).toHaveAttribute('href', '/cashflow/transfer-rules'),
+      );
+    screen
+      .getAllByRole('link', { name: 'Category Rules' })
+      .forEach((link) =>
+        expect(link).toHaveAttribute('href', '/cashflow/category-rules'),
+      );
   });
 
   it('renders Category Groups link under Transactions with correct href', () => {
@@ -64,7 +70,9 @@ describe('SideNav cashflow navigation', () => {
     expect(
       screen.getAllByRole('button', { name: 'Transactions' }),
     ).toHaveLength(2);
-    const categoryGroupsLinks = screen.getAllByRole('link', { name: 'Category Groups' });
+    const categoryGroupsLinks = screen.getAllByRole('link', {
+      name: 'Category Groups',
+    });
     expect(categoryGroupsLinks).toHaveLength(2);
     categoryGroupsLinks.forEach((link) =>
       expect(link).toHaveAttribute('href', '/cashflow/category-groups'),
@@ -77,9 +85,9 @@ describe('SideNav cashflow navigation', () => {
     render(<SideNav {...defaultProps} />);
 
     // Should have at least one open group when on category-groups route
-    expect(document.querySelectorAll('[data-open="true"]').length).toBeGreaterThan(
-      0,
-    );
+    expect(
+      document.querySelectorAll('[data-open="true"]').length,
+    ).toBeGreaterThan(0);
   });
 
   it('keeps Zakat inside the CashFlow navigation tree', () => {
@@ -87,7 +95,9 @@ describe('SideNav cashflow navigation', () => {
 
     const zakatLinks = screen.getAllByRole('link', { name: 'Zakat' });
     expect(zakatLinks).toHaveLength(2);
-    zakatLinks.forEach((link) => expect(link).toHaveAttribute('href', '/zakat'));
+    zakatLinks.forEach((link) =>
+      expect(link).toHaveAttribute('href', '/zakat'),
+    );
   });
 
   it('opens CashFlow by default when on a cashflow route', () => {
@@ -95,8 +105,8 @@ describe('SideNav cashflow navigation', () => {
 
     render(<SideNav {...defaultProps} />);
 
-    expect(document.querySelectorAll('[data-open="true"]').length).toBeGreaterThan(
-      0,
-    );
+    expect(
+      document.querySelectorAll('[data-open="true"]').length,
+    ).toBeGreaterThan(0);
   });
 });

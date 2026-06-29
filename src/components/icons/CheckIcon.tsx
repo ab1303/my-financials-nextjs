@@ -4,8 +4,10 @@ import type { MouseEventHandler } from 'react';
 {
   /* https://stackoverflow.com/questions/65230250/onclick-event-handler-not-work-as-expected-when-attached-to-svg-icon-in-react */
 }
-interface CheckIconProps
-  extends Omit<React.ComponentPropsWithoutRef<'svg'>, 'onClick'> {
+interface CheckIconProps extends Omit<
+  React.ComponentPropsWithoutRef<'svg'>,
+  'onClick'
+> {
   onClick?: MouseEventHandler<HTMLDivElement> | undefined;
 }
 

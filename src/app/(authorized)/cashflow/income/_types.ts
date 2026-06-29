@@ -27,4 +27,3 @@ export type IncomeEntryType = {
   incomeLedgerId: string;
   source: string; // 'USER_MANUAL' | 'LLM_CLASSIFIED' | 'USER_OVERRIDE'
 };
-

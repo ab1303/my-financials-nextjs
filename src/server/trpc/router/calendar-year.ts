@@ -8,12 +8,14 @@ export const calendarYearRouter = router({
     .input(
       z.object({
         types: z.array(z.enum(['FISCAL', 'ANNUAL'])).optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const calendarYears = await ctx.prisma.calendarYear.findMany({
         where: {
-          ...(input.types && input.types.length > 0 ? { type: { in: input.types } } : {}),
+          ...(input.types && input.types.length > 0
+            ? { type: { in: input.types } }
+            : {}),
         },
         orderBy: [{ fromYear: 'desc' }],
         select: {
@@ -37,7 +39,10 @@ export const calendarYearRouter = router({
       });
 
       if (!year) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Calendar year not found' });
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Calendar year not found',
+        });
       }
 
       return ctx.prisma.calendarYear.update({
@@ -54,7 +59,10 @@ export const calendarYearRouter = router({
       });
 
       if (!year) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Calendar year not found' });
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Calendar year not found',
+        });
       }
 
       return ctx.prisma.calendarYear.update({

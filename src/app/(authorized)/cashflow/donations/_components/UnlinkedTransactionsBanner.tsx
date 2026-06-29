@@ -30,9 +30,10 @@ export default async function UnlinkedTransactionsBanner({
   if (count === 0) return null;
 
   return (
-    <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950">
-      <p className="text-sm text-amber-800 dark:text-amber-200">
-        🔗 <strong>{count}</strong> &quot;Gifts &amp; donations&quot; transaction
+    <div className='mb-4 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-700 dark:bg-amber-950'>
+      <p className='text-sm text-amber-800 dark:text-amber-200'>
+        🔗 <strong>{count}</strong> &quot;Gifts &amp; donations&quot;
+        transaction
         {count !== 1 ? 's' : ''} from your bank import need recipient details.
       </p>
       <LinkTransactionsDrawerTrigger

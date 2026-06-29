@@ -61,7 +61,9 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
     }
 
     // Also support direct category name (from income breakdown tiles)
-    const categoryName = resolvedSearchParams.categoryName as string | undefined;
+    const categoryName = resolvedSearchParams.categoryName as
+      | string
+      | undefined;
     if (!initialCategory && categoryName) {
       initialCategory = categoryName;
       // No categoryId needed — ledger filters by name directly
@@ -70,8 +72,12 @@ export default async function TransactionsPage({ searchParams }: PageProps) {
     initialDateFrom = resolvedSearchParams.dateFrom as string | undefined;
     initialDateTo = resolvedSearchParams.dateTo as string | undefined;
 
-    initialMonth = resolvedSearchParams.month ? Number.parseInt(resolvedSearchParams.month as string, 10) : undefined;
-    initialYear = resolvedSearchParams.year ? Number.parseInt(resolvedSearchParams.year as string, 10) : undefined;
+    initialMonth = resolvedSearchParams.month
+      ? Number.parseInt(resolvedSearchParams.month as string, 10)
+      : undefined;
+    initialYear = resolvedSearchParams.year
+      ? Number.parseInt(resolvedSearchParams.year as string, 10)
+      : undefined;
     viewMode = resolvedSearchParams.view as string | undefined;
     initialTab = resolvedSearchParams.tab as string | undefined;
   } catch {

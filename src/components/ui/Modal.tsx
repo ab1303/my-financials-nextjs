@@ -3,11 +3,7 @@
 import type { ReactNode } from 'react';
 import React from 'react';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 type ModalRootProps = {
@@ -30,7 +26,13 @@ const ModalRoot = ({
         if (!open) onClose();
       }}
     >
-      <DialogContent style={{ maxHeight: '95vh' }} className={cn('flex flex-col overflow-hidden max-w-6xl md:max-w-4xl sm:max-w-3xl xs:max-w-sm !p-0 !gap-0', panelClassName)}>
+      <DialogContent
+        style={{ maxHeight: '95vh' }}
+        className={cn(
+          'flex flex-col overflow-hidden max-w-6xl md:max-w-4xl sm:max-w-3xl xs:max-w-sm !p-0 !gap-0',
+          panelClassName,
+        )}
+      >
         {children}
       </DialogContent>
     </Dialog>

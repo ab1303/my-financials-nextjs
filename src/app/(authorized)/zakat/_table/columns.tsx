@@ -33,7 +33,9 @@ export function getTableColumns(
           <TableCell
             row={row}
             table={table}
-            column={row.getAllCells().find(c => c.column.id === 'datePaid')!.column}
+            column={
+              row.getAllCells().find((c) => c.column.id === 'datePaid')!.column
+            }
           />
         );
       },
@@ -68,11 +70,7 @@ export function getTableColumns(
       size: 160,
       header: () => <span>Beneficiary Type</span>,
       cell: ({ row, table }) => (
-        <ZakatTypeCell 
-          row={row}
-          table={table}
-          options={beneficiaryOptions}
-        />
+        <ZakatTypeCell row={row} table={table} options={beneficiaryOptions} />
       ),
       footer: (props) => props.column.id,
     }),

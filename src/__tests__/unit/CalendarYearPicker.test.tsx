@@ -7,14 +7,24 @@ import type { CalendarYearType } from '@/types';
 
 // Mock the AppSelect component
 vi.mock('@/components/ui/AppSelect', () => ({
-  AppSelect: ({ options, value, onChange, placeholder, isClearable, inputId, ...props }: any) => (
+  AppSelect: ({
+    options,
+    value,
+    onChange,
+    placeholder,
+    isClearable,
+    inputId,
+    ...props
+  }: any) => (
     <div data-testid='app-select'>
       <select
         data-testid='select-input'
         id={inputId}
         value={value?.id || ''}
         onChange={(e) => {
-          const selected = options.find((opt: any) => opt.id === e.target.value);
+          const selected = options.find(
+            (opt: any) => opt.id === e.target.value,
+          );
           onChange(selected || null);
         }}
         {...props}
@@ -106,7 +116,7 @@ describe('CalendarYearPicker', () => {
           types={types}
           selectedType={CalendarEnumType.ANNUAL}
           onTypeChange={handleTypeChange}
-        />
+        />,
       );
 
       expect(screen.getByTestId('type-swatch-ANNUAL')).toBeInTheDocument();
@@ -123,7 +133,7 @@ describe('CalendarYearPicker', () => {
           types={types}
           selectedType={CalendarEnumType.ANNUAL}
           onTypeChange={handleTypeChange}
-        />
+        />,
       );
 
       // When types.length === 1, component returns null, so container should be empty
@@ -139,7 +149,7 @@ describe('CalendarYearPicker', () => {
           types={types}
           selectedType={CalendarEnumType.ANNUAL}
           onTypeChange={handleTypeChange}
-        />
+        />,
       );
 
       const annualButton = screen.getByTestId('type-swatch-ANNUAL');
@@ -156,7 +166,7 @@ describe('CalendarYearPicker', () => {
           types={types}
           selectedType={CalendarEnumType.ANNUAL}
           onTypeChange={handleTypeChange}
-        />
+        />,
       );
 
       const fiscalButton = screen.getByTestId('type-swatch-FISCAL');
@@ -173,7 +183,7 @@ describe('CalendarYearPicker', () => {
           types={types}
           selectedType={CalendarEnumType.ANNUAL}
           onTypeChange={handleTypeChange}
-        />
+        />,
       );
 
       const fiscalButton = screen.getByTestId('type-swatch-FISCAL');
@@ -197,7 +207,7 @@ describe('CalendarYearPicker', () => {
           defaultType={CalendarEnumType.ANNUAL}
           onYearChange={handleYearChange}
           onTypeChange={handleTypeChange}
-        />
+        />,
       );
 
       // Click fiscal type button
@@ -219,14 +229,18 @@ describe('CalendarYearPicker', () => {
           selectedYearId='annual-2024'
           defaultType={CalendarEnumType.ANNUAL}
           onYearChange={vi.fn()}
-        />
+        />,
       );
 
-      const selectInput = screen.getByTestId('select-input') as HTMLSelectElement;
+      const selectInput = screen.getByTestId(
+        'select-input',
+      ) as HTMLSelectElement;
       const options = Array.from(selectInput.options);
 
       // Should only show ANNUAL years when ANNUAL is selected
-      const optionLabels = options.map((opt) => opt.textContent).filter((text) => text !== 'Select year…');
+      const optionLabels = options
+        .map((opt) => opt.textContent)
+        .filter((text) => text !== 'Select year…');
 
       expect(optionLabels).toContain('Calendar Year 2024');
       expect(optionLabels).toContain('Calendar Year 2025');
@@ -242,7 +256,7 @@ describe('CalendarYearPicker', () => {
           calendarYears={mockCalendarYears}
           defaultType={CalendarEnumType.ANNUAL}
           onYearChange={vi.fn()}
-        />
+        />,
       );
 
       let selectInput = screen.getByTestId('select-input') as HTMLSelectElement;
@@ -276,7 +290,7 @@ describe('CalendarYearPicker', () => {
           calendarYears={mockCalendarYears}
           defaultType={CalendarEnumType.ANNUAL}
           onYearChange={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('Annual Year')).toBeInTheDocument();
@@ -289,7 +303,7 @@ describe('CalendarYearPicker', () => {
           calendarYears={mockCalendarYears}
           onYearChange={vi.fn()}
           label='Custom Year Label'
-        />
+        />,
       );
 
       expect(screen.getByText('Custom Year Label')).toBeInTheDocument();
@@ -305,10 +319,12 @@ describe('CalendarYearPicker', () => {
           calendarYears={mockCalendarYears}
           defaultType={CalendarEnumType.ANNUAL}
           onYearChange={handleYearChange}
-        />
+        />,
       );
 
-      const selectInput = screen.getByTestId('select-input') as HTMLSelectElement;
+      const selectInput = screen.getByTestId(
+        'select-input',
+      ) as HTMLSelectElement;
       await user.selectOptions(selectInput, 'annual-2024');
 
       expect(handleYearChange).toHaveBeenCalledWith('annual-2024');
@@ -320,7 +336,7 @@ describe('CalendarYearPicker', () => {
           applicableTypes={[CalendarEnumType.ANNUAL]}
           calendarYears={mockCalendarYears}
           onYearChange={vi.fn()}
-        />
+        />,
       );
 
       // When only one type, swatch should not render
@@ -336,10 +352,12 @@ describe('CalendarYearPicker', () => {
           selectedYearId='annual-2025'
           defaultType={CalendarEnumType.ANNUAL}
           onYearChange={vi.fn()}
-        />
+        />,
       );
 
-      const selectInput = screen.getByTestId('select-input') as HTMLSelectElement;
+      const selectInput = screen.getByTestId(
+        'select-input',
+      ) as HTMLSelectElement;
       expect(selectInput.value).toBe('annual-2025');
     });
 
@@ -350,12 +368,14 @@ describe('CalendarYearPicker', () => {
           calendarYears={mockCalendarYears}
           defaultType={CalendarEnumType.FISCAL}
           onYearChange={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('Fiscal Year')).toBeInTheDocument();
 
-      const selectInput = screen.getByTestId('select-input') as HTMLSelectElement;
+      const selectInput = screen.getByTestId(
+        'select-input',
+      ) as HTMLSelectElement;
       const optionLabels = Array.from(selectInput.options)
         .map((opt) => opt.textContent)
         .filter((text) => text !== 'Select year...');

@@ -1,8 +1,14 @@
-"use client";
+'use client';
 
 import React from 'react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'default' | 'outline' | 'ghost' | 'destructive';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'default'
+  | 'outline'
+  | 'ghost'
+  | 'destructive';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -26,14 +32,31 @@ export function buttonVariants({ variant }: { variant?: ButtonVariant }) {
   }
 }
 
-export function Button({ children, onClick, variant = 'primary', isLoading, size = 'default', className = '', ...rest }: ButtonProps) {
+export function Button({
+  children,
+  onClick,
+  variant = 'primary',
+  isLoading,
+  size = 'default',
+  className = '',
+  ...rest
+}: ButtonProps) {
   const base = 'rounded-md font-medium';
-  const sizeCls = size === 'sm' ? 'px-3 py-1 text-sm' : size === 'lg' ? 'px-6 py-3 text-lg' : 'px-4 py-2';
+  const sizeCls =
+    size === 'sm'
+      ? 'px-3 py-1 text-sm'
+      : size === 'lg'
+        ? 'px-6 py-3 text-lg'
+        : 'px-4 py-2';
   const style = buttonVariants({ variant });
 
   return (
-    <button onClick={onClick} className={`${base} ${sizeCls} ${style} ${className}`} {...rest}>
-      {isLoading ? <span className="opacity-50">{children}</span> : children}
+    <button
+      onClick={onClick}
+      className={`${base} ${sizeCls} ${style} ${className}`}
+      {...rest}
+    >
+      {isLoading ? <span className='opacity-50'>{children}</span> : children}
     </button>
   );
 }

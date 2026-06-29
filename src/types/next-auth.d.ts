@@ -1,13 +1,11 @@
 import type { RoleEnumType } from '@prisma/client';
 import { type DefaultUser } from 'next-auth';
 
-
 declare module 'next-auth' {
-
   interface User extends Omit<DefaultUser, 'id'> {
     role: RoleEnumType | null;
   }
-  
+
   interface AugmentedUser extends User {
     id: string;
   }

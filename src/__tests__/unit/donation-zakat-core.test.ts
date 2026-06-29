@@ -15,6 +15,7 @@ vi.mock('@/server/db/client', () => ({
   handleCaughtError: vi.fn(),
 }));
 
+import { prisma } from '@/server/db/client';
 import {
   addVoluntaryDonation,
   updateVoluntaryDonation,
@@ -24,7 +25,6 @@ import {
   getZakatTotalsByCategory,
   updateZakatPayment,
 } from '@/server/services/zakat/zakat.service';
-import { prisma } from '@/server/db/client';
 
 describe('donation-zakat-core', () => {
   beforeEach(() => {
@@ -125,17 +125,14 @@ describe('donation-zakat-core', () => {
   });
 
   it('updates zakat payments without storing tax category', async () => {
-    await updateZakatPayment(
-      'zakat-1',
-      {
-        id: 'zakat-1',
-        datePaid: new Date('2025-04-01'),
-        amount: 1500,
-        beneficiaryType: 'INDIVIDUAL' as const,
-        beneficiaryId: 'ind-3',
-        zakatObligationId: 'zakat-ledger-1',
-      },
-    );
+    await updateZakatPayment('zakat-1', {
+      id: 'zakat-1',
+      datePaid: new Date('2025-04-01'),
+      amount: 1500,
+      beneficiaryType: 'INDIVIDUAL' as const,
+      beneficiaryId: 'ind-3',
+      zakatObligationId: 'zakat-ledger-1',
+    });
 
     expect(prisma.zakatPayment.update).toHaveBeenCalledWith({
       where: { id: 'zakat-1' },

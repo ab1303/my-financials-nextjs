@@ -25,24 +25,27 @@ export interface TransactionSaveResult {
   errors: MonthError[];
 }
 
-import type { TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
+import type {
+  TransactionStatusEnum,
+  TransactionTypeEnum,
+} from '@prisma/client';
 
 export interface TransferCandidateScore {
   transactionId: string;
   bankAccountId: string;
   bankAccountName: string;
   bankName: string | null;
-  date: string;           // ISO date string
+  date: string; // ISO date string
   description: string;
   amount: number;
   type: TransactionTypeEnum;
   status: TransactionStatusEnum;
   confidenceScore: number; // 0–100
   scoreBreakdown: {
-    amountMatch: number;        // 0–40
-    dateProximity: number;      // 0–30
+    amountMatch: number; // 0–40
+    dateProximity: number; // 0–30
     descriptionSimilarity: number; // 0–20
-    sameBankBonus: number;      // 0–10
+    sameBankBonus: number; // 0–10
   };
   amountDiffWarning: string | null;
 }

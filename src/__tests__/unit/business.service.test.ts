@@ -13,12 +13,12 @@ vi.mock('@/server/db/client', () => ({
 
 import type { Business } from '@prisma/client';
 
+import { prisma } from '@/server/db/client';
 import {
   addBusinessDetails,
   updateBusinessDetails,
   validateBusinessNameUniqueness,
 } from '@/server/services/business.service';
-import { prisma } from '@/server/db/client';
 import { BusinessEnumType } from '@/types/enum';
 
 describe('business.service', () => {

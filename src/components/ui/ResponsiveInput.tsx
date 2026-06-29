@@ -6,8 +6,7 @@ import React from 'react';
 import { stylingUtils } from '@/styles/styling';
 import { inputStyles } from '@/styles/theme';
 
-interface ResponsiveInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+interface ResponsiveInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   width?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | string;
   variant?: 'base' | 'error' | 'disabled';
   withIcon?: boolean;

@@ -1,6 +1,10 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { parseCommBankCsv, parseCsvRow,validateCsvHeaders } from '@/server/services/ai-import/csv-parser.service';
+import {
+  parseCommBankCsv,
+  parseCsvRow,
+  validateCsvHeaders,
+} from '@/server/services/ai-import/csv-parser.service';
 
 describe('parseCommBankCsv', () => {
   const validCsv = [
@@ -38,9 +42,7 @@ describe('parseCommBankCsv', () => {
   });
 
   it('extracts date, month, year correctly', async () => {
-    const csv = [
-      '15/12/2023,-100.00,December,900.00',
-    ].join('\n');
+    const csv = ['15/12/2023,-100.00,December,900.00'].join('\n');
     const result = await parseCommBankCsv(csv);
     expect(result.success).toBe(true);
     const transactions = result.transactions;
@@ -52,9 +54,7 @@ describe('parseCommBankCsv', () => {
   });
 
   it('normalizes amount to positive', async () => {
-    const csv = [
-      '01/01/2024,-123.45,Test,876.55',
-    ].join('\n');
+    const csv = ['01/01/2024,-123.45,Test,876.55'].join('\n');
     const result = await parseCommBankCsv(csv);
     expect(result.success).toBe(true);
     const transactions = result.transactions;
@@ -71,9 +71,7 @@ describe('parseCommBankCsv', () => {
   });
 
   it('errors on non-numeric amounts', async () => {
-    const csv = [
-      '01/01/2024,abc,Groceries,950.00',
-    ].join('\n');
+    const csv = ['01/01/2024,abc,Groceries,950.00'].join('\n');
     const result = await parseCommBankCsv(csv);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/Invalid amount/);
@@ -86,9 +84,7 @@ describe('parseCommBankCsv', () => {
   });
 
   it('ignores extra columns', async () => {
-    const csv = [
-      '01/01/2024,-10.00,Test,1000,foo,bar',
-    ].join('\n');
+    const csv = ['01/01/2024,-10.00,Test,1000,foo,bar'].join('\n');
     const result = await parseCommBankCsv(csv);
     expect(result.success).toBe(true);
     const transactions = result.transactions;
@@ -98,9 +94,7 @@ describe('parseCommBankCsv', () => {
   });
 
   it('trims whitespace in headers and values', async () => {
-    const csv = [
-      ' 01/01/2024 , -5.00 , Lunch , 995.00 ',
-    ].join('\n');
+    const csv = [' 01/01/2024 , -5.00 , Lunch , 995.00 '].join('\n');
     const result = await parseCommBankCsv(csv);
     expect(result.success).toBe(true);
     const transactions = result.transactions;
@@ -112,9 +106,7 @@ describe('parseCommBankCsv', () => {
   });
 
   it('returns error when no transactions found', async () => {
-    const csv = [
-      '01/01/2024,0.00,Zero,0.00',
-    ].join('\n');
+    const csv = ['01/01/2024,0.00,Zero,0.00'].join('\n');
     const result = await parseCommBankCsv(csv);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/No valid transactions found/);
@@ -131,7 +123,11 @@ describe('parseCommBankCsv', () => {
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
     expect(transactions).toHaveLength(3);
-    expect(transactions!.map(t => t.type)).toEqual(['DEBIT', 'CREDIT', 'DEBIT']);
+    expect(transactions!.map((t) => t.type)).toEqual([
+      'DEBIT',
+      'CREDIT',
+      'DEBIT',
+    ]);
   });
 
   it('handles dates in different months', async () => {
@@ -167,7 +163,14 @@ describe('validateCsvHeaders', () => {
   });
 
   it('returns true with extra headers', () => {
-    const headers = ['Date', 'Amount', 'Description', 'Balance', 'Extra', 'Columns'];
+    const headers = [
+      'Date',
+      'Amount',
+      'Description',
+      'Balance',
+      'Extra',
+      'Columns',
+    ];
     expect(validateCsvHeaders(headers)).toBe(true);
   });
 });
@@ -274,7 +277,7 @@ describe('DEBIT/CREDIT type detection', () => {
     const transactions = result.transactions;
     expect(transactions).toBeDefined();
     expect(transactions).toHaveLength(3);
-    const types = transactions!.map(t => t.type);
+    const types = transactions!.map((t) => t.type);
     expect(types).toEqual(['DEBIT', 'CREDIT', 'DEBIT']);
   });
 
@@ -290,6 +293,6 @@ describe('DEBIT/CREDIT type detection', () => {
     expect(transactions![0]).toBeDefined();
     expect(transactions![0]!.amount).toBe(123.45);
     expect(transactions![1]).toBeDefined();
-    expect(transactions![1]!.amount).toBe(500.00);
+    expect(transactions![1]!.amount).toBe(500.0);
   });
 });

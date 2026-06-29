@@ -1,10 +1,10 @@
+import { handleCaughtError } from '@/server/db/client';
 import type { CreateBankInput, ParamsInput } from '@/server/schema/bank.schema';
 import {
   addBankDetails,
   deleteBankDetails,
   getBankDetails,
 } from '@/server/services/bank.service';
-import { handleCaughtError } from '@/server/db/client';
 
 export const addBankDetailsHandler = async ({
   input,

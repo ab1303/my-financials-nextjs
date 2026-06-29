@@ -1,11 +1,11 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Building2, Loader2, Plus,Trash2 } from 'lucide-react';
+import { Building2, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button,Card } from '@/components';
+import { Button, Card } from '@/components';
 import { Label, TextInput } from '@/components/ui';
 import { trpc } from '@/server/trpc/client';
 
@@ -51,7 +51,8 @@ export default function BanksForm() {
           <Card.Header.Title>Bank Institutions</Card.Header.Title>
         </div>
         <p className='mt-1 text-sm text-muted-foreground'>
-          Global institutions shared across all users. Used when setting up bank accounts for CSV import.
+          Global institutions shared across all users. Used when setting up bank
+          accounts for CSV import.
         </p>
       </Card.Header>
 

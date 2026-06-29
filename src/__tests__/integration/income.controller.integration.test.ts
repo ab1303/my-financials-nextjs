@@ -48,11 +48,21 @@ describe('Income Controller', () => {
       } as any);
 
       prismaMock.transaction.findMany.mockResolvedValue([
-        createMockIncomeTransaction({ id: 'txn-1', category: 'Employment', amount: new Decimal('5000') }),
+        createMockIncomeTransaction({
+          id: 'txn-1',
+          category: 'Employment',
+          amount: new Decimal('5000'),
+        }),
       ] as any);
 
       prismaMock.incomeSource.findMany.mockResolvedValue([
-        { id: 'src-1', name: 'Employment', description: null, isActive: true, createdAt: new Date() },
+        {
+          id: 'src-1',
+          name: 'Employment',
+          description: null,
+          isActive: true,
+          createdAt: new Date(),
+        },
       ] as any);
 
       const result = await incomeEntriesHandler(calendarYearId, userId);
@@ -69,7 +79,9 @@ describe('Income Controller', () => {
     });
 
     it('handles errors gracefully', async () => {
-      prismaMock.calendarYear.findUnique.mockRejectedValue(new Error('Database error'));
+      prismaMock.calendarYear.findUnique.mockRejectedValue(
+        new Error('Database error'),
+      );
       const result = await incomeEntriesHandler(calendarYearId, userId);
       expect(result).toBeUndefined();
     });
@@ -115,10 +127,11 @@ describe('Income Controller', () => {
     });
 
     it('handles errors gracefully', async () => {
-      prismaMock.calendarYear.findUnique.mockRejectedValue(new Error('Database error'));
+      prismaMock.calendarYear.findUnique.mockRejectedValue(
+        new Error('Database error'),
+      );
       const result = await totalIncomeHandler(calendarYearId, userId);
       expect(result).toBe(0);
     });
   });
 });
-

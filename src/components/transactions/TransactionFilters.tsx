@@ -3,13 +3,19 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useState } from 'react';
 import type { GroupBase, SingleValue } from 'react-select';
 
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 
 type CategoryOption = { label: string; value: string };
 type CategoryGroup = { label: string; options: CategoryOption[] };
 
-export type DatePreset = 'this-month' | 'last-month' | 'this-quarter' | 'this-fy' | 'last-fy' | 'custom';
+export type DatePreset =
+  | 'this-month'
+  | 'last-month'
+  | 'this-quarter'
+  | 'this-fy'
+  | 'last-fy'
+  | 'custom';
 
 interface TransactionFiltersProps {
   bankAccounts: Array<{ id: string; name: string; bankName: string }>;
@@ -84,23 +90,34 @@ export function getTwoYearsAgoDate(): string {
   return formatDate(startOfDay(date));
 }
 
-export function getPresetDateRange(preset: DatePreset): { from: string; to: string } | null {
+export function getPresetDateRange(
+  preset: DatePreset,
+): { from: string; to: string } | null {
   if (preset === 'custom') return null;
 
   const today = startOfDay(getCurrentDate());
 
   if (preset === 'this-month') {
-    return { from: formatDate(new Date(today.getFullYear(), today.getMonth(), 1)), to: formatDate(today) };
+    return {
+      from: formatDate(new Date(today.getFullYear(), today.getMonth(), 1)),
+      to: formatDate(today),
+    };
   }
   if (preset === 'last-month') {
     const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     return { from: formatDate(start), to: formatDate(endOfMonth(start)) };
   }
   if (preset === 'this-quarter') {
-    return { from: formatDate(getCurrentQuarterStart(today)), to: formatDate(today) };
+    return {
+      from: formatDate(getCurrentQuarterStart(today)),
+      to: formatDate(today),
+    };
   }
   if (preset === 'this-fy') {
-    return { from: formatDate(getCurrentFyStart(today)), to: formatDate(today) };
+    return {
+      from: formatDate(getCurrentFyStart(today)),
+      to: formatDate(today),
+    };
   }
 
   const lastFy = getLastFyRange(today);
@@ -111,7 +128,10 @@ export function getAuFYRange(preset: DatePreset): { from: string; to: string } {
   return getPresetDateRange(preset) ?? getPresetDateRange('this-fy')!;
 }
 
-const DATE_PRESETS: Array<{ value: Exclude<DatePreset, 'custom'>; label: string }> = [
+const DATE_PRESETS: Array<{
+  value: Exclude<DatePreset, 'custom'>;
+  label: string;
+}> = [
   { value: 'this-month', label: 'This Month' },
   { value: 'last-month', label: 'Last Month' },
   { value: 'this-quarter', label: 'This Quarter' },
@@ -133,13 +153,18 @@ const inputClass =
 
 function CalendarIcon() {
   return (
-    <svg aria-hidden="true" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="none">
+    <svg
+      aria-hidden='true'
+      className='h-3.5 w-3.5 shrink-0'
+      viewBox='0 0 20 20'
+      fill='none'
+    >
       <path
-        d="M6 2.75V5M14 2.75V5M3.5 7.25h13M4.5 4.5h11A1.5 1.5 0 0 1 17 6v9.5A1.5 1.5 0 0 1 15.5 17h-11A1.5 1.5 0 0 1 3 15.5V6a1.5 1.5 0 0 1 1.5-1.5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d='M6 2.75V5M14 2.75V5M3.5 7.25h13M4.5 4.5h11A1.5 1.5 0 0 1 17 6v9.5A1.5 1.5 0 0 1 15.5 17h-11A1.5 1.5 0 0 1 3 15.5V6a1.5 1.5 0 0 1 1.5-1.5Z'
+        stroke='currentColor'
+        strokeWidth='1.5'
+        strokeLinecap='round'
+        strokeLinejoin='round'
       />
     </svg>
   );
@@ -147,13 +172,18 @@ function CalendarIcon() {
 
 function ChevronIcon({ direction }: { direction: 'up' | 'down' }) {
   return (
-    <svg aria-hidden="true" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="none">
+    <svg
+      aria-hidden='true'
+      className='h-3.5 w-3.5 shrink-0'
+      viewBox='0 0 20 20'
+      fill='none'
+    >
       <path
         d={direction === 'up' ? 'M5 12.25 10 7.25l5 5' : 'M5 7.75 10 12.75l5-5'}
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        stroke='currentColor'
+        strokeWidth='1.75'
+        strokeLinecap='round'
+        strokeLinejoin='round'
       />
     </svg>
   );
@@ -189,15 +219,21 @@ export default function TransactionFilters({
   const bankOptions = useMemo(
     () =>
       bankAccounts.map((account) => ({
-        label: account.bankName ? `${account.name} (${account.bankName})` : account.name,
+        label: account.bankName
+          ? `${account.name} (${account.bankName})`
+          : account.name,
         value: account.id,
       })),
     [bankAccounts],
   );
 
-  const selectedBank = bankOptions.find((option) => option.value === bankAccountId) ?? null;
+  const selectedBank =
+    bankOptions.find((option) => option.value === bankAccountId) ?? null;
   const selectedCategory = useMemo(
-    () => categoryOptions.flatMap((g) => g.options).find((o) => o.value === category) ?? null,
+    () =>
+      categoryOptions
+        .flatMap((g) => g.options)
+        .find((o) => o.value === category) ?? null,
     [categoryOptions, category],
   );
 
@@ -227,97 +263,115 @@ export default function TransactionFilters({
   const periodChipActive = isPeriodOpen || datePreset !== 'this-fy';
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700/60 dark:bg-gray-800/40">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="flex min-w-[220px] flex-col gap-0.5">
-          <Label htmlFor={bankSelectId} className="text-xs font-medium text-gray-500 dark:text-gray-400">
+    <div className='rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700/60 dark:bg-gray-800/40'>
+      <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
+        <div className='flex min-w-[220px] flex-col gap-0.5'>
+          <Label
+            htmlFor={bankSelectId}
+            className='text-xs font-medium text-gray-500 dark:text-gray-400'
+          >
             Bank Account
           </Label>
           <Select
             instanceId={bankSelectId}
             inputId={bankSelectId}
-            name="bankAccountId"
+            name='bankAccountId'
             isClearable
-            placeholder="All Accounts"
+            placeholder='All Accounts'
             value={selectedBank}
             options={bankOptions}
-            onChange={(option: SingleValue<(typeof bankOptions)[number]>) => onBankChange(option?.value)}
-            className="w-full"
-            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+            onChange={(option: SingleValue<(typeof bankOptions)[number]>) =>
+              onBankChange(option?.value)
+            }
+            className='w-full'
+            menuPortalTarget={
+              typeof document !== 'undefined' ? document.body : null
+            }
           />
         </div>
 
-        <label className="flex flex-col gap-0.5">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Min $</span>
+        <label className='flex flex-col gap-0.5'>
+          <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>
+            Min $
+          </span>
           <input
-            aria-label="Minimum Amount"
-            name="amountMin"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.01"
-            autoComplete="off"
-            placeholder="0.00"
+            aria-label='Minimum Amount'
+            name='amountMin'
+            type='number'
+            inputMode='decimal'
+            min='0'
+            step='0.01'
+            autoComplete='off'
+            placeholder='0.00'
             value={amountMin}
             onChange={(e) => onAmountMinChange(e.target.value)}
             className={`${inputClass} w-24`}
           />
         </label>
 
-        <label className="flex flex-col gap-0.5">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Max $</span>
+        <label className='flex flex-col gap-0.5'>
+          <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>
+            Max $
+          </span>
           <input
-            aria-label="Maximum Amount"
-            name="amountMax"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.01"
-            autoComplete="off"
-            placeholder="Any"
+            aria-label='Maximum Amount'
+            name='amountMax'
+            type='number'
+            inputMode='decimal'
+            min='0'
+            step='0.01'
+            autoComplete='off'
+            placeholder='Any'
             value={amountMax}
             onChange={(e) => onAmountMaxChange(e.target.value)}
             className={`${inputClass} w-24`}
           />
         </label>
 
-        <label className="flex min-w-[160px] flex-1 flex-col gap-0.5">
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Description</span>
+        <label className='flex min-w-[160px] flex-1 flex-col gap-0.5'>
+          <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>
+            Description
+          </span>
           <input
-            aria-label="Search transactions"
-            name="search"
-            type="search"
-            inputMode="search"
-            autoComplete="off"
-            placeholder="Description or category…"
+            aria-label='Search transactions'
+            name='search'
+            type='search'
+            inputMode='search'
+            autoComplete='off'
+            placeholder='Description or category…'
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className={inputClass}
           />
         </label>
 
-        <div className="flex min-w-[220px] flex-col gap-0.5">
-          <Label htmlFor={categorySelectId} className="text-xs font-medium text-gray-500 dark:text-gray-400">
+        <div className='flex min-w-[220px] flex-col gap-0.5'>
+          <Label
+            htmlFor={categorySelectId}
+            className='text-xs font-medium text-gray-500 dark:text-gray-400'
+          >
             Category
           </Label>
           <Select<CategoryOption, false, GroupBase<CategoryOption>>
             instanceId={categorySelectId}
             inputId={categorySelectId}
-            name="category"
+            name='category'
             isClearable
-            placeholder="All Categories"
+            placeholder='All Categories'
             value={selectedCategory}
             options={categoryOptions}
             onChange={(option: SingleValue<CategoryOption>) =>
               onCategoryChange(option?.value)
             }
-            className="w-full"
-            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+            className='w-full'
+            menuPortalTarget={
+              typeof document !== 'undefined' ? document.body : null
+            }
           />
         </div>
 
         <button
-          type="button"
+          type='button'
           aria-expanded={isPeriodOpen}
           aria-label={`Period filter: ${activePresetLabel}. Click to ${isPeriodOpen ? 'collapse' : 'expand'}`}
           onClick={() => setIsPeriodOpen((open) => !open)}
@@ -333,21 +387,21 @@ export default function TransactionFilters({
         </button>
 
         <button
-          type="button"
+          type='button'
           onClick={handleReset}
-          className="self-end ml-auto text-xs text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:text-gray-500 dark:hover:text-gray-300"
+          className='self-end ml-auto text-xs text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:text-gray-500 dark:hover:text-gray-300'
         >
           Reset
         </button>
       </div>
 
       {isPeriodOpen && (
-        <div className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-700/60">
-          <div className="flex flex-wrap justify-end gap-1.5">
+        <div className='mt-2 border-t border-gray-200 pt-2 dark:border-gray-700/60'>
+          <div className='flex flex-wrap justify-end gap-1.5'>
             {DATE_PRESETS.map(({ value, label }) => (
               <button
                 key={value}
-                type="button"
+                type='button'
                 aria-pressed={datePreset === value}
                 onClick={() => {
                   applyPreset(value);
@@ -364,7 +418,7 @@ export default function TransactionFilters({
             ))}
 
             <button
-              type="button"
+              type='button'
               aria-pressed={datePreset === 'custom'}
               onClick={() => onDatePresetChange('custom')}
               className={`rounded-full border px-3 py-0.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
@@ -378,31 +432,37 @@ export default function TransactionFilters({
           </div>
 
           {datePreset === 'custom' && (
-            <div className="mt-2 flex flex-wrap justify-end gap-x-3 gap-y-2">
-              <label className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">From</span>
+            <div className='mt-2 flex flex-wrap justify-end gap-x-3 gap-y-2'>
+              <label className='flex flex-col gap-0.5'>
+                <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>
+                  From
+                </span>
                 <input
-                  aria-label="Date From"
-                  name="dateFrom"
-                  type="date"
+                  aria-label='Date From'
+                  name='dateFrom'
+                  type='date'
                   min={minDate}
                   max={dateFromMax}
-                  autoComplete="off"
+                  autoComplete='off'
                   value={dateFrom ?? ''}
-                  onChange={(e) => onDateFromChange(e.target.value || undefined)}
+                  onChange={(e) =>
+                    onDateFromChange(e.target.value || undefined)
+                  }
                   className={inputClass}
                 />
               </label>
 
-              <label className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">To</span>
+              <label className='flex flex-col gap-0.5'>
+                <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>
+                  To
+                </span>
                 <input
-                  aria-label="Date To"
-                  name="dateTo"
-                  type="date"
+                  aria-label='Date To'
+                  name='dateTo'
+                  type='date'
                   min={dateToMin}
                   max={formatDate(getCurrentDate())}
-                  autoComplete="off"
+                  autoComplete='off'
                   value={dateTo ?? ''}
                   onChange={(e) => onDateToChange(e.target.value || undefined)}
                   className={inputClass}
@@ -415,5 +475,3 @@ export default function TransactionFilters({
     </div>
   );
 }
-
-

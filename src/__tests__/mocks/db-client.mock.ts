@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
-import { beforeEach,vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 
 export const dbClientMock = mockDeep<PrismaClient>();

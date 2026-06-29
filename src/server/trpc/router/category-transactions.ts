@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
-import { EXCLUDED_FROM_EXPENSE_AGGREGATION, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import {
+  EXCLUDED_FROM_EXPENSE_AGGREGATION,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 const GetByCategoryInputSchema = z.object({
   category: z.string().min(1),
@@ -100,7 +103,10 @@ export const categoryTransactionsRouter = router({
         ctx.prisma.transaction.count({ where }),
       ]);
 
-      const totalAmount = transactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+      const totalAmount = transactions.reduce(
+        (sum, tx) => sum + Number(tx.amount),
+        0,
+      );
       const averageAmount = total > 0 ? totalAmount / total : 0;
 
       return {
@@ -144,7 +150,9 @@ export const categoryTransactionsRouter = router({
 
       // Only exclude Transfer rows for DEBIT type when filtering by category
       const transferGuard =
-        type === 'DEBIT' && category && category.toLowerCase() !== TRANSFER_CATEGORY.toLowerCase()
+        type === 'DEBIT' &&
+        category &&
+        category.toLowerCase() !== TRANSFER_CATEGORY.toLowerCase()
           ? { category: { notIn: [...EXCLUDED_FROM_EXPENSE_AGGREGATION] } }
           : undefined;
 
@@ -173,7 +181,10 @@ export const categoryTransactionsRouter = router({
         ctx.prisma.transaction.count({ where }),
       ]);
 
-      const totalAmount = transactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+      const totalAmount = transactions.reduce(
+        (sum, tx) => sum + Number(tx.amount),
+        0,
+      );
 
       // Build human-readable label
       let label = '';
@@ -182,7 +193,9 @@ export const categoryTransactionsRouter = router({
       } else if (source) {
         label = `${source} income`;
       } else if (month) {
-        const monthName = new Date(year, month - 1).toLocaleString('en-US', { month: 'long' });
+        const monthName = new Date(year, month - 1).toLocaleString('en-US', {
+          month: 'long',
+        });
         label = `${monthName} ${year}`;
       } else {
         label = `Year ${year}`;
@@ -205,4 +218,3 @@ export const categoryTransactionsRouter = router({
       };
     }),
 });
-

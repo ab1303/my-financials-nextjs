@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { mockSession, mockUnauthenticatedSession } from '@/__tests__/mocks/auth.mock';
+import {
+  mockSession,
+  mockUnauthenticatedSession,
+} from '@/__tests__/mocks/auth.mock';
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import type { DashboardSummaryResponse } from '@/server/models/dashboard';
 
@@ -126,8 +129,17 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     expect(body.netWorth.sparklinePoints.length).toBe(6);
 
     // Verify sparkline contains the last 6 data points
-    const expectedDates = ['2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08', '2024-01-09', '2024-01-10'];
-    expect(body.netWorth.sparklinePoints.map((p) => p.date)).toEqual(expectedDates);
+    const expectedDates = [
+      '2024-01-05',
+      '2024-01-06',
+      '2024-01-07',
+      '2024-01-08',
+      '2024-01-09',
+      '2024-01-10',
+    ];
+    expect(body.netWorth.sparklinePoints.map((p) => p.date)).toEqual(
+      expectedDates,
+    );
   });
 
   /**
@@ -239,4 +251,3 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     expect(body.recentTransactions[0]?.type).toBe('DEBIT');
   });
 });
-

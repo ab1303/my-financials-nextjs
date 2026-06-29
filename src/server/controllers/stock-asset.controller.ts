@@ -1,3 +1,4 @@
+import { handleCaughtError, prisma } from '@/server/db/client';
 import type {
   CreateStockHoldingInput,
   CreateStockSnapshotInput,
@@ -23,7 +24,6 @@ import {
   updateStockHolding,
   updateStockSnapshot,
 } from '@/server/services/stock-asset.service';
-import { handleCaughtError, prisma } from '@/server/db/client';
 
 // Helper: Resolve calendarYearId to date range
 async function resolveDateRange(calendarYearId?: string) {

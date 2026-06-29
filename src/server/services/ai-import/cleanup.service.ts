@@ -150,7 +150,9 @@ export async function getImageExpirationStats(): Promise<{
       },
     });
 
-    const expired = allImages.filter((img) => img.expiresAt && img.expiresAt < now);
+    const expired = allImages.filter(
+      (img) => img.expiresAt && img.expiresAt < now,
+    );
     const expiringSoon = allImages.filter(
       (img) =>
         img.expiresAt &&

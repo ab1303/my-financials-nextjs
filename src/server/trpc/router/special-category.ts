@@ -1,4 +1,4 @@
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export type SpecialCategoryRecord = {
   id: string;
@@ -10,20 +10,22 @@ export type SpecialCategoryRecord = {
 };
 
 export const specialCategoryRouter = router({
-  getAll: protectedProcedure.query(async ({ ctx }): Promise<SpecialCategoryRecord[]> => {
-    // Returns ALL special categories (including inactive)
-    const categories = await ctx.prisma.specialCategory.findMany({
-      orderBy: { name: 'asc' },
-    });
-    return categories.map((c) => ({
-      id: c.id,
-      name: c.name,
-      description: c.description,
-      isActive: c.isActive,
-      isEditable: c.isEditable,
-      color: c.color || undefined,
-    }));
-  }),
+  getAll: protectedProcedure.query(
+    async ({ ctx }): Promise<SpecialCategoryRecord[]> => {
+      // Returns ALL special categories (including inactive)
+      const categories = await ctx.prisma.specialCategory.findMany({
+        orderBy: { name: 'asc' },
+      });
+      return categories.map((c) => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        isActive: c.isActive,
+        isEditable: c.isEditable,
+        color: c.color || undefined,
+      }));
+    },
+  ),
 
   getAllActive: protectedProcedure.query(async ({ ctx }) => {
     // Returns only isActive=true special categories

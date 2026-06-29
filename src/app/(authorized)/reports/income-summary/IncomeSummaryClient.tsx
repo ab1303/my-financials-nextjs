@@ -2,12 +2,12 @@
 
 import type { CalendarEnumType } from '@prisma/client';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo,useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import type { ActionMeta } from 'react-select';
 
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import type { MonthlyIncomeSummary } from '@/server/models/income';
 
 import MonthlySummaryTable from './MonthlySummaryTable';

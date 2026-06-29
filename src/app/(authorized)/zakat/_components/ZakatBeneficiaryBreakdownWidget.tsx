@@ -3,7 +3,10 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { NumericFormat } from 'react-number-format';
 
-import { DistributionWidget, type DistributionItem } from '@/components/ui/DistributionWidget';
+import {
+  type DistributionItem,
+  DistributionWidget,
+} from '@/components/ui/DistributionWidget';
 
 type BeneficiaryBreakdownItem = {
   id: string;
@@ -17,8 +20,16 @@ type Props = {
 
 // Simple cycle of colors for beneficiaries
 const BENEFICIARY_COLORS = [
-  'bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500',
-  'bg-cyan-500', 'bg-fuchsia-500', 'bg-orange-500', 'bg-indigo-500', 'bg-yellow-500',
+  'bg-blue-500',
+  'bg-emerald-500',
+  'bg-purple-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-cyan-500',
+  'bg-fuchsia-500',
+  'bg-orange-500',
+  'bg-indigo-500',
+  'bg-yellow-500',
 ];
 
 export default function ZakatBeneficiaryBreakdownWidget({ breakdown }: Props) {
@@ -57,7 +68,9 @@ export default function ZakatBeneficiaryBreakdownWidget({ breakdown }: Props) {
   return (
     <div className='mb-6'>
       <div className='flex items-center justify-between mb-2'>
-        <h3 className='text-sm font-medium text-foreground'>Distribution by Beneficiary</h3>
+        <h3 className='text-sm font-medium text-foreground'>
+          Distribution by Beneficiary
+        </h3>
         {activeBeneficiaryId && (
           <button
             onClick={resetFilter}
@@ -76,7 +89,9 @@ export default function ZakatBeneficiaryBreakdownWidget({ breakdown }: Props) {
             className={`flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted/50 rounded-md px-1.5 py-0.5 transition-colors ${activeBeneficiaryId === item.id ? 'bg-muted text-foreground' : ''}`}
             title={`Filter by ${item.name}`}
           >
-            <span className={`inline-block w-2 h-2 rounded-full ${item.color}`} />
+            <span
+              className={`inline-block w-2 h-2 rounded-full ${item.color}`}
+            />
             {item.name}
             <NumericFormat
               value={item.total}

@@ -1,6 +1,11 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import type { Address, BankType, OptionType, ProfileType } from '@/types/businessTypes';
+import type {
+  Address,
+  BankType,
+  OptionType,
+  ProfileType,
+} from '@/types/businessTypes';
 
 describe('businessTypes - Phase 2: Address Logic Removal', () => {
   describe('BankType type definition', () => {

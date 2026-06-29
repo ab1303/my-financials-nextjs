@@ -1,5 +1,5 @@
 import { DonationPurposeEnum } from '@prisma/client';
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   calculateBreakdownTotals,
@@ -22,8 +22,12 @@ describe('charity-tax-display helpers', () => {
 
   describe('getDonationPurposeLabel', () => {
     it('returns human readable labels', () => {
-      expect(getDonationPurposeLabel(DonationPurposeEnum.VOLUNTARY)).toBe('Voluntary');
-      expect(getDonationPurposeLabel(DonationPurposeEnum.INTEREST_CLEANSING)).toBe('Interest Cleansing');
+      expect(getDonationPurposeLabel(DonationPurposeEnum.VOLUNTARY)).toBe(
+        'Voluntary',
+      );
+      expect(
+        getDonationPurposeLabel(DonationPurposeEnum.INTEREST_CLEANSING),
+      ).toBe('Interest Cleansing');
       expect(getDonationPurposeLabel(DonationPurposeEnum.ZAKAT)).toBe('Zakat');
     });
   });

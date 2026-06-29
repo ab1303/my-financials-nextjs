@@ -1,6 +1,15 @@
 'use client';
 
-import { Check, Pencil, Plus, RotateCcw, Search,Tag, Trash2, X } from 'lucide-react';
+import {
+  Check,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Search,
+  Tag,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -28,15 +37,29 @@ function LoadingSkeleton() {
   );
 }
 
-function EmptyState({ isFiltered, query }: { isFiltered: boolean; query: string }) {
+function EmptyState({
+  isFiltered,
+  query,
+}: {
+  isFiltered: boolean;
+  query: string;
+}) {
   if (isFiltered) {
     return (
       <div className='flex flex-col items-center gap-2 rounded-lg border border-dashed border-border py-8 text-center'>
-        <Search className='h-6 w-6 text-muted-foreground/40' aria-hidden='true' />
+        <Search
+          className='h-6 w-6 text-muted-foreground/40'
+          aria-hidden='true'
+        />
         <p className='text-sm text-muted-foreground'>
-          No match for <span className='font-medium text-foreground'>&quot;{query}&quot;</span>
+          No match for{' '}
+          <span className='font-medium text-foreground'>
+            &quot;{query}&quot;
+          </span>
         </p>
-        <p className='text-xs text-muted-foreground'>Press Enter or click Add to create it.</p>
+        <p className='text-xs text-muted-foreground'>
+          Press Enter or click Add to create it.
+        </p>
       </div>
     );
   }
@@ -44,8 +67,12 @@ function EmptyState({ isFiltered, query }: { isFiltered: boolean; query: string 
     <div className='flex flex-col items-center gap-3 rounded-lg border border-dashed border-border py-10 text-center'>
       <Tag className='h-8 w-8 text-muted-foreground/40' aria-hidden='true' />
       <div>
-        <p className='text-sm font-medium text-foreground'>No expense categories yet</p>
-        <p className='mt-0.5 text-xs text-muted-foreground'>Type a name above to add one.</p>
+        <p className='text-sm font-medium text-foreground'>
+          No expense categories yet
+        </p>
+        <p className='mt-0.5 text-xs text-muted-foreground'>
+          Type a name above to add one.
+        </p>
       </div>
     </div>
   );
@@ -53,12 +80,14 @@ function EmptyState({ isFiltered, query }: { isFiltered: boolean; query: string 
 
 export default function ExpenseCategories() {
   const utils = trpc.useUtils();
-  const { data: categories = [], isLoading } = trpc.expenseCategory.getAll.useQuery();
+  const { data: categories = [], isLoading } =
+    trpc.expenseCategory.getAll.useQuery();
 
   const [searchText, setSearchText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<ExpenseCategoryRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] =
+    useState<ExpenseCategoryRecord | null>(null);
 
   const createMutation = trpc.expenseCategory.create.useMutation({
     onSuccess: () => {
@@ -110,10 +139,14 @@ export default function ExpenseCategories() {
     ? inactive.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
     : inactive;
 
-  const exactMatch = categories.some((c) => c.name.toLowerCase() === query.toLowerCase());
-  const canCreate = query.length > 0 && !exactMatch && !createMutation.isPending;
+  const exactMatch = categories.some(
+    (c) => c.name.toLowerCase() === query.toLowerCase(),
+  );
+  const canCreate =
+    query.length > 0 && !exactMatch && !createMutation.isPending;
   const isFiltered = query.length > 0;
-  const hasNoResults = isFiltered && filteredActive.length === 0 && filteredInactive.length === 0;
+  const hasNoResults =
+    isFiltered && filteredActive.length === 0 && filteredInactive.length === 0;
 
   function handleCreate() {
     if (canCreate) createMutation.mutate({ name: query });
@@ -183,7 +216,10 @@ export default function ExpenseCategories() {
             >
               {editingId === category.id ? (
                 <>
-                  <label htmlFor={`edit-expense-${category.id}`} className='sr-only'>
+                  <label
+                    htmlFor={`edit-expense-${category.id}`}
+                    className='sr-only'
+                  >
                     Edit name
                   </label>
                   <input
@@ -193,7 +229,10 @@ export default function ExpenseCategories() {
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && editName.trim()) {
-                        updateMutation.mutate({ id: category.id, name: editName.trim() });
+                        updateMutation.mutate({
+                          id: category.id,
+                          name: editName.trim(),
+                        });
                       }
                       if (e.key === 'Escape') setEditingId(null);
                     }}
@@ -204,7 +243,10 @@ export default function ExpenseCategories() {
                     type='button'
                     onClick={() =>
                       editName.trim() &&
-                      updateMutation.mutate({ id: category.id, name: editName.trim() })
+                      updateMutation.mutate({
+                        id: category.id,
+                        name: editName.trim(),
+                      })
                     }
                     disabled={!editName.trim() || updateMutation.isPending}
                     className='rounded p-1.5 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
@@ -289,15 +331,21 @@ export default function ExpenseCategories() {
       <ConfirmationDialog
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => deleteTarget && removeMutation.mutate({ id: deleteTarget.id })}
+        onConfirm={() =>
+          deleteTarget && removeMutation.mutate({ id: deleteTarget.id })
+        }
         title='Delete Expense Category'
         message={
           deleteTarget && deleteTarget.usageCount > 0
             ? `"${deleteTarget.name}" is used by ${deleteTarget.usageCount} record(s). It will be deactivated (hidden from new entries) but historical records will be preserved.`
             : `Are you sure you want to delete "${deleteTarget?.name}"?`
         }
-        variant={deleteTarget && deleteTarget.usageCount > 0 ? 'warning' : 'danger'}
-        confirmButtonText={deleteTarget && deleteTarget.usageCount > 0 ? 'Deactivate' : 'Delete'}
+        variant={
+          deleteTarget && deleteTarget.usageCount > 0 ? 'warning' : 'danger'
+        }
+        confirmButtonText={
+          deleteTarget && deleteTarget.usageCount > 0 ? 'Deactivate' : 'Delete'
+        }
         isLoading={removeMutation.isPending}
       />
     </div>

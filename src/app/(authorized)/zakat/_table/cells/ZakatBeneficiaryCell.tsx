@@ -3,6 +3,7 @@ import type { CellContext } from '@tanstack/react-table';
 
 import { SelectWrapper as Select } from '@/components/ui/Select';
 import type { OptionType } from '@/types';
+
 import type { ZakatPaymentType } from '../../_types';
 
 type ZakatBeneficiaryCellProps = {
@@ -20,20 +21,18 @@ export default function ZakatBeneficiaryCell({
 }: ZakatBeneficiaryCellProps) {
   const meta = table.options.meta;
   const editedRecord = meta?.editedRows?.get(row.original.id);
-  
+
   // Use edited record if available, otherwise fallback to original
   const beneficiaryType = editedRecord
     ? editedRecord.beneficiaryType
     : row.original.beneficiaryType;
-  
+
   const beneficiaryId = editedRecord
     ? editedRecord.beneficiaryId
     : row.original.beneficiaryId;
 
   const options =
-    beneficiaryType === 'BUSINESS'
-      ? businessesOptions
-      : individualsOptions;
+    beneficiaryType === 'BUSINESS' ? businessesOptions : individualsOptions;
 
   const selectedOption = options.find((o) => o.id === beneficiaryId);
 

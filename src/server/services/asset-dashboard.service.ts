@@ -15,7 +15,9 @@ const isSameDay = (first: Date, second: Date) =>
   first.getMonth() === second.getMonth() &&
   first.getDate() === second.getDate();
 
-export const resolveDateRangeFromCalendarYear = async (calendarYearId: string) => {
+export const resolveDateRangeFromCalendarYear = async (
+  calendarYearId: string,
+) => {
   const calendarYear = await prisma.calendarYear.findUnique({
     where: { id: calendarYearId },
   });
@@ -99,7 +101,8 @@ export const getNetWorthTrend = async (
     const holdingsTotal = snapshot.holdings.reduce((sum, holding) => {
       const value = Number(holding.quantity) * Number(holding.currentPrice);
       if (holding.currency === 'AUD') return sum + value;
-      if (holding.currency === 'USD' && usdToAudRate) return sum + value * usdToAudRate;
+      if (holding.currency === 'USD' && usdToAudRate)
+        return sum + value * usdToAudRate;
       return sum; // USD with no rate: skip gracefully
     }, 0);
 
@@ -112,7 +115,8 @@ export const getNetWorthTrend = async (
       .reduce((sum, cb) => sum + Number(cb.amount), 0);
 
     // Combine holdings and cash for total
-    const stockTotal = holdingsTotal + cashAud + (usdToAudRate ? cashUsd * usdToAudRate : 0);
+    const stockTotal =
+      holdingsTotal + cashAud + (usdToAudRate ? cashUsd * usdToAudRate : 0);
 
     return {
       id: snapshot.id,
@@ -153,9 +157,13 @@ export const getNetWorthTrend = async (
       netWorthTotal: cashTotal + (lastStock?.stockTotal ?? 0),
       cashSnapshotId: lastCash?.id ?? '',
       stockSnapshotId: lastStock?.id ?? null,
-      isStockStale: lastStock && cashByDate.get(dateStr)
-        ? !isSameDay(lastStock.snapshotDate, cashByDate.get(dateStr)!.snapshotDate)
-        : false,
+      isStockStale:
+        lastStock && cashByDate.get(dateStr)
+          ? !isSameDay(
+              lastStock.snapshotDate,
+              cashByDate.get(dateStr)!.snapshotDate,
+            )
+          : false,
     };
   });
 

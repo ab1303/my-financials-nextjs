@@ -49,9 +49,9 @@ export default function DonationTableClient({
   dateFrom,
   dateTo,
 }: DonationTableClientProps) {
-  const [editedRows, setEditedRows] = useState<Map<string | number, DonationPaymentType>>(
-    new Map(),
-  );
+  const [editedRows, setEditedRows] = useState<
+    Map<string | number, DonationPaymentType>
+  >(new Map());
 
   const [isPending, startTransition] = useTransition();
   const router = useRouter();

@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import TransactionFilters, { type DatePreset } from '@/components/transactions/TransactionFilters';
+import TransactionFilters, {
+  type DatePreset,
+} from '@/components/transactions/TransactionFilters';
 
 vi.mock('react-select', () => ({
   default: ({
@@ -27,11 +29,12 @@ vi.mock('react-select', () => ({
       aria-label={placeholder ?? name}
       value={value?.value ?? ''}
       onChange={(event) => {
-        const selected = options.find((option) => option.value === event.target.value) ?? null;
+        const selected =
+          options.find((option) => option.value === event.target.value) ?? null;
         onChange?.(selected);
       }}
     >
-      {isClearable ? <option value="">All</option> : null}
+      {isClearable ? <option value=''>All</option> : null}
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
@@ -85,7 +88,9 @@ describe('TransactionFilters', () => {
   it('renders Period chip button with active preset label', () => {
     render(<TransactionFilters {...props} />);
 
-    expect(screen.getByRole('button', { name: /period filter: this fy/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /period filter: this fy/i }),
+    ).toBeInTheDocument();
   });
 
   it('period panel is collapsed by default', () => {
@@ -93,7 +98,9 @@ describe('TransactionFilters', () => {
 
     expect(screen.queryByRole('button', { name: /^this month$/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /^last month$/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: /^this quarter$/i })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /^this quarter$/i }),
+    ).toBeNull();
     expect(screen.queryByRole('button', { name: /^last fy$/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /^custom$/i })).toBeNull();
   });
@@ -103,8 +110,12 @@ describe('TransactionFilters', () => {
 
     openPeriodPanel();
 
-    expect(screen.getByRole('button', { name: /^this month$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^custom$/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^this month$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^custom$/i }),
+    ).toBeInTheDocument();
   });
 
   it('clicking Period chip twice closes the accordion', () => {
@@ -120,7 +131,9 @@ describe('TransactionFilters', () => {
   it('Period chip shows aria-expanded="false" when collapsed', () => {
     render(<TransactionFilters {...props} />);
 
-    expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      screen.getByRole('button', { name: /period filter/i }),
+    ).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('Period chip shows aria-expanded="true" when expanded', () => {
@@ -128,7 +141,9 @@ describe('TransactionFilters', () => {
 
     openPeriodPanel();
 
-    expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.getByRole('button', { name: /period filter/i }),
+    ).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('clicking a preset pill calls date callbacks and closes the panel', () => {
@@ -152,8 +167,13 @@ describe('TransactionFilters', () => {
     expect(props.onDatePresetChange).toHaveBeenCalledWith('custom');
     rerender(<TransactionFilters {...props} datePreset='custom' />);
 
-    expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('button', { name: /^custom$/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByRole('button', { name: /period filter/i }),
+    ).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: /^custom$/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   it('clicking Custom shows date inputs', () => {
@@ -184,11 +204,15 @@ describe('TransactionFilters', () => {
 
     openPeriodPanel();
     fireEvent.click(screen.getByRole('button', { name: /^custom$/i }));
-    expect(screen.getByRole('button', { name: /period filter/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.getByRole('button', { name: /period filter/i }),
+    ).toHaveAttribute('aria-expanded', 'true');
 
     rerender(<TransactionFilters {...props} resetKey={1} />);
 
-    expect(screen.getByRole('button', { name: /period filter: this fy/i })).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      screen.getByRole('button', { name: /period filter: this fy/i }),
+    ).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByLabelText(/date from/i)).toBeNull();
   });
 

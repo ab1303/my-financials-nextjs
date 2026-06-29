@@ -35,7 +35,7 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { beforeAll,describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import { parseCommBankCsv } from '@/server/services/ai-import/csv-parser.service';
 
@@ -51,7 +51,6 @@ import { parseCommBankCsv } from '@/server/services/ai-import/csv-parser.service
  * The parser correctly includes these — they ARE genuine debits.
  */
 const TOTAL_PARSED_DEBITS = 10336.28; // actual debit sum from the CSV (107 rows)
-
 
 describe('CSV Category Matching — CommBank July 2025', () => {
   const apiKey = process.env.AI_API_KEY;
@@ -87,10 +86,10 @@ describe('CSV Category Matching — CommBank July 2025', () => {
     const result = await parseCommBankCsv(csvContent);
     expect(result.success).toBe(true);
     // Filter to debit (spending) transactions only
-    const debits = result.transactions!.filter(tx => tx.type === 'DEBIT');
+    const debits = result.transactions!.filter((tx) => tx.type === 'DEBIT');
     expect(debits).toHaveLength(107);
-    const total = Math.round(
-      debits.reduce((sum, tx) => sum + tx.amount, 0) * 100) / 100;
+    const total =
+      Math.round(debits.reduce((sum, tx) => sum + tx.amount, 0) * 100) / 100;
     expect(total).toBeCloseTo(TOTAL_PARSED_DEBITS, 0);
   });
 
@@ -120,9 +119,8 @@ describe('CSV Category Matching — CommBank July 2025', () => {
       expect(firstTx.description).toBeTruthy();
 
       const { embed } = await import('ai');
-      const { getEmbeddingProvider } = await import(
-        '@/server/services/ai-import/embedding.service'
-      );
+      const { getEmbeddingProvider } =
+        await import('@/server/services/ai-import/embedding.service');
 
       const model = getEmbeddingProvider();
       const { embedding } = await embed({ model, value: firstTx.description });
@@ -130,14 +128,15 @@ describe('CSV Category Matching — CommBank July 2025', () => {
       // A valid embedding must be a non-empty array of finite numbers
       expect(Array.isArray(embedding)).toBe(true);
       expect(embedding.length).toBeGreaterThan(0);
-      expect(embedding.every((v) => typeof v === 'number' && isFinite(v))).toBe(true);
+      expect(embedding.every((v) => typeof v === 'number' && isFinite(v))).toBe(
+        true,
+      );
 
       console.log(
         `[AI connectivity] "${firstTx.description.substring(0, 50)}" ` +
-        `→ vector[${embedding.length}], first value: ${embedding[0]?.toFixed(6)}`,
+          `→ vector[${embedding.length}], first value: ${embedding[0]?.toFixed(6)}`,
       );
     },
     30_000, // one API call — should complete well within 30 s
   );
 });
-

@@ -39,7 +39,7 @@ export const Default: Story = {
     useGroupedSelect: true,
   },
   render: (args) => (
-    <div className="w-full bg-white dark:bg-slate-950 p-8">
+    <div className='w-full bg-white dark:bg-slate-950 p-8'>
       <FiltersPanel {...args} />
     </div>
   ),
@@ -60,11 +60,14 @@ export const InteractiveGroupedSelect: Story = {
     useGroupedSelect: true,
   },
   render: (args) => (
-    <div className="w-full bg-white dark:bg-slate-950 p-8">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold mb-2">Category Filtering Demo (Phase 2)</h2>
-        <p className="text-slate-600 dark:text-slate-400">
-          Select categories using the grouped dropdown. Categories are organized by their group heading with an Ungrouped bucket for unassigned items.
+    <div className='w-full bg-white dark:bg-slate-950 p-8'>
+      <div className='mb-4'>
+        <h2 className='text-2xl font-bold mb-2'>
+          Category Filtering Demo (Phase 2)
+        </h2>
+        <p className='text-slate-600 dark:text-slate-400'>
+          Select categories using the grouped dropdown. Categories are organized
+          by their group heading with an Ungrouped bucket for unassigned items.
         </p>
       </div>
       <FiltersPanel {...args} />
@@ -82,10 +85,10 @@ export const LegacyCheckboxPanel: Story = {
     useGroupedSelect: false,
   },
   render: (args) => (
-    <div className="w-full bg-white dark:bg-slate-950 p-8">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold mb-2">Legacy Checkbox Panel</h2>
-        <p className="text-slate-600 dark:text-slate-400">
+    <div className='w-full bg-white dark:bg-slate-950 p-8'>
+      <div className='mb-4'>
+        <h2 className='text-2xl font-bold mb-2'>Legacy Checkbox Panel</h2>
+        <p className='text-slate-600 dark:text-slate-400'>
           Original tri-state checkbox interface for category selection.
         </p>
       </div>
@@ -104,21 +107,33 @@ export const WithMinimalGroups: Story = {
         id: 'g-income',
         name: 'Income',
         categories: [
-          { id: 'c-salary', name: 'Salary', color: 'bg-yellow-500', type: 'income' as const, amount: 5000 },
+          {
+            id: 'c-salary',
+            name: 'Salary',
+            color: 'bg-yellow-500',
+            type: 'income' as const,
+            amount: 5000,
+          },
         ],
       },
       {
         id: 'g-expenses',
         name: 'Expenses',
         categories: [
-          { id: 'c-rent', name: 'Rent', color: 'bg-blue-500', type: 'expense' as const, amount: 1200 },
+          {
+            id: 'c-rent',
+            name: 'Rent',
+            color: 'bg-blue-500',
+            type: 'expense' as const,
+            amount: 1200,
+          },
         ],
       },
     ],
     useGroupedSelect: true,
   },
   render: (args) => (
-    <div className="w-full bg-white dark:bg-slate-950 p-8">
+    <div className='w-full bg-white dark:bg-slate-950 p-8'>
       <FiltersPanel {...args} />
     </div>
   ),

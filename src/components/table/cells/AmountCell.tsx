@@ -1,4 +1,5 @@
 import { NumericFormat } from 'react-number-format';
+
 import { tableCellStyles } from '@/styles/theme';
 
 interface AmountCellProps {

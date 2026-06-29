@@ -1,10 +1,22 @@
-import { TransactionSourceEnum, TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
+import type { TransactionStatusEnum } from '@prisma/client';
+import { TransactionSourceEnum, TransactionTypeEnum } from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
-import { rerollupExpenseSummary, updateIncomeRecordSource } from '@/server/services/transactions/ledger.service';
-import { handleCategoryChange, validateCategoryChange, applyMatchingCategoryChanges } from '@/server/services/transactions/category-change.service';
+
+import {
+  applyMatchingCategoryChanges,
+  handleCategoryChange,
+  validateCategoryChange,
+} from '@/server/services/transactions/category-change.service';
+import {
+  REIMBURSEMENT_CATEGORY,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
+import {
+  rerollupExpenseSummary,
+  updateIncomeRecordSource,
+} from '@/server/services/transactions/ledger.service';
 import { determineNewStatus } from '@/server/services/transactions/transaction-status.service';
 import { protectedProcedure } from '@/server/trpc/trpc';
 
@@ -14,7 +26,9 @@ const updateCategorySchema = z.object({
   offsetCategory: z.string().optional(),
   offsetTransactionId: z.string().optional(),
   applyToMatching: z.boolean().optional(),
-  matchScope: z.object({ type: z.enum(['recent', 'all']), days: z.number().optional() }).optional(),
+  matchScope: z
+    .object({ type: z.enum(['recent', 'all']), days: z.number().optional() })
+    .optional(),
   selectedTransactionIds: z.array(z.string()).optional(),
 });
 

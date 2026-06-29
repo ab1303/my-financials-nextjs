@@ -1,3 +1,5 @@
+import { handleCaughtError } from '@/server/db/client';
+
 import {
   addExpenseCalendarYearDetails,
   getCategoryBreakdownForMonth,
@@ -9,7 +11,6 @@ import {
   getMonthlyExpenseSummaries,
   getTotalExpenses,
 } from '../services/expense.service';
-import { handleCaughtError } from '@/server/db/client';
 
 /**
  * Create or retrieve Expense record for a calendar year and user

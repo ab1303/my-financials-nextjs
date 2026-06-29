@@ -1,5 +1,5 @@
 import type { TypeOf } from 'zod';
-import { array,object, string, z } from 'zod';
+import { array, object, string, z } from 'zod';
 
 // Schema for creating a bank account
 export const createBankAccountSchema = object({
@@ -48,7 +48,9 @@ export const deleteEntrySchema = object({
 export const addEntryToSnapshotSchema = object({
   snapshotId: string({ required_error: 'Snapshot ID is required' }),
   accountId: string({ required_error: 'Account is required' }),
-  balance: z.number({ required_error: 'Balance is required' }).min(0, 'Balance must be >= 0'),
+  balance: z
+    .number({ required_error: 'Balance is required' })
+    .min(0, 'Balance must be >= 0'),
 });
 
 // Schema for getting snapshots with filters

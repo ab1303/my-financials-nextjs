@@ -40,7 +40,7 @@ export const stockHoldingEntrySchema = object({
     .nullable(),
   saleDate: z.preprocess(
     (val) => (val === '' || val == null ? undefined : val),
-    z.coerce.date().optional().nullable()
+    z.coerce.date().optional().nullable(),
   ),
   soldQuantity: z.coerce
     .number({ invalid_type_error: 'Sold quantity must be a number' })
@@ -57,17 +57,19 @@ export const createStockSnapshotSchema = object({
   holdings: z.array(stockHoldingEntrySchema).optional(),
   cashBalances: z.array(cashBalanceEntrySchema).optional(),
 }).refine(
-  data => (data.holdings?.length ?? 0) + (data.cashBalances?.length ?? 0) > 0,
+  (data) => (data.holdings?.length ?? 0) + (data.cashBalances?.length ?? 0) > 0,
   {
     message: 'Add at least one holding or cash balance',
     path: ['holdings'],
-  }
+  },
 );
 
 // Update snapshot with multiple holdings - extends create schema with snapshotId
-export const updateStockSnapshotSchema = z.object({
-  snapshotId: z.string().cuid('Snapshot ID must be a valid CUID'),
-}).and(createStockSnapshotSchema);
+export const updateStockSnapshotSchema = z
+  .object({
+    snapshotId: z.string().cuid('Snapshot ID must be a valid CUID'),
+  })
+  .and(createStockSnapshotSchema);
 
 // Create a single holding (add to existing snapshot)
 export const createStockHoldingSchema = object({
@@ -88,7 +90,7 @@ export const updateStockHoldingSchema = object({
   salePrice: z.coerce.number().positive().optional().nullable(),
   saleDate: z.preprocess(
     (val) => (val === '' || val == null ? undefined : val),
-    z.coerce.date().optional().nullable()
+    z.coerce.date().optional().nullable(),
   ),
   soldQuantity: z.coerce.number().positive().optional().nullable(),
 });
@@ -121,7 +123,9 @@ export const updateSnapshotFxRateSchema = object({
 // Export inferred types
 export type StockHoldingEntryInput = z.infer<typeof stockHoldingEntrySchema>;
 export type CashBalanceEntryInput = z.infer<typeof cashBalanceEntrySchema>;
-export type UpdateSnapshotFxRateInput = z.infer<typeof updateSnapshotFxRateSchema>;
+export type UpdateSnapshotFxRateInput = z.infer<
+  typeof updateSnapshotFxRateSchema
+>;
 export type CreateStockSnapshotInput = z.infer<
   typeof createStockSnapshotSchema
 >;

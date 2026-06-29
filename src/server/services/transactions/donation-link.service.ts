@@ -1,5 +1,9 @@
 import { prisma } from '@/server/db/client';
-import { getAllLinkedTransactionIds, DONATION_PURPOSES } from './donation-utils.service';
+
+import {
+  DONATION_PURPOSES,
+  getAllLinkedTransactionIds,
+} from './donation-utils.service';
 
 export interface UnlinkedDonationTransaction {
   id: string;
@@ -41,7 +45,13 @@ export async function getUnlinkedDonationTransactions(
   const [allDonationTx, allLinkedTxIds] = await Promise.all([
     getPotentialDonationTransactions(userId, dateFrom, dateTo, {
       orderBy: { date: 'desc' },
-      select: { id: true, date: true, description: true, amount: true, category: true },
+      select: {
+        id: true,
+        date: true,
+        description: true,
+        amount: true,
+        category: true,
+      },
     }),
     getAllLinkedTransactionIds([
       DONATION_PURPOSES.VOLUNTARY,

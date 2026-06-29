@@ -1,7 +1,13 @@
 import { TransactionTypeEnum } from '@prisma/client';
+
+import {
+  REIMBURSEMENT_CATEGORY,
+  TRANSFER_CATEGORY,
+} from '@/server/services/transactions/constants';
 import { protectedProcedure } from '@/server/trpc/trpc';
-import { getAllInputSchema, buildTransactionWhere, GetAllOutput, TransactionRow } from '../shared';
-import { REIMBURSEMENT_CATEGORY, TRANSFER_CATEGORY } from '@/server/services/transactions/constants';
+
+import type { GetAllOutput, TransactionRow } from '../shared';
+import { buildTransactionWhere, getAllInputSchema } from '../shared';
 
 export const getAllQuery = protectedProcedure
   .input(getAllInputSchema)
@@ -94,85 +100,83 @@ export const getAllQuery = protectedProcedure
       ? (transactions[transactions.length - 1]?.id ?? null)
       : null;
 
-    const outputTransactions: TransactionRow[] = (
-      transactions as any[]
-    ).map((tx) => ({
-      id: tx.id,
-      date: tx.date.toISOString(),
-      description: tx.description,
-      amount: Number(tx.amount),
-      type: tx.type,
-      category: tx.category,
-      source: tx.source,
-      status: tx.status,
-      confirmedAt: tx.confirmedAt ? tx.confirmedAt.toISOString() : null,
-      bankAccountId: tx.bankAccountId,
-      bankAccountName: tx.financialAccount?.name ?? null,
-      bankName: tx.financialAccount?.institution?.name ?? null,
-      offsetCategory: tx.offsetCategory ?? null,
-      offsetTransactionId: tx.offsetTransactionId ?? null,
-      reimbursements: (tx.reimbursements ?? []).map((r: any) => ({
-        id: r.id,
-        date: r.date.toISOString(),
-        description: r.description,
-        amount: Number(r.amount),
-        type: r.type,
-        category: r.category,
-        offsetCategory: r.offsetCategory ?? null,
-        source: r.source,
-        status: r.status,
-        confirmedAt: r.confirmedAt ? r.confirmedAt.toISOString() : null,
-        bankAccountId: r.bankAccountId,
-        bankAccountName: r.financialAccount?.name ?? null,
-        bankName: r.financialAccount?.institution?.name ?? null,
-        offsetTransactionId: null,
-        reimbursements: [],
-        transferLinkedTransactionId: null,
-        transferCounterpartId: null,
-        transferCounterpart: null,
-        isTransferClassified: false,
-      })),
-      isDonationLinked:
-        tx.category.toLowerCase() === 'gifts & donations' &&
-        tx.type === TransactionTypeEnum.DEBIT
-          ? tx.voluntaryDonations.length > 0
+    const outputTransactions: TransactionRow[] = (transactions as any[]).map(
+      (tx) => ({
+        id: tx.id,
+        date: tx.date.toISOString(),
+        description: tx.description,
+        amount: Number(tx.amount),
+        type: tx.type,
+        category: tx.category,
+        source: tx.source,
+        status: tx.status,
+        confirmedAt: tx.confirmedAt ? tx.confirmedAt.toISOString() : null,
+        bankAccountId: tx.bankAccountId,
+        bankAccountName: tx.financialAccount?.name ?? null,
+        bankName: tx.financialAccount?.institution?.name ?? null,
+        offsetCategory: tx.offsetCategory ?? null,
+        offsetTransactionId: tx.offsetTransactionId ?? null,
+        reimbursements: (tx.reimbursements ?? []).map((r: any) => ({
+          id: r.id,
+          date: r.date.toISOString(),
+          description: r.description,
+          amount: Number(r.amount),
+          type: r.type,
+          category: r.category,
+          offsetCategory: r.offsetCategory ?? null,
+          source: r.source,
+          status: r.status,
+          confirmedAt: r.confirmedAt ? r.confirmedAt.toISOString() : null,
+          bankAccountId: r.bankAccountId,
+          bankAccountName: r.financialAccount?.name ?? null,
+          bankName: r.financialAccount?.institution?.name ?? null,
+          offsetTransactionId: null,
+          reimbursements: [],
+          transferLinkedTransactionId: null,
+          transferCounterpartId: null,
+          transferCounterpart: null,
+          isTransferClassified: false,
+        })),
+        isDonationLinked:
+          tx.category.toLowerCase() === 'gifts & donations' &&
+          tx.type === TransactionTypeEnum.DEBIT
+            ? tx.voluntaryDonations.length > 0
+            : undefined,
+        isZakatLinked:
+          tx.category.toLowerCase() === 'gifts & donations' &&
+          tx.type === TransactionTypeEnum.DEBIT
+            ? tx.zakatPayment !== null
+            : undefined,
+        isInterestLinked:
+          tx.category.toLowerCase() === 'gifts & donations' &&
+          tx.type === TransactionTypeEnum.DEBIT
+            ? tx.interestCleansingEvidence.length > 0
+            : undefined,
+        transferLinkedTransactionId: tx.transferLinkedTransactionId ?? null,
+        transferCounterpartId: tx.transferCounterpart?.id ?? null,
+        transferCounterpart: (() => {
+          const raw =
+            tx.transferLinkedTransaction ?? tx.transferCounterpart ?? null;
+          if (!raw) return null;
+          return {
+            id: raw.id,
+            date: (raw.date as Date).toISOString(),
+            description: raw.description as string,
+            amount: Number(raw.amount),
+            type: raw.type as string,
+            bankAccountName: raw.financialAccount?.name ?? null,
+            bankName: raw.financialAccount?.institution?.name ?? null,
+          };
+        })(),
+        isTransferClassified: tx.category === TRANSFER_CATEGORY,
+        importSource: tx.importSession
+          ? {
+              id: tx.importSession.id,
+              createdAt: tx.importSession.createdAt.toISOString(),
+            }
           : undefined,
-      isZakatLinked:
-        tx.category.toLowerCase() === 'gifts & donations' &&
-        tx.type === TransactionTypeEnum.DEBIT
-          ? tx.zakatPayment !== null
-          : undefined,
-      isInterestLinked:
-        tx.category.toLowerCase() === 'gifts & donations' &&
-        tx.type === TransactionTypeEnum.DEBIT
-          ? tx.interestCleansingEvidence.length > 0
-          : undefined,
-      transferLinkedTransactionId: tx.transferLinkedTransactionId ?? null,
-      transferCounterpartId: tx.transferCounterpart?.id ?? null,
-      transferCounterpart: (() => {
-        const raw =
-          tx.transferLinkedTransaction ??
-          tx.transferCounterpart ??
-          null;
-        if (!raw) return null;
-        return {
-          id: raw.id,
-          date: (raw.date as Date).toISOString(),
-          description: raw.description as string,
-          amount: Number(raw.amount),
-          type: raw.type as string,
-          bankAccountName: raw.financialAccount?.name ?? null,
-          bankName: raw.financialAccount?.institution?.name ?? null,
-        };
-      })(),
-      isTransferClassified: tx.category === TRANSFER_CATEGORY,
-      importSource: tx.importSession
-        ? {
-            id: tx.importSession.id,
-            createdAt: tx.importSession.createdAt.toISOString(),
-          }
-        : undefined,
-    }));
+      }),
+    );
 
     return {
       transactions: outputTransactions,

@@ -4,7 +4,11 @@ import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { NumericFormat } from 'react-number-format';
 
-import { DistributionWidget, type DistributionItem } from '@/components/ui/DistributionWidget';
+import {
+  type DistributionItem,
+  DistributionWidget,
+} from '@/components/ui/DistributionWidget';
+
 import type { IncomeEntryType } from '../_types';
 import SourceBadge from './SourceBadge';
 
@@ -38,7 +42,8 @@ type IncomeDistributionItem = DistributionItem & SourceSummary;
 export function computeBreakdown(entries: IncomeEntryType[]): SourceSummary[] {
   const totals: Record<string, number> = {};
   for (const entry of entries) {
-    totals[entry.incomeSourceName] = (totals[entry.incomeSourceName] ?? 0) + entry.amount;
+    totals[entry.incomeSourceName] =
+      (totals[entry.incomeSourceName] ?? 0) + entry.amount;
   }
   const grand = Object.values(totals).reduce((sum, value) => sum + value, 0);
   return Object.entries(totals)
@@ -50,7 +55,11 @@ export function computeBreakdown(entries: IncomeEntryType[]): SourceSummary[] {
     .sort((a, b) => b.total - a.total);
 }
 
-export default function SourceBreakdownWidget({ entries, yearDateFrom, yearDateTo }: SourceBreakdownWidgetProps) {
+export default function SourceBreakdownWidget({
+  entries,
+  yearDateFrom,
+  yearDateTo,
+}: SourceBreakdownWidgetProps) {
   if (entries.length === 0) return null;
 
   const breakdown = computeBreakdown(entries);

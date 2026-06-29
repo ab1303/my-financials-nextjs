@@ -105,7 +105,9 @@ export default function TransactionRow({
   const [isExpanded, setIsExpanded] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewMatchScope, setPreviewMatchScope] = useState<'recent' | 'all'>('recent');
+  const [previewMatchScope, setPreviewMatchScope] = useState<'recent' | 'all'>(
+    'recent',
+  );
 
   const [localOffsetTxId, setLocalOffsetTxId] = useState<string | null>(
     transaction.offsetTransactionId ?? null,
@@ -134,19 +136,24 @@ export default function TransactionRow({
 
   const effectiveMatchCount = suggestionCount ?? matchCount;
 
-  const previewQuery = trpc.transactionLedger.previewMatchingCategoryChanges.useInfiniteQuery(
-    {
-      transactionId: transaction.id,
-      description: transaction.description,
-      limit: 10,
-      matchScope: { type: previewMatchScope, days: previewMatchScope === 'recent' ? 90 : undefined },
-    },
-    {
-      enabled: showPreviewModal && effectiveMatchCount >= 2,
-      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    },
-  );
-  const previewMatches = previewQuery.data?.pages.flatMap((page) => page.matches) ?? [];
+  const previewQuery =
+    trpc.transactionLedger.previewMatchingCategoryChanges.useInfiniteQuery(
+      {
+        transactionId: transaction.id,
+        description: transaction.description,
+        limit: 10,
+        matchScope: {
+          type: previewMatchScope,
+          days: previewMatchScope === 'recent' ? 90 : undefined,
+        },
+      },
+      {
+        enabled: showPreviewModal && effectiveMatchCount >= 2,
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      },
+    );
+  const previewMatches =
+    previewQuery.data?.pages.flatMap((page) => page.matches) ?? [];
   const previewTotalCount = previewQuery.data?.pages[0]?.totalCount ?? 0;
 
   // Keep localCategory synced with hook value
@@ -742,10 +749,27 @@ export default function TransactionRow({
         <tr className='bg-teal-50 dark:bg-teal-900/10'>
           <td colSpan={colCount} className='px-4 py-2 text-sm'>
             <div className='flex items-center gap-2'>
-              <span className='text-teal-700 dark:text-teal-300'>Similar transactions found ({effectiveMatchCount}):</span>
-              <button onClick={handlePreviewBulk} className='text-xs text-teal-600 underline'>Preview matches</button>
-              <button onClick={() => handleApplyBulk()} className='text-xs font-medium text-teal-700'>Apply to these</button>
-              <button onClick={() => setShowRuleDrawer(true)} className='text-xs text-gray-500'>Create rule</button>
+              <span className='text-teal-700 dark:text-teal-300'>
+                Similar transactions found ({effectiveMatchCount}):
+              </span>
+              <button
+                onClick={handlePreviewBulk}
+                className='text-xs text-teal-600 underline'
+              >
+                Preview matches
+              </button>
+              <button
+                onClick={() => handleApplyBulk()}
+                className='text-xs font-medium text-teal-700'
+              >
+                Apply to these
+              </button>
+              <button
+                onClick={() => setShowRuleDrawer(true)}
+                className='text-xs text-gray-500'
+              >
+                Create rule
+              </button>
             </div>
           </td>
         </tr>

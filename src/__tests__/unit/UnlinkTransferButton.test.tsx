@@ -13,11 +13,16 @@ vi.mock('@/server/trpc/client', () => ({
   trpc: {
     transfer: {
       unlink: {
-        useMutation: vi.fn((opts: { onSuccess: () => void; onError: (err: { message?: string }) => void }) => {
-          onSuccessCallback = opts.onSuccess;
-          onErrorCallback = opts.onError;
-          return { mutate: mockMutate, isPending: mockIsPending };
-        }),
+        useMutation: vi.fn(
+          (opts: {
+            onSuccess: () => void;
+            onError: (err: { message?: string }) => void;
+          }) => {
+            onSuccessCallback = opts.onSuccess;
+            onErrorCallback = opts.onError;
+            return { mutate: mockMutate, isPending: mockIsPending };
+          },
+        ),
       },
     },
   },
@@ -40,32 +45,38 @@ describe('UnlinkTransferButton', () => {
   });
 
   it('renders unlink button', () => {
-    render(<UnlinkTransferButton transactionId="tx-1" onUnlinked={vi.fn()} />);
-    expect(screen.getByRole('button', { name: /unlink transfer/i })).toBeDefined();
+    render(<UnlinkTransferButton transactionId='tx-1' onUnlinked={vi.fn()} />);
+    expect(
+      screen.getByRole('button', { name: /unlink transfer/i }),
+    ).toBeDefined();
   });
 
   it('calls mutate on click', () => {
-    render(<UnlinkTransferButton transactionId="tx-1" onUnlinked={vi.fn()} />);
+    render(<UnlinkTransferButton transactionId='tx-1' onUnlinked={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /unlink transfer/i }));
     expect(mockMutate).toHaveBeenCalledWith({ transactionId: 'tx-1' });
   });
 
   it('is disabled when pending', () => {
     mockIsPending = true;
-    render(<UnlinkTransferButton transactionId="tx-1" onUnlinked={vi.fn()} />);
-    expect(screen.getByRole('button', { name: /unlink transfer/i })).toBeDisabled();
+    render(<UnlinkTransferButton transactionId='tx-1' onUnlinked={vi.fn()} />);
+    expect(
+      screen.getByRole('button', { name: /unlink transfer/i }),
+    ).toBeDisabled();
   });
 
   it('calls onUnlinked on success', () => {
     const onUnlinked = vi.fn();
-    render(<UnlinkTransferButton transactionId="tx-1" onUnlinked={onUnlinked} />);
+    render(
+      <UnlinkTransferButton transactionId='tx-1' onUnlinked={onUnlinked} />,
+    );
     onSuccessCallback?.();
     expect(onUnlinked).toHaveBeenCalledOnce();
     expect(toast.success).toHaveBeenCalledWith('Transfer unlinked');
   });
 
   it('shows toast error on error callback', () => {
-    render(<UnlinkTransferButton transactionId="tx-1" onUnlinked={vi.fn()} />);
+    render(<UnlinkTransferButton transactionId='tx-1' onUnlinked={vi.fn()} />);
     onErrorCallback?.({ message: 'custom error' });
     expect(toast.error).toHaveBeenCalledWith('custom error');
   });

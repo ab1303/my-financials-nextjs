@@ -1,4 +1,4 @@
-import { describe,expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 // We'll need to export the scoring logic or test the service directly.
 // For now, let's assume we might extract the scoring logic into a helper if it gets complex,
 // but let's see how it looks in the service first.
@@ -12,14 +12,18 @@ describe('Interest Cleansing Scoring Logic', () => {
     dateScore: number,
     descScore: number,
     accountScore: number,
-    weights = { amount: 0.4, date: 0.2, desc: 0.3, account: 0.1 }
+    weights = { amount: 0.4, date: 0.2, desc: 0.3, account: 0.1 },
   ) => {
-    const combinedNormalized = Math.max(0, Math.min(1,
-      amountScore * weights.amount +
-      dateScore * weights.date +
-      descScore * weights.desc +
-      accountScore * weights.account
-    ));
+    const combinedNormalized = Math.max(
+      0,
+      Math.min(
+        1,
+        amountScore * weights.amount +
+          dateScore * weights.date +
+          descScore * weights.desc +
+          accountScore * weights.account,
+      ),
+    );
 
     const matchPercent = Math.round(100 * combinedNormalized);
 
@@ -31,19 +35,34 @@ describe('Interest Cleansing Scoring Logic', () => {
     };
 
     if (combinedNormalized > 0) {
-      contributions.amount = Math.round((amountScore * weights.amount / combinedNormalized) * matchPercent);
-      contributions.date = Math.round((dateScore * weights.date / combinedNormalized) * matchPercent);
-      contributions.desc = Math.round((descScore * weights.desc / combinedNormalized) * matchPercent);
-      contributions.account = Math.round((accountScore * weights.account / combinedNormalized) * matchPercent);
+      contributions.amount = Math.round(
+        ((amountScore * weights.amount) / combinedNormalized) * matchPercent,
+      );
+      contributions.date = Math.round(
+        ((dateScore * weights.date) / combinedNormalized) * matchPercent,
+      );
+      contributions.desc = Math.round(
+        ((descScore * weights.desc) / combinedNormalized) * matchPercent,
+      );
+      contributions.account = Math.round(
+        ((accountScore * weights.account) / combinedNormalized) * matchPercent,
+      );
 
       // Rounding drift correction
-      const currentSum = Object.values(contributions).reduce((a, b) => a + b, 0);
+      const currentSum = Object.values(contributions).reduce(
+        (a, b) => a + b,
+        0,
+      );
       const diff = matchPercent - currentSum;
 
       if (diff !== 0) {
         // Adjust the largest contributor
-        const keys = Object.keys(contributions) as Array<keyof typeof contributions>;
-        const largestKey = keys.reduce((a, b) => contributions[a] > contributions[b] ? a : b);
+        const keys = Object.keys(contributions) as Array<
+          keyof typeof contributions
+        >;
+        const largestKey = keys.reduce((a, b) =>
+          contributions[a] > contributions[b] ? a : b,
+        );
         contributions[largestKey] += diff;
       }
     }
@@ -54,8 +73,18 @@ describe('Interest Cleansing Scoring Logic', () => {
   test('should sum contributions to matchPercent (perfect match)', () => {
     const { matchPercent, contributions } = computeScore(1, 1, 1, 1);
     expect(matchPercent).toBe(100);
-    expect(contributions.amount + contributions.date + contributions.desc + contributions.account).toBe(100);
-    expect(contributions).toEqual({ amount: 40, date: 20, desc: 30, account: 10 });
+    expect(
+      contributions.amount +
+        contributions.date +
+        contributions.desc +
+        contributions.account,
+    ).toBe(100);
+    expect(contributions).toEqual({
+      amount: 40,
+      date: 20,
+      desc: 30,
+      account: 10,
+    });
   });
 
   test('should sum contributions to matchPercent (partial match)', () => {
@@ -67,13 +96,28 @@ describe('Interest Cleansing Scoring Logic', () => {
     // Total = 0.48
     // matchPercent = 48
     expect(matchPercent).toBe(48);
-    expect(contributions.amount + contributions.date + contributions.desc + contributions.account).toBe(48);
+    expect(
+      contributions.amount +
+        contributions.date +
+        contributions.desc +
+        contributions.account,
+    ).toBe(48);
   });
 
   test('should handle rounding drift correctly', () => {
     // Pick values that likely cause rounding issues
-    const { matchPercent, contributions } = computeScore(0.33, 0.33, 0.33, 0.33);
-    expect(contributions.amount + contributions.date + contributions.desc + contributions.account).toBe(matchPercent);
+    const { matchPercent, contributions } = computeScore(
+      0.33,
+      0.33,
+      0.33,
+      0.33,
+    );
+    expect(
+      contributions.amount +
+        contributions.date +
+        contributions.desc +
+        contributions.account,
+    ).toBe(matchPercent);
   });
 
   test('should return all zeros if combinedNormalized is 0', () => {

@@ -4,7 +4,10 @@ import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { Fragment, useState } from 'react';
 
-import type { AIImportSessionResult,UploadedFile } from '../../../cashflow/transactions/_components/ai/_types';
+import type {
+  AIImportSessionResult,
+  UploadedFile,
+} from '../../../cashflow/transactions/_components/ai/_types';
 import ResultsStep from '../../../cashflow/transactions/_components/ai/ResultsStep';
 import UploadStep from '../../../cashflow/transactions/_components/ai/UploadStep';
 import BankProcessingStep from './BankAIProcessingStep';
@@ -31,9 +34,8 @@ export default function BankAssetAIImportWizard({
 }: BankAssetAIImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>('upload');
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [importResult, setImportResult] = useState<AIImportSessionResult | null>(
-    null,
-  );
+  const [importResult, setImportResult] =
+    useState<AIImportSessionResult | null>(null);
 
   // Default to today's date in ISO format (YYYY-MM-DD)
   const todayIso = new Date().toISOString().split('T')[0]!;

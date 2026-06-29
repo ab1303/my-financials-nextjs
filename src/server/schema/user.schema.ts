@@ -15,11 +15,11 @@ export const createUserSchema = object({
 
 export const loginUserSchema = object({
   email: string({ required_error: 'Email is required' }).email(
-    'Invalid email or password'
+    'Invalid email or password',
   ),
   password: string({ required_error: 'Password is required' }).min(
     8,
-    'Invalid email or password'
+    'Invalid email or password',
   ),
 });
 

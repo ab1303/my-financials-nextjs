@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter,useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, { useId } from 'react';
 
 import CalendarYearPicker from '@/components/CalendarYearPicker';
@@ -30,16 +30,14 @@ const currencyFormatter = new Intl.NumberFormat('en-AU', {
 
 const formatCurrency = (value: number) => currencyFormatter.format(value);
 
-export default function DonationFilters({
-  initialData,
-  yearIdParam,
-}: Props) {
+export default function DonationFilters({ initialData, yearIdParam }: Props) {
   const id = useId();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { voluntaryTotal, deductibleTotal, nonDeductibleTotal } = initialData.donationTotals;
+  const { voluntaryTotal, deductibleTotal, nonDeductibleTotal } =
+    initialData.donationTotals;
   const totalDonations = deductibleTotal + nonDeductibleTotal;
 
   const handleYearChange = (yearId: string | null) => {

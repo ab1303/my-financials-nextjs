@@ -10,8 +10,8 @@ import AsyncSelect from 'react-select/async';
 import { useDebouncedCallback } from 'use-debounce';
 import usePlacesAutocomplete, { getGeocode } from 'use-places-autocomplete';
 
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
+import { SelectWrapper as Select } from '@/components/ui/Select';
 import { TextInput } from '@/components/ui/TextInput';
 import { getSelectStyles } from '@/lib/select-styles';
 import { inputStyles } from '@/styles/theme';
@@ -224,8 +224,17 @@ export default function AddressComponent<T extends FieldValues>({
                       styles={{
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         ...(getSelectStyles() as any),
-                        control: (base: import('react-select').CSSObjectWithLabel, state: import('react-select').ControlProps<{ label: string }, false>) => ({
-                          ...getSelectStyles<{ label: string }>().control!(base, state),
+                        control: (
+                          base: import('react-select').CSSObjectWithLabel,
+                          state: import('react-select').ControlProps<
+                            { label: string },
+                            false
+                          >,
+                        ) => ({
+                          ...getSelectStyles<{ label: string }>().control!(
+                            base,
+                            state,
+                          ),
                           ...(addressFields.addressLineError
                             ? { borderColor: 'rgba(194, 65, 12)' }
                             : {}),

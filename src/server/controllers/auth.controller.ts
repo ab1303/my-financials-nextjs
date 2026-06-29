@@ -25,7 +25,7 @@ export const registerHandler = async ({
     };
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
-       throw new TRPCError({
+      throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: e.message,
       });

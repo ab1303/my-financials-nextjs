@@ -43,9 +43,9 @@ export type HoldingDisplay = StockHoldingWithAccount & HoldingCalculations;
 
 export type AccountTotalSummary = {
   accountId: string;
-  accountName: string;       // "InstitutionName — AccountName"
-  institutionName: string;   // Business.name
-  subAccountName: string;    // FinancialAccount.name
+  accountName: string; // "InstitutionName — AccountName"
+  institutionName: string; // Business.name
+  subAccountName: string; // FinancialAccount.name
   currency: CurrencyEnumType;
   holdings: HoldingDisplay[];
   totalMarketValue: number;
@@ -102,9 +102,9 @@ export type SnapshotFormData = {
 // ── Select Options ───────────────────────────────────────────────
 
 export type BrokerageAccountOption = {
-  value: string;           // FinancialAccount.id
-  label: string;           // "InstitutionName — AccountName"
-  institutionId: string;   // Business.id
+  value: string; // FinancialAccount.id
+  label: string; // "InstitutionName — AccountName"
+  institutionId: string; // Business.id
   institutionName: string; // Business.name
 };
 

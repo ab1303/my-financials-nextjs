@@ -34,7 +34,12 @@ interface SummaryCardsProps {
  * Shows total market value and P/L (realized + unrealized).
  * Color-coded backgrounds: AUD (teal), USD (blue).
  */
-export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDate, snapshotId }: SummaryCardsProps) {
+export default function SummaryCards({
+  currencyTotals,
+  usdToAudRate,
+  snapshotDate,
+  snapshotId,
+}: SummaryCardsProps) {
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [editRateValue, setEditRateValue] = useState<number | null>(null);
   const utils = trpc.useUtils();
@@ -102,12 +107,14 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
             <div className='mb-4 flex items-end justify-between gap-4'>
               <div>
                 <p className='text-sm text-muted-foreground mb-1'>
-                  {(total.totalCash ?? 0) > 0 ? 'Total Portfolio Value' : 'Portfolio Value'}
+                  {(total.totalCash ?? 0) > 0
+                    ? 'Total Portfolio Value'
+                    : 'Portfolio Value'}
                 </p>
                 <p className='text-2xl font-bold text-foreground'>
                   {formatCurrency(
                     total.totalValue + (total.totalCash ?? 0),
-                    total.currency as any
+                    total.currency as any,
                   )}
                 </p>
                 {(total.totalCash ?? 0) > 0 && (
@@ -115,20 +122,28 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
                     <div className='flex justify-between gap-4 text-muted-foreground'>
                       <span>Stocks:</span>
                       <span className='font-medium text-foreground'>
-                        {formatCurrency(total.totalValue, total.currency as any)}
+                        {formatCurrency(
+                          total.totalValue,
+                          total.currency as any,
+                        )}
                       </span>
                     </div>
                     <div className='flex justify-between gap-4 text-muted-foreground'>
                       <span>Cash:</span>
                       <span className='font-medium text-foreground'>
-                        {formatCurrency(total.totalCash ?? 0, total.currency as any)}
+                        {formatCurrency(
+                          total.totalCash ?? 0,
+                          total.currency as any,
+                        )}
                       </span>
                     </div>
                   </div>
                 )}
               </div>
               <div className='text-right'>
-                <p className='text-sm text-muted-foreground mb-1'>Invested Amount</p>
+                <p className='text-sm text-muted-foreground mb-1'>
+                  Invested Amount
+                </p>
                 <p className='text-lg font-semibold text-foreground'>
                   {formatCurrency(total.totalCostBasis, total.currency as any)}
                 </p>
@@ -139,13 +154,17 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
             <div className='space-y-2'>
               <div className='flex justify-between items-center py-2 border-t border-border border-opacity-50'>
                 <p className='text-sm text-muted-foreground'>Unrealized P/L</p>
-                <p className={`font-semibold ${getPLColorClass(total.totalUnrealizedPL)}`}>
+                <p
+                  className={`font-semibold ${getPLColorClass(total.totalUnrealizedPL)}`}
+                >
                   {formatPL(total.totalUnrealizedPL, total.currency as any)}
                 </p>
               </div>
               <div className='flex justify-between items-center py-2 border-t border-border border-opacity-50'>
                 <p className='text-sm text-muted-foreground'>Realized P/L</p>
-                <p className={`font-semibold ${getPLColorClass(total.totalRealizedPL)}`}>
+                <p
+                  className={`font-semibold ${getPLColorClass(total.totalRealizedPL)}`}
+                >
                   {formatPL(total.totalRealizedPL, total.currency as any)}
                 </p>
               </div>
@@ -169,11 +188,15 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
                         · 1 USD = {usdToAudRate.toFixed(4)} AUD
                         {snapshotDate && (
                           <span className='ml-1'>
-                            · {new Date(snapshotDate).toLocaleDateString('en-AU', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                            })}
+                            ·{' '}
+                            {new Date(snapshotDate).toLocaleDateString(
+                              'en-AU',
+                              {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              },
+                            )}
                           </span>
                         )}
                       </span>
@@ -184,7 +207,11 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
                       onClick={handleEditRate}
                       className='text-muted-foreground hover:text-foreground transition-colors p-0.5'
                       title={usdToAudRate ? 'Edit rate' : 'Add rate'}
-                      aria-label={usdToAudRate ? 'Edit exchange rate' : 'Add exchange rate'}
+                      aria-label={
+                        usdToAudRate
+                          ? 'Edit exchange rate'
+                          : 'Add exchange rate'
+                      }
                     >
                       <Pencil size={12} />
                     </button>
@@ -194,10 +221,14 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
                 {/* Inline rate editor */}
                 {isEditingRate && (
                   <div className='flex items-center gap-2 mb-2'>
-                    <span className='text-xs text-muted-foreground whitespace-nowrap'>1 USD =</span>
+                    <span className='text-xs text-muted-foreground whitespace-nowrap'>
+                      1 USD =
+                    </span>
                     <NumericFormat
                       value={editRateValue ?? ''}
-                      onValueChange={({ floatValue }) => setEditRateValue(floatValue ?? null)}
+                      onValueChange={({ floatValue }) =>
+                        setEditRateValue(floatValue ?? null)
+                      }
                       decimalScale={4}
                       placeholder='e.g. 1.5470'
                       autoFocus
@@ -226,21 +257,33 @@ export default function SummaryCards({ currencyTotals, usdToAudRate, snapshotDat
                 {usdToAudRate && !isEditingRate ? (
                   <div className='flex justify-between items-end'>
                     <div>
-                      <p className='text-xs text-muted-foreground mb-0.5'>Portfolio Value</p>
+                      <p className='text-xs text-muted-foreground mb-0.5'>
+                        Portfolio Value
+                      </p>
                       <p className='text-lg font-semibold text-foreground'>
-                        {formatCurrency((total.totalValue + (total.totalCash ?? 0)) * usdToAudRate, 'AUD')}
+                        {formatCurrency(
+                          (total.totalValue + (total.totalCash ?? 0)) *
+                            usdToAudRate,
+                          'AUD',
+                        )}
                       </p>
                     </div>
                     <div className='text-right'>
-                      <p className='text-xs text-muted-foreground mb-0.5'>Invested Amount</p>
+                      <p className='text-xs text-muted-foreground mb-0.5'>
+                        Invested Amount
+                      </p>
                       <p className='text-base font-medium text-foreground'>
-                        {formatCurrency(total.totalCostBasis * usdToAudRate, 'AUD')}
+                        {formatCurrency(
+                          total.totalCostBasis * usdToAudRate,
+                          'AUD',
+                        )}
                       </p>
                     </div>
                   </div>
                 ) : !isEditingRate ? (
                   <p className='text-xs text-muted-foreground italic'>
-                    AUD equivalent not available — click <Pencil size={10} className='inline mb-0.5' /> to add rate
+                    AUD equivalent not available — click{' '}
+                    <Pencil size={10} className='inline mb-0.5' /> to add rate
                   </p>
                 ) : null}
               </div>

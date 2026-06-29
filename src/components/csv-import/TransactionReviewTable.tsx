@@ -55,7 +55,11 @@ export function isLikelyUnknownMerchant(description: string): boolean {
 export interface ClassifiedMonth {
   month: string;
   transactions: ClassifiedTransaction[];
-  duplicates?: Array<{ csvId: string; dedupKey: string; matchedTransactionIds: string[] }>;
+  duplicates?: Array<{
+    csvId: string;
+    dedupKey: string;
+    matchedTransactionIds: string[];
+  }>;
   totalUsage: {
     promptTokens: number;
     completionTokens: number;

@@ -10,9 +10,18 @@ import type { CategoryBreakdown } from '@/server/models/expense';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 
 const GROUP_COLORS = [
-  'bg-red-500',   'bg-orange-500', 'bg-amber-500',   'bg-lime-500',
-  'bg-green-500', 'bg-teal-500',   'bg-cyan-500',    'bg-blue-500',
-  'bg-indigo-500','bg-violet-500', 'bg-purple-500',  'bg-pink-500',
+  'bg-red-500',
+  'bg-orange-500',
+  'bg-amber-500',
+  'bg-lime-500',
+  'bg-green-500',
+  'bg-teal-500',
+  'bg-cyan-500',
+  'bg-blue-500',
+  'bg-indigo-500',
+  'bg-violet-500',
+  'bg-purple-500',
+  'bg-pink-500',
 ];
 
 const GROUP_BADGE_COLORS = [
@@ -35,7 +44,10 @@ type Props = {
   categoryGroups: CategoryGroupListItem[];
 };
 
-export function ExpenseGroupSummaryChart({ expenseCategories, categoryGroups }: Props) {
+export function ExpenseGroupSummaryChart({
+  expenseCategories,
+  categoryGroups,
+}: Props) {
   const expenseGroups = useMemo(
     () => categoryGroups.filter((g) => g.scope === 'EXPENSE'),
     [categoryGroups],
@@ -50,7 +62,9 @@ export function ExpenseGroupSummaryChart({ expenseCategories, categoryGroups }: 
     return (
       <Card>
         <CardHeader>
-          <CardTitle className='text-sm font-medium'>Expenses by Group</CardTitle>
+          <CardTitle className='text-sm font-medium'>
+            Expenses by Group
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className='text-sm text-muted-foreground py-4 text-center'>
@@ -93,20 +107,31 @@ export function ExpenseGroupSummaryChart({ expenseCategories, categoryGroups }: 
         {/* Group rows */}
         <div className='space-y-3'>
           {grouped.map((group, i) => {
-            const barColor = GROUP_COLORS[i % GROUP_COLORS.length] ?? 'bg-gray-400';
-            const textColor = GROUP_BADGE_COLORS[i % GROUP_BADGE_COLORS.length] ?? 'text-foreground';
+            const barColor =
+              GROUP_COLORS[i % GROUP_COLORS.length] ?? 'bg-gray-400';
+            const textColor =
+              GROUP_BADGE_COLORS[i % GROUP_BADGE_COLORS.length] ??
+              'text-foreground';
 
             return (
               <div key={group.groupName} className='space-y-1'>
                 {/* Group header row */}
                 <div className='flex items-center justify-between gap-2'>
                   <div className='flex items-center gap-2 min-w-0'>
-                    <span className={`inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full ${barColor}`} />
-                    <span className={`text-sm font-semibold truncate ${textColor}`}>
+                    <span
+                      className={`inline-block h-2.5 w-2.5 flex-shrink-0 rounded-full ${barColor}`}
+                    />
+                    <span
+                      className={`text-sm font-semibold truncate ${textColor}`}
+                    >
                       {group.groupName}
                     </span>
                     <span className='text-xs text-muted-foreground'>
-                      ({group.categories.length} {group.categories.length === 1 ? 'category' : 'categories'})
+                      ({group.categories.length}{' '}
+                      {group.categories.length === 1
+                        ? 'category'
+                        : 'categories'}
+                      )
                     </span>
                   </div>
                   <div className='flex items-center gap-2 flex-shrink-0'>

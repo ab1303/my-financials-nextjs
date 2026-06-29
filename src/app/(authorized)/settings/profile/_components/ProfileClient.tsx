@@ -31,7 +31,11 @@ function ProfileSkeleton() {
 export function ProfileClient() {
   const { update: updateSession } = useSession();
   const utils = trpc.useUtils();
-  const { data: profile, isLoading, error } = trpc.userProfile.getProfile.useQuery();
+  const {
+    data: profile,
+    isLoading,
+    error,
+  } = trpc.userProfile.getProfile.useQuery();
 
   const handleProfileUpdated = async () => {
     await utils.userProfile.getProfile.invalidate();
@@ -55,14 +59,20 @@ export function ProfileClient() {
   return (
     <div className='space-y-6'>
       <ProfileSection title='Avatar' description='Your profile photo'>
-        <AvatarUpload profile={profile} onAvatarChanged={handleProfileUpdated} />
+        <AvatarUpload
+          profile={profile}
+          onAvatarChanged={handleProfileUpdated}
+        />
       </ProfileSection>
 
       <ProfileSection
         title='Personal Information'
         description='Update your personal details and financial preferences'
       >
-        <ProfileForm profile={profile} onProfileUpdated={handleProfileUpdated} />
+        <ProfileForm
+          profile={profile}
+          onProfileUpdated={handleProfileUpdated}
+        />
       </ProfileSection>
 
       {profile.isCredentialsUser && (

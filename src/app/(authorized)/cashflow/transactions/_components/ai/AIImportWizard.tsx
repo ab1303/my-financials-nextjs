@@ -26,9 +26,14 @@ export default function AIImportWizard({
 }: AIImportWizardProps) {
   const [currentStep, setCurrentStep] = useState<WizardStep>('upload');
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [importResult, setImportResult] = useState<AIImportSessionResult | null>(null);
-  const [selectedBankAccountId, setSelectedBankAccountId] = useState<string | null>(null);
-  const [extractedImages, setExtractedImages] = useState<ExtractedImageResult[]>([]);
+  const [importResult, setImportResult] =
+    useState<AIImportSessionResult | null>(null);
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState<
+    string | null
+  >(null);
+  const [extractedImages, setExtractedImages] = useState<
+    ExtractedImageResult[]
+  >([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [calendarYearId, setCalendarYearId] = useState('');
 

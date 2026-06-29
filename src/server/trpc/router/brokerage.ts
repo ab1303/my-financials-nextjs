@@ -9,7 +9,7 @@ import {
   params,
   updateBrokerageSchema,
 } from '@/server/schema/brokerage.schema';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const brokerageRouter = router({
   saveBrokerageDetails: protectedProcedure

@@ -1,17 +1,18 @@
 'use client';
 
-
-
-
-
-
-
 import { Dialog, Transition } from '@headlessui/react';
 import clsx from 'clsx';
 import { ArrowUpDown, ChevronDown, ChevronRight, Lock, X } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Fragment, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+} from 'react';
 import { NumericFormat } from 'react-number-format';
 import { toast } from 'sonner';
 
@@ -20,12 +21,15 @@ import ImportAuditIcon from '@/components/ImportAuditIcon';
 import Portal from '@/components/Portal';
 import { Label } from '@/components/ui';
 import { SelectWrapper as Select } from '@/components/ui/Select';
-import { groupExpenseEntries, type GroupedEntry } from '@/lib/category-group-utils';
+import {
+  type GroupedEntry,
+  groupExpenseEntries,
+} from '@/lib/category-group-utils';
 import { cn } from '@/lib/utils';
 import type { ExpenseEntryWithCategory } from '@/server/models/expense';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 import { cardStyles } from '@/styles/theme';
-import { buttonStyles,inputStyles } from '@/styles/theme';
+import { buttonStyles, inputStyles } from '@/styles/theme';
 import type { OptionType } from '@/types';
 
 import {
@@ -40,1638 +44,879 @@ import {
   useExpenseEntryState,
 } from '../StateProvider';
 
-
-
-
-
-
-
 type CategoryBreakdownModalProps = {
-
-
-
   calendarYearId: string;
-
-
 
   month: number;
 
-
-
   monthName: string;
-
-
 
   monthYear: number;
 
-
-
   isOpen: boolean;
-
-
 
   categoryGroups: CategoryGroupListItem[];
 
-
-
   onClose: () => void;
-
-
-
 };
 
-
-
-
-
-
-
 type ExpenseEntryFormData = {
-
-
-
   id: string;
-
-
 
   categoryId: string;
 
-
-
   categoryName: string;
 
-
-
   amount: number;
-
-
-
 };
 
-
-
-
-
-
-
 type CategoryBreakdownDialogProps = {
-
-
-
   title: string;
-
-
 
   onClose: () => void;
 
-
-
   children: ReactNode;
 
-
-
   footer?: ReactNode;
-
-
-
 };
 
-
-
-
-
-
-
 const defaultEntry: ExpenseEntryFormData = {
-
-
-
   id: '',
-
-
 
   categoryId: '',
 
-
-
   categoryName: '',
 
-
-
   amount: 0,
-
-
-
 };
 
-
-
-
-
-
-
 function CategoryBreakdownDialog({
-
-
-
   title,
-
-
 
   onClose,
 
-
-
   children,
 
-
-
   footer,
-
-
-
 }: CategoryBreakdownDialogProps) {
-
-
-
   return (
-
-
-
     <Portal>
-
-
-
       <Transition appear show as={Fragment}>
-
-
-
         <Dialog onClose={onClose} className='relative z-50'>
-
-
-
           <Transition.Child
-
-
-
             as={Fragment}
-
-
-
             enter='ease-out duration-300'
-
-
-
             enterFrom='opacity-0'
-
-
-
             enterTo='opacity-100'
-
-
-
             leave='ease-in duration-200'
-
-
-
             leaveFrom='opacity-100'
-
-
-
             leaveTo='opacity-0'
-
-
-
           >
-
-
-
             <div className='fixed inset-0 bg-black/50' />
-
-
-
           </Transition.Child>
 
-
-
-
-
-
-
           <div className='fixed inset-0 flex items-center justify-center p-4'>
-
-
-
             <Transition.Child
-
-
-
               as={Fragment}
-
-
-
               enter='ease-out duration-300'
-
-
-
               enterFrom='opacity-0 scale-95'
-
-
-
               enterTo='opacity-100 scale-100'
-
-
-
               leave='ease-in duration-200'
-
-
-
               leaveFrom='opacity-100 scale-100'
-
-
-
               leaveTo='opacity-0 scale-95'
-
-
-
             >
-
-
-
               <Dialog.Panel className='flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-background shadow-xl ring-1 ring-border sm:max-w-3xl lg:max-w-5xl 2xl:max-w-6xl'>
-
-
-
                 <div className='flex items-center justify-between border-b border-border px-6 py-4'>
-
-
-
-                  <Dialog.Title as='h2' className='text-lg font-semibold text-foreground'>
-
-
-
+                  <Dialog.Title
+                    as='h2'
+                    className='text-lg font-semibold text-foreground'
+                  >
                     {title}
-
-
-
                   </Dialog.Title>
 
-
-
                   <button
-
-
-
                     type='button'
-
-
-
                     onClick={onClose}
-
-
-
                     className='rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'
-
-
-
                     aria-label='Close dialog'
-
-
-
                   >
-
-
-
                     <X className='h-5 w-5' />
-
-
-
                   </button>
-
-
-
                 </div>
-
-
-
-
-
-
 
                 <div className='flex-1 max-h-[85vh] overflow-y-auto px-6 py-5'>
-
-
-
                   {children}
-
-
-
                 </div>
 
-
-
-
-
-
-
                 {footer ? (
-
-
-
                   <div className='border-t border-border px-6 py-4'>
-
-
-
                     {footer}
-
-
-
                   </div>
-
-
-
                 ) : null}
-
-
-
               </Dialog.Panel>
-
-
-
             </Transition.Child>
-
-
-
           </div>
-
-
-
         </Dialog>
-
-
-
       </Transition>
-
-
-
     </Portal>
-
-
-
   );
-
-
-
 }
 
-
-
-
-
-
-
-export function buildCategoryTransactionHref(categoryId: string, month: number, year: number = new Date().getFullYear()) {
+export function buildCategoryTransactionHref(
+  categoryId: string,
+  month: number,
+  year: number = new Date().getFullYear(),
+) {
   return `/cashflow/transactions?category=${encodeURIComponent(categoryId)}&month=${month}&year=${year}`;
 }
 
 function CategoryBreakdownContent({
-
-
-
   calendarYearId,
-
-
 
   month,
 
-
-
   monthName,
-
-
 
   monthYear,
 
-
-
   categoryGroups,
 
-
-
   onClose,
-
-
-
 }: Omit<CategoryBreakdownModalProps, 'isOpen'>) {
-
-
-
   const selectId = useId();
-
-
 
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
 
+  const [entryForm, setEntryForm] =
+    useState<ExpenseEntryFormData>(defaultEntry);
 
-
-  const [entryForm, setEntryForm] = useState<ExpenseEntryFormData>(defaultEntry);
-
-
-
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
-
-
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
 
   const [isLoading, setIsLoading] = useState(false);
 
-
-
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  const [viewMode, setViewMode] = useState<'flat' | 'grouped'>('flat');
 
-
-    const [viewMode, setViewMode] = useState<'flat' | 'grouped'>('flat');
-
-
-
-    const { state, dispatch } = useExpenseEntryState();
-
-
-
-
-
-
+  const { state, dispatch } = useExpenseEntryState();
 
   useEffect(() => {
-
-
-
     const loadCategories = async () => {
-
-
-
       const result = await getExpenseCategories();
 
-
-
       if (result.success && result.data) {
-
-
-
         setCategories(result.data);
-
-
-
       }
-
-
-
     };
 
-
-
     loadCategories();
-
-
-
   }, []);
 
-
-
-
-
-
-
   const categoryOptions: OptionType[] = categories.map((cat) => ({
-
-
-
     id: cat.id,
 
-
-
     label: cat.name,
-
-
-
   }));
 
-
-
-
-
-
-
   const handleAddEntry = async () => {
-
-
-
     if (!entryForm.categoryId || entryForm.amount <= 0) {
-
-
-
       toast.error('Please select a category and enter a valid amount');
 
-
-
       return;
-
-
-
     }
-
-
 
     setIsLoading(true);
 
-
-
-    const result = await addRow({ calendarYearId, month, categoryId: entryForm.categoryId, amount: entryForm.amount });
-
-
+    const result = await addRow({
+      calendarYearId,
+      month,
+      categoryId: entryForm.categoryId,
+      amount: entryForm.amount,
+    });
 
     if (result.success && result.data) {
+      const categoryName =
+        categories.find((c) => c.id === entryForm.categoryId)?.name || '';
 
-
-
-      const categoryName = categories.find((c) => c.id === entryForm.categoryId)?.name || '';
-
-
-
-      dispatch({ type: 'EXPENSE/Entries/ADD_ENTRY', payload: { entry: { ...result.data, categoryName } } });
-
-
+      dispatch({
+        type: 'EXPENSE/Entries/ADD_ENTRY',
+        payload: { entry: { ...result.data, categoryName } },
+      });
 
       toast.success('Expense entry added');
 
-
-
       setEntryForm(defaultEntry);
-
-
-
     } else {
-
-
-
       toast.error(result.error || 'Failed to add expense entry');
-
-
-
     }
-
-
 
     setIsLoading(false);
-
-
-
   };
 
-
-
-
-
-
-
   const handleEditEntry = async (entryId: string) => {
-
-
-
     if (!entryForm.categoryId || entryForm.amount <= 0) {
-
-
-
       toast.error('Please select a category and enter a valid amount');
 
-
-
       return;
-
-
-
     }
-
-
 
     setIsLoading(true);
 
-
-
-    const result = await editRow({ id: entryId, categoryId: entryForm.categoryId, amount: entryForm.amount });
-
-
+    const result = await editRow({
+      id: entryId,
+      categoryId: entryForm.categoryId,
+      amount: entryForm.amount,
+    });
 
     if (result.success && result.data) {
+      const categoryName =
+        categories.find((c) => c.id === entryForm.categoryId)?.name || '';
 
-
-
-      const categoryName = categories.find((c) => c.id === entryForm.categoryId)?.name || '';
-
-
-
-      dispatch({ type: 'EXPENSE/Entries/EDIT_ENTRY', payload: { expenseEntryId: entryId, entry: { categoryId: entryForm.categoryId, amount: entryForm.amount, categoryName } } });
-
-
+      dispatch({
+        type: 'EXPENSE/Entries/EDIT_ENTRY',
+        payload: {
+          expenseEntryId: entryId,
+          entry: {
+            categoryId: entryForm.categoryId,
+            amount: entryForm.amount,
+            categoryName,
+          },
+        },
+      });
 
       toast.success('Expense entry updated');
 
-
-
       setEditEntryId(null);
 
-
-
       setEntryForm(defaultEntry);
-
-
-
     } else {
-
-
-
       toast.error(result.error || 'Failed to update expense entry');
-
-
-
     }
 
-
-
     setIsLoading(false);
-
-
-
   };
 
-
-
-
-
-
-
   const handleDeleteEntry = async (entryId: string) => {
-
-
-
     setIsLoading(true);
-
-
 
     const result = await deleteRow({ id: entryId, calendarYearId });
 
-
-
     if (result.success) {
-
-
-
-      dispatch({ type: 'EXPENSE/Entries/REMOVE_ENTRY', payload: { expenseEntryId: entryId } });
-
-
+      dispatch({
+        type: 'EXPENSE/Entries/REMOVE_ENTRY',
+        payload: { expenseEntryId: entryId },
+      });
 
       toast.success('Expense entry deleted');
-
-
-
     } else {
-
-
-
       toast.error(result.error || 'Failed to delete expense entry');
-
-
-
     }
 
-
-
     setIsLoading(false);
-
-
-
   };
-
-
-
-
-
-
 
   const startEdit = (entry: ExpenseEntryWithCategory) => {
-
-
-
     setEditEntryId(entry.id);
 
-
-
-    setEntryForm({ id: entry.id, categoryId: entry.categoryId, categoryName: entry.categoryName, amount: entry.amount });
-
-
-
+    setEntryForm({
+      id: entry.id,
+      categoryId: entry.categoryId,
+      categoryName: entry.categoryName,
+      amount: entry.amount,
+    });
   };
-
-
-
-
-
-
 
   const cancelEdit = () => {
-
-
-
     setEditEntryId(null);
 
-
-
     setEntryForm(defaultEntry);
-
-
-
   };
-
-
-
-
-
-
 
   const totalAmount = state.data.reduce((sum, entry) => sum + entry.amount, 0);
 
-
-
-
-
-
-
   const sortedEntries = useMemo(
-
-
-
     () =>
-
-
-
       [...state.data].sort((a, b) =>
-
-
-
         sortOrder === 'asc' ? a.amount - b.amount : b.amount - a.amount,
-
-
-
       ),
 
-
-
     [state.data, sortOrder],
-
-
-
   );
-
-
-
-
-
-
 
   const toggleSort = useCallback(
-
-
-
     () => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc')),
 
-
-
     [],
-
-
-
   );
 
+  const groupedEntries = useMemo(
+    () => groupExpenseEntries(state.data, categoryGroups),
+    [state.data, categoryGroups],
+  );
 
-
-    const groupedEntries = useMemo(
-      () => groupExpenseEntries(state.data, categoryGroups),
-      [state.data, categoryGroups],
-    );
-
-
-
-    return (
-
-
-
-      <CategoryBreakdownDialog
-
-
-
+  return (
+    <CategoryBreakdownDialog
       title={`Expenses for ${monthName}`}
-
-
-
       onClose={onClose}
-
-
-
       footer={
-
-
-
         <div className='flex items-center justify-between w-full'>
-
-
-
           <span className='text-lg font-bold'>
-
-
-
-            Total: <NumericFormat prefix='$' displayType='text' thousandSeparator value={totalAmount.toFixed(2)} />
-
-
-
+            Total:{' '}
+            <NumericFormat
+              prefix='$'
+              displayType='text'
+              thousandSeparator
+              value={totalAmount.toFixed(2)}
+            />
           </span>
 
-
-
           <div className='flex gap-2'>
-
-            <button type='button' className={clsx(buttonStyles.primary)} onClick={onClose}>
-
+            <button
+              type='button'
+              className={clsx(buttonStyles.primary)}
+              onClick={onClose}
+            >
               Close
-
             </button>
-
           </div>
-
-
-
         </div>
-
-
-
       }
-
-
-
     >
-
-
-
       <div className='space-y-6'>
-
-
-
         {editEntryId === null && (
-
-
-
           <div className='rounded-lg border border-border bg-muted/50 p-4'>
-
-
-
             <div className='mb-3'>
-
-
-
-              <span className='text-sm font-semibold text-muted-foreground'>Add New Expense</span>
-
-
-
+              <span className='text-sm font-semibold text-muted-foreground'>
+                Add New Expense
+              </span>
             </div>
-
-
 
             <div className='grid grid-cols-12 items-end gap-3'>
-
-
-
               <div className='col-span-5'>
-
-
-
-                <Label className='mb-1 text-xs text-muted-foreground'>Category</Label>
-
-
+                <Label className='mb-1 text-xs text-muted-foreground'>
+                  Category
+                </Label>
 
                 <Select<OptionType>
-
-
-
                   instanceId={`category-add-${selectId}`}
-
-
-
                   options={categoryOptions}
-
-
-
-                  value={categoryOptions.find((opt) => opt.id === entryForm.categoryId) || null}
-
-
-
-                  onChange={(option) => { if (option) setEntryForm({ ...entryForm, categoryId: option.id, categoryName: option.label }); }}
-
-
-
+                  value={
+                    categoryOptions.find(
+                      (opt) => opt.id === entryForm.categoryId,
+                    ) || null
+                  }
+                  onChange={(option) => {
+                    if (option)
+                      setEntryForm({
+                        ...entryForm,
+                        categoryId: option.id,
+                        categoryName: option.label,
+                      });
+                  }}
                   getOptionValue={(option) => option.id}
-
-
-
                   placeholder='Select category...'
-
-
-
                   menuPortalTarget={document.body}
-
-
-
                   menuPosition='fixed'
-
-
-
-                  styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999, pointerEvents: 'auto' }) as typeof base }}
-
-
-
+                  styles={{
+                    menuPortal: (base) =>
+                      ({
+                        ...base,
+                        zIndex: 9999,
+                        pointerEvents: 'auto',
+                      }) as typeof base,
+                  }}
                 />
-
-
-
               </div>
-
-
 
               <div className='col-span-4'>
+                <Label className='mb-1 text-xs text-muted-foreground'>
+                  Amount $
+                </Label>
 
-
-
-                <Label className='mb-1 text-xs text-muted-foreground'>Amount $</Label>
-
-
-
-                <NumericFormat className={cn(inputStyles.base)} prefix='$' displayType='input' thousandSeparator value={entryForm.amount || ''} onValueChange={(values) => setEntryForm({ ...entryForm, amount: values.floatValue || 0 })} />
-
-
-
+                <NumericFormat
+                  className={cn(inputStyles.base)}
+                  prefix='$'
+                  displayType='input'
+                  thousandSeparator
+                  value={entryForm.amount || ''}
+                  onValueChange={(values) =>
+                    setEntryForm({
+                      ...entryForm,
+                      amount: values.floatValue || 0,
+                    })
+                  }
+                />
               </div>
-
-
 
               <div className='col-span-3'>
-
-
-
-                <button type='button' className={clsx(buttonStyles.iconAdd, 'w-full')} onClick={handleAddEntry} disabled={isLoading} aria-label='Add expense'>
-
-
-
+                <button
+                  type='button'
+                  className={clsx(buttonStyles.iconAdd, 'w-full')}
+                  onClick={handleAddEntry}
+                  disabled={isLoading}
+                  aria-label='Add expense'
+                >
                   <AddIcon />
-
-
-
                 </button>
-
-
-
               </div>
-
-
-
             </div>
-
-
-
           </div>
-
-
-
         )}
 
-
-
-
-
-
-
         <div>
-
-
-
           {state.data.length === 0 ? (
-
-
-
             <div className='py-12 text-center text-muted-foreground'>
-
-
-
               <p className='text-sm'>No expenses found for this month.</p>
-
-
-
             </div>
-
-
-
           ) : (
-
-
-
             <>
-
-
-
               {/* View mode toggle + Sort control */}
 
-
-
-                            <div className='mb-2 flex items-center justify-between gap-2'>
-                              {categoryGroups.filter(g => g.scope === 'EXPENSE').length > 0 && (
-                                <div className='flex items-center rounded-md border border-border bg-muted/40 p-0.5'>
-                                  <button
-                                    type='button'
-                                    onClick={() => setViewMode('flat')}
-                                    className={`rounded px-2 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
-                                      viewMode === 'flat' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                  >
-                                    Flat
-                                  </button>
-                                  <button
-                                    type='button'
-                                    onClick={() => setViewMode('grouped')}
-                                    className={`rounded px-2 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
-                                      viewMode === 'grouped' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                  >
-                                    Grouped
-                                  </button>
-                                </div>
-                              )}
-                              {viewMode === 'flat' && (
-                                <button
-
-
-
-                                type='button'
-
-
-
-                                onClick={toggleSort}
-
-
-
-                                className='inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'
-
-
-
-                  aria-label={`Sort by amount ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
-
-
-
-                >
-
-
-
-                  <ArrowUpDown className='h-3.5 w-3.5' />
-
-
-
-                  Amount {sortOrder === 'asc' ? '↑' : '↓'}
-
-
-
-                </button>
-                                  )}
-
-
-
-                                </div>
-
-
-
-
-
-{viewMode === 'flat' ? (
-
-            <div className='space-y-3'>
-
-
-
-              {sortedEntries.map((entry) => (
-
-
-
-                <div key={entry.id} className='flex items-center space-x-3'>
-
-
-
-                  <div className={clsx('h-16 w-1 rounded-full', editEntryId === entry.id ? 'bg-teal-500' : 'bg-gray-300')} />
-
-
-
-                  <div className={cardStyles.tile} data-tile>
-
-
-
-                    {editEntryId === entry.id ? (
-
-
-
-                      <div className='grid grid-cols-12 items-center gap-3'>
-
-
-
-                        <div className='col-span-5'>
-
-
-
-                          <Select<OptionType>
-
-
-
-                            instanceId={`category-edit-${selectId}`}
-
-
-
-                            options={categoryOptions}
-
-
-
-                            value={categoryOptions.find((opt) => opt.id === entryForm.categoryId) || null}
-
-
-
-                            onChange={(option) => { if (option) setEntryForm({ ...entryForm, categoryId: option.id, categoryName: option.label }); }}
-
-
-
-                            getOptionValue={(option) => option.id}
-
-
-
-                            placeholder='Select category...'
-
-
-
-                            menuPortalTarget={document.body}
-
-
-
-                            menuPosition='fixed'
-
-
-
-                            styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999, pointerEvents: 'auto' }) as typeof base }}
-
-
-
-                          />
-
-
-
-                        </div>
-
-
-
-                        <div className='col-span-4'>
-
-
-
-                          <NumericFormat className={cn(inputStyles.base, 'text-right')} prefix='$' displayType='input' thousandSeparator value={entryForm.amount} onValueChange={(values) => setEntryForm({ ...entryForm, amount: values.floatValue || 0 })} />
-
-
-
-                        </div>
-
-
-
-                        <div className='col-span-3 flex justify-end gap-2'>
-
-
-
-                          <button type='button' className={clsx(buttonStyles.iconCompact, 'text-muted-foreground hover:bg-muted/30 hover:text-primary')} onClick={() => handleEditEntry(entry.id)} disabled={isLoading} aria-label='Save changes'>
-
-
-
-                            <CheckIcon className='h-5 w-5' />
-
-
-
-                          </button>
-
-
-
-                          <button type='button' className={clsx(buttonStyles.iconCompact, 'text-muted-foreground hover:bg-muted/30 hover:text-foreground')} onClick={cancelEdit} disabled={isLoading} aria-label='Cancel edit'>
-
-
-
-                            <span className='text-xl'>×</span>
-
-
-
-                          </button>
-
-
-
-                        </div>
-
-
-
-                      </div>
-
-
-
-                    ) : (
-
-
-
-                      <div className='flex items-center gap-3'>
-
-
-
-                        <Link
-
-
-
-                          href={buildCategoryTransactionHref(entry.categoryId, month, monthYear)}
-
-
-
-                          className='flex-1 text-sm font-medium text-teal-600 transition-colors hover:text-teal-700 hover:underline dark:text-teal-400 dark:hover:text-teal-300'
-
-
-
-                          aria-label={`View transactions for ${entry.categoryName}`}
-
-
-
-                        >
-
-
-
-                          {entry.categoryName}
-
-
-
-                        </Link>
-
-
-
-                        <span className='w-28 text-right text-lg font-semibold text-foreground tabular-nums'>
-
-
-
-                          <NumericFormat prefix='$' displayType='text' thousandSeparator value={entry.amount.toFixed(2)} />
-
-
-
-                        </span>
-
-
-
-                        <div className='flex items-center gap-1'>
-
-
-
-                          {entry.importImageId && <ImportAuditIcon importImageId={entry.importImageId} fileName={entry.importImage?.fileName} />}
-
-
-
-                          {entry.source === 'bank' && (
-                            <span className='flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground' title='Bank-imported transaction — edit via Transaction Ledger'>
-                              <Lock className='h-2.5 w-2.5' />Bank
-                            </span>
-                          )}
-
-
-
-                          {entry.source === 'USER_MANUAL' && <button type='button' className={clsx(buttonStyles.iconCompact, 'text-muted-foreground hover:bg-muted/30 hover:text-primary')} onClick={() => startEdit(entry)} disabled={isLoading} aria-label='Edit entry'><PenIcon className='h-5 w-5' /></button>}
-
-
-
-                          {entry.source === 'USER_MANUAL' && <button type='button' className={clsx(buttonStyles.iconCompact, 'text-muted-foreground hover:bg-muted/30 hover:text-destructive')} onClick={() => handleDeleteEntry(entry.id)} disabled={isLoading} aria-label='Delete entry'><TrashIcon className='h-5 w-5' /></button>}
-
-
-
-                        </div>
-
-
-
-                      </div>
-
-
-
-                    )}
-
-
-
+              <div className='mb-2 flex items-center justify-between gap-2'>
+                {categoryGroups.filter((g) => g.scope === 'EXPENSE').length >
+                  0 && (
+                  <div className='flex items-center rounded-md border border-border bg-muted/40 p-0.5'>
+                    <button
+                      type='button'
+                      onClick={() => setViewMode('flat')}
+                      className={`rounded px-2 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
+                        viewMode === 'flat'
+                          ? 'bg-card text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      Flat
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => setViewMode('grouped')}
+                      className={`rounded px-2 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
+                        viewMode === 'grouped'
+                          ? 'bg-card text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      Grouped
+                    </button>
                   </div>
+                )}
+                {viewMode === 'flat' && (
+                  <button
+                    type='button'
+                    onClick={toggleSort}
+                    className='inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'
+                    aria-label={`Sort by amount ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
+                  >
+                    <ArrowUpDown className='h-3.5 w-3.5' />
+                    Amount {sortOrder === 'asc' ? '↑' : '↓'}
+                  </button>
+                )}
+              </div>
 
-
-
-                </div>
-
-
-
-              ))}
-
-
-
-            </div>
-                        ) : (
-                          /* Grouped view */
-                          <GroupedEntriesView
-                            groupedEntries={groupedEntries}
-                            month={month}
-                            monthYear={monthYear}
-                            startEdit={startEdit}
-                            handleDeleteEntry={handleDeleteEntry}
-                            isLoading={isLoading}
-                            editEntryId={editEntryId}
-                            entryForm={entryForm}
-                            setEntryForm={setEntryForm}
-                            handleEditEntry={handleEditEntry}
-                            cancelEdit={cancelEdit}
-                            categoryOptions={categoryOptions}
-                            selectId={selectId}
-                          />
+              {viewMode === 'flat' ? (
+                <div className='space-y-3'>
+                  {sortedEntries.map((entry) => (
+                    <div key={entry.id} className='flex items-center space-x-3'>
+                      <div
+                        className={clsx(
+                          'h-16 w-1 rounded-full',
+                          editEntryId === entry.id
+                            ? 'bg-teal-500'
+                            : 'bg-gray-300',
                         )}
+                      />
 
+                      <div className={cardStyles.tile} data-tile>
+                        {editEntryId === entry.id ? (
+                          <div className='grid grid-cols-12 items-center gap-3'>
+                            <div className='col-span-5'>
+                              <Select<OptionType>
+                                instanceId={`category-edit-${selectId}`}
+                                options={categoryOptions}
+                                value={
+                                  categoryOptions.find(
+                                    (opt) => opt.id === entryForm.categoryId,
+                                  ) || null
+                                }
+                                onChange={(option) => {
+                                  if (option)
+                                    setEntryForm({
+                                      ...entryForm,
+                                      categoryId: option.id,
+                                      categoryName: option.label,
+                                    });
+                                }}
+                                getOptionValue={(option) => option.id}
+                                placeholder='Select category...'
+                                menuPortalTarget={document.body}
+                                menuPosition='fixed'
+                                styles={{
+                                  menuPortal: (base) =>
+                                    ({
+                                      ...base,
+                                      zIndex: 9999,
+                                      pointerEvents: 'auto',
+                                    }) as typeof base,
+                                }}
+                              />
+                            </div>
 
-
-                          </>
-
-
-
-                        )}
-
-
-
-                      </div>
-
-
-
-                    </div>
-
-
-
-                  </CategoryBreakdownDialog>
-
-
-
-                );
-
-
-
-              }
-
-              // ─── Grouped Entries View ─────────────────────────────────────────────────────
-
-              const GROUP_LEFT_COLORS = [
-                'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-400',
-                'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500',
-                'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500',
-                'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500',
-              ];
-
-              type GroupedEntriesViewProps = {
-                groupedEntries: GroupedEntry[];
-                month: number;
-                monthYear: number;
-                startEdit: (entry: ExpenseEntryWithCategory) => void;
-                handleDeleteEntry: (id: string) => Promise<void>;
-                isLoading: boolean;
-                editEntryId: string | null;
-                entryForm: { id: string; categoryId: string; categoryName: string; amount: number };
-                setEntryForm: (form: { id: string; categoryId: string; categoryName: string; amount: number }) => void;
-                handleEditEntry: (id: string) => Promise<void>;
-                cancelEdit: () => void;
-                categoryOptions: OptionType[];
-                selectId: string;
-              };
-
-              function GroupedEntriesView({ groupedEntries, month, monthYear }: GroupedEntriesViewProps) {
-                const [openGroupIds, setOpenGroupIds] = useState<Set<string | null>>(() =>
-                  new Set(groupedEntries.slice(0, 1).map((g) => g.groupId)),
-                );
-
-                function toggleGroup(groupId: string | null) {
-                  setOpenGroupIds((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(groupId)) {
-                      next.delete(groupId);
-                    } else {
-                      next.add(groupId);
-                    }
-                    return next;
-                  });
-                }
-
-                return (
-                  <div className='space-y-2'>
-                    {groupedEntries.map((group, i) => {
-                      const isOpen = openGroupIds.has(group.groupId);
-                      const colorClass = GROUP_LEFT_COLORS[i % GROUP_LEFT_COLORS.length] ?? 'bg-teal-500';
-
-                      return (
-                        <div key={group.groupId ?? 'ungrouped'} className='rounded-lg border border-border overflow-hidden'>
-                          {/* Group header */}
-                          <button
-                            type='button'
-                            onClick={() => toggleGroup(group.groupId)}
-                            className='flex w-full items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors'
-                          >
-                            <span className={`h-full w-1 min-h-[1rem] rounded-full flex-shrink-0 ${colorClass}`} />
-                            {isOpen ? (
-                              <ChevronDown size={14} className='text-muted-foreground flex-shrink-0' />
-                            ) : (
-                              <ChevronRight size={14} className='text-muted-foreground flex-shrink-0' />
-                            )}
-                            <span className='flex-1 text-sm font-semibold text-foreground'>
-                              {group.groupName}
-                            </span>
-                            <span className='text-xs text-muted-foreground'>
-                              {group.entries.length} {group.entries.length === 1 ? 'item' : 'items'}
-                            </span>
-                            <span className='text-sm font-bold text-foreground tabular-nums'>
+                            <div className='col-span-4'>
                               <NumericFormat
-                                value={group.totalAmount.toFixed(2)}
+                                className={cn(inputStyles.base, 'text-right')}
+                                prefix='$'
+                                displayType='input'
+                                thousandSeparator
+                                value={entryForm.amount}
+                                onValueChange={(values) =>
+                                  setEntryForm({
+                                    ...entryForm,
+                                    amount: values.floatValue || 0,
+                                  })
+                                }
+                              />
+                            </div>
+
+                            <div className='col-span-3 flex justify-end gap-2'>
+                              <button
+                                type='button'
+                                className={clsx(
+                                  buttonStyles.iconCompact,
+                                  'text-muted-foreground hover:bg-muted/30 hover:text-primary',
+                                )}
+                                onClick={() => handleEditEntry(entry.id)}
+                                disabled={isLoading}
+                                aria-label='Save changes'
+                              >
+                                <CheckIcon className='h-5 w-5' />
+                              </button>
+
+                              <button
+                                type='button'
+                                className={clsx(
+                                  buttonStyles.iconCompact,
+                                  'text-muted-foreground hover:bg-muted/30 hover:text-foreground',
+                                )}
+                                onClick={cancelEdit}
+                                disabled={isLoading}
+                                aria-label='Cancel edit'
+                              >
+                                <span className='text-xl'>×</span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className='flex items-center gap-3'>
+                            <Link
+                              href={buildCategoryTransactionHref(
+                                entry.categoryId,
+                                month,
+                                monthYear,
+                              )}
+                              className='flex-1 text-sm font-medium text-teal-600 transition-colors hover:text-teal-700 hover:underline dark:text-teal-400 dark:hover:text-teal-300'
+                              aria-label={`View transactions for ${entry.categoryName}`}
+                            >
+                              {entry.categoryName}
+                            </Link>
+
+                            <span className='w-28 text-right text-lg font-semibold text-foreground tabular-nums'>
+                              <NumericFormat
+                                prefix='$'
                                 displayType='text'
                                 thousandSeparator
-                                prefix='$'
+                                value={entry.amount.toFixed(2)}
                               />
                             </span>
-                          </button>
 
-                          {/* Group entries */}
-                          {isOpen && (
-                            <div className='border-t border-border divide-y divide-border/50'>
-                              {group.entries.map((entry) => (
-                                <div key={entry.id} className='flex items-center gap-3 px-4 py-2 hover:bg-muted/30 transition-colors'>
-                                  <span className={`h-8 w-0.5 rounded-full flex-shrink-0 ${colorClass} opacity-40`} />
-                                  <Link
-                                    href={buildCategoryTransactionHref(entry.categoryId, month, monthYear)}
-                                    className='flex-1 text-sm text-teal-600 hover:text-teal-700 hover:underline dark:text-teal-400 dark:hover:text-teal-300 transition-colors'
-                                    aria-label={`View transactions for ${entry.categoryName}`}
-                                  >
-                                    {entry.categoryName}
-                                  </Link>
-                                  {entry.importImageId && (
-                                    <ImportAuditIcon importImageId={entry.importImageId} fileName={entry.importImage?.fileName} />
+                            <div className='flex items-center gap-1'>
+                              {entry.importImageId && (
+                                <ImportAuditIcon
+                                  importImageId={entry.importImageId}
+                                  fileName={entry.importImage?.fileName}
+                                />
+                              )}
+
+                              {entry.source === 'bank' && (
+                                <span
+                                  className='flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground'
+                                  title='Bank-imported transaction — edit via Transaction Ledger'
+                                >
+                                  <Lock className='h-2.5 w-2.5' />
+                                  Bank
+                                </span>
+                              )}
+
+                              {entry.source === 'USER_MANUAL' && (
+                                <button
+                                  type='button'
+                                  className={clsx(
+                                    buttonStyles.iconCompact,
+                                    'text-muted-foreground hover:bg-muted/30 hover:text-primary',
                                   )}
-                                  {entry.source === 'bank' && (
-                                    <span className='flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground'>
-                                      <Lock className='h-2.5 w-2.5' />Bank
-                                    </span>
+                                  onClick={() => startEdit(entry)}
+                                  disabled={isLoading}
+                                  aria-label='Edit entry'
+                                >
+                                  <PenIcon className='h-5 w-5' />
+                                </button>
+                              )}
+
+                              {entry.source === 'USER_MANUAL' && (
+                                <button
+                                  type='button'
+                                  className={clsx(
+                                    buttonStyles.iconCompact,
+                                    'text-muted-foreground hover:bg-muted/30 hover:text-destructive',
                                   )}
-                                  <span className='text-sm font-semibold text-foreground tabular-nums'>
-                                    <NumericFormat
-                                      value={entry.amount.toFixed(2)}
-                                      displayType='text'
-                                      thousandSeparator
-                                      prefix='$'
-                                    />
-                                  </span>
-                                </div>
-                              ))}
+                                  onClick={() => handleDeleteEntry(entry.id)}
+                                  disabled={isLoading}
+                                  aria-label='Delete entry'
+                                >
+                                  <TrashIcon className='h-5 w-5' />
+                                </button>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Grouped view */
+                <GroupedEntriesView
+                  groupedEntries={groupedEntries}
+                  month={month}
+                  monthYear={monthYear}
+                  startEdit={startEdit}
+                  handleDeleteEntry={handleDeleteEntry}
+                  isLoading={isLoading}
+                  editEntryId={editEntryId}
+                  entryForm={entryForm}
+                  setEntryForm={setEntryForm}
+                  handleEditEntry={handleEditEntry}
+                  cancelEdit={cancelEdit}
+                  categoryOptions={categoryOptions}
+                  selectId={selectId}
+                />
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </CategoryBreakdownDialog>
+  );
+}
+
+// ─── Grouped Entries View ─────────────────────────────────────────────────────
+
+const GROUP_LEFT_COLORS = [
+  'bg-red-500',
+  'bg-orange-500',
+  'bg-amber-500',
+  'bg-yellow-400',
+  'bg-lime-500',
+  'bg-green-500',
+  'bg-emerald-500',
+  'bg-teal-500',
+  'bg-cyan-500',
+  'bg-sky-500',
+  'bg-blue-500',
+  'bg-indigo-500',
+  'bg-violet-500',
+  'bg-purple-500',
+  'bg-fuchsia-500',
+  'bg-pink-500',
+];
+
+type GroupedEntriesViewProps = {
+  groupedEntries: GroupedEntry[];
+  month: number;
+  monthYear: number;
+  startEdit: (entry: ExpenseEntryWithCategory) => void;
+  handleDeleteEntry: (id: string) => Promise<void>;
+  isLoading: boolean;
+  editEntryId: string | null;
+  entryForm: {
+    id: string;
+    categoryId: string;
+    categoryName: string;
+    amount: number;
+  };
+  setEntryForm: (form: {
+    id: string;
+    categoryId: string;
+    categoryName: string;
+    amount: number;
+  }) => void;
+  handleEditEntry: (id: string) => Promise<void>;
+  cancelEdit: () => void;
+  categoryOptions: OptionType[];
+  selectId: string;
+};
+
+function GroupedEntriesView({
+  groupedEntries,
+  month,
+  monthYear,
+}: GroupedEntriesViewProps) {
+  const [openGroupIds, setOpenGroupIds] = useState<Set<string | null>>(
+    () => new Set(groupedEntries.slice(0, 1).map((g) => g.groupId)),
+  );
+
+  function toggleGroup(groupId: string | null) {
+    setOpenGroupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  }
+
+  return (
+    <div className='space-y-2'>
+      {groupedEntries.map((group, i) => {
+        const isOpen = openGroupIds.has(group.groupId);
+        const colorClass =
+          GROUP_LEFT_COLORS[i % GROUP_LEFT_COLORS.length] ?? 'bg-teal-500';
+
+        return (
+          <div
+            key={group.groupId ?? 'ungrouped'}
+            className='rounded-lg border border-border overflow-hidden'
+          >
+            {/* Group header */}
+            <button
+              type='button'
+              onClick={() => toggleGroup(group.groupId)}
+              className='flex w-full items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors'
+            >
+              <span
+                className={`h-full w-1 min-h-[1rem] rounded-full flex-shrink-0 ${colorClass}`}
+              />
+              {isOpen ? (
+                <ChevronDown
+                  size={14}
+                  className='text-muted-foreground flex-shrink-0'
+                />
+              ) : (
+                <ChevronRight
+                  size={14}
+                  className='text-muted-foreground flex-shrink-0'
+                />
+              )}
+              <span className='flex-1 text-sm font-semibold text-foreground'>
+                {group.groupName}
+              </span>
+              <span className='text-xs text-muted-foreground'>
+                {group.entries.length}{' '}
+                {group.entries.length === 1 ? 'item' : 'items'}
+              </span>
+              <span className='text-sm font-bold text-foreground tabular-nums'>
+                <NumericFormat
+                  value={group.totalAmount.toFixed(2)}
+                  displayType='text'
+                  thousandSeparator
+                  prefix='$'
+                />
+              </span>
+            </button>
+
+            {/* Group entries */}
+            {isOpen && (
+              <div className='border-t border-border divide-y divide-border/50'>
+                {group.entries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className='flex items-center gap-3 px-4 py-2 hover:bg-muted/30 transition-colors'
+                  >
+                    <span
+                      className={`h-8 w-0.5 rounded-full flex-shrink-0 ${colorClass} opacity-40`}
+                    />
+                    <Link
+                      href={buildCategoryTransactionHref(
+                        entry.categoryId,
+                        month,
+                        monthYear,
+                      )}
+                      className='flex-1 text-sm text-teal-600 hover:text-teal-700 hover:underline dark:text-teal-400 dark:hover:text-teal-300 transition-colors'
+                      aria-label={`View transactions for ${entry.categoryName}`}
+                    >
+                      {entry.categoryName}
+                    </Link>
+                    {entry.importImageId && (
+                      <ImportAuditIcon
+                        importImageId={entry.importImageId}
+                        fileName={entry.importImage?.fileName}
+                      />
+                    )}
+                    {entry.source === 'bank' && (
+                      <span className='flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground'>
+                        <Lock className='h-2.5 w-2.5' />
+                        Bank
+                      </span>
+                    )}
+                    <span className='text-sm font-semibold text-foreground tabular-nums'>
+                      <NumericFormat
+                        value={entry.amount.toFixed(2)}
+                        displayType='text'
+                        thousandSeparator
+                        prefix='$'
+                      />
+                    </span>
                   </div>
-                );
-              }
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
-              export default function CategoryBreakdownModal(props: CategoryBreakdownModalProps) {
-
-
-
+export default function CategoryBreakdownModal(
+  props: CategoryBreakdownModalProps,
+) {
   const [entries, setEntries] = useState<ExpenseEntryWithCategory[]>([]);
-
-
 
   const [isLoading, setIsLoading] = useState(true);
 
-
-
-
-
-
-
   useEffect(() => {
-
-
-
     const loadEntries = async () => {
-
-
-
       setIsLoading(true);
-
-
 
       const result = await getMonthEntries(props.calendarYearId, props.month);
 
-
-
       setEntries(result.data || []);
 
-
-
       setIsLoading(false);
-
-
-
     };
 
-
-
     if (props.isOpen) loadEntries();
-
-
-
   }, [props.isOpen, props.calendarYearId, props.month]);
-
-
-
-
-
-
 
   if (!props.isOpen) return null;
 
-
-
-
-
-
-
   if (isLoading) {
-
-
-
     return (
-
-
-
-      <CategoryBreakdownDialog title={`Expenses for ${props.monthName}`} onClose={props.onClose}>
-
-
-
+      <CategoryBreakdownDialog
+        title={`Expenses for ${props.monthName}`}
+        onClose={props.onClose}
+      >
         <div className='py-8 text-center'>Loading...</div>
-
-
-
       </CategoryBreakdownDialog>
-
-
-
     );
-
-
-
   }
 
-
-
-
-
-
-
   return (
-
-
-
     <ExpenseEntryStateProvider data={entries}>
-
-
-
       <CategoryBreakdownContent {...props} />
-
-
-
     </ExpenseEntryStateProvider>
-
-
-
   );
-
-
-
 }
-
-
-
-
-
-
-
-
-
-

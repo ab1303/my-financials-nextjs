@@ -8,7 +8,9 @@ import { useCleanseDonationState } from './useCleanseDonationState';
 
 type CleanseDonationContextType = ReturnType<typeof useCleanseDonationState>;
 
-const CleanseDonationContext = createContext<CleanseDonationContextType | null>(null);
+const CleanseDonationContext = createContext<CleanseDonationContextType | null>(
+  null,
+);
 
 export function CleanseDonationProvider({
   children,
@@ -25,7 +27,9 @@ export function CleanseDonationProvider({
 export function useCleanseDonation() {
   const context = useContext(CleanseDonationContext);
   if (!context) {
-    throw new Error('useCleanseDonation must be used within a CleanseDonationProvider');
+    throw new Error(
+      'useCleanseDonation must be used within a CleanseDonationProvider',
+    );
   }
   return context;
 }

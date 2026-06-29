@@ -24,14 +24,14 @@ export function UnlinkTransferButton({
 
   return (
     <button
-      type="button"
-      aria-label="Unlink transfer"
-      title="Unlink transfer"
+      type='button'
+      aria-label='Unlink transfer'
+      title='Unlink transfer'
       disabled={unlinkMutation.isPending}
       onClick={() => unlinkMutation.mutate({ transactionId })}
-      className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 disabled:opacity-50"
+      className='rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 disabled:opacity-50'
     >
-      <PiLinkBreak className="h-4 w-4" />
+      <PiLinkBreak className='h-4 w-4' />
     </button>
   );
 }

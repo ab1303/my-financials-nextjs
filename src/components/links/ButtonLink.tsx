@@ -4,8 +4,9 @@ import * as React from 'react';
 import type { UnstyledLinkProps } from '@/components/links/UnstyledLink';
 import UnstyledLink from '@/components/links/UnstyledLink';
 
-export interface ButtonLinkProps
-  extends React.ComponentPropsWithoutRef<typeof UnstyledLink> {
+export interface ButtonLinkProps extends React.ComponentPropsWithoutRef<
+  typeof UnstyledLink
+> {
   variant?: 'primary' | 'dark' | 'light';
 }
 

@@ -1,4 +1,4 @@
-import { afterEach,beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { dbClientMock } from '@/__tests__/mocks/db-client.mock';
 import { mapBankAssetData } from '@/server/services/ai-import/bank-asset-mapper.service';
@@ -23,10 +23,18 @@ describe('mapBankAssetData', () => {
       confidence: 0.9,
       warnings: [],
     };
-    const result = await mapBankAssetData(input as any, new Date('2024-01-01'), 'user-1');
+    const result = await mapBankAssetData(
+      input as any,
+      new Date('2024-01-01'),
+      'user-1',
+    );
     expect(result.success).toBe(false);
     expect(result.entriesCreated).toBe(0);
-    expect(result.errors.some(e => e.toLowerCase().includes('could not match account'))).toBe(true);
+    expect(
+      result.errors.some((e) =>
+        e.toLowerCase().includes('could not match account'),
+      ),
+    ).toBe(true);
   });
 
   it('Scenario 2: Exact match → creates snapshot and entry', async () => {
@@ -38,15 +46,23 @@ describe('mapBankAssetData', () => {
         institution: { id: 'bank-1', name: 'CommBank' },
       },
     ] as never);
-    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce(null as never);
-    dbClientMock.bankBalanceSnapshot.create.mockResolvedValueOnce({ id: 'snap-1' } as never);
+    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce(
+      null as never,
+    );
+    dbClientMock.bankBalanceSnapshot.create.mockResolvedValueOnce({
+      id: 'snap-1',
+    } as never);
     dbClientMock.bankBalanceRecord.upsert.mockResolvedValue({} as never);
     const input = {
       entries: [{ accountName: 'Savings', balance: 500 }],
       confidence: 0.95,
       warnings: [],
     };
-    const result = await mapBankAssetData(input as any, new Date('2024-01-01'), 'user-1');
+    const result = await mapBankAssetData(
+      input as any,
+      new Date('2024-01-01'),
+      'user-1',
+    );
     expect(result.success).toBe(true);
     expect(result.entriesCreated).toBe(1);
     expect(result.snapshotId).toBe('snap-1');
@@ -67,8 +83,12 @@ describe('mapBankAssetData', () => {
         institution: { id: 'bank-2', name: 'ANZ' },
       },
     ] as never);
-    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce(null as never);
-    dbClientMock.bankBalanceSnapshot.create.mockResolvedValueOnce({ id: 'snap-2' } as never);
+    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce(
+      null as never,
+    );
+    dbClientMock.bankBalanceSnapshot.create.mockResolvedValueOnce({
+      id: 'snap-2',
+    } as never);
     dbClientMock.bankBalanceRecord.upsert.mockResolvedValue({} as never);
     const input = {
       bankName: 'CommBank',
@@ -76,11 +96,19 @@ describe('mapBankAssetData', () => {
       confidence: 0.9,
       warnings: [],
     };
-    const result = await mapBankAssetData(input as any, new Date('2024-01-02'), 'user-2');
+    const result = await mapBankAssetData(
+      input as any,
+      new Date('2024-01-02'),
+      'user-2',
+    );
     expect(result.success).toBe(true);
     expect(result.entriesCreated).toBe(1);
     expect(result.snapshotId).toBe('snap-2');
-    expect(result.warnings.some(w => w.toLowerCase().includes('matched entries to bank'))).toBe(true);
+    expect(
+      result.warnings.some((w) =>
+        w.toLowerCase().includes('matched entries to bank'),
+      ),
+    ).toBe(true);
   });
 
   it('Scenario 4: Zero/negative balance → skipped with warning', async () => {
@@ -92,16 +120,26 @@ describe('mapBankAssetData', () => {
         institution: { id: 'bank-1', name: 'CommBank' },
       },
     ] as never);
-    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce(null as never);
+    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce(
+      null as never,
+    );
     const input = {
       entries: [{ accountName: 'Savings', balance: 0 }],
       confidence: 0.8,
       warnings: [],
     };
-    const result = await mapBankAssetData(input as any, new Date('2024-01-03'), 'user-3');
+    const result = await mapBankAssetData(
+      input as any,
+      new Date('2024-01-03'),
+      'user-3',
+    );
     expect(result.success).toBe(false);
     expect(result.entriesCreated).toBe(0);
-    expect(result.warnings.some(w => w.toLowerCase().includes('balance must be positive'))).toBe(true);
+    expect(
+      result.warnings.some((w) =>
+        w.toLowerCase().includes('balance must be positive'),
+      ),
+    ).toBe(true);
   });
 
   it('Scenario 5: Existing snapshot for same date → upserts into it', async () => {
@@ -113,16 +151,26 @@ describe('mapBankAssetData', () => {
         institution: { id: 'bank-1', name: 'CommBank' },
       },
     ] as never);
-    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce({ id: 'existing-snap' } as never);
+    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce({
+      id: 'existing-snap',
+    } as never);
     dbClientMock.bankBalanceRecord.upsert.mockResolvedValue({} as never);
     const input = {
       entries: [{ accountName: 'Savings', balance: 100 }],
       confidence: 0.9,
       warnings: [],
     };
-    const result = await mapBankAssetData(input as any, new Date('2024-01-04'), 'user-4');
+    const result = await mapBankAssetData(
+      input as any,
+      new Date('2024-01-04'),
+      'user-4',
+    );
     expect(result.snapshotId).toBe('existing-snap');
-    expect(result.warnings.some(w => w.toLowerCase().includes('snapshot already exists'))).toBe(true);
+    expect(
+      result.warnings.some((w) =>
+        w.toLowerCase().includes('snapshot already exists'),
+      ),
+    ).toBe(true);
     expect(dbClientMock.bankBalanceSnapshot.create).not.toHaveBeenCalled();
   });
 
@@ -135,8 +183,12 @@ describe('mapBankAssetData', () => {
         institution: { id: 'bank-1', name: 'CommBank' },
       },
     ] as never);
-    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce(null as never);
-    dbClientMock.bankBalanceSnapshot.create.mockResolvedValueOnce({ id: 'snap-3' } as never);
+    dbClientMock.bankBalanceSnapshot.findFirst.mockResolvedValueOnce(
+      null as never,
+    );
+    dbClientMock.bankBalanceSnapshot.create.mockResolvedValueOnce({
+      id: 'snap-3',
+    } as never);
     dbClientMock.bankBalanceRecord.upsert.mockResolvedValue({} as never);
     const input = {
       entries: [
@@ -146,9 +198,15 @@ describe('mapBankAssetData', () => {
       confidence: 0.9,
       warnings: [],
     };
-    const result = await mapBankAssetData(input as any, new Date('2024-01-05'), 'user-5');
+    const result = await mapBankAssetData(
+      input as any,
+      new Date('2024-01-05'),
+      'user-5',
+    );
     expect(result.entriesCreated).toBe(1);
     expect(result.success).toBe(true);
-    expect(result.warnings.some(w => w.toLowerCase().includes('duplicate'))).toBe(true);
+    expect(
+      result.warnings.some((w) => w.toLowerCase().includes('duplicate')),
+    ).toBe(true);
   });
 });

@@ -1,4 +1,7 @@
-import type { CategoryBreakdown, ExpenseEntryWithCategory } from '@/server/models/expense';
+import type {
+  CategoryBreakdown,
+  ExpenseEntryWithCategory,
+} from '@/server/models/expense';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 
 export type GroupedBreakdown = {
@@ -35,7 +38,9 @@ export function groupExpenseBreakdown(
 
   const result: GroupedBreakdown[] = groups
     .map((group) => {
-      const cats = filtered.filter((b) => group.memberIds.includes(b.categoryId));
+      const cats = filtered.filter((b) =>
+        group.memberIds.includes(b.categoryId),
+      );
       cats.forEach((c) => groupedIds.add(c.categoryId));
       const groupTotal = cats.reduce((sum, c) => sum + c.amount, 0);
       return {
@@ -75,7 +80,9 @@ export function groupExpenseEntries(
 
   const result: GroupedEntry[] = groups
     .map((group) => {
-      const groupEntries = entries.filter((e) => group.memberIds.includes(e.categoryId));
+      const groupEntries = entries.filter((e) =>
+        group.memberIds.includes(e.categoryId),
+      );
       groupEntries.forEach((e) => groupedIds.add(e.categoryId));
       const groupTotal = groupEntries.reduce((sum, e) => sum + e.amount, 0);
       return {

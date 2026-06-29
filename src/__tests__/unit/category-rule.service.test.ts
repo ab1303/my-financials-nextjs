@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   applyRuleToPast,
@@ -8,7 +8,7 @@ import {
   listRules,
   runCategoryRules,
   toggleRule,
-} from "@/server/services/transactions/category-rule.service";
+} from '@/server/services/transactions/category-rule.service';
 
 const mockRuleCreate = vi.fn();
 const mockRuleFindMany = vi.fn();
@@ -37,153 +37,153 @@ const mockPrisma = {
   },
 } as any;
 
-describe("category-rule service", () => {
+describe('category-rule service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("createRule", () => {
-    it("persists rule and returns mapped item", async () => {
+  describe('createRule', () => {
+    it('persists rule and returns mapped item', async () => {
       mockRuleCreate.mockResolvedValue({
-        id: "rule-1",
-        userId: "user-1",
-        name: "Test Rule",
-        pattern: "test",
-        matchType: "CONTAINS",
-        category: "Shopping",
+        id: 'rule-1',
+        userId: 'user-1',
+        name: 'Test Rule',
+        pattern: 'test',
+        matchType: 'CONTAINS',
+        category: 'Shopping',
         isActive: true,
         appliedCount: 0,
-        createdAt: new Date("2024-01-01"),
-        updatedAt: new Date("2024-01-01"),
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01'),
       });
 
       const result = await createRule({
         prisma: mockPrisma,
-        userId: "user-1",
-        name: "Test Rule",
-        pattern: "test",
-        matchType: "CONTAINS",
-        category: "Shopping",
+        userId: 'user-1',
+        name: 'Test Rule',
+        pattern: 'test',
+        matchType: 'CONTAINS',
+        category: 'Shopping',
       });
 
       expect(mockRuleCreate).toHaveBeenCalled();
       expect(result).toMatchObject({
-        id: "rule-1",
-        name: "Test Rule",
-        pattern: "test",
-        matchType: "CONTAINS",
-        category: "Shopping",
+        id: 'rule-1',
+        name: 'Test Rule',
+        pattern: 'test',
+        matchType: 'CONTAINS',
+        category: 'Shopping',
         isActive: true,
         appliedCount: 0,
       });
-      expect(result.createdAt).toBe("2024-01-01T00:00:00.000Z");
+      expect(result.createdAt).toBe('2024-01-01T00:00:00.000Z');
     });
   });
 
-  describe("listRules", () => {
-    it("returns all rules for user ordered by createdAt desc", async () => {
+  describe('listRules', () => {
+    it('returns all rules for user ordered by createdAt desc', async () => {
       mockRuleFindMany.mockResolvedValue([
         {
-          id: "rule-1",
-          name: "Rule 1",
-          pattern: "test",
-          matchType: "CONTAINS",
-          category: "Shopping",
+          id: 'rule-1',
+          name: 'Rule 1',
+          pattern: 'test',
+          matchType: 'CONTAINS',
+          category: 'Shopping',
           isActive: true,
           appliedCount: 5,
-          createdAt: new Date("2024-01-02"),
+          createdAt: new Date('2024-01-02'),
         },
         {
-          id: "rule-2",
-          name: "Rule 2",
-          pattern: "amazon",
-          matchType: "STARTS_WITH",
-          category: "Online",
+          id: 'rule-2',
+          name: 'Rule 2',
+          pattern: 'amazon',
+          matchType: 'STARTS_WITH',
+          category: 'Online',
           isActive: false,
           appliedCount: 0,
-          createdAt: new Date("2024-01-01"),
+          createdAt: new Date('2024-01-01'),
         },
       ]);
 
       const result = await listRules({
         prisma: mockPrisma,
-        userId: "user-1",
+        userId: 'user-1',
       });
 
       expect(mockRuleFindMany).toHaveBeenCalledWith({
-        where: { userId: "user-1" },
-        orderBy: { createdAt: "desc" },
+        where: { userId: 'user-1' },
+        orderBy: { createdAt: 'desc' },
       });
       expect(result).toHaveLength(2);
-      expect(result[0]?.name).toBe("Rule 1");
-      expect(result[1]?.name).toBe("Rule 2");
+      expect(result[0]?.name).toBe('Rule 1');
+      expect(result[1]?.name).toBe('Rule 2');
     });
   });
 
-  describe("toggleRule", () => {
-    it("updates isActive status", async () => {
+  describe('toggleRule', () => {
+    it('updates isActive status', async () => {
       mockRuleFindUnique.mockResolvedValue({
-        id: "rule-1",
-        userId: "user-1",
+        id: 'rule-1',
+        userId: 'user-1',
       });
 
       await toggleRule({
         prisma: mockPrisma,
-        userId: "user-1",
-        ruleId: "rule-1",
+        userId: 'user-1',
+        ruleId: 'rule-1',
         isActive: false,
       });
 
       expect(mockRuleUpdate).toHaveBeenCalledWith({
-        where: { id: "rule-1" },
+        where: { id: 'rule-1' },
         data: { isActive: false },
       });
     });
 
-    it("throws error if rule not owned by user", async () => {
+    it('throws error if rule not owned by user', async () => {
       mockRuleFindUnique.mockResolvedValue({
-        id: "rule-1",
-        userId: "other-user",
+        id: 'rule-1',
+        userId: 'other-user',
       });
 
       await expect(
         toggleRule({
           prisma: mockPrisma,
-          userId: "user-1",
-          ruleId: "rule-1",
+          userId: 'user-1',
+          ruleId: 'rule-1',
           isActive: false,
         }),
-      ).rejects.toThrow("Rule not found");
+      ).rejects.toThrow('Rule not found');
     });
   });
 
-  describe("deleteRule", () => {
-    it("throws error if rule not owned by user", async () => {
+  describe('deleteRule', () => {
+    it('throws error if rule not owned by user', async () => {
       mockRuleFindUnique.mockResolvedValue({
-        id: "rule-1",
-        userId: "other-user",
+        id: 'rule-1',
+        userId: 'other-user',
       });
 
       await expect(
         deleteRule({
           prisma: mockPrisma,
-          userId: "user-1",
-          ruleId: "rule-1",
+          userId: 'user-1',
+          ruleId: 'rule-1',
         }),
-      ).rejects.toThrow("Rule not found or not authorized");
+      ).rejects.toThrow('Rule not found or not authorized');
 
       expect(mockRuleDelete).not.toHaveBeenCalled();
     });
   });
 
-  describe("findSimilarTransactions", () => {
-    it("returns correct count for CONTAINS pattern", async () => {
+  describe('findSimilarTransactions', () => {
+    it('returns correct count for CONTAINS pattern', async () => {
       mockTransactionCount.mockResolvedValue(3);
 
       const result = await findSimilarTransactions({
         prisma: mockPrisma,
-        userId: "user-1",
-        description: "Amazon store purchase today",
+        userId: 'user-1',
+        description: 'Amazon store purchase today',
       });
 
       expect(result).toBe(3);
@@ -195,19 +195,19 @@ describe("category-rule service", () => {
       const call = calls[0];
       expect(call).toBeDefined();
       const callArgs = call![0];
-      expect(callArgs.where.userId).toBe("user-1");
-      expect(callArgs.where.status).toEqual({ not: "VOIDED" });
+      expect(callArgs.where.userId).toBe('user-1');
+      expect(callArgs.where.status).toEqual({ not: 'VOIDED' });
       expect(callArgs.where.description).toBeDefined();
     });
 
-    it("excludes transaction if provided", async () => {
+    it('excludes transaction if provided', async () => {
       mockTransactionCount.mockResolvedValue(2);
 
       const result = await findSimilarTransactions({
         prisma: mockPrisma,
-        userId: "user-1",
-        description: "test description",
-        excludeTransactionId: "tx-exclude",
+        userId: 'user-1',
+        description: 'test description',
+        excludeTransactionId: 'tx-exclude',
       });
 
       const calls = mockTransactionCount.mock.calls;
@@ -216,19 +216,19 @@ describe("category-rule service", () => {
       const call = calls[0];
       expect(call).toBeDefined();
       const callArgs = call![0];
-      expect(callArgs.where.id.not).toBe("tx-exclude");
+      expect(callArgs.where.id.not).toBe('tx-exclude');
     });
   });
 
-  describe("runCategoryRules", () => {
-    it("applies matching rules to import transactions", async () => {
+  describe('runCategoryRules', () => {
+    it('applies matching rules to import transactions', async () => {
       mockRuleFindMany.mockResolvedValue([
         {
-          id: "rule-1",
-          name: "Test Rule",
-          pattern: "amazon",
-          matchType: "CONTAINS",
-          category: "Shopping",
+          id: 'rule-1',
+          name: 'Test Rule',
+          pattern: 'amazon',
+          matchType: 'CONTAINS',
+          category: 'Shopping',
           isActive: true,
           appliedCount: 0,
         },
@@ -238,34 +238,34 @@ describe("category-rule service", () => {
 
       const result = await runCategoryRules({
         prisma: mockPrisma,
-        userId: "user-1",
-        importSessionId: "session-1",
+        userId: 'user-1',
+        importSessionId: 'session-1',
       });
 
       expect(result.rulesRan).toBe(1);
       expect(result.appliedCount).toBe(1);
       expect(mockTransactionUpdateMany).toHaveBeenCalledWith({
         where: {
-          userId: "user-1",
-          importSessionId: "session-1",
-          source: "LLM_CLASSIFIED",
-          status: { in: ["PENDING", "CONFIRMED"] },
-          description: expect.objectContaining({ contains: "amazon" }),
+          userId: 'user-1',
+          importSessionId: 'session-1',
+          source: 'LLM_CLASSIFIED',
+          status: { in: ['PENDING', 'CONFIRMED'] },
+          description: expect.objectContaining({ contains: 'amazon' }),
         },
         data: {
-          category: "Shopping",
-          source: "USER_OVERRIDE",
+          category: 'Shopping',
+          source: 'USER_OVERRIDE',
         },
       });
     });
 
-    it("skips non-LLM_CLASSIFIED transactions via source filter in updateMany", async () => {
+    it('skips non-LLM_CLASSIFIED transactions via source filter in updateMany', async () => {
       mockRuleFindMany.mockResolvedValue([
         {
-          id: "rule-1",
-          pattern: "test",
-          matchType: "CONTAINS",
-          category: "Shopping",
+          id: 'rule-1',
+          pattern: 'test',
+          matchType: 'CONTAINS',
+          category: 'Shopping',
         },
       ]);
 
@@ -273,35 +273,35 @@ describe("category-rule service", () => {
 
       const result = await runCategoryRules({
         prisma: mockPrisma,
-        userId: "user-1",
-        importSessionId: "session-1",
+        userId: 'user-1',
+        importSessionId: 'session-1',
       });
 
       // Service uses updateMany directly with source filter — no separate findMany call
       expect(mockTransactionFindMany).not.toHaveBeenCalled();
       expect(mockTransactionUpdateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ source: "LLM_CLASSIFIED" }),
+          where: expect.objectContaining({ source: 'LLM_CLASSIFIED' }),
         }),
       );
       expect(result.appliedCount).toBe(0);
     });
   });
 
-  describe("applyRuleToPast", () => {
-    it("throws if rule not owned by user", async () => {
+  describe('applyRuleToPast', () => {
+    it('throws if rule not owned by user', async () => {
       mockRuleFindUnique.mockResolvedValue({
-        id: "rule-1",
-        userId: "other-user",
+        id: 'rule-1',
+        userId: 'other-user',
       });
 
       await expect(
         applyRuleToPast({
           prisma: mockPrisma,
-          userId: "user-1",
-          ruleId: "rule-1",
+          userId: 'user-1',
+          ruleId: 'rule-1',
         }),
-      ).rejects.toThrow("Rule not found or not authorized");
+      ).rejects.toThrow('Rule not found or not authorized');
     });
   });
 });

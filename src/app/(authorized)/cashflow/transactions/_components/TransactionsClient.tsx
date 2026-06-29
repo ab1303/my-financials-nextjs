@@ -2,7 +2,7 @@
 
 import { GitMerge, History, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { type ReactNode,useCallback, useState } from 'react';
+import { type ReactNode, useCallback, useState } from 'react';
 
 import { CategoryFilteredLedger } from '@/components/transactions/CategoryFilteredLedger';
 import ImportSessionHistory from '@/components/transactions/ImportSessionHistory';
@@ -25,25 +25,35 @@ interface ImportCardProps {
   testId?: string;
 }
 
-function ImportCard({ title, description, onClick, icon, testId }: ImportCardProps) {
+function ImportCard({
+  title,
+  description,
+  onClick,
+  icon,
+  testId,
+}: ImportCardProps) {
   return (
     <div
-      role="button"
+      role='button'
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter') onClick();
       }}
       data-testid={testId}
-      className="cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+      className='cursor-pointer rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800'
     >
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400">
+      <div className='flex items-center gap-4'>
+        <div className='flex h-12 w-12 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400'>
           {icon}
         </div>
         <div>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h3>
-          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
+          <h3 className='text-base font-semibold text-gray-900 dark:text-white'>
+            {title}
+          </h3>
+          <p className='mt-0.5 text-sm text-gray-500 dark:text-gray-400'>
+            {description}
+          </p>
         </div>
       </div>
     </div>
@@ -85,7 +95,7 @@ export default function TransactionsClient({
   // Drill-down mode: category + month present and not explicitly requesting full ledger
   if (initialCategory && initialMonth !== undefined && viewMode !== 'ledger') {
     return (
-      <main className="px-4 py-6 sm:px-6 lg:px-8">
+      <main className='px-4 py-6 sm:px-6 lg:px-8'>
         <CategoryFilteredLedger
           category={initialCategory}
           categoryId={initialCategoryId ?? ''}
@@ -98,80 +108,82 @@ export default function TransactionsClient({
 
   // Normal mode: full transaction management
   return (
-    <main className="px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex items-start justify-between">
+    <main className='px-4 py-6 sm:px-6 lg:px-8'>
+      <div className='flex items-start justify-between'>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Transactions</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <h1 className='text-2xl font-semibold text-gray-900 dark:text-white'>
+            Transactions
+          </h1>
+          <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
             Import and manage your bank transactions
           </p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className='flex items-center gap-1'>
           <Link
-            href="/cashflow/transfer-rules"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-            title="Manage transfer match rules"
+            href='/cashflow/transfer-rules'
+            className='flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+            title='Manage transfer match rules'
           >
-            <GitMerge className="h-4 w-4" />
+            <GitMerge className='h-4 w-4' />
             Transfer Rules
           </Link>
           <Link
-            href="/cashflow/category-rules"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-            title="Manage category rules"
+            href='/cashflow/category-rules'
+            className='flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+            title='Manage category rules'
           >
-            <Tag className="h-4 w-4" />
+            <Tag className='h-4 w-4' />
             Category Rules
           </Link>
           <button
             onClick={() => setHistoryOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            className='flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
           >
-            <History className="h-4 w-4" />
+            <History className='h-4 w-4' />
             Import History
           </button>
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className='mt-8 grid grid-cols-1 gap-6 md:grid-cols-2'>
         <ImportCard
-          title="CSV Bank Statement"
-          description="Import transactions from a CommBank CSV statement"
-          testId="open-csv-import-wizard"
+          title='CSV Bank Statement'
+          description='Import transactions from a CommBank CSV statement'
+          testId='open-csv-import-wizard'
           icon={
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-6 w-6'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
             >
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeLinecap='round'
+                strokeLinejoin='round'
                 strokeWidth={2}
-                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                d='M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
               />
             </svg>
           }
           onClick={() => setCsvOpen(true)}
         />
         <ImportCard
-          title="AI Receipt / Invoice"
-          description="Extract expense data from receipt or invoice images"
+          title='AI Receipt / Invoice'
+          description='Extract expense data from receipt or invoice images'
           icon={
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-6 w-6'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
             >
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeLinecap='round'
+                strokeLinejoin='round'
                 strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
               />
             </svg>
           }
@@ -179,7 +191,7 @@ export default function TransactionsClient({
         />
       </div>
 
-      <div className="mt-10">
+      <div className='mt-10'>
         <TransactionLedgerTable
           bankAccounts={bankAccounts}
           refreshKey={refreshKey}
@@ -204,7 +216,10 @@ export default function TransactionsClient({
         bankAccounts={bankAccounts}
       />
 
-      <ImportSessionHistory isOpen={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <ImportSessionHistory
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
     </main>
   );
 }

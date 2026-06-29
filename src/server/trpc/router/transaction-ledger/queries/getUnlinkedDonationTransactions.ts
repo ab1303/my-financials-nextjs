@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { protectedProcedure } from '@/server/trpc/trpc';
+
 import { getUnlinkedDonationTransactions } from '@/server/services/transactions/donation-link.service';
+import { protectedProcedure } from '@/server/trpc/trpc';
 
 export const getUnlinkedDonationTransactionsQuery = protectedProcedure
   .input(

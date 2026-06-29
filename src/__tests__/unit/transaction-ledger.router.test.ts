@@ -5,23 +5,31 @@ import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import { appRouter } from '@/server/trpc/router/_app';
 import { buildTransactionWhere } from '@/server/trpc/router/transaction-ledger/shared';
 
-
 describe('buildTransactionWhere', () => {
   it('filters uncategorized transactions by empty category', () => {
-    const where = buildTransactionWhere({ uncategorized: true } as never, 'user-1');
+    const where = buildTransactionWhere(
+      { uncategorized: true } as never,
+      'user-1',
+    );
 
     expect(where.userId).toBe('user-1');
     expect(where.category).toBe('');
   });
 
   it('applies amount range filters', () => {
-    const where = buildTransactionWhere({ amountMin: 500, amountMax: 1000 } as never, 'user-1');
+    const where = buildTransactionWhere(
+      { amountMin: 500, amountMax: 1000 } as never,
+      'user-1',
+    );
 
     expect(where.amount).toEqual({ gte: 500, lte: 1000 });
   });
 
   it('applies date range filters', () => {
-    const where = buildTransactionWhere({ dateFrom: '2024-01-01', dateTo: '2024-01-31' } as never, 'user-1');
+    const where = buildTransactionWhere(
+      { dateFrom: '2024-01-01', dateTo: '2024-01-31' } as never,
+      'user-1',
+    );
 
     expect(where.date).toBeDefined();
     expect(where.date).toMatchObject({
@@ -31,12 +39,14 @@ describe('buildTransactionWhere', () => {
   });
 
   it('filters by category', () => {
-    const where = buildTransactionWhere({ category: 'Groceries' } as never, 'user-1');
+    const where = buildTransactionWhere(
+      { category: 'Groceries' } as never,
+      'user-1',
+    );
 
     expect(where.category).toBe('Groceries');
   });
 });
-
 
 describe('transactionLedgerRouter.getFilterOptions', () => {
   const caller = appRouter.createCaller({
@@ -59,11 +69,13 @@ describe('transactionLedgerRouter.getFilterOptions', () => {
 
     await expect(caller.transactionLedger.getFilterOptions()).resolves.toEqual({
       expenseCategories: [{ id: 'cat-1', name: 'Groceries' }],
-          incomeSourceLabels: [{ id: 'src-1', name: 'Employment' }, { id: 'src-2', name: 'Other' }],
+      incomeSourceLabels: [
+        { id: 'src-1', name: 'Employment' },
+        { id: 'src-2', name: 'Other' },
+      ],
     });
   });
 });
-
 
 describe('transactionLedgerRouter.getAll — cursor pagination', () => {
   const caller = appRouter.createCaller({
@@ -74,7 +86,9 @@ describe('transactionLedgerRouter.getAll — cursor pagination', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // mock aggregate queries
-    prismaMock.transaction.aggregate.mockResolvedValue({ _sum: { amount: null } } as never);
+    prismaMock.transaction.aggregate.mockResolvedValue({
+      _sum: { amount: null },
+    } as never);
   });
 
   it('returns nextCursor when more rows exist than the limit', async () => {
@@ -236,11 +250,12 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
     prismaMock.transaction.findMany.mockResolvedValue(mockMatches as never);
     prismaMock.transaction.count.mockResolvedValue(6 as never);
 
-    const result = await caller.transactionLedger.previewMatchingCategoryChanges({
-      transactionId,
-      description: 'Supermarket',
-      limit: 5,
-    });
+    const result =
+      await caller.transactionLedger.previewMatchingCategoryChanges({
+        transactionId,
+        description: 'Supermarket',
+        limit: 5,
+      });
 
     expect(result).toHaveProperty('matches');
     expect(result).toHaveProperty('totalCount');
@@ -288,10 +303,11 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
     prismaMock.transaction.findMany.mockResolvedValue([] as never);
     prismaMock.transaction.count.mockResolvedValue(0 as never);
 
-    const result = await caller.transactionLedger.previewMatchingCategoryChanges({
-      transactionId,
-      description: 'to and of',
-    });
+    const result =
+      await caller.transactionLedger.previewMatchingCategoryChanges({
+        transactionId,
+        description: 'to and of',
+      });
 
     expect(result.matches).toEqual([]);
     expect(result.totalCount).toBe(0);

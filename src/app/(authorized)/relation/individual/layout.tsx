@@ -1,4 +1,3 @@
- 
 import Script from 'next/script';
 import * as React from 'react';
 

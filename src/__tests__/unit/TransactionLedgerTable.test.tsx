@@ -381,7 +381,8 @@ describe('TransactionLedgerTable', () => {
     render(<TransactionLedgerTable bankAccounts={bankAccounts} />);
 
     // Simulate updateCategory mutation success with matched IDs
-    const successCallback = vi.mocked(mockUseMutation).mock.calls[0]?.[0]?.onSuccess;
+    const successCallback =
+      vi.mocked(mockUseMutation).mock.calls[0]?.[0]?.onSuccess;
     if (successCallback) {
       successCallback({
         success: true,
@@ -403,48 +404,49 @@ describe('TransactionLedgerTable', () => {
 describe('shouldRetainRowAfterCategoryChange', () => {
   const TRANSFER_CATEGORY = 'Transfer';
 
-  const createMockTransaction = (overrides = {}) => ({
-    id: 'tx-1',
-    date: '2024-01-15T00:00:00.000Z',
-    description: 'Test transaction',
-    amount: 100,
-    type: 'DEBIT',
-    category: null,
-    source: 'LLM_CLASSIFIED',
-    status: 'CONFIRMED',
-    bankAccountName: 'Test Account',
-    bankName: 'Test Bank',
-    reimbursements: [],
-    offsetCategory: null,
-    offsetTransactionId: null,
-    transferCounterpart: null,
-    transferLinkedTransactionId: null,
-    transferCounterpartId: null,
-    isTransferClassified: false,
-    confirmedAt: null,
-    bankAccountId: 'bank-1',
-    ...overrides,
-  }) as unknown as Parameters<typeof shouldRetainRowAfterCategoryChange>[0];
+  const createMockTransaction = (overrides = {}) =>
+    ({
+      id: 'tx-1',
+      date: '2024-01-15T00:00:00.000Z',
+      description: 'Test transaction',
+      amount: 100,
+      type: 'DEBIT',
+      category: null,
+      source: 'LLM_CLASSIFIED',
+      status: 'CONFIRMED',
+      bankAccountName: 'Test Account',
+      bankName: 'Test Bank',
+      reimbursements: [],
+      offsetCategory: null,
+      offsetTransactionId: null,
+      transferCounterpart: null,
+      transferLinkedTransactionId: null,
+      transferCounterpartId: null,
+      isTransferClassified: false,
+      confirmedAt: null,
+      bankAccountId: 'bank-1',
+      ...overrides,
+    }) as unknown as Parameters<typeof shouldRetainRowAfterCategoryChange>[0];
 
   describe('transfers tab', () => {
     it('retains row when moving away from Transfer category', () => {
       const tx = createMockTransaction({ category: TRANSFER_CATEGORY });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'transfers')
+        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'transfers'),
       ).toBe(true);
     });
 
     it('does not retain row when moving to Transfer category', () => {
       const tx = createMockTransaction({ category: 'Groceries' });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, TRANSFER_CATEGORY, 'transfers')
+        shouldRetainRowAfterCategoryChange(tx, TRANSFER_CATEGORY, 'transfers'),
       ).toBe(false);
     });
 
     it('does not retain row when category is already not Transfer', () => {
       const tx = createMockTransaction({ category: 'Groceries' });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'transfers')
+        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'transfers'),
       ).toBe(false);
     });
   });
@@ -453,29 +455,29 @@ describe('shouldRetainRowAfterCategoryChange', () => {
     it('retains row when assigning a category to uncategorized transaction', () => {
       const tx = createMockTransaction({ category: null });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'uncategorized')
+        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'uncategorized'),
       ).toBe(true);
     });
 
     it('retains row when assigning category to transaction with empty string category', () => {
       const tx = createMockTransaction({ category: '' });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'uncategorized')
+        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'uncategorized'),
       ).toBe(true);
     });
 
     it('does not retain row when transaction already has a category on uncategorized tab', () => {
       const tx = createMockTransaction({ category: 'Groceries' });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'uncategorized')
+        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'uncategorized'),
       ).toBe(false);
     });
 
     it('does not retain row when assigning empty/null category on uncategorized tab', () => {
       const tx = createMockTransaction({ category: null });
-      expect(
-        shouldRetainRowAfterCategoryChange(tx, '', 'uncategorized')
-      ).toBe(false);
+      expect(shouldRetainRowAfterCategoryChange(tx, '', 'uncategorized')).toBe(
+        false,
+      );
     });
   });
 
@@ -483,49 +485,55 @@ describe('shouldRetainRowAfterCategoryChange', () => {
     it('retains row on expenses tab', () => {
       const tx = createMockTransaction({ category: 'Groceries' });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'expenses')
+        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'expenses'),
       ).toBe(true);
     });
 
     it('retains row on income tab', () => {
       const tx = createMockTransaction({ category: 'Salary', type: 'CREDIT' });
-      expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Bonus', 'income')
-      ).toBe(true);
+      expect(shouldRetainRowAfterCategoryChange(tx, 'Bonus', 'income')).toBe(
+        true,
+      );
     });
 
     it('does not retain row on all tab', () => {
       const tx = createMockTransaction({ category: 'Groceries' });
-      expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'all')
-      ).toBe(false);
+      expect(shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'all')).toBe(
+        false,
+      );
     });
 
     it('retains row on excluded tab', () => {
-      const tx = createMockTransaction({ category: 'Excluded', status: 'EXCLUDED' });
+      const tx = createMockTransaction({
+        category: 'Excluded',
+        status: 'EXCLUDED',
+      });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'excluded')
+        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'excluded'),
       ).toBe(true);
     });
 
     it('retains row on reimbursements tab', () => {
       const tx = createMockTransaction({ category: 'Reimbursement' });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'reimbursements')
+        shouldRetainRowAfterCategoryChange(tx, 'Groceries', 'reimbursements'),
       ).toBe(true);
     });
 
     it('retains row on voided tab', () => {
-      const tx = createMockTransaction({ category: 'Groceries', status: 'VOIDED' });
+      const tx = createMockTransaction({
+        category: 'Groceries',
+        status: 'VOIDED',
+      });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'voided')
+        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'voided'),
       ).toBe(true);
     });
 
     it('retains row on all tab when a category filter is active and the row changes category', () => {
       const tx = createMockTransaction({ category: 'Groceries' });
       expect(
-        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'all', 'Groceries')
+        shouldRetainRowAfterCategoryChange(tx, 'Utilities', 'all', 'Groceries'),
       ).toBe(true);
     });
   });

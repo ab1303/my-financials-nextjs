@@ -138,7 +138,10 @@ export default function CSVClassifyingStep({
           }
           const mergedTxs = Array.from(existingById.values());
           // Merge duplicates as well
-          const mergedDuplicates = [...(existingDebit.duplicates ?? []), ...duplicates];
+          const mergedDuplicates = [
+            ...(existingDebit.duplicates ?? []),
+            ...duplicates,
+          ];
           const mergedUsage = {
             promptTokens:
               (existingDebit.totalUsage.promptTokens ?? 0) +

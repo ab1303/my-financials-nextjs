@@ -1,9 +1,10 @@
 import { randomUUID } from 'crypto';
+
 import { robustParseDate } from '@/lib/date-utils';
 import { getBankFormat } from '@/server/services/transactions/bank-format-registry';
 import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
 
-import type { CsvParseResult,CsvTransaction } from './_types';
+import type { CsvParseResult, CsvTransaction } from './_types';
 
 /**
  * @deprecated Use parseBankCsv(content, format) from csv-parser-generic.service.ts instead.
@@ -123,6 +124,7 @@ export function parseCsvRow(
  */
 function looksLikeDataRow(line: string): boolean {
   const firstComma = line.indexOf(',');
-  const dateField = firstComma > -1 ? line.slice(0, firstComma).replace(/"/g, '').trim() : '';
+  const dateField =
+    firstComma > -1 ? line.slice(0, firstComma).replace(/"/g, '').trim() : '';
   return /^\d{2}\/\d{2}\/\d{4}$/.test(dateField);
 }

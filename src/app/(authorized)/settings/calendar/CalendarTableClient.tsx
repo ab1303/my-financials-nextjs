@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Check, Lock, Pencil, Trash2, Unlock,X } from 'lucide-react';
+import { Check, Lock, Pencil, Trash2, Unlock, X } from 'lucide-react';
 import { useState } from 'react';
 
 import Table from '@/components/table';

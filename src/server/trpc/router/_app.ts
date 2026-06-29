@@ -52,6 +52,5 @@ export const appRouter = router({
   categoryTransactions: categoryTransactionsRouter,
 });
 
-
 // export type definition of API
 export type AppRouter = typeof appRouter;

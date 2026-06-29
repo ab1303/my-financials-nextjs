@@ -1,5 +1,5 @@
-import type { CurrencyEnumType,InvestmentTermEnumType } from '@prisma/client';
-import { addMonths,differenceInMonths } from 'date-fns';
+import type { CurrencyEnumType, InvestmentTermEnumType } from '@prisma/client';
+import { addMonths, differenceInMonths } from 'date-fns';
 
 import type {
   HoldingCalculations,

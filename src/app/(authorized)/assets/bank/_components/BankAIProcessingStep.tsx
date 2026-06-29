@@ -1,9 +1,12 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useEffect, useRef,useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import type { AIImportSessionResult,UploadedFile } from '../../../cashflow/transactions/_components/ai/_types';
+import type {
+  AIImportSessionResult,
+  UploadedFile,
+} from '../../../cashflow/transactions/_components/ai/_types';
 
 interface BankAIProcessingStepProps {
   files: UploadedFile[];
@@ -39,7 +42,10 @@ export default function BankAIProcessingStep({
           const err = await uploadRes.json().catch(() => ({}));
           throw new Error(err.error ?? 'Upload failed');
         }
-        const uploadData = await uploadRes.json() as { imageIds: string[]; images: Array<{ imageId: string; fileName: string }> };
+        const uploadData = (await uploadRes.json()) as {
+          imageIds: string[];
+          images: Array<{ imageId: string; fileName: string }>;
+        };
 
         // 2. Parse/extract via SSE
         setStatus('Extracting data with AI…');
@@ -95,14 +101,20 @@ export default function BankAIProcessingStep({
             month: 0,
             importType: 'BANK_ASSET',
             snapshotDate,
-            images: [],  // Auto-confirm all extracted entries
+            images: [], // Auto-confirm all extracted entries
           }),
         });
         if (!confirmRes.ok) {
           const err = await confirmRes.json().catch(() => ({}));
-          throw new Error((err as { error?: string }).error ?? 'Confirm failed');
+          throw new Error(
+            (err as { error?: string }).error ?? 'Confirm failed',
+          );
         }
-        const confirmData = await confirmRes.json() as { sessionId: string; recordsCreated: number; status: 'COMPLETED' | 'PARTIAL' | 'FAILED' };
+        const confirmData = (await confirmRes.json()) as {
+          sessionId: string;
+          recordsCreated: number;
+          status: 'COMPLETED' | 'PARTIAL' | 'FAILED';
+        };
 
         onComplete({
           sessionId: confirmData.sessionId,
@@ -110,7 +122,8 @@ export default function BankAIProcessingStep({
           status: confirmData.status,
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Processing failed';
+        const message =
+          err instanceof Error ? err.message : 'Processing failed';
         setError(message);
       }
     };
@@ -122,7 +135,9 @@ export default function BankAIProcessingStep({
   if (error) {
     return (
       <div className='flex flex-col items-center justify-center py-12 text-center'>
-        <p className='text-sm font-semibold text-red-600 mb-2'>Processing Failed</p>
+        <p className='text-sm font-semibold text-red-600 mb-2'>
+          Processing Failed
+        </p>
         <p className='text-xs text-red-500'>{error}</p>
       </div>
     );
@@ -132,7 +147,9 @@ export default function BankAIProcessingStep({
     <div className='flex flex-col items-center justify-center py-12 text-center'>
       <Loader2 className='h-10 w-10 animate-spin text-teal-600 mb-4' />
       <p className='text-sm font-medium text-gray-700'>{status}</p>
-      <p className='mt-2 text-xs text-gray-400'>Processing {files.length} image{files.length !== 1 ? 's' : ''}…</p>
+      <p className='mt-2 text-xs text-gray-400'>
+        Processing {files.length} image{files.length !== 1 ? 's' : ''}…
+      </p>
     </div>
   );
 }

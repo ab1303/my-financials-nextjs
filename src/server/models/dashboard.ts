@@ -4,9 +4,9 @@
  */
 
 export interface MonthlyTrendPoint {
-  month: number;    // 1-12
+  month: number; // 1-12
   year: number;
-  label: string;    // e.g. "Jan 25", "Feb 25"
+  label: string; // e.g. "Jan 25", "Feb 25"
   income: number;
   expenses: number;
 }

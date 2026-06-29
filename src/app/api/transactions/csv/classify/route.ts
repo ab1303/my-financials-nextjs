@@ -1,8 +1,8 @@
 import type { NextRequest } from 'next/server';
 
+import { normalizeDateToISO } from '@/lib/date-utils';
 import { auth } from '@/server/auth';
 import { prisma } from '@/server/db/client';
-import { normalizeDateToISO } from '@/lib/date-utils';
 import type {
   ClassifiedCreditTransaction,
   ClassifiedTransactionV2,
@@ -13,12 +13,12 @@ import {
   classifyTransactions,
 } from '@/server/services/ai-import/csv-classifier.service';
 import { ClassifyRequestSchema } from '@/server/services/ai-import/validation';
+import { getBankFormat } from '@/server/services/transactions/bank-format-registry';
 import {
   applyCategoryRulesToTransactions,
   loadActiveRules,
 } from '@/server/services/transactions/category-rule-applier';
 import { findDuplicatesForClassifiedMonths } from '@/server/services/transactions/dedup.service';
-import { getBankFormat } from '@/server/services/transactions/bank-format-registry';
 
 function groupTransactionsByMonth<T extends CsvTransaction>(transactions: T[]) {
   const monthMap = new Map<string, T[]>();

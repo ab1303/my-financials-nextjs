@@ -3,9 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarEnumType } from '@prisma/client';
 import clsx from 'clsx';
 import { Info } from 'lucide-react';
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { SubmitHandler } from 'react-hook-form';
-import { Controller,useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { Button } from '@/components';

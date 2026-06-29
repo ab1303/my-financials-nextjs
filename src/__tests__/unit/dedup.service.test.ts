@@ -1,6 +1,10 @@
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { getDateRangeFromMonthKeys,isDuplicate, makeDedupKey } from '@/server/services/transactions/dedup.service';
+import {
+  getDateRangeFromMonthKeys,
+  isDuplicate,
+  makeDedupKey,
+} from '@/server/services/transactions/dedup.service';
 
 describe('makeDedupKey', () => {
   it('normalises ISO datetime to date-only', () => {
@@ -24,8 +28,18 @@ describe('makeDedupKey', () => {
   });
 
   it('formats amount to 2 decimal places', () => {
-    const key1 = makeDedupKey({ date: '2025-01-15', description: 'Test', amount: 12.1, type: 'DEBIT' });
-    const key2 = makeDedupKey({ date: '2025-01-15', description: 'Test', amount: 12.10, type: 'DEBIT' });
+    const key1 = makeDedupKey({
+      date: '2025-01-15',
+      description: 'Test',
+      amount: 12.1,
+      type: 'DEBIT',
+    });
+    const key2 = makeDedupKey({
+      date: '2025-01-15',
+      description: 'Test',
+      amount: 12.1,
+      type: 'DEBIT',
+    });
     expect(key1).toBe(key2);
     expect(key1).toContain('12.10');
   });
@@ -38,7 +52,12 @@ describe('makeDedupKey', () => {
   });
 
   it('handles whole number amounts', () => {
-    const key = makeDedupKey({ date: '2025-01-15', description: 'Test', amount: 5, type: 'DEBIT' });
+    const key = makeDedupKey({
+      date: '2025-01-15',
+      description: 'Test',
+      amount: 5,
+      type: 'DEBIT',
+    });
     expect(key).toContain('5.00');
   });
 });
@@ -57,7 +76,10 @@ describe('isDuplicate', () => {
 
 describe('getDateRangeFromMonthKeys', () => {
   it('computes range for multiple months', () => {
-    const { startDate, endDate } = getDateRangeFromMonthKeys(['2025-01', '2025-03']);
+    const { startDate, endDate } = getDateRangeFromMonthKeys([
+      '2025-01',
+      '2025-03',
+    ]);
     expect(startDate).toEqual(new Date(2025, 0, 1));
     expect(endDate.getFullYear()).toBe(2025);
     expect(endDate.getMonth()).toBe(2);
@@ -71,7 +93,11 @@ describe('getDateRangeFromMonthKeys', () => {
   });
 
   it('sorts unsorted month keys correctly', () => {
-    const { startDate, endDate } = getDateRangeFromMonthKeys(['2025-03', '2025-01', '2025-02']);
+    const { startDate, endDate } = getDateRangeFromMonthKeys([
+      '2025-03',
+      '2025-01',
+      '2025-02',
+    ]);
     expect(startDate).toEqual(new Date(2025, 0, 1));
     expect(endDate.getMonth()).toBe(2);
   });

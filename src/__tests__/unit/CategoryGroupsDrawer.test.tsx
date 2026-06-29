@@ -260,7 +260,9 @@ describe('CategoryGroupsDrawer', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create Group' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Create Group' }),
+    ).toBeInTheDocument();
   });
 
   it('has cancel and update buttons in edit mode', () => {
@@ -274,7 +276,9 @@ describe('CategoryGroupsDrawer', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Update Group' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Update Group' }),
+    ).toBeInTheDocument();
   });
 
   it('disables save button when form is invalid (no scope selected in create mode)', () => {

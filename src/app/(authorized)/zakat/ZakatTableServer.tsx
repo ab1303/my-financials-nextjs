@@ -25,7 +25,10 @@ export default async function ZakatPaymentsTableServer({
       throw new Error('User session not found');
     }
 
-    const zakatPayments = await zakatPaymentsHandler(calendarYearId, beneficiaryId);
+    const zakatPayments = await zakatPaymentsHandler(
+      calendarYearId,
+      beneficiaryId,
+    );
     const individuals = await allIndividualDetailsHandler(session.user.id);
     const businesses = await allBusinessDetailsHandler(session.user.id);
 

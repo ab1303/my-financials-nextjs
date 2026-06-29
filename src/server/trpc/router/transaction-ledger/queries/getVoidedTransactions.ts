@@ -1,7 +1,9 @@
-import { Prisma, TransactionStatusEnum } from '@prisma/client';
-import { z } from 'zod';
-import { protectedProcedure } from '@/server/trpc/trpc';
+import type { Prisma } from '@prisma/client';
+import { TransactionStatusEnum } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+
+import { protectedProcedure } from '@/server/trpc/trpc';
 
 export const getVoidedTransactionsQuery = protectedProcedure
   .input(

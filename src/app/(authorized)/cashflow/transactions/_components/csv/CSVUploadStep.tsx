@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, CheckCircle,Upload, X } from 'lucide-react';
+import { AlertCircle, CheckCircle, Upload, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
@@ -115,7 +115,7 @@ export default function CSVUploadStep({
           Bank Account <span className='text-red-500'>*</span>
         </label>
         <select
-          data-testid="csv-bank-account-select"
+          data-testid='csv-bank-account-select'
           value={selectedBankAccountId ?? ''}
           onChange={(e) => onBankAccountChange(e.target.value)}
           className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
@@ -129,9 +129,12 @@ export default function CSVUploadStep({
           ))}
         </select>
         {bankAccounts.length === 0 && (
-          <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+          <p className='mt-2 text-sm text-amber-600 dark:text-amber-400'>
             No bank accounts set up yet.{' '}
-            <a href="/account/bank-accounts" className="underline hover:no-underline">
+            <a
+              href='/account/bank-accounts'
+              className='underline hover:no-underline'
+            >
               Add a bank account →
             </a>
           </p>
@@ -142,7 +145,7 @@ export default function CSVUploadStep({
         <>
           <div
             {...getRootProps()}
-            data-testid="csv-dropzone"
+            data-testid='csv-dropzone'
             className={`cursor-pointer rounded-lg border-2 border-dashed p-12 text-center transition-colors ${
               isDragActive
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
@@ -157,8 +160,8 @@ export default function CSVUploadStep({
                 : 'Drop CSV file or click to select'}
             </h3>
             <p className='mb-4 text-sm text-gray-600 dark:text-gray-400'>
-              Export your transaction history as CSV from your bank&apos;s internet
-              banking
+              Export your transaction history as CSV from your bank&apos;s
+              internet banking
             </p>
             <p className='text-xs text-gray-500 dark:text-gray-400'>
               Maximum file size: 5MB | Maximum 5000 rows
@@ -188,7 +191,9 @@ export default function CSVUploadStep({
           <div className='rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-4'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-sm font-semibold text-gray-900 dark:text-white'>{file.fileName}</p>
+                <p className='text-sm font-semibold text-gray-900 dark:text-white'>
+                  {file.fileName}
+                </p>
                 <p className='mt-1 text-xs text-gray-600 dark:text-gray-400'>
                   {file.rowCount} rows | {(file.fileSize / 1024).toFixed(1)} KB
                 </p>
@@ -244,7 +249,9 @@ export default function CSVUploadStep({
                           ${tx.amount.toFixed(2)}
                         </span>
                       </div>
-                      <div className='mt-1 text-gray-500 dark:text-gray-400'>{tx.date}</div>
+                      <div className='mt-1 text-gray-500 dark:text-gray-400'>
+                        {tx.date}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -262,7 +269,7 @@ export default function CSVUploadStep({
             </Button>
             <Button
               variant='default'
-              data-testid="csv-import-button"
+              data-testid='csv-import-button'
               onClick={onStartImport}
               disabled={isLoading || !selectedBankAccountId || !file}
             >

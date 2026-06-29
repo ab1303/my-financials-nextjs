@@ -1,5 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+
 import { AmountCell } from '@/components/table/cells/AmountCell';
 
 describe('AmountCell', () => {
@@ -16,12 +17,14 @@ describe('AmountCell', () => {
 
   it('calls onChange when value changes in edit mode', () => {
     const handleChange = vi.fn();
-    render(<AmountCell value={123.45} onChange={handleChange} isEditing={true} />);
+    render(
+      <AmountCell value={123.45} onChange={handleChange} isEditing={true} />,
+    );
     const input = screen.getByDisplayValue('$123.45');
-    
+
     // Simulate change
     fireEvent.change(input, { target: { value: '$200.00' } });
-    // Note: react-number-format handling might need more complex simulation 
+    // Note: react-number-format handling might need more complex simulation
     // but this validates the basic trigger.
   });
 });

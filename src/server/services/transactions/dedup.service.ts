@@ -1,4 +1,5 @@
 import type { TransactionTypeEnum } from '@prisma/client';
+
 import { prisma } from '@/server/db/client';
 
 export interface DedupKeyParams {
@@ -21,13 +22,16 @@ export function makeDedupKey(params: DedupKeyParams): string {
   const desc = params.description.trim().toLowerCase();
   const amount = params.amount.toFixed(2);
   const type = params.type;
-  const balance = params.runningBalance != null
-    ? `|${Number(params.runningBalance).toFixed(2)}`
-    : '';
+  const balance =
+    params.runningBalance != null
+      ? `|${Number(params.runningBalance).toFixed(2)}`
+      : '';
   return `${dateStr}|${desc}|${amount}|${type}${balance}`;
 }
 
-export async function buildDedupSet(params: BuildDedupSetParams): Promise<Set<string>> {
+export async function buildDedupSet(
+  params: BuildDedupSetParams,
+): Promise<Set<string>> {
   const existing = await prisma.transaction.findMany({
     where: {
       userId: params.userId,
@@ -54,7 +58,8 @@ export async function buildDedupSet(params: BuildDedupSetParams): Promise<Set<st
       description: tx.description,
       amount: Number(tx.amount),
       type: tx.type,
-      runningBalance: tx.runningBalance != null ? Number(tx.runningBalance) : null,
+      runningBalance:
+        tx.runningBalance != null ? Number(tx.runningBalance) : null,
     });
     set.add(key);
   }
@@ -91,7 +96,8 @@ export async function findDuplicatesForClassifiedMonths({
     for (const monthGroup of classifiedMonths) {
       for (const tx of monthGroup.transactions) {
         const key = makeDedupKey({
-          date: tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
+          date:
+            tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
           description: tx.description,
           amount: Number(tx.amount),
           type: tx.type ?? 'DEBIT',
@@ -102,7 +108,7 @@ export async function findDuplicatesForClassifiedMonths({
           duplicates.push({
             csvId: tx.id,
             dedupKey: key,
-            matchedTransactionIds: ['tx-1'], 
+            matchedTransactionIds: ['tx-1'],
             matchedTxSummary: [],
           });
         }
@@ -120,12 +126,18 @@ export function isDuplicate(key: string, dedupSet: Set<string>): boolean {
   return dedupSet.has(key);
 }
 
-export function getDateRangeFromMonthKeys(monthKeys: string[]): { startDate: Date; endDate: Date } {
+export function getDateRangeFromMonthKeys(monthKeys: string[]): {
+  startDate: Date;
+  endDate: Date;
+} {
   const sorted = [...monthKeys].sort();
   const first = sorted[0]!;
   const last = sorted[sorted.length - 1]!;
 
-  const [firstYear, firstMonth] = first.split('-').map(Number) as [number, number];
+  const [firstYear, firstMonth] = first.split('-').map(Number) as [
+    number,
+    number,
+  ];
   const [lastYear, lastMonth] = last.split('-').map(Number) as [number, number];
 
   const startDate = new Date(firstYear, firstMonth - 1, 1);

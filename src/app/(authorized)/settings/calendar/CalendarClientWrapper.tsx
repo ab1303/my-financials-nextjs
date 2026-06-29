@@ -9,7 +9,7 @@ import { trpc } from '@/server/trpc/client';
 import type { FormInput } from './_schema';
 import type { CalendarYearType } from './_types';
 import type { ServerActionType } from './_types';
-import { groupByYearRange,isCurrentCalendarYear } from './_types';
+import { groupByYearRange, isCurrentCalendarYear } from './_types';
 import CalendarTableClient from './CalendarTableClient';
 import CalendarForm from './form';
 import PastCalendarYears from './PastCalendarYears';
@@ -78,7 +78,9 @@ export default function CalendarClientWrapper({
       toast.success('Fiscal year locked');
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to lock fiscal year');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to lock fiscal year',
+      );
     }
   };
 
@@ -88,7 +90,9 @@ export default function CalendarClientWrapper({
       toast.success('Fiscal year unlocked');
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to unlock fiscal year');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to unlock fiscal year',
+      );
     }
   };
 

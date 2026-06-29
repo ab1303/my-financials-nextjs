@@ -39,12 +39,12 @@ export function ExpenseCategoryChart({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">
+          <CardTitle className='text-sm font-medium'>
             Expenses by Category
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground py-4 text-center">
+          <p className='text-sm text-muted-foreground py-4 text-center'>
             No expenses recorded
           </p>
         </CardContent>
@@ -55,11 +55,11 @@ export function ExpenseCategoryChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">
+        <CardTitle className='text-sm font-medium'>
           Expenses by Category
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className='space-y-2'>
         {rows.map((item) => (
           <div
             key={item.categoryId}
@@ -69,28 +69,29 @@ export function ExpenseCategoryChart({
                 : ''
             }`}
             onClick={() =>
-              item.categoryId !== 'other' && onCategoryClick?.(item.categoryName)
+              item.categoryId !== 'other' &&
+              onCategoryClick?.(item.categoryName)
             }
           >
-            <div className="flex justify-between text-xs">
-              <span className="text-foreground/80 truncate max-w-[60%]">
+            <div className='flex justify-between text-xs'>
+              <span className='text-foreground/80 truncate max-w-[60%]'>
                 {item.categoryName}
               </span>
-              <span className="text-muted-foreground">
+              <span className='text-muted-foreground'>
                 <NumericFormat
                   value={item.amount}
-                  displayType="text"
-                  thousandSeparator=","
-                  prefix="$"
+                  displayType='text'
+                  thousandSeparator=','
+                  prefix='$'
                   decimalScale={0}
                   fixedDecimalScale
                 />{' '}
                 ({item.percentage.toFixed(1)}%)
               </span>
             </div>
-            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+            <div className='h-1.5 w-full bg-muted rounded-full overflow-hidden'>
               <div
-                className="h-full bg-red-400 dark:bg-red-500 rounded-full transition-all"
+                className='h-full bg-red-400 dark:bg-red-500 rounded-full transition-all'
                 style={{ width: `${Math.min(item.percentage, 100)}%` }}
               />
             </div>

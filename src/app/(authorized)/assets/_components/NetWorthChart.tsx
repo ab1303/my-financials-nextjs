@@ -33,7 +33,10 @@ const formatAudCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-export default function NetWorthChart({ data, visibility }: NetWorthChartProps) {
+export default function NetWorthChart({
+  data,
+  visibility,
+}: NetWorthChartProps) {
   if (data.length === 0) {
     return (
       <div className='flex h-[360px] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300'>
@@ -64,7 +67,9 @@ export default function NetWorthChart({ data, visibility }: NetWorthChartProps) 
                 return null;
               }
 
-              const point = payload[0]?.payload as NetWorthDataPoint | undefined;
+              const point = payload[0]?.payload as
+                | NetWorthDataPoint
+                | undefined;
               if (!point) {
                 return null;
               }

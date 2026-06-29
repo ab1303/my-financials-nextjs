@@ -42,7 +42,9 @@ export function LinkedModeBody() {
         </h3>
         <div className='flex-1 overflow-y-auto'>
           {unlinkedTxQuery.isLoading ? (
-            <p className='text-sm text-gray-500 dark:text-gray-400'>Loading...</p>
+            <p className='text-sm text-gray-500 dark:text-gray-400'>
+              Loading...
+            </p>
           ) : transactions.length === 0 ? (
             <div className='rounded-md border border-dashed border-gray-300 p-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400'>
               No interest transactions found.
@@ -52,7 +54,8 @@ export function LinkedModeBody() {
               {transactions.map((tx) => {
                 const selected = tx.id === selectedTransactionId;
                 const isFullyCleansed = tx.cleansedAmount >= tx.amount;
-                const isPartiallyCleansed = tx.cleansedAmount > 0 && tx.cleansedAmount < tx.amount;
+                const isPartiallyCleansed =
+                  tx.cleansedAmount > 0 && tx.cleansedAmount < tx.amount;
 
                 return (
                   <button
@@ -63,8 +66,8 @@ export function LinkedModeBody() {
                       selected
                         ? 'border-amber-500 bg-amber-50 dark:border-amber-400 dark:bg-amber-950'
                         : isFullyCleansed
-                        ? 'border-transparent bg-gray-50/50 dark:bg-gray-900/30 opacity-60 grayscale'
-                        : 'border-gray-200 hover:border-amber-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-amber-700 dark:hover:bg-gray-800'
+                          ? 'border-transparent bg-gray-50/50 dark:bg-gray-900/30 opacity-60 grayscale'
+                          : 'border-gray-200 hover:border-amber-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-amber-700 dark:hover:bg-gray-800'
                     }`}
                   >
                     <div className='flex items-center justify-between gap-2'>
@@ -81,10 +84,14 @@ export function LinkedModeBody() {
                       )}
                     </div>
                     <div className='flex items-center justify-between gap-2 mt-1'>
-                      <p className={`line-clamp-1 text-xs ${isFullyCleansed ? 'text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                      <p
+                        className={`line-clamp-1 text-xs ${isFullyCleansed ? 'text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}
+                      >
                         {tx.description}
                       </p>
-                      <span className={`text-sm font-semibold ${isFullyCleansed ? 'text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
+                      <span
+                        className={`text-sm font-semibold ${isFullyCleansed ? 'text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}
+                      >
                         {formatCurrency(tx.amount)}
                       </span>
                     </div>
@@ -102,7 +109,9 @@ export function LinkedModeBody() {
           <div className='mb-4 flex items-center justify-between shrink-0'>
             <div className='flex flex-col'>
               <h3 className='text-sm font-medium text-gray-700 dark:text-gray-200'>
-                {isAuditMode ? 'Audit: Existing Links' : 'Select Evidence (DEBITs)'}
+                {isAuditMode
+                  ? 'Audit: Existing Links'
+                  : 'Select Evidence (DEBITs)'}
               </h3>
             </div>
           </div>
@@ -115,27 +124,35 @@ export function LinkedModeBody() {
                 </p>
               </div>
             ) : isAuditMode ? (
-                <div className='rounded-lg border p-4 bg-gray-50 dark:bg-gray-900'>
-                    <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>
-                        This transaction is fully cleansed. Review existing evidence links below.
-                    </p>
-                    <div className='space-y-2'>
-                        {selectedEvidence.map(ev => (
-                             <div key={ev.id} className='flex items-center justify-between p-3 border rounded dark:border-gray-800'>
-                                 <div className='min-w-0 flex-1'>
-                                   <p className='text-sm text-gray-700 dark:text-gray-300'>{ev.description}</p>
-                                   <p className='text-xs text-gray-500'>{formatCurrency(ev.amount)}</p>
-                                 </div>
-                                 <button
-                                    onClick={() => handleUnlink(ev.id)}
-                                    className='text-gray-400 hover:text-red-500 transition-colors'
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                             </div>
-                        ))}
+              <div className='rounded-lg border p-4 bg-gray-50 dark:bg-gray-900'>
+                <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>
+                  This transaction is fully cleansed. Review existing evidence
+                  links below.
+                </p>
+                <div className='space-y-2'>
+                  {selectedEvidence.map((ev) => (
+                    <div
+                      key={ev.id}
+                      className='flex items-center justify-between p-3 border rounded dark:border-gray-800'
+                    >
+                      <div className='min-w-0 flex-1'>
+                        <p className='text-sm text-gray-700 dark:text-gray-300'>
+                          {ev.description}
+                        </p>
+                        <p className='text-xs text-gray-500'>
+                          {formatCurrency(ev.amount)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleUnlink(ev.id)}
+                        className='text-gray-400 hover:text-red-500 transition-colors'
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
+                  ))}
                 </div>
+              </div>
             ) : (
               <CleansingCandidatePicker
                 creditId={selectedTransactionId}
@@ -143,7 +160,7 @@ export function LinkedModeBody() {
                 onSelect={(candidate) =>
                   handleToggleEvidence({
                     id: candidate.transactionId,
-                    amount: candidate.remainingAmount, 
+                    amount: candidate.remainingAmount,
                     description: candidate.description,
                     date: new Date(candidate.date),
                     score: candidate.matchPercent,
@@ -160,7 +177,7 @@ export function LinkedModeBody() {
         <h3 className='mb-3 text-sm font-medium text-gray-700 dark:text-gray-200 shrink-0'>
           {isAuditMode ? 'Existing Evidence' : 'Allocation Summary'}
         </h3>
-        
+
         <div className='mb-4 space-y-3 flex-1 overflow-hidden flex flex-col'>
           <div className='rounded-md bg-gray-50 p-3 dark:bg-gray-950 shrink-0'>
             <div className='flex justify-between text-xs text-gray-500 mb-1'>

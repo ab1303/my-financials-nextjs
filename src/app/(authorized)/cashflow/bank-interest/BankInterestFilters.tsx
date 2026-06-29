@@ -6,9 +6,9 @@ import { useId, useState } from 'react';
 import type { SingleValue } from 'react-select';
 
 import CalendarYearPicker from '@/components/CalendarYearPicker';
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
-import type { CalendarYearType,OptionType } from '@/types';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import type { CalendarYearType, OptionType } from '@/types';
 
 type BankInterestFiltersProps = {
   initialData: {
@@ -72,7 +72,9 @@ export default function BankInterestFilters({
           calendarYears={yearlyData}
           selectedYearId={yearIdParam || undefined}
           defaultType={defaultType}
-          onYearChange={(yearId) => updateURLSearchParams('year', yearId ?? undefined)}
+          onYearChange={(yearId) =>
+            updateURLSearchParams('year', yearId ?? undefined)
+          }
           label='Year'
         />
         <div className='flex flex-col space-y-1.5 flex-1 min-w-[280px]'>

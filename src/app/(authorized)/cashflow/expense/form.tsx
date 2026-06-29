@@ -1,14 +1,14 @@
 'use client';
 
 import type { CalendarEnumType } from '@prisma/client';
-import { usePathname, useRouter,useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId } from 'react';
 import type { SingleValue } from 'react-select';
 
 import CalendarYearPicker from '@/components/CalendarYearPicker';
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
-import type { CalendarYearType,OptionType } from '@/types';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import type { CalendarYearType, OptionType } from '@/types';
 
 type Props = {
   expenseYearData: Array<CalendarYearType>;
@@ -31,7 +31,7 @@ export default function ExpenseForm({
   const searchParams = useSearchParams();
 
   const selectedBank = selectedBankId
-    ? bankOptions.find((b) => b.id === selectedBankId) ?? null
+    ? (bankOptions.find((b) => b.id === selectedBankId) ?? null)
     : null;
 
   const updateURLSearchParams = (key: 'year' | 'bank', value?: string) => {

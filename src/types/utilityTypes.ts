@@ -13,6 +13,5 @@ export type ActionMap<M extends { [index: string]: unknown }> = {
       };
 };
 
-export type ActionMapUnion<T extends { [index: string]: unknown }> = ActionMap<
-  T
->[keyof ActionMap<T>];
+export type ActionMapUnion<T extends { [index: string]: unknown }> =
+  ActionMap<T>[keyof ActionMap<T>];

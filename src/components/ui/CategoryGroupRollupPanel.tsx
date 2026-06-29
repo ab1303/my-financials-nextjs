@@ -5,19 +5,37 @@ import { useMemo, useRef, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 import type { GroupBase, MultiValue } from 'react-select';
 
-import { DistributionWidget, type DistributionItem } from '@/components/ui/DistributionWidget';
+import {
+  type DistributionItem,
+  DistributionWidget,
+} from '@/components/ui/DistributionWidget';
 import { GroupCategoryPopover } from '@/components/ui/GroupCategoryPopover';
 import { GroupedCategorySelect } from '@/components/ui/GroupedCategorySelect';
-import { groupExpenseBreakdown, type GroupedBreakdown } from '@/lib/category-group-utils';
+import {
+  type GroupedBreakdown,
+  groupExpenseBreakdown,
+} from '@/lib/category-group-utils';
 import type { CategoryBreakdown } from '@/server/models/expense';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 import type { OptionType } from '@/types';
 
 const BAR_COLORS = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-400',
-  'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500',
-  'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500',
-  'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500',
+  'bg-red-500',
+  'bg-orange-500',
+  'bg-amber-500',
+  'bg-yellow-400',
+  'bg-lime-500',
+  'bg-green-500',
+  'bg-emerald-500',
+  'bg-teal-500',
+  'bg-cyan-500',
+  'bg-sky-500',
+  'bg-blue-500',
+  'bg-indigo-500',
+  'bg-violet-500',
+  'bg-purple-500',
+  'bg-fuchsia-500',
+  'bg-pink-500',
 ];
 
 const BADGE_COLORS = [
@@ -68,10 +86,14 @@ export function CategoryGroupRollupPanel({
   showFilterLabel = false,
   showEmptyGroups = false,
 }: Props) {
-  const [viewMode, setViewMode] = useState<'categories' | 'groups'>('categories');
+  const [viewMode, setViewMode] = useState<'categories' | 'groups'>(
+    'categories',
+  );
   const [expanded, setExpanded] = useState(false);
   const [filterOpen, setFilterOpen] = useState(defaultFilterOpen);
-  const [openPopoverGroupId, setOpenPopoverGroupId] = useState<string | null>(null);
+  const [openPopoverGroupId, setOpenPopoverGroupId] = useState<string | null>(
+    null,
+  );
   const groupBadgeRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scopedGroups = useMemo(
@@ -79,21 +101,18 @@ export function CategoryGroupRollupPanel({
     [categoryGroups, scope],
   );
   const hasGroups = scopedGroups.length > 0;
-  const sourceCategories = useMemo(
-    () => {
-      if (allCategories && allCategories.length > 0) {
-        return allCategories.map((category) => ({
-          id: category.id,
-          label: category.label,
-        }));
-      }
-      return breakdown.map((b) => ({
-        id: b.categoryId,
-        label: b.categoryName,
+  const sourceCategories = useMemo(() => {
+    if (allCategories && allCategories.length > 0) {
+      return allCategories.map((category) => ({
+        id: category.id,
+        label: category.label,
       }));
-    },
-    [allCategories, breakdown],
-  );
+    }
+    return breakdown.map((b) => ({
+      id: b.categoryId,
+      label: b.categoryName,
+    }));
+  }, [allCategories, breakdown]);
   const allCategoryIds = useMemo(
     () => sourceCategories.map((category) => category.id),
     [sourceCategories],
@@ -108,8 +127,8 @@ export function CategoryGroupRollupPanel({
     [breakdown, selectedCategoryIds],
   );
 
-  const distributionItems: (DistributionItem & CategoryBreakdown)[] = filteredBreakdown.map(
-    (item, i) => ({
+  const distributionItems: (DistributionItem & CategoryBreakdown)[] =
+    filteredBreakdown.map((item, i) => ({
       name: item.categoryName,
       total: item.amount,
       percentage: item.percentage,
@@ -117,27 +136,39 @@ export function CategoryGroupRollupPanel({
       categoryId: item.categoryId,
       categoryName: item.categoryName,
       amount: item.amount,
-    }),
-  );
+    }));
 
-  const visibleItems = expanded ? distributionItems : distributionItems.slice(0, 5);
+  const visibleItems = expanded
+    ? distributionItems
+    : distributionItems.slice(0, 5);
   const hiddenCount = distributionItems.length - 5;
 
   const groupedBreakdown = useMemo(() => {
-    const base = groupExpenseBreakdown(breakdown, scopedGroups, selectedCategoryIds);
+    const base = groupExpenseBreakdown(
+      breakdown,
+      scopedGroups,
+      selectedCategoryIds,
+    );
     if (!showEmptyGroups) return base;
 
     const existingGroupIds = new Set(
-      base.map((group) => group.groupId).filter((groupId): groupId is string => Boolean(groupId)),
+      base
+        .map((group) => group.groupId)
+        .filter((groupId): groupId is string => Boolean(groupId)),
     );
-    const selectedBreakdown = breakdown.filter((entry) => selectedCategoryIds.has(entry.categoryId));
+    const selectedBreakdown = breakdown.filter((entry) =>
+      selectedCategoryIds.has(entry.categoryId),
+    );
     const missingGroups = scopedGroups
       .filter((group) => !existingGroupIds.has(group.id))
       .map((group) => {
         const categories = selectedBreakdown.filter((entry) =>
           group.memberIds.includes(entry.categoryId),
         );
-        const totalAmount = categories.reduce((sum, entry) => sum + entry.amount, 0);
+        const totalAmount = categories.reduce(
+          (sum, entry) => sum + entry.amount,
+          0,
+        );
         return {
           groupId: group.id,
           groupName: group.name,
@@ -150,14 +181,13 @@ export function CategoryGroupRollupPanel({
     return [...base, ...missingGroups];
   }, [breakdown, scopedGroups, selectedCategoryIds, showEmptyGroups]);
 
-  const groupDistributionItems: (DistributionItem & GroupedBreakdown)[] = groupedBreakdown.map(
-    (g, i) => ({
+  const groupDistributionItems: (DistributionItem & GroupedBreakdown)[] =
+    groupedBreakdown.map((g, i) => ({
       ...g,
       name: g.groupName,
       total: g.totalAmount,
       color: BAR_COLORS[i % BAR_COLORS.length] ?? 'bg-gray-400',
-    }),
-  );
+    }));
 
   const groupedIds = new Set(scopedGroups.flatMap((g) => g.memberIds));
   const crossGroupOptions: GroupBase<OptionType>[] = useMemo(() => {
@@ -173,7 +203,8 @@ export function CategoryGroupRollupPanel({
     const ungrouped = sourceCategories
       .filter((category) => !groupedIds.has(category.id))
       .map((category) => ({ id: category.id, label: category.label }));
-    if (ungrouped.length > 0) grouped.push({ label: 'Ungrouped', options: ungrouped });
+    if (ungrouped.length > 0)
+      grouped.push({ label: 'Ungrouped', options: ungrouped });
     return grouped;
   }, [groupedIds, scopedGroups, sourceCategories]);
 
@@ -205,7 +236,10 @@ export function CategoryGroupRollupPanel({
             </button>
             <button
               type='button'
-              onClick={() => { setViewMode('groups'); setFilterOpen(false); }}
+              onClick={() => {
+                setViewMode('groups');
+                setFilterOpen(false);
+              }}
               className={`rounded px-2.5 py-0.5 text-xs font-medium transition-colors select-none cursor-default ${
                 viewMode === 'groups'
                   ? 'bg-card text-foreground shadow-sm'
@@ -289,7 +323,14 @@ export function CategoryGroupRollupPanel({
                 type='button'
                 className='rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors select-none cursor-default bg-muted/40 text-muted-foreground border-border'
               >
-                {item.categoryName} <NumericFormat value={item.total} displayType='text' thousandSeparator prefix='$' decimalScale={0} />
+                {item.categoryName}{' '}
+                <NumericFormat
+                  value={item.total}
+                  displayType='text'
+                  thousandSeparator
+                  prefix='$'
+                  decimalScale={0}
+                />
               </button>
             )}
           />
@@ -299,12 +340,20 @@ export function CategoryGroupRollupPanel({
                 type='button'
                 onClick={() => setExpanded((prev) => !prev)}
                 className='flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors'
-                aria-label={expanded ? 'Show fewer categories' : `Show ${hiddenCount} more categories`}
+                aria-label={
+                  expanded
+                    ? 'Show fewer categories'
+                    : `Show ${hiddenCount} more categories`
+                }
               >
                 {expanded ? (
-                  <><ChevronUp size={12} /> {hiddenCount} fewer</>
+                  <>
+                    <ChevronUp size={12} /> {hiddenCount} fewer
+                  </>
                 ) : (
-                  <><ChevronDown size={12} /> + {hiddenCount} more</>
+                  <>
+                    <ChevronDown size={12} /> + {hiddenCount} more
+                  </>
                 )}
               </button>
             )}
@@ -330,7 +379,9 @@ export function CategoryGroupRollupPanel({
               >
                 <button
                   type='button'
-                  onClick={() => setOpenPopoverGroupId(isOpen ? null : popoverId)}
+                  onClick={() =>
+                    setOpenPopoverGroupId(isOpen ? null : popoverId)
+                  }
                   className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
                     BADGE_COLORS[i % BADGE_COLORS.length] ?? ''
                   } border-transparent hover:border-current`}
@@ -342,7 +393,9 @@ export function CategoryGroupRollupPanel({
                   />
                   {g.groupName}
                   {selectedInGroup < totalInGroup && (
-                    <span className='opacity-70'>({selectedInGroup}/{totalInGroup})</span>
+                    <span className='opacity-70'>
+                      ({selectedInGroup}/{totalInGroup})
+                    </span>
                   )}
                   <NumericFormat
                     value={g.totalAmount}
@@ -351,10 +404,16 @@ export function CategoryGroupRollupPanel({
                     prefix='$'
                     decimalScale={0}
                   />
-                  <span className='opacity-60'>({g.percentage.toFixed(1)}%)</span>
+                  <span className='opacity-60'>
+                    ({g.percentage.toFixed(1)}%)
+                  </span>
                   <ChevronDown
                     size={10}
-                    className={isOpen ? 'rotate-180 transition-transform' : 'transition-transform'}
+                    className={
+                      isOpen
+                        ? 'rotate-180 transition-transform'
+                        : 'transition-transform'
+                    }
                   />
                 </button>
 

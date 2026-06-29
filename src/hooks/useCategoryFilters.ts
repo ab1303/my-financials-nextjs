@@ -36,7 +36,9 @@ export type CheckboxState = {
  */
 export function useCategoryFilters() {
   // Maps category ID -> selected state (true = selected)
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+    new Set(),
+  );
   // Use ref to store groups to avoid stale closure issues in useCallback
   // (ensures toggleGroup always uses the latest groups)
   const groupsRef = useRef<CategoryGroup[]>([]);
@@ -45,10 +47,13 @@ export function useCategoryFilters() {
    * Initialize the filter state based on provided category groups.
    * Resets all selections to unchecked.
    */
-  const buildInitialSelection = useCallback((categoryGroups: CategoryGroup[]) => {
-    groupsRef.current = categoryGroups;
-    setSelectedCategories(new Set());
-  }, []);
+  const buildInitialSelection = useCallback(
+    (categoryGroups: CategoryGroup[]) => {
+      groupsRef.current = categoryGroups;
+      setSelectedCategories(new Set());
+    },
+    [],
+  );
 
   /**
    * Toggle a single category by ID.
@@ -121,8 +126,9 @@ export function useCategoryFilters() {
         return { checked: false, indeterminate: false };
       }
 
-      const checkedCount = group.categories.filter((cat) => selectedCategories.has(cat.id))
-        .length;
+      const checkedCount = group.categories.filter((cat) =>
+        selectedCategories.has(cat.id),
+      ).length;
       const total = group.categories.length;
 
       if (checkedCount === 0) {
@@ -136,7 +142,7 @@ export function useCategoryFilters() {
       // Some but not all are checked
       return { checked: false, indeterminate: true };
     },
-    [selectedCategories]
+    [selectedCategories],
   );
 
   return {

@@ -59,13 +59,20 @@ export default function StockAssetsClient({ initialData }: Props) {
     ticker: string;
     snapshotId: string;
   } | null>(null);
-  const [addingToAccountId, setAddingToAccountId] = useState<string | null>(null);
-  const [editingSnapshotId, setEditingSnapshotId] = useState<string | null>(null);
+  const [addingToAccountId, setAddingToAccountId] = useState<string | null>(
+    null,
+  );
+  const [editingSnapshotId, setEditingSnapshotId] = useState<string | null>(
+    null,
+  );
 
   // Grouping toggle state — persisted to localStorage
   const [groupBy, setGroupBy] = useState<'currency' | 'brokerage'>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('stockGroupBy') as 'currency' | 'brokerage') ?? 'currency';
+      return (
+        (localStorage.getItem('stockGroupBy') as 'currency' | 'brokerage') ??
+        'currency'
+      );
     }
     return 'currency';
   });
@@ -116,8 +123,10 @@ export default function StockAssetsClient({ initialData }: Props) {
   // Fetch brokerage accounts and institutions
   const { data: brokerageAccounts = [], refetch: refetchBrokerageAccounts } =
     trpc.stockAsset.getBrokerageAccounts.useQuery();
-  const { data: brokerageInstitutions = [], refetch: refetchBrokerageInstitutions } =
-    trpc.business.getBrokeragesWithAccounts.useQuery();
+  const {
+    data: brokerageInstitutions = [],
+    refetch: refetchBrokerageInstitutions,
+  } = trpc.business.getBrokeragesWithAccounts.useQuery();
 
   // Fetch snapshots for selected year
   const {
@@ -288,7 +297,14 @@ export default function StockAssetsClient({ initialData }: Props) {
 
     const map = new Map<
       CurrencyEnumType,
-      Map<string, { accountId: string; accountName: string; holdings: StockHoldingWithAccount[] }>
+      Map<
+        string,
+        {
+          accountId: string;
+          accountName: string;
+          holdings: StockHoldingWithAccount[];
+        }
+      >
     >();
 
     for (const holding of selectedSnap.holdings) {
@@ -298,7 +314,8 @@ export default function StockAssetsClient({ initialData }: Props) {
 
       if (!map.has(currency)) map.set(currency, new Map());
       const acctMap = map.get(currency)!;
-      if (!acctMap.has(accountId)) acctMap.set(accountId, { accountId, accountName, holdings: [] });
+      if (!acctMap.has(accountId))
+        acctMap.set(accountId, { accountId, accountName, holdings: [] });
       acctMap.get(accountId)!.holdings.push(holding);
     }
 
@@ -339,7 +356,11 @@ export default function StockAssetsClient({ initialData }: Props) {
 
     const map = new Map<
       string,
-      { accountId: string; accountName: string; currencies: Map<CurrencyEnumType, StockHoldingWithAccount[]> }
+      {
+        accountId: string;
+        accountName: string;
+        currencies: Map<CurrencyEnumType, StockHoldingWithAccount[]>;
+      }
     >();
 
     for (const holding of selectedSnap.holdings) {
@@ -347,7 +368,8 @@ export default function StockAssetsClient({ initialData }: Props) {
       const accountName = `${holding.account.institution.name} — ${holding.account.name}`;
       const currency = holding.currency;
 
-      if (!map.has(accountId)) map.set(accountId, { accountId, accountName, currencies: new Map() });
+      if (!map.has(accountId))
+        map.set(accountId, { accountId, accountName, currencies: new Map() });
       const entry = map.get(accountId)!;
       if (!entry.currencies.has(currency)) entry.currencies.set(currency, []);
       entry.currencies.get(currency)!.push(holding);
@@ -413,7 +435,7 @@ export default function StockAssetsClient({ initialData }: Props) {
           <h2 className='text-lg font-semibold text-foreground'>
             Stock Holdings
           </h2>
-          
+
           {/* Controls: Toggles on left, Actions on right */}
           <div className='flex justify-between items-center gap-4'>
             {/* Toggles (left side) */}
@@ -443,7 +465,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                 </button>
               </div>
             )}
-            
+
             {/* Actions (right side) */}
             <div className='flex gap-2 items-center ml-auto'>
               <Button
@@ -535,243 +557,373 @@ export default function StockAssetsClient({ initialData }: Props) {
           </div>
         ) : (
           <div className='space-y-6'>
-            {groupBy === 'currency' ? (
-              /* ── Currency View: currency sections → brokerage accordions ── */
-              currencyGroups.map((currencyGroup) => {
-                const flag = currencyGroup.currency === 'AUD' ? '🇦🇺' : '🇺🇸';
-                return (
-                  <div key={currencyGroup.currency} className='space-y-3'>
-                    {/* Currency section header */}
-                    <div className='px-2 py-2 border-b-2 border-border'>
-                      <div className='flex items-center justify-between'>
-                        <h3 className='text-base font-semibold text-foreground'>
-                          {flag} {currencyGroup.currency} Holdings
-                        </h3>
-                        <div className='flex items-center gap-6 text-sm'>
-                          <div className='text-right'>
-                            <p className='text-xs text-muted-foreground'>Invested</p>
-                            <p className='font-medium text-foreground'>
-                              {formatCurrency(currencyGroup.totalCostBasis, currencyGroup.currency)}
-                            </p>
-                          </div>
-                          <div className='text-right'>
-                            <p className='text-xs text-muted-foreground'>Current</p>
-                            <p className='font-medium text-foreground'>
-                              {formatCurrency(currencyGroup.totalMarketValue, currencyGroup.currency)}
-                            </p>
-                          </div>
-                          <div className='text-right'>
-                            <p className='text-xs text-muted-foreground'>P/L</p>
-                            <p className={clsx('font-semibold', getPLColorClass(currencyGroup.totalUnrealizedPL))}>
-                              {currencyGroup.totalUnrealizedPL >= 0 ? '+' : ''}
-                              {formatCurrency(currencyGroup.totalUnrealizedPL, currencyGroup.currency)}
-                            </p>
+            {groupBy === 'currency'
+              ? /* ── Currency View: currency sections → brokerage accordions ── */
+                currencyGroups.map((currencyGroup) => {
+                  const flag = currencyGroup.currency === 'AUD' ? '🇦🇺' : '🇺🇸';
+                  return (
+                    <div key={currencyGroup.currency} className='space-y-3'>
+                      {/* Currency section header */}
+                      <div className='px-2 py-2 border-b-2 border-border'>
+                        <div className='flex items-center justify-between'>
+                          <h3 className='text-base font-semibold text-foreground'>
+                            {flag} {currencyGroup.currency} Holdings
+                          </h3>
+                          <div className='flex items-center gap-6 text-sm'>
+                            <div className='text-right'>
+                              <p className='text-xs text-muted-foreground'>
+                                Invested
+                              </p>
+                              <p className='font-medium text-foreground'>
+                                {formatCurrency(
+                                  currencyGroup.totalCostBasis,
+                                  currencyGroup.currency,
+                                )}
+                              </p>
+                            </div>
+                            <div className='text-right'>
+                              <p className='text-xs text-muted-foreground'>
+                                Current
+                              </p>
+                              <p className='font-medium text-foreground'>
+                                {formatCurrency(
+                                  currencyGroup.totalMarketValue,
+                                  currencyGroup.currency,
+                                )}
+                              </p>
+                            </div>
+                            <div className='text-right'>
+                              <p className='text-xs text-muted-foreground'>
+                                P/L
+                              </p>
+                              <p
+                                className={clsx(
+                                  'font-semibold',
+                                  getPLColorClass(
+                                    currencyGroup.totalUnrealizedPL,
+                                  ),
+                                )}
+                              >
+                                {currencyGroup.totalUnrealizedPL >= 0
+                                  ? '+'
+                                  : ''}
+                                {formatCurrency(
+                                  currencyGroup.totalUnrealizedPL,
+                                  currencyGroup.currency,
+                                )}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      {currencyGroup.currency === 'USD' && totals?.usdToAudRate && (
-                        <p className='text-xs text-muted-foreground mt-1 text-right'>
-                          ≈ {formatCurrency(currencyGroup.totalMarketValue * totals.usdToAudRate, 'AUD')} AUD
-                          <span className='ml-2 opacity-70'>
-                            (1 USD = {Number(totals.usdToAudRate).toFixed(4)} AUD)
-                          </span>
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Brokerage account accordions within this currency */}
-                    {currencyGroup.accounts.map((account) => (
-                      <Disclosure key={`${currencyGroup.currency}-${account.accountId}`} defaultOpen>
-                        {({ open }) => (
-                          <div className='border border-border rounded-lg overflow-hidden'>
-                            <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/50 transition-colors'>
-                              <div className='flex items-center gap-4'>
-                                <ChevronDown
-                                  className={clsx(
-                                    'w-5 h-5 text-muted-foreground transition-transform',
-                                    open && 'rotate-180',
-                                  )}
-                                />
-                                <span className='text-base font-semibold text-foreground'>
-                                  {account.accountName}
-                                </span>
-                              </div>
-                              <span className='text-sm text-muted-foreground'>
-                                {formatCurrency(account.totalMarketValue, currencyGroup.currency)}
+                        {currencyGroup.currency === 'USD' &&
+                          totals?.usdToAudRate && (
+                            <p className='text-xs text-muted-foreground mt-1 text-right'>
+                              ≈{' '}
+                              {formatCurrency(
+                                currencyGroup.totalMarketValue *
+                                  totals.usdToAudRate,
+                                'AUD',
+                              )}{' '}
+                              AUD
+                              <span className='ml-2 opacity-70'>
+                                (1 USD ={' '}
+                                {Number(totals.usdToAudRate).toFixed(4)} AUD)
                               </span>
-                            </Disclosure.Button>
-                            <Disclosure.Panel className='px-6 py-4 bg-card'>
-                              <HoldingsTable
-                                holdings={account.holdings}
-                                snapshotDate={snapshotDate}
-                                snapshotId={selectedSnapshotId ?? ''}
-                                accountId={account.accountId}
-                                onEdit={(holding) => {
-                                  setEditingHolding(holding);
-                                  setIsHoldingFormModalOpen(true);
-                                }}
-                                onDeleteConfirm={(holdingId, ticker, sid) =>
-                                  setDeleteHoldingConfirm({ holdingId, ticker, snapshotId: sid })
-                                }
-                                onAddHolding={handleAddHolding}
-                              />
-                            </Disclosure.Panel>
-                          </div>
-                        )}
-                      </Disclosure>
-                    ))}
-
-                    {/* Cash Balances for this currency */}
-                    {(() => {
-                      const cashForCurrency = totals?.cashBalances?.filter(cb => cb.currency === currencyGroup.currency) ?? [];
-                      if (cashForCurrency.length === 0) return null;
-                      return (
-                        <div className='mt-2 p-4 border border-border rounded-lg bg-amber-50 dark:bg-amber-950/20'>
-                          <h4 className='text-sm font-semibold text-foreground mb-3'>
-                            💰 Idle Cash ({currencyGroup.currency})
-                          </h4>
-                          <div className='space-y-2'>
-                            {cashForCurrency.map(cb => (
-                              <div key={cb.accountId} className='flex justify-between items-center text-sm'>
-                                <span className='text-muted-foreground'>{cb.accountName}</span>
-                                <span className='font-medium text-foreground'>{formatCurrency(cb.amount, cb.currency as any)}</span>
-                              </div>
-                            ))}
-                            {cashForCurrency.length > 1 && (
-                              <div className='flex justify-between items-center text-sm pt-2 border-t border-border'>
-                                <span className='font-semibold text-foreground'>Total Cash</span>
-                                <span className='font-bold text-foreground'>
-                                  {formatCurrency(cashForCurrency.reduce((s, cb) => s + cb.amount, 0), currencyGroup.currency as any)}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          {currencyGroup.currency === 'USD' && totals?.usdToAudRate && (
-                            <p className='text-xs text-muted-foreground mt-2'>
-                              ≈ {formatCurrency(cashForCurrency.reduce((s, cb) => s + cb.amount, 0) * totals.usdToAudRate, 'AUD')} AUD
                             </p>
                           )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                );
-              })
-            ) : (
-              /* ── Brokerage View: brokerage accordions → currency sub-sections ── */
-              brokerageGroups.map((brokerageGroup) => (
-                <Disclosure key={brokerageGroup.accountId} defaultOpen>
-                  {({ open }) => (
-                    <div className='border border-border rounded-lg overflow-hidden'>
-                      <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/50 transition-colors'>
-                        <div className='flex items-center gap-4'>
-                          <ChevronDown
-                            className={clsx(
-                              'w-5 h-5 text-muted-foreground transition-transform',
-                              open && 'rotate-180',
-                            )}
-                          />
-                          <span className='text-base font-semibold text-foreground'>
-                            {brokerageGroup.accountName}
-                          </span>
-                        </div>
-                      </Disclosure.Button>
+                      </div>
 
-                      <Disclosure.Panel className='px-6 py-4 bg-card space-y-6'>
-                        {brokerageGroup.currencies.map((currencySection) => {
-                          const flag = currencySection.currency === 'AUD' ? '🇦🇺' : '🇺🇸';
-                          return (
-                            <div key={currencySection.currency}>
-                              {/* Currency sub-header */}
-                              <div className='mb-3 pb-1 border-b border-border'>
-                                <div className='flex items-center justify-between'>
-                                  <span className='text-sm font-semibold text-foreground'>
-                                    {flag} {currencySection.currency}
+                      {/* Brokerage account accordions within this currency */}
+                      {currencyGroup.accounts.map((account) => (
+                        <Disclosure
+                          key={`${currencyGroup.currency}-${account.accountId}`}
+                          defaultOpen
+                        >
+                          {({ open }) => (
+                            <div className='border border-border rounded-lg overflow-hidden'>
+                              <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/50 transition-colors'>
+                                <div className='flex items-center gap-4'>
+                                  <ChevronDown
+                                    className={clsx(
+                                      'w-5 h-5 text-muted-foreground transition-transform',
+                                      open && 'rotate-180',
+                                    )}
+                                  />
+                                  <span className='text-base font-semibold text-foreground'>
+                                    {account.accountName}
                                   </span>
-                                  <div className='flex items-center gap-4 text-sm'>
-                                    <div className='text-right'>
-                                      <p className='text-xs text-muted-foreground'>Invested</p>
-                                      <p className='font-medium text-foreground'>
-                                        {formatCurrency(currencySection.totalCostBasis, currencySection.currency)}
-                                      </p>
-                                    </div>
-                                    <div className='text-right'>
-                                      <p className='text-xs text-muted-foreground'>Current</p>
-                                      <p className='font-medium text-foreground'>
-                                        {formatCurrency(currencySection.totalMarketValue, currencySection.currency)}
-                                      </p>
-                                    </div>
-                                    <div className='text-right'>
-                                      <p className='text-xs text-muted-foreground'>P/L</p>
-                                      <p className={clsx('font-semibold', getPLColorClass(currencySection.totalUnrealizedPL))}>
-                                        {currencySection.totalUnrealizedPL >= 0 ? '+' : ''}
-                                        {formatCurrency(currencySection.totalUnrealizedPL, currencySection.currency)}
-                                      </p>
-                                    </div>
-                                  </div>
                                 </div>
-                                {currencySection.currency === 'USD' && totals?.usdToAudRate && (
-                                  <p className='text-xs text-muted-foreground mt-1 text-right'>
-                                    ≈ {formatCurrency(currencySection.totalMarketValue * totals.usdToAudRate, 'AUD')} AUD
-                                    <span className='ml-2 opacity-70'>
-                                      (1 USD = {Number(totals.usdToAudRate).toFixed(4)} AUD)
-                                    </span>
-                                  </p>
-                                )}
-                              </div>
-                              <HoldingsTable
-                                holdings={currencySection.holdings}
-                                snapshotDate={snapshotDate}
-                                snapshotId={selectedSnapshotId ?? ''}
-                                accountId={brokerageGroup.accountId}
-                                onEdit={(holding) => {
-                                  setEditingHolding(holding);
-                                  setIsHoldingFormModalOpen(true);
-                                }}
-                                onDeleteConfirm={(holdingId, ticker, sid) =>
-                                  setDeleteHoldingConfirm({ holdingId, ticker, snapshotId: sid })
-                                }
-                                onAddHolding={handleAddHolding}
-                              />
+                                <span className='text-sm text-muted-foreground'>
+                                  {formatCurrency(
+                                    account.totalMarketValue,
+                                    currencyGroup.currency,
+                                  )}
+                                </span>
+                              </Disclosure.Button>
+                              <Disclosure.Panel className='px-6 py-4 bg-card'>
+                                <HoldingsTable
+                                  holdings={account.holdings}
+                                  snapshotDate={snapshotDate}
+                                  snapshotId={selectedSnapshotId ?? ''}
+                                  accountId={account.accountId}
+                                  onEdit={(holding) => {
+                                    setEditingHolding(holding);
+                                    setIsHoldingFormModalOpen(true);
+                                  }}
+                                  onDeleteConfirm={(holdingId, ticker, sid) =>
+                                    setDeleteHoldingConfirm({
+                                      holdingId,
+                                      ticker,
+                                      snapshotId: sid,
+                                    })
+                                  }
+                                  onAddHolding={handleAddHolding}
+                                />
+                              </Disclosure.Panel>
                             </div>
-                          );
-                        })}
+                          )}
+                        </Disclosure>
+                      ))}
 
-                        {/* Cash Balances for this brokerage */}
-                        {(() => {
-                          const cashForBrokerage = totals?.cashBalances?.filter(cb => cb.accountId === brokerageGroup.accountId) ?? [];
-                          if (cashForBrokerage.length === 0) return null;
-                          return (
-                            <div className='mt-2 p-4 border border-border rounded-lg bg-amber-50 dark:bg-amber-950/20'>
-                              <h4 className='text-sm font-semibold text-foreground mb-3'>
-                                💰 Idle Cash Balances
-                              </h4>
-                              <div className='space-y-2'>
-                                {cashForBrokerage.map(cb => (
-                                  <div key={`${cb.accountId}-${cb.currency}`} className='flex justify-between items-center text-sm'>
-                                    <span className='text-muted-foreground flex items-center gap-1'>
-                                      {cb.currency === 'AUD' ? '🇦🇺' : '🇺🇸'} {cb.currency}
+                      {/* Cash Balances for this currency */}
+                      {(() => {
+                        const cashForCurrency =
+                          totals?.cashBalances?.filter(
+                            (cb) => cb.currency === currencyGroup.currency,
+                          ) ?? [];
+                        if (cashForCurrency.length === 0) return null;
+                        return (
+                          <div className='mt-2 p-4 border border-border rounded-lg bg-amber-50 dark:bg-amber-950/20'>
+                            <h4 className='text-sm font-semibold text-foreground mb-3'>
+                              💰 Idle Cash ({currencyGroup.currency})
+                            </h4>
+                            <div className='space-y-2'>
+                              {cashForCurrency.map((cb) => (
+                                <div
+                                  key={cb.accountId}
+                                  className='flex justify-between items-center text-sm'
+                                >
+                                  <span className='text-muted-foreground'>
+                                    {cb.accountName}
+                                  </span>
+                                  <span className='font-medium text-foreground'>
+                                    {formatCurrency(
+                                      cb.amount,
+                                      cb.currency as any,
+                                    )}
+                                  </span>
+                                </div>
+                              ))}
+                              {cashForCurrency.length > 1 && (
+                                <div className='flex justify-between items-center text-sm pt-2 border-t border-border'>
+                                  <span className='font-semibold text-foreground'>
+                                    Total Cash
+                                  </span>
+                                  <span className='font-bold text-foreground'>
+                                    {formatCurrency(
+                                      cashForCurrency.reduce(
+                                        (s, cb) => s + cb.amount,
+                                        0,
+                                      ),
+                                      currencyGroup.currency as any,
+                                    )}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {currencyGroup.currency === 'USD' &&
+                              totals?.usdToAudRate && (
+                                <p className='text-xs text-muted-foreground mt-2'>
+                                  ≈{' '}
+                                  {formatCurrency(
+                                    cashForCurrency.reduce(
+                                      (s, cb) => s + cb.amount,
+                                      0,
+                                    ) * totals.usdToAudRate,
+                                    'AUD',
+                                  )}{' '}
+                                  AUD
+                                </p>
+                              )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                })
+              : /* ── Brokerage View: brokerage accordions → currency sub-sections ── */
+                brokerageGroups.map((brokerageGroup) => (
+                  <Disclosure key={brokerageGroup.accountId} defaultOpen>
+                    {({ open }) => (
+                      <div className='border border-border rounded-lg overflow-hidden'>
+                        <Disclosure.Button className='flex justify-between items-center w-full px-6 py-4 bg-muted hover:bg-muted/50 transition-colors'>
+                          <div className='flex items-center gap-4'>
+                            <ChevronDown
+                              className={clsx(
+                                'w-5 h-5 text-muted-foreground transition-transform',
+                                open && 'rotate-180',
+                              )}
+                            />
+                            <span className='text-base font-semibold text-foreground'>
+                              {brokerageGroup.accountName}
+                            </span>
+                          </div>
+                        </Disclosure.Button>
+
+                        <Disclosure.Panel className='px-6 py-4 bg-card space-y-6'>
+                          {brokerageGroup.currencies.map((currencySection) => {
+                            const flag =
+                              currencySection.currency === 'AUD' ? '🇦🇺' : '🇺🇸';
+                            return (
+                              <div key={currencySection.currency}>
+                                {/* Currency sub-header */}
+                                <div className='mb-3 pb-1 border-b border-border'>
+                                  <div className='flex items-center justify-between'>
+                                    <span className='text-sm font-semibold text-foreground'>
+                                      {flag} {currencySection.currency}
                                     </span>
-                                    <div className='text-right'>
-                                      <span className='font-medium text-foreground'>{formatCurrency(cb.amount, cb.currency as any)}</span>
-                                      {cb.currency === 'USD' && totals?.usdToAudRate && (
+                                    <div className='flex items-center gap-4 text-sm'>
+                                      <div className='text-right'>
                                         <p className='text-xs text-muted-foreground'>
-                                          ≈ {formatCurrency(cb.amount * totals.usdToAudRate, 'AUD')} AUD
+                                          Invested
                                         </p>
-                                      )}
+                                        <p className='font-medium text-foreground'>
+                                          {formatCurrency(
+                                            currencySection.totalCostBasis,
+                                            currencySection.currency,
+                                          )}
+                                        </p>
+                                      </div>
+                                      <div className='text-right'>
+                                        <p className='text-xs text-muted-foreground'>
+                                          Current
+                                        </p>
+                                        <p className='font-medium text-foreground'>
+                                          {formatCurrency(
+                                            currencySection.totalMarketValue,
+                                            currencySection.currency,
+                                          )}
+                                        </p>
+                                      </div>
+                                      <div className='text-right'>
+                                        <p className='text-xs text-muted-foreground'>
+                                          P/L
+                                        </p>
+                                        <p
+                                          className={clsx(
+                                            'font-semibold',
+                                            getPLColorClass(
+                                              currencySection.totalUnrealizedPL,
+                                            ),
+                                          )}
+                                        >
+                                          {currencySection.totalUnrealizedPL >=
+                                          0
+                                            ? '+'
+                                            : ''}
+                                          {formatCurrency(
+                                            currencySection.totalUnrealizedPL,
+                                            currencySection.currency,
+                                          )}
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
-                                ))}
+                                  {currencySection.currency === 'USD' &&
+                                    totals?.usdToAudRate && (
+                                      <p className='text-xs text-muted-foreground mt-1 text-right'>
+                                        ≈{' '}
+                                        {formatCurrency(
+                                          currencySection.totalMarketValue *
+                                            totals.usdToAudRate,
+                                          'AUD',
+                                        )}{' '}
+                                        AUD
+                                        <span className='ml-2 opacity-70'>
+                                          (1 USD ={' '}
+                                          {Number(totals.usdToAudRate).toFixed(
+                                            4,
+                                          )}{' '}
+                                          AUD)
+                                        </span>
+                                      </p>
+                                    )}
+                                </div>
+                                <HoldingsTable
+                                  holdings={currencySection.holdings}
+                                  snapshotDate={snapshotDate}
+                                  snapshotId={selectedSnapshotId ?? ''}
+                                  accountId={brokerageGroup.accountId}
+                                  onEdit={(holding) => {
+                                    setEditingHolding(holding);
+                                    setIsHoldingFormModalOpen(true);
+                                  }}
+                                  onDeleteConfirm={(holdingId, ticker, sid) =>
+                                    setDeleteHoldingConfirm({
+                                      holdingId,
+                                      ticker,
+                                      snapshotId: sid,
+                                    })
+                                  }
+                                  onAddHolding={handleAddHolding}
+                                />
                               </div>
-                            </div>
-                          );
-                        })()}
-                      </Disclosure.Panel>
-                    </div>
-                  )}
-                </Disclosure>
-              ))
-            )}
+                            );
+                          })}
+
+                          {/* Cash Balances for this brokerage */}
+                          {(() => {
+                            const cashForBrokerage =
+                              totals?.cashBalances?.filter(
+                                (cb) =>
+                                  cb.accountId === brokerageGroup.accountId,
+                              ) ?? [];
+                            if (cashForBrokerage.length === 0) return null;
+                            return (
+                              <div className='mt-2 p-4 border border-border rounded-lg bg-amber-50 dark:bg-amber-950/20'>
+                                <h4 className='text-sm font-semibold text-foreground mb-3'>
+                                  💰 Idle Cash Balances
+                                </h4>
+                                <div className='space-y-2'>
+                                  {cashForBrokerage.map((cb) => (
+                                    <div
+                                      key={`${cb.accountId}-${cb.currency}`}
+                                      className='flex justify-between items-center text-sm'
+                                    >
+                                      <span className='text-muted-foreground flex items-center gap-1'>
+                                        {cb.currency === 'AUD' ? '🇦🇺' : '🇺🇸'}{' '}
+                                        {cb.currency}
+                                      </span>
+                                      <div className='text-right'>
+                                        <span className='font-medium text-foreground'>
+                                          {formatCurrency(
+                                            cb.amount,
+                                            cb.currency as any,
+                                          )}
+                                        </span>
+                                        {cb.currency === 'USD' &&
+                                          totals?.usdToAudRate && (
+                                            <p className='text-xs text-muted-foreground'>
+                                              ≈{' '}
+                                              {formatCurrency(
+                                                cb.amount * totals.usdToAudRate,
+                                                'AUD',
+                                              )}{' '}
+                                              AUD
+                                            </p>
+                                          )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </Disclosure.Panel>
+                      </div>
+                    )}
+                  </Disclosure>
+                ))}
           </div>
         )}
       </div>

@@ -2,12 +2,12 @@
 
 import type { CalendarEnumType } from '@prisma/client';
 import type { ReactNode } from 'react';
-import { useId,useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import type { SingleValue } from 'react-select';
 
-import { SelectWrapper as Select } from '@/components/ui/Select';
 import { Label } from '@/components/ui/Label';
-import type { CalendarYearType,OptionType } from '@/types';
+import { SelectWrapper as Select } from '@/components/ui/Select';
+import type { CalendarYearType, OptionType } from '@/types';
 
 import CalendarTypeSwatch from './CalendarTypeSwatch';
 import type { CalendarYearContextValue } from './context';
@@ -60,8 +60,11 @@ function Provider({
   children,
 }: ProviderProps) {
   const labelId = useId();
-  const initialType = (defaultType ?? applicableTypes[0] ?? 'FISCAL') as CalendarEnumType;
-  const [selectedType, setSelectedType] = useState<CalendarEnumType>(initialType);
+  const initialType = (defaultType ??
+    applicableTypes[0] ??
+    'FISCAL') as CalendarEnumType;
+  const [selectedType, setSelectedType] =
+    useState<CalendarEnumType>(initialType);
 
   const handleTypeChange = (type: CalendarEnumType) => {
     setSelectedType(type);
@@ -78,14 +81,23 @@ function Provider({
   );
 
   const selectedOption = useMemo(
-    () => (selectedYearId ? (yearOptions.find((o) => o.id === selectedYearId) ?? null) : null),
+    () =>
+      selectedYearId
+        ? (yearOptions.find((o) => o.id === selectedYearId) ?? null)
+        : null,
     [selectedYearId, yearOptions],
   );
 
   const displayLabel = label ?? FIELD_LABELS[selectedType];
 
   const value: CalendarYearContextValue = {
-    state: { selectedType, applicableTypes, yearOptions, selectedOption, displayLabel },
+    state: {
+      selectedType,
+      applicableTypes,
+      yearOptions,
+      selectedOption,
+      displayLabel,
+    },
     actions: { onTypeChange: handleTypeChange, onYearChange },
     labelId,
   };
@@ -96,7 +108,13 @@ function Provider({
 // ─── Root — layout shell ──────────────────────────────────────────────────────
 
 /** Flex row container; compose TypeControl + YearSelect (and anything else) inside. */
-function Root({ className, children }: { className?: string; children: ReactNode }) {
+function Root({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
   return (
     <div className={`flex items-center gap-2 ${className ?? ''}`}>
       {children}
@@ -108,7 +126,10 @@ function Root({ className, children }: { className?: string; children: ReactNode
 
 /** Reads types + selectedType from context; delegates rendering to CalendarTypeSwatch. */
 function TypeControl({ className }: { className?: string }) {
-  const { state: { selectedType, applicableTypes }, actions } = useCalendarYearContext();
+  const {
+    state: { selectedType, applicableTypes },
+    actions,
+  } = useCalendarYearContext();
   return (
     <CalendarTypeSwatch
       types={applicableTypes}
@@ -123,13 +144,16 @@ function TypeControl({ className }: { className?: string }) {
 
 /** Reads year options + selected value from context; renders a compact inline AppSelect. */
 function YearSelect({ className }: { className?: string }) {
-  const { state: { yearOptions, selectedOption, displayLabel }, actions, labelId } =
-    useCalendarYearContext();
+  const {
+    state: { yearOptions, selectedOption, displayLabel },
+    actions,
+    labelId,
+  } = useCalendarYearContext();
 
   return (
     <>
       {/* sr-only keeps accessible labelling without cluttering the visual layout */}
-      <Label htmlFor={labelId} className="sr-only">
+      <Label htmlFor={labelId} className='sr-only'>
         {displayLabel}
       </Label>
       <Select<OptionType>
@@ -137,9 +161,11 @@ function YearSelect({ className }: { className?: string }) {
         inputId={labelId}
         options={yearOptions}
         value={selectedOption}
-        onChange={(option: SingleValue<OptionType>) => actions.onYearChange(option?.id ?? null)}
+        onChange={(option: SingleValue<OptionType>) =>
+          actions.onYearChange(option?.id ?? null)
+        }
         isClearable
-        placeholder="Select year…"
+        placeholder='Select year…'
         className={`min-w-[200px] max-w-[260px] ${className ?? ''}`}
         getOptionValue={(opt) => opt.id}
         getOptionLabel={(opt) => opt.label}
@@ -165,8 +191,16 @@ function YearSelect({ className }: { className?: string }) {
  * ```
  */
 function CalendarYearPickerDefault(props: CalendarYearPickerProps) {
-  const { applicableTypes, calendarYears, selectedYearId, defaultType,
-          onYearChange, onTypeChange, label, className } = props;
+  const {
+    applicableTypes,
+    calendarYears,
+    selectedYearId,
+    defaultType,
+    onYearChange,
+    onTypeChange,
+    label,
+    className,
+  } = props;
   return (
     <Provider
       applicableTypes={applicableTypes}

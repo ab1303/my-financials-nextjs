@@ -7,7 +7,11 @@ export default function SpecialCategories() {
   const { data: categories = [] } = trpc.specialCategory.getAll.useQuery();
 
   if (!categories.length) {
-    return <p className='text-sm text-muted-foreground'>No special categories available.</p>;
+    return (
+      <p className='text-sm text-muted-foreground'>
+        No special categories available.
+      </p>
+    );
   }
 
   return (
@@ -35,11 +39,13 @@ export default function SpecialCategories() {
                   className='h-3 w-3 rounded-full border border-border'
                   style={{ backgroundColor: category.color }}
                   title={`Color: ${category.color}`}
-                  aria-hidden="true"
+                  aria-hidden='true'
                 />
               )}
             </div>
-            <p className='mt-1 text-sm text-muted-foreground'>{category.description}</p>
+            <p className='mt-1 text-sm text-muted-foreground'>
+              {category.description}
+            </p>
           </div>
         </div>
       ))}

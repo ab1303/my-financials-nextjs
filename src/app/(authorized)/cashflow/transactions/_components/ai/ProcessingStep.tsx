@@ -19,7 +19,9 @@ export default function ProcessingStep({
   onComplete,
   context,
 }: ProcessingStepProps) {
-  const [extractedImages, setExtractedImages] = useState<ExtractedImageResult[]>([]);
+  const [extractedImages, setExtractedImages] = useState<
+    ExtractedImageResult[]
+  >([]);
   const [overallProgress, setOverallProgress] = useState(0);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -121,10 +123,12 @@ export default function ProcessingStep({
                   imageId: validatedEvent.imageId,
                   fileName: '',
                   confidence: validatedEvent.confidence,
-                  entries: ((validatedEvent.entries as Array<{
-                    categoryName: string;
-                    amount: number;
-                  }>) ?? []).map((e, i) => ({
+                  entries: (
+                    (validatedEvent.entries as Array<{
+                      categoryName: string;
+                      amount: number;
+                    }>) ?? []
+                  ).map((e, i) => ({
                     id: String(i),
                     categoryName: e.categoryName,
                     amount: e.amount,
@@ -152,7 +156,8 @@ export default function ProcessingStep({
                       {
                         imageId: validatedEvent.imageId,
                         fileName:
-                          uploadedFileNameById.get(validatedEvent.imageId) ?? '',
+                          uploadedFileNameById.get(validatedEvent.imageId) ??
+                          '',
                         confidence: 0,
                         entries: [],
                         status: 'failed' as const,
@@ -182,7 +187,9 @@ export default function ProcessingStep({
                 });
 
                 const nextImages =
-                  mergedImages.length > 0 ? mergedImages : currentExtractedImages;
+                  mergedImages.length > 0
+                    ? mergedImages
+                    : currentExtractedImages;
 
                 updateImages(nextImages);
                 if (!cancelled) {
@@ -195,7 +202,8 @@ export default function ProcessingStep({
           }
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Processing failed';
+        const message =
+          err instanceof Error ? err.message : 'Processing failed';
         if (!cancelled) {
           setError(message);
         }
@@ -266,7 +274,9 @@ export default function ProcessingStep({
                     {result.entries.length} entries extracted
                   </p>
                   {result.status === 'failed' && result.errorMessage && (
-                    <p className='text-xs text-red-600'>{result.errorMessage}</p>
+                    <p className='text-xs text-red-600'>
+                      {result.errorMessage}
+                    </p>
                   )}
                 </div>
               </div>

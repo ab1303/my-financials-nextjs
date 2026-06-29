@@ -12,7 +12,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { castDraft,produce } from 'immer';
+import { castDraft, produce } from 'immer';
 import {
   Loader2,
   Pen,
@@ -22,10 +22,10 @@ import {
   TrendingUp,
   Undo2,
 } from 'lucide-react';
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button,Card } from '@/components';
+import { Button, Card } from '@/components';
 import Table from '@/components/table';
 import { Label, TextInput } from '@/components/ui';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';

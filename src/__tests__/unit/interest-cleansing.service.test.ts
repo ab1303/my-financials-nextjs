@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import {
-  getYearlyCleansingData,
   applyAllocations,
+  getYearlyCleansingData,
 } from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 describe('interest-cleansing.service', () => {
@@ -33,7 +33,11 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify dateFrom is July 1, 2024 (not Jan 1)
       expect(result.dateFrom).toBe('2024-07-01');
@@ -47,11 +51,13 @@ describe('interest-cleansing.service', () => {
               lte: expect.any(Date),
             }),
           }),
-        })
+        }),
       );
 
       const callArg = (prismaMock.transaction.findMany as any).mock.calls[0][0];
-      expect(callArg.where.date.gte.toISOString().slice(0, 10)).toBe('2024-07-01');
+      expect(callArg.where.date.gte.toISOString().slice(0, 10)).toBe(
+        '2024-07-01',
+      );
     });
 
     // TEST 2: dateTo uses calendarYear.toYear/toMonth (not hardcoded December)
@@ -74,14 +80,20 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify dateTo is June 30, 2025 (not Dec 31)
       expect(result.dateTo).toBe('2025-06-30');
 
       // Verify the transaction query used the correct date range
       const callArg = (prismaMock.transaction.findMany as any).mock.calls[0][0];
-      expect(callArg.where.date.lte.toISOString().slice(0, 10)).toBe('2025-06-30');
+      expect(callArg.where.date.lte.toISOString().slice(0, 10)).toBe(
+        '2025-06-30',
+      );
     });
 
     // TEST 3: Fiscal year window (Jul–Jun) produces correct dateFrom/dateTo
@@ -103,7 +115,11 @@ describe('interest-cleansing.service', () => {
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       expect(result.dateFrom).toBe('2024-07-01');
       expect(result.dateTo).toBe('2025-06-30');
@@ -111,8 +127,9 @@ describe('interest-cleansing.service', () => {
       // Verify 12-month fiscal window
       const fromDate = new Date(result.dateFrom);
       const toDate = new Date(result.dateTo);
-      const monthDiff = (toDate.getFullYear() - fromDate.getFullYear()) * 12 + 
-                        (toDate.getMonth() - fromDate.getMonth());
+      const monthDiff =
+        (toDate.getFullYear() - fromDate.getFullYear()) * 12 +
+        (toDate.getMonth() - fromDate.getMonth());
       expect(monthDiff).toBe(11); // 12 months span = 11 month difference
     });
 
@@ -147,10 +164,11 @@ describe('interest-cleansing.service', () => {
               lte: expect.any(Date),
             }),
           }),
-        })
+        }),
       );
 
-      const callArg = (prismaMock.interestCleansing.findMany as any).mock.calls[0][0];
+      const callArg = (prismaMock.interestCleansing.findMany as any).mock
+        .calls[0][0];
       // Ensure donationLedger.calendarId is NOT in the query
       expect(callArg.where.donationLedger).toBeUndefined();
       // Ensure datePaid IS in the query
@@ -173,12 +191,15 @@ describe('interest-cleansing.service', () => {
         userId,
       } as never);
 
-      
       prismaMock.financialAccount.findMany.mockResolvedValue([]);
       prismaMock.transaction.findMany.mockResolvedValue([]);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify return type includes dateFrom and dateTo as ISO date strings
       expect(result).toHaveProperty('dateFrom');
@@ -220,8 +241,12 @@ describe('interest-cleansing.service', () => {
       const orClauses = callArg.where.OR as Array<Record<string, unknown>>;
 
       // Must include category-based clauses
-      expect(orClauses).toContainEqual({ category: { equals: 'Credit Interest', mode: 'insensitive' } });
-      expect(orClauses).toContainEqual({ category: { equals: 'Bank Interest', mode: 'insensitive' } });
+      expect(orClauses).toContainEqual({
+        category: { equals: 'Credit Interest', mode: 'insensitive' },
+      });
+      expect(orClauses).toContainEqual({
+        category: { equals: 'Bank Interest', mode: 'insensitive' },
+      });
 
       // Must NOT fall back to description-based matching
       const hasDescriptionFallback = orClauses.some((c) => 'description' in c);
@@ -307,7 +332,11 @@ describe('interest-cleansing.service', () => {
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify totals
       expect(result.yearlySummary.totalReceived).toBe(225); // $100 + $50 + $75
@@ -373,14 +402,20 @@ describe('interest-cleansing.service', () => {
             {
               id: 'ev-1',
               amountApplied: new Decimal('80'),
-              evidenceTransaction: { description: 'Donation B', date: new Date('2024-07-20') },
+              evidenceTransaction: {
+                description: 'Donation B',
+                date: new Date('2024-07-20'),
+              },
             },
           ],
         } as never,
       ]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
-
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify totals
       expect(result.yearlySummary.totalReceived).toBe(200); // $80 + $120
@@ -458,20 +493,26 @@ describe('interest-cleansing.service', () => {
             {
               id: 'ev-1',
               amountApplied: new Decimal('10'),
-              evidenceTransaction: { description: 'Donation C', date: new Date('2022-10-10') },
+              evidenceTransaction: {
+                description: 'Donation C',
+                date: new Date('2022-10-10'),
+              },
             },
           ],
         } as never,
       ]);
 
-        const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
-
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify 12-month fiscal window is generated (Oct-Sep)
       expect(result.monthlyCredits.length).toBe(12); // 12 months in fiscal window
       const totalMonthlyReceived = result.monthlyCredits.reduce(
         (sum, m) => sum + m.receivedFromLedger,
-        0
+        0,
       );
       expect(totalMonthlyReceived).toBe(60); // $10 + $20 + $30
 
@@ -540,16 +581,23 @@ describe('interest-cleansing.service', () => {
         // We're testing that the service correctly passes datePaid filters to the query
       ]);
 
-      const result = await getYearlyCleansingData(institutionId, calendarYearId, userId);
+      const result = await getYearlyCleansingData(
+        institutionId,
+        calendarYearId,
+        userId,
+      );
 
       // Verify only donations within window are included
       expect(result.cleansingDonations).toHaveLength(1);
       expect(result.cleansingDonations[0]).toBeDefined();
-      expect(result.cleansingDonations[0]!.datePaid).toEqual(new Date('2024-06-20'));
+      expect(result.cleansingDonations[0]!.datePaid).toEqual(
+        new Date('2024-06-20'),
+      );
       expect(result.yearlySummary.totalCleansed).toBe(50);
 
       // Verify the service queried with correct date range
-      const donationCallArg = (prismaMock.interestCleansing.findMany as any).mock.calls[0][0];
+      const donationCallArg = (prismaMock.interestCleansing.findMany as any)
+        .mock.calls[0][0];
       const dateFromQuery = donationCallArg.where.datePaid.gte;
       const dateToQuery = donationCallArg.where.datePaid.lte;
 
@@ -577,11 +625,20 @@ describe('interest-cleansing.service', () => {
       } as any);
 
       prismaMock.interestCleansing.findUnique.mockResolvedValue(null);
-      prismaMock.donationLedger.findFirst.mockResolvedValue({ id: 'ledger-1' } as any);
-      prismaMock.interestCleansing.create.mockResolvedValue({ id: 'cleansing-1' } as any);
+      prismaMock.donationLedger.findFirst.mockResolvedValue({
+        id: 'ledger-1',
+      } as any);
+      prismaMock.interestCleansing.create.mockResolvedValue({
+        id: 'cleansing-1',
+      } as any);
       prismaMock.interestCleansingEvidence.upsert.mockResolvedValue({} as any);
 
-      const result = await applyAllocations(creditId, allocations, userId, sourceBusinessId);
+      const result = await applyAllocations(
+        creditId,
+        allocations,
+        userId,
+        sourceBusinessId,
+      );
 
       expect(result.success).toBe(true);
       expect(prismaMock.interestCleansing.create).toHaveBeenCalledWith({
@@ -607,8 +664,12 @@ describe('interest-cleansing.service', () => {
       } as any);
 
       prismaMock.interestCleansing.findUnique.mockResolvedValue(null);
-      prismaMock.donationLedger.findFirst.mockResolvedValue({ id: 'ledger-1' } as any);
-      prismaMock.interestCleansing.create.mockResolvedValue({ id: 'cleansing-1' } as any);
+      prismaMock.donationLedger.findFirst.mockResolvedValue({
+        id: 'ledger-1',
+      } as any);
+      prismaMock.interestCleansing.create.mockResolvedValue({
+        id: 'cleansing-1',
+      } as any);
       prismaMock.interestCleansingEvidence.upsert.mockResolvedValue({} as any);
 
       const result = await applyAllocations(creditId, allocations, userId);

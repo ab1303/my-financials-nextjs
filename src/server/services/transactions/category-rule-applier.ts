@@ -1,4 +1,5 @@
-import type { PrismaClient, CategoryRuleMatchType } from '@prisma/client';
+import type { CategoryRuleMatchType, PrismaClient } from '@prisma/client';
+
 import type { CsvTransaction } from '@/server/services/ai-import/_types';
 
 export interface Rule {

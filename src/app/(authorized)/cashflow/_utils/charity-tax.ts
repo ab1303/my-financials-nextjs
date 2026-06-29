@@ -10,7 +10,8 @@ type ZakatPaymentLike = {
   isDeductible?: boolean;
 };
 
-const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+const roundMoney = (value: number) =>
+  Math.round((value + Number.EPSILON) * 100) / 100;
 
 /**
  * Converts deductibility to a human-readable label for display.
@@ -105,7 +106,9 @@ export function calculateBreakdownTotals(
 
       if (purpose === 'VOLUNTARY') {
         if (isDeductible) {
-          voluntaryDeductible = roundMoney(voluntaryDeductible + payment.amount);
+          voluntaryDeductible = roundMoney(
+            voluntaryDeductible + payment.amount,
+          );
         } else {
           voluntaryNonDeductible = roundMoney(
             voluntaryNonDeductible + payment.amount,

@@ -1,4 +1,4 @@
-import { beforeEach,describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import { suggestAllocations } from '@/server/services/interest-cleansing/interest-cleansing.service';
@@ -56,9 +56,7 @@ describe('suggestAllocations service', () => {
       sourceBusinessId: 'bus-1',
       createdAt: new Date(),
       updatedAt: new Date(),
-      evidence: [
-        { transaction: { description: 'Some other payment' } },
-      ],
+      evidence: [{ transaction: { description: 'Some other payment' } }],
     };
 
     // interestCleansing.findMany called twice: first for candidates, then for existingLinked

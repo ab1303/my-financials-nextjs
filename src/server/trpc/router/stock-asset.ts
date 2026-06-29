@@ -27,7 +27,7 @@ import {
   updateStockSnapshotSchema,
 } from '@/server/schema/stock-asset.schema';
 import { getUSDtoAUDRate } from '@/server/services/exchange-rate.service';
-import { protectedProcedure,router } from '@/server/trpc/trpc';
+import { protectedProcedure, router } from '@/server/trpc/trpc';
 
 export const stockAssetRouter = router({
   // Snapshot routes
@@ -102,7 +102,9 @@ export const stockAssetRouter = router({
   ),
 
   createBrokerageSubAccount: protectedProcedure
-    .input(z.object({ businessId: z.string(), name: z.string().min(1).max(100) }))
+    .input(
+      z.object({ businessId: z.string(), name: z.string().min(1).max(100) }),
+    )
     .mutation(({ input, ctx: { session } }) =>
       createBrokerageSubAccountHandler({ input, userId: session.user.id }),
     ),

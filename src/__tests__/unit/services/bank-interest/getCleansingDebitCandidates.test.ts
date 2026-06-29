@@ -1,7 +1,7 @@
-import { beforeEach,describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getCleansingDebitCandidates } from '@/server/services/interest-cleansing/interest-cleansing.service';
 import { prisma } from '@/server/db/client';
+import { getCleansingDebitCandidates } from '@/server/services/interest-cleansing/interest-cleansing.service';
 
 vi.mock('@/server/db/client', () => ({
   prisma: {
@@ -30,7 +30,7 @@ describe('getCleansingDebitCandidates', () => {
       date: new Date('2026-06-01'),
       description: 'Interest Payment',
     };
-    
+
     const mockCandidates = [
       {
         id: 'tx-1',
@@ -50,10 +50,18 @@ describe('getCleansingDebitCandidates', () => {
       },
     ];
 
-    vi.mocked(prisma.transaction.findUniqueOrThrow).mockResolvedValue(mockCredit as any);
-    vi.mocked(prisma.transaction.findMany).mockResolvedValue(mockCandidates as any);
+    vi.mocked(prisma.transaction.findUniqueOrThrow).mockResolvedValue(
+      mockCredit as any,
+    );
+    vi.mocked(prisma.transaction.findMany).mockResolvedValue(
+      mockCandidates as any,
+    );
 
-    const candidates = await getCleansingDebitCandidates({ userId, creditId, bankAccountId: 'acc-1' });
+    const candidates = await getCleansingDebitCandidates({
+      userId,
+      creditId,
+      bankAccountId: 'acc-1',
+    });
 
     expect(candidates).toHaveLength(2);
     expect(candidates[0]?.transactionId).toBe('tx-1'); // Exact amount and description match

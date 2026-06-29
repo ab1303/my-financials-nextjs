@@ -30,8 +30,12 @@ export function GroupCategoryPopover({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
-  const allSelected = group.categories.every((c) => selectedCategoryIds.has(c.categoryId));
-  const noneSelected = group.categories.every((c) => !selectedCategoryIds.has(c.categoryId));
+  const allSelected = group.categories.every((c) =>
+    selectedCategoryIds.has(c.categoryId),
+  );
+  const noneSelected = group.categories.every(
+    (c) => !selectedCategoryIds.has(c.categoryId),
+  );
 
   function toggleCategory(categoryId: string) {
     const next = new Set(selectedCategoryIds);
@@ -63,7 +67,9 @@ export function GroupCategoryPopover({
       aria-label={`Filter categories in ${group.groupName}`}
     >
       <div className='flex items-center justify-between border-b border-border px-3 py-2'>
-        <span className='text-xs font-semibold text-foreground'>{group.groupName}</span>
+        <span className='text-xs font-semibold text-foreground'>
+          {group.groupName}
+        </span>
         <div className='flex gap-2'>
           <button
             type='button'
@@ -96,7 +102,9 @@ export function GroupCategoryPopover({
                   onChange={() => toggleCategory(cat.categoryId)}
                   className='accent-primary h-3.5 w-3.5 flex-shrink-0'
                 />
-                <span className={`flex-1 truncate ${checked ? 'text-foreground' : 'text-muted-foreground'}`}>
+                <span
+                  className={`flex-1 truncate ${checked ? 'text-foreground' : 'text-muted-foreground'}`}
+                >
                   {cat.categoryName}
                 </span>
                 <span className='text-xs tabular-nums text-muted-foreground'>

@@ -1,7 +1,7 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 
-import { env } from "../../env/server.mjs";
+import { env } from '../../env/server.mjs';
 
 declare global {
   var prisma: PrismaClient | undefined;
@@ -16,7 +16,7 @@ export const prisma =
         : ['error', 'warn'],
   });
 
-if (env.NODE_ENV !== "production") {
+if (env.NODE_ENV !== 'production') {
   global.prisma = prisma;
 }
 

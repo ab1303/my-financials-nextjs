@@ -79,10 +79,10 @@ export default function CategoryGroupsDrawer({
     { enabled: formData.scope === 'INCOME' || !formData.scope },
   );
 
-  const { data: expenseCategoriesData } = trpc.expenseCategory.getAllActive.useQuery(
-    undefined,
-    { enabled: formData.scope === 'EXPENSE' || !formData.scope },
-  );
+  const { data: expenseCategoriesData } =
+    trpc.expenseCategory.getAllActive.useQuery(undefined, {
+      enabled: formData.scope === 'EXPENSE' || !formData.scope,
+    });
 
   // tRPC mutations
   const createMutation = trpc.categoryGroup.create.useMutation();
@@ -131,7 +131,9 @@ export default function CategoryGroupsDrawer({
       onClose();
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to save category group';
+        error instanceof Error
+          ? error.message
+          : 'Failed to save category group';
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);
@@ -166,7 +168,7 @@ export default function CategoryGroupsDrawer({
   ];
 
   const selectedMembers = memberOptions.filter((opt) =>
-    formData.memberIds.includes(opt.value)
+    formData.memberIds.includes(opt.value),
   );
 
   if (!isOpen) {
@@ -174,39 +176,39 @@ export default function CategoryGroupsDrawer({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
+    <div className='fixed inset-0 z-50 flex justify-end bg-black/40'>
       {/* Drawer Content */}
-      <div className="flex h-full w-full max-w-2xl flex-col overflow-hidden bg-background shadow-2xl">
+      <div className='flex h-full w-full max-w-2xl flex-col overflow-hidden bg-background shadow-2xl'>
         {/* Drawer Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div className='flex items-center justify-between border-b border-border px-6 py-4'>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 className='text-lg font-semibold text-foreground'>
               {editingGroup ? 'Edit Category Group' : 'New Category Group'}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className='mt-1 text-sm text-muted-foreground'>
               {editingGroup
                 ? 'Update the group details and members'
                 : 'Create a new category group to organize related items'}
             </p>
           </div>
           <button
-            type="button"
+            type='button'
             onClick={onClose}
             disabled={isSaving}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
-            aria-label="Close drawer"
+            className='rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50'
+            aria-label='Close drawer'
           >
-            <X className="h-5 w-5" />
+            <X className='h-5 w-5' />
           </button>
         </div>
 
         {/* Drawer Body */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-6">
+        <div className='flex-1 overflow-y-auto p-6'>
+          <div className='space-y-6'>
             {/* Scope Selection - only show in create mode */}
             {!editingGroup && (
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className='block text-sm font-medium text-foreground mb-2'>
                   Group Type
                 </label>
                 <SelectWrapper
@@ -219,49 +221,57 @@ export default function CategoryGroupsDrawer({
                   onChange={handleScopeChange}
                   isClearable={false}
                   isSearchable={false}
-                  placeholder="Select Income or Expense..."
+                  placeholder='Select Income or Expense...'
                 />
               </div>
             )}
 
             {/* Group Name */}
             <div>
-              <label htmlFor="groupName" className="block text-sm font-medium text-foreground mb-2">
+              <label
+                htmlFor='groupName'
+                className='block text-sm font-medium text-foreground mb-2'
+              >
                 Group Name
               </label>
               <TextInput
-                id="groupName"
+                id='groupName'
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="e.g., Essential Expenses"
+                placeholder='e.g., Essential Expenses'
                 disabled={isSaving}
               />
             </div>
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
+              <label
+                htmlFor='description'
+                className='block text-sm font-medium text-foreground mb-2'
+              >
                 Description (Optional)
               </label>
               <textarea
-                id="description"
+                id='description'
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Add a note about this group..."
+                placeholder='Add a note about this group...'
                 disabled={isSaving}
-                className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                className='min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50'
               />
             </div>
 
             {/* Member Selection - only show if scope is selected */}
             {formData.scope && (
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  {formData.scope === 'INCOME' ? 'Income Sources' : 'Expense Categories'}
+                <label className='block text-sm font-medium text-foreground mb-2'>
+                  {formData.scope === 'INCOME'
+                    ? 'Income Sources'
+                    : 'Expense Categories'}
                 </label>
                 <SelectWrapper<SelectOption, true>
                   isMulti
@@ -280,24 +290,33 @@ export default function CategoryGroupsDrawer({
         </div>
 
         {/* Drawer Footer */}
-        <div className="border-t border-border bg-muted/50 px-6 py-4 flex gap-3 justify-end">
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
+        <div className='border-t border-border bg-muted/50 px-6 py-4 flex gap-3 justify-end'>
+          <Button variant='outline' onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
           <Button
             onClick={handleSave}
-            disabled={isSaving || !formData.scope || !formData.name.trim() || formData.memberIds.length === 0}
+            disabled={
+              isSaving ||
+              !formData.scope ||
+              !formData.name.trim() ||
+              formData.memberIds.length === 0
+            }
           >
-            {isSaving ? 'Saving...' : editingGroup ? 'Update Group' : 'Create Group'}
+            {isSaving
+              ? 'Saving...'
+              : editingGroup
+                ? 'Update Group'
+                : 'Create Group'}
           </Button>
         </div>
       </div>
 
       {/* Overlay click to close */}
       <div
-        className="absolute inset-0 z-[-1]"
+        className='absolute inset-0 z-[-1]'
         onClick={onClose}
-        aria-hidden="true"
+        aria-hidden='true'
       />
     </div>,
     document.body,

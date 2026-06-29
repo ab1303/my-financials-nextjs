@@ -6,15 +6,15 @@ import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { getCalendarYearsHandler } from '@/server/controllers/calendar-year.controller';
 import {
-  donationTotalsByCategoryHandler,
   donationTotalsByBeneficiaryHandler,
+  donationTotalsByCategoryHandler,
 } from '@/server/controllers/donation.controller';
-import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { prisma } from '@/server/db/client';
+import { getUserFiscalYearType } from '@/server/services/user-profile/user-profile.service';
 import { getDefaultCalendarYear } from '@/utils/calendar-year-defaults';
 
-import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
 import DonationBeneficiaryBreakdownWidget from './_components/DonationBeneficiaryBreakdownWidget';
+import UnlinkedTransactionsBanner from './_components/UnlinkedTransactionsBanner';
 import DonationFilters from './DonationFilters';
 import DonationPaymentsTableServer from './DonationTableServer';
 
@@ -55,8 +55,12 @@ export default async function DonationPage({
   const selectedCalendarYearId = selectedCalendarYear?.id ?? '';
   const beneficiaryId = getSelectedParam(params?.beneficiaryId) || undefined;
 
-  const donationTotals = await donationTotalsByCategoryHandler(selectedCalendarYearId);
-  const beneficiaryBreakdown = await donationTotalsByBeneficiaryHandler(selectedCalendarYearId);
+  const donationTotals = await donationTotalsByCategoryHandler(
+    selectedCalendarYearId,
+  );
+  const beneficiaryBreakdown = await donationTotalsByBeneficiaryHandler(
+    selectedCalendarYearId,
+  );
 
   const initialData = {
     donationYearData,
@@ -89,9 +93,7 @@ export default async function DonationPage({
             />
           </Suspense>
         )}
-        <DonationBeneficiaryBreakdownWidget
-          breakdown={beneficiaryBreakdown}
-        />
+        <DonationBeneficiaryBreakdownWidget breakdown={beneficiaryBreakdown} />
         <Suspense fallback={<p className='font-medium'>Loading table...</p>}>
           {selectedCalendarYear && (
             <div className='font-mono text-muted-foreground mb-3'>
@@ -102,8 +104,16 @@ export default async function DonationPage({
           <DonationPaymentsTableServer
             calendarYearId={selectedCalendarYearId}
             beneficiaryId={beneficiaryId}
-            dateFrom={selectedCalendarYear ? `${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01` : ''}
-            dateTo={selectedCalendarYear ? `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}` : ''}
+            dateFrom={
+              selectedCalendarYear
+                ? `${selectedCalendarYear.fromYear}-${String(selectedCalendarYear.fromMonth).padStart(2, '0')}-01`
+                : ''
+            }
+            dateTo={
+              selectedCalendarYear
+                ? `${selectedCalendarYear.toYear}-${String(selectedCalendarYear.toMonth).padStart(2, '0')}-${new Date(selectedCalendarYear.toYear, selectedCalendarYear.toMonth, 0).getDate()}`
+                : ''
+            }
           />
         </Suspense>
       </div>

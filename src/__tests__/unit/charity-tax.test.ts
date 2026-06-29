@@ -1,4 +1,4 @@
-import { beforeEach,describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/server/db/client', () => ({
   prisma: {
@@ -8,8 +8,11 @@ vi.mock('@/server/db/client', () => ({
   },
 }));
 
-import { deriveIsDeductible, getTaxCategoryLabel } from '@/server/utils/charity-tax';
 import { prisma } from '@/server/db/client';
+import {
+  deriveIsDeductible,
+  getTaxCategoryLabel,
+} from '@/server/utils/charity-tax';
 
 describe('charity-tax helper', () => {
   beforeEach(() => {
@@ -17,7 +20,9 @@ describe('charity-tax helper', () => {
   });
 
   it('derives deductibility from business DGR status', async () => {
-    (prisma.business.findUnique as any).mockResolvedValue({ isDgrRegistered: true });
+    (prisma.business.findUnique as any).mockResolvedValue({
+      isDgrRegistered: true,
+    });
     await expect(deriveIsDeductible('biz-123', 'BUSINESS')).resolves.toBe(true);
     expect(prisma.business.findUnique).toHaveBeenCalledWith({
       where: { id: 'biz-123' },
@@ -26,7 +31,9 @@ describe('charity-tax helper', () => {
   });
 
   it('returns false for individuals', async () => {
-    await expect(deriveIsDeductible('ind-1', 'INDIVIDUAL')).resolves.toBe(false);
+    await expect(deriveIsDeductible('ind-1', 'INDIVIDUAL')).resolves.toBe(
+      false,
+    );
   });
 
   it('formats deductibility labels', () => {

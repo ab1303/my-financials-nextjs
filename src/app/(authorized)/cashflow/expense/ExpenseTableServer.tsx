@@ -1,4 +1,7 @@
-import { getExpenseCategoryBreakdownHandler,getExpenseDataHandler } from '@/server/controllers/expense.controller';
+import {
+  getExpenseCategoryBreakdownHandler,
+  getExpenseDataHandler,
+} from '@/server/controllers/expense.controller';
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 
 import ExpenseTableClient from './ExpenseTableClient';

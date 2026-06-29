@@ -1,6 +1,6 @@
 import { prisma } from '@/server/db/client';
 
-import type { AITokenUsage,ExpenseExtractionResult } from './_types';
+import type { AITokenUsage, ExpenseExtractionResult } from './_types';
 import { matchCategoryWithEmbedding } from './category-matcher.service';
 
 export interface ExpenseMapResult {
@@ -76,15 +76,16 @@ export async function mapExpenseData(
         }
 
         // Match category name to database category using AI embeddings
-        const { categoryName: matchedCategory, embeddingUsage: entryEmbeddingUsage } =
-          await matchCategoryWithEmbedding(
-            entry.categoryName,
-            categories,
-          );
+        const {
+          categoryName: matchedCategory,
+          embeddingUsage: entryEmbeddingUsage,
+        } = await matchCategoryWithEmbedding(entry.categoryName, categories);
 
         // Accumulate embedding tokens
-        accumulatedEmbeddingUsage.promptTokens += entryEmbeddingUsage.promptTokens;
-        accumulatedEmbeddingUsage.totalTokens += entryEmbeddingUsage.totalTokens;
+        accumulatedEmbeddingUsage.promptTokens +=
+          entryEmbeddingUsage.promptTokens;
+        accumulatedEmbeddingUsage.totalTokens +=
+          entryEmbeddingUsage.totalTokens;
 
         if (!matchedCategory) {
           errors.push(

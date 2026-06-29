@@ -1,7 +1,7 @@
 import type { CellContext, RowData } from '@tanstack/react-table';
 import { castDraft, produce } from 'immer';
 import type { ReactNode } from 'react';
-import { useEffect, useId,useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { NumericFormat } from 'react-number-format';
 
 import { SelectWrapper as Select } from '@/components/ui/Select';
@@ -191,4 +191,3 @@ export const TableCell = <TData extends { id: string }, TValue>({
   //   tableMeta?.updateData(row.index, column.id, e.target.value, e.target.validity.valid);
   // };
 };
-

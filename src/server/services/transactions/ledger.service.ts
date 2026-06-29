@@ -64,14 +64,15 @@ export async function rerollupExpenseSummary(params: {
     return;
   }
 
-  const existingSummary = await params.prismaClient.monthlyExpenseSummary.findFirst({
-    where: {
-      expenseLedgerId: expenseLedger.id,
-      categoryId: newCategory.id,
-      month,
-    },
-    select: { id: true },
-  });
+  const existingSummary =
+    await params.prismaClient.monthlyExpenseSummary.findFirst({
+      where: {
+        expenseLedgerId: expenseLedger.id,
+        categoryId: newCategory.id,
+        month,
+      },
+      select: { id: true },
+    });
 
   if (existingSummary) {
     await params.prismaClient.monthlyExpenseSummary.update({
@@ -130,7 +131,12 @@ export async function applyReimbursementOffset(params: {
   if (!fiscalCalendar) return;
 
   const expenseLedger = await params.prismaClient.expenseLedger.findUnique({
-    where: { calendarId_userId: { calendarId: fiscalCalendar.id, userId: params.userId } },
+    where: {
+      calendarId_userId: {
+        calendarId: fiscalCalendar.id,
+        userId: params.userId,
+      },
+    },
     select: { id: true },
   });
   if (!expenseLedger) return;
@@ -144,7 +150,11 @@ export async function applyReimbursementOffset(params: {
   if (!category) return;
 
   await params.prismaClient.monthlyExpenseSummary.updateMany({
-    where: { expenseLedgerId: expenseLedger.id, categoryId: category.id, month },
+    where: {
+      expenseLedgerId: expenseLedger.id,
+      categoryId: category.id,
+      month,
+    },
     data: { amount: { decrement: params.amount } },
   });
 }
@@ -168,7 +178,12 @@ export async function reverseReimbursementOffset(params: {
   if (!fiscalCalendar) return;
 
   const expenseLedger = await params.prismaClient.expenseLedger.findUnique({
-    where: { calendarId_userId: { calendarId: fiscalCalendar.id, userId: params.userId } },
+    where: {
+      calendarId_userId: {
+        calendarId: fiscalCalendar.id,
+        userId: params.userId,
+      },
+    },
     select: { id: true },
   });
   if (!expenseLedger) return;
@@ -182,7 +197,11 @@ export async function reverseReimbursementOffset(params: {
   if (!category) return;
 
   const existing = await params.prismaClient.monthlyExpenseSummary.findFirst({
-    where: { expenseLedgerId: expenseLedger.id, categoryId: category.id, month },
+    where: {
+      expenseLedgerId: expenseLedger.id,
+      categoryId: category.id,
+      month,
+    },
     select: { id: true },
   });
 
@@ -202,4 +221,3 @@ export async function reverseReimbursementOffset(params: {
     });
   }
 }
-

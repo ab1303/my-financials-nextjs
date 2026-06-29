@@ -79,7 +79,10 @@ export default function CreateBeneficiaryModal({
   }, [isOpen, initialName, reset]);
 
   const isPending = createIndividual.isPending || createBusiness.isPending;
-  const typeLabel = beneficiaryType === BeneficiaryEnumType.INDIVIDUAL ? 'Individual' : 'Business';
+  const typeLabel =
+    beneficiaryType === BeneficiaryEnumType.INDIVIDUAL
+      ? 'Individual'
+      : 'Business';
 
   const onSubmit = (values: CreateBeneficiaryValues) => {
     if (beneficiaryType === BeneficiaryEnumType.INDIVIDUAL) {
@@ -98,36 +101,36 @@ export default function CreateBeneficiaryModal({
 
   return createPortal(
     <div
-      role="dialog"
-      aria-modal="true"
+      role='dialog'
+      aria-modal='true'
       aria-label={`Create ${typeLabel}`}
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50"
+      className='fixed inset-0 z-[200] flex items-center justify-center bg-black/50'
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
     >
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
-        <h2 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">
+      <div className='w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800'>
+        <h2 className='mb-1 text-lg font-semibold text-gray-900 dark:text-white'>
           Add {typeLabel}
         </h2>
-        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+        <p className='mb-4 text-sm text-gray-500 dark:text-gray-400'>
           Quick-add a new {typeLabel.toLowerCase()} beneficiary. You can update
           their full details later in the Relationships page.
         </p>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
           <div>
             <label
-              htmlFor="beneficiary-name"
-              className="block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300"
+              htmlFor='beneficiary-name'
+              className='block cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300'
             >
               Name
             </label>
             <input
-              id="beneficiary-name"
+              id='beneficiary-name'
               {...register('name')}
               autoFocus
               disabled={isPending}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:disabled:bg-gray-600"
+              className='mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:disabled:bg-gray-600'
               placeholder={
                 beneficiaryType === BeneficiaryEnumType.INDIVIDUAL
                   ? 'e.g. Jane Smith'
@@ -135,22 +138,22 @@ export default function CreateBeneficiaryModal({
               }
             />
             {errors.name && (
-              <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
+              <p className='mt-1 text-xs text-red-500'>{errors.name.message}</p>
             )}
           </div>
-          <div className="flex justify-end gap-3 pt-2">
+          <div className='flex justify-end gap-3 pt-2'>
             <button
-              type="button"
+              type='button'
               onClick={handleClose}
               disabled={isPending}
-              className="rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
+              className='rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700'
             >
               Cancel
             </button>
             <button
-              type="submit"
+              type='submit'
               disabled={isPending}
-              className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+              className='rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50'
             >
               {isPending ? 'Saving…' : 'Save'}
             </button>

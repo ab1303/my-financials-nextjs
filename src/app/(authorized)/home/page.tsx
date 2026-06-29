@@ -19,13 +19,21 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { auth } from '@/server/auth';
-import type { DashboardSummaryResponse, MonthlyTrendPoint, TopExpenseCategory } from '@/server/models/dashboard';
+import { prisma } from '@/server/db/client';
+import type {
+  DashboardSummaryResponse,
+  MonthlyTrendPoint,
+  TopExpenseCategory,
+} from '@/server/models/dashboard';
 import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
 import { getCalendarYears } from '@/server/services/calendar-year.service';
-import { getMonthlyIncomeExpenseTrend, getMonthlyTrendForDateRange,getTopExpenseCategories } from '@/server/services/dashboard.service';
+import {
+  getMonthlyIncomeExpenseTrend,
+  getMonthlyTrendForDateRange,
+  getTopExpenseCategories,
+} from '@/server/services/dashboard.service';
 import { getTotalExpenses } from '@/server/services/expense.service';
 import { getTotalIncome } from '@/server/services/income.service';
-import { prisma } from '@/server/db/client';
 
 import {
   AIUsageDashboardCard,
@@ -85,28 +93,35 @@ export default async function HomePage() {
       ? new Date(selectedYear.toYear, selectedYear.toMonth, 0, 23, 59, 59, 999)
       : dateTo;
 
-    topExpensesLabel = selectedYear?.description ?? now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+    topExpensesLabel =
+      selectedYear?.description ??
+      now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
 
     // Wave 2: all fiscal-year-scoped data in parallel
-    const [totalIncome, totalExpenses, recentTxns, trendData, topCats] = await Promise.all([
-      selectedYear ? getTotalIncome(selectedYear.id, userId) : Promise.resolve(0),
-      selectedYear ? getTotalExpenses(selectedYear.id, userId) : Promise.resolve(0),
-      prisma.transaction.findMany({
-        where: {
-          userId,
-          status: 'CONFIRMED',
-          category: { not: 'Transfer' },
-          date: { gte: fiscalStart, lte: fiscalEnd },
-        },
-        include: { financialAccount: { select: { name: true } } },
-        orderBy: { date: 'desc' },
-        take: 5,
-      }),
-      selectedYear
-        ? getMonthlyTrendForDateRange(userId, fiscalStart, fiscalEnd)
-        : getMonthlyIncomeExpenseTrend(userId, 6),
-      getTopExpenseCategories(userId, fiscalStart, fiscalEnd, 5),
-    ]);
+    const [totalIncome, totalExpenses, recentTxns, trendData, topCats] =
+      await Promise.all([
+        selectedYear
+          ? getTotalIncome(selectedYear.id, userId)
+          : Promise.resolve(0),
+        selectedYear
+          ? getTotalExpenses(selectedYear.id, userId)
+          : Promise.resolve(0),
+        prisma.transaction.findMany({
+          where: {
+            userId,
+            status: 'CONFIRMED',
+            category: { not: 'Transfer' },
+            date: { gte: fiscalStart, lte: fiscalEnd },
+          },
+          include: { financialAccount: { select: { name: true } } },
+          orderBy: { date: 'desc' },
+          take: 5,
+        }),
+        selectedYear
+          ? getMonthlyTrendForDateRange(userId, fiscalStart, fiscalEnd)
+          : getMonthlyIncomeExpenseTrend(userId, 6),
+        getTopExpenseCategories(userId, fiscalStart, fiscalEnd, 5),
+      ]);
 
     // Build sparkline (last 6 points — net worth is not year-scoped)
     const sparklinePoints = netWorthData.dataPoints
@@ -118,7 +133,10 @@ export default async function HomePage() {
       const netCashflow = totalIncome - totalExpenses;
       const savingsRate =
         totalIncome > 0
-          ? Math.max(0, Math.min(100, Math.round((netCashflow / totalIncome) * 100)))
+          ? Math.max(
+              0,
+              Math.min(100, Math.round((netCashflow / totalIncome) * 100)),
+            )
           : 0;
       cashflowYTD = {
         calendarYearId: selectedYear.id,
@@ -168,7 +186,10 @@ export default async function HomePage() {
 
       {/* === Dashboard Widgets === */}
       {userId && netWorth ? (
-        <section aria-label='Financial overview widgets' className='mb-8 space-y-4'>
+        <section
+          aria-label='Financial overview widgets'
+          className='mb-8 space-y-4'
+        >
           {/* Row 1: Net Worth Hero (full width) */}
           <div className='grid grid-cols-1'>
             <NetWorthWidget netWorth={netWorth} />

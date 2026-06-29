@@ -74,7 +74,7 @@ export function useCategoryEdit({
   ) {
     setLocalCategory(newCategory);
     onClearRulePrompt?.();
-    
+
     // Explicitly set applyToMatching: false here.
     // The UI will now use a separate call to onCategoryChange for bulk actions.
     onCategoryChange(
@@ -84,7 +84,7 @@ export function useCategoryEdit({
       offsetTransactionId,
       false,
     );
-    
+
     setRuleCategory(newCategory);
     // Trigger match check eagerly but silently
     void findMatches().then((count) => {
