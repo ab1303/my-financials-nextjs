@@ -5,8 +5,9 @@
     "sessionStart": [
       {
         "type": "command",
-        "command": "bash .harness/init.sh",
-        "windows": "bash .harness/init.sh",
+        "bash": ".harness/init.sh",
+        "powershell": "bash .harness/init.sh",
+        "cwd": ".",
         "timeoutSec": 15
       }
     ]

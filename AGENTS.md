@@ -42,7 +42,7 @@ Specs → `spec/{domain}/{feature}/`. `plan.md` → session only, never commit.
 
 ### Session Start — before any implementation work
 
-1. **Automatic (preferred):** the `sessionStart` hook in `.copilot/hooks.json` runs
+1. **Automatic (preferred):** the `sessionStart` hook in `.github/hooks/hooks.json` runs
    `bash .harness/init.sh` and injects the output into your initial context — branch,
    recent commits, working-tree status, latest `progress.md` entry, active features
    with Definition of Done progress. Confirm it ran by checking `/env` for the
