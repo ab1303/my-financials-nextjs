@@ -1,3 +1,4 @@
+import type { Business } from '@prisma/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -7,6 +8,21 @@ import {
 } from '@/server/controllers/brokerage.controller';
 import * as prismaUtils from '@/server/db/client';
 import * as brokerageService from '@/server/services/brokerage.service';
+
+const createBrokerage = (overrides?: Partial<Business>): Business => ({
+  id: 'brokerage-1',
+  name: 'Fidelity',
+  institutionKey: null,
+  addressLine: null,
+  streetAddress: null,
+  suburb: null,
+  postcode: null,
+  state: null,
+  userId: null,
+  type: 'BROKERAGE',
+  isDgrRegistered: null,
+  ...overrides,
+});
 
 // Mock the service layer
 vi.mock('@/server/services/brokerage.service');
@@ -21,17 +37,13 @@ describe('Brokerage Controller', () => {
     it('returns success response when brokerage created', async () => {
       // Arrange
       const input = { name: 'Charles Schwab' };
-      const mockBrokerage = {
+      const mockBrokerage = createBrokerage({
         id: 'brokerage-2',
         name: 'Charles Schwab',
-        userId: null,
-        type: 'BROKERAGE',
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      });
 
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockResolvedValue(
-        mockBrokerage as any,
+        mockBrokerage,
       );
 
       // Act
@@ -50,17 +62,10 @@ describe('Brokerage Controller', () => {
     it('returns success response with correct brokerage data', async () => {
       // Arrange
       const input = { name: 'Fidelity' };
-      const mockBrokerage = {
-        id: 'brokerage-1',
-        name: 'Fidelity',
-        userId: null,
-        type: 'BROKERAGE',
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      const mockBrokerage = createBrokerage();
 
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockResolvedValue(
-        mockBrokerage as any,
+        mockBrokerage,
       );
 
       // Act
@@ -76,17 +81,13 @@ describe('Brokerage Controller', () => {
     it('calls service with correct input parameters', async () => {
       // Arrange
       const input = { name: 'TD Ameritrade' };
-      const mockBrokerage = {
+      const mockBrokerage = createBrokerage({
         id: 'brokerage-3',
         name: 'TD Ameritrade',
-        userId: null,
-        type: 'BROKERAGE',
-        createdAt: new Date('2024-01-01'),
-        updatedAt: new Date('2024-01-01'),
-      };
+      });
 
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockResolvedValue(
-        mockBrokerage as any,
+        mockBrokerage,
       );
 
       // Act
@@ -107,7 +108,7 @@ describe('Brokerage Controller', () => {
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockRejectedValue(
         error,
       );
-      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
+      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation(() => {
         // Mock implementation that doesn't throw
         return;
       });
@@ -128,12 +129,12 @@ describe('Brokerage Controller', () => {
       vi.spyOn(brokerageService, 'addBrokerageDetails').mockRejectedValue(
         validationError,
       );
-      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
+      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation(() => {
         return;
       });
 
       // Act
-      const result = await addBrokerageDetailsHandler({ input });
+      await addBrokerageDetailsHandler({ input });
 
       // Assert
       expect(prismaUtils.handleCaughtError).toHaveBeenCalledWith(
@@ -146,26 +147,15 @@ describe('Brokerage Controller', () => {
     it('returns array of brokerages', async () => {
       // Arrange
       const mockBrokerages = [
-        {
-          id: 'brokerage-1',
-          name: 'Fidelity',
-          userId: null,
-          type: 'BROKERAGE',
-          createdAt: new Date('2024-01-01'),
-          updatedAt: new Date('2024-01-01'),
-        },
-        {
+        createBrokerage({ id: 'brokerage-1', name: 'Fidelity' }),
+        createBrokerage({
           id: 'brokerage-2',
           name: 'Charles Schwab',
-          userId: null,
-          type: 'BROKERAGE',
-          createdAt: new Date('2024-01-02'),
-          updatedAt: new Date('2024-01-02'),
-        },
+        }),
       ];
 
       vi.spyOn(brokerageService, 'getBrokerageDetails').mockResolvedValue(
-        mockBrokerages as any,
+        mockBrokerages,
       );
 
       // Act
@@ -191,9 +181,7 @@ describe('Brokerage Controller', () => {
 
     it('calls service with no parameters', async () => {
       // Arrange
-      vi.spyOn(brokerageService, 'getBrokerageDetails').mockResolvedValue(
-        [] as any,
-      );
+      vi.spyOn(brokerageService, 'getBrokerageDetails').mockResolvedValue([]);
 
       // Act
       await allBrokerageDetailsHandler();
@@ -209,7 +197,7 @@ describe('Brokerage Controller', () => {
       vi.spyOn(brokerageService, 'getBrokerageDetails').mockRejectedValue(
         error,
       );
-      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
+      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation(() => {
         return;
       });
 
@@ -228,7 +216,7 @@ describe('Brokerage Controller', () => {
       const params = { brokerageId: 'brokerage-1' };
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockResolvedValue(
-        undefined as any,
+        createBrokerage({ id: 'brokerage-1' }),
       );
 
       // Act
@@ -245,7 +233,7 @@ describe('Brokerage Controller', () => {
       const params = { brokerageId: 'brokerage-2' };
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockResolvedValue(
-        undefined as any,
+        createBrokerage({ id: 'brokerage-2', name: 'Charles Schwab' }),
       );
 
       // Act
@@ -268,7 +256,7 @@ describe('Brokerage Controller', () => {
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockRejectedValue(
         error,
       );
-      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
+      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation(() => {
         return;
       });
 
@@ -290,7 +278,7 @@ describe('Brokerage Controller', () => {
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockRejectedValue(
         dependencyError,
       );
-      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
+      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation(() => {
         return;
       });
 
@@ -312,7 +300,7 @@ describe('Brokerage Controller', () => {
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockRejectedValue(
         dbError,
       );
-      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation((e) => {
+      vi.spyOn(prismaUtils, 'handleCaughtError').mockImplementation(() => {
         return;
       });
 
@@ -330,7 +318,7 @@ describe('Brokerage Controller', () => {
       const params2 = { brokerageId: 'brokerage-2' };
 
       vi.spyOn(brokerageService, 'deleteBrokerageDetails').mockResolvedValue(
-        undefined as any,
+        createBrokerage({ id: 'brokerage-1' }),
       );
 
       // Act

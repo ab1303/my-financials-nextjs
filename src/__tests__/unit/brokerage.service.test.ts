@@ -25,7 +25,7 @@ describe('Brokerage Service', () => {
         updatedAt: new Date('2024-01-01'),
       };
 
-      prismaMock.business.create.mockResolvedValue(mockResult as any);
+      prismaMock.business.create.mockResolvedValue(mockResult as never);
 
       // Act
       const result = await addBrokerageDetails(input);
@@ -75,9 +75,9 @@ describe('Brokerage Service', () => {
       ];
 
       prismaMock.business.create
-        .mockResolvedValueOnce(mockResults[0] as any)
-        .mockResolvedValueOnce(mockResults[1] as any)
-        .mockResolvedValueOnce(mockResults[2] as any);
+        .mockResolvedValueOnce(mockResults[0] as never)
+        .mockResolvedValueOnce(mockResults[1] as never)
+        .mockResolvedValueOnce(mockResults[2] as never);
 
       // Act
       const results = await Promise.all(
@@ -118,7 +118,7 @@ describe('Brokerage Service', () => {
         },
       ];
 
-      prismaMock.business.findMany.mockResolvedValue(mockBrokerages as any);
+      prismaMock.business.findMany.mockResolvedValue(mockBrokerages as never);
 
       // Act
       const result = await getBrokerageDetails();
@@ -170,7 +170,7 @@ describe('Brokerage Service', () => {
         },
       ];
 
-      prismaMock.business.findMany.mockResolvedValue(mockBrokerage as any);
+      prismaMock.business.findMany.mockResolvedValue(mockBrokerage as never);
 
       // Act
       const result = await getBrokerageDetails({ id: 'brokerage-1' });
@@ -191,7 +191,7 @@ describe('Brokerage Service', () => {
       // Arrange
       const mockBrokerages = [{ id: 'brokerage-1', name: 'Fidelity' }];
 
-      prismaMock.business.findMany.mockResolvedValue(mockBrokerages as any);
+      prismaMock.business.findMany.mockResolvedValue(mockBrokerages as never);
 
       // Act
       const result = await getBrokerageDetails(undefined, {
@@ -228,7 +228,7 @@ describe('Brokerage Service', () => {
       };
 
       prismaMock.financialAccount.count.mockResolvedValue(0);
-      prismaMock.business.delete.mockResolvedValue(mockDeleteResult as any);
+      prismaMock.business.delete.mockResolvedValue(mockDeleteResult as never);
 
       // Act
       const result = await deleteBrokerageDetails(brokerageId);

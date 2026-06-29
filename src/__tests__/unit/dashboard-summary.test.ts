@@ -39,8 +39,14 @@ import { GET } from '@/app/api/dashboard/summary/route';
 import { auth } from '@/server/auth';
 import { getNetWorthTrend } from '@/server/services/asset-dashboard.service';
 import { getCalendarYears } from '@/server/services/calendar-year.service';
-import { getTotalExpenses } from '@/server/services/expense.service';
-import { getTotalIncome } from '@/server/services/income.service';
+
+type AuthMock = {
+  mockResolvedValue: (value: unknown) => void;
+};
+
+const setAuthMock = (value: unknown) => {
+  (auth as unknown as AuthMock).mockResolvedValue(value);
+};
 
 describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
   beforeEach(() => {
@@ -52,10 +58,10 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
    * Verifies that the auth guard rejects requests without a valid session
    */
   it('should return 401 when unauthenticated', async () => {
-    (vi.mocked(auth) as any).mockResolvedValue(mockUnauthenticatedSession);
+    setAuthMock(mockUnauthenticatedSession);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await (GET as any)(request);
+    const response = await GET(request);
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -67,7 +73,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
    * Verifies empty state handling when no net worth data exists
    */
   it('should return netWorth.latestTotal = 0 when no snapshots exist', async () => {
-    (vi.mocked(auth) as any).mockResolvedValue(mockSession);
+    setAuthMock(mockSession);
     vi.mocked(getNetWorthTrend).mockResolvedValue({
       dataPoints: [],
       latestCashTotal: 0,
@@ -80,7 +86,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     prismaMock.transaction.findMany.mockResolvedValue([]);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await (GET as any)(request);
+    const response = await GET(request);
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as DashboardSummaryResponse;
@@ -93,7 +99,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
    * Verifies that sparkline is correctly sliced to last 6 data points
    */
   it('should return sparklinePoints with max 6 entries', async () => {
-    (vi.mocked(auth) as any).mockResolvedValue(mockSession);
+    setAuthMock(mockSession);
 
     // Create mock data points - 10 data points total
     const mockDataPoints = Array.from({ length: 10 }, (_, i) => ({
@@ -119,7 +125,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     prismaMock.transaction.findMany.mockResolvedValue([]);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await (GET as any)(request);
+    const response = await GET(request);
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as DashboardSummaryResponse;
@@ -147,7 +153,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
    * Verifies null guard when user has no fiscal year configured
    */
   it('should return cashflowYTD = null when no calendar year exists', async () => {
-    (vi.mocked(auth) as any).mockResolvedValue(mockSession);
+    setAuthMock(mockSession);
     vi.mocked(getNetWorthTrend).mockResolvedValue({
       dataPoints: [],
       latestCashTotal: 1000,
@@ -160,7 +166,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
     prismaMock.transaction.findMany.mockResolvedValue([]);
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await (GET as any)(request);
+    const response = await GET(request);
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as DashboardSummaryResponse;
@@ -172,7 +178,7 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
    * Verifies that transactions are properly filtered and exclude Transfer category
    */
   it('should return recentTransactions filtered to CONFIRMED status and exclude Transfer', async () => {
-    (vi.mocked(auth) as any).mockResolvedValue(mockSession);
+    setAuthMock(mockSession);
 
     vi.mocked(getNetWorthTrend).mockResolvedValue({
       dataPoints: [],
@@ -221,10 +227,12 @@ describe('Dashboard Summary API (GET /api/dashboard/summary)', () => {
       },
     ];
 
-    prismaMock.transaction.findMany.mockResolvedValue(mockTransactions as any);
+    prismaMock.transaction.findMany.mockResolvedValue(
+      mockTransactions as never,
+    );
 
     const request = new Request('http://localhost:3000/api/dashboard/summary');
-    const response = await (GET as any)(request);
+    const response = await GET(request);
 
     expect(response.status).toBe(200);
     const body = (await response.json()) as DashboardSummaryResponse;

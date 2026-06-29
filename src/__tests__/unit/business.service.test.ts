@@ -63,7 +63,7 @@ describe('business.service', () => {
       };
 
       vi.mocked(prisma.business.create).mockResolvedValueOnce(
-        mockBusiness as any,
+        mockBusiness as never,
       );
 
       // Act
@@ -93,11 +93,11 @@ describe('business.service', () => {
       };
 
       vi.mocked(prisma.business.create).mockResolvedValueOnce(
-        createdBusiness as any,
+        createdBusiness as never,
       );
 
       // Act
-      const result = await addBusinessDetails(input as any);
+      const result = await addBusinessDetails(input);
 
       // Assert
       expect(result.name).toBe('Tech Ventures');
@@ -131,7 +131,7 @@ describe('business.service', () => {
       // Arrange
       const name = 'Existing Business';
       vi.mocked(prisma.business.findFirst).mockResolvedValueOnce(
-        mockBusiness as any,
+        mockBusiness as never,
       );
 
       // Act
@@ -167,7 +167,7 @@ describe('business.service', () => {
       // Arrange
       const name = 'MyBusiness';
       vi.mocked(prisma.business.findFirst).mockResolvedValueOnce(
-        mockBusiness as any,
+        mockBusiness as never,
       );
 
       // Act
@@ -197,7 +197,7 @@ describe('business.service', () => {
       };
 
       vi.mocked(prisma.business.update).mockResolvedValueOnce(
-        updatedBusiness as any,
+        updatedBusiness as never,
       );
 
       // Act
@@ -224,7 +224,7 @@ describe('business.service', () => {
       };
 
       vi.mocked(prisma.business.update).mockResolvedValueOnce(
-        partiallyUpdatedBusiness as any,
+        partiallyUpdatedBusiness as never,
       );
 
       // Act
@@ -255,7 +255,7 @@ describe('business.service', () => {
       };
 
       vi.mocked(prisma.business.update).mockResolvedValueOnce(
-        updatedBusiness as any,
+        updatedBusiness as never,
       );
 
       // Act

@@ -6,6 +6,28 @@ import CashflowAnalyticsClient from '@/app/(authorized)/cashflow/analytics/_comp
 import type { CategoryGroupListItem } from '@/server/services/category-groups/category-groups.service';
 import type { CalendarYearType, OptionType } from '@/types';
 
+type TrendPoint = { income: number; expenses: number };
+type SelectOption = { id: string };
+type SelectGroup = { label: string; options: SelectOption[] };
+type SelectWrapperProps = {
+  options?: Array<SelectOption | { label: string; options: SelectOption[] }>;
+  value?: SelectOption | SelectOption[];
+  inputId: string;
+  onChange?: (value: SelectOption[]) => void;
+};
+
+type FetchMock = {
+  mockImplementation: (
+    impl: (input: RequestInfo | URL) => Promise<Response>,
+  ) => void;
+  mockResolvedValueOnce: (value: Promise<Response> | Response) => void;
+  mock: { calls: Array<[RequestInfo | URL]> };
+};
+
+const isSelectGroup = (
+  value: SelectOption | SelectGroup,
+): value is SelectGroup => 'label' in value;
+
 // Mock the API
 global.fetch = vi.fn();
 
@@ -20,16 +42,16 @@ vi.mock('next/navigation', () => ({
 vi.mock(
   '@/app/(authorized)/cashflow/analytics/_components/IncomeExpenseTrendChart',
   () => ({
-    IncomeExpenseTrendChart: ({ data }: any) => (
+    IncomeExpenseTrendChart: ({ data }: { data: TrendPoint[] }) => (
       <div
         data-testid='trend-chart'
         data-count={data.length}
         data-income-total={data.reduce(
-          (sum: number, point: any) => sum + point.income,
+          (sum: number, point: TrendPoint) => sum + point.income,
           0,
         )}
         data-expense-total={data.reduce(
-          (sum: number, point: any) => sum + point.expenses,
+          (sum: number, point: TrendPoint) => sum + point.expenses,
           0,
         )}
       >
@@ -49,7 +71,7 @@ vi.mock(
 vi.mock(
   '@/app/(authorized)/cashflow/analytics/_components/ExpenseCategoryChart',
   () => ({
-    ExpenseCategoryChart: ({ data }: any) => (
+    ExpenseCategoryChart: ({ data }: { data: unknown[] }) => (
       <div data-testid='expense-chart' data-count={data.length}>
         Expense Chart
       </div>
@@ -60,7 +82,7 @@ vi.mock(
 vi.mock(
   '@/app/(authorized)/cashflow/analytics/_components/IncomeSourceChart',
   () => ({
-    IncomeSourceChart: ({ data }: any) => (
+    IncomeSourceChart: ({ data }: { data: unknown[] }) => (
       <div data-testid='income-chart' data-count={data.length}>
         Income Chart
       </div>
@@ -90,13 +112,16 @@ vi.mock(
 );
 
 vi.mock('@/components/ui/Select', () => ({
-  SelectWrapper: (props: any) => {
+  SelectWrapper: (props: SelectWrapperProps) => {
     const groupLabels =
-      Array.isArray(props.options) && props.options[0]?.options
-        ? props.options.map((group: any) => group.label).join('|')
+      Array.isArray(props.options) && isSelectGroup(props.options[0]!)
+        ? props.options
+            .filter(isSelectGroup)
+            .map((group) => group.label)
+            .join('|')
         : '';
     const selectedIds = Array.isArray(props.value)
-      ? props.value.map((option: any) => option.id).join('|')
+      ? props.value.map((option) => option.id).join('|')
       : (props.value?.id ?? '');
 
     return (
@@ -110,7 +135,9 @@ vi.mock('@/components/ui/Select', () => ({
           data-testid={`${props.inputId}-select-first`}
           onClick={() => {
             const firstOption = Array.isArray(props.options)
-              ? (props.options[0]?.options?.[0] ?? props.options[0])
+              ? isSelectGroup(props.options[0]!)
+                ? props.options[0].options[0]
+                : props.options[0]
               : null;
             if (!firstOption) return;
             props.onChange?.([firstOption]);
@@ -131,7 +158,11 @@ vi.mock('@/components/ui/Select', () => ({
 }));
 
 vi.mock('@/components/CalendarYearPicker', () => ({
-  CalendarYearPicker: ({ onYearChange }: any) => (
+  CalendarYearPicker: ({
+    onYearChange,
+  }: {
+    onYearChange: (id: string) => void;
+  }) => (
     <div data-testid='calendar-picker'>
       <button onClick={() => onYearChange('year-1')}>Pick Year</button>
     </div>
@@ -354,12 +385,13 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockImplementation((input: RequestInfo | URL) =>
-      Promise.resolve(
-        new Response(JSON.stringify(buildAnalyticsResponse(input)), {
-          status: 200,
-        }),
-      ),
+    (global.fetch as unknown as FetchMock).mockImplementation(
+      (input: RequestInfo | URL) =>
+        Promise.resolve(
+          new Response(JSON.stringify(buildAnalyticsResponse(input)), {
+            status: 200,
+          }),
+        ),
     );
   });
 
@@ -455,7 +487,9 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
       expect(global.fetch).toHaveBeenCalled();
     });
 
-    const call = (global.fetch as any).mock.calls[0][0] as string;
+    const call = String(
+      (global.fetch as unknown as FetchMock).mock.calls[0]?.[0] ?? '',
+    );
     expect(call).toContain('calendarYearId=year-1');
   });
 
@@ -477,13 +511,15 @@ describe('AnalyticsFilters - Grouped Category Selectors', () => {
       expect(global.fetch).toHaveBeenCalled();
     });
 
-    const firstCall = (global.fetch as any).mock.calls[0][0] as string;
+    const firstCall = String(
+      (global.fetch as unknown as FetchMock).mock.calls[0]?.[0] ?? '',
+    );
     expect(firstCall).toContain('incomeCategoryIds=src-1%2Csrc-2');
     expect(firstCall).toContain('expenseCategoryIds=cat-1%2Ccat-2%2Ccat-3');
   });
 
   it('should render an empty grouped selector when no categories are available', async () => {
-    (global.fetch as any).mockResolvedValueOnce(
+    (global.fetch as unknown as FetchMock).mockResolvedValueOnce(
       new Response(
         JSON.stringify({
           ...mockAnalyticsData,

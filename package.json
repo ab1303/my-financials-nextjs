@@ -18,6 +18,7 @@
     "lint:evaluate": "node scripts/lint-evaluate.mjs",
     "lint:evaluate:json": "node scripts/lint-evaluate.mjs --json=reports/lint/eslint-scope.json",
     "lint:top-warnings": "node scripts/lint-evaluate.mjs --top-only",
+    "lint:next": "node scripts/lint-evaluate.mjs --next",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "type-check": "tsc --noEmit",
     "postinstall": "prisma generate",

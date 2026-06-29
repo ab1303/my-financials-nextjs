@@ -1,9 +1,12 @@
 import { TransactionStatusEnum, TransactionTypeEnum } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 import { appRouter } from '@/server/trpc/router/_app';
 import { buildTransactionWhere } from '@/server/trpc/router/transaction-ledger/shared';
+
+type CallerContext = Parameters<typeof appRouter.createCaller>[0];
 
 describe('buildTransactionWhere', () => {
   it('filters uncategorized transactions by empty category', () => {
@@ -52,7 +55,7 @@ describe('transactionLedgerRouter.getFilterOptions', () => {
   const caller = appRouter.createCaller({
     prisma: prismaMock,
     session: { user: { id: 'user-1' } },
-  } as any);
+  } as unknown as CallerContext);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -81,7 +84,7 @@ describe('transactionLedgerRouter.getAll — cursor pagination', () => {
   const caller = appRouter.createCaller({
     prisma: prismaMock,
     session: { user: { id: 'user-1' } },
-  } as any);
+  } as unknown as CallerContext);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -97,7 +100,7 @@ describe('transactionLedgerRouter.getAll — cursor pagination', () => {
       id: `tx-${i + 1}`,
       date: new Date('2024-01-01'),
       description: `Transaction ${i + 1}`,
-      amount: { toNumber: () => 100 } as any,
+      amount: new Decimal(100),
       type: 'DEBIT',
       category: 'Groceries',
       source: 'LLM_CLASSIFIED',
@@ -131,7 +134,7 @@ describe('transactionLedgerRouter.getAll — cursor pagination', () => {
       id: `tx-${i + 1}`,
       date: new Date('2024-01-01'),
       description: `Transaction ${i + 1}`,
-      amount: { toNumber: () => 50 } as any,
+      amount: new Decimal(50),
       type: 'CREDIT',
       category: 'Salary',
       source: 'LLM_CLASSIFIED',
@@ -185,7 +188,7 @@ describe('transactionLedgerRouter.updateCategory — EXCLUDED promotion', () => 
   const caller = appRouter.createCaller({
     prisma: prismaMock,
     session: { user: { id: 'user-1' } },
-  } as any);
+  } as unknown as CallerContext);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -227,7 +230,7 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
   const caller = appRouter.createCaller({
     prisma: prismaMock,
     session: { user: { id: 'user-1' } },
-  } as any);
+  } as unknown as CallerContext);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -240,7 +243,7 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
       id: `tx-match-${i + 1}`,
       date: new Date('2024-01-15'),
       description: 'Supermarket',
-      amount: { toNumber: () => 50 + i * 10 } as any,
+      amount: new Decimal(50 + i * 10),
       type: TransactionTypeEnum.DEBIT,
       category: 'Groceries',
       source: 'LLM_CLASSIFIED',
@@ -273,7 +276,7 @@ describe('transactionLedgerRouter.previewMatchingCategoryChanges — preview que
         id: 'tx-match-1',
         date: new Date('2024-01-15'),
         description: 'Supermarket',
-        amount: { toNumber: () => 50 } as any,
+        amount: new Decimal(50),
         type: TransactionTypeEnum.DEBIT,
         category: 'Groceries',
         status: TransactionStatusEnum.CONFIRMED,

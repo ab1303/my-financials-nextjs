@@ -112,6 +112,7 @@ All in `.ai/instructions/`. Grouped by **when** to reach for them — read befor
 | Building UI components     | `dark-mode-and-react-select.md` · `cursor-and-text-selection.md`                                                                                 |
 | Planning / spec work       | `spec-structure.md` · `spec-consolidation.md` · `spec-implementation.md` · `spec-migration-map.md` · `migration-agent-template.md`               |
 | Shipping / sessions        | `testing-and-subagents.md` · `compaction.md` · `git-worktree.md` · `deployment.md`                                                               |
+| Lint reduction             | `lint-strong-typing-recipes.md` (driven by skill `.agents/skills/lint-reduction-loop/SKILL.md`)                                                  |
 | Meta / governance          | `instruction-governance.md`                                                                                                                      |
 
 `.github/instructions/` contains Copilot **scoped** rules (`applyTo` frontmatter) — do not duplicate general rules there.

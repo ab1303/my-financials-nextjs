@@ -11,6 +11,12 @@ vi.mock('@/server/auth', () => ({
 import { useCleanseDonationState } from '@/app/(authorized)/cashflow/bank-interest/_components/cleanse-drawer/useCleanseDonationState';
 import { trpc } from '@/server/trpc/client';
 
+type MockWithReturn = {
+  mockReturnValue: (value: unknown) => void;
+};
+
+const asMock = (value: unknown): MockWithReturn => value as MockWithReturn;
+
 // Mock trpc
 vi.mock('@/server/trpc/client', () => ({
   trpc: {
@@ -30,27 +36,27 @@ vi.mock('@/server/trpc/client', () => ({
 describe('useCleanseDonationState evidence loading bug', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (
-      trpc.bankInterest.getUnlinkedInterestTransactions.useQuery as any
+    asMock(
+      trpc.bankInterest.getUnlinkedInterestTransactions.useQuery,
     ).mockReturnValue({ data: [], isLoading: false });
-    (
-      trpc.bankInterest.getInterestCleansingData.useQuery as any
-    ).mockReturnValue({ data: { cleansingDonations: [] }, isLoading: false });
-    (trpc.bankInterest.suggestAllocations.useQuery as any).mockReturnValue({
+    asMock(trpc.bankInterest.getInterestCleansingData.useQuery).mockReturnValue(
+      { data: { cleansingDonations: [] }, isLoading: false },
+    );
+    asMock(trpc.bankInterest.suggestAllocations.useQuery).mockReturnValue({
       data: [],
       isLoading: false,
     });
-    (trpc.bankInterest.applyAllocations.useMutation as any).mockReturnValue({
+    asMock(trpc.bankInterest.applyAllocations.useMutation).mockReturnValue({
       mutateAsync: vi.fn(),
     });
-    (trpc.bankInterest.removeAllocation.useMutation as any).mockReturnValue({
+    asMock(trpc.bankInterest.removeAllocation.useMutation).mockReturnValue({
       mutateAsync: vi.fn(),
     });
-    (trpc.useUtils as any).mockReturnValue({});
-    (trpc.individual.getAllIndividuals.useQuery as any).mockReturnValue({
+    asMock(trpc.useUtils).mockReturnValue({});
+    asMock(trpc.individual.getAllIndividuals.useQuery).mockReturnValue({
       data: [],
     });
-    (trpc.business.getBusinessesByType.useQuery as any).mockReturnValue({
+    asMock(trpc.business.getBusinessesByType.useQuery).mockReturnValue({
       data: [],
     });
   });
@@ -67,26 +73,26 @@ describe('useCleanseDonationState evidence loading bug', () => {
     };
 
     // Simulate existing evidence for tx1
-    (
-      trpc.bankInterest.getInterestCleansingData.useQuery as any
-    ).mockReturnValue({
-      data: {
-        cleansingDonations: [
-          {
-            interestTxId: 'tx1',
-            evidence: [
-              {
-                id: 'e1',
-                amountApplied: 10,
-                description: 'ev1',
-                date: new Date(),
-              },
-            ],
-          },
-        ],
+    asMock(trpc.bankInterest.getInterestCleansingData.useQuery).mockReturnValue(
+      {
+        data: {
+          cleansingDonations: [
+            {
+              interestTxId: 'tx1',
+              evidence: [
+                {
+                  id: 'e1',
+                  amountApplied: 10,
+                  description: 'ev1',
+                  date: new Date(),
+                },
+              ],
+            },
+          ],
+        },
+        isLoading: false,
       },
-      isLoading: false,
-    });
+    );
 
     const { result } = renderHook(() => useCleanseDonationState(props));
 
