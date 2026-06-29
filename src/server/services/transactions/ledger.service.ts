@@ -1,8 +1,10 @@
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
 
+type DbClient = PrismaClient | Prisma.TransactionClient;
+
 export async function rerollupExpenseSummary(params: {
-  prismaClient: PrismaClient;
+  prismaClient: DbClient;
   userId: string;
   oldCategory: string;
   newCategory: string;
@@ -101,13 +103,14 @@ export async function rerollupExpenseSummary(params: {
  * Category changes on CREDIT transactions are stored in Transaction.category directly.
  * The Transaction row itself is the income record — no secondary sync needed.
  */
-export async function updateIncomeRecordSource(params: {
-  prismaClient: PrismaClient;
+export async function updateIncomeRecordSource(_params: {
+  prismaClient: DbClient;
   userId: string;
   newSourceName: string;
   amount: Decimal;
   transactionDate: Date;
 }): Promise<void> {
+  void _params;
   // IncomeLedger/IncomeRecord tables removed — Transaction is the source of truth.
   // Category update already applied to Transaction row by the caller.
 }
@@ -118,7 +121,7 @@ export async function updateIncomeRecordSource(params: {
  * The summary amount can become negative (reimbursed more than spent in the month).
  */
 export async function applyReimbursementOffset(params: {
-  prismaClient: PrismaClient;
+  prismaClient: DbClient;
   userId: string;
   offsetCategory: string;
   amount: Decimal;
@@ -165,7 +168,7 @@ export async function applyReimbursementOffset(params: {
  * Symmetric inverse of applyReimbursementOffset.
  */
 export async function reverseReimbursementOffset(params: {
-  prismaClient: PrismaClient;
+  prismaClient: DbClient;
   userId: string;
   offsetCategory: string;
   amount: Decimal;

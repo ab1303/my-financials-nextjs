@@ -1,5 +1,6 @@
 'use client';
 
+import type { CurrencyEnumType } from '@prisma/client';
 import { Check, Pencil, X } from 'lucide-react';
 import { useState } from 'react';
 import { NumericFormat } from 'react-number-format';
@@ -19,7 +20,7 @@ interface CurrencyTotalFromService {
   totalUnrealizedPL: number;
   totalRealizedPL: number;
   totalCash?: number;
-  accounts: any[];
+  accounts: unknown[];
 }
 
 interface SummaryCardsProps {
@@ -28,6 +29,9 @@ interface SummaryCardsProps {
   snapshotDate: Date | null;
   snapshotId: string | null;
 }
+
+const asCurrencyEnum = (currency: string): CurrencyEnumType =>
+  currency === 'USD' ? 'USD' : 'AUD';
 
 /**
  * Display portfolio summary cards, one per currency (AUD/USD).
@@ -114,7 +118,7 @@ export default function SummaryCards({
                 <p className='text-2xl font-bold text-foreground'>
                   {formatCurrency(
                     total.totalValue + (total.totalCash ?? 0),
-                    total.currency as any,
+                    asCurrencyEnum(total.currency),
                   )}
                 </p>
                 {(total.totalCash ?? 0) > 0 && (
@@ -124,7 +128,7 @@ export default function SummaryCards({
                       <span className='font-medium text-foreground'>
                         {formatCurrency(
                           total.totalValue,
-                          total.currency as any,
+                          asCurrencyEnum(total.currency),
                         )}
                       </span>
                     </div>
@@ -133,7 +137,7 @@ export default function SummaryCards({
                       <span className='font-medium text-foreground'>
                         {formatCurrency(
                           total.totalCash ?? 0,
-                          total.currency as any,
+                          asCurrencyEnum(total.currency),
                         )}
                       </span>
                     </div>
@@ -145,7 +149,10 @@ export default function SummaryCards({
                   Invested Amount
                 </p>
                 <p className='text-lg font-semibold text-foreground'>
-                  {formatCurrency(total.totalCostBasis, total.currency as any)}
+                  {formatCurrency(
+                    total.totalCostBasis,
+                    asCurrencyEnum(total.currency),
+                  )}
                 </p>
               </div>
             </div>
@@ -157,7 +164,10 @@ export default function SummaryCards({
                 <p
                   className={`font-semibold ${getPLColorClass(total.totalUnrealizedPL)}`}
                 >
-                  {formatPL(total.totalUnrealizedPL, total.currency as any)}
+                  {formatPL(
+                    total.totalUnrealizedPL,
+                    asCurrencyEnum(total.currency),
+                  )}
                 </p>
               </div>
               <div className='flex justify-between items-center py-2 border-t border-border border-opacity-50'>
@@ -165,13 +175,16 @@ export default function SummaryCards({
                 <p
                   className={`font-semibold ${getPLColorClass(total.totalRealizedPL)}`}
                 >
-                  {formatPL(total.totalRealizedPL, total.currency as any)}
+                  {formatPL(
+                    total.totalRealizedPL,
+                    asCurrencyEnum(total.currency),
+                  )}
                 </p>
               </div>
               <div className='flex justify-between items-center py-3 border-t-2 border-border'>
                 <p className='font-semibold text-foreground'>Total P/L</p>
                 <p className={`text-lg font-bold ${totalPLColorClass}`}>
-                  {formatPL(totalPL, total.currency as any)}
+                  {formatPL(totalPL, asCurrencyEnum(total.currency))}
                 </p>
               </div>
             </div>

@@ -1,12 +1,17 @@
-import type { PrismaClient, TransactionStatusEnum } from '@prisma/client';
+import type {
+  Prisma,
+  PrismaClient,
+  TransactionStatusEnum,
+} from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
 
 import { rerollupExpenseSummary } from './ledger.service';
 
 const TRANSFER_CATEGORY = 'Transfer';
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 export async function clearTransferLink(
-  db: PrismaClient,
+  db: DbClient,
   userId: string,
   tx: {
     id: string;
@@ -16,15 +21,23 @@ export async function clearTransferLink(
   },
   sessionTxIds: Set<string>,
 ): Promise<void> {
-  if ((tx as any).transferLinkedTransactionId) {
-    await _clearDebitSide(db, userId, tx as any, sessionTxIds);
+  if (tx.transferLinkedTransactionId) {
+    await _clearDebitSide(
+      db,
+      userId,
+      {
+        ...tx,
+        transferLinkedTransactionId: tx.transferLinkedTransactionId,
+      },
+      sessionTxIds,
+    );
   } else {
     await _clearCreditSide(db, userId, tx.id, sessionTxIds);
   }
 }
 
 async function _clearDebitSide(
-  db: PrismaClient,
+  db: DbClient,
   _userId: string,
   debit: {
     id: string;
@@ -34,7 +47,7 @@ async function _clearDebitSide(
   },
   sessionTxIds: Set<string>,
 ): Promise<void> {
-  await (db.transaction as any).update({
+  await db.transaction.update({
     where: { id: debit.id },
     data: {
       transferLinkedTransactionId: null,
@@ -45,7 +58,7 @@ async function _clearDebitSide(
 
   if (sessionTxIds.has(debit.transferLinkedTransactionId)) return;
 
-  const credit = await (db.transaction as any).findUnique({
+  const credit = await db.transaction.findUnique({
     where: { id: debit.transferLinkedTransactionId },
     select: {
       id: true,
@@ -57,7 +70,7 @@ async function _clearDebitSide(
   });
   if (!credit || credit.status === 'VOIDED') return;
 
-  await (db.transaction as any).update({
+  await db.transaction.update({
     where: { id: credit.id },
     data: {
       category: credit.preLinkCategory ?? credit.category,
@@ -69,12 +82,12 @@ async function _clearDebitSide(
 }
 
 async function _clearCreditSide(
-  db: PrismaClient,
+  db: DbClient,
   userId: string,
   creditId: string,
   sessionTxIds: Set<string>,
 ): Promise<void> {
-  const debit = await (db.transaction as any).findFirst({
+  const debit = await db.transaction.findFirst({
     where: { transferLinkedTransactionId: creditId },
     select: {
       id: true,
@@ -92,7 +105,7 @@ async function _clearCreditSide(
   const restoredStatus = debit.preLinkStatus ?? debit.status;
 
   if (sessionTxIds.has(debit.id)) {
-    await (db.transaction as any).update({
+    await db.transaction.update({
       where: { id: debit.id },
       data: {
         transferLinkedTransactionId: null,
@@ -103,7 +116,7 @@ async function _clearCreditSide(
     return;
   }
 
-  await (db.transaction as any).update({
+  await db.transaction.update({
     where: { id: debit.id },
     data: {
       transferLinkedTransactionId: null,
@@ -124,11 +137,11 @@ async function _clearCreditSide(
       oldCategory: TRANSFER_CATEGORY,
       newCategory: restoredCategory,
       amount: debit.amount as Decimal,
-      date: debit.date as Date,
+      date: debit.date,
     });
   }
 
-  await (db.transaction as any).update({
+  await db.transaction.update({
     where: { id: creditId },
     data: { preLinkCategory: null, preLinkStatus: null },
   });

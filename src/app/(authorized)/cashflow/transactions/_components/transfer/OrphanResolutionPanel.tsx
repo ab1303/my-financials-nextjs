@@ -1,5 +1,6 @@
 'use client';
 
+import type { Decimal } from '@prisma/client/runtime/library';
 import {
   AlertTriangle,
   ChevronDown,
@@ -26,6 +27,37 @@ type PickMode = 'expense' | 'income' | null;
 interface CategoryOption {
   label: string;
   value: string;
+}
+
+interface OrphanItem {
+  id: string;
+  description: string;
+  date: string | Date;
+  amount: Decimal | number | string;
+  type?: 'DEBIT' | 'CREDIT';
+  bankAccountId?: string | null;
+  financialAccount?: { name?: string | null } | null;
+}
+
+interface ResolvedOrphanItem {
+  id: string;
+  description: string;
+  date: string | Date;
+  amount: Decimal | number | string;
+  orphanResolution?: string | null;
+  category?: string | null;
+}
+
+interface LinkedPairItem {
+  id: string;
+  description: string;
+  date: string | Date;
+  amount: Decimal | number | string;
+  financialAccount?: { name?: string | null } | null;
+  transferLinkedTransaction?: {
+    description: string;
+    financialAccount?: { name?: string | null } | null;
+  } | null;
 }
 
 const RESOLUTION_LABELS: Record<string, string> = {
@@ -62,6 +94,10 @@ export default function OrphanResolutionPanel({
     trpc.transfer.getResolvedOrphans.useQuery({ limit: 50 });
   const { data: linkedPairs = [], isLoading: linkedLoading } =
     trpc.transfer.getLinkedTransferPairs.useQuery();
+
+  const orphanList = orphans as OrphanItem[];
+  const resolvedList = resolved as ResolvedOrphanItem[];
+  const linkedPairsList = linkedPairs as LinkedPairItem[];
 
   const [isRunningDetection, setIsRunningDetection] = useState(false);
 
@@ -158,7 +194,7 @@ export default function OrphanResolutionPanel({
     const category = selectedCategory[orphanId];
     if (!mode || !category) return;
 
-    const orphan = (orphans as any[]).find((o) => o.id === orphanId);
+    const orphan = orphanList.find((o) => o.id === orphanId);
     const shouldSave = saveAsRule[orphanId] ?? false;
 
     setResolvingId(orphanId);
@@ -191,18 +227,18 @@ export default function OrphanResolutionPanel({
       year: 'numeric',
     });
 
-  const formatAmount = (amount: number | string) =>
+  const formatAmount = (amount: Decimal | number | string) =>
     `$${Math.abs(Number(amount)).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   // Find the orphan whose drawer is open (for TransferLinkDrawer props)
   const drawerOrphan = drawerOrphanId
-    ? (orphans as any[]).find((o) => o.id === drawerOrphanId)
+    ? orphanList.find((o) => o.id === drawerOrphanId)
     : null;
 
   const hasContent =
-    (orphans as any[]).length > 0 ||
-    (resolved as any[]).length > 0 ||
-    (linkedPairs as any[]).length > 0;
+    orphanList.length > 0 ||
+    resolvedList.length > 0 ||
+    linkedPairsList.length > 0;
 
   if (isLoading) return null;
   if (!hasContent) return null;
@@ -211,15 +247,15 @@ export default function OrphanResolutionPanel({
     <>
       <div className='mb-6 space-y-3'>
         {/* ── Unresolved orphans panel ── */}
-        {(orphans as any[]).length > 0 && (
+        {orphanList.length > 0 && (
           <div className='rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30'>
             <div className='flex items-start gap-3'>
               <AlertTriangle className='mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500' />
               <div className='flex-1 min-w-0'>
                 <div className='flex items-center gap-2'>
                   <h3 className='font-medium text-amber-800 dark:text-amber-200'>
-                    {(orphans as any[]).length} orphaned transfer
-                    {(orphans as any[]).length !== 1 ? 's' : ''} need resolution
+                    {orphanList.length} orphaned transfer
+                    {orphanList.length !== 1 ? 's' : ''} need resolution
                   </h3>
                   <button
                     type='button'
@@ -249,7 +285,7 @@ export default function OrphanResolutionPanel({
                 </p>
 
                 <div className='mt-4 space-y-3'>
-                  {(orphans as any[]).map((orphan) => {
+                  {orphanList.map((orphan) => {
                     const mode = pickMode[orphan.id] ?? null;
                     const isBusy = resolvingId === orphan.id;
                     const options =
@@ -268,11 +304,11 @@ export default function OrphanResolutionPanel({
                             {orphan.description}
                           </p>
                           <p className='mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400'>
-                            <TransactionTypeBadge type={(orphan as any).type} />
+                            <TransactionTypeBadge type={orphan.type} />
                             <span>
                               {formatDate(orphan.date)} ·{' '}
                               {formatAmount(orphan.amount)} ·{' '}
-                              {(orphan.financialAccount as any)?.name ??
+                              {orphan.financialAccount?.name ??
                                 'Unknown account'}
                             </span>
                           </p>
@@ -394,7 +430,7 @@ export default function OrphanResolutionPanel({
         )}
 
         {/* ── Resolved orphans section ── */}
-        {!resolvedLoading && (resolved as any[]).length > 0 && (
+        {!resolvedLoading && resolvedList.length > 0 && (
           <div className='rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/40'>
             <button
               type='button'
@@ -402,8 +438,8 @@ export default function OrphanResolutionPanel({
               className='flex w-full items-center justify-between text-sm font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
             >
               <span>
-                {(resolved as any[]).length} resolved transfer
-                {(resolved as any[]).length !== 1 ? 's' : ''}
+                {resolvedList.length} resolved transfer
+                {resolvedList.length !== 1 ? 's' : ''}
               </span>
               {showResolved ? (
                 <ChevronUp className='h-4 w-4' />
@@ -414,7 +450,7 @@ export default function OrphanResolutionPanel({
 
             {showResolved && (
               <div className='mt-3 space-y-2'>
-                {(resolved as any[]).map((tx) => (
+                {resolvedList.map((tx) => (
                   <div
                     key={tx.id}
                     className='flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900'
@@ -459,7 +495,7 @@ export default function OrphanResolutionPanel({
         )}
 
         {/* ── Linked transfer pairs section ── */}
-        {!linkedLoading && (linkedPairs as any[]).length > 0 && (
+        {!linkedLoading && linkedPairsList.length > 0 && (
           <div className='rounded-xl border border-teal-100 bg-teal-50/50 p-3 dark:border-teal-900/40 dark:bg-teal-950/20'>
             <button
               type='button'
@@ -468,8 +504,8 @@ export default function OrphanResolutionPanel({
             >
               <span className='flex items-center gap-1.5'>
                 <Link2 className='h-3.5 w-3.5' />
-                {(linkedPairs as any[]).length} linked transfer pair
-                {(linkedPairs as any[]).length !== 1 ? 's' : ''}
+                {linkedPairsList.length} linked transfer pair
+                {linkedPairsList.length !== 1 ? 's' : ''}
               </span>
               {showLinked ? (
                 <ChevronUp className='h-4 w-4' />
@@ -480,7 +516,7 @@ export default function OrphanResolutionPanel({
 
             {showLinked && (
               <div className='mt-3 space-y-2'>
-                {(linkedPairs as any[]).map((pair) => (
+                {linkedPairsList.map((pair) => (
                   <div
                     key={pair.id}
                     className='flex flex-wrap items-start justify-between gap-2 rounded-lg border border-teal-100 bg-white px-3 py-2 dark:border-teal-900/30 dark:bg-gray-900'
@@ -491,27 +527,24 @@ export default function OrphanResolutionPanel({
                       </p>
                       <p className='mt-0.5 text-xs text-gray-500 dark:text-gray-400'>
                         {formatDate(pair.date)} · {formatAmount(pair.amount)}
-                        {(pair.financialAccount as any)?.name && (
+                        {pair.financialAccount?.name && (
                           <span className='ml-1'>
-                            · {(pair.financialAccount as any).name}
+                            · {pair.financialAccount.name}
                           </span>
                         )}
                       </p>
-                      {(pair.transferLinkedTransaction as any) && (
+                      {pair.transferLinkedTransaction && (
                         <p className='mt-0.5 flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400'>
                           <Link2 className='h-3 w-3 shrink-0' />
                           <span className='truncate'>
-                            {
-                              (pair.transferLinkedTransaction as any)
-                                .description
-                            }
-                            {(pair.transferLinkedTransaction as any)
-                              .financialAccount?.name && (
+                            {pair.transferLinkedTransaction.description}
+                            {pair.transferLinkedTransaction.financialAccount
+                              ?.name && (
                               <span className='text-gray-400'>
                                 {' '}
                                 ·{' '}
                                 {
-                                  (pair.transferLinkedTransaction as any)
+                                  pair.transferLinkedTransaction
                                     .financialAccount.name
                                 }
                               </span>
@@ -550,14 +583,13 @@ export default function OrphanResolutionPanel({
             id: drawerOrphan.id,
             description: drawerOrphan.description,
             amount: Number(drawerOrphan.amount),
-            type: (drawerOrphan as any).type ?? 'DEBIT',
+            type: drawerOrphan.type === 'CREDIT' ? 'CREDIT' : 'DEBIT',
             date:
               drawerOrphan.date instanceof Date
                 ? drawerOrphan.date.toISOString()
                 : String(drawerOrphan.date),
-            bankAccountId: (drawerOrphan as any).bankAccountId ?? null,
-            bankAccountName:
-              (drawerOrphan.financialAccount as any)?.name ?? null,
+            bankAccountId: drawerOrphan.bankAccountId ?? null,
+            bankAccountName: drawerOrphan.financialAccount?.name ?? null,
           }}
           onLinked={() => {
             setDrawerOrphanId(null);

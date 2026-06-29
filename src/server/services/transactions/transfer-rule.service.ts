@@ -41,7 +41,7 @@ export async function createRule(
     creditBankAccountId,
     confidenceThreshold = 85,
   } = params;
-  const rule = await (prisma.transferMatchRule as any).create({
+  const rule = await prisma.transferMatchRule.create({
     data: {
       userId,
       name,
@@ -72,11 +72,11 @@ export async function listRules(params: {
   prisma: PrismaClient;
   userId: string;
 }): Promise<RuleListItem[]> {
-  const rules = await (params.prisma.transferMatchRule as any).findMany({
+  const rules = await params.prisma.transferMatchRule.findMany({
     where: { userId: params.userId },
     orderBy: { createdAt: 'desc' },
   });
-  return rules.map((rule: any) => ({
+  return rules.map((rule) => ({
     id: rule.id,
     name: rule.name,
     isActive: rule.isActive,
@@ -96,11 +96,11 @@ export async function toggleRule(params: {
   ruleId: string;
   isActive: boolean;
 }): Promise<void> {
-  const rule = await (params.prisma.transferMatchRule as any).findUnique({
+  const rule = await params.prisma.transferMatchRule.findUnique({
     where: { id: params.ruleId },
   });
   if (!rule || rule.userId !== params.userId) throw new Error('Rule not found');
-  await (params.prisma.transferMatchRule as any).update({
+  await params.prisma.transferMatchRule.update({
     where: { id: params.ruleId },
     data: { isActive: params.isActive },
   });
@@ -111,12 +111,12 @@ export async function deleteRule(params: {
   userId: string;
   ruleId: string;
 }): Promise<void> {
-  const rule = await (params.prisma.transferMatchRule as any).findUnique({
+  const rule = await params.prisma.transferMatchRule.findUnique({
     where: { id: params.ruleId },
   });
   if (!rule || rule.userId !== params.userId)
     throw new Error('Rule not found or not authorized');
-  await (params.prisma.transferMatchRule as any).delete({
+  await params.prisma.transferMatchRule.delete({
     where: { id: params.ruleId },
   });
 }
@@ -199,11 +199,11 @@ export async function updateRule(params: {
   maxDayGap?: number;
   confidenceThreshold?: number;
 }): Promise<RuleListItem> {
-  const rule = await (params.prisma.transferMatchRule as any).findUnique({
+  const rule = await params.prisma.transferMatchRule.findUnique({
     where: { id: params.ruleId },
   });
   if (!rule || rule.userId !== params.userId) throw new Error('Rule not found');
-  const updated = await (params.prisma.transferMatchRule as any).update({
+  const updated = await params.prisma.transferMatchRule.update({
     where: { id: params.ruleId },
     data: {
       ...(params.name !== undefined && { name: params.name }),

@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { CategoryRuleMatchType } from '@prisma/client';
 
 export type { CategoryRuleMatchType };
@@ -29,7 +29,7 @@ export async function createRule(
 ): Promise<CategoryRuleListItem> {
   const { prisma, userId, name, pattern, matchType, category } = params;
 
-  const rule = await (prisma.categoryRule as any).create({
+  const rule = await prisma.categoryRule.create({
     data: {
       userId,
       name,
@@ -58,12 +58,12 @@ export async function listRules(params: {
   prisma: PrismaClient;
   userId: string;
 }): Promise<CategoryRuleListItem[]> {
-  const rules = await (params.prisma.categoryRule as any).findMany({
+  const rules = await params.prisma.categoryRule.findMany({
     where: { userId: params.userId },
     orderBy: { createdAt: 'desc' },
   });
 
-  return rules.map((rule: any) => ({
+  return rules.map((rule) => ({
     id: rule.id,
     name: rule.name,
     matchType: rule.matchType,
@@ -85,7 +85,7 @@ export async function toggleRule(params: {
   ruleId: string;
   isActive: boolean;
 }): Promise<void> {
-  const rule = await (params.prisma.categoryRule as any).findUnique({
+  const rule = await params.prisma.categoryRule.findUnique({
     where: { id: params.ruleId },
   });
 
@@ -93,7 +93,7 @@ export async function toggleRule(params: {
     throw new Error('Rule not found');
   }
 
-  await (params.prisma.categoryRule as any).update({
+  await params.prisma.categoryRule.update({
     where: { id: params.ruleId },
     data: { isActive: params.isActive },
   });
@@ -108,7 +108,7 @@ export async function deleteRule(params: {
   userId: string;
   ruleId: string;
 }): Promise<void> {
-  const rule = await (params.prisma.categoryRule as any).findUnique({
+  const rule = await params.prisma.categoryRule.findUnique({
     where: { id: params.ruleId },
   });
 
@@ -116,7 +116,7 @@ export async function deleteRule(params: {
     throw new Error('Rule not found or not authorized');
   }
 
-  await (params.prisma.categoryRule as any).delete({
+  await params.prisma.categoryRule.delete({
     where: { id: params.ruleId },
   });
 }
@@ -168,7 +168,7 @@ export async function findSimilarTransactions(params: {
     return 0;
   }
 
-  const count = await (params.prisma.transaction as any).count({
+  const count = await params.prisma.transaction.count({
     where: {
       userId: params.userId,
       status: { not: 'VOIDED' },
@@ -192,15 +192,15 @@ export async function findSimilarTransactions(params: {
 function buildDescriptionFilter(
   matchType: CategoryRuleMatchType,
   pattern: string,
-) {
+): Prisma.StringFilter {
   if (matchType === CategoryRuleMatchType.STARTS_WITH) {
-    return { startsWith: pattern, mode: 'insensitive' as const };
+    return { startsWith: pattern, mode: 'insensitive' };
   }
   if (matchType === CategoryRuleMatchType.EXACT) {
-    return { equals: pattern, mode: 'insensitive' as const };
+    return { equals: pattern, mode: 'insensitive' };
   }
   // CONTAINS (default)
-  return { contains: pattern, mode: 'insensitive' as const };
+  return { contains: pattern, mode: 'insensitive' };
 }
 
 /**
@@ -215,14 +215,14 @@ export async function runCategoryRules(params: {
   userId: string;
   importSessionId: string;
 }): Promise<{ rulesRan: number; appliedCount: number }> {
-  const rules = await (params.prisma.categoryRule as any).findMany({
+  const rules = await params.prisma.categoryRule.findMany({
     where: { userId: params.userId, isActive: true },
   });
 
   let totalApplied = 0;
 
   for (const rule of rules) {
-    const result = await (params.prisma.transaction as any).updateMany({
+    const result = await params.prisma.transaction.updateMany({
       where: {
         userId: params.userId,
         importSessionId: params.importSessionId,
@@ -237,7 +237,7 @@ export async function runCategoryRules(params: {
     });
 
     if (result.count > 0) {
-      await (params.prisma.categoryRule as any).update({
+      await params.prisma.categoryRule.update({
         where: { id: rule.id },
         data: { appliedCount: { increment: result.count } },
       });
@@ -258,7 +258,7 @@ export async function applyRuleToPast(params: {
   userId: string;
   ruleId: string;
 }): Promise<number> {
-  const rule = await (params.prisma.categoryRule as any).findUnique({
+  const rule = await params.prisma.categoryRule.findUnique({
     where: { id: params.ruleId },
   });
 
@@ -266,7 +266,7 @@ export async function applyRuleToPast(params: {
     throw new Error('Rule not found or not authorized');
   }
 
-  const result = await (params.prisma.transaction as any).updateMany({
+  const result = await params.prisma.transaction.updateMany({
     where: {
       userId: params.userId,
       status: { not: 'VOIDED' },

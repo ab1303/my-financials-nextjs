@@ -31,7 +31,7 @@ export function scoreCandidate(params: {
     amount: Decimal;
     date: Date;
     description: string;
-    bankAccountId: string;
+    bankAccountId: string | null;
     bankId: string | null;
   };
   sourceDescription: string;
@@ -130,7 +130,7 @@ export async function getCandidates(params: {
   const dateTo = new Date(source.date);
   dateTo.setDate(dateTo.getDate() + TRANSFER_DATE_TOLERANCE_DAYS_CROSS);
 
-  const candidates = (await (params.prisma.transaction as any).findMany({
+  const candidates = await params.prisma.transaction.findMany({
     where: {
       userId: params.userId,
       type: counterType,
@@ -141,26 +141,11 @@ export async function getCandidates(params: {
       date: { gte: dateFrom, lte: dateTo },
     },
     include: { financialAccount: { include: { institution: true } } },
-  })) as Array<{
-    id: string;
-    amount: Decimal;
-    date: Date;
-    description: string;
-    type: TransactionTypeEnum;
-    status: TransactionStatusEnum;
-    bankAccountId: string | null;
-    financialAccount: {
-      name: string;
-      institutionId: string;
-      isTracked: boolean;
-      institution: { name: string | null } | null;
-    } | null;
-  }>;
+  });
 
   const sourceBankId: string | null =
-    (source as any).financialAccount?.institutionId ?? null;
-  const sourceIsTracked: boolean =
-    (source as any).financialAccount?.isTracked !== false;
+    source.financialAccount?.institutionId ?? null;
+  const sourceIsTracked: boolean = source.financialAccount?.isTracked !== false;
 
   return candidates
     .filter((candidate) => {
@@ -250,7 +235,7 @@ export async function searchTransferCandidates(params: {
       })()
     : undefined;
 
-  const candidates = (await (params.prisma.transaction as any).findMany({
+  const candidates = await params.prisma.transaction.findMany({
     where: {
       userId: params.userId,
       type: counterType,
@@ -272,23 +257,10 @@ export async function searchTransferCandidates(params: {
     include: { financialAccount: { include: { institution: true } } },
     orderBy: { date: 'desc' },
     take: 50,
-  })) as Array<{
-    id: string;
-    amount: import('@prisma/client/runtime/library').Decimal;
-    date: Date;
-    description: string;
-    type: TransactionTypeEnum;
-    status: TransactionStatusEnum;
-    bankAccountId: string | null;
-    financialAccount: {
-      name: string;
-      institutionId: string;
-      institution: { name: string | null } | null;
-    } | null;
-  }>;
+  });
 
   const sourceBankId: string | null =
-    (source as any).financialAccount?.institutionId ?? null;
+    source.financialAccount?.institutionId ?? null;
 
   return candidates
     .map((candidate) => {
@@ -325,7 +297,10 @@ export async function searchTransferCandidates(params: {
       };
     })
     .sort((a, b) => a._daysDiff - b._daysDiff) // nearest date first
-    .map(({ _daysDiff: _, ...rest }) => rest); // strip internal sort key
+    .map(({ _daysDiff, ...rest }) => {
+      void _daysDiff;
+      return rest;
+    }); // strip internal sort key
 }
 
 /**
@@ -357,10 +332,7 @@ export async function linkTransferPair(params: {
     throw new Error('Second transaction must be CREDIT');
   // Same-account transfers are valid (e.g. loan sent out and returned via the same bank account)
 
-  if (
-    (debit as any).transferLinkedTransactionId ??
-    (credit as any).transferLinkedTransactionId
-  ) {
+  if (debit.transferLinkedTransactionId ?? credit.transferLinkedTransactionId) {
     throw new Error(
       'One or both transactions are already linked to a transfer pair',
     );
@@ -370,7 +342,7 @@ export async function linkTransferPair(params: {
 
   await params.prisma.$transaction(async (tx) => {
     // Store pre-link state and mark debit as Transfer/CONFIRMED
-    await (tx.transaction as any).update({
+    await tx.transaction.update({
       where: { id: debit.id },
       data: {
         transferLinkedTransactionId: credit.id,
@@ -382,7 +354,7 @@ export async function linkTransferPair(params: {
     });
 
     // Store pre-link state and mark credit as Transfer/CONFIRMED
-    await (tx.transaction as any).update({
+    await tx.transaction.update({
       where: { id: credit.id },
       data: {
         preLinkCategory: credit.category,
@@ -427,40 +399,10 @@ export async function unlinkTransferPair(params: {
   transactionId: string; // either side of the pair
   userId: string;
 }): Promise<TransferUnlinkResult> {
-  const txRecord = (await (params.prisma.transaction as any).findUnique({
+  const txRecord = await params.prisma.transaction.findUnique({
     where: { id: params.transactionId, userId: params.userId },
     include: { transferLinkedTransaction: true, transferCounterpart: true },
-  })) as {
-    id: string;
-    type: TransactionTypeEnum;
-    status: TransactionStatusEnum;
-    category: string;
-    amount: Decimal;
-    date: Date;
-    preLinkCategory: string | null;
-    preLinkStatus: TransactionStatusEnum | null;
-    transferLinkedTransactionId: string | null;
-    transferLinkedTransaction: {
-      id: string;
-      type: TransactionTypeEnum;
-      status: TransactionStatusEnum;
-      category: string;
-      amount: Decimal;
-      date: Date;
-      preLinkCategory: string | null;
-      preLinkStatus: TransactionStatusEnum | null;
-    } | null;
-    transferCounterpart: {
-      id: string;
-      type: TransactionTypeEnum;
-      status: TransactionStatusEnum;
-      category: string;
-      amount: Decimal;
-      date: Date;
-      preLinkCategory: string | null;
-      preLinkStatus: TransactionStatusEnum | null;
-    } | null;
-  } | null;
+  });
 
   if (!txRecord) throw new Error('Transaction not found');
 
@@ -487,7 +429,7 @@ export async function unlinkTransferPair(params: {
 
   await params.prisma.$transaction(async (prismaClient) => {
     // Restore debit
-    await (prismaClient.transaction as any).update({
+    await prismaClient.transaction.update({
       where: { id: debit.id },
       data: {
         transferLinkedTransactionId: null,
@@ -499,7 +441,7 @@ export async function unlinkTransferPair(params: {
     });
 
     // Restore credit
-    await (prismaClient.transaction as any).update({
+    await prismaClient.transaction.update({
       where: { id: credit.id },
       data: {
         preLinkCategory: null,
@@ -542,7 +484,7 @@ export async function getUnmatchedTransferCount(params: {
   prisma: PrismaClient;
   userId: string;
 }): Promise<number> {
-  return (params.prisma.transaction as any).count({
+  return params.prisma.transaction.count({
     where: {
       userId: params.userId,
       category: TRANSFER_CATEGORY,
@@ -615,7 +557,7 @@ export async function runRetroactiveDetection({
   // --- Pass 1: Score-based pairing ---
   // Fetch unresolved DEBIT and CREDIT orphans
   const [debitOrphans, creditOrphans] = await Promise.all([
-    (prisma.transaction as any).findMany({
+    prisma.transaction.findMany({
       where: {
         userId,
         category: TRANSFER_CATEGORY,
@@ -626,7 +568,7 @@ export async function runRetroactiveDetection({
       },
       include: { financialAccount: { include: { institution: true } } },
     }),
-    (prisma.transaction as any).findMany({
+    prisma.transaction.findMany({
       where: {
         userId,
         category: TRANSFER_CATEGORY,
@@ -645,7 +587,7 @@ export async function runRetroactiveDetection({
     amount: Decimal;
     date: Date;
     description: string;
-    bankAccountId: string;
+    bankAccountId: string | null;
     financialAccount: {
       institutionId: string | null;
       institution: { name: string | null } | null;
@@ -726,7 +668,8 @@ export async function runRetroactiveDetection({
         userId,
       });
       pairedCount++;
-    } catch (err) {
+    } catch (_err) {
+      void _err;
       // Ignore errors (already linked, etc)
     }
   }
@@ -736,7 +679,7 @@ export async function runRetroactiveDetection({
   const unresolvedOrphans: Array<{
     id: string;
     description: string;
-  }> = await (prisma.transaction as any).findMany({
+  }> = await prisma.transaction.findMany({
     where: {
       userId,
       category: TRANSFER_CATEGORY,
@@ -754,7 +697,7 @@ export async function runRetroactiveDetection({
     matchType: string;
     category: string;
     appliedCount: number;
-  }> = await (prisma.categoryRule as any).findMany({
+  }> = await prisma.categoryRule.findMany({
     where: { userId, isActive: true },
     select: {
       id: true,
@@ -785,7 +728,7 @@ export async function runRetroactiveDetection({
     for (const rule of categoryRules) {
       if (matchesRule(orphan.description, rule.pattern, rule.matchType)) {
         // Update orphan category and source
-        await (prisma.transaction as any).update({
+        await prisma.transaction.update({
           where: { id: orphan.id },
           data: { category: rule.category, source: 'USER_OVERRIDE' },
         });
@@ -801,14 +744,14 @@ export async function runRetroactiveDetection({
 
   // Update appliedCount for rules
   for (const [ruleId, count] of ruleIdToApplyCount.entries()) {
-    await (prisma.categoryRule as any).update({
+    await prisma.categoryRule.update({
       where: { id: ruleId },
       data: { appliedCount: { increment: count } },
     });
   }
 
   // Final unresolved count
-  const remainingCount: number = await (prisma.transaction as any).count({
+  const remainingCount: number = await prisma.transaction.count({
     where: {
       userId,
       category: TRANSFER_CATEGORY,
@@ -879,11 +822,11 @@ export async function findSimilarUnmatchedPairs(params: {
   creditTransactionId: string;
 }): Promise<SimilarPairSuggestion[]> {
   const [sourceDebit, sourceCredit] = await Promise.all([
-    (params.prisma.transaction as any).findUnique({
+    params.prisma.transaction.findUnique({
       where: { id: params.debitTransactionId, userId: params.userId },
       include: { financialAccount: { include: { institution: true } } },
     }),
-    (params.prisma.transaction as any).findUnique({
+    params.prisma.transaction.findUnique({
       where: { id: params.creditTransactionId, userId: params.userId },
       include: { financialAccount: { include: { institution: true } } },
     }),
@@ -908,7 +851,7 @@ export async function findSimilarUnmatchedPairs(params: {
     },
   });
 
-  const unmatchedDebits = await (params.prisma.transaction as any).findMany({
+  const unmatchedDebits = await params.prisma.transaction.findMany({
     where: {
       userId: params.userId,
       type: TransactionTypeEnum.DEBIT,
@@ -929,7 +872,7 @@ export async function findSimilarUnmatchedPairs(params: {
     const dateTo = new Date(debit.date);
     dateTo.setDate(dateTo.getDate() + pattern.maxDayGap);
 
-    const creditCandidates = await (params.prisma.transaction as any).findMany({
+    const creditCandidates = await params.prisma.transaction.findMany({
       where: {
         userId: params.userId,
         type: TransactionTypeEnum.CREDIT,
@@ -946,7 +889,7 @@ export async function findSimilarUnmatchedPairs(params: {
 
     if (creditCandidates.length === 0) continue;
 
-    let bestCredit: any = null;
+    let bestCredit: (typeof creditCandidates)[number] | null = null;
     let bestScore = 0;
     let bestBreakdown: TransferCandidateScore['scoreBreakdown'] | null = null;
     let bestAmountDiffWarning: string | null = null;

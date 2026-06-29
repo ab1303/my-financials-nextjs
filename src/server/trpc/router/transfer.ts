@@ -1,5 +1,4 @@
 import type { Prisma } from '@prisma/client';
-import { TransferOrphanResolution } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
@@ -159,7 +158,7 @@ export const transferRouter = router({
       const skip = (input.page - 1) * input.limit;
 
       const [transactions, total] = await Promise.all([
-        (ctx.prisma.transaction as any).findMany({
+        ctx.prisma.transaction.findMany({
           where: {
             userId,
             category: TRANSFER_CATEGORY,
@@ -171,7 +170,7 @@ export const transferRouter = router({
           skip,
           take: input.limit,
         }),
-        (ctx.prisma.transaction as any).count({
+        ctx.prisma.transaction.count({
           where: {
             userId,
             category: TRANSFER_CATEGORY,
@@ -209,13 +208,13 @@ export const transferRouter = router({
             type: 'DEBIT',
             category: TRANSFER_CATEGORY,
             transferLinkedTransactionId: { not: null },
-          } as any,
+          },
           include: {
             financialAccount: { include: { institution: true } },
             transferLinkedTransaction: {
               include: { financialAccount: { include: { institution: true } } },
             },
-          } as any,
+          },
           orderBy: { date: 'desc' },
           skip,
           take: input.limit,
@@ -226,7 +225,7 @@ export const transferRouter = router({
             type: 'DEBIT',
             category: TRANSFER_CATEGORY,
             transferLinkedTransactionId: { not: null },
-          } as any,
+          },
         }),
       ]);
 
@@ -248,7 +247,7 @@ export const transferRouter = router({
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - ORPHAN_RESOLUTION_DAYS);
 
-      return (ctx.prisma.transaction as any).findMany({
+      return ctx.prisma.transaction.findMany({
         where: {
           userId: ctx.session.user.id,
           category: TRANSFER_CATEGORY,
@@ -277,7 +276,7 @@ export const transferRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       // Guard: verify it IS an orphaned transfer owned by this user
-      const tx = await (ctx.prisma.transaction as any).findFirst({
+      const tx = await ctx.prisma.transaction.findFirst({
         where: {
           id: input.transactionId,
           userId: ctx.session.user.id,
@@ -303,7 +302,7 @@ export const transferRouter = router({
         });
       }
 
-      return (ctx.prisma.transaction as any).update({
+      return ctx.prisma.transaction.update({
         where: { id: input.transactionId },
         data: {
           orphanResolution: input.resolution,
@@ -321,7 +320,7 @@ export const transferRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return (ctx.prisma.transaction as any).findMany({
+      return ctx.prisma.transaction.findMany({
         where: {
           userId: ctx.session.user.id,
           category: TRANSFER_CATEGORY,
@@ -340,7 +339,7 @@ export const transferRouter = router({
   resetOrphanResolution: protectedProcedure
     .input(z.object({ transactionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const tx = await (ctx.prisma.transaction as any).findFirst({
+      const tx = await ctx.prisma.transaction.findFirst({
         where: {
           id: input.transactionId,
           userId: ctx.session.user.id,
@@ -356,7 +355,7 @@ export const transferRouter = router({
         });
       }
 
-      return (ctx.prisma.transaction as any).update({
+      return ctx.prisma.transaction.update({
         where: { id: input.transactionId },
         data: {
           orphanResolution: null,
@@ -366,7 +365,7 @@ export const transferRouter = router({
     }),
 
   getLinkedTransferPairs: protectedProcedure.query(async ({ ctx }) => {
-    return (ctx.prisma.transaction as any).findMany({
+    return ctx.prisma.transaction.findMany({
       where: {
         userId: ctx.session.user.id,
         category: TRANSFER_CATEGORY,

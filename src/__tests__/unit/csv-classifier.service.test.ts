@@ -1,3 +1,4 @@
+import type { ExpenseCategory } from '@prisma/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CsvTransaction } from '@/server/services/ai-import/_types';
@@ -19,6 +20,22 @@ import {
   classifyCreditTransactions,
   classifyTransactions,
 } from '@/server/services/ai-import/csv-classifier.service';
+
+type GenerateTextResult = Awaited<ReturnType<typeof generateText>>;
+
+const asGenerateTextResult = (
+  text: string,
+  usage: { inputTokens: number; outputTokens: number; totalTokens: number },
+): GenerateTextResult =>
+  ({
+    text,
+    usage,
+    finishReason: 'stop',
+  }) as unknown as GenerateTextResult;
+
+const toExpenseCategories = (
+  categories: Array<Pick<ExpenseCategory, 'id' | 'name' | 'isActive'>>,
+): ExpenseCategory[] => categories as unknown as ExpenseCategory[];
 
 describe('csv-classifier.service', () => {
   const mockCategories = [
@@ -81,18 +98,16 @@ describe('csv-classifier.service', () => {
     `;
 
     vi.mocked(generateText).mockResolvedValueOnce({
-      text: mockResponse,
-      usage: {
+      ...asGenerateTextResult(mockResponse, {
         inputTokens: 100,
         outputTokens: 50,
         totalTokens: 150,
-      },
-      finishReason: 'stop',
-    } as any);
+      }),
+    });
 
     const result = await classifyTransactions(
       mockTransactions,
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.classified).toHaveLength(3);
@@ -123,14 +138,16 @@ describe('csv-classifier.service', () => {
     `;
 
     vi.mocked(generateText).mockResolvedValueOnce({
-      text: mockResponse,
-      usage: { inputTokens: 50, outputTokens: 25, totalTokens: 75 },
-      finishReason: 'stop',
-    } as any);
+      ...asGenerateTextResult(mockResponse, {
+        inputTokens: 50,
+        outputTokens: 25,
+        totalTokens: 75,
+      }),
+    });
 
     const result = await classifyTransactions(
       [mockTransactions[0]!],
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.classified[0]!.confirmedCategory).toBe(
@@ -146,14 +163,16 @@ describe('csv-classifier.service', () => {
     `;
 
     vi.mocked(generateText).mockResolvedValueOnce({
-      text: mockResponse,
-      usage: { inputTokens: 50, outputTokens: 25, totalTokens: 75 },
-      finishReason: 'stop',
-    } as any);
+      ...asGenerateTextResult(mockResponse, {
+        inputTokens: 50,
+        outputTokens: 25,
+        totalTokens: 75,
+      }),
+    });
 
     const result = await classifyTransactions(
       [mockTransactions[0]!],
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.classified[0]!.overridden).toBe(false);
@@ -167,14 +186,16 @@ describe('csv-classifier.service', () => {
     `;
 
     vi.mocked(generateText).mockResolvedValueOnce({
-      text: mockResponse,
-      usage: { inputTokens: 50, outputTokens: 25, totalTokens: 75 },
-      finishReason: 'stop',
-    } as any);
+      ...asGenerateTextResult(mockResponse, {
+        inputTokens: 50,
+        outputTokens: 25,
+        totalTokens: 75,
+      }),
+    });
 
     const result = await classifyTransactions(
       [mockTransactions[0]!],
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.classified[0]!.amount).toBe(mockTransactions[0]!.amount);
@@ -185,7 +206,7 @@ describe('csv-classifier.service', () => {
 
     const result = await classifyTransactions(
       [mockTransactions[0]!],
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.classified[0]!.llmCategory).toBe(
@@ -199,14 +220,16 @@ describe('csv-classifier.service', () => {
 
   it('should fall back when LLM returns no JSON array in response', async () => {
     vi.mocked(generateText).mockResolvedValueOnce({
-      text: 'Invalid response, no JSON',
-      usage: { inputTokens: 50, outputTokens: 25, totalTokens: 75 },
-      finishReason: 'stop',
-    } as any);
+      ...asGenerateTextResult('Invalid response, no JSON', {
+        inputTokens: 50,
+        outputTokens: 25,
+        totalTokens: 75,
+      }),
+    });
 
     const result = await classifyTransactions(
       [mockTransactions[0]!],
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.classified[0]!.llmCategory).toBe(
@@ -216,7 +239,10 @@ describe('csv-classifier.service', () => {
   });
 
   it('should handle empty transactions array', async () => {
-    const result = await classifyTransactions([], mockCategories as any);
+    const result = await classifyTransactions(
+      [],
+      toExpenseCategories(mockCategories),
+    );
 
     expect(result.classified).toHaveLength(0);
     expect(result.usage.totalTokens).toBe(0);
@@ -227,7 +253,7 @@ describe('csv-classifier.service', () => {
 
     const result = await classifyTransactions(
       [mockTransactions[0]!],
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.usage.promptTokens).toBe(0);
@@ -244,18 +270,16 @@ describe('csv-classifier.service', () => {
     `;
 
     vi.mocked(generateText).mockResolvedValueOnce({
-      text: mockResponse,
-      usage: {
+      ...asGenerateTextResult(mockResponse, {
         inputTokens: 200,
         outputTokens: 100,
         totalTokens: 300,
-      },
-      finishReason: 'stop',
-    } as any);
+      }),
+    });
 
     const result = await classifyTransactions(
       [mockTransactions[0]!, mockTransactions[1]!],
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.usage.promptTokens).toBe(200);
@@ -273,18 +297,16 @@ describe('csv-classifier.service', () => {
     `;
 
     vi.mocked(generateText).mockResolvedValueOnce({
-      text: mockResponse,
-      usage: {
+      ...asGenerateTextResult(mockResponse, {
         inputTokens: 100,
         outputTokens: 50,
         totalTokens: 150,
-      },
-      finishReason: 'stop',
-    } as any);
+      }),
+    });
 
     const result = await classifyTransactions(
       mockTransactions,
-      mockCategories as any,
+      toExpenseCategories(mockCategories),
     );
 
     expect(result.classified[0]!.description).toBe(
@@ -345,14 +367,15 @@ describe('classifyCreditTransactions', () => {
   });
 
   it('classifies credits using LLM and returns ClassifiedCreditTransaction[]', async () => {
-    const { generateText } = await import('ai');
-    (generateText as any).mockResolvedValue({
-      text: JSON.stringify([
-        { description: 'EMPLOYER SALARY', category: 'EMPLOYMENT' },
-        { description: 'TRANSFER FROM SAVINGS', category: 'Transfer' },
-        { description: 'DIVIDEND PAYMENT ASX', category: 'STOCKS' },
-      ]),
-      usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+    vi.mocked(generateText).mockResolvedValueOnce({
+      ...asGenerateTextResult(
+        JSON.stringify([
+          { description: 'EMPLOYER SALARY', category: 'EMPLOYMENT' },
+          { description: 'TRANSFER FROM SAVINGS', category: 'Transfer' },
+          { description: 'DIVIDEND PAYMENT ASX', category: 'STOCKS' },
+        ]),
+        { inputTokens: 100, outputTokens: 50, totalTokens: 150 },
+      ),
     });
 
     const result = await classifyCreditTransactions(mockCredits);
@@ -379,8 +402,7 @@ describe('classifyCreditTransactions', () => {
   });
 
   it('falls back gracefully when LLM fails', async () => {
-    const { generateText } = await import('ai');
-    (generateText as any).mockRejectedValue(new Error('LLM unavailable'));
+    vi.mocked(generateText).mockRejectedValueOnce(new Error('LLM unavailable'));
 
     const result = await classifyCreditTransactions(mockCredits);
     expect(result.classified).toHaveLength(3);
@@ -392,10 +414,11 @@ describe('classifyCreditTransactions', () => {
   });
 
   it('all returned items have type CREDIT', async () => {
-    const { generateText } = await import('ai');
-    (generateText as any).mockResolvedValue({
-      text: JSON.stringify([{ description: 'X', category: 'EMPLOYMENT' }]),
-      usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 },
+    vi.mocked(generateText).mockResolvedValueOnce({
+      ...asGenerateTextResult(
+        JSON.stringify([{ description: 'X', category: 'EMPLOYMENT' }]),
+        { inputTokens: 10, outputTokens: 5, totalTokens: 15 },
+      ),
     });
 
     const result = await classifyCreditTransactions([mockCredits[0]!]);

@@ -19,7 +19,7 @@ export async function runTransferMatchRules(params: {
 }): Promise<JobSummary> {
   const { prisma, userId, importSessionId } = params;
 
-  const activeRules = await (prisma.transferMatchRule as any).findMany({
+  const activeRules = await prisma.transferMatchRule.findMany({
     where: { userId, isActive: true },
   });
 
@@ -33,7 +33,7 @@ export async function runTransferMatchRules(params: {
     };
   }
 
-  const newTransactions = await (prisma.transaction as any).findMany({
+  const newTransactions = await prisma.transaction.findMany({
     where: {
       userId,
       importSessionId,
@@ -55,7 +55,7 @@ export async function runTransferMatchRules(params: {
     let ruleSkipped = 0;
 
     const debits = newTransactions.filter(
-      (tx: any) =>
+      (tx) =>
         tx.type === TransactionTypeEnum.DEBIT &&
         (!rule.debitBankAccountId ||
           tx.bankAccountId === rule.debitBankAccountId) &&
@@ -65,7 +65,7 @@ export async function runTransferMatchRules(params: {
     );
 
     for (const debit of debits) {
-      const freshDebit = await (prisma.transaction as any).findUnique({
+      const freshDebit = await prisma.transaction.findUnique({
         where: { id: debit.id },
         select: {
           transferLinkedTransactionId: true,
@@ -85,7 +85,7 @@ export async function runTransferMatchRules(params: {
       const dateTo = new Date(debit.date);
       dateTo.setDate(dateTo.getDate() + rule.maxDayGap);
 
-      const creditCandidates = await (prisma.transaction as any).findMany({
+      const creditCandidates = await prisma.transaction.findMany({
         where: {
           userId,
           type: TransactionTypeEnum.CREDIT,
@@ -102,7 +102,7 @@ export async function runTransferMatchRules(params: {
         include: { financialAccount: { include: { institution: true } } },
       });
 
-      let bestCredit: any = null;
+      let bestCredit: (typeof creditCandidates)[number] | null = null;
       let bestScore = 0;
 
       for (const credit of creditCandidates) {
@@ -161,7 +161,7 @@ export async function runTransferMatchRules(params: {
       }
     }
 
-    const jobResult = await (prisma.transferMatchJobResult as any).create({
+    const jobResult = await prisma.transferMatchJobResult.create({
       data: {
         userId,
         importSessionId,
@@ -173,7 +173,7 @@ export async function runTransferMatchRules(params: {
     });
 
     if (ruleAutoLinked > 0) {
-      await (prisma.transferMatchRule as any).update({
+      await prisma.transferMatchRule.update({
         where: { id: rule.id },
         data: {
           matchCount: { increment: ruleAutoLinked },

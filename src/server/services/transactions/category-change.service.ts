@@ -1,4 +1,6 @@
 import {
+  type Prisma,
+  type PrismaClient,
   TransactionSourceEnum,
   TransactionStatusEnum,
   TransactionTypeEnum,
@@ -18,20 +20,38 @@ import {
 } from '@/server/services/transactions/ledger.service';
 
 interface Context {
-  prismaClient: any;
+  prismaClient: PrismaClient | Prisma.TransactionClient;
   userId: string;
-  transaction: any;
+  transaction: CategoryChangeTransaction;
   newCategory: string;
   newStatus: TransactionStatusEnum;
   offsetCategory?: string | null;
   amount: Decimal;
 }
 
+type CategoryChangeTransaction = Pick<
+  Prisma.TransactionGetPayload<object>,
+  | 'id'
+  | 'description'
+  | 'type'
+  | 'status'
+  | 'category'
+  | 'amount'
+  | 'date'
+  | 'offsetCategory'
+>;
+
+interface CategoryChangeInput {
+  newCategory: string;
+  offsetCategory?: string | null;
+  offsetTransactionId?: string | null;
+}
+
 export async function validateCategoryChange(ctx: {
-  prismaClient: any;
+  prismaClient: PrismaClient | Prisma.TransactionClient;
   userId: string;
-  transaction: any;
-  input: any;
+  transaction: CategoryChangeTransaction;
+  input: CategoryChangeInput;
 }) {
   const { prismaClient, userId, transaction, input } = ctx;
 
@@ -234,8 +254,7 @@ async function handleTransferTransition(ctx: Context) {
 }
 
 async function handleGenericCategoryChange(ctx: Context) {
-  const { prismaClient, userId, transaction, newCategory, newStatus, amount } =
-    ctx;
+  const { prismaClient, userId, transaction, newCategory, amount } = ctx;
   const categoryChanged = transaction.category !== newCategory;
 
   // DEBIT category change
@@ -277,9 +296,9 @@ async function handleGenericCategoryChange(ctx: Context) {
 }
 
 export async function applyMatchingCategoryChanges(ctx: {
-  prismaClient: any;
+  prismaClient: PrismaClient | Prisma.TransactionClient;
   userId: string;
-  transaction: any;
+  transaction: Pick<CategoryChangeTransaction, 'id' | 'description'>;
   newCategory: string;
   applyToMatching?: boolean;
   matchScope?: { type: 'recent' | 'all'; days?: number };
@@ -337,7 +356,7 @@ export async function applyMatchingCategoryChanges(ctx: {
             userId,
             oldCategory: match.category,
             newCategory,
-            amount: match.amount as Decimal,
+            amount: match.amount,
             date: match.date,
           });
         } else if (match.type === TransactionTypeEnum.CREDIT) {
@@ -345,7 +364,7 @@ export async function applyMatchingCategoryChanges(ctx: {
             prismaClient,
             userId,
             newSourceName: newCategory,
-            amount: match.amount as Decimal,
+            amount: match.amount,
             transactionDate: match.date,
           });
         }
@@ -356,12 +375,12 @@ export async function applyMatchingCategoryChanges(ctx: {
   }
 
   // Define date scope
-  const dateFilter: any = {};
+  const dateFilter: Prisma.DateTimeFilter = {};
   if (matchScope?.type === 'recent') {
     const days = matchScope.days ?? 90;
     const dateLimit = new Date();
     dateLimit.setDate(dateLimit.getDate() - days);
-    dateFilter.gte = dateLimit.toISOString();
+    dateFilter.gte = dateLimit;
   }
 
   const matches = await prismaClient.transaction.findMany({
@@ -399,7 +418,7 @@ export async function applyMatchingCategoryChanges(ctx: {
           userId,
           oldCategory: match.category,
           newCategory,
-          amount: match.amount as Decimal,
+          amount: match.amount,
           date: match.date,
         });
       } else if (match.type === TransactionTypeEnum.CREDIT) {
@@ -407,7 +426,7 @@ export async function applyMatchingCategoryChanges(ctx: {
           prismaClient,
           userId,
           newSourceName: newCategory,
-          amount: match.amount as Decimal,
+          amount: match.amount,
           transactionDate: match.date,
         });
       }
@@ -426,9 +445,9 @@ export async function handleCategoryChange({
   newStatus,
   offsetCategory,
 }: {
-  prismaClient: any;
+  prismaClient: PrismaClient | Prisma.TransactionClient;
   userId: string;
-  transaction: any;
+  transaction: CategoryChangeTransaction;
   newCategory: string;
   newStatus: TransactionStatusEnum;
   offsetCategory?: string | null;
@@ -440,7 +459,7 @@ export async function handleCategoryChange({
     newCategory,
     newStatus,
     offsetCategory,
-    amount: transaction.amount as Decimal,
+    amount: transaction.amount,
   };
 
   if (await handleReimbursementTransition(ctx)) return;

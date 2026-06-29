@@ -18,11 +18,7 @@ import { CreatableSelectWrapper as CreatableSelect } from '@/components/ui/Selec
 import { SelectWrapper as Select } from '@/components/ui/Select';
 import { trpc } from '@/server/trpc/client';
 import type { CalendarYearType, OptionType } from '@/types';
-import type {
-  AccountBalance,
-  BankTotalSummary,
-  SnapshotTotals,
-} from '@/types/bank-asset.types';
+import type { AccountBalance, SnapshotTotals } from '@/types/bank-asset.types';
 
 import BankAssetAIImportWizard from './_components/BankAssetAIImportWizard';
 import { updateAccountName } from './actions';
@@ -39,6 +35,9 @@ type InitialDataType = {
 type Props = {
   initialData: InitialDataType;
 };
+
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
 
 export default function BankAssetsClient({ initialData }: Props) {
   const id = useId();
@@ -247,7 +246,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       utils.bankAsset.getSnapshotTotals.invalidate();
     },
     onError: (error) => {
-      toast.error((error as any)?.message || 'Failed to update balance');
+      toast.error(getErrorMessage(error, 'Failed to update balance'));
     },
   });
 
@@ -262,7 +261,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       utils.bankAsset.getSnapshotTotals.invalidate();
     },
     onError: (error) => {
-      toast.error((error as any)?.message || 'Failed to delete account');
+      toast.error(getErrorMessage(error, 'Failed to delete account'));
     },
   });
 
@@ -277,8 +276,8 @@ export default function BankAssetsClient({ initialData }: Props) {
       utils.bankAsset.getMostRecentSnapshot.invalidate();
       utils.bankAsset.getSnapshotTotals.invalidate();
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to delete snapshot');
+    onError: (error) => {
+      toast.error(getErrorMessage(error, 'Failed to delete snapshot'));
       setDeleteConfirm(null);
       setSelectedSnapshotId(null);
       // Refetch in case of sync issues
@@ -292,7 +291,7 @@ export default function BankAssetsClient({ initialData }: Props) {
         utils.bankAsset.getBankAccounts.invalidate();
       },
       onError: (error) => {
-        toast.error((error as any)?.message || 'Failed to create account');
+        toast.error(getErrorMessage(error, 'Failed to create account'));
       },
     });
 
@@ -308,9 +307,11 @@ export default function BankAssetsClient({ initialData }: Props) {
         utils.bankAsset.getMostRecentSnapshot.invalidate();
         utils.bankAsset.getSnapshotTotals.invalidate();
       },
-      onError: (error: any) => {
-        const msg: string =
-          error?.message || 'Failed to add account to snapshot';
+      onError: (error) => {
+        const msg: string = getErrorMessage(
+          error,
+          'Failed to add account to snapshot',
+        );
         if (
           msg.toLowerCase().includes('unique') ||
           msg.toLowerCase().includes('already')
@@ -571,11 +572,11 @@ export default function BankAssetsClient({ initialData }: Props) {
             >
               {[...allSnapshots]
                 .sort(
-                  (a: any, b: any) =>
+                  (a, b) =>
                     new Date(b.snapshotDate).getTime() -
                     new Date(a.snapshotDate).getTime(),
                 )
-                .map((snap: any) => (
+                .map((snap) => (
                   <option key={snap.id} value={snap.id}>
                     {new Date(snap.snapshotDate).toLocaleDateString('en-AU', {
                       day: '2-digit',
@@ -1154,7 +1155,7 @@ export default function BankAssetsClient({ initialData }: Props) {
       <NewSnapshotModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        mostRecentSnapshot={snapshot as any}
+        mostRecentSnapshot={snapshot}
         onSuccess={() => {
           setIsModalOpen(false);
           // Reset selected snapshot ID first so auto-selection can pick new one

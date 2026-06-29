@@ -1,7 +1,30 @@
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import type { Decimal } from '@prisma/client/runtime/library';
 
 import { clearTransferLink } from './void-transfer.service';
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
+
+type VoidTransaction = Prisma.TransactionGetPayload<{
+  include: {
+    transferLinkedTransaction: { select: { id: true } };
+    transferCounterpart: { select: { id: true } };
+    reimbursements: { select: { id: true } };
+  };
+}>;
+
+type VoidImportSession = Prisma.ImportSessionGetPayload<{
+  include: {
+    transactions: {
+      where: { userId: string; status: { not: 'VOIDED' } };
+      include: {
+        transferLinkedTransaction: { select: { id: true } };
+        transferCounterpart: { select: { id: true } };
+        reimbursements: { select: { id: true } };
+      };
+    };
+  };
+}>;
 
 interface VoidContext {
   prisma: PrismaClient;
@@ -12,28 +35,14 @@ export async function voidSingleTransaction(
   ctx: VoidContext,
   transactionId: string,
 ): Promise<void> {
-  const tx = (await (ctx.prisma.transaction as any).findUnique({
+  const tx = await ctx.prisma.transaction.findUnique({
     where: { id: transactionId },
     include: {
-      donationPayment: { select: { id: true } },
       transferLinkedTransaction: { select: { id: true } },
       transferCounterpart: { select: { id: true } },
       reimbursements: { select: { id: true } },
     },
-  })) as {
-    id: string;
-    userId: string;
-    type: string;
-    status: string;
-    amount: Decimal;
-    date: Date;
-    category: string;
-    donationPayment: { id: string } | null;
-    transferLinkedTransactionId: string | null;
-    preLinkCategory: string | null;
-    preLinkStatus: string | null;
-    reimbursements: Array<{ id: string }>;
-  } | null;
+  });
 
   if (!tx || tx.userId !== ctx.userId) {
     throw new Error('Transaction not found');
@@ -46,27 +55,22 @@ export async function voidSingleTransaction(
     async (db) => {
       // Clear any reimbursement links before voiding
       if (tx.reimbursements.length > 0) {
-        await (db.transaction as any).updateMany({
+        await db.transaction.updateMany({
           where: { id: { in: tx.reimbursements.map((r) => r.id) } },
           data: { offsetTransactionId: null },
         });
       }
       // Clear offset transaction link (this tx is a reimbursement)
-      if ((tx as any).offsetTransactionId) {
-        await (db.transaction as any).update({
+      if (tx.offsetTransactionId) {
+        await db.transaction.update({
           where: { id: tx.id },
           data: { offsetTransactionId: null },
         });
       }
 
-      await clearTransferLink(
-        db as unknown as PrismaClient,
-        ctx.userId,
-        tx as any,
-        new Set([tx.id]),
-      );
-      await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
-      await (db.transaction as any).update({
+      await clearTransferLink(db, ctx.userId, tx, new Set([tx.id]));
+      await reverseDownstream(db, ctx.userId, tx);
+      await db.transaction.update({
         where: { id: transactionId },
         data: {
           status: 'VOIDED',
@@ -83,18 +87,9 @@ export async function restoreTransaction(
   ctx: VoidContext,
   transactionId: string,
 ): Promise<void> {
-  const tx = (await (ctx.prisma.transaction as any).findUnique({
+  const tx = await ctx.prisma.transaction.findUnique({
     where: { id: transactionId },
-  })) as {
-    id: string;
-    userId: string;
-    type: string;
-    status: string;
-    amount: Decimal;
-    date: Date;
-    category: string;
-    preVoidStatus: string | null;
-  } | null;
+  });
 
   if (!tx || tx.userId !== ctx.userId) {
     throw new Error('Transaction not found');
@@ -109,7 +104,7 @@ export async function restoreTransaction(
 
   await ctx.prisma.$transaction(
     async (db) => {
-      await (db.transaction as any).update({
+      await db.transaction.update({
         where: { id: transactionId },
         data: {
           status: restoreStatus,
@@ -122,7 +117,7 @@ export async function restoreTransaction(
       if (restoreStatus === 'CONFIRMED') {
         if (tx.type === 'DEBIT') {
           await reapplyExpenseSummary(
-            db as unknown as PrismaClient,
+            db,
             ctx.userId,
             tx.amount,
             tx.date,
@@ -140,37 +135,19 @@ export async function undoImportSession(
   ctx: VoidContext,
   importSessionId: string,
 ): Promise<{ voided: number; yearWarning: boolean }> {
-  const session = (await (ctx.prisma.importSession as any).findUnique({
+  const session = (await ctx.prisma.importSession.findUnique({
     where: { id: importSessionId },
     include: {
       transactions: {
         where: { userId: ctx.userId, status: { not: 'VOIDED' } },
         include: {
-          donationPayment: { select: { id: true } },
           transferLinkedTransaction: { select: { id: true } },
           transferCounterpart: { select: { id: true } },
           reimbursements: { select: { id: true } },
         },
       },
     },
-  })) as {
-    id: string;
-    userId: string;
-    status: string;
-    transactions: Array<{
-      id: string;
-      type: string;
-      status: string;
-      amount: Decimal;
-      date: Date;
-      category: string;
-      donationPayment: { id: string } | null;
-      transferLinkedTransactionId: string | null;
-      preLinkCategory: string | null;
-      preLinkStatus: string | null;
-      reimbursements: Array<{ id: string }>;
-    }>;
-  } | null;
+  })) as VoidImportSession | null;
 
   if (!session || session.userId !== ctx.userId) {
     throw new Error('Import session not found');
@@ -187,26 +164,21 @@ export async function undoImportSession(
       for (const tx of txs) {
         // Clear any reimbursement links before voiding
         if (tx.reimbursements.length > 0) {
-          await (db.transaction as any).updateMany({
+          await db.transaction.updateMany({
             where: { id: { in: tx.reimbursements.map((r) => r.id) } },
             data: { offsetTransactionId: null },
           });
         }
         // Clear offset transaction link (this tx is a reimbursement)
-        if ((tx as any).offsetTransactionId) {
-          await (db.transaction as any).update({
+        if (tx.offsetTransactionId) {
+          await db.transaction.update({
             where: { id: tx.id },
             data: { offsetTransactionId: null },
           });
         }
 
-        await clearTransferLink(
-          db as unknown as PrismaClient,
-          ctx.userId,
-          tx as any,
-          sessionTxIds,
-        );
-        await reverseDownstream(db as unknown as PrismaClient, ctx.userId, tx);
+        await clearTransferLink(db, ctx.userId, tx, sessionTxIds);
+        await reverseDownstream(db, ctx.userId, tx);
       }
 
       await db.transaction.updateMany({
@@ -230,16 +202,12 @@ export async function undoImportSession(
 }
 
 async function reverseDownstream(
-  db: PrismaClient,
+  db: DbClient,
   userId: string,
-  tx: {
-    id: string;
-    type: string;
-    status: string;
-    amount: Decimal;
-    date: Date;
-    category: string;
-  },
+  tx: Pick<
+    VoidTransaction,
+    'id' | 'type' | 'status' | 'amount' | 'date' | 'category'
+  >,
 ): Promise<void> {
   if (tx.status !== 'CONFIRMED') return;
 
@@ -250,7 +218,7 @@ async function reverseDownstream(
 }
 
 async function reverseExpenseSummary(
-  db: PrismaClient,
+  db: DbClient,
   userId: string,
   amount: Decimal,
   date: Date,
@@ -302,7 +270,7 @@ async function reverseExpenseSummary(
 // ─── Restore helpers ─────────────────────────────────────────────────────────
 
 async function reapplyExpenseSummary(
-  db: PrismaClient,
+  db: DbClient,
   userId: string,
   amount: Decimal,
   date: Date,
