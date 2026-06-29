@@ -1,6 +1,17 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "updatedAt": "2026-06-29T00:00:00Z",
+  "rules": {
+    "singleActiveFeature": true,
+    "passingRequiresEvidence": true,
+    "doNotSkipVerification": true
+  },
+  "statusLegend": {
+    "planned": "Spec exists or queued, no implementation started",
+    "in-progress": "Active feature — at most one at a time per branch",
+    "blocked": "Cannot continue until a documented blocker is resolved",
+    "done": "All verification items checked off and evidence recorded"
+  },
   "features": [
     {
       "id": "category-groups",
@@ -9,7 +20,17 @@
       "branch": "category-groups",
       "spec": "spec/architecture/category-filter-groups/",
       "blockers": [],
-      "notes": "Active branch — implementing category group CRUD and cashflow filter integration"
+      "notes": "Active branch — implementing category group CRUD and cashflow filter integration",
+      "verification": [
+        { "id": "schema", "description": "Prisma migration created and applied (pnpm prisma migrate dev)", "passing": false },
+        { "id": "router", "description": "tRPC router for category group CRUD with input validation", "passing": false },
+        { "id": "ui-settings", "description": "Settings UI renders group CRUD with dark mode variants", "passing": false },
+        { "id": "ui-cashflow", "description": "Cashflow filters respect category groups", "passing": false },
+        { "id": "type-check", "description": "pnpm run type-check passes (zero errors)", "passing": false },
+        { "id": "lint", "description": "pnpm run lint passes (zero errors)", "passing": false },
+        { "id": "build", "description": "pnpm run build succeeds (user-confirmed run only)", "passing": false }
+      ],
+      "evidence": []
     }
   ]
 }

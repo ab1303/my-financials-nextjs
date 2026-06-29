@@ -201,7 +201,7 @@ All 48 features consolidated across 11 domains.
 |---|---|---|
 | **Analyze current structure** | Claude 3.5 Sonnet (main session) | Human oversight, strategic decisions |
 | **Migrate domain spec** | `gpt-4.1` (background agent) | Mechanical file reorganization, no context loss |
-| **Validate migration** | Claude Haiku (quick check) | File structure validation |
+| **Validate migration** | `gpt-5.4-mini` (quick check) | File structure validation |
 | **Document learnings** | Claude Sonnet (main session) | Synthesis for next phases |
 
 ### Cost Savings

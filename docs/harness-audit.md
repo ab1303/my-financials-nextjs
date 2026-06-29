@@ -37,7 +37,7 @@ Your project already does advanced context engineering. The question is: **how c
 │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │
 │  │ Instructions │  │    State     │  │   Verification     │   │
 │  │              │  │              │  │                    │   │
-│  │ ⭐⭐⭐⭐⭐     │  │ ⭐⭐½         │  │ ⭐⭐⭐½            │   │
+│  │ ⭐⭐⭐⭐⭐     │  │ ⭐⭐⭐⭐      │  │ ⭐⭐⭐½            │   │
 │  │              │  │              │  │                    │   │
 │  └──────────────┘  └──────────────┘  └────────────────────┘   │
 │                                                                │
@@ -78,11 +78,33 @@ You nail this completely. Your progressive disclosure structure is textbook:
 
 **L04's principle ("give a map, not an encyclopedia")** is well-served by your Canonical Instructions table and Context Bundle by Task table. The agent knows _where_ to look without loading everything.
 
-**One gap:** The course emphasizes "progressive disclosure the agent navigates on demand." Your AGENTS.md is still ~300 lines loaded into _every_ session. Consider: what if only the first 40 lines (commands + boundaries + "read X for Y" pointers) were in AGENTS.md, and the rest was in `.ai/instructions/agents-reference.md` loaded on demand?
+**One gap (now addressed):** The course emphasizes "progressive disclosure the agent navigates on demand." AGENTS.md was verbose and has been pruned — the entry-point is now a compact map and detailed sections moved to `.ai/instructions/` (see `AGENTS.md` and `.ai/instructions/compaction.md`).
 
 ---
 
-### 2. State ⭐⭐½ (Biggest Gap)
+### 2. State ⭐⭐⭐⭐ (Gap largely closed — 2026-06-29)
+
+This is your harness's weakest subsystem. The harness engineering framework defines state as:
+
+> "Track what's been done, what's in progress, and what's next. Persisted to disk so the next session picks up exactly where the last one left off."
+
+**What you have (post-remediation):**
+
+- `spec/` tree (feature-level intent)
+- Git history (implicit state)
+- Session store SQL database (Copilot internal)
+- `.harness/feature-status.json` v1.1 — feature registry with `rules`, `statusLegend`, and
+  per-feature `verification[]` (Definition of Done) + `evidence[]` (proof of passing)
+- `.harness/progress.md` — newest-first session handoff log
+- `.harness/init.sh` — Tier 1 session-start orientation (branch, recent commits, last progress
+  entry, active features with DoD progress)
+- `.harness/clean-state-checklist.md` — pre-session-end gate ensuring resumability
+- `.harness/README.md` — schema and workflow rules
+
+**Residual gap:** No JSON Schema file enforcing `feature-status.json` shape and no CI check
+that rejects `status: "done"` when `verification[].passing` flags are not all true. These
+are nice-to-haves; the human-readable contract is now explicit enough that an agent reading
+`AGENTS.md` + `.harness/README.md` cannot misinterpret it.
 
 This is your harness's weakest subsystem. The harness engineering framework defines state as:
 
@@ -163,22 +185,7 @@ This is what connects sessions. Without it, every agent session starts cold — 
 
 Your harness **defines** the verification steps but doesn't **enforce** them as a gate. The agent is told to run them, but there's no mechanism that says "you cannot claim done until these pass."
 
-**Recommendation:** Add to AGENTS.md:
-
-```markdown
-## Verification Gate (Non-Negotiable)
-
-Before reporting any implementation as complete:
-
-1. Run `pnpm run type-check --quiet` — must exit 0
-2. Run `pnpm run lint --quiet` — must exit 0
-3. Report evidence: "✅ type-check passed, ✅ lint passed"
-
-If either fails, fix and re-run. Do NOT report success without evidence.
-A build failure is NOT "done" — it's "in progress with verification errors."
-```
-
-The key phrase from the course: _"Without the harness, step 9 becomes 'agent says it looks fine.' With the harness, step 9 is 'tests pass, lint is clean, types check.'"_
+**Recommendation (implemented):** A Verification Gate was added to `AGENTS.md` requiring agents to run the quick validation sequence and present command output as evidence before declaring a task complete. This closes the verification loop described above.
 
 ---
 
@@ -279,16 +286,18 @@ Your harness has strong **E** (execute) and decent **D** (scope), but the **A→
 
 ## Prioritized Action Items
 
-| Priority | Action                                                          | Harness Subsystem | Effort  |
-| -------- | --------------------------------------------------------------- | ----------------- | ------- |
-| 🔴 1     | Create `.harness/progress.md` + update protocol                 | State + Lifecycle | Small   |
-| 🔴 2     | Add verification gate language ("report evidence")              | Verification      | Trivial |
-| 🔴 3     | Create `.harness/feature-status.json`                           | State + Scope     | Small   |
-| 🟡 4     | Add session start/end protocol to AGENTS.md                     | Lifecycle         | Trivial |
-| 🟡 5     | Prune AGENTS.md to ~80 lines, move rest to `.ai/`               | Instructions      | Medium  |
-| 🟡 6     | Add "definition of done" checklist per active feature           | Scope             | Ongoing |
-| 🟢 7     | Create `init` script (type-check + lint as health check)        | Lifecycle         | Small   |
-| 🟢 8     | Instruct agents to read `git log --oneline -5` at session start | State             | Trivial |
+| Priority | Action                                                                 | Harness Subsystem | Effort  |
+| -------- | ---------------------------------------------------------------------- | ----------------- | ------- |
+| Priority | Action                                                                 | Harness Subsystem | Effort  |
+| -------- | ---------------------------------------------------------------        | ----------------- | ------- |
+| 🔴 1     | Create `.harness/progress.md` + update protocol (DONE)                 | State + Lifecycle | Small   |
+| 🔴 2     | Add verification gate language ("report evidence") (DONE)              | Verification      | Trivial |
+| 🔴 3     | Create `.harness/feature-status.json` (DONE)                           | State + Scope     | Small   |
+| 🟡 4     | Add session start/end protocol to `AGENTS.md` (DONE)                   | Lifecycle         | Trivial |
+| 🟡 5     | Prune `AGENTS.md` to ~80 lines, move rest to `.ai/` (DONE)             | Instructions      | Medium  |
+| 🟡 6     | Add "definition of done" checklist per active feature                  | Scope             | Ongoing |
+| 🟢 7     | Create `init` script (type-check + lint as health check)               | Lifecycle         | Small   |
+| 🟢 8     | Instruct agents to read `git log --oneline -5` at session start (DONE) | State             | Trivial |
 
 ---
 
@@ -371,15 +380,16 @@ See the per-subsystem deep-dive above (§ The 5 Subsystems — Your Project Scor
 
 Priority: P0 (urgent), P1 (high), P2 (medium)
 
-- P0: Add `.harness/feature-status.json` template and `.harness/README.md` describing fields and use.
-- P0: Add `reports/verification-schema.json` and enforce in `implement-from-spec` SKILL that every completed phase produces a `reports/<feature>-verification.json` with:
+- P0: Add `.harness/feature-status.json` template and `.harness/README.md` describing fields and use. (DONE)
+- P0: Add `reports/verification-schema.json` and enforce in `implement-from-spec` SKILL that every completed phase produces a `reports/<feature>-verification.json` with: (PENDING)
+  - P0: Add `reports/verification-schema.json` and enforce in `implement-from-spec` SKILL that every completed phase produces a `reports/<feature>-verification.json` with: (PENDING)
   - `commands`: array of executed commands (exact strings).
   - `outputs`: stdout/stderr snippets.
   - `files_changed`: list of files and their SHAs.
   - `status`: pass/fail.
-- P1: Add `scripts/init-harness.sh` (or `init-harness.ps1`) to bootstrap `.harness` and create initial `feature-status.json` entries.
-- P1: Add a small check script `scripts/check-scope.js` that compares changed files (git diff) to allowed files passed to subagent and fails if out-of-scope.
-- P2: Add CI job (optional) `verify/harness-verification` which validates `reports/*` files conform to schema.
+- P1: Add `scripts/init-harness.sh` (or `init-harness.ps1`) to bootstrap `.harness` and create initial `feature-status.json` entries. (PENDING)
+- P1: Add a small check script `scripts/check-scope.js` that compares changed files (git diff) to allowed files passed to subagent and fails if out-of-scope. (PENDING)
+- P2: Add CI job (optional) `verify/harness-verification` which validates `reports/*` files conform to schema. (PENDING)
 
 ### Mermaid: Session Lifecycle
 
@@ -529,16 +539,16 @@ Adopt the priority-based TODO system in code:
 
 ### Prioritized HumanLayer-Inspired Action Items
 
-| Priority | Action                                                       | Effort  |
-| -------- | ------------------------------------------------------------ | ------- |
-| 🔴 1     | Add compaction protocol to `.ai/instructions/compaction.md`  | Trivial |
-| 🔴 2     | Formalize three-tier risk model in AGENTS.md                 | Trivial |
-| 🔴 3     | Add phase-by-phase compaction to `implement-from-spec` SKILL | Small   |
-| 🟡 4     | Add research phase (sub-agent + `thoughts/` output)          | Medium  |
-| 🟡 5     | Adopt TODO(0-4) annotation system in contributing guide      | Trivial |
-| 🟡 6     | Create `.harness/progress.md` for session handoff            | Small   |
-| 🟢 7     | Add "weekly alignment" summary artifact generation           | Medium  |
-| 🟢 8     | Explore external "thoughts" repo for cross-project knowledge | Large   |
+| Priority | Action                                                              | Effort  |
+| -------- | ------------------------------------------------------------------- | ------- |
+| 🔴 1     | Add compaction protocol to `.ai/instructions/compaction.md` (DONE)  | Trivial |
+| 🔴 2     | Formalize three-tier risk model in AGENTS.md (DONE)                 | Trivial |
+| 🔴 3     | Add phase-by-phase compaction to `implement-from-spec` SKILL (DONE) | Small   |
+| 🟡 4     | Add research phase (sub-agent + `thoughts/` output)                 | Medium  |
+| 🟡 5     | Adopt TODO(0-4) annotation system in contributing guide             | Trivial |
+| 🟡 6     | Create `.harness/progress.md` for session handoff (DONE)            | Small   |
+| 🟢 7     | Add "weekly alignment" summary artifact generation                  | Medium  |
+| 🟢 8     | Explore external "thoughts" repo for cross-project knowledge        | Large   |
 
 ---
 
@@ -563,6 +573,9 @@ The fix is lightweight — ~3 new files, ~30 lines added to AGENTS.md, and a sma
 
 - `AGENTS.md`, `.agents/skills/implement-from-spec/SKILL.md`, `.ai/instructions/testing-and-subagents.md`
 - `spec/transactions/hld.md`, `CLAUDE.md`, `GEMINI.md`
+- `.ai/instructions/compaction.md`, `.ai/instructions/dev-server-safety.md`
+- `.harness/feature-status.json`, `.harness/progress.md`, `.harness/README.md`
+- `.github/copilot-instructions.md`, `docs/context-engineering.md`
 
 **External references:**
 

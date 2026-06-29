@@ -62,7 +62,7 @@ The current spec tree (48 flat `spec/{feature}/` folders) was designed with hori
 For migration work (mechanical restructuring):
 - **Do not** use Sonnet (overkill)
 - **Use** gpt-4.1 (60% faster, sufficient reasoning)
-- **Validate** with Haiku after agent completes
+- **Validate** with gpt-5.4-mini after agent completes
 
 ---
 

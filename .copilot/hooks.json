@@ -1,0 +1,14 @@
+{
+  "$comment": "Copilot CLI hook config. Events: sessionStart | sessionEnd | userPromptSubmitted | preToolUse | postToolUse | errorOccurred. Hook stdout is injected into the model's context for sessionStart; sessionEnd runs AFTER the model exits (side-effects only — the model never sees its output).",
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "command": "bash .harness/init.sh",
+        "windows": "bash .harness/init.sh",
+        "timeoutSec": 15
+      }
+    ]
+  }
+}

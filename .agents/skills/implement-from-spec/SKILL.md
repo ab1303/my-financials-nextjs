@@ -41,7 +41,7 @@ for the additional context needed instead of searching the broader codebase.
 
 **MANDATORY DECLARATION — before reading any source file in Step 4, post this to the user:**
 
-> "Delegating {N} phase(s) to background Next.js Expert (haiku) agents:
+> "Delegating {N} phase(s) to background Next.js Expert (gpt-5.4-mini) agents:
 >
 > - Phase 0 → `{feature}-phase-0` (no dependencies)
 > - Phase 1 → `{feature}-phase-1` (depends on Phase 0)
@@ -50,7 +50,7 @@ for the additional context needed instead of searching the broader codebase.
 
 If you find yourself writing a code change in the main conversation — **STOP**. Put it in an agent prompt instead.
 
-**Cost contract**: haiku agents cost ~10× less than the orchestrator model. Direct implementation wastes budget AND bypasses scope enforcement. Agents get hard file constraints; the orchestrator does not.
+**Cost contract**: gpt-5.4-mini agents cost a fraction of the orchestrator model. Direct implementation wastes budget AND bypasses scope enforcement. Agents get hard file constraints; the orchestrator does not.
 
 **Slice-first rule**: never load sibling sub-features or unrelated feature specs unless the current slice explicitly depends on them. If the slice is still insufficient after reading the spec and the listed files, ask the user for more context rather than expanding the search.
 
@@ -221,7 +221,7 @@ For each phase in Wave 1, call `task` tool simultaneously:
 ```
 agent_type: "Next.js Expert"   (or detected agent)
 mode: "background"
-model: "claude-haiku-4.5"      ← always use haiku for speed; phases are self-contained
+model: "gpt-5.4-mini"      ← always use gpt-5.4-mini for speed/cost (400K context); phases are self-contained
 name: "{feature}-phase-{N}"
 description: "Implementing Phase N — {name}"
 prompt: {assembled context bundle from Step 4}

@@ -42,16 +42,27 @@ Specs → `spec/{domain}/{feature}/`. `plan.md` → session only, never commit.
 
 ### Session Start — before any implementation work
 
-1. Read `.harness/progress.md` — most recent entry says where the last session stopped.
-2. Run `git log --oneline -5` — confirm branch and recent commits.
-3. Check `.harness/feature-status.json` — which feature is `in-progress`.
-4. Announce: "Last session worked on X. Continuing from Y."
+1. **Automatic (preferred):** the `sessionStart` hook in `.copilot/hooks.json` runs
+   `bash .harness/init.sh` and injects the output into your initial context — branch,
+   recent commits, working-tree status, latest `progress.md` entry, active features
+   with Definition of Done progress. Confirm it ran by checking `/env` for the
+   `Hooks` section, or just look at your initial context block.
+2. **Manual fallback** (hook disabled or unavailable): run `bash .harness/init.sh`
+   as the very first action.
+3. Announce: "Last session worked on X. Continuing from Y." (cite the progress entry).
+4. Open the active feature's `spec/{domain}/{feature}/lld.md` before editing any code.
 
 ### Session End — before stopping
 
-1. Write a new entry to `.harness/progress.md` (format: see `.harness/README.md`).
-2. Update `status` in `.harness/feature-status.json` if a phase or feature completed.
-3. Ensure no half-applied migrations or incomplete schema changes remain.
+> Note: Copilot CLI's `sessionEnd` hook runs **after** the model has exited, so it
+> cannot enforce these steps. They are agent-side rules — you must perform them
+> before your final response.
+
+1. Walk `.harness/clean-state-checklist.md` — every box must be tickable or documented.
+2. Flip any newly-passing `verification[]` items in `.harness/feature-status.json` and append
+   matching `evidence[]` entries (command output / commit sha / screenshot path).
+3. Write a new entry to `.harness/progress.md` (newest first; format in `.harness/README.md`).
+4. A feature can only transition to `status: "done"` when ALL `verification[].passing === true`.
 
 ### Context Threshold (>50% utilization)
 
@@ -77,7 +88,7 @@ For UI changes: describe what changed visually, or attach a screenshot.
 
 ## Subagents & Delegation
 
-When `implement-from-spec` is active, the **orchestrator writes ZERO production code** — all phases go to `Next.js Expert` (haiku) agents. Every subagent prompt **must** include the `⚠️ CRITICAL CONSTRAINTS` block (explicit file list, no global lint/format, no auto-commit).
+When `implement-from-spec` is active, the **orchestrator writes ZERO production code** — all phases go to `Next.js Expert` (gpt-5.4-mini) agents. Every subagent prompt **must** include the `⚠️ CRITICAL CONSTRAINTS` block (explicit file list, no global lint/format, no auto-commit).
 
 Full rules + model selection table + scope constraints block → `.ai/instructions/testing-and-subagents.md`.
 

@@ -7,14 +7,14 @@
 | ✅ Allowed | ❌ FORBIDDEN |
 |---|---|
 | Read spec slices and source excerpts to build context bundles | Call `edit`/`create` on any `.ts`, `.tsx`, or `.prisma` file |
-| Launch `Next.js Expert` background agents (haiku) per phase | Run `prisma migrate` or `prisma generate` in main conversation |
+| Launch `Next.js Expert` background agents (gpt-5.4-mini) per phase | Run `prisma migrate` or `prisma generate` in main conversation |
 | Read agent results and surface errors to user | Fix agent errors by directly editing files yourself |
 | Run `pnpm run build` after all agents complete | Mark a phase done without an agent having run it |
 
 **Mandatory pre-delegation declaration** — before reading any source file for a bundle, post to the user:
-> "Delegating {N} phase(s) to Next.js Expert (haiku) agents: Phase 0 → no deps, Phase 1 → depends on Phase 0 ..."
+> "Delegating {N} phase(s) to Next.js Expert (gpt-5.4-mini) agents: Phase 0 → no deps, Phase 1 → depends on Phase 0 ..."
 
-**Cost contract**: haiku agents cost ~10× less. Direct implementation wastes budget AND bypasses scope enforcement.
+**Cost contract**: gpt-5.4-mini agents cost a fraction of the orchestrator. Direct implementation wastes budget AND bypasses scope enforcement.
 
 ---
 
@@ -26,7 +26,7 @@ Delegate all mechanical output — spec writing, doc generation, boilerplate, ph
 | Task | Model | Reason |
 |---|---|---|
 | Spec writing (`context.md`, `hld.md`, `lld.md`) | `gpt-4.1` | Mechanical document structure; cheap and fast |
-| **Implementing a spec phase (via `implement-from-spec`)** | **`claude-haiku-4.5` via `Next.js Expert` agent** | **Self-contained contract; ~10× cheaper than orchestrator** |
+| **Implementing a spec phase (via `implement-from-spec`)** | **`gpt-5.4-mini` via `Next.js Expert` agent** | **Self-contained contract; 400K context, fraction of orchestrator cost** |
 | Fixing test failures (per category) | `gpt-4.1` | Narrow scope, clear root cause |
 | Complex cross-cutting refactors | `claude-sonnet-4.6` (default) | Needs reasoning across many files |
 | Architecture / PO analysis | orchestrator only | No subagent; in-conversation reasoning |
