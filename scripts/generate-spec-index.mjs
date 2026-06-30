@@ -201,7 +201,7 @@ const out = {
     id: '<domain>[.<sub>].<feature>  — derived from spec/ folder path',
     statusValues: ['planned', 'in-progress', 'done', 'blocked', 'unknown'],
     phaseValues: ['pre-build', 'build', 'post-build', 'unknown'],
-    ownsConfidence: ['none', 'low', 'medium', 'high'],
+    ownsConfidence: ['none', 'low', 'medium', 'high', 'n/a-adr', 'n/a-planned'],
   },
   totals: {
     features: features.length,

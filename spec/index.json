@@ -1,6 +1,6 @@
 {
   "schemaVersion": "0.1.0",
-  "generatedAt": "2026-06-30T00:35:34.244Z",
+  "generatedAt": "2026-06-30T03:43:50.623Z",
   "generatedFromSha": "568c61bc4aecb058bf50d45166346dd3ed9853ff",
   "notes": [
     "This file is the DRAFT machine-readable spec ↔ code manifest.",
@@ -32,7 +32,7 @@
   },
   "totals": {
     "features": 91,
-    "withOwnsMatches": 19,
+    "withOwnsMatches": 60,
     "overlaps": 0
   },
   "overlaps": [],
@@ -49,15 +49,27 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/ai-import/_types.ts",
+          "src/server/services/ai-import/ai-vision.service.ts",
+          "src/server/services/ai-import/category-matcher.service.ts",
+          "src/server/services/ai-import/cleanup.service.ts",
+          "src/server/services/ai-import/image-storage.adapter.ts",
+          "src/server/services/ai-import/validation.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/api/ai-import/cleanup/route.ts",
+          "src/app/api/transactions/ai/confirm/route.ts",
+          "src/app/api/transactions/ai/parse/route.ts",
+          "src/app/api/transactions/ai/upload/route.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -72,15 +84,18 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/ai-import/ai-vision.service.ts",
+          "src/server/services/ai-import/category-matcher.service.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -123,10 +138,10 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "n/a-adr",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -201,10 +216,10 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "n/a-adr",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -220,14 +235,32 @@
       "owns": {
         "routers": [],
         "services": [],
-        "components": [],
-        "app": [],
+        "components": [
+          "src/components/Breadcrumb.tsx",
+          "src/components/Header.tsx",
+          "src/components/Providers.tsx",
+          "src/components/theme-provider.tsx",
+          "src/components/ui/Modal.tsx",
+          "src/components/ui/ResponsiveInput.tsx",
+          "src/components/ui/TextInput.tsx",
+          "src/components/ui/button.tsx",
+          "src/components/ui/card.tsx",
+          "src/components/ui/dialog.tsx",
+          "src/components/ui/input.tsx",
+          "src/components/ui/label.tsx",
+          "src/components/ui/theme-toggle.tsx"
+        ],
+        "app": [
+          "src/app/(authorized)/home/page.tsx",
+          "src/app/(authorized)/layout.tsx",
+          "src/app/layout.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -242,15 +275,17 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/transaction.service.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -311,15 +346,17 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/relationship.service.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -380,15 +417,17 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/income.service.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -435,15 +474,22 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/asset-dashboard.service.ts",
+          "src/server/services/stock-asset.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx",
+          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx",
+          "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -460,13 +506,16 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx",
+          "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -506,15 +555,19 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/asset-dashboard.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/assets/_components/AssetSummaryCards.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -528,16 +581,20 @@
         "lld": "spec/assets/snapshot-display/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/bank-asset.ts"
+        ],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/assets/bank/BankAssetsClient.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -553,15 +610,20 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/stock-asset.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx",
+          "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -575,16 +637,24 @@
         "lld": "spec/assets/snapshot-fx-rate/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/stock-asset.ts"
+        ],
+        "services": [
+          "src/server/services/stock-asset.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx",
+          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx",
+          "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -601,13 +671,16 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/assets/stocks/HoldingsTable.tsx",
+          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -622,15 +695,20 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/stock-asset.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx",
+          "src/app/(authorized)/assets/stocks/page.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -647,13 +725,16 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/zakat/_types.ts",
+          "src/app/(authorized)/zakat/form.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -902,14 +983,24 @@
       "owns": {
         "routers": [],
         "services": [],
-        "components": [],
-        "app": [],
+        "components": [
+          "src/components/ui/CategoryGroupRollupPanel.tsx",
+          "src/components/ui/GroupCategoryPopover.tsx"
+        ],
+        "app": [
+          "src/app/(authorized)/cashflow/analytics/_components/CashflowAnalyticsClient.tsx",
+          "src/app/(authorized)/cashflow/expense/ExpenseTableClient.tsx",
+          "src/app/(authorized)/cashflow/expense/ExpenseTableServer.tsx",
+          "src/app/(authorized)/cashflow/expense/_components/CategoryBreakdownModal.tsx",
+          "src/app/(authorized)/cashflow/expense/_components/ExpenseCategoryBreakdownWidget.tsx",
+          "src/app/(authorized)/cashflow/expense/page.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1037,13 +1128,15 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/cashflow/expense/actions.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1081,15 +1174,26 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/income.service.ts",
+          "src/server/services/transactions/csv-confirm.service.ts",
+          "src/server/services/transactions/void.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/cashflow/income/IncomeTableClient.tsx",
+          "src/app/(authorized)/cashflow/income/IncomeTableServer.tsx",
+          "src/app/(authorized)/cashflow/income/_components/MonthAccordionPanel.tsx",
+          "src/app/(authorized)/cashflow/income/_table/columns.tsx",
+          "src/app/(authorized)/cashflow/income/_types.ts",
+          "src/app/(authorized)/cashflow/income/actions.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1106,13 +1210,19 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/(authorized)/cashflow/income/IncomeTableClient.tsx",
+          "src/app/(authorized)/cashflow/income/_components/MonthAccordionPanel.tsx",
+          "src/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/IncomeTableClient.monthHeader.test.tsx"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1259,13 +1369,16 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/cashflow/expense/page.tsx",
+          "src/app/(authorized)/cashflow/income/page.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1278,16 +1391,26 @@
         "lld": "spec/cashflow/multi-account-transfer-integrity/fix-transfer-exclusion/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
-        "components": [],
+        "routers": [
+          "src/server/trpc/router/category-transactions.ts"
+        ],
+        "services": [
+          "src/server/services/transactions/constants.ts",
+          "src/server/services/transactions/csv-confirm.service.ts"
+        ],
+        "components": [
+          "src/components/transactions/TransactionLedgerTable.tsx"
+        ],
         "app": [],
-        "tests": []
+        "tests": [
+          "src/__tests__/integration/category-transactions.integration.test.ts",
+          "src/__tests__/unit/services/csv-confirm.service.test.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1300,16 +1423,26 @@
         "lld": "spec/cashflow/multi-account-transfer-integrity/handle-orphans/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
-        "components": [],
-        "app": [],
+        "routers": [
+          "src/server/trpc/router/transfer.ts"
+        ],
+        "services": [
+          "src/server/services/transactions/constants.ts"
+        ],
+        "components": [
+          "src/components/TransferExclusionSummary.tsx",
+          "src/components/UnresolvedTransfersBanner.tsx"
+        ],
+        "app": [
+          "src/app/(authorized)/cashflow/expense/page.tsx",
+          "src/app/(authorized)/cashflow/income/page.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1345,15 +1478,18 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/transactions/constants.ts",
+          "src/server/services/transactions/transfer.service.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1489,15 +1625,25 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/ai-import/csv-parser.service.ts",
+          "src/server/services/transactions/bank-format-registry.ts",
+          "src/server/services/transactions/csv-format-detector.service.ts",
+          "src/server/services/transactions/csv-format.types.ts",
+          "src/server/services/transactions/csv-parser-generic.service.ts"
+        ],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/api/transactions/csv/upload/route.ts"
+        ],
+        "tests": [
+          "src/__tests__/unit/csv-parser-generic.test.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1512,15 +1658,24 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
-        "components": [],
-        "app": [],
+        "services": [
+          "src/server/services/ai-import/_types.ts",
+          "src/server/services/ai-import/csv-classifier.service.ts",
+          "src/server/services/ai-import/validation.ts"
+        ],
+        "components": [
+          "src/components/csv-import/TransactionReviewTable.tsx"
+        ],
+        "app": [
+          "src/app/api/csv-import/classify/route.ts",
+          "src/app/api/csv-import/confirm/route.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1537,13 +1692,15 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/api/csv-import/classify/route.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1558,15 +1715,21 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/ai-import/category-matcher.service.ts",
+          "src/server/services/ai-import/embedding.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/api/ai-import/parse/route.ts",
+          "src/app/api/csv-import/parse/route.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1580,16 +1743,23 @@
         "lld": "spec/csv-import/session-date-range/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/transaction-clearing.ts"
+        ],
         "services": [],
-        "components": [],
-        "app": [],
+        "components": [
+          "src/components/transactions/ImportSessionHistory.tsx"
+        ],
+        "app": [
+          "src/app/api/transactions/ai/confirm/route.ts",
+          "src/app/api/transactions/csv/confirm/route.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1603,16 +1773,22 @@
         "lld": "spec/donations/donation-domain-boundary-refactor/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/bank-interest.ts"
+        ],
+        "services": [
+          "src/server/services/voluntary-donations/voluntary-donation.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/cashflow/bank-interest/_components/cleanse-drawer/useCleanseDonationState.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1661,13 +1837,23 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/home/_components/AssetBalanceCards.tsx",
+          "src/app/(authorized)/home/_components/CashflowPulseCard.tsx",
+          "src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx",
+          "src/app/(authorized)/home/_components/MonthlyTrendWidget.tsx",
+          "src/app/(authorized)/home/_components/NetWorthWidget.tsx",
+          "src/app/(authorized)/home/_components/RecentTransactionsWidget.tsx",
+          "src/app/(authorized)/home/_components/TopExpensesWidget.tsx",
+          "src/app/(authorized)/home/page.tsx",
+          "src/app/api/dashboard/summary/route.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1681,16 +1867,26 @@
         "lld": "spec/relation/business-contacts/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/business.ts"
+        ],
+        "services": [
+          "src/server/controllers/business.controller.ts",
+          "src/server/services/business.service.ts"
+        ],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/(authorized)/relation/business/form.tsx",
+          "src/app/(authorized)/relation/business/page.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/business.service.test.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1704,16 +1900,22 @@
         "lld": "spec/relation/individual-contacts/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/individual.ts"
+        ],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/relation/individual/form.tsx",
+          "src/app/(authorized)/relation/individual/layout.tsx",
+          "src/app/(authorized)/relation/individual/page.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1755,16 +1957,27 @@
         "lld": "spec/settings/calendar-management/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/calendar-year.ts"
+        ],
+        "services": [
+          "src/server/controllers/calendar-year.controller.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/settings/calendar/CalendarClientWrapper.tsx",
+          "src/app/(authorized)/settings/calendar/CalendarTableClient.tsx",
+          "src/app/(authorized)/settings/calendar/_schema.ts",
+          "src/app/(authorized)/settings/calendar/_types.ts",
+          "src/app/(authorized)/settings/calendar/form.tsx",
+          "src/app/(authorized)/settings/calendar/page.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1778,16 +1991,22 @@
         "lld": "spec/settings/category-management/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/expense-category.ts",
+          "src/server/trpc/router/income-source.ts",
+          "src/server/trpc/router/special-category.ts"
+        ],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/settings/categories/_components/CategoriesClient.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1801,16 +2020,21 @@
         "lld": "spec/settings/profile-settings/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/user-profile.ts"
+        ],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/settings/profile/_components/ProfileClient.tsx",
+          "src/app/(authorized)/settings/profile/_schema.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "medium",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1826,15 +2050,20 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/transactions/csv-confirm.service.ts",
+          "src/server/services/transactions/dedup.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/api/transactions/csv/confirm/route.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1850,15 +2079,22 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/transactions/category-rule-applier.ts",
+          "src/server/services/transactions/category-rule.service.ts",
+          "src/server/services/transactions/csv-confirm.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/api/transactions/csv/classify/route.ts",
+          "src/app/api/transactions/csv/confirm/route.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1873,16 +2109,24 @@
         "lld": "spec/technical_debt/remove-denormalized-monthly-expense-summary/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/expense-category.ts"
+        ],
+        "services": [
+          "src/server/services/expense.service.ts",
+          "src/server/services/transactions/csv-confirm.service.ts",
+          "src/server/services/transactions/ledger.service.ts"
+        ],
         "components": [],
         "app": [],
-        "tests": []
+        "tests": [
+          "src/__tests__/unit/ledger.service.test.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2002,16 +2246,25 @@
         "lld": "spec/transactions/transaction-bulk-apply/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
-        "components": [],
+        "routers": [
+          "src/server/trpc/router/transaction-ledger/mutations/updateCategory.ts"
+        ],
+        "services": [
+          "src/server/services/transactions/category-change.service.ts",
+          "src/server/services/transactions/category-rule.service.ts"
+        ],
+        "components": [
+          "src/components/transactions/TransactionLedgerTable.tsx",
+          "src/components/transactions/TransactionRow.tsx",
+          "src/components/transactions/hooks/useCategoryEdit.ts"
+        ],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "high",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {

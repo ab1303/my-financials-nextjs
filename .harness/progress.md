@@ -3,6 +3,34 @@
 Each entry is written at the end of a session or after crossing the 50% context utilization threshold.
 Agents: read the most recent entry at session start before doing anything else.
 
+## 2026-06-30 — Empty-owns backfill P0 + P3 partial (39 features applied)
+
+**Done this session:**
+
+- **P0 Discovery** — classified all 72 empty-owns features into buckets via `scripts/classify-empty-owns.mjs` (idempotent, re-runnable). Output: `spec/index.backfill-plan.md`. Final bucketing after 2 regex iterations + 9 manual spot-checks:
+  - **A** (live, LLD lists files): 49
+  - **B** (live, undocumented): 21
+  - **C** (planned): 0 — phase skipped
+  - **D** (dead/migration stub): 0 — phase skipped (only stub was `user-profile`, retired previous session)
+  - **E-adr** (architectural standard): 2
+- **P3 Bucket A mechanical extraction** — built `scripts/extract-owns-bucket-a.mjs` with slug-aware bare-filename resolver. Extracted owns for 39/49 features (HIGH 17 + MEDIUM 22).
+- **P3.5 E-adr marking** — applied `ownsConfidence: "n/a-adr"` to `architecture.calendar-attribution` and `architecture.category-url-filtering`. Extended `scripts/generate-spec-index.mjs` enum with `"n/a-adr"` and `"n/a-planned"`.
+- `pnpm spec:check --no-review --json` reports **0 drift, 0 overlap, 0 review, 0 ghost, 0 shaMissing**.
+- `withOwnsMatches: 19 → 60 / 91` (66% coverage).
+
+**Current blockers:**
+
+- 10 Bucket A LOW-confidence features have LLDs citing speculative/stale paths (e.g. `src/app/(banking)/bank-account-management/page.tsx` — folder does not exist). Mechanical extraction cannot recover them; need DDD sub-agent batch with grep-based discovery. Affected: ai-features.finance-chat, architecture.{e2e-testing, embedding-models, preferred-currency}, banking.{bank-account-management, bank-institution-ui, brokerage-hybrid, business-institutions}, cashflow.multi-account-transfer-integrity.harden-import-wizard, csv-import.batch-re-matching.
+- 21 Bucket B features (mostly cashflow + transactions) have short LLDs naming only service methods — need same DDD treatment.
+- `architecture.schema-naming` is in Bucket B but is likely a 3rd E-adr — re-review during DDD batch.
+
+**Next-session entry point:**
+
+- Read `spec/index.backfill-plan.md` Executive Summary + Bucket B/LOW lists.
+- Launch DDD sub-agent batch (claude-haiku-4.5) for the 31 remaining features (10 LOW + 21 B).
+
+---
+
 ## 2026-06-30 — Spec triage apply + manifest cleanup
 
 **Done this session:**

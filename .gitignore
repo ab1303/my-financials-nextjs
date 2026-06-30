@@ -68,3 +68,7 @@ build-output.log
 .gemini/settings.json
 backup.sql
 backup.dump
+
+# Transient extraction artifacts from spec/index backfill tooling
+scripts/.tmp/
+
