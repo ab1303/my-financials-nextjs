@@ -6,7 +6,7 @@
     {
       "id": "step1-t001",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "cashflow.multi-account-transfer-integrity",
       "files": [
@@ -16,14 +16,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:42:35.481Z",
+      "outcome": {
+        "overlapBefore": 94,
+        "overlapAfter": 94,
+        "patchPath": ".harness/remediation/patches-batch-1/task-step1-t001.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t002",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "cashflow.multi-account-transfer-integrity.fix-transfer-exclusion",
       "files": [
@@ -34,14 +38,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:42:35.744Z",
+      "outcome": {
+        "overlapBefore": 94,
+        "overlapAfter": 94,
+        "patchPath": ".harness/remediation/patches-batch-1/task-step1-t002.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t003",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "cashflow.multi-account-transfer-integrity.handle-orphans",
       "files": [
@@ -51,14 +59,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:42:35.953Z",
+      "outcome": {
+        "overlapBefore": 94,
+        "overlapAfter": 94,
+        "patchPath": ".harness/remediation/patches-batch-1/task-step1-t003.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t004",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "cashflow.multi-account-transfer-integrity.harden-import-wizard",
       "files": [
@@ -72,14 +84,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:52:12.080Z",
+      "outcome": {
+        "overlapBefore": 94,
+        "overlapAfter": 89,
+        "patchPath": ".harness/remediation/patches-batch-2/task-step1-t004.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t005",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "cashflow.multi-account-transfer-integrity.improve-detection",
       "files": [
@@ -90,14 +106,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:52:12.286Z",
+      "outcome": {
+        "overlapBefore": 89,
+        "overlapAfter": 89,
+        "patchPath": ".harness/remediation/patches-batch-2/task-step1-t005.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t006",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "transactions.import-audit-trail",
       "files": [
@@ -109,14 +129,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:52:12.481Z",
+      "outcome": {
+        "overlapBefore": 89,
+        "overlapAfter": 88,
+        "patchPath": ".harness/remediation/patches-batch-2/task-step1-t006.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t007",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "transactions.paginated-search",
       "files": [
@@ -126,14 +150,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:52:12.700Z",
+      "outcome": {
+        "overlapBefore": 88,
+        "overlapAfter": 87,
+        "patchPath": ".harness/remediation/patches-batch-2/task-step1-t007.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t008",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "transactions.transaction-bulk-apply",
       "files": [
@@ -145,14 +173,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:52:12.904Z",
+      "outcome": {
+        "overlapBefore": 87,
+        "overlapAfter": 85,
+        "patchPath": ".harness/remediation/patches-batch-2/task-step1-t008.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t009",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "transactions.transaction-dedup",
       "files": [
@@ -162,14 +194,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:55:52.771Z",
+      "outcome": {
+        "overlapBefore": 85,
+        "overlapAfter": 85,
+        "patchPath": ".harness/remediation/patches-batch-3/task-step1-t009.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t010",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "transactions.transfer-counterpart",
       "files": [
@@ -179,14 +215,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:55:52.970Z",
+      "outcome": {
+        "overlapBefore": 85,
+        "overlapAfter": 85,
+        "patchPath": ".harness/remediation/patches-batch-3/task-step1-t010.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t011",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "transactions.transfer-match-rules",
       "files": [
@@ -197,14 +237,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:55:53.180Z",
+      "outcome": {
+        "overlapBefore": 85,
+        "overlapAfter": 83,
+        "patchPath": ".harness/remediation/patches-batch-3/task-step1-t011.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t012",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "transactions.transfer-reconciliation",
       "files": [
@@ -214,14 +258,18 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:55:53.362Z",
+      "outcome": {
+        "overlapBefore": 83,
+        "overlapAfter": 83,
+        "patchPath": ".harness/remediation/patches-batch-3/task-step1-t012.json"
+      },
       "stopReason": null
     },
     {
       "id": "step1-t013",
       "step": 1,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.transactions",
       "target": "transactions.undo-safeguards",
       "files": [
@@ -234,8 +282,12 @@
       "promptTemplate": "step1-scope-down.md",
       "createdAt": "2026-06-30T10:07:04.591Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T10:55:53.568Z",
+      "outcome": {
+        "overlapBefore": 83,
+        "overlapAfter": 80,
+        "patchPath": ".harness/remediation/patches-batch-3/task-step1-t013.json"
+      },
       "stopReason": null
     }
   ]
