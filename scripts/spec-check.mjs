@@ -6,7 +6,10 @@
  *
  * Reads `spec/index.json` and reports, for each feature:
  *   - DRIFT:    files in `owns` that changed between `lastVerifiedSha` and HEAD
- *   - OVERLAP:  files claimed by more than one feature (boundary violation)
+ *   - OVERLAP:  files claimed by more than one feature (boundary violation;
+ *               recomputed live from `owns[]` each run — `index.overlaps` is
+ *               ignored, since stale stored state is exactly the failure mode
+ *               this gate exists to prevent).
  *   - REVIEW:   features still flagged `needsReview: true` (unverified ownership)
  *   - GHOST:    files listed in `owns` that no longer exist in the working tree
  *
@@ -146,11 +149,26 @@ for (const f of features) {
   }
 }
 
-// OVERLAP comes precomputed in the manifest but re-filter for --feature.
-const overlapsRaw = index.overlaps ?? [];
+// OVERLAP — recomputed live from current owns[] across ALL features (never read
+// from index.overlaps, which is stale stored state). A file claimed by >1 feature
+// is a boundary defect: two specs both assert authority over the same contract.
+// Note: this scans the full feature list even when --feature=<id> is supplied,
+// so overlap signal is always global (it has to be — overlap is a relationship).
+const overlapOwners = new Map(); // file -> Set<featureId>
+for (const f of index.features) {
+  if (f.status === 'adr') continue; // ADRs own no code, can't overlap
+  for (const file of ownsFiles(f)) {
+    if (!overlapOwners.has(file)) overlapOwners.set(file, new Set());
+    overlapOwners.get(file).add(f.id);
+  }
+}
+const allOverlaps = [];
+for (const [file, ids] of overlapOwners) {
+  if (ids.size > 1) allOverlaps.push({ file, claimedBy: [...ids].sort() });
+}
 findings.overlap = featureArg
-  ? overlapsRaw.filter(o => o.claimedBy.includes(featureArg))
-  : overlapsRaw;
+  ? allOverlaps.filter(o => o.claimedBy.includes(featureArg))
+  : allOverlaps;
 
 // --- Output ---
 const totals = {

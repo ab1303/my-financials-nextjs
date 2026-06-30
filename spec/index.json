@@ -33,7 +33,7 @@
     ]
   },
   "totals": {
-    "features": 91,
+    "features": 92,
     "withOwnsMatches": 86,
     "overlaps": 0
   },
@@ -1960,6 +1960,34 @@
       "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
+    },
+    {
+      "id": "harness.spec-remediation",
+      "domain": "harness",
+      "path": "spec/harness/spec-remediation/",
+      "status": "in-progress",
+      "phase": "build",
+      "docs": {
+        "context": "spec/harness/spec-remediation/context.md",
+        "lld": "spec/harness/spec-remediation/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "n/a-planned",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": [
+        "The harness must not bypass its own gates: apply-patch.mjs runs spec:check after each manifest edit and rolls back any change that introduces a finding.",
+        "Tier 3 operations (git push, prisma db push, etc.) require explicit user confirmation per AGENTS.md, even from a harness script.",
+        "Sub-agent invocations follow the ⚠️ CRITICAL CONSTRAINTS contract: read-only by default, allowed reads enumerated, JSON-only output schema declared.",
+        "Cheap-model friendliness: every irreducible LLM step fits within Haiku-class context + reasoning budget."
+      ]
     },
     {
       "id": "phase2-scope.home-dashboard-widgets",

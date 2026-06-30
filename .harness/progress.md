@@ -5,63 +5,61 @@ Agents: read this file at session start to know exactly what to work on next.
 
 ---
 
-## 2026-06-30 — Lint + build cleanup — IN PROGRESS 🔧
+## 2026-06-30 — Spec manifest overlap remediation — IN PROGRESS 🔧
 
-**State:** Lint 336 → 9 warnings. Build passes. Test-file type errors remain.
+**Workstream:** Phase 2 of the harness-audit priority queue (Bucket B DDD backfill + downstream).
+**State:** Original "21-feature Bucket B" turned out to be already 18/20 complete. Real work is `spec/index.json` overlap remediation: **94 live overlaps surfaced** after fixing a stale-state bug in `spec:check`. Layers 1 (gate fix) and Phase 1 (ADR schema) done. Layer 2 (overlap reclassification via invariants[]) is the active task.
 
-**Already done this session:**
+**Done this session:**
 
-- Ran 4 parallel subagents (lint-batch-1..4) fixing all 336 warnings across 150 files.
-- Fixed `eslint.config.mjs` to add `varsIgnorePattern/caughtErrorsIgnorePattern/destructuredArrayIgnorePattern: '^_'`.
-- Fixed 9 sequential build errors introduced by subagents stripping needed `as any` casts:
-  - `NewSnapshotModal.tsx` — `BankAssetEntry.balance: unknown`
-  - `HoldingFormModal.tsx` — `FieldErrors<CreateFormData>` cast + `FieldErrors` import
-  - `BeneficiaryFormFields.tsx` — restored `as any` for react-hook-form union `Control` types
-  - `donations/actions.ts` — restored `as any` for `paymentData`
-  - `CreditsDialog.tsx` + `page.tsx` — removed unused props from call site
-  - `relation/business/form.tsx` — restored `clsx` import + `react-hooks/incompatible-library` disable
-  - `relation/individual/form.tsx` — restored `clsx` + `: any` for map callbacks
-  - `dedup.service.ts` — `as TransactionTypeEnum` cast; removed `prisma` param (now module-level import)
-  - `csv/confirm/route.ts` — `as any` casts for `debitMonths`/`creditMonths`
-  - `csv/upload/route.ts` — `as any` for Prisma JSON metadata
-  - `TableCell.tsx` — reverted `_TValue` → `TValue` (module augmentation requires exact param names)
-  - `TelInput.tsx` — cast `country as any as Country`; `(countries as Country[]).find`
-  - `classify/route.ts` — removed stale `prisma` arg from `findDuplicatesForClassifiedMonths`
+- **Phase 1 — ADR schema decision (Option 3 adopted):** Re-decided after discovering the prior session's Option 1 "lock" was tactical. Schema now: `status: 'adr'` + `ownsConfidence: 'none'` (was: `ownsConfidence: 'n/a-adr'`). Applied to 3 features: `architecture.calendar-attribution`, `architecture.category-url-filtering`, `architecture.schema-naming`. Files: `spec/index.json` (conventions + 3 entries), `scripts/spec-check.mjs` (ADR-skip guard), `scripts/generate-spec-index.mjs` (enum sync), `spec/index.backfill-plan.md` (decision logged). `scripts/apply-eadr.mjs` deleted (superseded one-off).
+- **Layer 1 — `spec:check` overlap recompute (gate fix):** Replaced stale `index.overlaps` array read with live recomputation from `owns[]`. Critical finding: previous "0 overlaps" reported by `spec:check` was a lie — manifest's stored `overlaps` field was never refreshed after hand-edits introduced new overlaps. Patched `scripts/spec-check.mjs` lines 148-167.
 
-**Current state:**
-- `pnpm run build` ✅ — passes cleanly
-- `pnpm run lint:evaluate:json` — 0 errors, **9 warnings** (all intentional `as any` with eslint-disable comments)
-- `pnpm run type-check` ❌ — test-file type errors remain (prod files all pass)
+**Verification evidence:**
 
-**Remaining work (next session):**
+- `pnpm spec:check` → drift=50 / **overlap=94** (was reported as 0) / ghost=0 / sha-missing=0 / review=0.
+- `node -e "require('./spec/index.json')..."` → 3 ADR features tagged correctly, 0 stale `n/a-adr` references, conventions enums consistent.
+- 18/20 original Bucket B features at `ownsConfidence: high` (Phase 2 original scope effectively complete).
 
-### 1. Fix test-file type errors (`pnpm run type-check`)
-These are all in `src/__tests__/` and `e2e/`:
+**Key insight (re-frames Phase 2):** 72 of 91 features participate in overlaps. Dominant offender: `transactions.transactions` (37 overlap participations — owns 76 files, audit priority #7 flagged this as deferred). Likely 30+ overlaps dissolve mechanically just by scoping it down. Invariant-only features (e.g. `cashflow.bank-account-filter-parity`, `cashflow.multi-account-transfer-integrity.*`) have been claiming ownership of files they merely contribute invariants to — a model-level error.
 
-- `CategoryGroupsDrawer.test.tsx` L132, L148, L230 — `Cannot find name 'user'` (agent renamed to `_user` but code at those lines still uses `user`). Fix: change back to `user` in those tests, keep `_user` only where truly unused.
-- `cashflow-analytics.route.test.ts` L26 — `null` not assignable to `NextMiddleware`
-- `charity-tax.test.ts` L23 — `mockResolvedValue` not on `never` (agent changed `any` to wrong type)
-- `CleansingCandidatePicker.test.tsx` L79, L83 — mock not assignable to `UseTRPCQueryResult`
-- `donation-zakat-core.test.ts` L39, L69, L95, L150 — `mockResolvedValue` not on `never`
-- `IncomeTableClient.monthHeader.test.tsx` L83-217 — `Mock<()=>...>` not assignable to action types
-- `interest-cleansing-phase3.test.ts` L419, L420, L529 — wrong types on Prisma query mock
-- `interest-cleansing.scoring.test.ts` L36, L37, L88, L89 — `mockResolvedValue` not on `never`
-- `bank-interest.getCleansingDebitCandidates.test.ts` L36, L37 — same
-- `find-duplicates.service.test.ts` L16, L52 — `prisma` not in function signature (function was updated to use module-level prisma)
-- `SourceBadge.contrast.test.tsx` L62 — spread on `unknown` type
-- `stock-asset.schema.test.ts` L220 — `data.holdings` possibly undefined
-- `TableCell.amount.test.tsx` L37, L43 — spread on `unknown` type
-- `transfer-rule-job.test.ts` L133 — `transferMatchRule` not on `never`
+**Adopted ownership model (state-of-the-art, decided 2026-06-30):**
 
-**Key pattern for `mockResolvedValue not on 'never'`:** The agent changed `any` to `unknown` in mock setup, but prisma mock methods on `unknown` type don't have `.mockResolvedValue`. Fix: use `vi.mocked(prisma.model.method).mockResolvedValue(...)` or cast the mock correctly.
+1. **One owner per file.** The owner is the spec that defines the file's contract.
+2. **Cross-cutting concerns own no files.** They contribute `invariants[]` text to the canonical owner's spec. The `invariants: []` field already exists on every feature — it's been underused.
+3. **`spec:check` overlap detection** is now live-computed; it surfaces ownership conflicts, not import/usage relationships.
+4. **`touches[]` field** (for traceability of cross-cutting concerns) deferred — invariant text is grep-able.
 
-**Key pattern for `find-duplicates.service.test.ts`:** The `findDuplicatesForClassifiedMonths` function no longer accepts `prisma` parameter. Remove `prisma` from the test call.
+**Remaining work (next session — Layer 2 + Step 1):**
 
-**Key pattern for spread on `unknown`:** Agent changed `as any` to `unknown`. `{...unknown}` doesn't compile. Fix: use `as Record<string, unknown>` or restore `as SomeSpecificType`.
+### Step 1 — Scope down `transactions.transactions` (highest leverage, ~30+ overlaps dissolve)
+Audit priority #7 finally getting attention. Currently owns 76 files; should be a thin root concept owning maybe 10. Files belong to existing sub-features (`transaction-ledger`, `transaction-dedup`, `transfer-counterpart`, etc.).
 
-### 2. Resolve the 9 remaining lint warnings
-All are `no-explicit-any` with `eslint-disable` comments. These are legitimate (library type limitations). Either:
-- Accept them as intentional technical debt (they're suppressed, no impact)
-- Or refactor to use proper type-safe wrappers (lower priority)
+### Step 2 — Reclassify obvious invariant-only features
+Move from `owns: [...]` to `owns: []` + populated `invariants[]`:
+- `cashflow.bank-account-filter-parity`
+- `cashflow.multi-account-transfer-integrity.add-filtration-parity`
+- `cashflow.multi-account-transfer-integrity.handle-orphans`
+- Possibly: `architecture.site-audit`
 
-**Next session starts at:** Run `pnpm run type-check 2>&1 | grep "error TS"` to see current state, then fix test-file errors using the patterns above.
+### Step 3 — DDD triage on remaining ~40 true overlaps
+Genuine boundary decisions among 2-5 claimant features per overlapping file. Per-overlap DDD pass. Examples: `StockAssetsClient.tsx` (5 assets-feature claimants), `csv-confirm.service.ts` (6 claimants).
+
+### Final cleanup (after Steps 1-3)
+- Re-run `pnpm spec:check` — expect overlap=0 from real signal.
+- Update audit Snapshot table to reflect the actual baseline.
+- Then back to original Phase 2 holdouts: 2 features at `medium` confidence (`cashflow.bank-account-filter-parity` covered above; `transactions.transfer-reconciliation`) + 5 at `low/none` (`architecture.category-filters`, `transactions.reimbursements`, `transactions.transaction-clearing`, `user-profile.user-profile`, `ai-features.finance-chat`).
+
+**Sub-agent delegation plan for Steps 1-3:** See the orchestrator's analysis in this session's chat log — three-step pipeline with cheap sub-agents emitting JSON patches, orchestrator applying serially.
+
+**Files modified this session (uncommitted):**
+
+- `spec/index.json` — conventions + 3 ADR entries
+- `scripts/spec-check.mjs` — overlap recompute + ADR guard + docstring
+- `scripts/generate-spec-index.mjs` — enum sync
+- `scripts/apply-eadr.mjs` — **deleted**
+- `spec/index.backfill-plan.md` — Option 3 decision logged
+- `.harness/progress.md` — this entry
+- `.harness/progress-history.md` — old lint entry archived
+
+**Next session starts at:** Read this entry, then either (a) execute the sub-agent delegation plan for Step 1, or (b) commit current work first.
