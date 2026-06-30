@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  Diagnostic script for CSV import parsing and dedup key analysis.
- Usage: node ./scripts/diagnose-csv-import.ts /path/to/file.csv
+ Usage: node ./scripts/diagnostics/diagnose-csv-import.ts /path/to/file.csv
 
 This script is read-only and does not touch the database.
 It prints debug logs at key steps and writes a JSON report `diagnose-csv-report.json`.
@@ -166,7 +166,7 @@ async function main() {
   const arg = process.argv[2];
   if (!arg) {
     console.error(
-      'Usage: node scripts/diagnose-csv-import.ts /path/to/file.csv',
+      'Usage: node scripts/diagnostics/diagnose-csv-import.ts /path/to/file.csv',
     );
     process.exit(1);
   }

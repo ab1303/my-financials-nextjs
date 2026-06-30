@@ -38,7 +38,7 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const INDEX_PATH = path.join(REPO_ROOT, 'spec', 'index.json');
 
 const args = process.argv.slice(2);
@@ -53,7 +53,7 @@ function die(code, msg) {
 }
 
 if (!fs.existsSync(INDEX_PATH)) {
-  die(2, `spec/index.json not found. Run: node scripts/generate-spec-index.mjs`);
+  die(2, `spec/index.json not found. Run: node scripts/harness/spec-manifest/generate-spec-index.mjs`);
 }
 
 let index;

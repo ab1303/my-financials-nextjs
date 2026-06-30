@@ -21,6 +21,36 @@ feature, the same overlap detector flags it.
 
 Eat your own dog food. No exemptions for the meta-layer.
 
+## Folder convention
+
+Symmetry between `spec/harness/` and `scripts/harness/`:
+
+```
+spec/harness/<feature>/         ⟷    scripts/harness/<feature>/
+spec/harness/spec-remediation/  ⟷    scripts/harness/spec-remediation/
+spec/harness/capsule-format/    ⟷    scripts/harness/capsule-format/      (future)
+spec/harness/pre-push-hook/     ⟷    scripts/harness/pre-push-hook/       (future)
+```
+
+Rules:
+
+1. **One spec folder ↔ one script folder.** Every harness feature with
+   executable code has both, and they share a kebab-case feature id.
+2. **Cross-feature shared utilities** live in `scripts/harness/_lib/`.
+   Created lazily — only when ≥2 features actually need to share code.
+   No preemptive DRY.
+3. **All harness scripts live under `scripts/harness/<feature>/`.** Top-level
+   `scripts/` is reserved for operational/CLI utilities outside the harness
+   (`scripts/db/`, `scripts/mcp/`, `scripts/diagnostics/`). When a harness
+   feature is specced, its scripts move (`git mv`) into its dedicated folder
+   in the same commit as the spec — no "temporarily at top level" intermediate
+   state.
+4. **Feature ownership of scripts:** each harness feature's `lld.md`
+   declares its `scripts/harness/<feature>/**` files in `owns[].services`
+   (with `bucket: "services"` for `.mjs` files — the manifest's bucket
+   names are domain-leaning but adequate for now; refining the bucket
+   taxonomy is a separate concern documented in the LLD's open questions).
+
 ## What lives in `spec/harness/`
 
 | Concern | Lives in |
@@ -40,8 +70,10 @@ contract** → spec it under `spec/harness/<feature>/`.
 
 Harness features collectively own:
 
-- `scripts/spec-*.mjs` — manifest generation, checking, remediation
-- `scripts/generate-spec-index.mjs` (the manifest generator)
+- `scripts/harness/spec-manifest/*` — manifest generation, checking, classification
+- `scripts/harness/spec-remediation/*` — overlap remediation pipeline (in build)
+- `scripts/harness/lint-reports/*` — lint scope reports
+- `scripts/harness/repo-hygiene/*` — repo-level invariant checks
 - `.harness/feature-status.json`, `.harness/init.sh`, `.harness/clean-state-checklist.md`
 - `.harness/remediation/*` (state for the remediation workstream)
 

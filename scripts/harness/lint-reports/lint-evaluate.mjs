@@ -197,7 +197,7 @@ if (nextMode) {
       console.log(`\nVerification gate after patching:`);
       console.log(`  pnpm --silent exec eslint "${rel}"`);
       console.log(`  pnpm --silent run type-check`);
-      console.log(`  node scripts/lint-evaluate.mjs --top-only`);
+      console.log(`  node scripts/harness/lint-reports/lint-evaluate.mjs --top-only`);
     }
   }
 }

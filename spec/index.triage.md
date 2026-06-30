@@ -1,297 +1,297 @@
-# spec/index.triage.md — Overlap Triage Report
+# cpec/index.triage.md — Overlap Triage Report
 
 **Generated:** 2026-06-30  
-**Branch:** spec-triage  
+**Branch:** cpec-triage  
 **Head SHA:** b245aad83d57e2ec1859306922a0a6b46474134f  
-**Overlaps triaged:** 15 of 15  
-**Subagent model:** claude-haiku-4.5 (DDD loop per `.agents/skills/doubt-driven-development/SKILL.md`)  
-**Orchestrator:** claude-sonnet-4.6 (this session)
+**Overlapc triaged:** 15 of 15  
+**Subagent model:** claude-haiku-4.5 (DDD loop per `.agentc/ckillc/doubt-driven-development/SKILL.md`)  
+**Orchectrator:** claude-connet-4.6 (thic ceccion)
 
 ---
 
 ## Stop-Condition Check (pre-report gate)
 
-| Rule | Threshold | Actual | Status |
+| Rule | Threchold | Actual | Statuc |
 |------|-----------|--------|--------|
-| `confidence: low` count | > 3 triggers stop | **0** | ✅ clear |
-| Max `blastRadius` | > 10 requires escalation | **2** | ✅ clear |
-| Active-feature conflict (`category-groups`) | any → stop | **0 files touched** | ✅ clear |
+| `confidence: low` count | > 3 triggerc ctop | **0** | ✅ clear |
+| Max `blactRadiuc` | > 10 requirec eccalation | **2** | ✅ clear |
+| Active-feature conflict (`category-groupc`) | any → ctop | **0 filec touched** | ✅ clear |
 
 All clear — proceeding to ranked report.
 
 ---
 
-## Meta-Pattern (orchestrator observation)
+## Meta-Pattern (orchectrator obcervation)
 
-**Root cause of 13 out of 15 overlaps:** `transactions.transactions` is a catch-all spec claiming **89 files**, many of which belong to more focused sub-features (`transactions.transaction-ledger`, `transactions.category-rules`, `transactions.reimbursements`, `csv-import.csv-import`, `architecture.category-filters`). The remaining 2 overlaps are a `user-profile` root-stub/nested-spec duplication.
+**Root cauce of 13 out of 15 overlapc:** `trancactionc.trancactionc` ic a catch-all cpec claiming **89 filec**, many of which belong to more focuced cub-featurec (`trancactionc.trancaction-ledger`, `trancactionc.category-rulec`, `trancactionc.reimburcementc`, `ccv-import.ccv-import`, `architecture.category-filterc`). The remaining 2 overlapc are a `ucer-profile` root-ctub/nected-cpec duplication.
 
-**Systemic note for Step 5 (apply session):** After the 13 individual reassignments land, `transactions.transactions` will still own ~76 files. Consider whether it should be further scoped in a future session to only the core import pipeline (services under `src/server/services/transactions/` that are not claimed by any sub-feature). This is **not** a current recommendation — it exceeds the 10-file escalation threshold and requires a deliberate scope-down session.
-
----
-
-## Section 1 — Auto-Approvable (`confidence: high`, `blastRadius ≤ 3`)
-
-*14 of 15 overlaps. Safe to approve in batch; verify one against source if in doubt.*
+**Syctemic note for Step 5 (apply ceccion):** After the 13 individual reaccignmentc land, `trancactionc.trancactionc` will ctill own ~76 filec. Concider whether it chould be further ccoped in a future ceccion to only the core import pipeline (cervicec under `crc/cerver/cervicec/trancactionc/` that are not claimed by any cub-feature). Thic ic **not** a current recommendation — it exceedc the 10-file eccalation threchold and requirec a deliberate ccope-down ceccion.
 
 ---
 
-### Group: assign-to-A (remove from `transactions.transactions`)
+## Section 1 — Auto-Approvable (`confidence: high`, `blactRadiuc ≤ 3`)
 
-These 11 files are all presently double-claimed by `transactions.transactions` (catch-all) and a more specific sub-feature. The DDD loop confirms each belongs exclusively to the sub-feature.
-
-#### OL-07 — `restoreVoidedTransaction.ts` → `transactions.transaction-ledger`
-| Field | Value |
-|-------|-------|
-| File | `src/server/trpc/router/transaction-ledger/mutations/restoreVoidedTransaction.ts` |
-| Assign to | `transactions.transaction-ledger` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Ledger status mutation (voided → pending); matches transaction-ledger context.md scope "Status management". |
-| Key evidence | `context.md:15` lists "Status management (ALL, Expenses, Income, Excluded, Voided)"; file updates a single transaction status, not the import pipeline. |
-
-#### OL-08 — `getUnlinkedDonationTransactions.ts` → `transactions.transaction-ledger`
-| Field | Value |
-|-------|-------|
-| File | `src/server/trpc/router/transaction-ledger/queries/getUnlinkedDonationTransactions.ts` |
-| Assign to | `transactions.transaction-ledger` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Post-import ledger query for donation-linking UI; colocated in transaction-ledger router. |
-| Key evidence | `transaction-ledger/context.md:12` scope "Paginated table + Filtering"; file delegates to `donation-link.service` (not import pipeline), used by ledger browsing surface. |
-
-#### OL-09 — `getUnlinkedZakatTransactions.ts` → `transactions.transaction-ledger`
-| Field | Value |
-|-------|-------|
-| File | `src/server/trpc/router/transaction-ledger/queries/getUnlinkedZakatTransactions.ts` |
-| Assign to | `transactions.transaction-ledger` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | tRPC query endpoint in transaction-ledger router serving the ledger's browsing/auditing surface for zakat obligations. |
-| Key evidence | File is a `protectedProcedure` query in `transaction-ledger/queries/`; ledger browsing/auditing scope covers cross-domain queries that expose ledger data. |
-
-#### OL-10 — `getVoidedTransactions.ts` → `transactions.transaction-ledger`
-| Field | Value |
-|-------|-------|
-| File | `src/server/trpc/router/transaction-ledger/queries/getVoidedTransactions.ts` |
-| Assign to | `transactions.transaction-ledger` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Paginated read on the transaction ledger filtered by VOIDED status; implements "Status management" scope. |
-| Key evidence | `transaction-ledger/context.md:15` "Status management (ALL, Expenses, Income, Excluded, Voided)"; file has zero import/classification/rollup logic. |
-
-#### OL-11 — `searchDebitTransactions.ts` → `transactions.transaction-ledger`
-| Field | Value |
-|-------|-------|
-| File | `src/server/trpc/router/transaction-ledger/queries/searchDebitTransactions.ts` |
-| Assign to | `transactions.transaction-ledger` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Ledger-scoped query for interactive table filtering (search, date range, pagination). |
-| Key evidence | `transaction-ledger/context.md:14` "Filtering by bank account, date range, and description"; query filters post-import confirmed/excluded records only. |
-
-#### OL-12 — `TransactionLedgerTable.tsx` → `transactions.transaction-ledger`
-| Field | Value |
-|-------|-------|
-| File | `src/components/transactions/TransactionLedgerTable.tsx` |
-| Assign to | `transactions.transaction-ledger` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Core ledger UI implementing paginated table, inline category editing, status filtering, and multi-field search. |
-| Key evidence | `transaction-ledger/lld.md:14` "TransactionRow → transactionLedger.updateCategory" matches `shouldRetainRowAfterCategoryChange` logic; component has zero import pipeline dependencies. |
-
-#### OL-13 — `TransactionLedgerTable.test.tsx` → `transactions.transaction-ledger`
-| Field | Value |
-|-------|-------|
-| File | `src/__tests__/unit/TransactionLedgerTable.test.tsx` |
-| Assign to | `transactions.transaction-ledger` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Test file exclusively exercises transaction-ledger UI and tRPC router — no import pipeline dependency. |
-| Key evidence | Test mocks `transactionLedger.getAll`, `transactionLedger.updateCategory`, `transactionLedger.getFilterOptions`; zero reference to csv-classifier, csv-confirm, or ImportSession. |
-
-#### OL-03 — `category-rule.service.ts` → `transactions.category-rules`
-| Field | Value |
-|-------|-------|
-| File | `src/server/services/transactions/category-rule.service.ts` |
-| Assign to | `transactions.category-rules` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Service exclusively implements category rule CRUD and application; explicitly named in `category-rules/context.md:8`. |
-| Key evidence | `category-rules/context.md:8` names this file; functions `createRule`, `listRules`, `toggleRule`, `deleteRule`, `runCategoryRules`, `applyRuleToPast` are all rule-domain operations. |
-
-#### OL-04 — `CategoryRuleDrawer.tsx` → `transactions.category-rules`
-| Field | Value |
-|-------|-------|
-| File | `src/components/transactions/CategoryRuleDrawer.tsx` |
-| Assign to | `transactions.category-rules` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Dedicated rule-creation drawer using `categoryRule.create` and `categoryRule.applyToPast` mutations. |
-| Key evidence | `category-rules/context.md:13` "Inline UI for rule creation during transaction editing"; component only uses category-rules tRPC mutations. |
-
-#### OL-05 — `CategoryRulePrompt.tsx` → `transactions.category-rules`
-| Field | Value |
-|-------|-------|
-| File | `src/components/transactions/CategoryRulePrompt.tsx` |
-| Assign to | `transactions.category-rules` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | UI prompt for rule-creation suggestion; explicitly described in category-rules LLD UX flow. |
-| Key evidence | `category-rules/lld.md:22` "Detect Similar Transactions → Open Drawer"; component text "Found N similar transaction(s). Save as a category rule?" (lines 21–23). |
-
-#### OL-02 — `TransactionReviewTable.tsx` → `csv-import.csv-import`
-| Field | Value |
-|-------|-------|
-| File | `src/components/csv-import/TransactionReviewTable.tsx` |
-| Assign to | `csv-import.csv-import` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Post-parse review UI for the csv-import wizard; renders `ClassifiedTransaction` state scoped to import sessions. |
-| Key evidence | `csv-import/lld.md:9,19` Phase 2 classify/review flow; component imports `ClassifiedTransaction` from ai-import domain, implements LLM category override at line 119. |
+*14 of 15 overlapc. Safe to approve in batch; verify one againct cource if in doubt.*
 
 ---
 
-### Group: assign-to-B (remove from specific sub-spec, keep in broader spec)
+### Group: accign-to-A (remove from `trancactionc.trancactionc`)
 
-#### OL-01 — `CategoryFilteredLedger.tsx` → `transactions.transactions`
+Thece 11 filec are all precently double-claimed by `trancactionc.trancactionc` (catch-all) and a more cpecific cub-feature. The DDD loop confirmc each belongc exclucively to the cub-feature.
+
+#### OL-07 — `rectoreVoidedTrancaction.tc` → `trancactionc.trancaction-ledger`
 | Field | Value |
 |-------|-------|
-| File | `src/components/transactions/CategoryFilteredLedger.tsx` |
-| Assign to | `transactions.transactions` |
-| Remove from | `architecture.category-filters` |
-| blastRadius | 1 |
+| File | `crc/cerver/trpc/router/trancaction-ledger/mutationc/rectoreVoidedTrancaction.tc` |
+| Accign to | `trancactionc.trancaction-ledger` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
 | Confidence | **high** |
-| DDD claim | Transaction display component that queries filtered transaction data; belongs to transactions, not category group authoring. |
-| Key evidence | Component calls `trpc.categoryTransactions.getByCategory` (line 66) — a transaction query. `architecture.category-filters/lld.md:13-20` describes group authoring (dashboard, drawer, CRUD), not transaction display. |
+| DDD claim | Ledger ctatuc mutation (voided → pending); matchec trancaction-ledger context.md ccope "Statuc management". |
+| Key evidence | `context.md:15` lictc "Statuc management (ALL, Expencec, Income, Excluded, Voided)"; file updatec a cingle trancaction ctatuc, not the import pipeline. |
+
+#### OL-08 — `getUnlinkedDonationTrancactionc.tc` → `trancactionc.trancaction-ledger`
+| Field | Value |
+|-------|-------|
+| File | `crc/cerver/trpc/router/trancaction-ledger/queriec/getUnlinkedDonationTrancactionc.tc` |
+| Accign to | `trancactionc.trancaction-ledger` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Poct-import ledger query for donation-linking UI; colocated in trancaction-ledger router. |
+| Key evidence | `trancaction-ledger/context.md:12` ccope "Paginated table + Filtering"; file delegatec to `donation-link.cervice` (not import pipeline), uced by ledger browcing curface. |
+
+#### OL-09 — `getUnlinkedZakatTrancactionc.tc` → `trancactionc.trancaction-ledger`
+| Field | Value |
+|-------|-------|
+| File | `crc/cerver/trpc/router/trancaction-ledger/queriec/getUnlinkedZakatTrancactionc.tc` |
+| Accign to | `trancactionc.trancaction-ledger` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | tRPC query endpoint in trancaction-ledger router cerving the ledger'c browcing/auditing curface for zakat obligationc. |
+| Key evidence | File ic a `protectedProcedure` query in `trancaction-ledger/queriec/`; ledger browcing/auditing ccope coverc crocc-domain queriec that expoce ledger data. |
+
+#### OL-10 — `getVoidedTrancactionc.tc` → `trancactionc.trancaction-ledger`
+| Field | Value |
+|-------|-------|
+| File | `crc/cerver/trpc/router/trancaction-ledger/queriec/getVoidedTrancactionc.tc` |
+| Accign to | `trancactionc.trancaction-ledger` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Paginated read on the trancaction ledger filtered by VOIDED ctatuc; implementc "Statuc management" ccope. |
+| Key evidence | `trancaction-ledger/context.md:15` "Statuc management (ALL, Expencec, Income, Excluded, Voided)"; file hac zero import/claccification/rollup logic. |
+
+#### OL-11 — `cearchDebitTrancactionc.tc` → `trancactionc.trancaction-ledger`
+| Field | Value |
+|-------|-------|
+| File | `crc/cerver/trpc/router/trancaction-ledger/queriec/cearchDebitTrancactionc.tc` |
+| Accign to | `trancactionc.trancaction-ledger` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Ledger-ccoped query for interactive table filtering (cearch, date range, pagination). |
+| Key evidence | `trancaction-ledger/context.md:14` "Filtering by bank account, date range, and deccription"; query filterc poct-import confirmed/excluded recordc only. |
+
+#### OL-12 — `TrancactionLedgerTable.tcx` → `trancactionc.trancaction-ledger`
+| Field | Value |
+|-------|-------|
+| File | `crc/componentc/trancactionc/TrancactionLedgerTable.tcx` |
+| Accign to | `trancactionc.trancaction-ledger` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Core ledger UI implementing paginated table, inline category editing, ctatuc filtering, and multi-field cearch. |
+| Key evidence | `trancaction-ledger/lld.md:14` "TrancactionRow → trancactionLedger.updateCategory" matchec `chouldRetainRowAfterCategoryChange` logic; component hac zero import pipeline dependenciec. |
+
+#### OL-13 — `TrancactionLedgerTable.tect.tcx` → `trancactionc.trancaction-ledger`
+| Field | Value |
+|-------|-------|
+| File | `crc/__tectc__/unit/TrancactionLedgerTable.tect.tcx` |
+| Accign to | `trancactionc.trancaction-ledger` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Tect file exclucively exercicec trancaction-ledger UI and tRPC router — no import pipeline dependency. |
+| Key evidence | Tect mockc `trancactionLedger.getAll`, `trancactionLedger.updateCategory`, `trancactionLedger.getFilterOptionc`; zero reference to ccv-claccifier, ccv-confirm, or ImportSeccion. |
+
+#### OL-03 — `category-rule.cervice.tc` → `trancactionc.category-rulec`
+| Field | Value |
+|-------|-------|
+| File | `crc/cerver/cervicec/trancactionc/category-rule.cervice.tc` |
+| Accign to | `trancactionc.category-rulec` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Service exclucively implementc category rule CRUD and application; explicitly named in `category-rulec/context.md:8`. |
+| Key evidence | `category-rulec/context.md:8` namec thic file; functionc `createRule`, `lictRulec`, `toggleRule`, `deleteRule`, `runCategoryRulec`, `applyRuleToPact` are all rule-domain operationc. |
+
+#### OL-04 — `CategoryRuleDrawer.tcx` → `trancactionc.category-rulec`
+| Field | Value |
+|-------|-------|
+| File | `crc/componentc/trancactionc/CategoryRuleDrawer.tcx` |
+| Accign to | `trancactionc.category-rulec` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Dedicated rule-creation drawer ucing `categoryRule.create` and `categoryRule.applyToPact` mutationc. |
+| Key evidence | `category-rulec/context.md:13` "Inline UI for rule creation during trancaction editing"; component only ucec category-rulec tRPC mutationc. |
+
+#### OL-05 — `CategoryRulePrompt.tcx` → `trancactionc.category-rulec`
+| Field | Value |
+|-------|-------|
+| File | `crc/componentc/trancactionc/CategoryRulePrompt.tcx` |
+| Accign to | `trancactionc.category-rulec` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | UI prompt for rule-creation cuggection; explicitly deccribed in category-rulec LLD UX flow. |
+| Key evidence | `category-rulec/lld.md:22` "Detect Similar Trancactionc → Open Drawer"; component text "Found N cimilar trancaction(c). Save ac a category rule?" (linec 21–23). |
+
+#### OL-02 — `TrancactionReviewTable.tcx` → `ccv-import.ccv-import`
+| Field | Value |
+|-------|-------|
+| File | `crc/componentc/ccv-import/TrancactionReviewTable.tcx` |
+| Accign to | `ccv-import.ccv-import` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Poct-parce review UI for the ccv-import wizard; renderc `ClaccifiedTrancaction` ctate ccoped to import ceccionc. |
+| Key evidence | `ccv-import/lld.md:9,19` Phace 2 claccify/review flow; component importc `ClaccifiedTrancaction` from ai-import domain, implementc LLM category override at line 119. |
 
 ---
 
-### Group: assign-to-B (retire root stub, keep with nested feature)
+### Group: accign-to-B (remove from cpecific cub-cpec, keep in broader cpec)
 
-#### OL-14 — `user-profile.ts` → `user-profile.user-profile`
+#### OL-01 — `CategoryFilteredLedger.tcx` → `trancactionc.trancactionc`
 | Field | Value |
 |-------|-------|
-| File | `src/server/trpc/router/user-profile.ts` |
-| Assign to | `user-profile.user-profile` |
-| Remove from | `user-profile` (root stub) |
-| blastRadius | 2 |
+| File | `crc/componentc/trancactionc/CategoryFilteredLedger.tcx` |
+| Accign to | `trancactionc.trancactionc` |
+| Remove from | `architecture.category-filterc` |
+| blactRadiuc | 1 |
 | Confidence | **high** |
-| DDD claim | File owned by `user-profile.user-profile`; root spec is a documented migration stub that defers all implementation. |
-| Key evidence | `user-profile/context.md:3-11` is an explicit migration note; `user-profile/user-profile/lld.md:78` lists this file in File Inventory as "Protected tRPC router for profile queries and mutations". |
-
-#### OL-15 — `user-profile.service.ts` → `user-profile.user-profile`
-| Field | Value |
-|-------|-------|
-| File | `src/server/services/user-profile/user-profile.service.ts` |
-| Assign to | `user-profile.user-profile` |
-| Remove from | `user-profile` (root stub) |
-| blastRadius | 1 |
-| Confidence | **high** |
-| DDD claim | Service layer for profile CRUD; explicitly listed in `user-profile.user-profile` LLD File Inventory. |
-| Key evidence | `user-profile/user-profile/lld.md:79` "Service functions for profile CRUD, avatar operations, and password changes"; `context.md:63` "file inventory live in lld.md only". |
-
-> **Follow-up action for apply session:** Once OL-14 and OL-15 are resolved, the `user-profile` root stub entry in `spec/index.json` has an empty `owns[]` and should be removed from the manifest entirely. This is a `retire-one` on the root stub — blastRadius 0 after the two reassignments land.
+| DDD claim | Trancaction dicplay component that queriec filtered trancaction data; belongc to trancactionc, not category group authoring. |
+| Key evidence | Component callc `trpc.categoryTrancactionc.getByCategory` (line 66) — a trancaction query. `architecture.category-filterc/lld.md:13-20` deccribec group authoring (dachboard, drawer, CRUD), not trancaction dicplay. |
 
 ---
 
-## Section 2 — Needs Human Review (`confidence: medium` or `reconcile: Stop`)
+### Group: accign-to-B (retire root ctub, keep with nected feature)
 
-*0 remaining — OL-06 resolved by human on 2026-06-30.*
+#### OL-14 — `ucer-profile.tc` → `ucer-profile.ucer-profile`
+| Field | Value |
+|-------|-------|
+| File | `crc/cerver/trpc/router/ucer-profile.tc` |
+| Accign to | `ucer-profile.ucer-profile` |
+| Remove from | `ucer-profile` (root ctub) |
+| blactRadiuc | 2 |
+| Confidence | **high** |
+| DDD claim | File owned by `ucer-profile.ucer-profile`; root cpec ic a documented migration ctub that deferc all implementation. |
+| Key evidence | `ucer-profile/context.md:3-11` ic an explicit migration note; `ucer-profile/ucer-profile/lld.md:78` lictc thic file in File Inventory ac "Protected tRPC router for profile queriec and mutationc". |
+
+#### OL-15 — `ucer-profile.cervice.tc` → `ucer-profile.ucer-profile`
+| Field | Value |
+|-------|-------|
+| File | `crc/cerver/cervicec/ucer-profile/ucer-profile.cervice.tc` |
+| Accign to | `ucer-profile.ucer-profile` |
+| Remove from | `ucer-profile` (root ctub) |
+| blactRadiuc | 1 |
+| Confidence | **high** |
+| DDD claim | Service layer for profile CRUD; explicitly licted in `ucer-profile.ucer-profile` LLD File Inventory. |
+| Key evidence | `ucer-profile/ucer-profile/lld.md:79` "Service functionc for profile CRUD, avatar operationc, and paccword changec"; `context.md:63` "file inventory live in lld.md only". |
+
+> **Follow-up action for apply ceccion:** Once OL-14 and OL-15 are recolved, the `ucer-profile` root ctub entry in `cpec/index.jcon` hac an empty `ownc[]` and chould be removed from the manifect entirely. Thic ic a `retire-one` on the root ctub — blactRadiuc 0 after the two reaccignmentc land.
 
 ---
 
-#### OL-06 — `ReimbursementSubRow.tsx` → `transactions.reimbursements` ✅ (human-approved 2026-06-30)
+## Section 2 — Needc Human Review (`confidence: medium` or `reconcile: Stop`)
+
+*0 remaining — OL-06 recolved by human on 2026-06-30.*
+
+---
+
+#### OL-06 — `ReimburcementSubRow.tcx` → `trancactionc.reimburcementc` ✅ (human-approved 2026-06-30)
 | Field | Value |
 |-------|-------|
-| File | `src/components/transactions/ReimbursementSubRow.tsx` |
-| Recommendation | assign-to-A → `transactions.reimbursements` |
-| Remove from | `transactions.transactions` |
-| blastRadius | 1 |
+| File | `crc/componentc/trancactionc/ReimburcementSubRow.tcx` |
+| Recommendation | accign-to-A → `trancactionc.reimburcementc` |
+| Remove from | `trancactionc.trancactionc` |
+| blactRadiuc | 1 |
 | Confidence | **medium → approved** |
-| Reconcile | Stop → **Proceed** (human resolved the `?` assumptions) |
+| Reconcile | Stop → **Proceed** (human recolved the `?` accumptionc) |
 
-**Resolution:** Human confirmed single-import exclusivity. Grep result: only `TransactionRow.tsx:22` imports this component. `TransactionRow.donation-badge.test.tsx` mocks it, confirming test coverage is transaction-row scoped. No import pipeline usage.  The two `?` assumptions are now resolved ✓ — approve as auto-approvable.
+**Recolution:** Human confirmed cingle-import exclucivity. Grep recult: only `TrancactionRow.tcx:22` importc thic component. `TrancactionRow.donation-badge.tect.tcx` mockc it, confirming tect coverage ic trancaction-row ccoped. No import pipeline ucage.  The two `?` accumptionc are now recolved ✓ — approve ac auto-approvable.
 
 ---
 
-## Section 3 — Escalation Required (`confidence: low`)
+## Section 3 — Eccalation Required (`confidence: low`)
 
-*0 of 15 overlaps.* No escalation needed.
+*0 of 15 overlapc.* No eccalation needed.
 
 ---
 
 ## Summary Table
 
-| # | File (short) | Rec | Assign To | Remove From | Conf | Tier |
+| # | File (chort) | Rec | Accign To | Remove From | Conf | Tier |
 |---|-------------|-----|-----------|-------------|------|------|
-| OL-01 | CategoryFilteredLedger.tsx | assign-to-B | transactions.transactions | architecture.category-filters | high | Auto |
-| OL-02 | TransactionReviewTable.tsx | assign-to-A | csv-import.csv-import | transactions.transactions | high | Auto |
-| OL-03 | category-rule.service.ts | assign-to-A | transactions.category-rules | transactions.transactions | high | Auto |
-| OL-04 | CategoryRuleDrawer.tsx | assign-to-A | transactions.category-rules | transactions.transactions | high | Auto |
-| OL-05 | CategoryRulePrompt.tsx | assign-to-A | transactions.category-rules | transactions.transactions | high | Auto |
-| OL-06 | ReimbursementSubRow.tsx | assign-to-A | transactions.reimbursements | transactions.transactions | medium ✅ | **Auto** (human-approved) |
-| OL-07 | restoreVoidedTransaction.ts | assign-to-A | transactions.transaction-ledger | transactions.transactions | high | Auto |
-| OL-08 | getUnlinkedDonationTransactions.ts | assign-to-A | transactions.transaction-ledger | transactions.transactions | high | Auto |
-| OL-09 | getUnlinkedZakatTransactions.ts | assign-to-A | transactions.transaction-ledger | transactions.transactions | high | Auto |
-| OL-10 | getVoidedTransactions.ts | assign-to-A | transactions.transaction-ledger | transactions.transactions | high | Auto |
-| OL-11 | searchDebitTransactions.ts | assign-to-A | transactions.transaction-ledger | transactions.transactions | high | Auto |
-| OL-12 | TransactionLedgerTable.tsx | assign-to-A | transactions.transaction-ledger | transactions.transactions | high | Auto |
-| OL-13 | TransactionLedgerTable.test.tsx | assign-to-A | transactions.transaction-ledger | transactions.transactions | high | Auto |
-| OL-14 | user-profile.ts | assign-to-B | user-profile.user-profile | user-profile (stub) | high | Auto |
-| OL-15 | user-profile.service.ts | assign-to-B | user-profile.user-profile | user-profile (stub) | high | Auto |
+| OL-01 | CategoryFilteredLedger.tcx | accign-to-B | trancactionc.trancactionc | architecture.category-filterc | high | Auto |
+| OL-02 | TrancactionReviewTable.tcx | accign-to-A | ccv-import.ccv-import | trancactionc.trancactionc | high | Auto |
+| OL-03 | category-rule.cervice.tc | accign-to-A | trancactionc.category-rulec | trancactionc.trancactionc | high | Auto |
+| OL-04 | CategoryRuleDrawer.tcx | accign-to-A | trancactionc.category-rulec | trancactionc.trancactionc | high | Auto |
+| OL-05 | CategoryRulePrompt.tcx | accign-to-A | trancactionc.category-rulec | trancactionc.trancactionc | high | Auto |
+| OL-06 | ReimburcementSubRow.tcx | accign-to-A | trancactionc.reimburcementc | trancactionc.trancactionc | medium ✅ | **Auto** (human-approved) |
+| OL-07 | rectoreVoidedTrancaction.tc | accign-to-A | trancactionc.trancaction-ledger | trancactionc.trancactionc | high | Auto |
+| OL-08 | getUnlinkedDonationTrancactionc.tc | accign-to-A | trancactionc.trancaction-ledger | trancactionc.trancactionc | high | Auto |
+| OL-09 | getUnlinkedZakatTrancactionc.tc | accign-to-A | trancactionc.trancaction-ledger | trancactionc.trancactionc | high | Auto |
+| OL-10 | getVoidedTrancactionc.tc | accign-to-A | trancactionc.trancaction-ledger | trancactionc.trancactionc | high | Auto |
+| OL-11 | cearchDebitTrancactionc.tc | accign-to-A | trancactionc.trancaction-ledger | trancactionc.trancactionc | high | Auto |
+| OL-12 | TrancactionLedgerTable.tcx | accign-to-A | trancactionc.trancaction-ledger | trancactionc.trancactionc | high | Auto |
+| OL-13 | TrancactionLedgerTable.tect.tcx | accign-to-A | trancactionc.trancaction-ledger | trancactionc.trancactionc | high | Auto |
+| OL-14 | ucer-profile.tc | accign-to-B | ucer-profile.ucer-profile | ucer-profile (ctub) | high | Auto |
+| OL-15 | ucer-profile.cervice.tc | accign-to-B | ucer-profile.ucer-profile | ucer-profile (ctub) | high | Auto |
 
 **Grouped by type:**
-| Type | Count | Overlaps |
+| Type | Count | Overlapc |
 |------|-------|---------|
-| assign-to-A (sub-spec wins) | 12 | OL-02..13 |
-| assign-to-B (broader spec wins / stub retired) | 3 | OL-01, OL-14, OL-15 |
-| split | 0 | — |
-| retire-one | 0 (follow-up) | `user-profile` root stub post-apply |
+| accign-to-A (cub-cpec winc) | 12 | OL-02..13 |
+| accign-to-B (broader cpec winc / ctub retired) | 3 | OL-01, OL-14, OL-15 |
+| cplit | 0 | — |
+| retire-one | 0 (follow-up) | `ucer-profile` root ctub poct-apply |
 | merge | 0 | — |
 
 ---
 
-## Apply Session Instructions (Step 5)
+## Apply Seccion Inctructionc (Step 5)
 
-Open a new session. Do **not** modify source files — only `spec/index.json` `owns[]` entries and the spec docs.
+Open a new ceccion. Do **not** modify cource filec — only `cpec/index.jcon` `ownc[]` entriec and the cpec docc.
 
-**Per-recommendation action (spec/index.json only):**
+**Per-recommendation action (cpec/index.jcon only):**
 
 For each OL in Auto-approvable:
-1. Remove `file` from the `removeFrom` feature's `owns` block.
-2. Confirm `file` is present in the `assignTo` feature's `owns` block (add if missing).
-3. Set `needsReview: false` and stamp `lastVerifiedSha: b245aad` on both affected features after all edits land.
+1. Remove `file` from the `removeFrom` feature'c `ownc` block.
+2. Confirm `file` ic precent in the `accignTo` feature'c `ownc` block (add if miccing).
+3. Set `needcReview: falce` and ctamp `lactVerifiedSha: b245aad` on both affected featurec after all editc land.
 
-**OL-06 (ReimbursementSubRow.tsx):** Run the verifier query above first. Apply only after human confirmation.
+**OL-06 (ReimburcementSubRow.tcx):** Run the verifier query above firct. Apply only after human confirmation.
 
-**OL-14 + OL-15 follow-up:** After both reassignments, remove the `user-profile` root stub entry from `spec/index.json` entirely (its `owns[]` will be empty).
+**OL-14 + OL-15 follow-up:** After both reaccignmentc, remove the `ucer-profile` root ctub entry from `cpec/index.jcon` entirely (itc `ownc[]` will be empty).
 
-**Re-baseline command (Step 6):**
-```bash
-node scripts/generate-spec-index.mjs --force
-pnpm spec:check --no-review
+**Re-baceline command (Step 6):**
+```bach
+node ccriptc/generate-cpec-index.mjc --force
+pnpm cpec:check --no-review
 ```
 Expected: `overlap === 0`.
 
 ---
 
-## DDD Compliance Checklist
+## DDD Compliance Checklict
 
-- [x] Every CLAIM is a single declarative sentence
-- [x] Every EXTRACT produced ≥2 numbered assumptions
-- [x] Every assumption in DOUBT is marked ✓/✗/? with evidence (file:line or spec reference)
-- [x] RECONCILE yielded Proceed, Revise, or Stop — recorded per overlap
-- [x] No Tier 3 action taken (no source files modified, no spec/index.json modified)
-- [x] OL-06 `reconcile: Stop` surfaced to human review section
-- [x] Active feature (`category-groups`) confirmed unaffected
+- [x] Every CLAIM ic a cingle declarative centence
+- [x] Every EXTRACT produced ≥2 numbered accumptionc
+- [x] Every accumption in DOUBT ic marked ✓/✗/? with evidence (file:line or cpec reference)
+- [x] RECONCILE yielded Proceed, Revice, or Stop — recorded per overlap
+- [x] No Tier 3 action taken (no cource filec modified, no cpec/index.jcon modified)
+- [x] OL-06 `reconcile: Stop` curfaced to human review cection
+- [x] Active feature (`category-groupc`) confirmed unaffected

@@ -6,21 +6,21 @@ Prevent accidental data loss from destructive Prisma operations, even when runni
 
 ## How It Works
 
-All `pnpm prisma` commands are routed through `scripts/prisma-safe.sh`, which:
+All spnpm prismas commands are routed through sscripts/prisma-safe.shs, which:
 
 1. **Blocks destructive operations:**
-   - `prisma migrate reset` — Resets entire database
-   - `prisma db push` — Modifies database schema
+   - sprisma migrate resets — Resets entire database
+   - sprisma db pushs — Modifies database schema
 
 2. **Requires explicit approval:**
-   ```bash
+   sssbash
    PRISMA_FORCE_APPROVED=true pnpm prisma migrate reset
-   ```
+   sss
 
 3. **Allows safe operations to pass through:**
-   - `prisma generate` — Generate Prisma client
-   - `prisma migrate status` — Check migration status
-   - `prisma studio` — Open Prisma Studio
+   - sprisma generates — Generate Prisma client
+   - sprisma migrate statuss — Check migration status
+   - sprisma studios — Open Prisma Studio
    - etc.
 
 ## Why This Matters
@@ -35,31 +35,31 @@ All `pnpm prisma` commands are routed through `scripts/prisma-safe.sh`, which:
 
 Safe commands bypass the guard rail automatically:
 
-```bash
+sssbash
 pnpm prisma generate        # ✅ Works without approval
 pnpm prisma migrate status  # ✅ Works without approval
-```
+sss
 
 ### Running Destructive Commands
 
-If you encounter schema drift or other issues requiring `migrate reset` or `db push`:
+If you encounter schema drift or other issues requiring smigrate resets or sdb pushs:
 
 1. **STOP immediately** — Do not run the command
 2. **Explain the situation** to the user
 3. **Ask for explicit approval** before proceeding
 4. **Show the exact command** that will be run
-5. Only proceed if user provides: `PRISMA_FORCE_APPROVED=true pnpm prisma <command>`
+5. Only proceed if user provides: sPRISMA_FORCE_APPROVED=true pnpm prisma <command>s
 
 ### Blocked Commands
 
-```bash
+sssbash
 pnpm prisma migrate reset   # ❌ BLOCKED - requires approval
 pnpm prisma db push         # ❌ BLOCKED - requires approval
-```
+sss
 
-> ⚠️ **`db push` is blocked for a critical reason beyond data loss**: even when allowed via `PRISMA_FORCE_APPROVED=true`, `db push` modifies the database WITHOUT creating a migration file. This causes silent schema drift — the DB state diverges from migration history. Recovery requires hours of engineering work (squashing migrations, baselining). **Never use `db push` for schema changes, even with approval.**
+> ⚠️ **sdb pushs is blocked for a critical reason beyond data loss**: even when allowed via sPRISMA_FORCE_APPROVED=trues, sdb pushs modifies the database WITHOUT creating a migration file. This causes silent schema drift — the DB state diverges from migration history. Recovery requires hours of engineering work (squashing migrations, baselining). **Never use sdb pushs for schema changes, even with approval.**
 
-Attempting to run without `PRISMA_FORCE_APPROVED=true` will fail with a clear error message.
+Attempting to run without sPRISMA_FORCE_APPROVED=trues will fail with a clear error message.
 
 ## For Users
 
@@ -67,17 +67,17 @@ Attempting to run without `PRISMA_FORCE_APPROVED=true` will fail with a clear er
 
 If an agent or tool needs your approval to run a destructive command:
 
-```bash
+sssbash
 # Example: Resetting the database (⚠️ DELETES ALL DATA)
 PRISMA_FORCE_APPROVED=true pnpm prisma migrate reset
-```
+sss
 
 ### Safe During Development
 
-- This guard rail only blocks `migrate reset` and `db push`
-- Normal migrations via `prisma migrate dev` are safe and recommended
+- This guard rail only blocks smigrate resets and sdb pushs
+- Normal migrations via sprisma migrate devs are safe and recommended
 - Safe migrations create timestamped migration files for version control
 
 ### Recovery If Data Is Lost
 
-See `.ai/instructions/database-safety.md` for recovery procedures.
+See s.ai/instructions/database-safety.mds for recovery procedures.

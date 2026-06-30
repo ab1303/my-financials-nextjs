@@ -15,7 +15,7 @@
  *   - src/server/services/<feature>/**
  *   - src/components/<Feature>* directories
  *
- * Run: `node scripts/generate-spec-index.mjs` from repo root.
+ * Run: `node scripts/harness/spec-manifest/generate-spec-index.mjs` from repo root.
  * Output: spec/index.json (will refuse to overwrite without --force).
  */
 import fs from 'node:fs';
@@ -23,7 +23,7 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const SPEC_DIR = path.join(REPO_ROOT, 'spec');
 const SRC_DIR = path.join(REPO_ROOT, 'src');
 const OUT = path.join(SPEC_DIR, 'index.json');

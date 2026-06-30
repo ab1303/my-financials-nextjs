@@ -47,14 +47,14 @@
 ## File layout
 
 ```
-scripts/spec-remediation/
+scripts/harness/spec-remediation/
 ├── discover.mjs                     # build step{N}-tasks.json from manifest
 ├── apply-patch.mjs                  # apply ONE patch + verify + rollback
 ├── apply-batch.mjs                  # apply patches-batch-N/*.json sequentially
 ├── report.mjs                       # pretty-print state.json + current overlaps
 ├── lib/
 │   ├── manifest.mjs                 # read/write spec/index.json with locking
-│   ├── overlaps.mjs                 # live overlap computation (shared with spec-check)
+│   ├── overlaps.mjs                 # live overlap computation
 │   ├── patch.mjs                    # patch validation + application primitives
 │   └── prompts.mjs                  # render prompt templates with task data
 ├── prompts/
@@ -66,6 +66,21 @@ scripts/spec-remediation/
 │   └── task.schema.json             # JSON Schema for task validation
 └── README.md                        # short pointer to this LLD
 ```
+
+> **Folder convention** (defined in `spec/harness/hld.md`):
+> `scripts/harness/<feature>/` mirrors `spec/harness/<feature>/` one-to-one.
+> Cross-feature shared utilities live in `scripts/harness/_lib/` — created
+> lazily only when ≥2 features actually need to share code (no preemptive
+> DRY). All existing harness scripts now live under `scripts/harness/`
+> (e.g. `scripts/harness/spec-manifest/spec-check.mjs`,
+> `scripts/harness/spec-manifest/generate-spec-index.mjs`) — top-level
+> `scripts/` is reserved for non-harness operational utilities.
+>
+> `lib/overlaps.mjs` here will eventually merge with the live-recompute
+> logic now inlined in `scripts/harness/spec-manifest/spec-check.mjs`
+> (Layer 1 fix from 2026-06-30). That merger is deferred until a second
+> consumer needs it — keeping spec-check.mjs self-contained for now
+> preserves its dependency-free, Tier-1-read-only character.
 
 ```
 .harness/remediation/                # state — gitignored except state.json
@@ -195,7 +210,7 @@ state. `apply-patch.mjs` enforces this via JSON deep-equality check.
 ### `discover.mjs`
 
 ```
-Usage: node scripts/spec-remediation/discover.mjs --step <1|2|3> [--force]
+Usage: node scripts/harness/spec-remediation/discover.mjs --step <1|2|3> [--force]
 
 Reads spec/index.json. For the requested step:
   - Step 1: enumerates files in transactions.transactions.owns that also
@@ -217,7 +232,7 @@ Exit codes: 0 success | 2 manifest malformed | 3 git unavailable
 ### `apply-patch.mjs`
 
 ```
-Usage: node scripts/spec-remediation/apply-patch.mjs --patch <path-to-patch.json>
+Usage: node scripts/harness/spec-remediation/apply-patch.mjs --patch <path-to-patch.json>
 
 Reads ONE patch JSON. Validates against patch.schema.json. Refuses if
 any op affects a feature not declared in `feature`. Applies ops to
@@ -237,7 +252,7 @@ Exit codes: 0 applied + verified | 1 rolled back | 2 schema invalid | 3 spec:che
 ### `apply-batch.mjs`
 
 ```
-Usage: node scripts/spec-remediation/apply-batch.mjs --batch <N>
+Usage: node scripts/harness/spec-remediation/apply-batch.mjs --batch <N>
 
 Reads patches-batch-N/task-*.json in deterministic order (sorted by
 taskId). Calls apply-patch.mjs on each. Stops on first rollback unless
@@ -249,7 +264,7 @@ Designed for use from the chat agent after dispatching N sub-agents.
 ### `report.mjs`
 
 ```
-Usage: node scripts/spec-remediation/report.mjs [--step <N>]
+Usage: node scripts/harness/spec-remediation/report.mjs [--step <N>]
 
 Prints:
   - Current spec:check totals (live)
@@ -337,7 +352,7 @@ needed beyond `state.json` and this LLD:
 
 ```
 1. On session start:
-     node scripts/spec-remediation/report.mjs
+     node scripts/harness/spec-remediation/report.mjs
    → orientation. Shows pending tasks per step.
 
 2. To run a batch:
@@ -350,9 +365,9 @@ needed beyond `state.json` and this LLD:
    d. Each sub-agent returns ONE JSON object. Save raw to
         .harness/remediation/patches-batch-N/task-{id}.json
    e. Run:
-        node scripts/spec-remediation/apply-batch.mjs --batch N
+        node scripts/harness/spec-remediation/apply-batch.mjs --batch N
    f. Run:
-        node scripts/spec-remediation/report.mjs
+        node scripts/harness/spec-remediation/report.mjs
       → show before/after overlap; surface any stop_required: true tasks
    g. Ask user to approve next batch (or pause for stop_required review)
 
@@ -365,7 +380,7 @@ needed beyond `state.json` and this LLD:
      Re-run apply-batch.mjs
 
 4. On completion (no pending tasks across all steps):
-     node scripts/spec-remediation/report.mjs --final
+     node scripts/harness/spec-remediation/report.mjs --final
      → produces summary suitable for commit message
      Ask user to commit (Tier 2 — explicit approval required)
 ```
@@ -403,7 +418,7 @@ None blocking. These are minor and can be decided during build:
 
 Feature is `done` when:
 
-- [ ] `node scripts/spec-remediation/discover.mjs --step 1` runs cleanly
+- [ ] `node scripts/harness/spec-remediation/discover.mjs --step 1` runs cleanly
       and produces a non-empty `step1-tasks.json`.
 - [ ] One end-to-end batch (discover → dispatch 3 sub-agents → apply →
       verify) completes with overlap count strictly decreasing.

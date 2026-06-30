@@ -7,7 +7,7 @@ cycle in a row. Three minutes of investigation showed the real count was
 **94 overlapping files** across **72 of 91 features**. The gate had been
 lying for weeks.
 
-Root cause: `scripts/spec-check.mjs` read overlaps from a stored
+Root cause: `scripts/harness/spec-manifest/spec-check.mjs` read overlaps from a stored
 `index.overlaps` array in the manifest, written once at manifest
 generation time. Subsequent hand-edits to feature `owns[]` blocks (from
 Bucket A backfill, ADR triage, and earlier remediation passes) introduced
@@ -20,7 +20,7 @@ trusted.*
 
 ## Immediate fix (Layer 1, already deployed)
 
-`scripts/spec-check.mjs` now recomputes overlaps live from each feature's
+`scripts/harness/spec-manifest/spec-check.mjs` now recomputes overlaps live from each feature's
 current `owns[]` on every invocation. The stored `index.overlaps` array is
 ignored. ADR-tagged features (`status: "adr"`) are excluded from overlap
 detection because they legitimately own no files.
@@ -91,7 +91,7 @@ Out of scope (each is a separate harness feature):
 - Capsule format / generation (`harness.capsule-format`).
 - Layer 2 pre-push enforcement (`harness.pre-push-hook`).
 - Layer 3 corrective scheduling (`harness.weekly-corrective`).
-- Rewriting `scripts/generate-spec-index.mjs` to preserve hand-curated
+- Rewriting `scripts/harness/spec-manifest/generate-spec-index.mjs` to preserve hand-curated
   `owns[]` on regeneration (a known landmine flagged for follow-up).
 
 ## Stakeholders & success criteria
@@ -129,9 +129,9 @@ A successful end-state for the *feature itself*:
 
 ## Related artifacts
 
-- `scripts/spec-check.mjs` — the gate this feature exists to make
+- `scripts/harness/spec-manifest/spec-check.mjs` — the gate this feature exists to make
   trustworthy. Owned by this feature post-Layer-1-fix.
-- `scripts/generate-spec-index.mjs` — out of scope here; owned by a
+- `scripts/harness/spec-manifest/generate-spec-index.mjs` — out of scope here; owned by a
   separate feature once specced.
 - `spec/index.json` — the artifact patches are applied to.
 - `docs/harness-audit.md` § 2026-06-30 — the audit that motivated this work.
