@@ -1,12 +1,5 @@
-# Copilot Instructions for my-financials-nextjs
+# Copilot Instructions
 
-All foundational rules, hard constraints, session lifecycle, and verification gate are in `AGENTS.md` — Copilot reads it automatically. No duplication here.
+All rules — risk tiers, hard constraints, verification gate, session lifecycle, anti-rationalization — live in [`AGENTS.md`](../AGENTS.md). Copilot loads it automatically; this file is intentionally empty of duplicated content.
 
-## Scoped Instructions
-
-Auto-injected by Copilot when editing matching files — no manual reference needed.
-
-| File                                                                       | Activates on                                  |
-| -------------------------------------------------------------------------- | --------------------------------------------- |
-| `.github/instructions/github-actions-ci-cd-best-practices.instructions.md` | `.github/workflows/*.yml`                     |
-| `.github/instructions/reimbursement-patterns.instructions.md`              | `transaction-ledger.ts`, `TransactionRow.tsx` |
+File-scoped rules live under `.github/instructions/*.instructions.md` and auto-inject when their `applyTo` glob matches the file being edited.

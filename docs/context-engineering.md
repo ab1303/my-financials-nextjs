@@ -10,13 +10,12 @@ Maps every folder and file that shapes how AI agents behave in this repository.
 
 | Location                                 | Loaded by                      | When                            | Role                                                                                                                    |
 | ---------------------------------------- | ------------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `AGENTS.md`                              | All agents                     | Every session — auto            | Universal entry point: risk tiers, hard constraints, session lifecycle, verification gate, canonical instructions index |
-| `CLAUDE.md`                              | Claude Code / Copilot (Claude) | Every session — auto            | Claude-specific persona and MCP tool config                                                                             |
-| `GEMINI.md`                              | Gemini CLI                     | Every session — auto            | Gemini-specific persona                                                                                                 |
-| `.github/copilot-instructions.md`        | GitHub Copilot                 | Every session — auto            | Thin wrapper that defers to `AGENTS.md`; lists scoped instruction files                                                 |
+| `AGENTS.md`                              | All agents                     | Every session — auto            | Universal entry point: risk tiers, hard constraints, session lifecycle, verification gate, anti-rationalization         |
+| `CLAUDE.md`                              | Claude Code / Copilot (Claude) | Every session — auto            | Claude-specific MCP tool config (Playwright / Prisma / Postgres MCP)                                                    |
+| `.github/copilot-instructions.md`        | GitHub Copilot                 | Every session — auto            | Thin pointer to `AGENTS.md` — no duplicated content                                                                     |
 | `.github/instructions/*.instructions.md` | GitHub Copilot                 | Auto on `applyTo` file match    | File-scoped rules — injected only when editing a matching file                                                          |
 | `.github/agents/*.agent.md`              | GitHub Copilot                 | On `@agent-name` invocation     | Custom specialist personas (e.g. `@expert-react-frontend-engineer`)                                                     |
-| `.ai/instructions/*.md`                  | Any agent                      | On-demand via AGENTS.md pointer | Deep-dive topic docs — 23 files covering auth, forms, UI, spec workflow, etc.                                           |
+| `.ai/instructions/*.md`                  | Any agent                      | On-demand — discoverable by `ls` | Deep-dive topic docs — agents list this directory when they need detail on a topic                                     |
 | `.agents/skills/*/SKILL.md`              | Copilot / Claude Code          | On skill invocation             | Invocable multi-step workflow definitions                                                                               |
 | `.harness/progress.md`                   | Any agent                      | Session start — required        | Human-readable session handoff log (newest entry first)                                                                 |
 | `.harness/feature-status.json`           | Any agent                      | Session start — required        | Machine-readable feature registry                                                                                       |
@@ -26,13 +25,13 @@ Maps every folder and file that shapes how AI agents behave in this repository.
 
 ## Folder Details
 
-### `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` — Root Level
+### `AGENTS.md` / `CLAUDE.md` — Root Level
 
-**Always loaded.** The first thing any agent reads. `AGENTS.md` is the single source of truth for universal rules.
+**Always loaded.** The first thing any agent reads. `AGENTS.md` is the single source of truth for universal rules; every agent (Claude Code, Copilot, Gemini CLI, Cursor) reads it. `CLAUDE.md` holds only Claude-specific MCP tool configuration.
 
-- Add a rule here only if it applies to **all agents** and would cause mistakes if absent.
-- For topic detail (>5 lines), add a pointer in the Canonical Instructions table instead and put content in `.ai/instructions/`.
-- `CLAUDE.md` and `GEMINI.md` hold only agent-specific tweaks. Never duplicate `AGENTS.md` rules.
+- Add a rule to `AGENTS.md` only if it applies to **all agents** and would cause mistakes if absent.
+- For topic detail (>10 lines), put it in `.ai/instructions/<topic>.md`. Agents discover those files by listing the directory; do not maintain an index.
+- `CLAUDE.md` holds only Claude-specific tweaks (MCP tools). Never duplicate `AGENTS.md` rules.
 
 ---
 
@@ -42,8 +41,7 @@ Copilot-specific files. Nothing here should duplicate `AGENTS.md`.
 
 | File                                                               | `applyTo`                                     | Purpose                                                           |
 | ------------------------------------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------- |
-| `copilot-instructions.md`                                          | Always                                        | Defers to `AGENTS.md`; lists scoped instruction files             |
-| `instructions/github-actions-ci-cd-best-practices.instructions.md` | `.github/workflows/*.yml`                     | CI/CD authoring rules — auto-injected when editing workflow files |
+| `copilot-instructions.md`                                          | Always                                        | Thin pointer to `AGENTS.md`                                       |
 | `instructions/reimbursement-patterns.instructions.md`              | `transaction-ledger.ts`, `TransactionRow.tsx` | Feature-specific patterns — auto-injected on matching files       |
 | `agents/expert-react-frontend-engineer.agent.md`                   | `@expert-react-frontend-engineer`             | Specialist React reviewer persona                                 |
 | `agents/Prd.chatmode.md`                                           | Chat mode                                     | PRD generation workflow                                           |
@@ -54,20 +52,9 @@ Copilot-specific files. Nothing here should duplicate `AGENTS.md`.
 
 ### `.ai/instructions/` — Universal Deep-Dive Docs
 
-**Platform-agnostic.** Works with any agent that reads `AGENTS.md`. Loaded **on-demand** — an agent identifies the relevant file from the Canonical Instructions index and reads it when needed.
+**Platform-agnostic.** Works with any agent that reads `AGENTS.md`. Loaded **on-demand** — agents discover relevant files by listing this directory (filenames are descriptive) and reading what's needed for the current task. **There is no maintained index** — adding/removing files requires no other changes.
 
-Grouped by when to read them (mirrors the index in `AGENTS.md`):
-
-| When                       | Files                                                                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Touching DB / auth / infra | `auth.md` · `database-safety.md` · `dev-server-safety.md`                                                                                        |
-| Building a feature         | `form-patterns.md` · `state-and-ui.md` · `middleware-and-icons.md` · `transaction-ledger-patterns.md` · `performance.md` · `product-owner-ux.md` |
-| Building UI components     | `dark-mode-and-react-select.md` · `cursor-and-text-selection.md`                                                                                 |
-| Planning / spec work       | `spec-structure.md` · `spec-consolidation.md` · `spec-implementation.md` · `spec-migration-map.md` · `migration-agent-template.md`               |
-| Shipping / sessions        | `testing-and-subagents.md` · `compaction.md` · `git-worktree.md` · `deployment.md`                                                               |
-| Meta / governance          | `instruction-governance.md`                                                                                                                      |
-
-**Add here when:** You have detailed guidance (>10 lines) for a specific topic. After creating the file, add a row to the Canonical Instructions table in `AGENTS.md`.
+**Add here when:** You have detailed guidance (>10 lines) for a specific topic. Pick a clear, descriptive kebab-case filename and write the content. Don't add it to any index.
 
 ---
 
@@ -104,13 +91,14 @@ Grouped by when to read them (mirrors the index in `AGENTS.md`):
 
 ## Decision: Where Does New Content Go?
 
-| Content type                                            | Destination                                                                   |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Universal rule (all agents, causes mistakes if missing) | `AGENTS.md` inline                                                            |
-| Detailed topic guidance (>10 lines)                     | `.ai/instructions/<topic>.md` + pointer in `AGENTS.md` Canonical Instructions |
-| Copilot-only behaviour                                  | `.github/copilot-instructions.md`                                             |
-| File-scoped rule (auto-inject on edit)                  | `.github/instructions/<name>.instructions.md` with `applyTo` frontmatter      |
-| Invocable multi-step workflow                           | `.agents/skills/<name>/SKILL.md`                                              |
-| Specialist agent persona                                | `.github/agents/<name>.agent.md`                                              |
-| Session state / progress                                | `.harness/`                                                                   |
-| Lessons and post-mortems                                | `docs/lessons/`                                                               |
+| Content type                                            | Destination                                                              |
+| ------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Universal rule (all agents, causes mistakes if missing) | `AGENTS.md` inline                                                       |
+| Detailed topic guidance (>10 lines)                     | `.ai/instructions/<topic>.md` (no index required)                        |
+| Claude-only MCP / tool config                           | `CLAUDE.md`                                                              |
+| Copilot-only behaviour                                  | `.github/copilot-instructions.md`                                        |
+| File-scoped rule (auto-inject on edit)                  | `.github/instructions/<name>.instructions.md` with `applyTo` frontmatter |
+| Invocable multi-step workflow                           | `.agents/skills/<name>/SKILL.md`                                         |
+| Specialist agent persona                                | `.github/agents/<name>.agent.md`                                         |
+| Session state / progress                                | `.harness/`                                                              |
+| Lessons and post-mortems                                | `docs/lessons/`                                                          |
