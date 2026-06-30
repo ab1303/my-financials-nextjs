@@ -199,9 +199,9 @@ const out = {
   ],
   conventions: {
     id: '<domain>[.<sub>].<feature>  — derived from spec/ folder path',
-    statusValues: ['planned', 'in-progress', 'done', 'blocked', 'unknown'],
+    statusValues: ['planned', 'in-progress', 'done', 'blocked', 'adr', 'unknown'],
     phaseValues: ['pre-build', 'build', 'post-build', 'unknown'],
-    ownsConfidence: ['none', 'low', 'medium', 'high', 'n/a-adr', 'n/a-planned'],
+    ownsConfidence: ['none', 'low', 'medium', 'high', 'n/a-planned'],
   },
   totals: {
     features: features.length,

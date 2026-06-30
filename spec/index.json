@@ -15,6 +15,7 @@
       "in-progress",
       "done",
       "blocked",
+      "adr",
       "unknown"
     ],
     "phaseValues": [
@@ -28,7 +29,6 @@
       "low",
       "medium",
       "high",
-      "n/a-adr",
       "n/a-planned"
     ]
   },
@@ -127,7 +127,7 @@
       "id": "architecture.calendar-attribution",
       "domain": "architecture",
       "path": "spec/architecture/calendar-attribution/",
-      "status": "unknown",
+      "status": "adr",
       "phase": "unknown",
       "docs": {
         "context": "spec/architecture/calendar-attribution/context.md",
@@ -140,7 +140,7 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "n/a-adr",
+      "ownsConfidence": "none",
       "needsReview": false,
       "lastVerifiedSha": null,
       "lastVerifiedDate": "2026-06-30",
@@ -205,7 +205,7 @@
       "id": "architecture.category-url-filtering",
       "domain": "architecture",
       "path": "spec/architecture/category-url-filtering/",
-      "status": "unknown",
+      "status": "adr",
       "phase": "unknown",
       "docs": {
         "context": "spec/architecture/category-url-filtering/context.md",
@@ -218,7 +218,7 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "n/a-adr",
+      "ownsConfidence": "none",
       "needsReview": false,
       "lastVerifiedSha": null,
       "lastVerifiedDate": "2026-06-30",
@@ -401,7 +401,7 @@
       "id": "architecture.schema-naming",
       "domain": "architecture",
       "path": "spec/architecture/schema-naming/",
-      "status": "unknown",
+      "status": "adr",
       "phase": "unknown",
       "docs": {
         "context": "spec/architecture/schema-naming/context.md",
@@ -414,7 +414,7 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "n/a-adr",
+      "ownsConfidence": "none",
       "needsReview": false,
       "lastVerifiedSha": null,
       "lastVerifiedDate": "2026-06-30",

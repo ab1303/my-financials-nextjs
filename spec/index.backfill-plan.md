@@ -1,5 +1,17 @@
 ## Executive Summary (orchestrator notes, 2026-06-30)
 
+> **DECISION RESOLVED 2026-06-30 (re-decided):** Adopted **Option 3** — ADR features are
+> tagged `status: "adr"` + `ownsConfidence: "none"`. This **supersedes** the earlier
+> tactical "lock" of Option 1 (`ownsConfidence: "n/a-adr"`) applied via
+> `scripts/apply-eadr.mjs`. Reasoning: `status` describes *what an entry is*;
+> `ownsConfidence` describes *quality of ownership data*. The previous approach
+> conflated the two. `'n/a-adr'` removed from the `ownsConfidence` enum;
+> `'adr'` added to `statusValues`. `scripts/apply-eadr.mjs` deleted (one-off,
+> superseded). `scripts/spec-check.mjs` updated to skip per-file detections
+> (ghost / drift / review) for `status: 'adr'` entries. Applies to 3 features:
+> `architecture.calendar-attribution`, `architecture.category-url-filtering`,
+> `architecture.schema-naming`. Bucket B (P4) DDD backfill now unblocked.
+
 After two rounds of regex tightening against manual spot-checks (5 samples per pass), the
 classifier stabilised at these counts. Key takeaways for downstream phases:
 
@@ -19,11 +31,14 @@ classifier stabilised at these counts. Key takeaways for downstream phases:
 
 ### Decision needed before Phase 3
 
+> **RESOLVED 2026-06-30:** Option 3 chosen (see Executive Summary banner above for
+> rationale + supersession note). The options below are preserved for historical context.
+
 How should ADR entries be represented in `spec/index.json`?
 
-1. Add `ownsConfidence: 'n/a-adr'` value (parallel to `n/a-planned`, leave `owns: []`).
+1. ~~Add `ownsConfidence: 'n/a-adr'` value (parallel to `n/a-planned`, leave `owns: []`).~~ *(initially applied, superseded)*
 2. Remove ADR specs from `spec/index.json` entirely (they're not features); keep folder.
-3. Mark them with `status: 'adr'` plus the standard `ownsConfidence: 'none'`.
+3. **✅ Mark them with `status: 'adr'` plus the standard `ownsConfidence: 'none'`.** *(chosen)*
 
 ### Revised execution path
 
@@ -33,7 +48,7 @@ How should ADR entries be represented in `spec/index.json`?
 | P1 Bucket D | ⏭ skipped | 0 | None remain |
 | P2 Bucket C | ⏭ skipped | 0 | None detected |
 | P3 Bucket A backfill | ⏳ ready | 49 | Per-domain sub-agent batches |
-| P3.5 Bucket E-adr | ⏳ pending decision | 2 (+1?) | Block on schema decision above |
+| P3.5 Bucket E-adr | ✅ done | 3 | Resolved via Option 3 (status:"adr") on 2026-06-30 |
 | P4 Bucket B DDD | ⏳ ready | 21 | Heaviest phase; sequential |
 | P5 Re-baseline | ⏳ blocked | — | After P3+P4 |
 

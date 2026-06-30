@@ -112,6 +112,12 @@ const findings = {
 };
 
 for (const f of features) {
+  // ADR entries describe architectural decisions, not features. They legitimately own
+  // no source files, so all per-file detections (ghost, drift, review) are skipped.
+  // Overlap is still computed below (precomputed in the manifest) — ADRs have empty
+  // owns[] so they cannot participate in overlaps anyway.
+  if (f.status === 'adr') continue;
+
   const files = ownsFiles(f);
 
   // GHOST detection
