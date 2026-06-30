@@ -43,5 +43,23 @@ After committing, re-stamp `lastVerifiedSha` in `spec/index.json` with the new H
 
 ### Pending drift item
 
-`scripts/harness/spec-remediation/render-prompt.mjs` exists but is NOT registered in `spec/index.json::harness.spec-remediation.owns.services`. Either add it to the `owns.services` array before committing, or delete it — either is fine.
+`scripts/harness/spec-remediation/render-prompt.mjs` is now registered in `spec/index.json::harness.spec-remediation.owns.services` (line 1885). No outstanding drift.
+
+---
+
+## ⏭️ Next workstream — `harness.consumes-derivation`
+
+Spec'd in a separate session: **`spec/harness/consumes-derivation/`** (`context.md` + `lld.md`).
+
+**Why this is next:** the just-completed remediation achieved `overlap-parts=0` by forcing single-author selection on every shared file. Legitimate consumer relationships (e.g. feature B imports a `<Button>` owned by feature A) are now machine-invisible — `spec:check` cannot tell apart "shared use" from "ownership conflict".
+
+**Approach:** derive a `consumes[]` field on each feature from the **static import graph** of `src/` (source of truth: code imports, not LLD prose, which is stale post-remediation). `spec:check` continues to compute overlaps from `owns[]` only; `consumes[]` is informational.
+
+**Key design points (from the LLD):**
+- New script `scripts/harness/consumes-derivation/derive.mjs` walks TS imports, resolves via tsconfig paths, reverse-indexes `file → owning feature`, emits per-feature `consumes[]`.
+- No LLM in the runtime loop — sub-agents are only used to author the scripts during build.
+- Manifest schema gains `consumes[]` but no semantics change for overlap detection.
+
+The next session starts there. This spec-remediation workstream is **done**; no further action on it.
+
 

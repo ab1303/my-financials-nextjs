@@ -51,6 +51,7 @@ scripts/harness/spec-remediation/
 ├── discover.mjs                     # build step{N}-tasks.json from manifest
 ├── apply-patch.mjs                  # apply ONE patch + verify + rollback
 ├── apply-batch.mjs                  # apply patches-batch-N/*.json sequentially
+├── render-prompt.mjs                # render one task's prompt with placeholders resolved
 ├── report.mjs                       # pretty-print state.json + current overlaps
 ├── lib/
 │   ├── manifest.mjs                 # read/write spec/index.json with locking
@@ -408,30 +409,35 @@ This feature must satisfy each of these constraints from
 - [x] **Orchestrator ≠ reasoner.** Chat-level agent runs scripts and
       dispatches; never produces ownership decisions itself.
 
-## Open questions (resolve before code)
-
-None blocking. These are minor and can be decided during build:
+## Open questions (resolved during build)
 
 1. Should `report.mjs --final` include per-feature delta tables, or just
-   totals? Lean toward totals for terseness; tables only on `--verbose`.
+   totals? **Deferred** — default `report.mjs` output proved sufficient
+   for batch-to-batch orientation; `--final` flag not implemented.
 2. Should `step3-tasks.json` be regenerated after every step-1/step-2
-   batch, or only after all of step 1+2 is complete? Lean toward the
-   latter — fewer regenerations, clearer audit trail.
-3. Should `apply-patch.mjs` accept `--dry-run`? Probably yes; trivially
-   add it.
+   batch, or only after all of step 1+2 is complete? **Diverged from
+   leaned answer.** In practice, step-3 required multi-round residual
+   discovery: each batch resolved one claimant per file, but files with
+   3+ original claimants left residual pairs that only became visible
+   after the batch was applied. Resolution: `discover.mjs --step 3
+   --force` was re-run after every step-3 batch (5 rounds total: 94 +
+   22 + 8 + 3 = 127 tasks). The audit trail stays clear because each
+   round's tasks live in their own `patches-batch-N/` directory.
+3. Should `apply-patch.mjs` accept `--dry-run`? **Deferred** — not
+   implemented; the rollback gate proved sufficient as a safety net.
 
 ## Acceptance criteria
 
 Feature is `done` when:
 
-- [ ] `node scripts/harness/spec-remediation/discover.mjs --step 1` runs cleanly
+- [x] `node scripts/harness/spec-remediation/discover.mjs --step 1` runs cleanly
       and produces a non-empty `step1-tasks.json`.
-- [ ] One end-to-end batch (discover → dispatch 3 sub-agents → apply →
+- [x] One end-to-end batch (discover → dispatch 3 sub-agents → apply →
       verify) completes with overlap count strictly decreasing.
-- [ ] `report.mjs` correctly shows the new state.
-- [ ] State file `state.json` correctly persists across an intentional
+- [x] `report.mjs` correctly shows the new state.
+- [x] State file `state.json` correctly persists across an intentional
       session restart (simulated by re-running `report.mjs` in a fresh
       shell).
-- [ ] All five invariants above hold under a targeted test (manually
+- [x] All five invariants above hold under a targeted test (manually
       verified for v1; automated test deferred).
-- [ ] LLD updated if reality diverged during build.
+- [x] LLD updated if reality diverged during build.
