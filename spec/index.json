@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1.0",
-  "generatedAt": "2026-06-30T04:25:18.815Z",
-  "generatedFromSha": "568c61bc4aecb058bf50d45166346dd3ed9853ff",
+  "generatedAt": "2026-06-30T23:29:19.489Z",
+  "generatedFromSha": "b447cd8ba7ef7770961c98cf91a455c8fc0743ff",
   "notes": [
     "This file is the DRAFT machine-readable spec ↔ code manifest.",
     "Every entry has `needsReview: true` until a human or agent verifies `owns`.",
@@ -24,6 +24,11 @@
       "post-build",
       "unknown"
     ],
+    "relations": [
+      "owns",
+      "consumes",
+      "invariants"
+    ],
     "ownsConfidence": [
       "none",
       "low",
@@ -33,8 +38,8 @@
     ]
   },
   "totals": {
-    "features": 96,
-    "withOwnsMatches": 86,
+    "features": 106,
+    "withOwnsMatches": 90,
     "overlaps": 0
   },
   "overlaps": [],
@@ -66,11 +71,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -79,7 +79,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "ai-features.ai-usage-logging",
@@ -98,18 +103,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "ai-features.finance-chat",
@@ -128,18 +133,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "none",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.calendar-attribution",
@@ -158,18 +163,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "none",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.calendar-year-picker",
@@ -194,18 +199,18 @@
           "src/__tests__/unit/CalendarYearPicker.test.tsx"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.category-filters",
@@ -227,11 +232,6 @@
           "src/__tests__/unit/useCategoryFilters.test.ts"
         ]
       },
-      "ownsConfidence": "low",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -240,7 +240,12 @@
         ],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "low",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.category-url-filtering",
@@ -259,18 +264,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "none",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.design-modernization",
@@ -306,18 +311,18 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.development-standards",
@@ -336,18 +341,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.e2e-testing",
@@ -372,18 +377,18 @@
           "playwright.config.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.embedding-models",
@@ -402,18 +407,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.entity-relations",
@@ -434,18 +439,107 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
+    },
+    {
+      "id": "architecture.insight-primitives",
+      "domain": "architecture",
+      "path": "spec/architecture/insight-primitives/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/insight-primitives/context.md",
+        "lld": "spec/architecture/insight-primitives/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.insights-analytics-overhaul",
+      "domain": "architecture",
+      "path": "spec/architecture/insights-analytics-overhaul/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "hld": "spec/architecture/insights-analytics-overhaul/hld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.period-picker",
+      "domain": "architecture",
+      "path": "spec/architecture/period-picker/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/period-picker/context.md",
+        "lld": "spec/architecture/period-picker/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
     },
     {
       "id": "architecture.preferred-currency",
@@ -466,18 +560,18 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.schema-naming",
@@ -496,18 +590,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "none",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "architecture.site-audit",
@@ -526,18 +620,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.bank-assets",
@@ -565,11 +659,6 @@
           "src/__tests__/unit/bank-asset.service.test.ts"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -583,7 +672,12 @@
           "src/app/(authorized)/cashflow/transactions/_components/ai/UploadStep.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.brokerage-cash-holdings",
@@ -602,18 +696,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.invested-amount-display",
@@ -632,18 +726,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.net-worth-dashboard",
@@ -674,11 +768,6 @@
           "src/__tests__/unit/dashboard-summary.test.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -688,7 +777,12 @@
           "src/app/api/dashboard/summary/route.ts"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.overview-usd-conversion",
@@ -707,18 +801,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.snapshot-display",
@@ -737,18 +831,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.snapshot-entry-redesign",
@@ -770,11 +864,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -783,7 +872,12 @@
         ],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.snapshot-fx-rate",
@@ -806,18 +900,18 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.stock-market-segregation",
@@ -839,11 +933,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -853,7 +942,12 @@
           "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.stocks-tracking",
@@ -876,11 +970,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -889,7 +978,12 @@
           "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "assets.zakat-stock-classification",
@@ -911,11 +1005,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -924,7 +1013,12 @@
           "src/app/(authorized)/zakat/_schema.ts"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "banking.bank-account-management",
@@ -952,18 +1046,18 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "banking.bank-institution-ui",
@@ -987,18 +1081,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "banking.brokerage-hybrid",
@@ -1028,18 +1122,18 @@
           "src/__tests__/unit/brokerage.controller.test.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "banking.business-institutions",
@@ -1060,18 +1154,18 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.analytics-dashboard",
@@ -1097,11 +1191,6 @@
           "src/__tests__/unit/AnalyticsFilters.test.tsx"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1113,7 +1202,12 @@
           "src/app/(authorized)/cashflow/analytics/_components/AnalyticsDrillDownDrawer.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.analytics-drill-down",
@@ -1135,18 +1229,48 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
+    },
+    {
+      "id": "cashflow.analytics-insights",
+      "domain": "cashflow",
+      "path": "spec/cashflow/analytics-insights/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/analytics-insights/context.md",
+        "lld": "spec/cashflow/analytics-insights/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
     },
     {
       "id": "cashflow.audit.cashflow-audit",
@@ -1167,18 +1291,18 @@
           "e2e/cashflow-audit.spec.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.bank-account-filter-parity",
@@ -1197,6 +1321,13 @@
         "app": [],
         "tests": []
       },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
       "ownsConfidence": "none",
       "needsReview": false,
       "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
@@ -1206,14 +1337,7 @@
         "When bankAccountId is selected, both expense and income pages filter transaction queries to that account OR include USER_MANUAL source entries (null bankAccountId).",
         "Income service getTotalIncome(), getIncomeEntries(), and getMonthlyIncomeSummaryFiltered() accept optional bankAccountId parameter and apply it to WHERE clause (OR with USER_MANUAL when active).",
         "No page renders unfiltered totals if a bank filter is active; parity is enforced at query-binding time, not UI rendering time."
-      ],
-      "consumes": {
-        "routers": [],
-        "services": [],
-        "components": [],
-        "app": [],
-        "tests": []
-      }
+      ]
     },
     {
       "id": "cashflow.categories.category-management",
@@ -1239,11 +1363,6 @@
           "src/__tests__/unit/settings/CategoriesClient.test.tsx"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1252,7 +1371,12 @@
           "src/app/(authorized)/settings/categories/_components/CategoriesClient.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.categories.drill-down",
@@ -1273,18 +1397,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.categories.group-rollup",
@@ -1310,11 +1434,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1323,7 +1442,12 @@
           "src/app/(authorized)/cashflow/expense/actions.ts"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.contextual-account-tracking",
@@ -1345,18 +1469,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.donations.donations",
@@ -1392,11 +1516,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1407,7 +1526,12 @@
           "src/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.donations.transaction-linking",
@@ -1433,11 +1557,6 @@
           "src/__tests__/unit/LinkTransactionsDrawer.test.tsx"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1447,7 +1566,12 @@
           "src/app/(authorized)/cashflow/donations/actions.ts"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.expense.expense-tracking",
@@ -1470,11 +1594,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1483,7 +1602,12 @@
           "src/app/(authorized)/cashflow/expense/ExpenseTableClient.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.expense.manual-expense-transaction",
@@ -1504,18 +1628,48 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
+    },
+    {
+      "id": "cashflow.forecasting",
+      "domain": "cashflow",
+      "path": "spec/cashflow/forecasting/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/forecasting/context.md",
+        "lld": "spec/cashflow/forecasting/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
     },
     {
       "id": "cashflow.income.income-management",
@@ -1536,18 +1690,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.income.income-source-of-truth",
@@ -1575,11 +1729,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -1592,7 +1741,12 @@
           "src/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.income.income-ux-improvements",
@@ -1615,11 +1769,6 @@
           "src/__tests__/unit/IncomeTableClient.monthHeader.test.tsx"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1629,7 +1778,42 @@
           "src/app/(authorized)/cashflow/income/IncomeTableClient.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
+    },
+    {
+      "id": "cashflow.insights-engine",
+      "domain": "cashflow",
+      "path": "spec/cashflow/insights-engine/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/insights-engine/context.md",
+        "lld": "spec/cashflow/insights-engine/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
     },
     {
       "id": "cashflow.interest",
@@ -1655,11 +1839,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1668,7 +1847,12 @@
         ],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.interest.cleansing-debit-candidates",
@@ -1692,18 +1876,18 @@
           "src/__tests__/unit/server/services/bank-interest/interest-cleansing.scoring.test.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.interest.cleansing-debit-linking",
@@ -1728,11 +1912,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1743,7 +1922,12 @@
           "src/app/(authorized)/cashflow/donations/actions.ts"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.interest.interest-cleansing",
@@ -1769,18 +1953,18 @@
           "src/__tests__/unit/interest-cleansing.service.test.ts"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.multi-account-transfer-integrity",
@@ -1801,11 +1985,6 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -1814,7 +1993,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.multi-account-transfer-integrity.add-filtration-parity",
@@ -1832,18 +2016,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.multi-account-transfer-integrity.fix-transfer-exclusion",
@@ -1868,11 +2052,6 @@
           "src/__tests__/unit/services/csv-confirm.service.test.ts"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -1883,7 +2062,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.multi-account-transfer-integrity.handle-orphans",
@@ -1909,11 +2093,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -1923,7 +2102,12 @@
           "src/app/(authorized)/cashflow/income/IncomeTableServer.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.multi-account-transfer-integrity.harden-import-wizard",
@@ -1949,11 +2133,6 @@
           "src/__tests__/unit/CSVTransactionReviewTable.test.tsx"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -1969,7 +2148,12 @@
           "src/app/(authorized)/cashflow/transactions/_components/transfer/PostImportMatchBanner.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.multi-account-transfer-integrity.improve-detection",
@@ -1989,11 +2173,6 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -2003,7 +2182,42 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
+    },
+    {
+      "id": "cashflow.recurring-detection",
+      "domain": "cashflow",
+      "path": "spec/cashflow/recurring-detection/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/recurring-detection/context.md",
+        "lld": "spec/cashflow/recurring-detection/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
     },
     {
       "id": "cashflow.transfer-resolution-improvements",
@@ -2027,11 +2241,6 @@
           "e2e/cashflow/orphan-resolution.spec.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -2040,7 +2249,12 @@
           "src/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "cashflow.zakat",
@@ -2080,11 +2294,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -2094,7 +2303,12 @@
           "src/app/(authorized)/zakat/form.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "csv-import.batch-re-matching",
@@ -2113,18 +2327,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "n/a-planned",
-      "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "n/a-planned",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "csv-import.csv-import",
@@ -2147,18 +2361,18 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "csv-import.generic-csv-import",
@@ -2187,11 +2401,6 @@
           "src/__tests__/unit/csv-parser-generic.test.ts"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -2201,7 +2410,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "csv-import.llm-classification",
@@ -2227,11 +2441,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -2240,7 +2449,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "csv-import.rag-examples",
@@ -2259,18 +2473,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "csv-import.semantic-matching",
@@ -2294,11 +2508,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -2307,7 +2516,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "csv-import.session-date-range",
@@ -2328,18 +2542,18 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "donations.donation-domain-boundary-refactor",
@@ -2360,60 +2574,170 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
-    },
-    {
-      "id": "home.dashboard",
-      "domain": "home",
-      "path": "spec/home/dashboard/",
-      "status": "unknown",
-      "phase": "unknown",
-      "docs": {
-        "context": "spec/home/dashboard/context.md",
-        "lld": "spec/home/dashboard/lld.md"
-      },
-      "owns": {
-        "routers": [],
-        "services": [
-          "src/server/services/dashboard.service.ts"
-        ],
-        "components": [],
-        "app": [
-          "src/app/(authorized)/cashflow/category-groups/_components/CategoryGroupsDashboard.tsx",
-          "src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx"
-        ],
-        "tests": [
-          "src/__tests__/unit/CategoryGroupsDashboard.test.tsx"
-        ]
       },
       "ownsConfidence": "medium",
       "needsReview": false,
       "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
-      "consumes": {
+      "invariants": []
+    },
+    {
+      "id": "harness.capsule-format",
+      "domain": "harness",
+      "path": "spec/harness/capsule-format/",
+      "status": "in-progress",
+      "phase": "build",
+      "docs": {
+        "context": "spec/harness/capsule-format/context.md",
+        "lld": "spec/harness/capsule-format/lld.md"
+      },
+      "owns": {
         "routers": [],
         "services": [
-          "src/server/services/transactions/constants.ts"
+          "scripts/harness/capsule-format/generate.mjs",
+          "scripts/harness/capsule-format/check.mjs",
+          "scripts/harness/capsule-format/lib/template.mjs",
+          "scripts/harness/capsule-format/lib/tokenize.mjs",
+          "scripts/harness/capsule-format/lib/front-matter.mjs"
         ],
-        "components": [
-          "src/components/ui/button.tsx",
-          "src/components/ui/card.tsx"
-        ],
+        "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": [
+        "Capsule generation is mechanical; no LLM in the runtime loop.",
+        "capsule.md is a derived cache — never edit by hand; edit capsule.yml or context.md instead.",
+        "Every capsule ≤800 tokens, measured via the Claude-first tokenizer.",
+        "Re-running generate.mjs on unchanged sources produces zero diff."
+      ]
+    },
+    {
+      "id": "harness.consumes-derivation",
+      "domain": "harness",
+      "path": "spec/harness/consumes-derivation/",
+      "status": "in-progress",
+      "phase": "build",
+      "docs": {
+        "context": "spec/harness/consumes-derivation/context.md",
+        "lld": "spec/harness/consumes-derivation/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "scripts/harness/consumes-derivation/derive.mjs",
+          "scripts/harness/consumes-derivation/leaky-report.mjs",
+          "scripts/harness/consumes-derivation/lib/resolve.mjs"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": [
+        "Derivation is mechanical; no LLM in the runtime loop.",
+        "consumes[] is a derived cache — never edit by hand without re-deriving.",
+        "Idempotent: re-running derive.mjs on unchanged sources produces zero diff."
+      ]
+    },
+    {
+      "id": "harness.manifest-preservation",
+      "domain": "harness",
+      "path": "spec/harness/manifest-preservation/",
+      "status": "in-progress",
+      "phase": "build",
+      "docs": {
+        "context": "spec/harness/manifest-preservation/context.md",
+        "lld": "spec/harness/manifest-preservation/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "scripts/harness/spec-manifest/generate-spec-index.mjs"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": [
+        "Existing features preserve all hand-curated fields on regeneration.",
+        "New features (no previous entry) use heuristics for owns[]; conservative defaults elsewhere.",
+        "--reset is the only path to force-bootstrap and is intentionally undocumented in pnpm scripts."
+      ]
+    },
+    {
+      "id": "harness.session-close",
+      "domain": "harness",
+      "path": "spec/harness/session-close/",
+      "status": "planned",
+      "phase": "design",
+      "docs": {
+        "context": "spec/harness/session-close/context.md",
+        "lld": "spec/harness/session-close/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "scripts/harness/session-close/close.mjs"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": [
+        "close.mjs never calls git commit — staging only (Hard Constraint).",
+        "Running close.mjs twice with no intervening changes is idempotent.",
+        "All verification gate results are recorded in feature-status.json evidence[].",
+        "No LLM in the runtime loop — pure Node.js child_process + string templating."
+      ]
     },
     {
       "id": "harness.spec-remediation",
@@ -2447,6 +2771,13 @@
         "app": [],
         "tests": []
       },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
       "ownsConfidence": "high",
       "needsReview": false,
       "lastVerifiedSha": "e9a8f1f195a97e42ae4d26f93abaf5bcda9f26c0",
@@ -2456,129 +2787,79 @@
         "Tier 3 operations (git push, prisma db push, etc.) require explicit user confirmation per AGENTS.md, even from a harness script.",
         "Sub-agent invocations follow the ⚠️ CRITICAL CONSTRAINTS contract: read-only by default, allowed reads enumerated, JSON-only output schema declared.",
         "Cheap-model friendliness: every irreducible LLM step fits within Haiku-class context + reasoning budget."
-      ],
-      "consumes": {
-        "routers": [],
-        "services": [],
-        "components": [],
-        "app": [],
-        "tests": []
-      }
+      ]
     },
     {
-      "id": "harness.consumes-derivation",
-      "domain": "harness",
-      "path": "spec/harness/consumes-derivation/",
-      "status": "in-progress",
-      "phase": "build",
+      "id": "home.dashboard",
+      "domain": "home",
+      "path": "spec/home/dashboard/",
+      "status": "unknown",
+      "phase": "unknown",
       "docs": {
-        "context": "spec/harness/consumes-derivation/context.md",
-        "lld": "spec/harness/consumes-derivation/lld.md"
+        "context": "spec/home/dashboard/context.md",
+        "lld": "spec/home/dashboard/lld.md"
       },
       "owns": {
         "routers": [],
         "services": [
-          "scripts/harness/consumes-derivation/derive.mjs",
-          "scripts/harness/consumes-derivation/leaky-report.mjs",
-          "scripts/harness/consumes-derivation/lib/resolve.mjs"
+          "src/server/services/dashboard.service.ts"
         ],
         "components": [],
+        "app": [
+          "src/app/(authorized)/cashflow/category-groups/_components/CategoryGroupsDashboard.tsx",
+          "src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/CategoryGroupsDashboard.test.tsx"
+        ]
+      },
+      "consumes": {
+        "routers": [],
+        "services": [
+          "src/server/services/transactions/constants.ts"
+        ],
+        "components": [
+          "src/components/ui/button.tsx",
+          "src/components/ui/card.tsx"
+        ],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
+      "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
-      "invariants": [
-        "Derivation is mechanical; no LLM in the runtime loop.",
-        "consumes[] is a derived cache — never edit by hand without re-deriving.",
-        "Idempotent: re-running derive.mjs on unchanged sources produces zero diff."
-      ],
-      "consumes": {
-        "routers": [],
-        "services": [],
-        "components": [],
-        "app": [],
-        "tests": []
-      }
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
-      "id": "harness.capsule-format",
-      "domain": "harness",
-      "path": "spec/harness/capsule-format/",
-      "status": "in-progress",
-      "phase": "build",
+      "id": "home.dashboard-narrative",
+      "domain": "home",
+      "path": "spec/home/dashboard-narrative/",
+      "status": "unknown",
+      "phase": "unknown",
       "docs": {
-        "context": "spec/harness/capsule-format/context.md",
-        "lld": "spec/harness/capsule-format/lld.md"
+        "context": "spec/home/dashboard-narrative/context.md",
+        "lld": "spec/home/dashboard-narrative/lld.md"
       },
       "owns": {
         "routers": [],
-        "services": [
-          "scripts/harness/capsule-format/generate.mjs",
-          "scripts/harness/capsule-format/check.mjs",
-          "scripts/harness/capsule-format/lib/template.mjs",
-          "scripts/harness/capsule-format/lib/tokenize.mjs",
-          "scripts/harness/capsule-format/lib/front-matter.mjs"
-        ],
+        "services": [],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
-      "invariants": [
-        "Capsule generation is mechanical; no LLM in the runtime loop.",
-        "capsule.md is a derived cache — never edit by hand; edit capsule.yml or context.md instead.",
-        "Every capsule ≤800 tokens, measured via the Claude-first tokenizer.",
-        "Re-running generate.mjs on unchanged sources produces zero diff."
-      ],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
-    },
-    {
-      "id": "harness.manifest-preservation",
-      "domain": "harness",
-      "path": "spec/harness/manifest-preservation/",
-      "status": "in-progress",
-      "phase": "build",
-      "docs": {
-        "context": "spec/harness/manifest-preservation/context.md",
-        "lld": "spec/harness/manifest-preservation/lld.md"
       },
-      "owns": {
-        "routers": [],
-        "services": [
-          "scripts/harness/spec-manifest/generate-spec-index.mjs"
-        ],
-        "components": [],
-        "app": [],
-        "tests": []
-      },
-      "ownsConfidence": "high",
-      "needsReview": false,
+      "ownsConfidence": "none",
+      "needsReview": true,
       "lastVerifiedSha": null,
       "lastVerifiedDate": null,
-      "invariants": [
-        "Existing features preserve all hand-curated fields on regeneration.",
-        "New features (no previous entry) use heuristics for owns[]; conservative defaults elsewhere.",
-        "--reset is the only path to force-bootstrap and is intentionally undocumented in pnpm scripts."
-      ],
-      "consumes": {
-        "routers": [],
-        "services": [],
-        "components": [],
-        "app": [],
-        "tests": []
-      }
+      "invariants": []
     },
     {
       "id": "phase2-scope.home-dashboard-widgets",
@@ -2607,11 +2888,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -2621,7 +2897,12 @@
         ],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "relation.business-contacts",
@@ -2650,18 +2931,18 @@
           "src/__tests__/unit/business.service.test.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "relation.individual-contacts",
@@ -2686,18 +2967,48 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
+    },
+    {
+      "id": "reports.expense-summary",
+      "domain": "reports",
+      "path": "spec/reports/expense-summary/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/reports/expense-summary/context.md",
+        "lld": "spec/reports/expense-summary/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
     },
     {
       "id": "reports.income-summary",
@@ -2721,11 +3032,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -2734,7 +3040,42 @@
           "src/app/(authorized)/cashflow/income/_types.ts"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
+    },
+    {
+      "id": "reports.income-summary-v2",
+      "domain": "reports",
+      "path": "spec/reports/income-summary-v2/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/reports/income-summary-v2/context.md",
+        "lld": "spec/reports/income-summary-v2/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
     },
     {
       "id": "settings.calendar-management",
@@ -2764,11 +3105,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -2777,7 +3113,12 @@
         ],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "settings.category-management",
@@ -2802,11 +3143,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -2816,7 +3152,12 @@
           "src/app/(authorized)/settings/categories/_components/IncomeSources.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "settings.profile-settings",
@@ -2838,18 +3179,18 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "technical_debt.duplicate-review-tab",
@@ -2869,18 +3210,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "technical_debt.preapply-category-rules",
@@ -2904,11 +3245,6 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -2919,7 +3255,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "technical_debt.remove-denormalized-monthly-expense-summary",
@@ -2943,11 +3284,6 @@
           "src/__tests__/unit/ledger.service.test.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -2956,7 +3292,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.category-rules",
@@ -2987,18 +3328,18 @@
           "src/__tests__/unit/category-rule.service.test.ts"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.import-audit-trail",
@@ -3023,16 +3364,6 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [
-        "Session state transitions must log audit records: each import attempt, skip event, and status change is recorded immutably.",
-        "Financial integrity parity: every voided transaction in an import session must reverse corresponding expense and income ledger entries (atomically).",
-        "Access control invariant: import session details are accessible only to the user who owns the session (user-scoped authorization enforced).",
-        "Skipped transaction accounting: skipped record count must equal recordsCreated minus non-VOIDED imported transactions (reconciliation guarantee)."
-      ],
       "consumes": {
         "routers": [],
         "services": [],
@@ -3042,7 +3373,17 @@
         ],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "none",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": [
+        "Session state transitions must log audit records: each import attempt, skip event, and status change is recorded immutably.",
+        "Financial integrity parity: every voided transaction in an import session must reverse corresponding expense and income ledger entries (atomically).",
+        "Access control invariant: import session details are accessible only to the user who owns the session (user-scoped authorization enforced).",
+        "Skipped transaction accounting: skipped record count must equal recordsCreated minus non-VOIDED imported transactions (reconciliation guarantee)."
+      ]
     },
     {
       "id": "transactions.paginated-search",
@@ -3063,11 +3404,6 @@
           "src/__tests__/unit/TransactionRow.test.tsx"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [
           "src/server/trpc/router/transaction-ledger/index.ts"
@@ -3078,7 +3414,12 @@
         ],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.reimbursements",
@@ -3099,11 +3440,6 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "low",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [
           "src/server/trpc/router/transaction-ledger/index.ts"
@@ -3112,7 +3448,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "low",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transaction-bulk-apply",
@@ -3135,11 +3476,6 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [
           "src/server/trpc/router/transaction-ledger/index.ts"
@@ -3158,7 +3494,12 @@
         ],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transaction-clearing",
@@ -3179,18 +3520,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "low",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "low",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transaction-dedup",
@@ -3213,18 +3554,18 @@
           "src/__tests__/unit/dedup.service.test.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transaction-enrichment",
@@ -3243,18 +3584,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transaction-ledger",
@@ -3290,11 +3631,6 @@
           "src/__tests__/unit/TransactionLedgerTable.test.tsx"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -3314,7 +3650,12 @@
           "src/app/(authorized)/zakat/_components/LinkZakatTransactionsDrawer.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transactions",
@@ -3378,11 +3719,6 @@
           "src/__tests__/unit/TransactionsPage.test.tsx"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [
           "src/server/trpc/router/transaction-ledger/index.ts"
@@ -3405,7 +3741,12 @@
           "src/app/(authorized)/cashflow/transactions/_components/csv/CSVImportWizard.tsx"
         ],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transfer-counterpart",
@@ -3424,18 +3765,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transfer-match-rules",
@@ -3461,11 +3802,6 @@
           "src/__tests__/unit/transfer-rule-job.test.ts"
         ]
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [
@@ -3474,7 +3810,12 @@
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.transfer-reconciliation",
@@ -3495,18 +3836,18 @@
           "e2e/cashflow/transfer-exclusion.spec.ts"
         ]
       },
-      "ownsConfidence": "medium",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "transactions.undo-safeguards",
@@ -3531,18 +3872,18 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
         "components": [],
         "app": [],
         "tests": []
-      }
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     },
     {
       "id": "user-profile.user-profile",
@@ -3565,11 +3906,6 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "low",
-      "needsReview": false,
-      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
-      "lastVerifiedDate": "2026-06-30",
-      "invariants": [],
       "consumes": {
         "routers": [],
         "services": [],
@@ -3579,42 +3915,12 @@
           "src/app/(authorized)/settings/profile/_types.ts"
         ],
         "tests": []
-      }
-    },
-    {
-      "id": "harness.session-close",
-      "domain": "harness",
-      "path": "spec/harness/session-close/",
-      "status": "planned",
-      "phase": "design",
-      "docs": {
-        "context": "spec/harness/session-close/context.md",
-        "lld": "spec/harness/session-close/lld.md"
       },
-      "owns": {
-        "routers": [],
-        "services": ["scripts/harness/session-close/close.mjs"],
-        "components": [],
-        "app": [],
-        "tests": []
-      },
-      "ownsConfidence": "high",
+      "ownsConfidence": "low",
       "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
-      "invariants": [
-        "close.mjs never calls git commit — staging only (Hard Constraint).",
-        "Running close.mjs twice with no intervening changes is idempotent.",
-        "All verification gate results are recorded in feature-status.json evidence[].",
-        "No LLM in the runtime loop — pure Node.js child_process + string templating."
-      ],
-      "consumes": {
-        "routers": [],
-        "services": [],
-        "components": [],
-        "app": [],
-        "tests": []
-      }
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
+      "invariants": []
     }
   ]
 }
