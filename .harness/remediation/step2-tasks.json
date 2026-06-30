@@ -1,0 +1,63 @@
+{
+  "$schema": "../../scripts/harness/spec-remediation/schema/task.schema.json",
+  "generatedAt": "2026-06-30T10:06:56.130Z",
+  "step": 2,
+  "tasks": [
+    {
+      "id": "step2-t001",
+      "step": 2,
+      "status": "pending",
+      "subject": "cashflow.bank-account-filter-parity",
+      "target": null,
+      "files": [
+        "src/app/(authorized)/cashflow/expense/page.tsx",
+        "src/app/(authorized)/cashflow/income/page.tsx",
+        "src/server/services/income.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step2-invariant-classify.md",
+      "createdAt": "2026-06-30T10:06:56.130Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step2-t002",
+      "step": 2,
+      "status": "pending",
+      "subject": "cashflow.multi-account-transfer-integrity",
+      "target": null,
+      "files": [
+        "src/server/services/transactions/transfer.service.ts",
+        "src/server/trpc/router/transfer.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step2-invariant-classify.md",
+      "createdAt": "2026-06-30T10:06:56.130Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step2-t003",
+      "step": 2,
+      "status": "pending",
+      "subject": "transactions.import-audit-trail",
+      "target": null,
+      "files": [
+        "src/components/transactions/ImportSessionHistory.tsx",
+        "src/components/transactions/ImportValidationReview.tsx",
+        "src/server/services/transactions/import-audit.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step2-invariant-classify.md",
+      "createdAt": "2026-06-30T10:06:56.130Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    }
+  ]
+}

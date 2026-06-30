@@ -1973,14 +1973,28 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "scripts/harness/spec-remediation/apply-batch.mjs",
+          "scripts/harness/spec-remediation/apply-patch.mjs",
+          "scripts/harness/spec-remediation/discover.mjs",
+          "scripts/harness/spec-remediation/lib/manifest.mjs",
+          "scripts/harness/spec-remediation/lib/overlaps.mjs",
+          "scripts/harness/spec-remediation/lib/patch.mjs",
+          "scripts/harness/spec-remediation/lib/prompts.mjs",
+          "scripts/harness/spec-remediation/prompts/step1-scope-down.md",
+          "scripts/harness/spec-remediation/prompts/step2-invariant-classify.md",
+          "scripts/harness/spec-remediation/prompts/step3-overlap-decide.md",
+          "scripts/harness/spec-remediation/report.mjs",
+          "scripts/harness/spec-remediation/schema/patch.schema.json",
+          "scripts/harness/spec-remediation/schema/task.schema.json"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "n/a-planned",
+      "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "95843a043f8f7a90a5516b124a29ccde643bea24",
       "lastVerifiedDate": "2026-06-30",
       "invariants": [
         "The harness must not bypass its own gates: apply-patch.mjs runs spec:check after each manifest edit and rolls back any change that introduces a finding.",

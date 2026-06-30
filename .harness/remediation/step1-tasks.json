@@ -1,0 +1,242 @@
+{
+  "$schema": "../../scripts/harness/spec-remediation/schema/task.schema.json",
+  "generatedAt": "2026-06-30T10:07:04.591Z",
+  "step": 1,
+  "tasks": [
+    {
+      "id": "step1-t001",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "cashflow.multi-account-transfer-integrity",
+      "files": [
+        "src/server/services/transactions/transfer.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t002",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "cashflow.multi-account-transfer-integrity.fix-transfer-exclusion",
+      "files": [
+        "src/server/services/transactions/constants.ts",
+        "src/server/services/transactions/csv-confirm.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t003",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "cashflow.multi-account-transfer-integrity.handle-orphans",
+      "files": [
+        "src/server/services/transactions/constants.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t004",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "cashflow.multi-account-transfer-integrity.harden-import-wizard",
+      "files": [
+        "src/app/(authorized)/cashflow/transactions/_components/csv/CSVClassifyingStep.tsx",
+        "src/app/(authorized)/cashflow/transactions/_components/csv/CSVImportWizard.tsx",
+        "src/app/(authorized)/cashflow/transactions/_components/csv/CSVResultsStep.tsx",
+        "src/app/(authorized)/cashflow/transactions/_components/csv/CSVTransactionReviewTable.tsx",
+        "src/app/(authorized)/cashflow/transactions/_components/csv/_types.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t005",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "cashflow.multi-account-transfer-integrity.improve-detection",
+      "files": [
+        "src/server/services/transactions/constants.ts",
+        "src/server/services/transactions/transfer.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t006",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "transactions.import-audit-trail",
+      "files": [
+        "src/components/transactions/ImportSessionHistory.tsx",
+        "src/components/transactions/ImportValidationReview.tsx",
+        "src/server/services/transactions/import-audit.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t007",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "transactions.paginated-search",
+      "files": [
+        "src/__tests__/unit/TransactionRow.test.tsx"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t008",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "transactions.transaction-bulk-apply",
+      "files": [
+        "src/components/transactions/TransactionRow.tsx",
+        "src/components/transactions/hooks/useCategoryEdit.ts",
+        "src/server/services/transactions/category-change.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t009",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "transactions.transaction-dedup",
+      "files": [
+        "src/server/services/transactions/dedup.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t010",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "transactions.transfer-counterpart",
+      "files": [
+        "src/components/transactions/TransactionRow.tsx"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t011",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "transactions.transfer-match-rules",
+      "files": [
+        "src/server/services/transactions/transfer-rule-job.service.ts",
+        "src/server/services/transactions/transfer-rule.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t012",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "transactions.transfer-reconciliation",
+      "files": [
+        "src/server/services/transactions/transfer.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    },
+    {
+      "id": "step1-t013",
+      "step": 1,
+      "status": "pending",
+      "subject": "transactions.transactions",
+      "target": "transactions.undo-safeguards",
+      "files": [
+        "src/components/transactions/RestoreTransactionButton.tsx",
+        "src/components/transactions/VoidTransactionButton.tsx",
+        "src/server/services/transactions/void-transfer.service.ts",
+        "src/server/services/transactions/void.service.ts"
+      ],
+      "claimants": null,
+      "promptTemplate": "step1-scope-down.md",
+      "createdAt": "2026-06-30T10:07:04.591Z",
+      "dispatchedAt": null,
+      "appliedAt": null,
+      "outcome": null,
+      "stopReason": null
+    }
+  ]
+}

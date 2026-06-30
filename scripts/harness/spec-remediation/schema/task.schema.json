@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal/spec-remediation/task.schema.json",
+  "title": "Spec Remediation Task File",
+  "description": "Schema for .harness/remediation/step{N}-tasks.json produced by discover.mjs.",
+  "type": "object",
+  "required": ["tasks"],
+  "additionalProperties": true,
+  "properties": {
+    "$schema": { "type": "string" },
+    "generatedAt": { "type": "string" },
+    "step": { "type": "integer", "enum": [1, 2, 3] },
+    "tasks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/task" }
+    }
+  },
+  "definitions": {
+    "task": {
+      "type": "object",
+      "required": ["id", "step", "status", "subject", "files", "promptTemplate", "createdAt"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^step[123]-t[0-9]{3,}$" },
+        "step": { "type": "integer", "enum": [1, 2, 3] },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "dispatched", "applied", "rejected", "escalated"]
+        },
+        "subject": { "type": "string", "minLength": 1 },
+        "target": { "type": ["string", "null"] },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "claimants": {
+          "type": ["array", "null"],
+          "items": { "type": "string" }
+        },
+        "promptTemplate": {
+          "type": "string",
+          "pattern": "^step[123]-[a-z0-9-]+\\.md$"
+        },
+        "createdAt": { "type": "string" },
+        "dispatchedAt": { "type": ["string", "null"] },
+        "appliedAt": { "type": ["string", "null"] },
+        "outcome": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["overlapBefore", "overlapAfter", "patchPath"],
+              "properties": {
+                "overlapBefore": { "type": "integer", "minimum": 0 },
+                "overlapAfter": { "type": "integer", "minimum": 0 },
+                "patchPath": { "type": "string" }
+              }
+            }
+          ]
+        },
+        "stopReason": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "step": { "const": 1 } } },
+          "then": { "required": ["target"] }
+        },
+        {
+          "if": { "properties": { "step": { "const": 3 } } },
+          "then": {
+            "properties": {
+              "claimants": {
+                "type": "array",
+                "minItems": 2,
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["claimants"]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -72,3 +72,7 @@ backup.dump
 # Transient extraction artifacts from spec/index backfill tooling
 scripts/.tmp/
 
+# Spec remediation: transient sub-agent outputs (per spec/harness/spec-remediation/lld.md § Gitignore policy).
+# state.json, step{N}-tasks.json, and log.md are committed; only working batches are ignored.
+.harness/remediation/patches-batch-*/
+

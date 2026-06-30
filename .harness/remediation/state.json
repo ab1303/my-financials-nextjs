@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.1.0",
+  "createdAt": "2026-06-30T20:01:00.000Z",
+  "updatedAt": "2026-06-30T20:01:00.000Z",
+  "notes": [
+    "Bootstrap state for spec-remediation. Per-task progress lives in step{N}-tasks.json files; this file holds batch metadata and escalations.",
+    "Per LLD invariant #6: a fresh-context agent given only this file + the LLD must be able to identify the next task to dispatch."
+  ],
+  "steps": {
+    "1": { "tasksFile": "step1-tasks.json", "discoveredAt": null },
+    "2": { "tasksFile": "step2-tasks.json", "discoveredAt": null },
+    "3": { "tasksFile": "step3-tasks.json", "discoveredAt": null }
+  },
+  "batches": [],
+  "escalations": []
+}

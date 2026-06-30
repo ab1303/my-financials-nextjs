@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://internal/spec-remediation/patch.schema.json",
+  "title": "Spec Remediation Patch",
+  "description": "Schema for a single sub-agent output saved as patches-batch-N/task-{taskId}.json.",
+  "type": "object",
+  "required": ["taskId", "step", "feature", "ops", "rationale", "evidence", "confidence", "stop_required"],
+  "additionalProperties": true,
+  "properties": {
+    "$schema": { "type": "string" },
+    "taskId": { "type": "string", "pattern": "^step[123]-t[0-9]{3,}$" },
+    "step": { "type": "integer", "enum": [1, 2, 3] },
+    "feature": { "type": "string", "minLength": 1 },
+    "ops": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/op" }
+    },
+    "rationale": { "type": "string", "minLength": 1 },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "lines", "supports"],
+        "additionalProperties": false,
+        "properties": {
+          "file": { "type": "string", "minLength": 1 },
+          "lines": { "type": "string", "minLength": 1 },
+          "supports": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+    "stop_required": { "type": "boolean" },
+    "ddd_trace": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["claim", "assumptions", "reconcile"],
+        "properties": {
+          "claim": { "type": "string" },
+          "assumptions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["n", "text", "result"],
+              "properties": {
+                "n": { "type": "integer", "minimum": 1 },
+                "text": { "type": "string" },
+                "result": { "type": "string" },
+                "evidence": { "type": "string" }
+              }
+            }
+          },
+          "reconcile": { "type": "string" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "op": {
+      "type": "object",
+      "required": ["op"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "remove-files-from-owns",
+            "add-files-to-owns",
+            "set-invariants",
+            "set-owns-confidence",
+            "set-status"
+          ]
+        },
+        "bucket": {
+          "type": "string",
+          "enum": ["routers", "services", "components", "app", "tests"]
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "invariants": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "value": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "op": { "enum": ["remove-files-from-owns", "add-files-to-owns"] } } },
+          "then": { "required": ["bucket", "files"] }
+        },
+        {
+          "if": { "properties": { "op": { "const": "set-invariants" } } },
+          "then": { "required": ["invariants"] }
+        },
+        {
+          "if": { "properties": { "op": { "enum": ["set-owns-confidence", "set-status"] } } },
+          "then": { "required": ["value"] }
+        }
+      ]
+    }
+  }
+}
