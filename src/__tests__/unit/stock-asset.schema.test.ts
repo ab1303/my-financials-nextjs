@@ -217,7 +217,7 @@ describe('stock-asset.schema', () => {
         const data = result.data;
         expect(data.holdings).toHaveLength(2);
         // buyDate is optional, so it can be undefined or null
-        expect(data.holdings[1].buyDate ?? null).toBeNull();
+        expect(data.holdings?.[1]!.buyDate ?? null).toBeNull();
       }
     });
   });

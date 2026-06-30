@@ -34,13 +34,13 @@ describe('TableCell amount formatting', () => {
   });
 
   it('renders $74.25 for value 74.25', () => {
-    render(<TableCell {...(buildProps(74.25) as never)} />);
+    render(<TableCell {...(buildProps(74.25) as unknown as Parameters<typeof TableCell>[0])} />);
 
     expect(screen.getByText('$74.25')).toBeDefined();
   });
 
   it('renders $15.80 for value 15.8', () => {
-    render(<TableCell {...(buildProps(15.8) as never)} />);
+    render(<TableCell {...(buildProps(15.8) as unknown as Parameters<typeof TableCell>[0])} />);
 
     expect(screen.getByText('$15.80')).toBeDefined();
   });

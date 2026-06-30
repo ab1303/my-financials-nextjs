@@ -1,3 +1,4 @@
+import type { Session } from 'next-auth';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET } from '@/app/api/cashflow/analytics/route';
@@ -23,7 +24,7 @@ describe('GET /api/cashflow/analytics', () => {
   });
 
   it('should return 401 when user is not authenticated', async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null);
+    vi.mocked(auth as () => Promise<Session | null>).mockResolvedValueOnce(null);
 
     const request = new Request(
       'http://localhost:3000/api/cashflow/analytics?calendarYearId=year-1',

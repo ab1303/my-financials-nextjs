@@ -33,8 +33,8 @@ describe('interest-cleansing.service - scoring', () => {
       interestCleansingEvidence: [],
     };
 
-    (prisma.transaction.findUniqueOrThrow as never).mockResolvedValue(mockCredit);
-    (prisma.transaction.findMany as never).mockResolvedValue([mockDebit]);
+    vi.mocked(prisma.transaction.findUniqueOrThrow).mockResolvedValue(mockCredit as never);
+    vi.mocked(prisma.transaction.findMany).mockResolvedValue([mockDebit] as never);
 
     const candidates = await getCleansingDebitCandidates({
       userId: 'user-1',
@@ -85,8 +85,8 @@ describe('interest-cleansing.service - scoring', () => {
       interestCleansingEvidence: [],
     };
 
-    (prisma.transaction.findUniqueOrThrow as never).mockResolvedValue(mockCredit);
-    (prisma.transaction.findMany as never).mockResolvedValue([mockDebit]);
+    vi.mocked(prisma.transaction.findUniqueOrThrow).mockResolvedValue(mockCredit as never);
+    vi.mocked(prisma.transaction.findMany).mockResolvedValue([mockDebit] as never);
 
     const candidates = await getCleansingDebitCandidates({
       userId: 'user-1',

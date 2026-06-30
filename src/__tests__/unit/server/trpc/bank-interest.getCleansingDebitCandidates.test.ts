@@ -33,8 +33,8 @@ describe('bankInterest.getCleansingDebitCandidates integration-ish', () => {
       interestCleansingEvidence: [],
     };
 
-    (prisma.transaction.findUniqueOrThrow as never).mockResolvedValue(mockCredit);
-    (prisma.transaction.findMany as never).mockResolvedValue([mockDebit]);
+    vi.mocked(prisma.transaction.findUniqueOrThrow).mockResolvedValue(mockCredit as never);
+    vi.mocked(prisma.transaction.findMany).mockResolvedValue([mockDebit] as never);
 
     const result = await getCleansingDebitCandidates({
       userId: 'u1',

@@ -416,8 +416,11 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       // Verify donation query was called with correct window
       const donationCallArg =
         prismaMock.interestCleansing.findMany.mock.calls[0]?.[0];
-      const dateFromQuery = donationCallArg?.where?.datePaid?.gte;
-      const dateToQuery = donationCallArg?.where?.datePaid?.lte;
+      const datePaid = donationCallArg?.where?.datePaid as
+        | { gte?: Date; lte?: Date }
+        | undefined;
+      const dateFromQuery = datePaid?.gte;
+      const dateToQuery = datePaid?.lte;
 
       expect(dateFromQuery?.toISOString().slice(0, 10)).toBe('2023-01-01');
       expect(dateToQuery?.toISOString().slice(0, 10)).toBe('2023-12-31');
@@ -526,7 +529,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
           bankAccountId: institutionId,
         } as never);
       }
-      prismaMock.transaction.findMany.mockResolvedValue(transactions);
+      prismaMock.transaction.findMany.mockResolvedValue(transactions as never);
       prismaMock.interestCleansing.findMany.mockResolvedValue([]);
 
       const result = await getYearlyCleansingData(

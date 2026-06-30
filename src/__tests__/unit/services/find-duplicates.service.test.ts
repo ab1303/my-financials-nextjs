@@ -13,7 +13,6 @@ describe('findDuplicatesForClassifiedMonths', () => {
     prismaMock.transaction.findMany.mockResolvedValue([]);
 
     const result = await findDuplicatesForClassifiedMonths({
-      prisma: prismaMock,
       userId: 'user-1',
       bankAccountId: 'bank-1',
       classifiedMonths: [],
@@ -49,7 +48,6 @@ describe('findDuplicatesForClassifiedMonths', () => {
     ];
 
     const result = await findDuplicatesForClassifiedMonths({
-      prisma: prismaMock,
       userId: 'user-1',
       bankAccountId: 'bank-1',
       classifiedMonths: classifiedMonths as never,

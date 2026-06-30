@@ -47,9 +47,10 @@ vi.mock(
 
 // Mock server actions - use flexible mock behavior
 const mockServerActions = {
-  editRow: vi.fn(async () => ({ success: true })),
+  editRow: vi.fn(async () => ({ success: true, error: undefined })),
   addRow: vi.fn(async () => ({
     success: true,
+    error: undefined,
     data: {
       id: 'mock-id',
       dateEarned: new Date(),
@@ -60,7 +61,7 @@ const mockServerActions = {
       source: 'USER_MANUAL',
     } as IncomeEntryType,
   })),
-  deleteRow: vi.fn(async () => ({ success: true })),
+  deleteRow: vi.fn(async () => ({ success: true, error: undefined })),
 };
 
 describe('IncomeTableClient — Month Header (Accordion)', () => {

@@ -76,14 +76,16 @@ describe('CleansingCandidatePicker', () => {
   beforeEach(() => {
     vi.mocked(
       trpc.bankInterest.getCleansingDebitCandidates.useQuery,
-    ).mockReturnValue({
-      data: mockCandidates,
-      isLoading: false,
-    });
-    vi.mocked(trpc.bankAccount.list.useQuery).mockReturnValue({
-      data: mockAccounts,
-      isLoading: false,
-    });
+    ).mockReturnValue(
+      { data: mockCandidates, isLoading: false } as unknown as ReturnType<
+        typeof trpc.bankInterest.getCleansingDebitCandidates.useQuery
+      >,
+    );
+    vi.mocked(trpc.bankAccount.list.useQuery).mockReturnValue(
+      { data: mockAccounts, isLoading: false } as unknown as ReturnType<
+        typeof trpc.bankAccount.list.useQuery
+      >,
+    );
   });
 
   test('renders candidate rows with match badges', () => {

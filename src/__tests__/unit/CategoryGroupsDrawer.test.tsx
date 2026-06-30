@@ -129,7 +129,7 @@ describe('CategoryGroupsDrawer', () => {
     );
 
     const closeButton = screen.getByRole('button', { name: 'Close drawer' });
-    await user.click(closeButton);
+    await _user.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -145,7 +145,7 @@ describe('CategoryGroupsDrawer', () => {
     );
 
     const cancelButton = screen.getByRole('button', { name: 'Cancel' });
-    await user.click(cancelButton);
+    await _user.click(cancelButton);
 
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -227,7 +227,7 @@ describe('CategoryGroupsDrawer', () => {
     );
 
     const nameInput = screen.getByPlaceholderText('e.g., Essential Expenses');
-    await user.type(nameInput, 'My Test Group');
+    await _user.type(nameInput, 'My Test Group');
 
     expect(nameInput).toHaveValue('My Test Group');
   });

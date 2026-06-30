@@ -21,7 +21,7 @@ describe('runTransferMatchRules', () => {
   it('returns zero summary when no active rules', async () => {
     const prisma = {
       transferMatchRule: { findMany: vi.fn().mockResolvedValue([]) },
-    } as never;
+    } as unknown as Parameters<typeof runTransferMatchRules>[0]['prisma'];
 
     const result = await runTransferMatchRules({
       prisma,
@@ -42,7 +42,7 @@ describe('runTransferMatchRules', () => {
     const findMany = vi.fn().mockResolvedValue([]);
     const prisma = {
       transferMatchRule: { findMany },
-    } as never;
+    } as unknown as Parameters<typeof runTransferMatchRules>[0]['prisma'];
 
     await runTransferMatchRules({
       prisma,
@@ -120,7 +120,7 @@ describe('runTransferMatchRules', () => {
       transferMatchJobResult: {
         create: vi.fn().mockResolvedValue({ id: 'jr-1' }),
       },
-    } as never;
+    } as unknown as Parameters<typeof runTransferMatchRules>[0]['prisma'];
 
     const result = await runTransferMatchRules({
       prisma,

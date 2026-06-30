@@ -36,7 +36,7 @@ describe('donation-zakat-core', () => {
   });
 
   it('creates voluntary donation payments', async () => {
-    (prisma.voluntaryDonation.create as never).mockResolvedValue({
+    vi.mocked(prisma.voluntaryDonation.create).mockResolvedValue({
       id: 'donation-1',
       datePaid: new Date('2025-01-15'),
       amount: 1000,
@@ -45,7 +45,7 @@ describe('donation-zakat-core', () => {
       individualId: null,
       donationLedgerId: 'ledger-1',
       purpose: 'VOLUNTARY',
-    });
+    } as never);
 
     const result = await addVoluntaryDonation({
       donationLedgerId: 'ledger-1',
@@ -66,10 +66,10 @@ describe('donation-zakat-core', () => {
   });
 
   it('updates voluntary donation payments', async () => {
-    (prisma.voluntaryDonation.update as never).mockResolvedValue({
+    vi.mocked(prisma.voluntaryDonation.update).mockResolvedValue({
       id: 'donation-1',
       purpose: 'VOLUNTARY',
-    });
+    } as never);
 
     await updateVoluntaryDonation('donation-1', {
       donationLedgerId: 'ledger-1',
@@ -92,7 +92,7 @@ describe('donation-zakat-core', () => {
   });
 
   it('creates zakat payments with derived deductibility', async () => {
-    (prisma.zakatPayment.create as never).mockResolvedValue({
+    vi.mocked(prisma.zakatPayment.create).mockResolvedValue({
       id: 'zakat-1',
       datePaid: new Date('2025-03-10'),
       amount: { toNumber: () => 750 },
@@ -102,7 +102,7 @@ describe('donation-zakat-core', () => {
       zakatObligationId: 'zakat-ledger-1',
       business: { isDgrRegistered: false },
       individual: null,
-    });
+    } as never);
 
     const result = await addZakatPaymentDetail('zakat-ledger-1', {
       datePaid: new Date('2025-03-10'),
@@ -147,7 +147,7 @@ describe('donation-zakat-core', () => {
   });
 
   it('calculates zakat totals from derived deductibility', async () => {
-    (prisma.zakatPayment.findMany as never).mockResolvedValue([
+    vi.mocked(prisma.zakatPayment.findMany).mockResolvedValue([
       {
         amount: { toNumber: () => 5000 },
         business: { isDgrRegistered: true },
@@ -156,7 +156,7 @@ describe('donation-zakat-core', () => {
         amount: { toNumber: () => 1000 },
         business: { isDgrRegistered: false },
       },
-    ]);
+    ] as never);
 
     const result = await getZakatTotalsByCategory('year-1');
 
