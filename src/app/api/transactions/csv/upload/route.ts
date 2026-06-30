@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -157,21 +158,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const importMetadata: ImportSessionMetadata = {
+      fileName,
+      fileSize,
+      bankAccountId,
+      bankName: account.institution.name,
+      institutionKey: account.institution.institutionKey,
+      detectionMethod,
+      transactions,
+    };
+
     const importSession = await prisma.importSession.create({
       data: {
         userId: session.user.id,
         importType: 'EXPENSE',
         status: 'PENDING',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: {
-          fileName,
-          fileSize,
-          bankAccountId,
-          bankName: account.institution.name,
-          institutionKey: account.institution.institutionKey,
-          detectionMethod,
-          transactions,
-        } as any,
+        metadata: importMetadata as unknown as Prisma.InputJsonValue,
       },
     });
 

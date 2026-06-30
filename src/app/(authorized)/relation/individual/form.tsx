@@ -1,6 +1,5 @@
 'use client';
 
-import clsx from 'clsx';
 import { useQueryClient } from '@tanstack/react-query';
 import { TRPCError } from '@trpc/server';
 import { useId, useState } from 'react';

@@ -62,16 +62,13 @@ export function BeneficiaryFormFields({
                 options={options}
                 value={selected}
                 onChange={(option) => field.onChange(option?.value)}
-                styles={
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  {
-                    ...getSelectStyles(),
-                    menuPortal: (base: CSSObjectWithLabel) => ({
-                      ...base,
-                      zIndex: 9999,
-                    }),
-                  } as any
-                }
+                styles={{
+                  ...getSelectStyles<{ value: BeneficiaryEnumType; label: string }>(),
+                  menuPortal: (base: CSSObjectWithLabel) => ({
+                    ...base,
+                    zIndex: 9999,
+                  }),
+                }}
                 usePortal
               />
             );

@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { type FieldErrors, Controller, useForm } from 'react-hook-form';
+import { Controller, type FieldErrors, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
