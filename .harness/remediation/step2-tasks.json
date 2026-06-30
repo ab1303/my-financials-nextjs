@@ -6,7 +6,7 @@
     {
       "id": "step2-t001",
       "step": 2,
-      "status": "pending",
+      "status": "applied",
       "subject": "cashflow.bank-account-filter-parity",
       "target": null,
       "files": [
@@ -18,14 +18,18 @@
       "promptTemplate": "step2-invariant-classify.md",
       "createdAt": "2026-06-30T10:06:56.130Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T11:22:49.457Z",
+      "outcome": {
+        "overlapBefore": 80,
+        "overlapAfter": 80,
+        "patchPath": ".harness/remediation/patches-batch-4/task-step2-t001.json"
+      },
       "stopReason": null
     },
     {
       "id": "step2-t002",
       "step": 2,
-      "status": "pending",
+      "status": "applied",
       "subject": "cashflow.multi-account-transfer-integrity",
       "target": null,
       "files": [
@@ -36,14 +40,18 @@
       "promptTemplate": "step2-invariant-classify.md",
       "createdAt": "2026-06-30T10:06:56.130Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T11:22:49.617Z",
+      "outcome": {
+        "overlapBefore": 80,
+        "overlapAfter": 80,
+        "patchPath": ".harness/remediation/patches-batch-4/task-step2-t002.json"
+      },
       "stopReason": null
     },
     {
       "id": "step2-t003",
       "step": 2,
-      "status": "pending",
+      "status": "applied",
       "subject": "transactions.import-audit-trail",
       "target": null,
       "files": [
@@ -55,8 +63,12 @@
       "promptTemplate": "step2-invariant-classify.md",
       "createdAt": "2026-06-30T10:06:56.130Z",
       "dispatchedAt": null,
-      "appliedAt": null,
-      "outcome": null,
+      "appliedAt": "2026-06-30T11:22:49.800Z",
+      "outcome": {
+        "overlapBefore": 80,
+        "overlapAfter": 80,
+        "patchPath": ".harness/remediation/patches-batch-4/task-step2-t003.json"
+      },
       "stopReason": null
     }
   ]

@@ -39,7 +39,7 @@
       "branch": "spec-remediation",
       "spec": "spec/harness/spec-remediation/",
       "blockers": [],
-      "notes": "Step 1 complete (13/13 patches applied across 3 batches). Overlap-files 94 → 80, overlap-parts 223 → 189, transactions.transactions participation 37 → 17. Apply-patch rollback gate was switched mid-session from file-count to participations (a tooling fix; see lib/overlaps.mjs and apply-patch.mjs uncommitted edits). Remaining: step-2 (3 invariant tasks, haiku), step-3 (94 boundary-decision tasks, sonnet).",
+      "notes": "All 3 pipeline steps complete. overlap-files: 94 → 0, overlap-parts: 223 → 0. Step 1: 13/13 applied (3 batches). Step 2: 3/3 applied. Step 3: 94+22+8+3+3 tasks applied across batches 5-16 (multiple discover --force rounds to clear stop_required residuals). Final SHA: cb49a9c.",
       "verification": [
         { "id": "build-layout", "description": "scripts/harness/spec-remediation/ tree matches LLD § File layout exactly", "passing": true },
         { "id": "discover-step1", "description": "discover.mjs --step 1 produces non-empty step1-tasks.json", "passing": true },
@@ -55,8 +55,8 @@
         { "id": "type-check", "description": "pnpm run type-check passes (zero errors)", "passing": true },
         { "id": "pipeline-batch-1", "description": "Step-1 batch 1: dispatch 3 sub-agents → apply → verify overlap strictly decreases", "passing": true },
         { "id": "pipeline-step-1-complete", "description": "All step-1 tasks applied (13 → 0 pending)", "passing": true },
-        { "id": "pipeline-step-2-complete", "description": "All step-2 tasks applied", "passing": false },
-        { "id": "pipeline-step-3-complete", "description": "All step-3 tasks applied; overlap count = 0", "passing": false }
+        { "id": "pipeline-step-2-complete", "description": "All step-2 tasks applied", "passing": true },
+        { "id": "pipeline-step-3-complete", "description": "All step-3 tasks applied; overlap count = 0", "passing": true }
       ],
       "evidence": [
         { "id": "build-layout", "sha": "a8f24ad", "note": "git ls-tree shows 13 files under scripts/harness/spec-remediation/ matching LLD layout" },
@@ -72,7 +72,9 @@
         { "id": "spec-check-clean", "sha": "95843a0", "command": "pnpm spec:check", "result": "drift=50 overlap=94 ghost=0 sha-missing=0 review=0 (overlap unchanged from before registration)" },
         { "id": "type-check", "sha": "95843a0", "command": "pnpm run type-check", "result": "exit 0, no output" },
         { "id": "pipeline-batch-1", "sha": "uncommitted", "command": "node scripts/harness/spec-remediation/apply-batch.mjs --batch 1", "result": "3/3 applied; parts 223 → 220; transactions.transactions 37 → 34" },
-        { "id": "pipeline-step-1-complete", "sha": "uncommitted", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 1: 13 total · applied=13 · pending=0; cumulative overlap-files 94 → 80 (−14), overlap-parts 223 → 189 (−34) across 3 batches (batch-2: 5/5, batch-3: 5/5 with 2 idempotent no-ops in batch-3 and 1 in batch-2)" }
+        { "id": "pipeline-step-1-complete", "sha": "uncommitted", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 1: 13 total · applied=13 · pending=0; cumulative overlap-files 94 → 80 (−14), overlap-parts 223 → 189 (−34) across 3 batches (batch-2: 5/5, batch-3: 5/5 with 2 idempotent no-ops in batch-3 and 1 in batch-2)" },
+        { "id": "pipeline-step-2-complete", "sha": "cb49a9c", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 2: 3 total · applied=3 · pending=0" },
+        { "id": "pipeline-step-3-complete", "sha": "cb49a9c", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 3: all tasks applied across batches 5-16 (6 discover rounds); final overlap-files=0 overlap-parts=0" }
       ]
     }
   ]

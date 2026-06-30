@@ -54,10 +54,8 @@
         "services": [
           "src/server/services/ai-import/_types.ts",
           "src/server/services/ai-import/ai-vision.service.ts",
-          "src/server/services/ai-import/category-matcher.service.ts",
           "src/server/services/ai-import/cleanup.service.ts",
-          "src/server/services/ai-import/image-storage.adapter.ts",
-          "src/server/services/ai-import/validation.ts"
+          "src/server/services/ai-import/image-storage.adapter.ts"
         ],
         "components": [],
         "app": [
@@ -86,10 +84,7 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/ai-import/ai-vision.service.ts",
-          "src/server/services/ai-import/category-matcher.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [],
         "tests": []
@@ -253,7 +248,6 @@
           "src/components/ui/theme-toggle.tsx"
         ],
         "app": [
-          "src/app/(authorized)/home/page.tsx",
           "src/app/(authorized)/layout.tsx",
           "src/app/layout.tsx"
         ],
@@ -277,9 +271,7 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/transaction.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [],
         "tests": []
@@ -331,9 +323,7 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/ai-import/embedding.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [],
         "tests": []
@@ -381,13 +371,10 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/user-profile/user-profile.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [
-          "src/app/(authorized)/settings/profile/_types.ts",
-          "src/app/(authorized)/settings/profile/_schema.ts"
+          "src/app/(authorized)/settings/profile/_types.ts"
         ],
         "tests": []
       },
@@ -432,9 +419,7 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/income.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [],
         "tests": []
@@ -489,16 +474,9 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/asset-dashboard.service.ts",
-          "src/server/services/stock-asset.service.ts"
-        ],
+        "services": [],
         "components": [],
-        "app": [
-          "src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx",
-          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx",
-          "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "medium",
@@ -521,10 +499,7 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [
-          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx",
-          "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "medium",
@@ -580,13 +555,9 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/asset-dashboard.service.ts"
-        ],
+        "services": [],
         "components": [],
-        "app": [
-          "src/app/(authorized)/assets/_components/AssetSummaryCards.tsx"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "medium",
@@ -606,14 +577,10 @@
         "lld": "spec/assets/snapshot-display/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/bank-asset.ts"
-        ],
+        "routers": [],
         "services": [],
         "components": [],
-        "app": [
-          "src/app/(authorized)/assets/bank/BankAssetsClient.tsx"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "medium",
@@ -635,13 +602,10 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/stock-asset.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [
-          "src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx",
-          "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
+          "src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx"
         ],
         "tests": []
       },
@@ -665,13 +629,9 @@
         "routers": [
           "src/server/trpc/router/stock-asset.ts"
         ],
-        "services": [
-          "src/server/services/stock-asset.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [
-          "src/app/(authorized)/assets/stocks/NewSnapshotModal.tsx",
-          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx",
           "src/app/(authorized)/assets/stocks/SummaryCards.tsx"
         ],
         "tests": []
@@ -725,7 +685,6 @@
         ],
         "components": [],
         "app": [
-          "src/app/(authorized)/assets/stocks/StockAssetsClient.tsx",
           "src/app/(authorized)/assets/stocks/page.tsx"
         ],
         "tests": []
@@ -777,7 +736,6 @@
           "src/server/trpc/router/bank-account.ts"
         ],
         "services": [
-          "src/server/services/bank-account.service.ts",
           "src/server/controllers/bank-account.controller.ts"
         ],
         "components": [],
@@ -894,9 +852,7 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/expense.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [
           "src/app/api/cashflow/analytics/route.ts",
@@ -977,21 +933,21 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/income.service.ts"
-        ],
+        "services": [],
         "components": [],
-        "app": [
-          "src/app/(authorized)/cashflow/income/page.tsx",
-          "src/app/(authorized)/cashflow/expense/page.tsx"
-        ],
+        "app": [],
         "tests": []
       },
-      "ownsConfidence": "medium",
+      "ownsConfidence": "none",
       "needsReview": false,
       "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
-      "invariants": []
+      "invariants": [
+        "Bank account filter parameter from URL query is consistently passed to all cashflow service handlers (expense, income) when present.",
+        "When bankAccountId is selected, both expense and income pages filter transaction queries to that account OR include USER_MANUAL source entries (null bankAccountId).",
+        "Income service getTotalIncome(), getIncomeEntries(), and getMonthlyIncomeSummaryFiltered() accept optional bankAccountId parameter and apply it to WHERE clause (OR with USER_MANUAL when active).",
+        "No page renders unfiltered totals if a bank filter is active; parity is enforced at query-binding time, not UI rendering time."
+      ]
     },
     {
       "id": "cashflow.categories.category-management",
@@ -1004,10 +960,7 @@
         "lld": "spec/cashflow/categories/category-management/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/income-source.ts",
-          "src/server/trpc/router/expense-category.ts"
-        ],
+        "routers": [],
         "services": [],
         "components": [],
         "app": [
@@ -1037,18 +990,13 @@
         "lld": "spec/cashflow/categories/drill-down/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/category-transactions.ts"
-        ],
+        "routers": [],
         "services": [],
         "components": [
           "src/components/transactions/CategoryFilteredLedger.tsx"
         ],
         "app": [],
-        "tests": [
-          "src/__tests__/integration/category-transactions.integration.test.ts",
-          "src/__tests__/unit/CategoryFilteredLedger.test.tsx"
-        ]
+        "tests": []
       },
       "ownsConfidence": "high",
       "needsReview": false,
@@ -1074,12 +1022,9 @@
           "src/components/ui/GroupCategoryPopover.tsx"
         ],
         "app": [
-          "src/app/(authorized)/cashflow/analytics/_components/CashflowAnalyticsClient.tsx",
           "src/app/(authorized)/cashflow/expense/ExpenseTableClient.tsx",
-          "src/app/(authorized)/cashflow/expense/ExpenseTableServer.tsx",
           "src/app/(authorized)/cashflow/expense/_components/CategoryBreakdownModal.tsx",
-          "src/app/(authorized)/cashflow/expense/_components/ExpenseCategoryBreakdownWidget.tsx",
-          "src/app/(authorized)/cashflow/expense/page.tsx"
+          "src/app/(authorized)/cashflow/expense/_components/ExpenseCategoryBreakdownWidget.tsx"
         ],
         "tests": []
       },
@@ -1106,9 +1051,7 @@
           "src/server/services/bank-account.service.ts"
         ],
         "components": [],
-        "app": [
-          "src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "high",
@@ -1141,7 +1084,6 @@
           "src/app/(authorized)/cashflow/donations/StateProvider.tsx",
           "src/app/(authorized)/cashflow/donations/_components/CreateBeneficiaryModal.tsx",
           "src/app/(authorized)/cashflow/donations/_components/DonationBeneficiaryBreakdownWidget.tsx",
-          "src/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer.tsx",
           "src/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawerTrigger.tsx",
           "src/app/(authorized)/cashflow/donations/_components/UnlinkedTransactionsBanner.tsx",
           "src/app/(authorized)/cashflow/donations/_schema.ts",
@@ -1205,9 +1147,7 @@
         ],
         "components": [],
         "app": [
-          "src/app/(authorized)/cashflow/expense/ExpenseTableServer.tsx",
-          "src/app/(authorized)/cashflow/expense/actions.ts",
-          "src/app/(authorized)/cashflow/expense/page.tsx"
+          "src/app/(authorized)/cashflow/expense/ExpenseTableServer.tsx"
         ],
         "tests": []
       },
@@ -1258,10 +1198,7 @@
           "src/server/controllers/income.controller.ts"
         ],
         "components": [],
-        "app": [
-          "src/app/(authorized)/cashflow/income/IncomeTableServer.tsx",
-          "src/app/(authorized)/cashflow/income/actions.ts"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "high",
@@ -1283,9 +1220,7 @@
       "owns": {
         "routers": [],
         "services": [
-          "src/server/services/income.service.ts",
-          "src/server/services/transactions/csv-confirm.service.ts",
-          "src/server/services/transactions/void.service.ts"
+          "src/server/services/income.service.ts"
         ],
         "components": [],
         "app": [
@@ -1319,8 +1254,6 @@
         "services": [],
         "components": [],
         "app": [
-          "src/app/(authorized)/cashflow/income/IncomeTableClient.tsx",
-          "src/app/(authorized)/cashflow/income/_components/MonthAccordionPanel.tsx",
           "src/app/(authorized)/cashflow/income/_components/SourceBreakdownWidget.tsx"
         ],
         "tests": [
@@ -1406,18 +1339,13 @@
         "routers": [
           "src/server/trpc/router/bank-interest.ts"
         ],
-        "services": [
-          "src/server/services/interest-cleansing/interest-cleansing.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [
           "src/app/(authorized)/cashflow/bank-interest/_components/CleansingCandidatePicker.tsx",
           "src/app/(authorized)/cashflow/bank-interest/_components/cleanse-drawer/useCleanseDonationState.ts"
         ],
-        "tests": [
-          "src/__tests__/unit/interest-cleansing.service.test.ts",
-          "src/__tests__/integration/bank-interest.getCleansingDebitCandidates.integration.test.ts"
-        ]
+        "tests": []
       },
       "ownsConfidence": "high",
       "needsReview": false,
@@ -1446,8 +1374,7 @@
         "app": [],
         "tests": [
           "src/__tests__/unit/interest-cleansing.scoring.test.ts",
-          "src/__tests__/unit/interest-cleansing.service.test.ts",
-          "src/__tests__/unit/server/services/bank-interest/interest-cleansing.scoring.test.ts"
+          "src/__tests__/unit/interest-cleansing.service.test.ts"
         ]
       },
       "ownsConfidence": "medium",
@@ -1470,9 +1397,7 @@
         "routers": [
           "src/server/trpc/router/transfer.ts"
         ],
-        "services": [
-          "src/server/services/transactions/transfer.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [],
         "tests": []
@@ -1496,10 +1421,7 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [
-          "src/app/(authorized)/cashflow/expense/page.tsx",
-          "src/app/(authorized)/cashflow/income/page.tsx"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "medium",
@@ -1522,12 +1444,9 @@
           "src/server/trpc/router/category-transactions.ts"
         ],
         "services": [
-          "src/server/services/transactions/constants.ts",
           "src/server/services/transactions/csv-confirm.service.ts"
         ],
-        "components": [
-          "src/components/transactions/TransactionLedgerTable.tsx"
-        ],
+        "components": [],
         "app": [],
         "tests": [
           "src/__tests__/integration/category-transactions.integration.test.ts",
@@ -1550,9 +1469,7 @@
         "lld": "spec/cashflow/multi-account-transfer-integrity/handle-orphans/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/transfer.ts"
-        ],
+        "routers": [],
         "services": [
           "src/server/services/transactions/constants.ts"
         ],
@@ -1614,7 +1531,6 @@
       "owns": {
         "routers": [],
         "services": [
-          "src/server/services/transactions/constants.ts",
           "src/server/services/transactions/transfer.service.ts"
         ],
         "components": [],
@@ -1674,7 +1590,6 @@
         "components": [],
         "app": [
           "src/app/(authorized)/zakat/actions.ts",
-          "src/app/(authorized)/zakat/form.tsx",
           "src/app/(authorized)/zakat/layout.tsx",
           "src/app/(authorized)/zakat/page.tsx",
           "src/app/(authorized)/zakat/reducer.ts",
@@ -1690,8 +1605,7 @@
           "src/app/(authorized)/zakat/_table/cells/ZakatAmountCell.tsx",
           "src/app/(authorized)/zakat/_table/cells/ZakatBeneficiaryCell.tsx",
           "src/app/(authorized)/zakat/_table/cells/ZakatTypeCell.tsx",
-          "src/app/(authorized)/zakat/_table/columns.tsx",
-          "src/app/(authorized)/zakat/_types.ts"
+          "src/app/(authorized)/zakat/_table/columns.tsx"
         ],
         "tests": []
       },
@@ -1739,7 +1653,6 @@
         "services": [],
         "components": [],
         "app": [
-          "src/app/api/csv-import/classify/route.ts",
           "src/app/api/csv-import/confirm/route.ts",
           "src/app/api/csv-import/parse/route.ts",
           "src/app/api/csv-import/upload/route.ts"
@@ -1798,7 +1711,6 @@
       "owns": {
         "routers": [],
         "services": [
-          "src/server/services/ai-import/_types.ts",
           "src/server/services/ai-import/csv-classifier.service.ts",
           "src/server/services/ai-import/validation.ts"
         ],
@@ -1806,8 +1718,7 @@
           "src/components/csv-import/TransactionReviewTable.tsx"
         ],
         "app": [
-          "src/app/api/csv-import/classify/route.ts",
-          "src/app/api/csv-import/confirm/route.ts"
+          "src/app/api/csv-import/classify/route.ts"
         ],
         "tests": []
       },
@@ -1831,9 +1742,7 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [
-          "src/app/api/csv-import/classify/route.ts"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "medium",
@@ -1860,8 +1769,7 @@
         ],
         "components": [],
         "app": [
-          "src/app/api/ai-import/parse/route.ts",
-          "src/app/api/csv-import/parse/route.ts"
+          "src/app/api/ai-import/parse/route.ts"
         ],
         "tests": []
       },
@@ -1882,15 +1790,10 @@
         "lld": "spec/csv-import/session-date-range/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/transaction-clearing.ts"
-        ],
+        "routers": [],
         "services": [],
-        "components": [
-          "src/components/transactions/ImportSessionHistory.tsx"
-        ],
+        "components": [],
         "app": [
-          "src/app/api/transactions/ai/confirm/route.ts",
           "src/app/api/transactions/csv/confirm/route.ts"
         ],
         "tests": []
@@ -1912,16 +1815,12 @@
         "lld": "spec/donations/donation-domain-boundary-refactor/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/bank-interest.ts"
-        ],
+        "routers": [],
         "services": [
           "src/server/services/voluntary-donations/voluntary-donation.service.ts"
         ],
         "components": [],
-        "app": [
-          "src/app/(authorized)/cashflow/bank-interest/_components/cleanse-drawer/useCleanseDonationState.ts"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "medium",
@@ -1948,8 +1847,7 @@
         "components": [],
         "app": [
           "src/app/(authorized)/cashflow/category-groups/_components/CategoryGroupsDashboard.tsx",
-          "src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx",
-          "src/app/api/dashboard/summary/route.ts"
+          "src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx"
         ],
         "tests": [
           "src/__tests__/unit/CategoryGroupsDashboard.test.tsx"
@@ -1965,7 +1863,7 @@
       "id": "harness.spec-remediation",
       "domain": "harness",
       "path": "spec/harness/spec-remediation/",
-      "status": "in-progress",
+      "status": "done",
       "phase": "build",
       "docs": {
         "context": "spec/harness/spec-remediation/context.md",
@@ -1995,7 +1893,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": "95843a043f8f7a90a5516b124a29ccde643bea24",
+      "lastVerifiedSha": "cb49a9c019e5bdde82510b5fb9eb9470488ea8bc",
       "lastVerifiedDate": "2026-06-30",
       "invariants": [
         "The harness must not bypass its own gates: apply-patch.mjs runs spec:check after each manifest edit and rolls back any change that introduces a finding.",
@@ -2022,7 +1920,6 @@
         "app": [
           "src/app/(authorized)/home/_components/AssetBalanceCards.tsx",
           "src/app/(authorized)/home/_components/CashflowPulseCard.tsx",
-          "src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx",
           "src/app/(authorized)/home/_components/MonthlyTrendWidget.tsx",
           "src/app/(authorized)/home/_components/NetWorthWidget.tsx",
           "src/app/(authorized)/home/_components/RecentTransactionsWidget.tsx",
@@ -2202,9 +2099,7 @@
         "lld": "spec/settings/profile-settings/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/user-profile.ts"
-        ],
+        "routers": [],
         "services": [],
         "components": [],
         "app": [
@@ -2232,14 +2127,9 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/transactions/csv-confirm.service.ts",
-          "src/server/services/transactions/dedup.service.ts"
-        ],
+        "services": [],
         "components": [],
-        "app": [
-          "src/app/api/transactions/csv/confirm/route.ts"
-        ],
+        "app": [],
         "tests": []
       },
       "ownsConfidence": "high",
@@ -2262,14 +2152,11 @@
       "owns": {
         "routers": [],
         "services": [
-          "src/server/services/transactions/category-rule-applier.ts",
-          "src/server/services/transactions/category-rule.service.ts",
-          "src/server/services/transactions/csv-confirm.service.ts"
+          "src/server/services/transactions/category-rule-applier.ts"
         ],
         "components": [],
         "app": [
-          "src/app/api/transactions/csv/classify/route.ts",
-          "src/app/api/transactions/csv/confirm/route.ts"
+          "src/app/api/transactions/csv/classify/route.ts"
         ],
         "tests": []
       },
@@ -2291,13 +2178,9 @@
         "lld": "spec/technical_debt/remove-denormalized-monthly-expense-summary/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/expense-category.ts"
-        ],
+        "routers": [],
         "services": [
-          "src/server/services/expense.service.ts",
-          "src/server/services/transactions/csv-confirm.service.ts",
-          "src/server/services/transactions/ledger.service.ts"
+          "src/server/services/expense.service.ts"
         ],
         "components": [],
         "app": [],
@@ -2369,11 +2252,16 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "high",
+      "ownsConfidence": "none",
       "needsReview": false,
       "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
-      "invariants": []
+      "invariants": [
+        "Session state transitions must log audit records: each import attempt, skip event, and status change is recorded immutably.",
+        "Financial integrity parity: every voided transaction in an import session must reverse corresponding expense and income ledger entries (atomically).",
+        "Access control invariant: import session details are accessible only to the user who owns the session (user-scoped authorization enforced).",
+        "Skipped transaction accounting: skipped record count must equal recordsCreated minus non-VOIDED imported transactions (reconciliation guarantee)."
+      ]
     },
     {
       "id": "transactions.paginated-search",
@@ -2386,9 +2274,7 @@
         "lld": "spec/transactions/paginated-search/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/transaction-ledger/queries/searchDebitTransactions.ts"
-        ],
+        "routers": [],
         "services": [],
         "components": [],
         "app": [],
@@ -2437,15 +2323,11 @@
         "lld": "spec/transactions/transaction-bulk-apply/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/transaction-ledger/mutations/updateCategory.ts"
-        ],
+        "routers": [],
         "services": [
-          "src/server/services/transactions/category-change.service.ts",
-          "src/server/services/transactions/category-rule.service.ts"
+          "src/server/services/transactions/category-change.service.ts"
         ],
         "components": [
-          "src/components/transactions/TransactionLedgerTable.tsx",
           "src/components/transactions/TransactionRow.tsx",
           "src/components/transactions/hooks/useCategoryEdit.ts"
         ],
@@ -2521,12 +2403,8 @@
         "lld": "spec/transactions/transaction-enrichment/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/transaction-ledger/queries/getUnlinkedZakatTransactions.ts"
-        ],
-        "services": [
-          "src/server/services/zakat/zakat.service.ts"
-        ],
+        "routers": [],
+        "services": [],
         "components": [],
         "app": [],
         "tests": []
@@ -2591,20 +2469,12 @@
         "routers": [],
         "services": [
           "src/server/services/transaction.service.ts",
-          "src/server/services/transactions/bank-format-registry.ts",
-          "src/server/services/transactions/category-rule-applier.ts",
-          "src/server/services/transactions/csv-format-detector.service.ts",
-          "src/server/services/transactions/csv-format.types.ts",
-          "src/server/services/transactions/csv-parser-generic.service.ts",
-          "src/server/services/transactions/donation-link.service.ts",
           "src/server/services/transactions/donation-utils.service.ts",
-          "src/server/services/transactions/import-audit.service.ts",
           "src/server/services/transactions/ledger.service.ts",
           "src/server/services/transactions/transaction-status.service.ts",
           "src/server/services/transactions/_types.ts"
         ],
         "components": [
-          "src/components/transactions/ImportSessionHistory.tsx",
           "src/components/transactions/PreviewMatchesModal.tsx",
           "src/components/transactions/TransactionFilters.tsx",
           "src/components/transactions/TransactionSourceIndicator.tsx",
@@ -2632,18 +2502,11 @@
           "src/app/(authorized)/cashflow/transactions/_components/csv/DuplicatesReviewTable.tsx",
           "src/app/(authorized)/cashflow/transactions/_components/csv/DuplicatesTab.tsx",
           "src/app/(authorized)/cashflow/transactions/_components/TransactionsClient.tsx",
-          "src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx",
           "src/app/(authorized)/cashflow/transactions/_components/transfer/PostImportMatchBanner.tsx",
           "src/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog.tsx",
           "src/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer.tsx",
           "src/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge.tsx",
-          "src/app/(authorized)/cashflow/transactions/_components/transfer/_types.ts",
-          "src/app/api/transactions/ai/confirm/route.ts",
-          "src/app/api/transactions/ai/parse/route.ts",
-          "src/app/api/transactions/ai/upload/route.ts",
-          "src/app/api/transactions/csv/classify/route.ts",
-          "src/app/api/transactions/csv/confirm/route.ts",
-          "src/app/api/transactions/csv/upload/route.ts"
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/_types.ts"
         ],
         "tests": [
           "src/__tests__/unit/services/transactions/test-status.test.ts",
@@ -2671,13 +2534,9 @@
         "lld": "spec/transactions/transfer-counterpart/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/transaction-ledger/shared.ts"
-        ],
+        "routers": [],
         "services": [],
-        "components": [
-          "src/components/transactions/TransactionRow.tsx"
-        ],
+        "components": [],
         "app": [],
         "tests": []
       },
@@ -2729,9 +2588,7 @@
       },
       "owns": {
         "routers": [],
-        "services": [
-          "src/server/services/transactions/transfer.service.ts"
-        ],
+        "services": [],
         "components": [],
         "app": [],
         "tests": [
