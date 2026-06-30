@@ -5,61 +5,45 @@ Agents: read this file at session start to know exactly what to work on next.
 
 ---
 
-## 2026-06-30 — Harness spec-remediation — PIPELINE COMPLETE ✅
+# Harness Progress — Current Handoff
 
-**Workstream:** `spec/index.json` overlap remediation — **ALL 3 PIPELINE STEPS DONE. Awaiting commit.**
-
-### Final state
-
-| Metric | Before | After |
-|---|---|---|
-| `overlap-files` | 94 | **0** |
-| `overlap-parts` | 223 | **0** |
-| Total patches applied | — | **127** (steps 1-3, 5 discover rounds) |
-
-All four `verification[].passing` entries in `.harness/feature-status.json` are now `true`.
-`harness.spec-remediation` status set to `"done"` in `spec/index.json`.
-`lastVerifiedSha` set to `cb49a9c019e5bdde82510b5fb9eb9470488ea8bc`.
-
-### One remaining action (Tier 3 — requires explicit user confirmation)
-
-**Ask the user to commit:**
-
-```bash
-git add spec/index.json .harness/remediation/ .harness/feature-status.json \
-  scripts/harness/spec-remediation/ spec/harness/spec-remediation/lld.md
-git commit -m "chore(spec): remediate all ownership overlaps in spec/index.json
-
-overlap-files 94→0, overlap-parts 223→0 across 3 pipeline steps.
-- Step 1 (scope-down): 13 tasks, 9 effective patches
-- Step 2 (invariant reclassify): 3 tasks
-- Step 3 (boundary decisions): 94 original + 33 residual = 127 total patches
-- Rollback gate switched to overlap-participations (strictly monotone)
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
-```
-
-After committing, re-stamp `lastVerifiedSha` in `spec/index.json` with the new HEAD SHA.
-
-### Pending drift item
-
-`scripts/harness/spec-remediation/render-prompt.mjs` is now registered in `spec/index.json::harness.spec-remediation.owns.services` (line 1885). No outstanding drift.
+**One entry = the active workstream.** Completed entries move to `progress-history.md`.
+Agents: read this file at session start to know exactly what to work on next.
 
 ---
 
-## ⏭️ Next workstream — `harness.consumes-derivation`
+## 2026-07-01 — Next up: downstream capsule wiring (Phase 3) OR pre-push hook
 
-Spec'd in a separate session: **`spec/harness/consumes-derivation/`** (`context.md` + `lld.md`).
+**Workstream options (pick one, confirm with user):**
 
-**Why this is next:** the just-completed remediation achieved `overlap-parts=0` by forcing single-author selection on every shared file. Legitimate consumer relationships (e.g. feature B imports a `<Button>` owned by feature A) are now machine-invisible — `spec:check` cannot tell apart "shared use" from "ownership conflict".
+### Option A — Phase 3: wire `implement-from-spec` to use capsules (recommended)
+Now that 95 `capsule.md` files exist, update the `implement-from-spec` skill so subagent prompts are hydrated from `capsule.md` rather than `lld.md`. This is the direct payoff of `harness.capsule-format` and the reason the audit rated Context Rot as the dominant failure mode.
 
-**Approach:** derive a `consumes[]` field on each feature from the **static import graph** of `src/` (source of truth: code imports, not LLD prose, which is stale post-remediation). `spec:check` continues to compute overlaps from `owns[]` only; `consumes[]` is informational.
+- Spec: `spec/harness/capsule-format/lld.md` § Phase 3 — Downstream wiring
+- Files to touch: `.agents/skills/implement-from-spec/SKILL.md`
 
-**Key design points (from the LLD):**
-- New script `scripts/harness/consumes-derivation/derive.mjs` walks TS imports, resolves via tsconfig paths, reverse-indexes `file → owning feature`, emits per-feature `consumes[]`.
-- No LLM in the runtime loop — sub-agents are only used to author the scripts during build.
-- Manifest schema gains `consumes[]` but no semantics change for overlap detection.
+### Option B — Pre-push hook (`harness.pre-push-hook`, audit P-Q #4)
+Local Layer 2 enforcement: install a `pre-push` hook that runs `pnpm spec:check:strict` before any push. Trivial effort; keeps the boundary gate load-bearing.
 
-The next session starts there. This spec-remediation workstream is **done**; no further action on it.
+- Spec: needs to be written (`prd-mode` first per AGENTS.md)
+- Files to touch: `.harness/pre-push`, `.github/hooks/` or `.git/hooks/`
 
+### Status of last session
+
+| Item | State |
+|---|---|
+| `harness.capsule-format` implemented | ✅ committed |
+| `docs/harness-audit.md` P-Q #6 | ✅ closed |
+| `pnpm run build` after capsule-format | ⏳ Not yet run — run this first next session |
+
+### Next session starts at
+
+1. Run `pnpm run build` to close the last Verification Gate item for `harness.capsule-format`.
+2. Confirm with user: Option A (downstream wiring) or Option B (pre-push hook)?
+3. If Option A: read `.agents/skills/implement-from-spec/SKILL.md`, then edit to replace `lld.md` auto-load with `capsule.md` hydration.
+
+### Predecessor lineage
+
+- `harness.capsule-format` committed this session. Full record in `progress-history.md`.
+- `harness.consumes-derivation` shipped earlier; `consumes[]` data available for capsule "Consumed by" sections.
 

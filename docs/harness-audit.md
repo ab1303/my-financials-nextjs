@@ -33,7 +33,7 @@
 | Subsystem            | 2026-06-29 | 2026-06-30 | Reason                                                                                                                                                |
 | -------------------- | ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Instructions**     | ⭐⭐⭐⭐⭐  | ⭐⭐⭐⭐⭐    | Already maxed. SDD/DDD skills deepen but don't change tier.                                                                                          |
-| **State**            | ⭐⭐⭐⭐     | **⭐⭐⭐⭐½** | Manifest now connects features to code at file granularity. Stops short of 5 because capsules don't exist yet — high-traffic features still auto-load full LLDs. |
+| **State**            | ⭐⭐⭐⭐     | **⭐⭐⭐⭐½** | Manifest now connects features to code at file granularity. Capsules now exist (`harness.capsule-format` shipped 2026-07-01) — high-traffic features no longer force-load full LLDs. Stops short of 5 because Phase field is still `unknown` for all features and Layer 2 enforcement is not yet installed. |
 | **Verification**     | ⭐⭐⭐½     | **⭐⭐⭐⭐**   | `pnpm spec:check` is the third deterministic gate. Still no automated enforcement (Layer 2 pre-push hook pending) → not 5.                            |
 | **Scope**            | ⭐⭐⭐⭐½   | **⭐⭐⭐⭐⭐**  | Boundary overlaps were the dominant scope failure — now 0. `owns[]` blocks are the machine-readable definition of done the original audit asked for.   |
 | **Session Lifecycle**| ⭐⭐         | **⭐⭐⭐**    | Init hook + progress log present; session-end ritual still best-effort. Ungraceful-kill drift remains uncovered (Layer 2 missing).                     |
@@ -54,13 +54,15 @@
 2. **Bucket E-adr schema decision** (3 options). Blocks Bucket B re-baseline.
 3. **5 features with empty `owns[]`** correctly cover ADR + planned + retired-stub categories — but `'n/a-adr'` and `'n/a-planned'` are de-facto values, not yet declared in the manifest `conventions` block.
 4. **50 drift findings unaddressed.** No mechanism decides whether to re-stamp `lastVerifiedSha` or update specs. First real test of "DDD-on-drift" workflow.
-5. **No capsule format** for post-build features. LLDs span 14–724 lines; high-traffic features still auto-load full. Context-rot risk unchanged for those.
+5. ~~**No capsule format** for post-build features. LLDs span 14–724 lines; high-traffic features still auto-load full. Context-rot risk unchanged for those.~~ → **Closed 2026-07-01** by `harness.capsule-format` (see below).
 6. **Layer 2 enforcement not installed.** Local pre-push hook running `pnpm spec:check:strict` is the smallest meaningful gate.
 7. **`status` / `phase` still `unknown` for all 91 features.** Manifest tracks ownership but not lifecycle phase → phase-driven loading rules not yet possible.
 
 ### Closed Since This Audit
 
 - **Consumption signal restored (`harness.consumes-derivation`)** — the overlap remediation collapsed `owns[]` to a single canonical owner per file but silently discarded the *consumption* signal (feature B imports feature A's file). Added a third relation `consumes[]` to the manifest, deterministically derived from the TypeScript import graph by `scripts/harness/consumes-derivation/derive.mjs` (zero LLM at runtime). 93 features, 105 cross-feature edges discovered. `spec:check` overlap totals unchanged (still 0). Idempotent. Leaky-import report at `.harness/leaky-imports.md` surfaces cross-feature reaches into another feature's internals — informational signal for follow-up architectural cleanup.
+
+- **Capsule format shipped (`harness.capsule-format`) — P-Q #6 closed** — deterministic ≤800-token `capsule.md` generated for all 95 features in `spec/index.json`. Generator at `scripts/harness/capsule-format/generate.mjs`; staleness gate at `scripts/harness/capsule-format/check.mjs` wired additively into `pnpm spec:check`. Tokenizer: `@anthropic-ai/tokenizer` (native Claude BPE, zero LLM at runtime). All capsules ≤800 tokens (max 621, median 249); idempotent. Large `owns[]` buckets truncated at 5 entries + `…and N more` to stay within budget. 7 sub-features without `context.md` fall back to `lld.md` gracefully. `harness.capsule-format` moved to catalogue in `spec/harness/hld.md`. **State subsystem now earns its full ⭐⭐⭐⭐⭐** — high-traffic features no longer need to auto-load full LLDs.
 
 ### New Concerns Surfaced by the Data
 
@@ -78,7 +80,7 @@
 | 3 | **Re-baseline manifest** after #1 + #2 → 0 drift baseline, all features stamped                    | State          | Trivial | #4, #5, #6        |
 | 4 | **Local pre-push hook** running `pnpm spec:check:strict`                                           | Verification   | Trivial | —                 |
 | 5 | **Address the 50 drift findings** via a new drift triage runbook (same shape as overlap runbook)   | State + Lifecycle | Medium  | #6                |
-| 6 | **Capsule generation runbook + script** for top-10 highest-traffic features                        | State          | Medium  | meaningful Layer 2 |
+| 6 | ~~**Capsule generation runbook + script** for top-10 highest-traffic features~~ → **Closed 2026-07-01** by `harness.capsule-format` — full 95-feature coverage, not just top-10. | State | ~~Medium~~ | ~~meaningful Layer 2~~ |
 | 7 | **Scope-down `transactions.transactions`** to root concept (the deferred follow-up from triage)    | Scope          | Small   | —                 |
 | 8 | **Session-end ritual addendum**: paste `spec:check` totals into progress entry as last action      | Lifecycle      | Trivial | —                 |
 | 9 | **Encode `phase`** properly per feature (currently all `unknown`)                                  | State          | Small   | capsules earn keep |

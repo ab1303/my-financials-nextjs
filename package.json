@@ -107,6 +107,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@anthropic-ai/tokenizer": "^0.0.4",
     "@babel/preset-env": "^7.26.0",
     "@next/codemod": "^16.1.6",
     "@playwright/test": "^1.58.2",

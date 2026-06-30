@@ -33,7 +33,7 @@
     ]
   },
   "totals": {
-    "features": 92,
+    "features": 95,
     "withOwnsMatches": 86,
     "overlaps": 0
   },
@@ -2494,6 +2494,47 @@
         "Derivation is mechanical; no LLM in the runtime loop.",
         "consumes[] is a derived cache — never edit by hand without re-deriving.",
         "Idempotent: re-running derive.mjs on unchanged sources produces zero diff."
+      ],
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      }
+    },
+    {
+      "id": "harness.capsule-format",
+      "domain": "harness",
+      "path": "spec/harness/capsule-format/",
+      "status": "in-progress",
+      "phase": "build",
+      "docs": {
+        "context": "spec/harness/capsule-format/context.md",
+        "lld": "spec/harness/capsule-format/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "scripts/harness/capsule-format/generate.mjs",
+          "scripts/harness/capsule-format/check.mjs",
+          "scripts/harness/capsule-format/lib/template.mjs",
+          "scripts/harness/capsule-format/lib/tokenize.mjs",
+          "scripts/harness/capsule-format/lib/front-matter.mjs"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": [
+        "Capsule generation is mechanical; no LLM in the runtime loop.",
+        "capsule.md is a derived cache — never edit by hand; edit capsule.yml or context.md instead.",
+        "Every capsule ≤800 tokens, measured via the Claude-first tokenizer.",
+        "Re-running generate.mjs on unchanged sources produces zero diff."
       ],
       "consumes": {
         "routers": [],

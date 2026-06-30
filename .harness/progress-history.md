@@ -4,6 +4,62 @@ Entries moved here when no longer the active handoff. Newest first.
 Read only for archaeology; do not use to orient a new session.
 
 ---
+
+## 2026-07-01 — Harness capsule-format — COMPLETE ✅ (committed)
+
+**Workstream:** `harness.capsule-format` — ≤800-token `capsule.md` per feature, closes audit P-Q #6.
+
+### Final state
+
+| Metric | Result |
+|---|---|
+| Capsules generated | **95** (all features in `spec/index.json`) |
+| Over 800 tokens | **0** |
+| Max tokens | **621** (`transactions.transactions`) |
+| Median tokens | **249** |
+| `pnpm run type-check` | ✅ 0 errors |
+| `pnpm run lint` | ✅ 0 errors |
+| `pnpm spec:check` capsule section | ✅ 95/95 clean |
+| Idempotency | ✅ confirmed |
+
+### Implementation deviations from spec
+
+1. `lib/template.mjs` caps `owns[]` buckets at 5 entries + `…and N more` (budget enforcement for large features).
+2. 7 sub-features without `context.md` fall back to `lld.md` gracefully.
+3. `@anthropic-ai/tokenizer` exists on npm — installed directly; no `tiktoken` fallback or 1.1× multiplier needed.
+
+---
+
+## 2026-06-30 — Harness spec-remediation — PIPELINE COMPLETE ✅ (committed)
+
+**Workstream:** `spec/index.json` overlap remediation — all 3 pipeline steps done, committed, verified.
+
+### Final state
+
+| Metric | Before | After |
+|---|---|---|
+| `overlap-files` | 94 | **0** |
+| `overlap-parts` | 223 | **0** |
+| Total patches applied | — | **127** (steps 1-3, 5 discover rounds) |
+
+All four `verification[].passing` entries in `.harness/feature-status.json` are `true`.
+`harness.spec-remediation` status set to `"done"` in `spec/index.json`.
+`lastVerifiedSha` stamped to `cb49a9c019e5bdde82510b5fb9eb9470488ea8bc`.
+
+### What shipped
+
+- Step 1 (scope-down): 13 tasks, 9 effective patches
+- Step 2 (invariant reclassify): 3 tasks
+- Step 3 (boundary decisions): 94 original + 33 residual = 127 total patches
+- Rollback gate switched to overlap-participations (strictly monotone)
+- `scripts/harness/spec-remediation/render-prompt.mjs` registered in `spec/index.json::harness.spec-remediation.owns.services`
+
+### Known successor work (not blockers)
+
+- `harness.consumes-derivation` — restore the consumer signal lost when overlaps were collapsed to single-author. Spec'd in `spec/harness/consumes-derivation/`; not yet built. Lower priority than capsule-format per current session pivot.
+
+---
+
 # Harness Progress — Current Handoff
 
 **One entry = the active workstream.** Completed entries move to `progress-history.md`.

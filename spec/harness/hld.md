@@ -91,10 +91,10 @@ That rule applies to harness features as strictly as to product features.
 |---|---|---|---|
 | `harness.spec-remediation` | `in-progress` | `spec/harness/spec-remediation/` | Deterministic orchestrator-worker pipeline for remediating `spec:check` findings (overlaps now; drift later) using cheap LLM workers within a scripted loop. |
 | `harness.consumes-derivation` | `in-progress` | `spec/harness/consumes-derivation/` | Derives per-feature `consumes[]` from the TypeScript import graph; restores the consumption signal lost during overlap remediation. No LLM in the runtime loop. |
+| `harness.capsule-format` | `in-progress` | `spec/harness/capsule-format/` | Generates a deterministic ≤800-token `capsule.md` digest per feature for cheap-model context injection. Closes audit P-Q #6. |
 
 **Planned (not yet specced — on the audit priority queue):**
 
-- `harness.capsule-format` — ≤800-token `reference.md` per high-traffic feature (audit P-Q #6).
 - `harness.pre-push-hook` — local Layer 2 enforcement running `pnpm spec:check:strict` (audit P-Q #4).
 - `harness.weekly-corrective` — scheduled Layer 3 job opening drift triage issues (audit P-Q #10).
 - `harness.phase-encoding` — populate `phase` per feature (currently all `unknown`) (audit P-Q #9).

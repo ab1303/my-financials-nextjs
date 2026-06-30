@@ -76,6 +76,34 @@
         { "id": "pipeline-step-2-complete", "sha": "cb49a9c", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 2: 3 total · applied=3 · pending=0" },
         { "id": "pipeline-step-3-complete", "sha": "cb49a9c", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 3: all tasks applied across batches 5-16 (6 discover rounds); final overlap-files=0 overlap-parts=0" }
       ]
+    },
+    {
+      "id": "harness.capsule-format",
+      "domain": "harness",
+      "status": "done",
+      "branch": "main",
+      "spec": "spec/harness/capsule-format/",
+      "blockers": [],
+      "notes": "95 capsule.md files generated across all features. @anthropic-ai/tokenizer installed (Claude-native BPE). Owns[] buckets capped at 5 entries + '…and N more' to stay within 800-token budget. 7 sub-features without context.md fall back to lld.md.",
+      "completedAt": "2026-07-01",
+      "verification": [
+        { "id": "generate", "description": "node scripts/harness/capsule-format/generate.mjs exits 0, 95 capsules, 0 over budget", "passing": true },
+        { "id": "idempotency", "description": "Re-running generate.mjs produces zero diff (check.mjs 95/95 clean)", "passing": true },
+        { "id": "spec-check", "description": "pnpm spec:check — capsule staleness 95/95 clean, 0 overlap, 0 ghost", "passing": true },
+        { "id": "type-check", "description": "pnpm run type-check passes (zero errors)", "passing": true },
+        { "id": "lint", "description": "pnpm run lint passes (zero errors)", "passing": true },
+        { "id": "manifest-registration", "description": "spec/index.json: harness.capsule-format owns 5 script files, ownsConfidence=high, 95 total features", "passing": true },
+        { "id": "hld-catalogue", "description": "spec/harness/hld.md: capsule-format in Catalogue, removed from Planned", "passing": true },
+        { "id": "audit-closed", "description": "docs/harness-audit.md P-Q #6 marked closed", "passing": true },
+        { "id": "build", "description": "pnpm run build succeeds (user-confirmed run only)", "passing": false }
+      ],
+      "evidence": [
+        { "id": "generate", "sha": "HEAD", "command": "node scripts/harness/capsule-format/generate.mjs", "result": "Generated 95 capsules. 0 over budget. Max 621 tokens (transactions.transactions), median 249." },
+        { "id": "idempotency", "sha": "HEAD", "command": "node scripts/harness/capsule-format/check.mjs", "result": "✓ 95 capsule(s) clean, checked: 95" },
+        { "id": "spec-check", "sha": "HEAD", "command": "node scripts/harness/spec-manifest/spec-check.mjs", "result": "drift=43 overlap=0 ghost=0 sha-missing=0 review=0 | capsule staleness ✓ 95 capsule(s) clean" },
+        { "id": "type-check", "sha": "HEAD", "command": "pnpm run type-check", "result": "exit 0, no output" },
+        { "id": "lint", "sha": "HEAD", "command": "pnpm run lint", "result": "exit 0, no output" }
+      ]
     }
   ]
 }

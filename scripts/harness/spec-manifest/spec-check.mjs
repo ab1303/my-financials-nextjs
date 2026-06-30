@@ -36,7 +36,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const INDEX_PATH = path.join(REPO_ROOT, 'spec', 'index.json');
@@ -225,4 +225,28 @@ if (JSON_OUT) {
 }
 
 const blocking = totals.drift + totals.overlap + totals.ghost + totals.shaMissing + (NO_REVIEW ? 0 : totals.review);
-process.exit(STRICT && blocking > 0 ? 1 : 0);
+let exitCode = STRICT && blocking > 0 ? 1 : 0;
+
+// --- Capsule staleness check (harness.capsule-format) ---
+// Invoke check.mjs only when capsules exist (i.e., after first generate run).
+// This is additive: capsule failures are reported but do NOT alter the existing
+// blocking/exit-code logic of spec-check.mjs for backwards compatibility.
+// When --strict is passed, capsule failures also fail the gate.
+try {
+  const checkMjs = path.join(REPO_ROOT, 'scripts', 'harness', 'capsule-format', 'check.mjs');
+  if (fs.existsSync(checkMjs)) {
+    const { checkCapsules } = await import(pathToFileURL(checkMjs).href);
+    const capsuleResult = await checkCapsules({ repoRoot: REPO_ROOT, dryRun: true, strict: STRICT });
+    if (!JSON_OUT) {
+      process.stdout.write('\n--- Capsule staleness ---\n');
+      process.stdout.write(capsuleResult.summary + '\n');
+    }
+    if (STRICT && capsuleResult.exitCode !== 0 && exitCode === 0) {
+      exitCode = capsuleResult.exitCode;
+    }
+  }
+} catch (e) {
+  if (!JSON_OUT) process.stderr.write(`capsule check skipped: ${e.message}\n`);
+}
+
+process.exit(exitCode);
