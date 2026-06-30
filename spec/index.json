@@ -1,0 +1,2503 @@
+{
+  "schemaVersion": "0.1.0",
+  "generatedAt": "2026-06-30T00:35:34.244Z",
+  "generatedFromSha": "b245aad83d57e2ec1859306922a0a6b46474134f",
+  "notes": [
+    "This file is the DRAFT machine-readable spec ↔ code manifest.",
+    "Every entry has `needsReview: true` until a human or agent verifies `owns`.",
+    "Overlap warnings below indicate features that claim the same source file — these need boundary resolution before they can be trusted.",
+    "See docs/harness-audit.md and docs/context-engineering.md for the design rationale."
+  ],
+  "conventions": {
+    "id": "<domain>[.<sub>].<feature>  — derived from spec/ folder path",
+    "statusValues": [
+      "planned",
+      "in-progress",
+      "done",
+      "blocked",
+      "unknown"
+    ],
+    "phaseValues": [
+      "pre-build",
+      "build",
+      "post-build",
+      "unknown"
+    ],
+    "ownsConfidence": [
+      "none",
+      "low",
+      "medium",
+      "high"
+    ]
+  },
+  "totals": {
+    "features": 92,
+    "withOwnsMatches": 20,
+    "overlaps": 15
+  },
+  "overlaps": [
+    {
+      "file": "src/components/transactions/CategoryFilteredLedger.tsx",
+      "claimedBy": [
+        "architecture.category-filters",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/components/csv-import/TransactionReviewTable.tsx",
+      "claimedBy": [
+        "csv-import.csv-import",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/server/services/transactions/category-rule.service.ts",
+      "claimedBy": [
+        "transactions.category-rules",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/components/transactions/CategoryRuleDrawer.tsx",
+      "claimedBy": [
+        "transactions.category-rules",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/components/transactions/CategoryRulePrompt.tsx",
+      "claimedBy": [
+        "transactions.category-rules",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/components/transactions/ReimbursementSubRow.tsx",
+      "claimedBy": [
+        "transactions.reimbursements",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/server/trpc/router/transaction-ledger/mutations/restoreVoidedTransaction.ts",
+      "claimedBy": [
+        "transactions.transaction-ledger",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/server/trpc/router/transaction-ledger/queries/getUnlinkedDonationTransactions.ts",
+      "claimedBy": [
+        "transactions.transaction-ledger",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/server/trpc/router/transaction-ledger/queries/getUnlinkedZakatTransactions.ts",
+      "claimedBy": [
+        "transactions.transaction-ledger",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/server/trpc/router/transaction-ledger/queries/getVoidedTransactions.ts",
+      "claimedBy": [
+        "transactions.transaction-ledger",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/server/trpc/router/transaction-ledger/queries/searchDebitTransactions.ts",
+      "claimedBy": [
+        "transactions.transaction-ledger",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/components/transactions/TransactionLedgerTable.tsx",
+      "claimedBy": [
+        "transactions.transaction-ledger",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/__tests__/unit/TransactionLedgerTable.test.tsx",
+      "claimedBy": [
+        "transactions.transaction-ledger",
+        "transactions.transactions"
+      ]
+    },
+    {
+      "file": "src/server/trpc/router/user-profile.ts",
+      "claimedBy": [
+        "user-profile",
+        "user-profile.user-profile"
+      ]
+    },
+    {
+      "file": "src/server/services/user-profile/user-profile.service.ts",
+      "claimedBy": [
+        "user-profile",
+        "user-profile.user-profile"
+      ]
+    }
+  ],
+  "features": [
+    {
+      "id": "ai-features.ai-image-import",
+      "domain": "ai-features",
+      "path": "spec/ai-features/ai-image-import/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/ai-features/ai-image-import/context.md",
+        "lld": "spec/ai-features/ai-image-import/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "ai-features.ai-usage-logging",
+      "domain": "ai-features",
+      "path": "spec/ai-features/ai-usage-logging/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/ai-features/ai-usage-logging/context.md",
+        "lld": "spec/ai-features/ai-usage-logging/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "ai-features.finance-chat",
+      "domain": "ai-features",
+      "path": "spec/ai-features/finance-chat/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/ai-features/finance-chat/context.md",
+        "lld": "spec/ai-features/finance-chat/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.calendar-attribution",
+      "domain": "architecture",
+      "path": "spec/architecture/calendar-attribution/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/calendar-attribution/context.md",
+        "lld": "spec/architecture/calendar-attribution/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.calendar-year-picker",
+      "domain": "architecture",
+      "path": "spec/architecture/calendar-year-picker/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/calendar-year-picker/context.md",
+        "lld": "spec/architecture/calendar-year-picker/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [
+          "src/components/CalendarYearPicker/CalendarTypeSwatch.tsx",
+          "src/components/CalendarYearPicker/context.ts",
+          "src/components/CalendarYearPicker/index.tsx"
+        ],
+        "app": [],
+        "tests": [
+          "src/__tests__/unit/CalendarYearPicker.test.tsx"
+        ]
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.category-filters",
+      "domain": "architecture",
+      "path": "spec/architecture/category-filters/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/category-filters/context.md",
+        "lld": "spec/architecture/category-filters/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [
+          "src/components/transactions/CategoryFilteredLedger.tsx"
+        ],
+        "app": [],
+        "tests": [
+          "src/__tests__/unit/CategoryFilteredLedger.test.tsx",
+          "src/__tests__/unit/useCategoryFilters.test.ts"
+        ]
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.category-url-filtering",
+      "domain": "architecture",
+      "path": "spec/architecture/category-url-filtering/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/category-url-filtering/context.md",
+        "lld": "spec/architecture/category-url-filtering/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.design-modernization",
+      "domain": "architecture",
+      "path": "spec/architecture/design-modernization/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/design-modernization/context.md",
+        "lld": "spec/architecture/design-modernization/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.development-standards",
+      "domain": "architecture",
+      "path": "spec/architecture/development-standards/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/development-standards/context.md",
+        "lld": "spec/architecture/development-standards/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.e2e-testing",
+      "domain": "architecture",
+      "path": "spec/architecture/e2e-testing/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/e2e-testing/context.md",
+        "lld": "spec/architecture/e2e-testing/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.embedding-models",
+      "domain": "architecture",
+      "path": "spec/architecture/embedding-models/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/embedding-models/context.md",
+        "lld": "spec/architecture/embedding-models/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.entity-relations",
+      "domain": "architecture",
+      "path": "spec/architecture/entity-relations/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/entity-relations/context.md",
+        "lld": "spec/architecture/entity-relations/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.preferred-currency",
+      "domain": "architecture",
+      "path": "spec/architecture/preferred-currency/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/preferred-currency/context.md",
+        "lld": "spec/architecture/preferred-currency/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.schema-naming",
+      "domain": "architecture",
+      "path": "spec/architecture/schema-naming/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/schema-naming/context.md",
+        "lld": "spec/architecture/schema-naming/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "architecture.site-audit",
+      "domain": "architecture",
+      "path": "spec/architecture/site-audit/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/architecture/site-audit/context.md",
+        "lld": "spec/architecture/site-audit/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.bank-assets",
+      "domain": "assets",
+      "path": "spec/assets/bank-assets/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/bank-assets/context.md",
+        "lld": "spec/assets/bank-assets/lld.md"
+      },
+      "owns": {
+        "routers": [
+          "src/server/trpc/router/bank-asset.ts"
+        ],
+        "services": [
+          "src/server/services/bank-asset.service.ts"
+        ],
+        "components": [],
+        "app": [
+          "src/app/(authorized)/assets/bank/BankAssetsClient.tsx",
+          "src/app/(authorized)/assets/bank/_components/BankAssetAIImportWizard.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/bank-asset.service.test.ts"
+        ]
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.brokerage-cash-holdings",
+      "domain": "assets",
+      "path": "spec/assets/brokerage-cash-holdings/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/brokerage-cash-holdings/context.md",
+        "lld": "spec/assets/brokerage-cash-holdings/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.invested-amount-display",
+      "domain": "assets",
+      "path": "spec/assets/invested-amount-display/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/invested-amount-display/context.md",
+        "lld": "spec/assets/invested-amount-display/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.net-worth-dashboard",
+      "domain": "assets",
+      "path": "spec/assets/net-worth-dashboard/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/net-worth-dashboard/context.md",
+        "lld": "spec/assets/net-worth-dashboard/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [
+          "src/app/(authorized)/assets/NetWorthDashboardClient.tsx"
+        ],
+        "tests": []
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.overview-usd-conversion",
+      "domain": "assets",
+      "path": "spec/assets/overview-usd-conversion/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/overview-usd-conversion/context.md",
+        "lld": "spec/assets/overview-usd-conversion/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.snapshot-display",
+      "domain": "assets",
+      "path": "spec/assets/snapshot-display/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/snapshot-display/context.md",
+        "lld": "spec/assets/snapshot-display/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.snapshot-entry-redesign",
+      "domain": "assets",
+      "path": "spec/assets/snapshot-entry-redesign/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/snapshot-entry-redesign/context.md",
+        "hld": "spec/assets/snapshot-entry-redesign/hld.md",
+        "lld": "spec/assets/snapshot-entry-redesign/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.snapshot-fx-rate",
+      "domain": "assets",
+      "path": "spec/assets/snapshot-fx-rate/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/snapshot-fx-rate/context.md",
+        "lld": "spec/assets/snapshot-fx-rate/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.stock-market-segregation",
+      "domain": "assets",
+      "path": "spec/assets/stock-market-segregation/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/stock-market-segregation/context.md",
+        "lld": "spec/assets/stock-market-segregation/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.stocks-tracking",
+      "domain": "assets",
+      "path": "spec/assets/stocks-tracking/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/stocks-tracking/context.md",
+        "lld": "spec/assets/stocks-tracking/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "assets.zakat-stock-classification",
+      "domain": "assets",
+      "path": "spec/assets/zakat-stock-classification/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/assets/zakat-stock-classification/context.md",
+        "lld": "spec/assets/zakat-stock-classification/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "banking.bank-account-management",
+      "domain": "banking",
+      "path": "spec/banking/bank-account-management/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/banking/bank-account-management/context.md",
+        "lld": "spec/banking/bank-account-management/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "banking.bank-institution-ui",
+      "domain": "banking",
+      "path": "spec/banking/bank-institution-ui/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/banking/bank-institution-ui/context.md",
+        "lld": "spec/banking/bank-institution-ui/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "banking.brokerage-hybrid",
+      "domain": "banking",
+      "path": "spec/banking/brokerage-hybrid/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/banking/brokerage-hybrid/context.md",
+        "lld": "spec/banking/brokerage-hybrid/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "banking.business-institutions",
+      "domain": "banking",
+      "path": "spec/banking/business-institutions/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/banking/business-institutions/context.md",
+        "lld": "spec/banking/business-institutions/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.analytics-dashboard",
+      "domain": "cashflow",
+      "path": "spec/cashflow/analytics-dashboard/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/analytics-dashboard/context.md",
+        "lld": "spec/cashflow/analytics-dashboard/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.analytics-drill-down",
+      "domain": "cashflow",
+      "path": "spec/cashflow/analytics-drill-down/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/analytics-drill-down/context.md",
+        "hld": "spec/cashflow/analytics-drill-down/hld.md",
+        "lld": "spec/cashflow/analytics-drill-down/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [
+          "src/app/(authorized)/cashflow/analytics/_components/AnalyticsDrillDownDrawer.tsx"
+        ],
+        "tests": []
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.audit.cashflow-audit",
+      "domain": "cashflow",
+      "path": "spec/cashflow/audit/cashflow-audit/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/audit/cashflow-audit/context.md",
+        "lld": "spec/cashflow/audit/cashflow-audit/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.bank-account-filter-parity",
+      "domain": "cashflow",
+      "path": "spec/cashflow/bank-account-filter-parity/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/bank-account-filter-parity/context.md",
+        "lld": "spec/cashflow/bank-account-filter-parity/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.categories.category-management",
+      "domain": "cashflow",
+      "path": "spec/cashflow/categories/category-management/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/categories/category-management/context.md",
+        "lld": "spec/cashflow/categories/category-management/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.categories.drill-down",
+      "domain": "cashflow",
+      "path": "spec/cashflow/categories/drill-down/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/categories/drill-down/context.md",
+        "lld": "spec/cashflow/categories/drill-down/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.categories.group-rollup",
+      "domain": "cashflow",
+      "path": "spec/cashflow/categories/group-rollup/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/categories/group-rollup/context.md",
+        "lld": "spec/cashflow/categories/group-rollup/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.contextual-account-tracking",
+      "domain": "cashflow",
+      "path": "spec/cashflow/contextual-account-tracking/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/contextual-account-tracking/context.md",
+        "hld": "spec/cashflow/contextual-account-tracking/hld.md",
+        "lld": "spec/cashflow/contextual-account-tracking/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.donations.donations",
+      "domain": "cashflow",
+      "path": "spec/cashflow/donations/donations/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/donations/donations/context.md",
+        "lld": "spec/cashflow/donations/donations/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [
+          "src/app/(authorized)/cashflow/donations/actions.ts",
+          "src/app/(authorized)/cashflow/donations/DonationFilters.tsx",
+          "src/app/(authorized)/cashflow/donations/DonationTableClient.tsx",
+          "src/app/(authorized)/cashflow/donations/DonationTableServer.tsx",
+          "src/app/(authorized)/cashflow/donations/page.tsx",
+          "src/app/(authorized)/cashflow/donations/reducer.ts",
+          "src/app/(authorized)/cashflow/donations/StateProvider.tsx",
+          "src/app/(authorized)/cashflow/donations/_components/CreateBeneficiaryModal.tsx",
+          "src/app/(authorized)/cashflow/donations/_components/DonationBeneficiaryBreakdownWidget.tsx",
+          "src/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer.tsx",
+          "src/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawerTrigger.tsx",
+          "src/app/(authorized)/cashflow/donations/_components/UnlinkedTransactionsBanner.tsx",
+          "src/app/(authorized)/cashflow/donations/_schema.ts",
+          "src/app/(authorized)/cashflow/donations/_table/BeneficiarySelectionCell.tsx",
+          "src/app/(authorized)/cashflow/donations/_table/columns.tsx",
+          "src/app/(authorized)/cashflow/donations/_table/DonationTypeSelectionCell.tsx",
+          "src/app/(authorized)/cashflow/donations/_types.ts"
+        ],
+        "tests": []
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.donations.transaction-linking",
+      "domain": "cashflow",
+      "path": "spec/cashflow/donations/transaction-linking/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/donations/transaction-linking/context.md",
+        "lld": "spec/cashflow/donations/transaction-linking/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.expense.expense-tracking",
+      "domain": "cashflow",
+      "path": "spec/cashflow/expense/expense-tracking/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/expense/expense-tracking/context.md",
+        "lld": "spec/cashflow/expense/expense-tracking/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.expense.manual-expense-transaction",
+      "domain": "cashflow",
+      "path": "spec/cashflow/expense/manual-expense-transaction/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/expense/manual-expense-transaction/context.md",
+        "lld": "spec/cashflow/expense/manual-expense-transaction/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.income.income-management",
+      "domain": "cashflow",
+      "path": "spec/cashflow/income/income-management/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/income/income-management/context.md",
+        "lld": "spec/cashflow/income/income-management/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.income.income-source-of-truth",
+      "domain": "cashflow",
+      "path": "spec/cashflow/income/income-source-of-truth/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/income/income-source-of-truth/context.md",
+        "lld": "spec/cashflow/income/income-source-of-truth/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.income.income-ux-improvements",
+      "domain": "cashflow",
+      "path": "spec/cashflow/income/income-ux-improvements/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/income/income-ux-improvements/context.md",
+        "lld": "spec/cashflow/income/income-ux-improvements/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.interest",
+      "domain": "cashflow",
+      "path": "spec/cashflow/interest/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/interest/context.md",
+        "hld": "spec/cashflow/interest/hld.md",
+        "lld": "spec/cashflow/interest/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [
+          "src/app/(authorized)/cashflow/bank-interest/InterestCreditsTable.tsx"
+        ],
+        "tests": []
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.interest.cleansing-debit-candidates",
+      "domain": "cashflow",
+      "path": "spec/cashflow/interest/cleansing-debit-candidates/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/interest/cleansing-debit-candidates/context.md",
+        "lld": "spec/cashflow/interest/cleansing-debit-candidates/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": [
+          "src/__tests__/integration/bank-interest.getCleansingDebitCandidates.integration.test.ts",
+          "src/__tests__/unit/server/trpc/bank-interest.getCleansingDebitCandidates.test.ts",
+          "src/__tests__/unit/services/bank-interest/getCleansingDebitCandidates.test.ts"
+        ]
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.interest.cleansing-debit-linking",
+      "domain": "cashflow",
+      "path": "spec/cashflow/interest/cleansing-debit-linking/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/interest/cleansing-debit-linking/context.md",
+        "hld": "spec/cashflow/interest/cleansing-debit-linking/hld.md",
+        "lld": "spec/cashflow/interest/cleansing-debit-linking/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.interest.interest-cleansing",
+      "domain": "cashflow",
+      "path": "spec/cashflow/interest/interest-cleansing/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/interest/interest-cleansing/context.md",
+        "hld": "spec/cashflow/interest/interest-cleansing/hld.md",
+        "lld": "spec/cashflow/interest/interest-cleansing/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "src/server/services/interest-cleansing/interest-cleansing.service.ts",
+          "src/server/services/interest-cleansing/types.ts"
+        ],
+        "components": [],
+        "app": [],
+        "tests": [
+          "src/__tests__/unit/interest-cleansing.scoring.test.ts",
+          "src/__tests__/unit/interest-cleansing.service.test.ts",
+          "src/__tests__/unit/server/services/bank-interest/interest-cleansing.scoring.test.ts"
+        ]
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.multi-account-transfer-integrity",
+      "domain": "cashflow",
+      "path": "spec/cashflow/multi-account-transfer-integrity/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/multi-account-transfer-integrity/context.md",
+        "lld": "spec/cashflow/multi-account-transfer-integrity/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.multi-account-transfer-integrity.add-filtration-parity",
+      "domain": "cashflow",
+      "path": "spec/cashflow/multi-account-transfer-integrity/add-filtration-parity/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "lld": "spec/cashflow/multi-account-transfer-integrity/add-filtration-parity/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.multi-account-transfer-integrity.fix-transfer-exclusion",
+      "domain": "cashflow",
+      "path": "spec/cashflow/multi-account-transfer-integrity/fix-transfer-exclusion/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "lld": "spec/cashflow/multi-account-transfer-integrity/fix-transfer-exclusion/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.multi-account-transfer-integrity.handle-orphans",
+      "domain": "cashflow",
+      "path": "spec/cashflow/multi-account-transfer-integrity/handle-orphans/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "lld": "spec/cashflow/multi-account-transfer-integrity/handle-orphans/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.multi-account-transfer-integrity.harden-import-wizard",
+      "domain": "cashflow",
+      "path": "spec/cashflow/multi-account-transfer-integrity/harden-import-wizard/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "lld": "spec/cashflow/multi-account-transfer-integrity/harden-import-wizard/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.multi-account-transfer-integrity.improve-detection",
+      "domain": "cashflow",
+      "path": "spec/cashflow/multi-account-transfer-integrity/improve-detection/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "lld": "spec/cashflow/multi-account-transfer-integrity/improve-detection/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.transfer-resolution-improvements",
+      "domain": "cashflow",
+      "path": "spec/cashflow/transfer-resolution-improvements/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/transfer-resolution-improvements/context.md",
+        "hld": "spec/cashflow/transfer-resolution-improvements/hld.md",
+        "lld": "spec/cashflow/transfer-resolution-improvements/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "cashflow.zakat",
+      "domain": "cashflow",
+      "path": "spec/cashflow/zakat/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/cashflow/zakat/context.md",
+        "lld": "spec/cashflow/zakat/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "src/server/services/zakat/types.ts",
+          "src/server/services/zakat/zakat.service.ts"
+        ],
+        "components": [],
+        "app": [
+          "src/app/(authorized)/zakat/actions.ts",
+          "src/app/(authorized)/zakat/form.tsx",
+          "src/app/(authorized)/zakat/layout.tsx",
+          "src/app/(authorized)/zakat/page.tsx",
+          "src/app/(authorized)/zakat/reducer.ts",
+          "src/app/(authorized)/zakat/StateProvider.tsx",
+          "src/app/(authorized)/zakat/ZakatTableClient.tsx",
+          "src/app/(authorized)/zakat/ZakatTableServer.tsx",
+          "src/app/(authorized)/zakat/_components/LinkZakatTransactionsDrawer.tsx",
+          "src/app/(authorized)/zakat/_components/LinkZakatTransactionsDrawerTrigger.tsx",
+          "src/app/(authorized)/zakat/_components/UnlinkedZakatTransactionsBanner.tsx",
+          "src/app/(authorized)/zakat/_components/ZakatBeneficiaryBreakdownWidget.tsx",
+          "src/app/(authorized)/zakat/_schema.ts",
+          "src/app/(authorized)/zakat/_table/BeneficiarySelectionCell.tsx",
+          "src/app/(authorized)/zakat/_table/cells/ZakatAmountCell.tsx",
+          "src/app/(authorized)/zakat/_table/cells/ZakatBeneficiaryCell.tsx",
+          "src/app/(authorized)/zakat/_table/cells/ZakatTypeCell.tsx",
+          "src/app/(authorized)/zakat/_table/columns.tsx",
+          "src/app/(authorized)/zakat/_types.ts"
+        ],
+        "tests": []
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "csv-import.batch-re-matching",
+      "domain": "csv-import",
+      "path": "spec/csv-import/batch-re-matching/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/csv-import/batch-re-matching/context.md",
+        "lld": "spec/csv-import/batch-re-matching/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "csv-import.csv-import",
+      "domain": "csv-import",
+      "path": "spec/csv-import/csv-import/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/csv-import/csv-import/context.md",
+        "lld": "spec/csv-import/csv-import/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [
+          "src/components/csv-import/TransactionReviewTable.tsx"
+        ],
+        "app": [
+          "src/app/api/csv-import/classify/route.ts",
+          "src/app/api/csv-import/confirm/route.ts",
+          "src/app/api/csv-import/parse/route.ts",
+          "src/app/api/csv-import/upload/route.ts"
+        ],
+        "tests": []
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "csv-import.generic-csv-import",
+      "domain": "csv-import",
+      "path": "spec/csv-import/generic-csv-import/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/csv-import/generic-csv-import/context.md",
+        "lld": "spec/csv-import/generic-csv-import/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "csv-import.llm-classification",
+      "domain": "csv-import",
+      "path": "spec/csv-import/llm-classification/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/csv-import/llm-classification/context.md",
+        "lld": "spec/csv-import/llm-classification/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "csv-import.rag-examples",
+      "domain": "csv-import",
+      "path": "spec/csv-import/rag-examples/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/csv-import/rag-examples/context.md",
+        "lld": "spec/csv-import/rag-examples/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "csv-import.semantic-matching",
+      "domain": "csv-import",
+      "path": "spec/csv-import/semantic-matching/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/csv-import/semantic-matching/context.md",
+        "lld": "spec/csv-import/semantic-matching/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "csv-import.session-date-range",
+      "domain": "csv-import",
+      "path": "spec/csv-import/session-date-range/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/csv-import/session-date-range/context.md",
+        "lld": "spec/csv-import/session-date-range/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "donations.donation-domain-boundary-refactor",
+      "domain": "donations",
+      "path": "spec/donations/donation-domain-boundary-refactor/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "hld": "spec/donations/donation-domain-boundary-refactor/hld.md",
+        "lld": "spec/donations/donation-domain-boundary-refactor/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "home.dashboard",
+      "domain": "home",
+      "path": "spec/home/dashboard/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/home/dashboard/context.md",
+        "lld": "spec/home/dashboard/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "src/server/services/dashboard.service.ts"
+        ],
+        "components": [],
+        "app": [
+          "src/app/(authorized)/cashflow/category-groups/_components/CategoryGroupsDashboard.tsx",
+          "src/app/(authorized)/home/_components/DashboardWidgetSkeleton.tsx",
+          "src/app/api/dashboard/summary/route.ts"
+        ],
+        "tests": [
+          "src/__tests__/unit/CategoryGroupsDashboard.test.tsx"
+        ]
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "phase2-scope.home-dashboard-widgets",
+      "domain": "phase2-scope",
+      "path": "spec/phase2-scope/home-dashboard-widgets/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/phase2-scope/home-dashboard-widgets/context.md",
+        "hld": "spec/phase2-scope/home-dashboard-widgets/hld.md",
+        "lld": "spec/phase2-scope/home-dashboard-widgets/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "relation.business-contacts",
+      "domain": "relation",
+      "path": "spec/relation/business-contacts/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/relation/business-contacts/context.md",
+        "lld": "spec/relation/business-contacts/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "relation.individual-contacts",
+      "domain": "relation",
+      "path": "spec/relation/individual-contacts/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/relation/individual-contacts/context.md",
+        "lld": "spec/relation/individual-contacts/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "reports.income-summary",
+      "domain": "reports",
+      "path": "spec/reports/income-summary/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/reports/income-summary/context.md",
+        "lld": "spec/reports/income-summary/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [
+          "src/app/(authorized)/reports/income-summary/IncomeSummaryClient.tsx",
+          "src/app/(authorized)/reports/income-summary/MonthlySummaryTable.tsx",
+          "src/app/(authorized)/reports/income-summary/page.tsx",
+          "src/app/(authorized)/reports/income-summary/SourceBreakdownRow.tsx"
+        ],
+        "tests": []
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "settings.calendar-management",
+      "domain": "settings",
+      "path": "spec/settings/calendar-management/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/settings/calendar-management/context.md",
+        "lld": "spec/settings/calendar-management/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "settings.category-management",
+      "domain": "settings",
+      "path": "spec/settings/category-management/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/settings/category-management/context.md",
+        "lld": "spec/settings/category-management/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "settings.profile-settings",
+      "domain": "settings",
+      "path": "spec/settings/profile-settings/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/settings/profile-settings/context.md",
+        "lld": "spec/settings/profile-settings/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "technical_debt.duplicate-review-tab",
+      "domain": "technical_debt",
+      "path": "spec/technical_debt/duplicate-review-tab/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/technical_debt/duplicate-review-tab/context.md",
+        "hld": "spec/technical_debt/duplicate-review-tab/hld.md",
+        "lld": "spec/technical_debt/duplicate-review-tab/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "technical_debt.preapply-category-rules",
+      "domain": "technical_debt",
+      "path": "spec/technical_debt/preapply-category-rules/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/technical_debt/preapply-category-rules/context.md",
+        "hld": "spec/technical_debt/preapply-category-rules/hld.md",
+        "lld": "spec/technical_debt/preapply-category-rules/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "technical_debt.remove-denormalized-monthly-expense-summary",
+      "domain": "technical_debt",
+      "path": "spec/technical_debt/remove-denormalized-monthly-expense-summary/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/technical_debt/remove-denormalized-monthly-expense-summary/context.md",
+        "hld": "spec/technical_debt/remove-denormalized-monthly-expense-summary/hld.md",
+        "lld": "spec/technical_debt/remove-denormalized-monthly-expense-summary/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.category-rules",
+      "domain": "transactions",
+      "path": "spec/transactions/category-rules/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/category-rules/context.md",
+        "lld": "spec/transactions/category-rules/lld.md"
+      },
+      "owns": {
+        "routers": [
+          "src/server/trpc/router/category-rule.ts"
+        ],
+        "services": [
+          "src/server/services/transactions/category-rule.service.ts"
+        ],
+        "components": [
+          "src/components/transactions/CategoryRuleDrawer.tsx",
+          "src/components/transactions/CategoryRulePrompt.tsx"
+        ],
+        "app": [
+          "src/app/(authorized)/cashflow/category-rules/page.tsx",
+          "src/app/(authorized)/cashflow/category-rules/_components/CategoryRulesTable.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/category-rule.service.test.ts"
+        ]
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.import-audit-trail",
+      "domain": "transactions",
+      "path": "spec/transactions/import-audit-trail/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/import-audit-trail/context.md",
+        "hld": "spec/transactions/import-audit-trail/hld.md",
+        "lld": "spec/transactions/import-audit-trail/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.paginated-search",
+      "domain": "transactions",
+      "path": "spec/transactions/paginated-search/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/paginated-search/context.md",
+        "lld": "spec/transactions/paginated-search/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.reimbursements",
+      "domain": "transactions",
+      "path": "spec/transactions/reimbursements/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/reimbursements/context.md",
+        "lld": "spec/transactions/reimbursements/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [
+          "src/components/transactions/ReimbursementSubRow.tsx"
+        ],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transaction-bulk-apply",
+      "domain": "transactions",
+      "path": "spec/transactions/transaction-bulk-apply/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "lld": "spec/transactions/transaction-bulk-apply/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transaction-clearing",
+      "domain": "transactions",
+      "path": "spec/transactions/transaction-clearing/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/transaction-clearing/context.md",
+        "lld": "spec/transactions/transaction-clearing/lld.md"
+      },
+      "owns": {
+        "routers": [
+          "src/server/trpc/router/transaction-clearing.ts"
+        ],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transaction-dedup",
+      "domain": "transactions",
+      "path": "spec/transactions/transaction-dedup/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/transaction-dedup/context.md",
+        "lld": "spec/transactions/transaction-dedup/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transaction-enrichment",
+      "domain": "transactions",
+      "path": "spec/transactions/transaction-enrichment/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/transaction-enrichment/context.md",
+        "lld": "spec/transactions/transaction-enrichment/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transaction-ledger",
+      "domain": "transactions",
+      "path": "spec/transactions/transaction-ledger/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/transaction-ledger/context.md",
+        "lld": "spec/transactions/transaction-ledger/lld.md"
+      },
+      "owns": {
+        "routers": [
+          "src/server/trpc/router/transaction-ledger/index.ts",
+          "src/server/trpc/router/transaction-ledger/mutations/restoreVoidedTransaction.ts",
+          "src/server/trpc/router/transaction-ledger/mutations/updateCategory.ts",
+          "src/server/trpc/router/transaction-ledger/queries/getAll.ts",
+          "src/server/trpc/router/transaction-ledger/queries/getFilterOptions.ts",
+          "src/server/trpc/router/transaction-ledger/queries/getUnlinkedDonationTransactions.ts",
+          "src/server/trpc/router/transaction-ledger/queries/getUnlinkedZakatTransactions.ts",
+          "src/server/trpc/router/transaction-ledger/queries/getVoidedTransactions.ts",
+          "src/server/trpc/router/transaction-ledger/queries/previewMatchingCategoryChanges.ts",
+          "src/server/trpc/router/transaction-ledger/queries/searchDebitTransactions.ts",
+          "src/server/trpc/router/transaction-ledger/shared.ts"
+        ],
+        "services": [],
+        "components": [
+          "src/components/transactions/TransactionLedgerTable.tsx"
+        ],
+        "app": [],
+        "tests": [
+          "src/__tests__/unit/transaction-ledger.router.test.ts",
+          "src/__tests__/unit/TransactionLedgerTable.test.tsx"
+        ]
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transactions",
+      "domain": "transactions",
+      "path": "spec/transactions/transactions/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/transactions/context.md",
+        "lld": "spec/transactions/transactions/lld.md"
+      },
+      "owns": {
+        "routers": [
+          "src/server/trpc/router/transaction-ledger/mutations/restoreVoidedTransaction.ts",
+          "src/server/trpc/router/transaction-ledger/queries/getUnlinkedDonationTransactions.ts",
+          "src/server/trpc/router/transaction-ledger/queries/getUnlinkedZakatTransactions.ts",
+          "src/server/trpc/router/transaction-ledger/queries/getVoidedTransactions.ts",
+          "src/server/trpc/router/transaction-ledger/queries/searchDebitTransactions.ts"
+        ],
+        "services": [
+          "src/server/services/transaction.service.ts",
+          "src/server/services/transactions/bank-format-registry.ts",
+          "src/server/services/transactions/category-change.service.ts",
+          "src/server/services/transactions/category-rule-applier.ts",
+          "src/server/services/transactions/category-rule.service.ts",
+          "src/server/services/transactions/constants.ts",
+          "src/server/services/transactions/csv-confirm.service.ts",
+          "src/server/services/transactions/csv-format-detector.service.ts",
+          "src/server/services/transactions/csv-format.types.ts",
+          "src/server/services/transactions/csv-parser-generic.service.ts",
+          "src/server/services/transactions/dedup.service.ts",
+          "src/server/services/transactions/donation-link.service.ts",
+          "src/server/services/transactions/donation-utils.service.ts",
+          "src/server/services/transactions/import-audit.service.ts",
+          "src/server/services/transactions/ledger.service.ts",
+          "src/server/services/transactions/transaction-status.service.ts",
+          "src/server/services/transactions/transfer-rule-job.service.ts",
+          "src/server/services/transactions/transfer-rule.service.ts",
+          "src/server/services/transactions/transfer.service.ts",
+          "src/server/services/transactions/void-transfer.service.ts",
+          "src/server/services/transactions/void.service.ts",
+          "src/server/services/transactions/_types.ts"
+        ],
+        "components": [
+          "src/components/csv-import/TransactionReviewTable.tsx",
+          "src/components/transactions/CategoryFilteredLedger.tsx",
+          "src/components/transactions/CategoryRuleDrawer.tsx",
+          "src/components/transactions/CategoryRulePrompt.tsx",
+          "src/components/transactions/hooks/useCategoryEdit.ts",
+          "src/components/transactions/ImportSessionHistory.tsx",
+          "src/components/transactions/ImportValidationReview.tsx",
+          "src/components/transactions/PreviewMatchesModal.tsx",
+          "src/components/transactions/ReimbursementSubRow.tsx",
+          "src/components/transactions/RestoreTransactionButton.tsx",
+          "src/components/transactions/TransactionFilters.tsx",
+          "src/components/transactions/TransactionLedgerTable.tsx",
+          "src/components/transactions/TransactionRow.tsx",
+          "src/components/transactions/TransactionSourceIndicator.tsx",
+          "src/components/transactions/TransactionSummary.tsx",
+          "src/components/transactions/UnlinkTransferButton.tsx",
+          "src/components/transactions/VoidedTransactionsModal.tsx",
+          "src/components/transactions/VoidTransactionButton.tsx"
+        ],
+        "app": [
+          "src/app/(authorized)/cashflow/transactions/error.tsx",
+          "src/app/(authorized)/cashflow/transactions/layout.tsx",
+          "src/app/(authorized)/cashflow/transactions/page.tsx",
+          "src/app/(authorized)/cashflow/transactions/TransactionsUnavailable.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/AIImportWizard.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/ConfidenceBadge.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/ImageRedactor.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/ProcessingStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/ResultsStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/ReviewStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/UploadStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/_schema.ts",
+          "src/app/(authorized)/cashflow/transactions/_components/ai/_types.ts",
+          "src/app/(authorized)/cashflow/transactions/_components/CategoryTransactionFilters.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/CharityClassificationMenu.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVClassifyingStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVImportWizard.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVResultsStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVTransactionReviewTable.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVUploadStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/DuplicatesReviewTable.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/DuplicatesTab.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/_types.ts",
+          "src/app/(authorized)/cashflow/transactions/_components/TransactionsClient.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/PostImportMatchBanner.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/SmartMatchDialog.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/TransferLinkDrawer.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/UnmatchedTransfersBadge.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/_types.ts",
+          "src/app/api/transactions/ai/confirm/route.ts",
+          "src/app/api/transactions/ai/parse/route.ts",
+          "src/app/api/transactions/ai/upload/route.ts",
+          "src/app/api/transactions/csv/classify/route.ts",
+          "src/app/api/transactions/csv/confirm/route.ts",
+          "src/app/api/transactions/csv/upload/route.ts"
+        ],
+        "tests": [
+          "src/__tests__/unit/services/transactions/test-status.test.ts",
+          "src/__tests__/unit/TransactionFilters.test.tsx",
+          "src/__tests__/unit/TransactionLedgerTable.test.tsx",
+          "src/__tests__/unit/TransactionReviewTable.test.tsx",
+          "src/__tests__/unit/TransactionRow.donation-badge.test.tsx",
+          "src/__tests__/unit/TransactionRow.test.tsx",
+          "src/__tests__/unit/TransactionsClient.test.tsx",
+          "src/__tests__/unit/TransactionsPage.test.tsx"
+        ]
+      },
+      "ownsConfidence": "medium",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transfer-counterpart",
+      "domain": "transactions",
+      "path": "spec/transactions/transfer-counterpart/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/transfer-counterpart/context.md",
+        "lld": "spec/transactions/transfer-counterpart/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transfer-match-rules",
+      "domain": "transactions",
+      "path": "spec/transactions/transfer-match-rules/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/transfer-match-rules/context.md",
+        "lld": "spec/transactions/transfer-match-rules/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.transfer-reconciliation",
+      "domain": "transactions",
+      "path": "spec/transactions/transfer-reconciliation/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/transfer-reconciliation/context.md",
+        "lld": "spec/transactions/transfer-reconciliation/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "transactions.undo-safeguards",
+      "domain": "transactions",
+      "path": "spec/transactions/undo-safeguards/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/transactions/undo-safeguards/context.md",
+        "lld": "spec/transactions/undo-safeguards/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "none",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "user-profile",
+      "domain": "user-profile",
+      "path": "spec/user-profile/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/user-profile/context.md",
+        "hld": "spec/user-profile/hld.md",
+        "lld": "spec/user-profile/lld.md"
+      },
+      "owns": {
+        "routers": [
+          "src/server/trpc/router/user-profile.ts"
+        ],
+        "services": [
+          "src/server/services/user-profile/user-profile.service.ts"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    },
+    {
+      "id": "user-profile.user-profile",
+      "domain": "user-profile",
+      "path": "spec/user-profile/user-profile/",
+      "status": "unknown",
+      "phase": "unknown",
+      "docs": {
+        "context": "spec/user-profile/user-profile/context.md",
+        "lld": "spec/user-profile/user-profile/lld.md"
+      },
+      "owns": {
+        "routers": [
+          "src/server/trpc/router/user-profile.ts"
+        ],
+        "services": [
+          "src/server/services/user-profile/user-profile.service.ts"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "low",
+      "needsReview": true,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": []
+    }
+  ]
+}

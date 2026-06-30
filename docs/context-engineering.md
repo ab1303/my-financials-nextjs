@@ -20,6 +20,7 @@ Maps every folder and file that shapes how AI agents behave in this repository.
 | `.harness/progress.md`                   | Any agent                      | Session start — required        | Human-readable session handoff log (newest entry first)                                                                 |
 | `.harness/feature-status.json`           | Any agent                      | Session start — required        | Machine-readable feature registry                                                                                       |
 | `.harness/README.md`                     | Any agent                      | On demand                       | Schema and workflow rules for the `.harness/` directory                                                                 |
+| `spec/index.json`                        | Any agent + `pnpm spec:check`  | On demand / pre-edit            | Machine-readable spec↔code ownership manifest. Lists which feature owns which source file, drift sha, overlaps          |
 
 ---
 
@@ -70,6 +71,8 @@ Copilot-specific files. Nothing here should duplicate `AGENTS.md`.
 | `vercel-react-best-practices` | React/Next.js performance and patterns                    |
 | `vercel-composition-patterns` | Component composition and compound patterns               |
 | `web-design-guidelines`       | UI accessibility and design audit                         |
+| `source-driven-development`   | Cite-or-flag gate for framework APIs (build-phase)        |
+| `doubt-driven-development`    | CLAIM→EXTRACT→DOUBT→RECONCILE loop for Tier 3 / drift     |
 
 **Add here when:** You have a repeatable multi-step workflow with clear entry/exit criteria that agents invoke by name. Follow the SKILL.md anatomy: Overview → When to Use → Process → Anti-Rationalization → Verification.
 

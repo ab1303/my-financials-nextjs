@@ -5,6 +5,80 @@ Agents: read the most recent entry at session start before doing anything else.
 
 ---
 
+## 2026-06-30 — Spec harness ↔ code manifest + cite/doubt skills (fix-linting branch)
+
+**Done this session:**
+
+- Authored audit findings on `spec/` drift, boundary overlap, indexing, and pre-vs-post-build granularity. Reference: `docs/harness-audit.md` (existing) + this session's analysis.
+- `spec/index.json` (DRAFT, schema 0.1.0, 92 features) — machine-readable ownership manifest with `owns`, `ownsConfidence`, `needsReview`, `lastVerifiedSha`, `invariants`, and precomputed `overlaps`. Generator: `scripts/generate-spec-index.mjs` (idempotent, requires `--force` to overwrite).
+- `scripts/spec-check.mjs` — deterministic Tier 1 drift + overlap + ghost + sha-missing detector. Wired into `package.json` as `pnpm spec:index`, `pnpm spec:check`, `pnpm spec:check:strict`.
+- `.agents/skills/source-driven-development/SKILL.md` v1.0 — cite-or-flag gate for framework APIs. Pinned to `upstreamSha: aba7c4e9695c363e65cb59effe926c7f1d1abe3d` (addyosmani/agent-skills). Quarterly review cadence.
+- `.agents/skills/doubt-driven-development/SKILL.md` v1.0 — CLAIM→EXTRACT→DOUBT→RECONCILE→STOP loop. Same upstream pin.
+- `AGENTS.md` — added one-liner on `spec/index.json` + 2-skill callout under Subagents.
+- `docs/context-engineering.md` — added `spec/index.json` row in Loading Mechanism Map and 2 new skills in Skill table.
+- `docs/spec-triage-runbook.md` — operator runbook for delegating the overlap triage to a cheap model (this work's natural next step).
+- First real `pnpm spec:check --no-review` run: **15 overlap findings, 0 drift, 0 ghost** (drift will surface as features get stamped with `lastVerifiedSha`).
+
+**Not yet done:**
+
+- Triage the 15 overlaps. `transactions.transactions` is the chief offender (claims 89 files, conflicts with 6 other specs). Procedure: `docs/spec-triage-runbook.md`.
+- Per-feature ownership backfill — stamp `lastVerifiedSha` + `lastVerifiedDate` on each `needsReview: true` feature so drift detection becomes meaningful.
+- Capsule generation — for `phase: "post-build"` features, distil `lld.md` → `reference.md` (≤800 tokens). Switch auto-loading from `lld.md` to `reference.md`.
+- CI wire-up — add `pnpm spec:check:strict` to the GitHub Actions workflow alongside lint/type-check.
+
+**Current blockers:**
+
+- None.
+
+**⚠️ Two parallel workstreams — pick ONE per session (Single Active Feature rule):**
+
+1. **Spec triage / harness completion** (this entry) — branch-agnostic, low code risk, high harness value.
+2. **Lint reduction** (next entry below, still ~336 warnings) — must finish before merging `fix-linting`.
+
+Do NOT interleave. The active feature in `.harness/feature-status.json` (`category-groups`) is independent of both and should not be touched in either of these sessions.
+
+**Next session starts at:**
+
+- Read this entry to orient.
+- If continuing **triage**: open `docs/spec-triage-runbook.md` and follow Step 1 onward. Switch model picker to Sonnet 4.6 effort=medium for the orchestrator; Haiku 4.5 for subagents.
+- If resuming **lint**: open `docs/lint-loop-runbook.md` § Step 2. Switch to GPT-5.4-mini / Haiku 4.5.
+- If something else entirely: respect Single Active Feature — finish the in-progress feature first or explicitly park it in `feature-status.json`.
+
+---
+
+## 2026-06-30 — Lint-reduction harness codified (fix-linting branch)
+
+**Done this session:**
+
+- Reduced lint count: 1 error + 496 warnings → 0 errors + ~336 warnings across 14 test files. Each file validated with per-file `eslint` + global `type-check`. No rule disabling, no `as any`, no config relaxing.
+- Files cleaned (all under `src/__tests__/` and `e2e/fixtures/`): `auth.fixture.ts`, `income.service.test.ts`, `income.actions.integration.test.ts`, `income.service.integration.test.ts`, `brokerage.controller.test.ts`, `interest-cleansing.service.test.ts`, `AnalyticsFilters.test.tsx`, `dashboard-summary.test.ts`, `donation-link.service.test.ts`, `income-source.router.test.ts`, `useCleanseDonationState.repro.test.ts`, `brokerage.service.test.ts`, `business.service.test.ts`, `transaction-ledger.router.test.ts`.
+- Codified the lint workflow as a reusable harness:
+  - `.agents/skills/lint-reduction-loop/SKILL.md` — deterministic 6-step loop with hard-constraints table, anti-rationalization patterns, mermaid flow diagram.
+  - `.ai/instructions/lint-strong-typing-recipes.md` — recipe library with before/after for 12 named recipes (`R-VI-MOCKED`, `R-PRISMA-MOCK`, `R-PRISMA-PAYLOAD`, `R-AUTH-MOCK-HELPER`, `R-TRPC-CALLER-CONTEXT`, `R-DECIMAL-LITERAL`, `R-MOCK-CALL-ARGS`, `R-COMPONENT-PROPS`, `R-UNKNOWN-ERROR`, `R-UNUSED-VAR`, `R-HOOK-DEPS`, `R-HOOK-RULES`).
+  - `scripts/lint-evaluate.mjs` — new `--next` mode classifies each warning by recipe ID using source-line heuristics; emits gate commands. `R-UNKNOWN` forces STOP.
+  - `package.json` — added `pnpm lint:next` alias.
+  - `AGENTS.md` — added "Lint reduction" row in Canonical Instructions table.
+  - `docs/lint-loop-runbook.md` — operator runbook for delegating the loop to a cheap model.
+- Lint artifact placement codified in `AGENTS.md`: ad-hoc `eslint-*.json` artifacts banned at repo root; reports go under `reports/lint/`. `.gitignore` updated.
+
+**Not yet done:**
+
+- Drive remaining ~336 warnings to zero via the new loop (next session, cheap model — see `docs/lint-loop-runbook.md`).
+- Optional: extend the classifier in `scripts/lint-evaluate.mjs` if the loop surfaces new `R-UNKNOWN` patterns.
+
+**Current blockers:**
+
+- None.
+
+**Next session starts at:**
+
+- Read this entry to orient.
+- Switch model picker to a cheap tier (GPT-5.4-mini / Claude Haiku 4.5 / GPT-4.1-mini).
+- Paste the opener from `docs/lint-loop-runbook.md` § Step 2. The agent will auto-invoke the `lint-reduction-loop` skill.
+- Stop on first `R-UNKNOWN` and author the missing recipe before resuming.
+
+---
+
 ## 2026-06-29 — Initial harness setup (fix-linting branch)
 
 **Done this session:**

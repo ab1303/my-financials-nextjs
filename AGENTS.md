@@ -39,11 +39,16 @@ For UI changes: describe the visual change or attach a screenshot.
 - **End.** Walk `.harness/clean-state-checklist.md`. Update `verification[]` / `evidence[]` in `.harness/feature-status.json`. Append a new entry (newest first) to `.harness/progress.md`. A feature becomes `status: "done"` only when every `verification[].passing === true`.
 - **Context >50%.** Compact the active `lld.md` → write progress entry → start fresh session. Protocol: `.ai/instructions/compaction.md`.
 
-`plan.md` is session-only — never commit. Specs live under `spec/{domain}/{feature}/`.
+`plan.md` is session-only — never commit. Specs live under `spec/{domain}/{feature}/`. `spec/index.json` is the machine-readable ownership + drift manifest — consult it before touching any source file to see which feature claims it (`pnpm spec:check` flags drift and boundary overlaps).
 
 ## Subagents
 
 When `implement-from-spec` is active, the orchestrator writes **zero production code** — every phase is delegated to a `Next.js Expert` (`gpt-5.4-mini`) subagent. Every subagent prompt must include the `⚠️ CRITICAL CONSTRAINTS` block (explicit file list, no global lint/format, no auto-commit). Full rules + model table: `.ai/instructions/testing-and-subagents.md`.
+
+Two skills are mandatory for small/cheap-model implementation work:
+
+- **`source-driven-development`** — cite-or-flag gate for every framework API call. Prevents hallucinated Prisma / NextAuth / tRPC symbols. Invoke during *build* phase.
+- **`doubt-driven-development`** — CLAIM → EXTRACT → DOUBT → RECONCILE → STOP loop. Mandatory before any Tier 3 op, schema migration, or `spec:check` drift resolution.
 
 ## UI Rules (recurring landmines)
 
