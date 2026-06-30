@@ -312,10 +312,16 @@ These hold across every run; violations are bugs in this feature, not in
 its inputs:
 
 1. **Monotonic overlap reduction within a batch.** After each successful
-   `apply-patch.mjs`, `spec:check` overlap count must be strictly less than
+   `apply-patch.mjs`, the **overlap participations** metric (sum of
+   `claimedBy.length` across overlapping files) must be strictly less than
    before, OR the patch must explicitly target a non-overlap concern (e.g.
    step-2 invariant classification on a feature with no current overlaps).
-   `apply-patch.mjs` enforces this and rolls back violations.
+   `apply-patch.mjs` enforces this and rolls back violations. NOTE: the
+   file-count metric (`overlapCount`) is too strict for step-1/step-3
+   scope-downs — a file claimed by 4 features only drops out of the
+   overlap set once 3 of those 4 ownerships have been removed. The
+   participations metric strictly decreases with every legitimate
+   single-owner removal.
 2. **Idempotency.** Re-applying any applied patch must be a no-op.
 3. **No silent manifest mutation.** Every change to `spec/index.json` made
    by this feature has a corresponding `.applied.json` audit row and a

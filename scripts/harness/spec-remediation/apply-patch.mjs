@@ -34,7 +34,7 @@ import {
   REPO_ROOT,
   INDEX_PATH,
 } from './lib/manifest.mjs';
-import { overlapCount } from './lib/overlaps.mjs';
+import { overlapCount, overlapParticipations } from './lib/overlaps.mjs';
 import { validatePatch, applyPatch } from './lib/patch.mjs';
 
 const args = process.argv.slice(2);
@@ -70,6 +70,7 @@ if (!targetFeature) {
 }
 
 const overlapBefore = overlapCount(manifestBefore);
+const partsBefore = overlapParticipations(manifestBefore);
 
 let manifestAfter, changed;
 try {
@@ -79,6 +80,7 @@ try {
 }
 
 const overlapAfter = overlapCount(manifestAfter);
+const partsAfter = overlapParticipations(manifestAfter);
 
 // Idempotency: re-applying an already-applied patch is a logical success but
 // we still report it as such (and never write to disk).
@@ -89,32 +91,40 @@ if (!changed) {
     status: 'noop',
     overlapBefore,
     overlapAfter,
+    partsBefore,
+    partsAfter,
     note: 'patch was a no-op (idempotent re-apply)',
     dryRun: DRY_RUN,
   };
   writeAudit(absPatchPath, audit);
-  appendLog(`${audit.appliedAt}  ${patch.taskId}  noop  overlap ${overlapBefore} → ${overlapAfter}`);
-  process.stdout.write(`apply-patch: no-op — manifest unchanged (overlap ${overlapBefore})\n`);
+  appendLog(`${audit.appliedAt}  ${patch.taskId}  noop  files ${overlapBefore} → ${overlapAfter}  parts ${partsBefore} → ${partsAfter}`);
+  process.stdout.write(`apply-patch: no-op — manifest unchanged (files ${overlapBefore}, parts ${partsBefore})\n`);
   process.exit(0);
 }
 
 // Rollback guard: if the patch contains remove-files-from-owns ops, overlap
-// MUST strictly decrease. Step-2-only patches (set-invariants, set-status,
+// PARTICIPATIONS must strictly decrease. Participations = sum of claimedBy
+// counts across overlapping files; removing one redundant ownership always
+// drops this by 1, even when the file remains overlapping (≥2 claimants).
+// File count alone is too strict — it only changes when a file drops from 2
+// to 1 owner. Step-2-only patches (set-invariants, set-status,
 // set-owns-confidence) may legitimately leave overlap unchanged.
 const hasRemove = patch.ops.some((o) => o.op === 'remove-files-from-owns');
-if (hasRemove && overlapAfter >= overlapBefore) {
+if (hasRemove && partsAfter >= partsBefore) {
   const audit = {
     taskId: patch.taskId,
     appliedAt: new Date().toISOString(),
     status: 'rolled_back',
     overlapBefore,
     overlapAfter,
-    reason: `remove-files-from-owns op did not reduce overlap (${overlapBefore} → ${overlapAfter})`,
+    partsBefore,
+    partsAfter,
+    reason: `remove-files-from-owns op did not reduce overlap participations (${partsBefore} → ${partsAfter})`,
     dryRun: DRY_RUN,
   };
   writeAudit(absPatchPath, audit);
-  appendLog(`${audit.appliedAt}  ${patch.taskId}  ROLLBACK  overlap ${overlapBefore} → ${overlapAfter}  (no decrease)`);
-  process.stderr.write(`apply-patch: rolled back — overlap did not strictly decrease (${overlapBefore} → ${overlapAfter})\n`);
+  appendLog(`${audit.appliedAt}  ${patch.taskId}  ROLLBACK  parts ${partsBefore} → ${partsAfter}  (no decrease)`);
+  process.stderr.write(`apply-patch: rolled back — overlap participations did not strictly decrease (${partsBefore} → ${partsAfter})\n`);
   process.exit(1);
 }
 
@@ -130,6 +140,8 @@ const audit = {
   status: DRY_RUN ? 'dry_run' : 'applied',
   overlapBefore,
   overlapAfter,
+  partsBefore,
+  partsAfter,
   opsApplied: patch.ops.length,
   feature: patch.feature,
   dryRun: DRY_RUN,
@@ -137,11 +149,11 @@ const audit = {
 writeAudit(absPatchPath, audit);
 appendLog(
   `${audit.appliedAt}  ${patch.taskId}  ${audit.status}  ${patch.feature}  ` +
-  `overlap ${overlapBefore} → ${overlapAfter}  (${patch.ops.length} op(s))`,
+  `files ${overlapBefore} → ${overlapAfter}  parts ${partsBefore} → ${partsAfter}  (${patch.ops.length} op(s))`,
 );
 
 process.stdout.write(
-  `apply-patch: ${audit.status} — overlap ${overlapBefore} → ${overlapAfter} (${patch.feature})\n`,
+  `apply-patch: ${audit.status} — files ${overlapBefore} → ${overlapAfter}  parts ${partsBefore} → ${partsAfter} (${patch.feature})\n`,
 );
 process.exit(0);
 

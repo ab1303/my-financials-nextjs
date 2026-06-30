@@ -1984,6 +1984,7 @@
           "scripts/harness/spec-remediation/prompts/step1-scope-down.md",
           "scripts/harness/spec-remediation/prompts/step2-invariant-classify.md",
           "scripts/harness/spec-remediation/prompts/step3-overlap-decide.md",
+          "scripts/harness/spec-remediation/render-prompt.mjs",
           "scripts/harness/spec-remediation/report.mjs",
           "scripts/harness/spec-remediation/schema/patch.schema.json",
           "scripts/harness/spec-remediation/schema/task.schema.json"

@@ -16,7 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readManifest, REPO_ROOT } from './lib/manifest.mjs';
-import { computeOverlaps } from './lib/overlaps.mjs';
+import { computeOverlaps, overlapParticipations } from './lib/overlaps.mjs';
 
 const REMEDIATION_DIR = path.join(REPO_ROOT, '.harness', 'remediation');
 const args = process.argv.slice(2);
@@ -34,7 +34,8 @@ try {
 }
 
 const overlaps = computeOverlaps(manifest);
-const header = `spec-remediation report  ·  features=${manifest.features.length}  ·  overlap=${overlaps.count}`;
+const parts = overlapParticipations(manifest);
+const header = `spec-remediation report  ·  features=${manifest.features.length}  ·  overlap-files=${overlaps.count}  ·  overlap-parts=${parts}`;
 process.stdout.write(`\n${header}\n${'─'.repeat(header.length)}\n`);
 
 // Per-step queue

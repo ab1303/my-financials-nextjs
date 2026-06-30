@@ -52,3 +52,19 @@ export function computeOverlaps(manifest) {
 export function overlapCount(manifest) {
   return computeOverlaps(manifest).count;
 }
+
+/**
+ * Sum of `claimedBy.length` across every overlapping file.
+ *
+ * A file with N>1 claimants contributes N. This is the metric the rollback
+ * gate uses: any legitimate `remove-files-from-owns` op that drops one
+ * redundant ownership reduces this count by 1, even when the file remains
+ * overlapping (still owned by ≥2 features). `overlapCount` alone is too
+ * strict — it only decreases when the file drops to exactly one owner.
+ */
+export function overlapParticipations(manifest) {
+  const { byFile } = computeOverlaps(manifest);
+  let total = 0;
+  for (const { claimedBy } of byFile) total += claimedBy.length;
+  return total;
+}
