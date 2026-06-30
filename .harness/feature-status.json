@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.1.0",
-  "updatedAt": "2026-06-30T10:56:00Z",
+  "updatedAt": "2026-07-01T12:00:00Z",
   "rules": {
     "singleActiveFeature": true,
     "passingRequiresEvidence": true,
@@ -95,14 +95,15 @@
         { "id": "manifest-registration", "description": "spec/index.json: harness.capsule-format owns 5 script files, ownsConfidence=high, 95 total features", "passing": true },
         { "id": "hld-catalogue", "description": "spec/harness/hld.md: capsule-format in Catalogue, removed from Planned", "passing": true },
         { "id": "audit-closed", "description": "docs/harness-audit.md P-Q #6 marked closed", "passing": true },
-        { "id": "build", "description": "pnpm run build succeeds (user-confirmed run only)", "passing": false }
+        { "id": "build", "description": "pnpm run build succeeds (user-confirmed run only)", "passing": true }
       ],
       "evidence": [
         { "id": "generate", "sha": "HEAD", "command": "node scripts/harness/capsule-format/generate.mjs", "result": "Generated 95 capsules. 0 over budget. Max 621 tokens (transactions.transactions), median 249." },
         { "id": "idempotency", "sha": "HEAD", "command": "node scripts/harness/capsule-format/check.mjs", "result": "✓ 95 capsule(s) clean, checked: 95" },
         { "id": "spec-check", "sha": "HEAD", "command": "node scripts/harness/spec-manifest/spec-check.mjs", "result": "drift=43 overlap=0 ghost=0 sha-missing=0 review=0 | capsule staleness ✓ 95 capsule(s) clean" },
         { "id": "type-check", "sha": "HEAD", "command": "pnpm run type-check", "result": "exit 0, no output" },
-        { "id": "lint", "sha": "HEAD", "command": "pnpm run lint", "result": "exit 0, no output" }
+        { "id": "lint", "sha": "HEAD", "command": "pnpm run lint", "result": "exit 0, no output" },
+        { "id": "build", "sha": "b447cd8", "command": "pnpm run build", "result": "exit 0, build successful (user-confirmed)" }
       ]
     }
   ]

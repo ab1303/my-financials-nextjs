@@ -33,7 +33,7 @@
     ]
   },
   "totals": {
-    "features": 95,
+    "features": 96,
     "withOwnsMatches": 86,
     "overlaps": 0
   },
@@ -3578,6 +3578,41 @@
           "src/app/(authorized)/settings/profile/_schema.ts",
           "src/app/(authorized)/settings/profile/_types.ts"
         ],
+        "tests": []
+      }
+    },
+    {
+      "id": "harness.session-close",
+      "domain": "harness",
+      "path": "spec/harness/session-close/",
+      "status": "planned",
+      "phase": "design",
+      "docs": {
+        "context": "spec/harness/session-close/context.md",
+        "lld": "spec/harness/session-close/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": ["scripts/harness/session-close/close.mjs"],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": [
+        "close.mjs never calls git commit — staging only (Hard Constraint).",
+        "Running close.mjs twice with no intervening changes is idempotent.",
+        "All verification gate results are recorded in feature-status.json evidence[].",
+        "No LLM in the runtime loop — pure Node.js child_process + string templating."
+      ],
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
         "tests": []
       }
     }
