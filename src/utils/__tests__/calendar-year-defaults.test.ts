@@ -27,7 +27,7 @@ const makeYear = (
 const FISCAL_2425 = makeYear('fy2425', 2024, 7, 2025, 6, 'FISCAL');
 const FISCAL_2324 = makeYear('fy2324', 2023, 7, 2024, 6, 'FISCAL');
 const ANNUAL_2024 = makeYear('ay2024', 2024, 1, 2024, 12, 'ANNUAL');
-const ANNUAL_2023 = makeYear('ay2023', 2023, 1, 2023, 12, 'ANNUAL');
+const _ANNUAL_2023 = makeYear('ay2023', 2023, 1, 2023, 12, 'ANNUAL');
 const ZAKAT_2024 = makeYear('zk2024', 2024, 1, 2024, 12, 'ZAKAT');
 const NULL_TYPE: CalendarYearOption = {
   ...ANNUAL_2024,

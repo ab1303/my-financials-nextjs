@@ -7,7 +7,8 @@
  *   pnpm exec playwright test e2e/site-audit.spec.ts --project=chromium
  */
 
-import { type Browser,expect, type Page, test } from '@playwright/test';
+import type { ConsoleMessage, Request, Response } from '@playwright/test';
+import { type Browser, expect, type Page, test } from '@playwright/test';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface PageAuditResult {
@@ -97,14 +98,14 @@ async function auditOnePage(
   }
 
   // Attach listeners
-  const onConsole = (msg: import('@playwright/test').ConsoleMessage) => {
+  const onConsole = (msg: ConsoleMessage) => {
     if (msg.type() === 'error') consoleErrors.push(msg.text());
   };
-  const onRequestFailed = (req: import('@playwright/test').Request) => {
+  const onRequestFailed = (req: Request) => {
     const f = req.failure();
     if (f) networkErrors.push(`${req.method()} ${req.url()} → ${f.errorText}`);
   };
-  const onResponse = (res: import('@playwright/test').Response) => {
+  const onResponse = (res: Response) => {
     if (res.status() >= 400 && res.url().includes('/api/'))
       networkErrors.push(`HTTP ${res.status()} ${res.url()}`);
   };

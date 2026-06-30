@@ -133,7 +133,11 @@ export default function LinkZakatTransactionsDrawer({
         setSelectedTransactionId(unlinkedTransactionsQuery.data[0]?.id ?? '');
       }
     }
-  }, [unlinkedTransactionsQuery.data, initialSelectedTransactionId]);
+  }, [
+    unlinkedTransactionsQuery.data,
+    initialSelectedTransactionId,
+    selectedTransactionId,
+  ]);
 
   useEffect(() => {
     setValue('beneficiaryId', '');

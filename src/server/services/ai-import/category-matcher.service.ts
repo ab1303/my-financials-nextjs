@@ -32,20 +32,6 @@ function levenshteinDistance(a: string, b: string): number {
 }
 
 /**
- * Check if extracted text is similar to a category
- */
-function _isSimilar(
-  extractedText: string,
-  category: string,
-  threshold = 0.75,
-): boolean {
-  const distance = levenshteinDistance(extractedText, category);
-  const maxLength = Math.max(extractedText.length, category.length);
-  const similarity = 1 - distance / maxLength;
-  return similarity >= threshold;
-}
-
-/**
  * Match extracted category name to available categories
  * Uses multiple strategies: exact match, substring match, similarity
  */
@@ -138,7 +124,6 @@ export function matchCategories(
 import type { AITokenUsage } from './_types';
 import {
   ensureCategoryEmbeddings,
-  findBestCategoryMatch,
   findBestCategoryMatchWithRetry,
 } from './embedding.service';
 

@@ -92,6 +92,7 @@ export default function MonthAccordionPanel({
 
   const columns = useMemo(() => getTableColumns(), []);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<IncomeEntryType>({
     data: entries,
     columns,

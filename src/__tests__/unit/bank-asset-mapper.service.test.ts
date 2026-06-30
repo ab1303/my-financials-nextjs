@@ -24,7 +24,7 @@ describe('mapBankAssetData', () => {
       warnings: [],
     };
     const result = await mapBankAssetData(
-      input as any,
+      input as never,
       new Date('2024-01-01'),
       'user-1',
     );
@@ -59,7 +59,7 @@ describe('mapBankAssetData', () => {
       warnings: [],
     };
     const result = await mapBankAssetData(
-      input as any,
+      input as never,
       new Date('2024-01-01'),
       'user-1',
     );
@@ -97,7 +97,7 @@ describe('mapBankAssetData', () => {
       warnings: [],
     };
     const result = await mapBankAssetData(
-      input as any,
+      input as never,
       new Date('2024-01-02'),
       'user-2',
     );
@@ -129,7 +129,7 @@ describe('mapBankAssetData', () => {
       warnings: [],
     };
     const result = await mapBankAssetData(
-      input as any,
+      input as never,
       new Date('2024-01-03'),
       'user-3',
     );
@@ -161,7 +161,7 @@ describe('mapBankAssetData', () => {
       warnings: [],
     };
     const result = await mapBankAssetData(
-      input as any,
+      input as never,
       new Date('2024-01-04'),
       'user-4',
     );
@@ -199,7 +199,7 @@ describe('mapBankAssetData', () => {
       warnings: [],
     };
     const result = await mapBankAssetData(
-      input as any,
+      input as never,
       new Date('2024-01-05'),
       'user-5',
     );

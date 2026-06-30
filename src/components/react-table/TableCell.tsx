@@ -1,7 +1,7 @@
 import type { CellContext, RowData } from '@tanstack/react-table';
 import { castDraft, produce } from 'immer';
 import type { ReactNode } from 'react';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId } from 'react';
 import { NumericFormat } from 'react-number-format';
 
 import { SelectWrapper as Select } from '@/components/ui/Select';
@@ -13,6 +13,7 @@ import DatePickerDialog from '../DatePickerDialog';
 type ControlType = 'SELECT' | 'DATE' | 'INPUT' | 'AMOUNT';
 
 declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
     type?: ControlType;
     propName: keyof TData;
@@ -40,7 +41,6 @@ export const TableCell = <TData extends { id: string }, TValue>({
   const columnMeta = column.columnDef.meta;
   const tableMeta = table.options.meta;
   const uniqSelectId = useId();
-  const [validationMessage, setValidationMessage] = useState('');
 
   // const [value, setValue] = useState<unknown>(initialValue);
   useEffect(() => {

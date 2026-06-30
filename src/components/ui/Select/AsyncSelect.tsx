@@ -1,8 +1,12 @@
 'use client';
 
-import { type GroupBase } from 'react-select';
-import { components as selectComponents } from 'react-select';
-import AsyncSelect, { type AsyncProps } from 'react-select/async';
+import {
+  components as selectComponents,
+  type GroupBase,
+  type OptionProps,
+} from 'react-select';
+import type { AsyncProps } from 'react-select/async';
+import AsyncSelect from 'react-select/async';
 
 import { getCompactSelectStyles, getSelectStyles } from '@/lib/select-styles';
 
@@ -11,7 +15,11 @@ import { PopperMenu } from './PopperMenu';
 /**
  * Custom Option component that adds a title attribute for native browser tooltips on hover.
  */
-function CustomOption(props: any) {
+function CustomOption<
+  Option,
+  IsMulti extends boolean,
+  Group extends GroupBase<Option>,
+>(props: OptionProps<Option, IsMulti, Group>) {
   const label = (props.data as { label?: string }).label;
   return (
     <selectComponents.Option

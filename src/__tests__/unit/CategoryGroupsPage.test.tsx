@@ -41,7 +41,7 @@ vi.mock('@/server/services/category-groups/category-groups.service', () => ({
 vi.mock(
   '@/app/(authorized)/cashflow/category-groups/_components/CategoryGroupsDashboard',
   () => ({
-    default: ({ initialGroups }: { initialGroups: any[] }) => (
+    default: ({ initialGroups }: { initialGroups: unknown[] }) => (
       <div data-testid='dashboard'>{initialGroups.length} groups loaded</div>
     ),
   }),

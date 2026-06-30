@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { type FieldErrors, Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { CGTEligibilityWarning } from '@/components/ui/CGTEligibilityWarning';
@@ -87,11 +87,6 @@ export default function HoldingFormModal({
     id: string;
     name: string;
   } | null>(null);
-
-  // Helper: get account name from id
-  const accountNameForId = (id: string) => {
-    return brokerageAccounts.find((a) => a.id === id)?.name ?? id;
-  };
 
   // Create new institution (Business/BROKERAGE)
   const createInstitution = trpc.business.create.useMutation({
@@ -450,9 +445,9 @@ export default function HoldingFormModal({
                   />
                 )}
               />
-              {!isEditMode && (errors as any).accountId && (
+              {!isEditMode && (errors as FieldErrors<CreateFormData>).accountId && (
                 <p className='mt-1 text-sm text-red-600'>
-                  {(errors as any).accountId?.message}
+                  {(errors as FieldErrors<CreateFormData>).accountId?.message}
                 </p>
               )}
             </div>

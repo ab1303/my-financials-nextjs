@@ -560,7 +560,7 @@ function CategorySummaryDialog({
                         </tr>
                       </thead>
                       <tbody className='divide-y divide-border/50'>
-                        {filtered.map((item, i) => {
+                        {filtered.map((item, _i) => {
                           const originalIndex = breakdown.indexOf(item);
                           const url = `/cashflow/transactions?tab=expenses&categoryName=${encodeURIComponent(item.categoryName)}&dateFrom=${yearDateFrom}&dateTo=${yearDateTo}`;
                           return (

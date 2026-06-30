@@ -92,7 +92,7 @@ export const updateBusinessDetailsHandler = async ({
       }
     }
 
-    const updateData: any = {};
+    const updateData: Parameters<typeof updateBusinessDetails>[1] = {};
     if (input.name !== undefined) updateData.name = input.name;
     if (input.addressLine !== undefined)
       updateData.addressLine = input.addressLine || null;

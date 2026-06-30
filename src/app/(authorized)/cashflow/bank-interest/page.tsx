@@ -111,8 +111,6 @@ export default async function BanksPage({
           <CreditsDialog
             bankName={selectedBank?.label ?? ''}
             credits={yearlyCleansingData?.monthlyCredits ?? []}
-            institutionId={selectedBankId}
-            calendarYearId={selectedCalendarYearId}
           />
         )}
       </div>

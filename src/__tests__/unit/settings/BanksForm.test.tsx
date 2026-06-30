@@ -45,16 +45,16 @@ vi.mock('@/server/trpc/client', () => ({
         useQuery: vi.fn(() => mocks.getAllBanksState),
       },
       saveBankDetails: {
-        useMutation: vi.fn((config: any) => ({
-          mutate: vi.fn((input: { name: string }) => {
+        useMutation: vi.fn((config: { onSuccess?: () => void }) => ({
+          mutate: vi.fn((_input: { name: string }) => {
             if (config.onSuccess) config.onSuccess();
           }),
           isPending: mocks.saveBankMutation.isPending,
         })),
       },
       removeBankDetails: {
-        useMutation: vi.fn((config: any) => ({
-          mutate: vi.fn((input: { bankId: string }) => {
+        useMutation: vi.fn((config: { onSuccess?: () => void }) => ({
+          mutate: vi.fn((_input: { bankId: string }) => {
             if (config.onSuccess) config.onSuccess();
           }),
           isPending: mocks.deleteBankMutation.isPending,

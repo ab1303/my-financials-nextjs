@@ -1,5 +1,6 @@
 import 'react-phone-input-2/lib/style.css';
 
+import type { ChangeEvent } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import PhoneInput from 'react-phone-input-2';
 
@@ -32,12 +33,16 @@ export default function TelInput({ propertyName }: TelInputComponentProps) {
           country={'au'}
           onlyCountries={['au']}
           value={value}
-          isValid={(inputNumber, country: any, countries) => {
+          isValid={(inputNumber, country, countries) => {
             if (!fieldState.isDirty) return true;
+            if (!country) return false;
 
-            const selectedCountry = countries.find(
-              (c: any) => c.dialCode === country.dialCode,
-            ) as any;
+            type Country = { dialCode: string };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const typedCountry = country as any as Country;
+            const selectedCountry = (countries as Country[]).find(
+              (c) => c.dialCode === typedCountry.dialCode,
+            );
 
             if (!selectedCountry) {
               return false;
@@ -53,8 +58,11 @@ export default function TelInput({ propertyName }: TelInputComponentProps) {
               ? true
               : false;
           }}
-          onChange={(_, __, event: React.ChangeEvent<HTMLInputElement>) =>
-            onChange(event.target.value)
+          onChange={(_, __, event) =>
+            onChange(
+              (event as ChangeEvent<HTMLInputElement> | undefined)?.target
+                .value ?? '',
+            )
           }
         />
       )}

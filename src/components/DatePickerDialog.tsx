@@ -10,10 +10,9 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import clsx from 'clsx';
 import { format, isValid, parse } from 'date-fns';
 import type { ChangeEventHandler } from 'react';
-import React, { useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { createPortal } from 'react-dom';
 

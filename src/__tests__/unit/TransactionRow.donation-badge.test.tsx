@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import TransactionRow from '@/components/transactions/TransactionRow';
-import { REIMBURSEMENT_CATEGORY } from '@/server/services/transactions/constants';
 import type { TransactionRow as LedgerTransactionRow } from '@/server/trpc/router/transaction-ledger';
 
 vi.mock('@/server/trpc/client', () => ({
@@ -18,7 +17,15 @@ vi.mock('@/server/trpc/client', () => ({
 }));
 
 vi.mock('react-select', () => ({
-  default: ({ value, options, 'aria-label': ariaLabel }: any) => (
+  default: ({
+    value,
+    options,
+    'aria-label': ariaLabel,
+  }: {
+    value?: { label?: string; value?: string } | null;
+    options?: Array<{ label?: string; value?: string }>;
+    'aria-label'?: string;
+  }) => (
     <div aria-label={ariaLabel} data-testid={ariaLabel}>
       {value?.label ?? value?.value ?? 'select'}
       {Array.isArray(options) ? options.length : 0}
@@ -27,7 +34,7 @@ vi.mock('react-select', () => ({
 }));
 
 vi.mock('react-select/async', () => ({
-  default: ({ 'aria-label': ariaLabel }: any) => (
+  default: ({ 'aria-label': ariaLabel }: { 'aria-label'?: string }) => (
     <div aria-label={ariaLabel}>async-select</div>
   ),
 }));

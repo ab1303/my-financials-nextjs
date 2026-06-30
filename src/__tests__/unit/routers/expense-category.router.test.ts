@@ -7,7 +7,7 @@ describe('expenseCategory router', () => {
   const caller = appRouter.createCaller({
     prisma: prismaMock,
     session: { user: { id: 'user_1' } },
-  } as any);
+  } as never);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -19,7 +19,7 @@ describe('expenseCategory router', () => {
       id: '1',
       name: 'Food',
       isActive: true,
-    } as any);
+    } as never);
 
     await expect(
       caller.expenseCategory.create({ name: 'Food' }),
@@ -35,7 +35,7 @@ describe('expenseCategory router', () => {
     prismaMock.expenseCategory.update.mockResolvedValue({
       id: '1',
       isActive: false,
-    } as any);
+    } as never);
 
     await expect(caller.expenseCategory.remove({ id: '1' })).resolves.toEqual({
       softDeleted: true,

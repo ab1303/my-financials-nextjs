@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Check, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Check, Trash2 } from 'lucide-react';
 import React from 'react';
 
 import {

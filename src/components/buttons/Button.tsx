@@ -4,17 +4,11 @@ import * as React from 'react';
 
 import { buttonStyles } from '@/styles/theme';
 
-enum ButtonVariant {
-  'dark',
-  'light',
-  'primary',
-  'secondary',
-  'default',
-}
+type ButtonVariant = 'dark' | 'light' | 'primary' | 'secondary' | 'default';
 
 type ButtonProps = {
   isLoading?: boolean;
-  variant?: keyof typeof ButtonVariant;
+  variant?: ButtonVariant;
   size?: 'default' | 'sm' | 'lg';
 } & React.ComponentPropsWithoutRef<'button'>;
 
@@ -24,7 +18,6 @@ export default function Button({
   disabled: buttonDisabled,
   isLoading,
   variant = 'primary',
-  size = 'default',
   ...rest
 }: ButtonProps) {
   const disabled = isLoading || buttonDisabled;

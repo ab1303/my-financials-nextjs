@@ -14,7 +14,6 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components';
 import Table from '@/components/table';
 import { tableCellStyles } from '@/styles/theme';
 import type { OptionType } from '@/types';
@@ -50,7 +49,7 @@ export default function ZakatTableClient({
   const [editedRows, setEditedRows] = useState<
     Map<string | number, ZakatPaymentType>
   >(new Map());
-  const [validRows, setValidRows] = useState({});
+  const [validRows, _setValidRows] = useState({});
   const router = useRouter();
 
   const {
@@ -95,6 +94,7 @@ export default function ZakatTableClient({
     [individualsOptions, businessesOptions],
   );
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<ZakatPaymentType>({
     data: data,
     columns,

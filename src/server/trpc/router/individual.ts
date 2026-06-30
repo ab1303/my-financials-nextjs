@@ -9,9 +9,7 @@ import {
 } from '@/server/controllers/individual.controller';
 import {
   createIndividualSchema,
-  createRelationshipSchema,
   params,
-  relationshipParams,
   updateIndividualSchema,
 } from '@/server/schema/individual.schema';
 import { getRelationships } from '@/server/services/relationship.service';

@@ -63,7 +63,7 @@ export default function IncomeTableClient({
   yearDateFrom,
   yearDateTo,
 }: IncomeTableClientProps) {
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
 
   const {
     state: { data },

@@ -20,6 +20,16 @@ import {
 } from '@/server/services/transactions/csv-format-detector.service';
 import { parseBankCsv } from '@/server/services/transactions/csv-parser-generic.service';
 
+type ImportSessionMetadata = {
+  fileName: string;
+  fileSize: number;
+  bankAccountId: string;
+  bankName: string;
+  institutionKey: string | null | undefined;
+  detectionMethod: 'registry' | 'auto-detect' | null;
+  transactions: CsvTransaction[];
+};
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) {
@@ -152,6 +162,7 @@ export async function POST(req: NextRequest) {
         userId: session.user.id,
         importType: 'EXPENSE',
         status: 'PENDING',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata: {
           fileName,
           fileSize,

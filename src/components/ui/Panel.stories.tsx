@@ -1,11 +1,11 @@
-import React from 'react';
-
 import Panel from './panel';
 
-export default {
+const meta = {
   title: 'UI/Panel',
   component: Panel,
 };
+
+export default meta;
 
 export const Default = () => (
   <Panel title='Wireframe Panel'>

@@ -30,7 +30,7 @@ export async function loadActiveRules(
   prisma: PrismaClient,
   userId: string,
 ): Promise<Rule[]> {
-  const rules = await (prisma.categoryRule as any).findMany({
+  const rules = await prisma.categoryRule.findMany({
     where: { userId, isActive: true },
     select: {
       name: true,

@@ -1,5 +1,4 @@
 import type { Prisma } from '@prisma/client';
-import { Individual } from '@prisma/client';
 
 import { prisma } from '@/server/db/client';
 

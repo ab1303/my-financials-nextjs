@@ -1,13 +1,11 @@
 'use client';
 
+import clsx from 'clsx';
 import { useQueryClient } from '@tanstack/react-query';
 import { TRPCError } from '@trpc/server';
-import clsx from 'clsx';
-import { Loader2 } from 'lucide-react';
 import { useId, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import type { GroupBase, OptionProps, SingleValue } from 'react-select';
-import { components } from 'react-select';
+import type { OptionProps, SingleValue } from 'react-select';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -38,8 +36,6 @@ type BusinessOptionType = {
   label: string;
   id: string;
 };
-
-const AU_STATE_CODES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 
 const postCodeSchema = z.coerce.number({
   required_error: 'Postcode is required',
@@ -300,6 +296,7 @@ export default function BusinessForm() {
                 </div>
               </div>
 
+              {/* eslint-disable-next-line react-hooks/incompatible-library */}
               {formMethods.watch('type') === BusinessEnumType.PHILANTHROPY ? (
                 <div className='rounded-lg border border-border bg-muted/40 px-4 py-3'>
                   <div className='flex items-start gap-3'>

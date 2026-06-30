@@ -20,7 +20,7 @@ describe('charity-tax helper', () => {
   });
 
   it('derives deductibility from business DGR status', async () => {
-    (prisma.business.findUnique as any).mockResolvedValue({
+    (prisma.business.findUnique as never).mockResolvedValue({
       isDgrRegistered: true,
     });
     await expect(deriveIsDeductible('biz-123', 'BUSINESS')).resolves.toBe(true);

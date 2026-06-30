@@ -1,7 +1,7 @@
 'use client';
 
 import type { User } from 'next-auth';
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 

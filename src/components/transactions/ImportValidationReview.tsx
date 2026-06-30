@@ -13,34 +13,6 @@ export interface ImportValidationReviewProps {
   isLoading: boolean;
 }
 
-type TransactionStatus =
-  | 'IMPORTED'
-  | 'VOIDED'
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'EXCLUDED';
-
-interface ImportSessionTransaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: string;
-  status: string;
-}
-
-interface ImportSessionDetails {
-  id: string;
-  userId: string;
-  importType: string;
-  status: string;
-  recordsCreated: number;
-  skippedCount: number;
-  metadata?: any;
-  startDate?: string;
-  endDate?: string;
-  transactions: ImportSessionTransaction[];
-}
-
 export const ImportValidationReview: React.FC<ImportValidationReviewProps> = ({
   isOpen,
   onClose,
@@ -53,7 +25,7 @@ export const ImportValidationReview: React.FC<ImportValidationReviewProps> = ({
     data,
     isLoading: isFetching,
     isError,
-    error,
+    error: _error,
     refetch,
   } = trpc.transactionClearing.getImportSessionDetails.useQuery(
     { sessionId },

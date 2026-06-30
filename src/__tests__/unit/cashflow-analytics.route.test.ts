@@ -23,7 +23,7 @@ describe('GET /api/cashflow/analytics', () => {
   });
 
   it('should return 401 when user is not authenticated', async () => {
-    (vi.mocked(auth) as any).mockResolvedValueOnce(null);
+    vi.mocked(auth).mockResolvedValueOnce(null);
 
     const request = new Request(
       'http://localhost:3000/api/cashflow/analytics?calendarYearId=year-1',
@@ -36,7 +36,7 @@ describe('GET /api/cashflow/analytics', () => {
   });
 
   it('should return 400 when calendarYearId is missing', async () => {
-    vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+    vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'user-1' } } as never);
 
     const request = new Request('http://localhost:3000/api/cashflow/analytics');
     const response = await GET(request);
@@ -47,7 +47,7 @@ describe('GET /api/cashflow/analytics', () => {
   });
 
   it('should accept incomeGroupIds query parameter', async () => {
-    vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+    vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'user-1' } } as never);
 
     const { prisma } = await import('@/server/db/client');
     vi.mocked(prisma.calendarYear.findUnique).mockResolvedValueOnce({
@@ -55,7 +55,7 @@ describe('GET /api/cashflow/analytics', () => {
       fromMonth: 7,
       toYear: 2025,
       toMonth: 6,
-    } as any);
+    } as never);
 
     vi.mocked(incomeService.getTotalIncome).mockResolvedValueOnce(50000);
     vi.mocked(
@@ -83,7 +83,7 @@ describe('GET /api/cashflow/analytics', () => {
   });
 
   it('should accept expenseGroupIds query parameter', async () => {
-    vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'user-1' } } as any);
+    vi.mocked(auth).mockResolvedValueOnce({ user: { id: 'user-1' } } as never);
 
     const { prisma } = await import('@/server/db/client');
     vi.mocked(prisma.calendarYear.findUnique).mockResolvedValueOnce({
@@ -91,7 +91,7 @@ describe('GET /api/cashflow/analytics', () => {
       fromMonth: 7,
       toYear: 2025,
       toMonth: 6,
-    } as any);
+    } as never);
 
     vi.mocked(incomeService.getTotalIncome).mockResolvedValueOnce(50000);
     vi.mocked(

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CleansingCandidatePicker } from '@/app/(authorized)/cashflow/bank-interest/_components/CleansingCandidatePicker';
 // We'll need to mock trpc
@@ -74,13 +74,13 @@ describe('CleansingCandidatePicker', () => {
   ];
 
   beforeEach(() => {
-    (
-      trpc.bankInterest.getCleansingDebitCandidates.useQuery as any
+    vi.mocked(
+      trpc.bankInterest.getCleansingDebitCandidates.useQuery,
     ).mockReturnValue({
       data: mockCandidates,
       isLoading: false,
     });
-    (trpc.bankAccount.list.useQuery as any).mockReturnValue({
+    vi.mocked(trpc.bankAccount.list.useQuery).mockReturnValue({
       data: mockAccounts,
       isLoading: false,
     });
@@ -114,7 +114,7 @@ describe('CleansingCandidatePicker', () => {
   test('keyboard navigation selects candidates', () => {
     render(<CleansingCandidatePicker creditId='credit1' onSelect={() => {}} />);
 
-    const rows = screen.getAllByRole('option');
+    screen.getAllByRole('option');
     fireEvent.keyDown(window, { key: 'ArrowDown' });
     // First row should be highlighted (visual check might be hard here, but we can check implementation details if needed)
     // For now, let's assume we test the interaction

@@ -1,10 +1,4 @@
 import { expect,test } from '@playwright/test';
-import path from 'path';
-
-import { dropFileOnZone } from '../helpers/drop-file';
-
-const COMMBANK_FIXTURE = path.resolve('e2e/fixtures/commbank-sample.csv');
-
 async function openImportDialog(page: Parameters<typeof test>[1]) {
   await page.getByTestId('open-csv-import-wizard').click();
   await expect(page.getByTestId('csv-import-wizard')).toBeVisible({ timeout: 8000 });
@@ -58,16 +52,14 @@ test.describe('Generic CSV Import — Transactions Page', () => {
     await expect(page.getByText(/anz.*coming soon|westpac.*coming soon/i)).toBeVisible();
   });
 
-  test('CommBank CSV upload: shows format-recognised badge and preview', async ({ page }) => {
+  test('CommBank CSV upload: shows format-recognised badge and preview', async ({ page: _page }) => {
     // react-dropzone programmatic file dispatch not reliably supported in Playwright Chromium.
     // Covered by manual testing. Use the upload API directly in integration tests instead.
     test.skip(true, 'react-dropzone onDrop not triggerable via Playwright — test manually');
   });
 
-  test('transaction preview shows coloured amounts (DEBIT red, CREDIT green)', async ({ page }) => {
+  test('transaction preview shows coloured amounts (DEBIT red, CREDIT green)', async ({ page: _page }) => {
     test.skip(true, 'react-dropzone onDrop not triggerable via Playwright — test manually');
   });
 });
-
-
 

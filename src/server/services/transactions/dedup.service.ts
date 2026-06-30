@@ -68,16 +68,31 @@ export async function buildDedupSet(
 }
 
 export async function findDuplicatesForClassifiedMonths({
-  prisma,
   userId,
   bankAccountId,
   classifiedMonths,
 }: {
-  prisma: any;
   userId: string;
   bankAccountId: string;
-  classifiedMonths: any[];
-}): Promise<any[]> {
+  classifiedMonths: Array<{
+    month: string;
+    transactions: Array<{
+      id: string;
+      date: Date | string;
+      description: string;
+      amount: number;
+      type?: TransactionTypeEnum | string | null;
+      balance?: number | null;
+    }>;
+  }>;
+}): Promise<
+  Array<{
+    csvId: string;
+    dedupKey: string;
+    matchedTransactionIds: string[];
+    matchedTxSummary: unknown[];
+  }>
+> {
   if (classifiedMonths.length === 0) {
     return [];
   }
@@ -92,7 +107,12 @@ export async function findDuplicatesForClassifiedMonths({
       endDate,
     });
 
-    const duplicates: any[] = [];
+    const duplicates: Array<{
+      csvId: string;
+      dedupKey: string;
+      matchedTransactionIds: string[];
+      matchedTxSummary: unknown[];
+    }> = [];
     for (const monthGroup of classifiedMonths) {
       for (const tx of monthGroup.transactions) {
         const key = makeDedupKey({
@@ -100,7 +120,7 @@ export async function findDuplicatesForClassifiedMonths({
             tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
           description: tx.description,
           amount: Number(tx.amount),
-          type: tx.type ?? 'DEBIT',
+          type: (tx.type ?? 'DEBIT') as TransactionTypeEnum,
           runningBalance: tx.balance ?? null,
         });
 

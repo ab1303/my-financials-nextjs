@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Loader2, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { SSEEventSchema } from './_schema';

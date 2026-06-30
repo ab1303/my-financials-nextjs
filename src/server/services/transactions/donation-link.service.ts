@@ -1,3 +1,5 @@
+import type { Prisma } from '@prisma/client';
+
 import { prisma } from '@/server/db/client';
 
 import {
@@ -19,7 +21,7 @@ async function getPotentialDonationTransactions(
   userId: string,
   dateFrom: Date,
   dateTo: Date,
-  select: any,
+  select: Pick<Prisma.TransactionFindManyArgs, 'orderBy' | 'select'>,
 ) {
   return await prisma.transaction.findMany({
     where: {

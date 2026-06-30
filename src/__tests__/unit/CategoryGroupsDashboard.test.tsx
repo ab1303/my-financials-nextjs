@@ -42,10 +42,10 @@ vi.mock(
   () => ({
     default: ({
       isOpen,
-      editingGroup,
+      editingGroup: _editingGroup,
       onClose,
-      onGroupAdded,
-      onGroupUpdated,
+      onGroupAdded: _onGroupAdded,
+      onGroupUpdated: _onGroupUpdated,
     }: {
       isOpen: boolean;
       editingGroup?: CategoryGroupListItem | null;

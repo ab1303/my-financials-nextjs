@@ -201,7 +201,7 @@ describe('transactionLedger.getFilterOptions', () => {
   const caller = appRouter.createCaller({
     prisma: prismaMock,
     session: { user: { id: 'user-1' } },
-  } as any);
+  } as never);
 
   beforeEach(() => {
     prismaMock.expenseCategory.findMany.mockResolvedValue([

@@ -6,7 +6,6 @@ import clsx from 'clsx';
 import { ChevronDown, Plus, Trash2 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Fragment, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { NumericFormat } from 'react-number-format';
 import type { SingleValue } from 'react-select';
 import { toast } from 'sonner';
 
@@ -169,19 +168,6 @@ export default function StockAssetsClient({ initialData }: Props) {
     },
   });
 
-  // Update holding mutation
-  const updateHolding = trpc.stockAsset.updateHolding.useMutation({
-    onSuccess: () => {
-      toast.success('Holding updated successfully');
-      setEditingHolding(null);
-      setIsHoldingFormModalOpen(false);
-      refetchTotals();
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Failed to update holding');
-    },
-  });
-
   // Delete holding mutation
   const deleteHolding = trpc.stockAsset.deleteHolding.useMutation({
     onSuccess: () => {
@@ -200,7 +186,7 @@ export default function StockAssetsClient({ initialData }: Props) {
   // Update snapshot options when snapshots change
   useLayoutEffect(() => {
     if (snapshots && snapshots.length > 0) {
-      const options = snapshots.map((snapshot: any) => ({
+      const options = snapshots.map((snapshot) => ({
         id: snapshot.id,
         label: new Date(snapshot.snapshotDate).toLocaleDateString('en-AU', {
           year: 'numeric',
@@ -221,7 +207,7 @@ export default function StockAssetsClient({ initialData }: Props) {
       setSelectedSnapshotId(null);
       setSelectedSnapshot(null);
     }
-  }, [snapshots]);
+  }, [selectedSnapshotId, snapshots]);
 
   // Update URL when year changes — only when yearId actually differs to prevent infinite re-render loop
   useEffect(() => {
@@ -707,10 +693,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                     {cb.accountName}
                                   </span>
                                   <span className='font-medium text-foreground'>
-                                    {formatCurrency(
-                                      cb.amount,
-                                      cb.currency as any,
-                                    )}
+                                    {formatCurrency(cb.amount, cb.currency)}
                                   </span>
                                 </div>
                               ))}
@@ -725,7 +708,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                         (s, cb) => s + cb.amount,
                                         0,
                                       ),
-                                      currencyGroup.currency as any,
+                                      currencyGroup.currency,
                                     )}
                                   </span>
                                 </div>
@@ -898,7 +881,7 @@ export default function StockAssetsClient({ initialData }: Props) {
                                         <span className='font-medium text-foreground'>
                                           {formatCurrency(
                                             cb.amount,
-                                            cb.currency as any,
+                                            cb.currency,
                                           )}
                                         </span>
                                         {cb.currency === 'USD' &&

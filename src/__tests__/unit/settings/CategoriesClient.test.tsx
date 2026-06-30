@@ -1,13 +1,12 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CategoriesClient from '@/app/(authorized)/settings/categories/_components/CategoriesClient';
 import IncomeSources from '@/app/(authorized)/settings/categories/_components/IncomeSources';
 
 const mocks = vi.hoisted(() => ({
-  incomeQueryState: { data: [] as any[], isLoading: false as boolean },
-  expenseQueryState: { data: [] as any[], isLoading: false as boolean },
+  incomeQueryState: { data: [] as Array<Record<string, unknown>>, isLoading: false as boolean },
+  expenseQueryState: { data: [] as Array<Record<string, unknown>>, isLoading: false as boolean },
   invalidateMock: vi.fn(),
   useMutationMock: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }));

@@ -17,7 +17,7 @@ import { getTotalIncome } from '@/server/services/income.service';
  * Returns dashboard summary data: net worth, cashflow YTD, and recent transactions
  * Requires authentication
  */
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { prismaMock } from '@/__tests__/mocks/prisma.mock';
 
 /**
  * Phase 2 Unit Tests: Interest Cleansing (CalendarYearPicker & Date Window)

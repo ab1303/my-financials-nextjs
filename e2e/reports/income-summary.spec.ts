@@ -61,8 +61,6 @@ test.describe('Income Summary Reports', () => {
 
       // Should show empty state or zero values
       const emptyMessage = page.locator('text=/no data|No income|empty/i');
-      const zeroDisplay = page.locator('text=/0/');
-
       if (await emptyMessage.isVisible({ timeout: 2000 }).catch(() => false)) {
         await expect(emptyMessage).toBeVisible();
       }

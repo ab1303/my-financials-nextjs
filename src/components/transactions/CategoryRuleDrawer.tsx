@@ -61,7 +61,8 @@ export default function CategoryRuleDrawer({
     },
   });
 
-  const applyToPast = watch('applyToPast');
+  // eslint-disable-next-line react-hooks/incompatible-library
+  watch('applyToPast');
 
   // Reset form when drawer opens with new values
   useEffect(() => {

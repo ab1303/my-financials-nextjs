@@ -91,7 +91,10 @@ export const EditCell = <TData, TValue>({
 
   // Try to get meaningful details for the confirmation dialog
   const getRowDetails = () => {
-    const original = row.original as any;
+    const original = row.original as {
+      datePaid?: Date | string | null;
+      amount?: number | string | null;
+    };
     const details: { [key: string]: string | undefined } = {};
 
     if (original.datePaid) {

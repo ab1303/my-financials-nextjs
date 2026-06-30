@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarEnumType } from '@prisma/client';
 import clsx from 'clsx';
 import { Info } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import type { SubmitHandler } from 'react-hook-form';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -90,7 +90,7 @@ export default function CalendarForm({
         toDate: new Date(y, 12, 0),
       });
     }
-  }, [editingRecord, reset, y]);
+  }, [editingRecord, reset]);
 
   const processForm: SubmitHandler<FormInput> = async (data) => {
     const result = await upsertCalendarYear(data);

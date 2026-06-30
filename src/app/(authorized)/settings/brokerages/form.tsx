@@ -26,7 +26,6 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button, Card } from '@/components';
-import Table from '@/components/table';
 import { Label, TextInput } from '@/components/ui';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { trpc } from '@/server/trpc/client';
@@ -99,10 +98,8 @@ export default function BrokeragesForm() {
     () => [
       columnHelper.accessor('name', {
         header: 'Institution',
-        cell: ({ getValue, row, table }) => {
-          const editedRecord = (table.options.meta as any)?.editedRows.get(
-            row.index,
-          );
+        cell: ({ getValue, row }) => {
+          const editedRecord = editedRows.get(row.index);
           const value = editedRecord ? editedRecord.name : getValue();
 
           if (editedRecord) {
@@ -158,10 +155,8 @@ export default function BrokeragesForm() {
       }),
       columnHelper.display({
         id: 'actions',
-        cell: ({ row, table }) => {
-          const isEditing = (table.options.meta as any)?.editedRows.has(
-            row.index,
-          );
+        cell: ({ row }) => {
+          const isEditing = editedRows.has(row.index);
           const brokerage = row.original;
 
           if (isEditing) {
@@ -245,44 +240,14 @@ export default function BrokeragesForm() {
         },
       }),
     ],
-    [editedRows, updateMutation.isPending],
+    [editedRows, updateMutation],
   ) as ColumnDef<BrokerageRow, unknown>[];
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: getBrokeragesQuery.data ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
-    meta: {
-      editedRows,
-      setEditedRows,
-      validRows: {},
-      updateRow: async (rowIndex: number) => {
-        const edited = editedRows.get(rowIndex);
-        if (edited?.name.trim()) {
-          const original = (getBrokeragesQuery.data ?? [])[rowIndex];
-          if (original) {
-            updateMutation.mutate({
-              brokerageId: original.id,
-              name: edited.name.trim(),
-            });
-          }
-        }
-      },
-      removeRow: async (rowIndex: number) => {
-        const brokerage = (getBrokeragesQuery.data ?? [])[rowIndex];
-        if (brokerage) {
-          setDeleteTarget(brokerage.id);
-          setShowDeleteConfirm(true);
-        }
-      },
-      revertData: (rowIndex: number) => {
-        setEditedRows(
-          produce((draft) => {
-            draft.delete(rowIndex);
-          }),
-        );
-      },
-    } as any,
   });
 
   return (

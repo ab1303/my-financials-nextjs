@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/components/csv-import/TransactionReviewTable', () => ({
-  default: ({ months }: any) => (
+  default: ({ months }: { months: unknown[] }) => (
     <div data-testid='debit-table'>Debits: {months.length} months</div>
   ),
 }));

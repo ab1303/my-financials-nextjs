@@ -100,6 +100,7 @@ export default function DonationTableClient({
     [individualsOptions, businessesOptions],
   );
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<DonationPaymentType>({
     data: data,
     columns,

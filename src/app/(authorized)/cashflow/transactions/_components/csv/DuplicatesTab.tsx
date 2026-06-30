@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import type { ClassifiedMonth } from './_types';
 import DuplicatesReviewTable from './DuplicatesReviewTable';
 

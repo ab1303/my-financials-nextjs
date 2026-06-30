@@ -175,6 +175,7 @@ export default function ExpenseTableClient({
     calendarYearId,
     monthlySummaries,
     selectedCategoryIdsKey,
+    selectedCategoryIds,
   ]);
 
   // Build display rows in fiscal-year order, each annotated with its calendar year
@@ -265,6 +266,7 @@ export default function ExpenseTableClient({
     }),
   ];
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<DisplayRow>({
     data: orderedRows,
     columns,

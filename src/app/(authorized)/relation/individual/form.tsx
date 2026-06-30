@@ -1,13 +1,11 @@
 'use client';
 
+import clsx from 'clsx';
 import { useQueryClient } from '@tanstack/react-query';
 import { TRPCError } from '@trpc/server';
-import clsx from 'clsx';
-import { Loader2 } from 'lucide-react';
 import { useId, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import type { GroupBase, OptionProps, SingleValue } from 'react-select';
-import { components } from 'react-select';
+import type { OptionProps, SingleValue } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -293,6 +291,7 @@ export default function IndividualForm() {
   // Transform individuals for dropdown
   let individualOptions: Array<IndividualOptionType> = [];
   if (getIndividualsQuery.isSuccess && getIndividualsQuery.data) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     individualOptions = getIndividualsQuery.data.map((individual: any) => ({
       id: individual.id,
       label: individual.name,
@@ -316,13 +315,12 @@ export default function IndividualForm() {
   // Transform relationships for dropdown
   let relationshipOptions: Array<RelationshipOptionType> = [];
   if (getRelationshipsQuery.isSuccess && getRelationshipsQuery.data) {
-    relationshipOptions = getRelationshipsQuery.data.map(
-      (relationship: any) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    relationshipOptions = getRelationshipsQuery.data.map((relationship: any) => ({
         id: relationship.id,
         label: relationship.name,
         value: relationship.name,
-      }),
-    );
+      }));
   }
 
   return (

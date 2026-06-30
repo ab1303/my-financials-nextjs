@@ -51,7 +51,7 @@ function record(page_: string, category: Finding['category'], severity: Finding[
 }
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
-async function collectConsoleErrors(page: Page): Promise<string[]> {
+async function _collectConsoleErrors(page: Page): Promise<string[]> {
   const errors: string[] = [];
   page.on('console', (msg) => {
     if (msg.type() === 'error') errors.push(msg.text());
@@ -228,7 +228,7 @@ test('Audit: /cashflow/income', async ({ page }) => {
     // Save via check/save button
     const saveBtn = page.locator('button[aria-label*="save" i], button[aria-label*="confirm" i], button svg[class*="check" i]').first();
     const saveBtnAlt = page.locator('button').filter({ hasText: /save/i }).first();
-    const checkIconBtn = page.locator('button').filter({ has: page.locator('svg') }).nth(0);
+    const _checkIconBtn = page.locator('button').filter({ has: page.locator('svg') }).nth(0);
 
     let saved = false;
     if (await saveBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
@@ -504,9 +504,9 @@ test('Audit: /cashflow/expense', async ({ page }) => {
     record(PAGE_NAME, 'crud', 'ok', `React Select controls in modal: ${modalSelectCount}`);
 
     // Try to add an expense entry in the modal
-    const modalAddBtn = page.locator('[role="dialog"] button[aria-label*="add" i], [role="dialog"] button').filter({ hasText: /^\+$/ }).first();
-    const modalAddBtnAlt = page.locator('[role="dialog"] button').filter({ hasText: /add/i }).first();
-    const addIconBtn = page.locator('[role="dialog"] button[aria-label*="add" i]').first();
+    const _modalAddBtn = page.locator('[role="dialog"] button[aria-label*="add" i], [role="dialog"] button').filter({ hasText: /^\+$/ }).first();
+    const _modalAddBtnAlt = page.locator('[role="dialog"] button').filter({ hasText: /add/i }).first();
+    const _addIconBtn = page.locator('[role="dialog"] button[aria-label*="add" i]').first();
 
     // Look for add/+ button within the modal
     const addBtnInModal = page.locator('[role="dialog"]').locator('button').filter({ hasText: /^\+$/ }).first();

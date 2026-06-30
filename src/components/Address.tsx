@@ -5,7 +5,12 @@ import * as React from 'react';
 import { useId } from 'react';
 import type { FieldError, FieldValues } from 'react-hook-form';
 import { Controller, useFormContext } from 'react-hook-form';
-import type { Options, SingleValue } from 'react-select';
+import type {
+  ControlProps,
+  CSSObjectWithLabel,
+  Options,
+  SingleValue,
+} from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { useDebouncedCallback } from 'use-debounce';
 import usePlacesAutocomplete, { getGeocode } from 'use-places-autocomplete';
@@ -121,6 +126,7 @@ export default function AddressComponent<T extends FieldValues>({
     ),
     debounce,
   );
+  const selectStyles = getSelectStyles<{ label: string }>();
 
   const handleSelect = (selectedOption: SingleValue<{ label: string }>) => {
     // Loop like an Array
@@ -222,19 +228,12 @@ export default function AddressComponent<T extends FieldValues>({
                       instanceId={uniqId}
                       {...selectProps}
                       styles={{
-                         
-                        ...(getSelectStyles() as any),
+                        ...selectStyles,
                         control: (
-                          base: import('react-select').CSSObjectWithLabel,
-                          state: import('react-select').ControlProps<
-                            { label: string },
-                            false
-                          >,
+                          base: CSSObjectWithLabel,
+                          state: ControlProps<{ label: string }, false>,
                         ) => ({
-                          ...getSelectStyles<{ label: string }>().control!(
-                            base,
-                            state,
-                          ),
+                          ...(selectStyles.control?.(base, state) ?? {}),
                           ...(addressFields.addressLineError
                             ? { borderColor: 'rgba(194, 65, 12)' }
                             : {}),

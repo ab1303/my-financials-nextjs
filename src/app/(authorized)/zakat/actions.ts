@@ -34,7 +34,6 @@ export async function addRow(input: CreateZakatPaymentInput) {
     // Get or create Zakat record for the calendar year
     const zakatRecord = await getZakat(validatedInput.calendarYearId);
     let zakatId = zakatRecord.id;
-    let zakatAmountDue = zakatRecord.amountDue;
 
     if (!zakatId) {
       // Auto-initialize obligation if missing
@@ -43,7 +42,6 @@ export async function addRow(input: CreateZakatPaymentInput) {
         amountDue: 0,
       });
       zakatId = newZakat.id;
-      zakatAmountDue = newZakat.amountDue.toNumber();
     }
 
     // Create payment record
@@ -61,7 +59,7 @@ export async function addRow(input: CreateZakatPaymentInput) {
       data: {
         id: newPayment.id,
         datePaid: newPayment.datePaid,
-        amount: Number((newPayment as any).amount),
+        amount: Number(newPayment.amount),
         beneficiaryType: newPayment.beneficiaryType,
         isDeductible: newPayment.isDeductible,
         beneficiaryId: validatedInput.beneficiaryId || '',

@@ -1,6 +1,7 @@
 import { CalendarEnumType } from '@prisma/client';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CalendarYearType } from '@/types';
@@ -12,25 +13,28 @@ vi.mock('@/components/ui/AppSelect', () => ({
     value,
     onChange,
     placeholder,
-    isClearable,
-    inputId,
-    ...props
-  }: any) => (
+   inputId,
+   ...props
+  }: {
+   options: Array<{ id: string; label: string }>;
+   value?: { id: string } | null;
+   onChange: (selected: { id: string; label: string } | null) => void;
+   placeholder?: string;
+   inputId?: string;
+  } & ComponentPropsWithoutRef<'select'>) => (
     <div data-testid='app-select'>
       <select
         data-testid='select-input'
         id={inputId}
         value={value?.id || ''}
         onChange={(e) => {
-          const selected = options.find(
-            (opt: any) => opt.id === e.target.value,
-          );
+          const selected = options.find((opt) => opt.id === e.target.value);
           onChange(selected || null);
         }}
         {...props}
       >
         <option value=''>{placeholder}</option>
-        {options.map((opt: any) => (
+        {options.map((opt) => (
           <option key={opt.id} value={opt.id}>
             {opt.label}
           </option>
@@ -42,7 +46,12 @@ vi.mock('@/components/ui/AppSelect', () => ({
 
 // Mock the Label component
 vi.mock('@/components/ui/Label', () => ({
-  Label: ({ children, ...props }: any) => <label {...props}>{children}</label>,
+  Label: ({
+    children,
+    ...props
+  }: {
+    children: ReactNode;
+  } & ComponentPropsWithoutRef<'label'>) => <label {...props}>{children}</label>,
 }));
 
 import CalendarYearPicker from '@/components/CalendarYearPicker';
@@ -199,7 +208,7 @@ describe('CalendarYearPicker', () => {
       const handleYearChange = vi.fn();
       const handleTypeChange = vi.fn();
 
-      const { rerender } = render(
+      const { rerender: _rerender } = render(
         <CalendarYearPicker
           applicableTypes={[CalendarEnumType.ANNUAL, CalendarEnumType.FISCAL]}
           calendarYears={mockCalendarYears}

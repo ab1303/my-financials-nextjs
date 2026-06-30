@@ -107,7 +107,7 @@ export const updateIndividualDetailsHandler = async ({
       }
     }
 
-    const updateData: any = {};
+    const updateData: Parameters<typeof updateIndividualDetails>[1] = {};
     if (input.name !== undefined) updateData.name = input.name.trim();
     if (input.firstName !== undefined)
       updateData.firstName = input.firstName || null;

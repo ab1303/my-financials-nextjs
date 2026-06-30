@@ -19,7 +19,7 @@ const mockCtx = {
 
 describe('Transaction Ledger Router Authentication', () => {
   it('should allow access to getAll when user is authenticated', async () => {
-    const caller = transactionLedgerRouter.createCaller(mockCtx as any);
+    const caller = transactionLedgerRouter.createCaller(mockCtx as never);
 
     // Call getAll without input just to test the procedure's authentication check
     // We expect it to succeed or fail with validation error, not unauthorized error.
@@ -28,7 +28,7 @@ describe('Transaction Ledger Router Authentication', () => {
 
   it('should throw UNAUTHORIZED when user is not in context', async () => {
     const unauthedCtx = { session: null };
-    const caller = transactionLedgerRouter.createCaller(unauthedCtx as any);
+    const caller = transactionLedgerRouter.createCaller(unauthedCtx as never);
 
     await expect(caller.getAll({ limit: 1 })).rejects.toThrow(TRPCError);
   });

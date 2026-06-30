@@ -10,6 +10,8 @@ import {
 } from '@/server/services/transactions/csv-confirm.service';
 import { runTransferMatchRules } from '@/server/services/transactions/transfer-rule-job.service';
 
+type CsvTransactionRow = Record<string, unknown>;
+
 const ConfirmRequestSchema = z.object({
   fileId: z.string().min(1),
   forceCreateIds: z.array(z.string()).optional(),
@@ -21,13 +23,13 @@ const ConfirmRequestSchema = z.object({
   debitMonths: z.array(
     z.object({
       month: z.string().regex(/^\d{4}-\d{2}$/),
-      transactions: z.array(z.any()),
+      transactions: z.array(z.record(z.string(), z.unknown())),
     }),
   ),
   creditMonths: z.array(
     z.object({
       month: z.string().regex(/^\d{4}-\d{2}$/),
-      transactions: z.array(z.any()),
+      transactions: z.array(z.record(z.string(), z.unknown())),
     }),
   ),
 });
@@ -62,15 +64,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { fileId, llmUsage, debitMonths, creditMonths, forceCreateIds } =
-      parse.data;
+    const { fileId, debitMonths, creditMonths, forceCreateIds } = parse.data;
 
     // Enforce ISO date-only strings (yyyy-MM-dd) for all incoming transactions.
     // This guarantees confirm only receives canonical dates produced by classify.
     const isoDateRE = /^\d{4}-\d{2}-\d{2}$/;
-    const allTxs = [
-      ...debitMonths.flatMap((m: any) => m.transactions as any[]),
-      ...creditMonths.flatMap((m: any) => m.transactions as any[]),
+    const allTxs: CsvTransactionRow[] = [
+      ...debitMonths.flatMap((m) => m.transactions),
+      ...creditMonths.flatMap((m) => m.transactions),
     ];
 
     const bad = allTxs.find((tx) => {
@@ -115,14 +116,16 @@ export async function POST(req: NextRequest) {
 
     const [debitResult, creditResult] = await Promise.all([
       confirmDebitTransactions(
-        debitMonths,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        debitMonths as any,
         session.user.id,
         bankAccountId,
         fileId,
         forceCreateIds,
       ),
       confirmCreditTransactions(
-        creditMonths,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        creditMonths as any,
         session.user.id,
         bankAccountId,
         fileId,
@@ -136,7 +139,7 @@ export async function POST(req: NextRequest) {
       return (
         count +
         month.transactions.filter(
-          (tx: any) =>
+          (tx) =>
             tx.confirmedCategory === 'Transfer' ||
             tx.confirmedCategory === 'Excluded',
         ).length

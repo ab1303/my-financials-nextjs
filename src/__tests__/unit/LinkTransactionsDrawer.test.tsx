@@ -55,18 +55,28 @@ vi.mock('sonner', () => ({
 }));
 
 vi.mock('react-select/creatable', () => ({
-  default: ({ inputId, options = [], value, onChange }: any) => (
+  default: ({
+    inputId,
+    options = [],
+    value,
+    onChange,
+  }: {
+    inputId?: string;
+    options?: Array<{ value: string; label: string }>;
+    value?: { value: string; label: string } | null;
+    onChange?: (selected: { value: string; label: string } | null) => void;
+  }) => (
     <select
       id={inputId}
       value={value?.value ?? ''}
       onChange={(event) => {
         const selected =
-          options.find((option: any) => option.value === event.target.value) ??
+          options.find((option) => option.value === event.target.value) ??
           null;
         onChange?.(selected);
       }}
     >
-      {options.map((option: any) => (
+      {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>
@@ -76,18 +86,28 @@ vi.mock('react-select/creatable', () => ({
 }));
 
 vi.mock('@/components/ui/AppSelect', () => ({
-  AppSelect: ({ inputId, options = [], value, onChange }: any) => (
+  AppSelect: ({
+    inputId,
+    options = [],
+    value,
+    onChange,
+  }: {
+    inputId?: string;
+    options?: Array<{ value: string; label: string }>;
+    value?: { value: string; label: string } | null;
+    onChange?: (selected: { value: string; label: string } | null) => void;
+  }) => (
     <select
       id={inputId}
       value={value?.value ?? ''}
       onChange={(event) => {
         const selected =
-          options.find((option: any) => option.value === event.target.value) ??
+          options.find((option) => option.value === event.target.value) ??
           null;
         onChange?.(selected);
       }}
     >
-      {options.map((option: any) => (
+      {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>

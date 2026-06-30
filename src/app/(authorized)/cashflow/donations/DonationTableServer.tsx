@@ -56,12 +56,6 @@ export default async function DonationPaymentsTableServer({
 
     const data =
       donationPayments?.map<DonationPaymentType>((dp) => {
-        // Need to narrow type to extract specific fields
-        const isVoluntary =
-          'beneficiaryType' in dp && dp.beneficiaryType !== undefined;
-        const isZakat =
-          'beneficiaryType' in dp && dp.donationPurpose === 'ZAKAT';
-
         let beneficiaryId = '';
         let beneficiaryType: BeneficiaryEnumType = BeneficiaryEnumType.BUSINESS;
         let isDeductible = false;
@@ -70,13 +64,13 @@ export default async function DonationPaymentsTableServer({
           beneficiaryType = dp.beneficiaryType;
           beneficiaryId =
             (dp.beneficiaryType === 'BUSINESS'
-              ? (dp as any).businessId
-              : (dp as any).individualId) || '';
+              ? dp.businessId
+              : dp.individualId) || '';
           isDeductible = dp.isDeductible;
         } else {
           // Interest Cleansing
           beneficiaryType = BeneficiaryEnumType.BUSINESS;
-          beneficiaryId = (dp as any).sourceBusinessId || '';
+          beneficiaryId = dp.sourceBusinessId || '';
           isDeductible = dp.isDeductible;
         }
 
@@ -97,7 +91,7 @@ export default async function DonationPaymentsTableServer({
         <DonationTableClient
           individualsOptions={individualsOptions}
           businessesOptions={businessesOptions}
-          addRow={addRow as any}
+          addRow={addRow}
           editRow={editRow}
           deleteRow={deleteRow}
           calendarYearId={calendarYearId}

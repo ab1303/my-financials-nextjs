@@ -1,5 +1,5 @@
 import type { ExpenseCategory } from '@prisma/client';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { CsvTransaction } from '@/server/services/ai-import/_types';
 import { classifyTransactions } from '@/server/services/ai-import/csv-classifier.service';

@@ -38,9 +38,17 @@ export const updateTracking = async (
   isTracked: boolean,
   userId: string,
 ) => {
-  return (prisma.financialAccount as any).update({
+  const updated = await prisma.financialAccount.updateMany({
     where: { id: accountId, userId },
     data: { isTracked },
+  });
+
+  if (updated.count === 0) {
+    throw new Error('Bank account not found');
+  }
+
+  return prisma.financialAccount.findFirstOrThrow({
+    where: { id: accountId, userId },
     select: { id: true, isTracked: true },
   });
 };

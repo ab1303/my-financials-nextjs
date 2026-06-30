@@ -2,7 +2,6 @@
 
 import {
   Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   ComposedChart,
@@ -22,6 +21,8 @@ type NetCashflowChartProps = {
   data: MonthlyTrendPoint[];
 };
 
+type ChartPoint = MonthlyTrendPoint & { cumulative: number };
+
 const formatTick = (v: number) =>
   v >= 1000
     ? `$${(v / 1000).toFixed(0)}k`
@@ -31,7 +32,7 @@ const formatTick = (v: number) =>
 
 export function NetCashflowChart({ data }: NetCashflowChartProps) {
   // Compute cumulative savings line using reduce
-  const chartData = data.reduce((acc: any[], point, index) => {
+  const chartData = data.reduce<ChartPoint[]>((acc, point, index) => {
     const cumulative = (acc[index - 1]?.cumulative ?? 0) + point.net;
     acc.push({ ...point, cumulative });
     return acc;

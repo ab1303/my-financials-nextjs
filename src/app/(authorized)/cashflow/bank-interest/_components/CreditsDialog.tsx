@@ -15,15 +15,11 @@ import InterestCreditsTable from '../InterestCreditsTable';
 type CreditsDialogProps = {
   bankName: string;
   credits: MonthlyCredit[];
-  institutionId: string;
-  calendarYearId: string;
 };
 
 export default function CreditsDialog({
   bankName,
   credits,
-  institutionId,
-  calendarYearId,
 }: CreditsDialogProps) {
   return (
     <Dialog>

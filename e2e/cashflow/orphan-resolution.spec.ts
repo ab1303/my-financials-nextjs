@@ -124,7 +124,7 @@ test.describe('handle-orphans P3 — Resolution flows (sequential)', () => {
   test.afterAll(async () => {
     const prisma = new PrismaClient();
     try {
-      await (prisma.transaction as any).updateMany({
+      await (prisma.transaction as never).updateMany({
         where: { id: { in: ['e2e-transfer-orphan-fy26', 'e2e-transfer-midyear-fy26'] } },
         data: { orphanResolution: null, category: 'Transfer' },
       });

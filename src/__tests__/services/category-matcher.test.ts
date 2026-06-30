@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { makeCategories } from '@/__tests__/helpers/test-helpers';
-import type { AITokenUsage } from '@/server/services/ai-import/_types';
 
 /**
  * Unit Tests for Category Matcher Service
@@ -39,13 +38,6 @@ describe('Category Matcher Service - matchCategoryWithEmbedding', () => {
     vi.resetModules();
     vi.clearAllMocks();
   });
-
-  /**
-   * Helper function to create mock embeddings (1536-dimensional vectors)
-   */
-  function createMockEmbedding(value: number = 0.1): number[] {
-    return new Array(1536).fill(value);
-  }
 
   /**
    * Test 1: Exact match skips embedding

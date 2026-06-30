@@ -13,7 +13,7 @@ import { trpc } from '@/server/trpc/client';
 
 type BankAssetEntry = {
   id: string;
-  balance: string | number;
+  balance: unknown;
   account: {
     id: string;
     name: string;
@@ -30,7 +30,7 @@ type BankAssetSnapshot = {
 type NewSnapshotModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  mostRecentSnapshot?: any;
+  mostRecentSnapshot?: BankAssetSnapshot | null;
   onSuccess: () => void;
 };
 
@@ -77,8 +77,10 @@ export default function NewSnapshotModal({
       // Refetch accounts after creating new account
       utils.bankAsset.getBankAccounts.invalidate();
     },
-    onError: (error) => {
-      toast.error((error as any)?.message || 'Failed to create account');
+    onError: (error: unknown) => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to create account',
+      );
     },
   });
 
@@ -88,18 +90,19 @@ export default function NewSnapshotModal({
       toast.success('Snapshot created successfully!');
       onSuccess();
     },
-    onError: (error) => {
-      toast.error((error as any)?.message || 'Failed to create snapshot');
+    onError: (error: unknown) => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to create snapshot',
+      );
     },
   });
 
   // Pre-fill form with most recent snapshot data
   useEffect(() => {
-    if (mostRecentSnapshot?.entries && entries.length === 0) {
+    if (mostRecentSnapshot?.balanceRecords && entries.length === 0) {
       const snapshotEntries = mostRecentSnapshot.balanceRecords.map(
-        (entry: any) => ({
-          institutionId:
-            entry.account.institutionId || entry.account.institutionId,
+        (entry) => ({
+          institutionId: entry.account.institutionId,
           accountId: entry.account.id,
           balance: Number(entry.balance),
         }),

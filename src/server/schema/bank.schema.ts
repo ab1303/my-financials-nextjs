@@ -1,5 +1,5 @@
 import type { TypeOf } from 'zod';
-import { number, object, string, z } from 'zod';
+import { object, string } from 'zod';
 
 export const createBankSchema = object({
   name: string({ required_error: 'Bank Name is required' })

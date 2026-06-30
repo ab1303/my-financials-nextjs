@@ -216,7 +216,10 @@ export function FiltersPanel({
 
   // Get selected categories (for preview totals and rendering)
   const activeFilterIds = useMemo(() => getActiveFilters(), [getActiveFilters]);
-  const selectedCategories = new Set(activeFilterIds);
+  const selectedCategories = useMemo(
+    () => new Set(activeFilterIds),
+    [activeFilterIds],
+  );
 
   useEffect(() => {
     onSelectionChange?.(activeFilterIds);

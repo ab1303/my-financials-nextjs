@@ -51,10 +51,10 @@ describe('getCleansingDebitCandidates', () => {
     ];
 
     vi.mocked(prisma.transaction.findUniqueOrThrow).mockResolvedValue(
-      mockCredit as any,
+      mockCredit as never,
     );
     vi.mocked(prisma.transaction.findMany).mockResolvedValue(
-      mockCandidates as any,
+      mockCandidates as never,
     );
 
     const candidates = await getCleansingDebitCandidates({

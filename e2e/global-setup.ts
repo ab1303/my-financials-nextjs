@@ -241,7 +241,7 @@ async function globalSetup() {
     // Explicitly reset orphanResolution to null AND category to 'Transfer' for both seeded orphans
     // (Prisma upsert update block silently ignores unrecognised typed fields)
     // Also resets category in case orphan-resolution tests reclassified them (EXPENSE/INCOME)
-    await (prisma.transaction as any).updateMany({
+    await (prisma.transaction as never).updateMany({
       where: {
         id: { in: ['e2e-transfer-orphan-fy26', 'e2e-transfer-midyear-fy26'] },
       },

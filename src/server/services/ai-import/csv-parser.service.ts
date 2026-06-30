@@ -117,14 +117,3 @@ export function parseCsvRow(
     balance,
   };
 }
-
-/**
- * Detect if a CSV line looks like a CommBank data row (starts with DD/MM/YYYY date)
- * @deprecated Internal helper kept for parseCsvRow backward compatibility.
- */
-function looksLikeDataRow(line: string): boolean {
-  const firstComma = line.indexOf(',');
-  const dateField =
-    firstComma > -1 ? line.slice(0, firstComma).replace(/"/g, '').trim() : '';
-  return /^\d{2}\/\d{2}\/\d{4}$/.test(dateField);
-}

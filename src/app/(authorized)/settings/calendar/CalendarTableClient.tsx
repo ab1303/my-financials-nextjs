@@ -145,6 +145,7 @@ export default function CalendarTableClient(props: CalendarTableClientProps) {
     }),
   ];
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<CalendarYearType>({
     data: tableData,
     columns,

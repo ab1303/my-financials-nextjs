@@ -189,8 +189,8 @@ export function CategoryGroupRollupPanel({
       color: BAR_COLORS[i % BAR_COLORS.length] ?? 'bg-gray-400',
     }));
 
-  const groupedIds = new Set(scopedGroups.flatMap((g) => g.memberIds));
   const crossGroupOptions: GroupBase<OptionType>[] = useMemo(() => {
+    const groupedIds = new Set(scopedGroups.flatMap((g) => g.memberIds));
     const grouped = scopedGroups
       .map((g) => ({
         label: g.name,
@@ -206,7 +206,7 @@ export function CategoryGroupRollupPanel({
     if (ungrouped.length > 0)
       grouped.push({ label: 'Ungrouped', options: ungrouped });
     return grouped;
-  }, [groupedIds, scopedGroups, sourceCategories]);
+  }, [scopedGroups, sourceCategories]);
 
   const selectedOptions = useMemo(
     () =>

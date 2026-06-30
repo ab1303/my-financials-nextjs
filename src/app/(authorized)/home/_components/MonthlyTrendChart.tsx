@@ -3,7 +3,6 @@
 import {
   Bar,
   BarChart,
-  Cell,
   Legend,
   ResponsiveContainer,
   Tooltip,

@@ -1,4 +1,3 @@
-import type { BeneficiaryEnumType } from '@prisma/client';
 import type { CellContext } from '@tanstack/react-table';
 
 import { SelectWrapper as Select } from '@/components/ui/Select';

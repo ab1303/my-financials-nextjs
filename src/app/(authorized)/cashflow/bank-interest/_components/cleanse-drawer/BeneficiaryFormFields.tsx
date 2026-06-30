@@ -2,6 +2,7 @@
 
 import { BeneficiaryEnumType } from '@prisma/client';
 import { Controller } from 'react-hook-form';
+import type { CSSObjectWithLabel } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 
 import { SelectWrapper as Select } from '@/components/ui/Select';
@@ -42,6 +43,7 @@ export function BeneficiaryFormFields({
           Beneficiary type
         </label>
         <Controller
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           control={form.control as any}
           name='beneficiaryType'
           render={({ field }) => {
@@ -61,9 +63,13 @@ export function BeneficiaryFormFields({
                 value={selected}
                 onChange={(option) => field.onChange(option?.value)}
                 styles={
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   {
                     ...getSelectStyles(),
-                    menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+                    menuPortal: (base: CSSObjectWithLabel) => ({
+                      ...base,
+                      zIndex: 9999,
+                    }),
                   } as any
                 }
                 usePortal
@@ -80,6 +86,7 @@ export function BeneficiaryFormFields({
           Beneficiary
         </label>
         <Controller
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           control={form.control as any}
           name='beneficiaryId'
           render={({ field }) => {
@@ -102,7 +109,10 @@ export function BeneficiaryFormFields({
                 formatCreateLabel={(value) => `+ Create "${value}"`}
                 styles={{
                   ...getSelectStyles<BeneficiaryOption>(),
-                  menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
+                  menuPortal: (base: CSSObjectWithLabel) => ({
+                    ...base,
+                    zIndex: 9999,
+                  }),
                 }}
                 menuPortalTarget={
                   typeof document !== 'undefined' ? document.body : null
@@ -112,8 +122,10 @@ export function BeneficiaryFormFields({
             );
           }}
         />
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {(form.formState.errors as any).beneficiaryId && (
           <p className='mt-1 text-xs text-red-600 dark:text-red-400'>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {String((form.formState.errors as any).beneficiaryId.message)}
           </p>
         )}

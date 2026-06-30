@@ -242,7 +242,7 @@ export async function POST(req: NextRequest) {
                 sseEvent(encoder, {
                   type: 'credit_classified',
                   month,
-                  transactions: classified as any,
+                  transactions: classified as ClassifiedCreditTransaction[],
                   usage: {
                     totalTokens: 0,
                     promptTokens: 0,
@@ -274,7 +274,6 @@ export async function POST(req: NextRequest) {
               totalCompletionTokens += result.usage.completionTokens;
 
               const duplicates = await findDuplicatesForClassifiedMonths({
-                prisma,
                 userId: session.user.id,
                 bankAccountId,
                 classifiedMonths: [{ month, transactions: result.classified }],

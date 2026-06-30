@@ -34,7 +34,7 @@ test.describe('CSV Import — Review & Category Override', () => {
    * Helper function: Upload CSV and wait for classification to complete.
    * This moves us from Step 1 (Upload) through Step 2 (Classifying) to Step 3 (Review).
    */
-  async function uploadAndClassifyCSV(page: any) {
+  async function uploadAndClassifyCSV(page: Parameters<Parameters<typeof test>[1]>[0]) {
     // Select a bank account using stable testid
     const select = page.getByTestId('csv-bank-account-select');
     const options = await select.locator('option').all();
@@ -168,7 +168,7 @@ test.describe('CSV Import — Review & Category Override', () => {
 
       if (!hasAmberClass) {
         // Check for data-testid="overridden-row"
-        const overriddenIndicator = rowWithSelect.locator('[data-testid="overridden-row"]');
+        const _overriddenIndicator = rowWithSelect.locator('[data-testid="overridden-row"]');
         // Either amber class or overridden-row indicator should exist
         // (soft assertion - might not be implemented yet)
       }
@@ -337,7 +337,7 @@ test.describe('CSV Import — Review & Category Override', () => {
     // Expect loading/saving state
     // TODO: add data-testid="saving-state" to saving indicator
     const savingIndicator = page.getByText(/saving|processing|completing/i);
-    const savingStateExists = await savingIndicator
+    const _savingStateExists = await savingIndicator
       .first()
       .isVisible({ timeout: 2000 })
       .catch(() => false);
@@ -584,7 +584,7 @@ test.describe('CSV Import — Review & Category Override', () => {
     await uploadAndClassifyCSV(page);
 
     // Store initial state by counting overrides
-    const initialOverrides = await page
+    const _initialOverrides = await page
       .locator('[data-testid="override-count"], text=/\\d+ override/i')
       .count();
 

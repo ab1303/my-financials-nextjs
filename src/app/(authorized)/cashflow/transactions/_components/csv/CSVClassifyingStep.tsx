@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 
 import type { ClassifiedCreditMonth } from '@/server/services/ai-import/_types';
+import type {
+  ClassifiedCreditTransaction,
+  ClassifiedTransaction,
+} from '@/server/services/ai-import/_types';
 
 import type { ClassifiedMonth, CSVClassifyingStepProps } from './_types';
 
@@ -14,7 +18,6 @@ interface ProgressEntry {
 
 export default function CSVClassifyingStep({
   file,
-  context: _context,
   onComplete,
   onError,
 }: CSVClassifyingStepProps) {
@@ -106,8 +109,10 @@ export default function CSVClassifyingStep({
         }));
       } else if (type === 'debit_classified' || type === 'classified') {
         const month = event.month as string;
-        const transactions = (event.transactions ?? []) as any[];
-        const duplicates = (event.duplicates ?? []) as any[]; // Capture duplicates
+        const transactions = (event.transactions ?? []) as ClassifiedTransaction[];
+        const duplicates = (event.duplicates ?? []) as NonNullable<
+          ClassifiedMonth['duplicates']
+        >; // Capture duplicates
         const usage = (event.usage ?? {
           promptTokens: 0,
           completionTokens: 0,
@@ -175,7 +180,7 @@ export default function CSVClassifyingStep({
         }));
       } else if (type === 'credit_classified') {
         const month = event.month as string;
-        const transactions = (event.transactions ?? []) as any[];
+        const transactions = (event.transactions ?? []) as ClassifiedCreditTransaction[];
         const usage = (event.usage ?? {
           promptTokens: 0,
           completionTokens: 0,

@@ -24,8 +24,6 @@ import { expect,test } from '@playwright/test';
 
 import { dropFileOnZone } from '../helpers/drop-file';
 
-const EXPENSE_URL = '/cashflow/expense';
-
 // ---------------------------------------------------------------------------
 // Helper: open the CSV Import Wizard modal
 // ---------------------------------------------------------------------------
@@ -104,7 +102,7 @@ test.describe('harden-import-wizard — CSV wizard structure', () => {
     await expect(page.getByTestId('csv-import-wizard')).not.toBeVisible({ timeout: 3000 });
   });
 
-  test('NAB sample CSV fixture is accepted by file input', async ({ page }) => {
+  test('NAB sample CSV fixture is accepted by file input', async ({ page: _page }) => {
     // react-dropzone programmatic file dispatch not reliably supported in Playwright Chromium.
     test.skip(true, 'react-dropzone onDrop not triggerable via Playwright — test manually');
   });

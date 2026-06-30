@@ -4,29 +4,7 @@ import {
   components,
   type GroupBase,
   type MenuProps,
-  type OptionProps,
 } from 'react-select';
-
-/**
- * Custom Option component that adds a title attribute for native browser tooltips on hover.
- */
-function CustomOption<
-  Option,
-  IsMulti extends boolean,
-  Group extends GroupBase<Option>,
->(props: OptionProps<Option, IsMulti, Group>) {
-  // Cast data to allow accessing 'label'.
-  const label = (props.data as { label?: string }).label;
-
-  return (
-    <components.Option
-      {...props}
-      innerProps={{ ...props.innerProps, title: label }}
-    >
-      {props.children}
-    </components.Option>
-  );
-}
 
 /**
  * A custom Menu component for react-select that forces consistent Popper placement.

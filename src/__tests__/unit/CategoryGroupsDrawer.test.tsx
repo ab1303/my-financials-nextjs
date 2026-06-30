@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -119,7 +119,7 @@ describe('CategoryGroupsDrawer', () => {
   });
 
   it('closes drawer when close button is clicked', async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     render(
       <CategoryGroupsDrawer
         isOpen={true}
@@ -135,7 +135,7 @@ describe('CategoryGroupsDrawer', () => {
   });
 
   it('closes drawer when cancel button is clicked', async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     render(
       <CategoryGroupsDrawer
         isOpen={true}
@@ -217,7 +217,7 @@ describe('CategoryGroupsDrawer', () => {
   });
 
   it('allows entering group name', async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     render(
       <CategoryGroupsDrawer
         isOpen={true}
@@ -313,7 +313,7 @@ describe('CategoryGroupsDrawer', () => {
   });
 
   it('allows selecting Income Sources as scope', async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     render(
       <CategoryGroupsDrawer
         isOpen={true}

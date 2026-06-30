@@ -100,8 +100,12 @@ export const getAllQuery = protectedProcedure
       ? (transactions[transactions.length - 1]?.id ?? null)
       : null;
 
-    const outputTransactions: TransactionRow[] = (transactions as any[]).map(
-      (tx) => ({
+    type TransactionQueryRow = (typeof transactions)[number];
+    type ReimbursementQueryRow =
+      NonNullable<TransactionQueryRow['reimbursements']>[number];
+
+    const outputTransactions: TransactionRow[] = transactions.map(
+      (tx: TransactionQueryRow) => ({
         id: tx.id,
         date: tx.date.toISOString(),
         description: tx.description,
@@ -116,7 +120,7 @@ export const getAllQuery = protectedProcedure
         bankName: tx.financialAccount?.institution?.name ?? null,
         offsetCategory: tx.offsetCategory ?? null,
         offsetTransactionId: tx.offsetTransactionId ?? null,
-        reimbursements: (tx.reimbursements ?? []).map((r: any) => ({
+        reimbursements: (tx.reimbursements ?? []).map((r: ReimbursementQueryRow) => ({
           id: r.id,
           date: r.date.toISOString(),
           description: r.description,

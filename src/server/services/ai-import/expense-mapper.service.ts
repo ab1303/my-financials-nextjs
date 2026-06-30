@@ -43,7 +43,6 @@ export async function mapExpenseData(
     const categoryMap = Object.fromEntries(
       categories.map((cat) => [cat.name, cat.id]),
     );
-    const availableCategories = categories.map((cat) => cat.name);
 
     // Ensure parent Expense record exists
     let expense = await prisma.expenseLedger.findUnique({

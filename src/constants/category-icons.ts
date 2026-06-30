@@ -1,3 +1,4 @@
+import type { IconType } from 'react-icons';
 import {
   MdCardGiftcard,
   MdChildCare,
@@ -54,7 +55,7 @@ export type IconName =
  * Each entry corresponds to an ExpenseCategory.iconName value in the database.
  * Icons are rendered on the client side using this mapping.
  */
-export const CATEGORY_ICON_MAP: Record<IconName, React.ComponentType<any>> = {
+export const CATEGORY_ICON_MAP: Record<IconName, IconType> = {
   'shopping-bag': MdShoppingBag,
   'shopping-cart': MdShoppingCart,
   utensils: MdRestaurant,
@@ -86,7 +87,7 @@ export const CATEGORY_ICON_MAP: Record<IconName, React.ComponentType<any>> = {
  */
 export function getCategoryIcon(
   iconName: string | null | undefined,
-): React.ComponentType<any> {
+): IconType {
   if (!iconName || !(iconName in CATEGORY_ICON_MAP)) {
     return MdShoppingCart; // Default fallback icon
   }

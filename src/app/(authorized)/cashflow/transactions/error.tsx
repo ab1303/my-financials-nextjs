@@ -2,12 +2,7 @@
 
 import TransactionsUnavailable from './TransactionsUnavailable';
 
-interface TransactionsErrorProps {
-  error: Error & { digest?: string };
-  reset: () => void;
-}
-
-export default function TransactionsError(_: TransactionsErrorProps) {
+export default function TransactionsError() {
   return (
     <TransactionsUnavailable
       title='Page unavailable'

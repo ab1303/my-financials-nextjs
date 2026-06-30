@@ -3,7 +3,7 @@
 import type { CalendarEnumType } from '@prisma/client';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 
 import type { CalendarYearType } from '@/app/(authorized)/settings/calendar/_types';
 import { trpc } from '@/server/trpc/client';

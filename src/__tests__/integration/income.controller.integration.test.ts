@@ -45,7 +45,7 @@ describe('Income Controller', () => {
         fromMonth: 1,
         toYear: 2024,
         toMonth: 12,
-      } as any);
+      } as never);
 
       prismaMock.transaction.findMany.mockResolvedValue([
         createMockIncomeTransaction({
@@ -53,7 +53,7 @@ describe('Income Controller', () => {
           category: 'Employment',
           amount: new Decimal('5000'),
         }),
-      ] as any);
+      ] as never);
 
       prismaMock.incomeSource.findMany.mockResolvedValue([
         {
@@ -63,7 +63,7 @@ describe('Income Controller', () => {
           isActive: true,
           createdAt: new Date(),
         },
-      ] as any);
+      ] as never);
 
       const result = await incomeEntriesHandler(calendarYearId, userId);
 
@@ -94,11 +94,11 @@ describe('Income Controller', () => {
         fromMonth: 1,
         toYear: 2024,
         toMonth: 12,
-      } as any);
+      } as never);
 
       prismaMock.transaction.aggregate.mockResolvedValue({
         _sum: { amount: new Decimal('15000.00') },
-      } as any);
+      } as never);
 
       const result = await totalIncomeHandler(calendarYearId, userId);
       expect(result).toBe(15000);
@@ -116,11 +116,11 @@ describe('Income Controller', () => {
         fromMonth: 1,
         toYear: 2024,
         toMonth: 12,
-      } as any);
+      } as never);
 
       prismaMock.transaction.aggregate.mockResolvedValue({
         _sum: { amount: null },
-      } as any);
+      } as never);
 
       const result = await totalIncomeHandler(calendarYearId, userId);
       expect(result).toBe(0);

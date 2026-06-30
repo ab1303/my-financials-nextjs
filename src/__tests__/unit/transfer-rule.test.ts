@@ -22,7 +22,7 @@ const mockPrisma = {
     update: mockRuleUpdate,
     delete: mockRuleDelete,
   },
-} as any;
+} as never;
 
 describe('transfer-rule service', () => {
   beforeEach(() => {

@@ -42,7 +42,8 @@ export function getSelectStyles<
       // Allow callers to pass a menuWidth prop (number) to match the control width
       boxSizing: 'border-box',
       minWidth: (() => {
-        const mw = (state?.selectProps as any)?.menuWidth as number | undefined;
+        const mw =
+          (state?.selectProps as { menuWidth?: number } | undefined)?.menuWidth;
         const MIN = 400; // use 400px min-width per common UI guidelines for dropdowns
         if (mw && !Number.isNaN(mw)) return `${Math.max(mw, MIN)}px`;
         return `${MIN}px`;

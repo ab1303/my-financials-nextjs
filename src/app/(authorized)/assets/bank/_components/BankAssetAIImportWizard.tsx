@@ -14,11 +14,6 @@ import BankProcessingStep from './BankAIProcessingStep';
 
 type WizardStep = 'upload' | 'processing' | 'results';
 
-interface BankAssetImportContext {
-  importType: 'BANK_ASSET';
-  snapshotDate: string;
-}
-
 interface BankAssetAIImportWizardProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,11 +37,6 @@ export default function BankAssetAIImportWizard({
   const [snapshotDate, setSnapshotDate] = useState<string>(
     defaultSnapshotDate ?? todayIso,
   );
-
-  const context: BankAssetImportContext = {
-    importType: 'BANK_ASSET',
-    snapshotDate,
-  };
 
   const handleFilesSelected = (newFiles: UploadedFile[]) => {
     setFiles(newFiles);

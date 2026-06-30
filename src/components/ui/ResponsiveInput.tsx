@@ -1,6 +1,5 @@
 'use client';
 
-import clsx from 'clsx';
 import React from 'react';
 
 import { stylingUtils } from '@/styles/styling';
@@ -50,10 +49,3 @@ export default function ResponsiveInput({
 
 // If these utilities are only used here, keep them internal to this file.
 // Otherwise, move them to '@/styles/styling' for reuse across components.
-
-// Example: Internal utility (remove export)
-const inputWidthUtils = {
-  responsive: stylingUtils.responsiveWidth.input,
-  override: (baseClass: string, width: string) =>
-    stylingUtils.overrideClasses(baseClass, { w: width }),
-};

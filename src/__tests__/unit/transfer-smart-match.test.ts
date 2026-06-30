@@ -46,10 +46,10 @@ function createMockPrisma(options?: { failDebitId?: string }) {
     incomeRecord: {
       deleteMany: vi.fn(async () => ({ count: 0 })),
     },
-    $transaction: vi.fn(async (cb: (tx: any) => Promise<void>) =>
+    $transaction: vi.fn(async (cb: (tx: unknown) => Promise<void>) =>
       cb(mockPrisma),
     ),
-  } as any;
+  } as never;
 
   return { mockPrisma, updates };
 }

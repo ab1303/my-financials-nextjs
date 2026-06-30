@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { deleteRow } from '@/app/(authorized)/cashflow/donations/actions';
 import { Badge } from '@/components/ui/badge';
 import { trpc } from '@/server/trpc/client';
 

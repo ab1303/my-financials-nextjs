@@ -14,7 +14,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         defaultOptions: {
           queries: {
             staleTime: 60 * 1000, // 1 minute
-            retry: (failureCount, error) => {
+            retry: (failureCount, _error) => {
               if (failureCount < 3) return true;
               return false;
             },

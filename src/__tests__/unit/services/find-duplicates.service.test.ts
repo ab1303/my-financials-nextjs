@@ -30,7 +30,7 @@ describe('findDuplicatesForClassifiedMonths', () => {
       amount: 42.5,
       type: 'DEBIT',
     };
-    prismaMock.transaction.findMany.mockResolvedValue([existingTx as any]);
+    prismaMock.transaction.findMany.mockResolvedValue([existingTx as never]);
 
     const classifiedMonths = [
       {
@@ -52,7 +52,7 @@ describe('findDuplicatesForClassifiedMonths', () => {
       prisma: prismaMock,
       userId: 'user-1',
       bankAccountId: 'bank-1',
-      classifiedMonths: classifiedMonths as any,
+      classifiedMonths: classifiedMonths as never,
     });
 
     expect(result).toHaveLength(1);

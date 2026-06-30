@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import { beforeEach, vi } from 'vitest';
-import { type DeepMockProxy, mockDeep, mockReset } from 'vitest-mock-extended';
+import { mockDeep, mockReset } from 'vitest-mock-extended';
 
 // Create the mock instance
 export const prismaMock = mockDeep<PrismaClient>();
@@ -15,7 +15,7 @@ beforeEach(() => {
 vi.mock('@/server/db/client', () => ({
   __esModule: true,
   prisma: prismaMock,
-  handleCaughtError: vi.fn((e) => {
+  handleCaughtError: vi.fn((_e) => {
     // In tests, we want to allow the controller catch block to handle the error
     // instead of throwing it out of the handler
     // In production, handleCaughtError throws a TRPCError

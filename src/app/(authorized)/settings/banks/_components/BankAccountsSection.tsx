@@ -107,32 +107,40 @@ export default function BankAccountsSection() {
                         {acc._count.transactions}
                       </td>
                       <td className='px-4 py-3'>
-                        <button
-                          type='button'
-                          role='switch'
-                          aria-checked={(acc as any).isTracked !== false}
-                          aria-label={`${(acc as any).isTracked !== false ? 'Untrack' : 'Track'} ${acc.name}`}
-                          onClick={() =>
-                            updateTrackingMutation.mutate({
-                              accountId: acc.id,
-                              isTracked: !((acc as any).isTracked !== false),
-                            })
-                          }
-                          className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${
-                            (acc as any).isTracked !== false
-                              ? 'bg-teal-500 dark:bg-teal-600'
-                              : 'bg-gray-300 dark:bg-gray-600'
-                          }`}
-                          disabled={updateTrackingMutation.isPending}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                              (acc as any).isTracked !== false
-                                ? 'translate-x-5'
-                                : 'translate-x-1'
-                            }`}
-                          />
-                        </button>
+                        {(() => {
+                          const isTracked =
+                            (acc as { isTracked?: boolean }).isTracked !==
+                            false;
+
+                          return (
+                            <button
+                              type='button'
+                              role='switch'
+                              aria-checked={isTracked}
+                              aria-label={`${isTracked ? 'Untrack' : 'Track'} ${acc.name}`}
+                              onClick={() =>
+                                updateTrackingMutation.mutate({
+                                  accountId: acc.id,
+                                  isTracked: !isTracked,
+                                })
+                              }
+                              className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${
+                                isTracked
+                                  ? 'bg-teal-500 dark:bg-teal-600'
+                                  : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                              disabled={updateTrackingMutation.isPending}
+                            >
+                              <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                                  isTracked
+                                    ? 'translate-x-5'
+                                    : 'translate-x-1'
+                                }`}
+                              />
+                            </button>
+                          );
+                        })()}
                       </td>
                       <td className='px-4 py-3 text-right'>
                         <button

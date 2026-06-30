@@ -1,3 +1,5 @@
+import type { Prisma } from '@prisma/client';
+
 import { prisma } from '@/server/db/client';
 
 import {
@@ -303,7 +305,7 @@ export const getUnlinkedCleansingDebitTransactions = async (
 
   if (bankAccountIds.length === 0) return [];
 
-  const where: any = {
+  const where: Prisma.TransactionWhereInput = {
     userId,
     bankAccountId: { in: bankAccountIds },
     status: 'CONFIRMED',
@@ -402,16 +404,19 @@ export async function getCleansingDebitCandidates(params: {
   const creditAmount = credit.amount.toNumber();
   const creditDate = new Date(credit.date);
 
-  const whereClause: any = {
+  const whereClause: Prisma.TransactionWhereInput = {
     userId,
     type: 'DEBIT',
     status: 'CONFIRMED',
   };
 
   if (bankAccountId) whereClause.bankAccountId = bankAccountId;
-  if (dateFrom)
-    whereClause.date = { ...whereClause.date, gte: new Date(dateFrom) };
-  if (dateTo) whereClause.date = { ...whereClause.date, lte: new Date(dateTo) };
+  if (dateFrom || dateTo) {
+    whereClause.date = {
+      ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+      ...(dateTo ? { lte: new Date(dateTo) } : {}),
+    };
+  }
   if (search) {
     const numericAmount = parseFloat(search);
     const isNumeric = !isNaN(numericAmount);
@@ -604,7 +609,7 @@ export async function getCleansingDebitCandidates(params: {
 export const suggestAllocations = async (
   creditId: string,
   limit: number,
-  userId: string,
+  _userId: string,
 ): Promise<
   Array<{
     donationPaymentId: string;
@@ -762,7 +767,7 @@ export const applyAllocations = async (
 
 export const removeAllocation = async (
   allocationId: string,
-  userId: string,
+  _userId: string,
 ): Promise<{ success: boolean }> => {
   return await prisma.$transaction(async (tx) => {
     const evidence = await tx.interestCleansingEvidence.findUniqueOrThrow({

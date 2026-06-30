@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { StockHoldingWithAccount } from '@/types/stock-asset.types';
 import {
@@ -67,14 +67,14 @@ describe('Stock Asset Service - Null buyDate Handling', () => {
     // Normalize overrides: convert numeric/undefined price/quantity values to Decimal
     const cleanedOverrides: Partial<Record<string, unknown>> = { ...overrides };
     if (overrides.quantity !== undefined) {
-      cleanedOverrides.quantity = toDecimal(overrides.quantity as any, 10);
+      cleanedOverrides.quantity = toDecimal(overrides.quantity as number, 10);
     }
     if (overrides.buyPrice !== undefined) {
-      cleanedOverrides.buyPrice = toDecimal(overrides.buyPrice as any, 150);
+      cleanedOverrides.buyPrice = toDecimal(overrides.buyPrice as number, 150);
     }
     if (overrides.currentPrice !== undefined) {
       cleanedOverrides.currentPrice = toDecimal(
-        overrides.currentPrice as any,
+        overrides.currentPrice as number,
         175,
       );
     }

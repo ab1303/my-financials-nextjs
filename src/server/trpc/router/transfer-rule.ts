@@ -144,19 +144,17 @@ export const transferRuleRouter = router({
     .input(z.object({ importSessionId: z.string().min(1).optional() }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const results = await (ctx.prisma.transferMatchJobResult as any).findMany(
-        {
-          where: {
-            userId,
-            ...(input.importSessionId && {
-              importSessionId: input.importSessionId,
-            }),
-          },
-          include: { rule: { select: { id: true, name: true } } },
-          orderBy: { createdAt: 'desc' },
+      const results = await ctx.prisma.transferMatchJobResult.findMany({
+        where: {
+          userId,
+          ...(input.importSessionId && {
+            importSessionId: input.importSessionId,
+          }),
         },
-      );
-      return results.map((r: any) => ({
+        include: { rule: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+      return results.map((r) => ({
         id: r.id,
         importSessionId: r.importSessionId,
         ruleId: r.ruleId,

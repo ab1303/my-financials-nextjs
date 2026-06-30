@@ -35,7 +35,7 @@ const mockPrisma = {
     count: mockTransactionCount,
     updateMany: mockTransactionUpdateMany,
   },
-} as any;
+} as never;
 
 describe('category-rule service', () => {
   beforeEach(() => {
@@ -203,7 +203,7 @@ describe('category-rule service', () => {
     it('excludes transaction if provided', async () => {
       mockTransactionCount.mockResolvedValue(2);
 
-      const result = await findSimilarTransactions({
+      const _result = await findSimilarTransactions({
         prisma: mockPrisma,
         userId: 'user-1',
         description: 'test description',

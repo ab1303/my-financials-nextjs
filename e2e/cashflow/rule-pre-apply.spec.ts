@@ -21,7 +21,7 @@ test.describe('CSV Pre-apply Category Rules', () => {
       throw new Error('Bank account (E2E Test Checking) not found');
 
     // Create category rule
-    const rule = await prisma.categoryRule.create({
+    const _rule = await prisma.categoryRule.create({
       data: {
         userId: testUser.id,
         name: 'Woolworths Rule',

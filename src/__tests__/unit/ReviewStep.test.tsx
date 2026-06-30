@@ -16,7 +16,7 @@ global.fetch = vi.fn().mockResolvedValue({
       recordsCreated: 2,
       status: 'COMPLETED',
     }),
-}) as any;
+}) as unknown as typeof fetch;
 
 import ReviewStep from '@/app/(authorized)/cashflow/transactions/_components/ai/ReviewStep';
 

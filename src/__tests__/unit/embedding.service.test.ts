@@ -20,17 +20,10 @@ vi.mock('@/server/services/ai-import/ai-usage-log', () => ({
 
 // --- Types ---
 type ExpenseCategory = { id: string; name: string };
-type AITokenUsage = {
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-  estimatedCostUSD: number;
-};
 
 // --- Import after mocks ---
 import { embed, embedMany } from 'ai';
 
-import { prisma } from '@/server/db';
 import * as embeddingService from '@/server/services/ai-import/embedding.service';
 
 type EmbedManyResult = Awaited<ReturnType<typeof embedMany>>;

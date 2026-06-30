@@ -19,8 +19,8 @@ export default function RegisterForm() {
   const router = useRouter();
 
   const registerMutation = trpc.auth.register.useMutation({
-    onError(err: any) {
-      toast.error(err.message);
+    onError(err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Registration failed');
     },
 
     onSuccess() {

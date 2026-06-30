@@ -32,7 +32,7 @@ function NumericFormatWithIndicator<BaseType = InputAttributes>({
   onValueChange,
   onBlur,
   className,
-  ...props
+  ..._props
 }: NumericFormatWithIndicatorProps<BaseType> & { isSaved: boolean }) {
   return (
     <div className='flex items-center gap-2'>

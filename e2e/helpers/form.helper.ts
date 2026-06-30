@@ -56,7 +56,7 @@ export async function waitForSuccessMessage(page: Page, timeout = 5000) {
       'text=/success|added|created|updated|deleted|saved/',
       { timeout },
     );
-  } catch (e) {
+  } catch (_e) {
     // May not have success message, just wait for network idle
     await page.waitForLoadState('networkidle');
   }

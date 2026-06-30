@@ -17,7 +17,7 @@ export interface ImportSessionDetail {
   status: string;
   recordsCreated: number;
   skippedCount: number;
-  metadata?: any;
+  metadata?: unknown;
   startDate?: string;
   endDate?: string;
   transactions: TransactionSummary[];

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useLayoutEffect, useMemo, useState } from 'react';
+import { useId, useLayoutEffect, useMemo, useState } from 'react';
 import type { GroupBase, SingleValue } from 'react-select';
 
 import { Label } from '@/components/ui/Label';

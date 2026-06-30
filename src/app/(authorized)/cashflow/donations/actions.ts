@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache';
 
 import { auth } from '@/server/auth';
 import { createDonationYearHandler } from '@/server/controllers/donation.controller';
-import { getDonation } from '@/server/services/donation-ledger.service';
 import {
   addVoluntaryDonation,
   deleteVoluntaryDonation,
@@ -63,6 +62,7 @@ export async function addRow(input: CreateDonationPaymentInput) {
       donationPurpose: validatedInput.donationPurpose ?? 'VOLUNTARY',
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const paymentData = newPayment as any;
 
     return {
@@ -71,7 +71,7 @@ export async function addRow(input: CreateDonationPaymentInput) {
       data: {
         id: newPayment.id,
         datePaid: newPayment.datePaid,
-        amount: Number((newPayment as any).amount),
+        amount: Number(paymentData.amount),
         beneficiaryType: paymentData.beneficiaryType ?? 'BUSINESS',
         isDeductible: paymentData.isDeductible ?? false,
         donationPurpose: paymentData.donationPurpose,

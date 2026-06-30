@@ -12,7 +12,6 @@ import { useDebounce } from 'use-debounce';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import InfoTooltip from '@/components/ui/InfoTooltip';
 import { SelectWrapper as Select } from '@/components/ui/Select';
 import { cn } from '@/lib/utils';
 import { type Candidate } from '@/server/services/interest-cleansing/interest-cleansing.service';
@@ -29,7 +28,7 @@ export function CleansingCandidatePicker({
   creditId,
   bankAccountId: initialBankAccountId,
   onSelect,
-  alreadySelectedEvidenceIds = [],
+  alreadySelectedEvidenceIds: _alreadySelectedEvidenceIds = [],
 }: CleansingCandidatePickerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch] = useDebounce(searchTerm, 300);
@@ -162,7 +161,7 @@ export function CleansingCandidatePicker({
             value={accountOptions.find(
               (o) => o.value === (selectedBankAccountId ?? 'all'),
             )}
-            onChange={handleAccountChange as any}
+            onChange={handleAccountChange}
           />
         </div>
       </div>

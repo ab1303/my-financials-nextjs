@@ -151,9 +151,15 @@ export default function CashflowAnalyticsClient({
     });
   };
 
-  const filteredIncomeSources = data?.incomeSources ?? [];
+  const filteredIncomeSources = useMemo(
+    () => data?.incomeSources ?? [],
+    [data?.incomeSources],
+  );
 
-  const filteredExpenseCategories = data?.expenseCategories ?? [];
+  const filteredExpenseCategories = useMemo(
+    () => data?.expenseCategories ?? [],
+    [data?.expenseCategories],
+  );
   const incomeBreakdown = useMemo<CategoryBreakdown[]>(() => {
     const normalize = (value: string) => value.trim().toLowerCase();
     const byLabel = new Map(

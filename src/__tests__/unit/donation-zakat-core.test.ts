@@ -36,7 +36,7 @@ describe('donation-zakat-core', () => {
   });
 
   it('creates voluntary donation payments', async () => {
-    (prisma.voluntaryDonation.create as any).mockResolvedValue({
+    (prisma.voluntaryDonation.create as never).mockResolvedValue({
       id: 'donation-1',
       datePaid: new Date('2025-01-15'),
       amount: 1000,
@@ -66,7 +66,7 @@ describe('donation-zakat-core', () => {
   });
 
   it('updates voluntary donation payments', async () => {
-    (prisma.voluntaryDonation.update as any).mockResolvedValue({
+    (prisma.voluntaryDonation.update as never).mockResolvedValue({
       id: 'donation-1',
       purpose: 'VOLUNTARY',
     });
@@ -92,7 +92,7 @@ describe('donation-zakat-core', () => {
   });
 
   it('creates zakat payments with derived deductibility', async () => {
-    (prisma.zakatPayment.create as any).mockResolvedValue({
+    (prisma.zakatPayment.create as never).mockResolvedValue({
       id: 'zakat-1',
       datePaid: new Date('2025-03-10'),
       amount: { toNumber: () => 750 },
@@ -147,7 +147,7 @@ describe('donation-zakat-core', () => {
   });
 
   it('calculates zakat totals from derived deductibility', async () => {
-    (prisma.zakatPayment.findMany as any).mockResolvedValue([
+    (prisma.zakatPayment.findMany as never).mockResolvedValue([
       {
         amount: { toNumber: () => 5000 },
         business: { isDgrRegistered: true },

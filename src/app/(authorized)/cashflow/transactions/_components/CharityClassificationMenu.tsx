@@ -1,7 +1,6 @@
 'use client';
 
 import { Fragment } from 'react';
-import { toast } from 'sonner';
 
 interface CharityClassificationMenuProps {
   transactionId: string;

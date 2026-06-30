@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { ZodError } from 'zod';
 
 import {
   createStockSnapshotSchema,
@@ -215,7 +214,7 @@ describe('stock-asset.schema', () => {
       // Assert
       expect(result.success).toBe(true);
       if (result.success) {
-        const data = (result as any).data;
+        const data = result.data;
         expect(data.holdings).toHaveLength(2);
         // buyDate is optional, so it can be undefined or null
         expect(data.holdings[1].buyDate ?? null).toBeNull();

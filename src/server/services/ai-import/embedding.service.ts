@@ -205,11 +205,10 @@ export async function findBestCategoryMatchWithRetry<
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await findBestCategoryMatch(text, categories);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; status?: number };
       const isRetryable =
-        error?.code === 'ETIMEDOUT' ||
-        error?.status === 429 ||
-        error?.status === 500;
+        err.code === 'ETIMEDOUT' || err.status === 429 || err.status === 500;
       if (!isRetryable || attempt >= maxRetries) return null;
       await sleep(backoffs[attempt] || 4000);
     }

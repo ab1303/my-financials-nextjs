@@ -414,8 +414,8 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       );
 
       // Verify donation query was called with correct window
-      const donationCallArg = (prismaMock.interestCleansing.findMany as any)
-        ?.mock?.calls?.[0]?.[0];
+      const donationCallArg =
+        prismaMock.interestCleansing.findMany.mock.calls[0]?.[0];
       const dateFromQuery = donationCallArg?.where?.datePaid?.gte;
       const dateToQuery = donationCallArg?.where?.datePaid?.lte;
 
@@ -507,7 +507,7 @@ describe('interest-cleansing-phase3: Historical CalendarYear Back-Dating', () =>
       } as never);
 
       // Mock one transaction per month to verify all 12 months are captured
-      const transactions: any[] = [];
+      const transactions: Array<Record<string, unknown>> = [];
       const startMonth = 10;
       const startYear = 2022;
       for (let i = 0; i < 12; i++) {

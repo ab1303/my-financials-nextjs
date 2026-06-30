@@ -72,7 +72,7 @@ export default async function CalendarYearPage() {
               : undefined,
         };
       }
-    } catch (error) {
+    } catch (_error) {
       return { success: false, error: 'Failed to save calendar year' };
     }
   }
@@ -104,7 +104,7 @@ export default async function CalendarYearPage() {
               : undefined,
         };
       }
-    } catch (error) {
+    } catch (_error) {
       return { success: false, error: 'Failed to delete calendar year' };
     }
   }

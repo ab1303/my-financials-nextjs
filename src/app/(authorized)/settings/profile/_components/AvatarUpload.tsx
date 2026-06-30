@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { type ChangeEvent, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -89,10 +90,12 @@ export function AvatarUpload({ profile, onAvatarChanged }: AvatarUploadProps) {
     <div className='flex items-center gap-6'>
       <div className='relative h-20 w-20 shrink-0'>
         {effectiveSrc ? (
-          <img
+          <Image
             src={effectiveSrc}
             alt='Profile avatar'
-            className='h-20 w-20 rounded-full object-cover ring-2 ring-teal-500 dark:ring-teal-400'
+            fill
+            sizes='80px'
+            className='rounded-full object-cover ring-2 ring-teal-500 dark:ring-teal-400'
           />
         ) : (
           <div className='flex h-20 w-20 select-none items-center justify-center rounded-full bg-teal-600 text-2xl font-bold text-white dark:bg-teal-500'>

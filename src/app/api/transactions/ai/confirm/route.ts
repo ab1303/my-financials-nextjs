@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
         endDate: dateRange._max.date ?? null,
       },
     });
-  } catch (err) {
+  } catch (_err) {
     status = 'PARTIAL';
     await prisma.importSession.update({
       where: { id: sessionId },
