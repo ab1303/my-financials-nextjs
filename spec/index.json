@@ -2504,6 +2504,42 @@
       }
     },
     {
+      "id": "harness.manifest-preservation",
+      "domain": "harness",
+      "path": "spec/harness/manifest-preservation/",
+      "status": "in-progress",
+      "phase": "build",
+      "docs": {
+        "context": "spec/harness/manifest-preservation/context.md",
+        "lld": "spec/harness/manifest-preservation/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "scripts/harness/spec-manifest/generate-spec-index.mjs"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": null,
+      "lastVerifiedDate": null,
+      "invariants": [
+        "Existing features preserve all hand-curated fields on regeneration.",
+        "New features (no previous entry) use heuristics for owns[]; conservative defaults elsewhere.",
+        "--reset is the only path to force-bootstrap and is intentionally undocumented in pnpm scripts."
+      ],
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      }
+    },
+    {
       "id": "phase2-scope.home-dashboard-widgets",
       "domain": "phase2-scope",
       "path": "spec/phase2-scope/home-dashboard-widgets/",

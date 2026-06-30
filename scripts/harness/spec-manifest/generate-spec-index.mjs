@@ -28,6 +28,17 @@ const SPEC_DIR = path.join(REPO_ROOT, 'spec');
 const SRC_DIR = path.join(REPO_ROOT, 'src');
 const OUT = path.join(SPEC_DIR, 'index.json');
 const FORCE = process.argv.includes('--force');
+const RESET_FLAG = process.argv.includes('--reset');
+
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`Usage: node scripts/harness/spec-manifest/generate-spec-index.mjs [--force] [--reset]
+
+Generates spec/index.json from spec/ folders.
+  --force  Allow overwriting spec/index.json
+  --reset  Destructive: ignore previous manifest and bootstrap from heuristics.
+`);
+  process.exit(0);
+}
 
 const EMPTY_RELATION_BUCKETS = {
   routers: [],
@@ -85,8 +96,12 @@ function* walk(dir, depth = 0) {
   const subdirs = entries.filter(e => e.isDirectory()).map(e => e.name);
   const docFiles = files.filter(f => DOC_FILES.has(f));
   const hasFeatureDocs = docFiles.some(f => f === 'lld.md' || f === 'context.md');
+  const basename = path.basename(dir);
+  // STANDALONE_AT_DOMAIN: domain folder carries stub docs at root AND a same-named
+  // child folder holds the canonical spec — yield only the child (skip root yield).
+  const suppressRootYield = depth === 1 && STANDALONE_AT_DOMAIN.has(basename) && subdirs.includes(basename);
   // Domain root files (hld.md without lld/context) are domain-level overviews.
-  if (depth > 0 && hasFeatureDocs) {
+  if (depth > 0 && hasFeatureDocs && !suppressRootYield) {
     yield { kind: 'feature', dir, files: docFiles };
   } else if (depth > 0 && docFiles.includes('hld.md') && !hasFeatureDocs && subdirs.length === 0) {
     // domain with only an hld at root and no children — still treat as feature
@@ -164,15 +179,16 @@ for (const node of walk(SPEC_DIR)) {
 
   const harness = harnessById.get(featureSlug) || harnessById.get(id);
   const previousFeature = previousFeaturesById.get(id);
-  const status = harness?.status ?? 'unknown';
-  const phase = status === 'done'
+  const status = (previousFeature && !RESET_FLAG) ? previousFeature.status : (harness?.status ?? 'unknown');
+  const phase = (previousFeature && !RESET_FLAG) ? previousFeature.phase : (status === 'done'
     ? 'post-build'
     : status === 'in-progress'
       ? 'build'
       : status === 'planned'
         ? 'pre-build'
-        : 'unknown';
+        : 'unknown');
 
+  // Preserve hand-curated fields for existing features; bootstrap new ones from heuristics. --reset forces full bootstrap.
   features.push({
     id,
     domain,
@@ -180,7 +196,7 @@ for (const node of walk(SPEC_DIR)) {
     status,
     phase,
     docs,
-    owns: {
+    owns: (previousFeature && !RESET_FLAG) ? cloneRelationBuckets(previousFeature.owns) : {
       routers: owns.routers,
       services: owns.services,
       components: owns.components,
@@ -188,15 +204,15 @@ for (const node of walk(SPEC_DIR)) {
       tests: owns.tests,
     },
     consumes: cloneRelationBuckets(previousFeature?.consumes),
-    ownsConfidence: owns.matchCount === 0
+    ownsConfidence: (previousFeature && !RESET_FLAG) ? previousFeature.ownsConfidence : (owns.matchCount === 0
       ? 'none'
       : owns.matchCount <= 3
         ? 'low'
-        : 'medium',
-    needsReview: true,
-    lastVerifiedSha: null,
-    lastVerifiedDate: null,
-    invariants: [],
+        : 'medium'),
+    needsReview: (previousFeature && !RESET_FLAG) ? previousFeature.needsReview : true,
+    lastVerifiedSha: (previousFeature && !RESET_FLAG) ? previousFeature.lastVerifiedSha : null,
+    lastVerifiedDate: (previousFeature && !RESET_FLAG) ? previousFeature.lastVerifiedDate : null,
+    invariants: (previousFeature && !RESET_FLAG) ? (previousFeature.invariants ?? []) : [],
   });
 }
 
