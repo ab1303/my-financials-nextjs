@@ -90,6 +90,7 @@ That rule applies to harness features as strictly as to product features.
 | Feature | Status | Spec | Purpose |
 |---|---|---|---|
 | `harness.spec-remediation` | `in-progress` | `spec/harness/spec-remediation/` | Deterministic orchestrator-worker pipeline for remediating `spec:check` findings (overlaps now; drift later) using cheap LLM workers within a scripted loop. |
+| `harness.consumes-derivation` | `in-progress` | `spec/harness/consumes-derivation/` | Derives per-feature `consumes[]` from the TypeScript import graph; restores the consumption signal lost during overlap remediation. No LLM in the runtime loop. |
 
 **Planned (not yet specced — on the audit priority queue):**
 

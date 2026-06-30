@@ -29,6 +29,34 @@ const SRC_DIR = path.join(REPO_ROOT, 'src');
 const OUT = path.join(SPEC_DIR, 'index.json');
 const FORCE = process.argv.includes('--force');
 
+const EMPTY_RELATION_BUCKETS = {
+  routers: [],
+  services: [],
+  components: [],
+  app: [],
+  tests: [],
+};
+
+function cloneRelationBuckets(buckets = EMPTY_RELATION_BUCKETS) {
+  return {
+    routers: Array.isArray(buckets.routers) ? [...buckets.routers] : [],
+    services: Array.isArray(buckets.services) ? [...buckets.services] : [],
+    components: Array.isArray(buckets.components) ? [...buckets.components] : [],
+    app: Array.isArray(buckets.app) ? [...buckets.app] : [],
+    tests: Array.isArray(buckets.tests) ? [...buckets.tests] : [],
+  };
+}
+
+const previousManifest = (() => {
+  if (!fs.existsSync(OUT)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(OUT, 'utf8'));
+  } catch {
+    return null;
+  }
+})();
+const previousFeaturesById = new Map((previousManifest?.features ?? []).map(feature => [feature.id, feature]));
+
 if (fs.existsSync(OUT) && !FORCE) {
   console.error(`Refusing to overwrite ${OUT}. Re-run with --force.`);
   process.exit(1);
@@ -135,6 +163,7 @@ for (const node of walk(SPEC_DIR)) {
   const owns = inferOwns(featureSlug);
 
   const harness = harnessById.get(featureSlug) || harnessById.get(id);
+  const previousFeature = previousFeaturesById.get(id);
   const status = harness?.status ?? 'unknown';
   const phase = status === 'done'
     ? 'post-build'
@@ -158,6 +187,7 @@ for (const node of walk(SPEC_DIR)) {
       app: owns.app,
       tests: owns.tests,
     },
+    consumes: cloneRelationBuckets(previousFeature?.consumes),
     ownsConfidence: owns.matchCount === 0
       ? 'none'
       : owns.matchCount <= 3
@@ -201,6 +231,7 @@ const out = {
     id: '<domain>[.<sub>].<feature>  — derived from spec/ folder path',
     statusValues: ['planned', 'in-progress', 'done', 'blocked', 'adr', 'unknown'],
     phaseValues: ['pre-build', 'build', 'post-build', 'unknown'],
+    relations: ['owns', 'consumes', 'invariants'],
     ownsConfidence: ['none', 'low', 'medium', 'high', 'n/a-planned'],
   },
   totals: {

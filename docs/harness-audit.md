@@ -58,6 +58,10 @@
 6. **Layer 2 enforcement not installed.** Local pre-push hook running `pnpm spec:check:strict` is the smallest meaningful gate.
 7. **`status` / `phase` still `unknown` for all 91 features.** Manifest tracks ownership but not lifecycle phase → phase-driven loading rules not yet possible.
 
+### Closed Since This Audit
+
+- **Consumption signal restored (`harness.consumes-derivation`)** — the overlap remediation collapsed `owns[]` to a single canonical owner per file but silently discarded the *consumption* signal (feature B imports feature A's file). Added a third relation `consumes[]` to the manifest, deterministically derived from the TypeScript import graph by `scripts/harness/consumes-derivation/derive.mjs` (zero LLM at runtime). 93 features, 105 cross-feature edges discovered. `spec:check` overlap totals unchanged (still 0). Idempotent. Leaky-import report at `.harness/leaky-imports.md` surfaces cross-feature reaches into another feature's internals — informational signal for follow-up architectural cleanup.
+
 ### New Concerns Surfaced by the Data
 
 - **Drift accumulation rate.** 50 drifts from ~4 commits = ~12 per commit. At this rate every PR will need spec touches. **Capsule format becomes a hard prerequisite for sustainable enforcement, not a nice-to-have.**

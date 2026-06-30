@@ -78,7 +78,7 @@ unit-verifiable artifact and touches a disjoint section of files.
    (mirror the existing `owns[]` preservation policy).
 
 **Done when:**
-- `pnpm spec:generate` produces a manifest where every feature has an
+- `pnpm spec:index` produces a manifest where every feature has an
   empty (or preserved) `consumes` block.
 - `pnpm spec:check` still passes with no behaviour change.
 
@@ -94,8 +94,10 @@ unit-verifiable artifact and touches a disjoint section of files.
 **Algorithm:**
 1. Load `spec/index.json`. Build reverse index: `Map<absoluteFilePath,
    featureId>` from every feature's `owns[]`.
-2. Load `tsconfig.json`. Extract `compilerOptions.paths` (e.g. `@/*`
-   → `./src/*`).
+2. Load `tsconfig.json` AND `tsconfig.paths.json` (the latter is
+   `extends`-ed by the former in this repo and is where `paths` lives).
+   Extract `compilerOptions.paths` (e.g. `@/*` → `./src/*`,
+   `@/server/*` → `./src/server/*`, etc.).
 3. For each `(featureId, ownedFile)` pair:
    - Read the file's source.
    - Parse `import` statements. Primary: regex
@@ -209,7 +211,7 @@ Phase 1 — Parallel implementation (target ≤ 15 min wall-clock)
    └─ Stream D: feature registration      ──┘
 
 Phase 2 — Integration (sequential, ≈ 5 min)
-   ├─ Run: pnpm spec:generate              (re-emits schema from Stream A)
+   ├─ Run: pnpm spec:index                 (re-emits schema from Stream A)
    ├─ Run: node scripts/harness/consumes-derivation/derive.mjs
    ├─ Run: pnpm spec:check                 (expect unchanged overlap totals)
    └─ Eyeball: top-10 features by consumes[] count for sanity
@@ -229,10 +231,11 @@ Phase 3 — Optional follow-up (parallel-able)
 | C | `spec-check.mjs` source | same file | None — additive guard / comment, separate logical section |
 | D | manifest, `harness/hld.md` | same files | A regenerates manifest later (Phase 2); D's hand-edit survives by the existing preserve-hand-curated convention |
 
-**One ordering constraint:** in Phase 2, run `spec:generate` (Stream A's
-output) **before** `derive.mjs` (Stream B) so the empty `consumes[]`
-blocks exist for Stream B to populate. This is enforced by the Phase 2
-script order, not by Phase 1 dispatch order.
+**One ordering constraint:** in Phase 2, run `pnpm spec:index` (which
+invokes the generator modified in Stream A) **before** `derive.mjs`
+(Stream B) so the empty `consumes[]` blocks exist for Stream B to
+populate. This is enforced by the Phase 2 script order, not by Phase 1
+dispatch order.
 
 ## Invariants (run on every CI / pre-push invocation)
 

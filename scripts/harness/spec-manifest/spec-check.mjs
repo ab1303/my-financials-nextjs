@@ -154,10 +154,13 @@ for (const f of features) {
 // is a boundary defect: two specs both assert authority over the same contract.
 // Note: this scans the full feature list even when --feature=<id> is supplied,
 // so overlap signal is always global (it has to be — overlap is a relationship).
+// Stream C guard: read `owns[]` only, never `consumes[]` (see
+// spec/harness/consumes-derivation/lld.md § Stream C — `spec:check` additive guard).
 const overlapOwners = new Map(); // file -> Set<featureId>
 for (const f of index.features) {
   if (f.status === 'adr') continue; // ADRs own no code, can't overlap
-  for (const file of ownsFiles(f)) {
+  const ownedBuckets = f.owns ?? {}; // explicit `owns` access; ignore derived `consumes`
+  for (const file of ownsFiles({ owns: ownedBuckets })) {
     if (!overlapOwners.has(file)) overlapOwners.set(file, new Set());
     overlapOwners.get(file).add(f.id);
   }
