@@ -1,7 +1,7 @@
 {
   "schemaVersion": "0.1.0",
   "generatedAt": "2026-06-30T00:35:34.244Z",
-  "generatedFromSha": "b245aad83d57e2ec1859306922a0a6b46474134f",
+  "generatedFromSha": "568c61bc4aecb058bf50d45166346dd3ed9853ff",
   "notes": [
     "This file is the DRAFT machine-readable spec ↔ code manifest.",
     "Every entry has `needsReview: true` until a human or agent verifies `owns`.",
@@ -31,117 +31,11 @@
     ]
   },
   "totals": {
-    "features": 92,
-    "withOwnsMatches": 20,
-    "overlaps": 15
+    "features": 91,
+    "withOwnsMatches": 19,
+    "overlaps": 0
   },
-  "overlaps": [
-    {
-      "file": "src/components/transactions/CategoryFilteredLedger.tsx",
-      "claimedBy": [
-        "architecture.category-filters",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/components/csv-import/TransactionReviewTable.tsx",
-      "claimedBy": [
-        "csv-import.csv-import",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/server/services/transactions/category-rule.service.ts",
-      "claimedBy": [
-        "transactions.category-rules",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/components/transactions/CategoryRuleDrawer.tsx",
-      "claimedBy": [
-        "transactions.category-rules",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/components/transactions/CategoryRulePrompt.tsx",
-      "claimedBy": [
-        "transactions.category-rules",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/components/transactions/ReimbursementSubRow.tsx",
-      "claimedBy": [
-        "transactions.reimbursements",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/server/trpc/router/transaction-ledger/mutations/restoreVoidedTransaction.ts",
-      "claimedBy": [
-        "transactions.transaction-ledger",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/server/trpc/router/transaction-ledger/queries/getUnlinkedDonationTransactions.ts",
-      "claimedBy": [
-        "transactions.transaction-ledger",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/server/trpc/router/transaction-ledger/queries/getUnlinkedZakatTransactions.ts",
-      "claimedBy": [
-        "transactions.transaction-ledger",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/server/trpc/router/transaction-ledger/queries/getVoidedTransactions.ts",
-      "claimedBy": [
-        "transactions.transaction-ledger",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/server/trpc/router/transaction-ledger/queries/searchDebitTransactions.ts",
-      "claimedBy": [
-        "transactions.transaction-ledger",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/components/transactions/TransactionLedgerTable.tsx",
-      "claimedBy": [
-        "transactions.transaction-ledger",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/__tests__/unit/TransactionLedgerTable.test.tsx",
-      "claimedBy": [
-        "transactions.transaction-ledger",
-        "transactions.transactions"
-      ]
-    },
-    {
-      "file": "src/server/trpc/router/user-profile.ts",
-      "claimedBy": [
-        "user-profile",
-        "user-profile.user-profile"
-      ]
-    },
-    {
-      "file": "src/server/services/user-profile/user-profile.service.ts",
-      "claimedBy": [
-        "user-profile",
-        "user-profile.user-profile"
-      ]
-    }
-  ],
+  "overlaps": [],
   "features": [
     {
       "id": "ai-features.ai-image-import",
@@ -277,9 +171,7 @@
       "owns": {
         "routers": [],
         "services": [],
-        "components": [
-          "src/components/transactions/CategoryFilteredLedger.tsx"
-        ],
+        "components": [],
         "app": [],
         "tests": [
           "src/__tests__/unit/CategoryFilteredLedger.test.tsx",
@@ -287,9 +179,9 @@
         ]
       },
       "ownsConfidence": "low",
-      "needsReview": true,
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1570,9 +1462,7 @@
       "owns": {
         "routers": [],
         "services": [],
-        "components": [
-          "src/components/csv-import/TransactionReviewTable.tsx"
-        ],
+        "components": [],
         "app": [
           "src/app/api/csv-import/classify/route.ts",
           "src/app/api/csv-import/confirm/route.ts",
@@ -1582,9 +1472,9 @@
         "tests": []
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1751,9 +1641,9 @@
         ]
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2097,9 +1987,9 @@
         "tests": []
       },
       "ownsConfidence": "low",
-      "needsReview": true,
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2230,9 +2120,9 @@
         ]
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2246,19 +2136,12 @@
         "lld": "spec/transactions/transactions/lld.md"
       },
       "owns": {
-        "routers": [
-          "src/server/trpc/router/transaction-ledger/mutations/restoreVoidedTransaction.ts",
-          "src/server/trpc/router/transaction-ledger/queries/getUnlinkedDonationTransactions.ts",
-          "src/server/trpc/router/transaction-ledger/queries/getUnlinkedZakatTransactions.ts",
-          "src/server/trpc/router/transaction-ledger/queries/getVoidedTransactions.ts",
-          "src/server/trpc/router/transaction-ledger/queries/searchDebitTransactions.ts"
-        ],
+        "routers": [],
         "services": [
           "src/server/services/transaction.service.ts",
           "src/server/services/transactions/bank-format-registry.ts",
           "src/server/services/transactions/category-change.service.ts",
           "src/server/services/transactions/category-rule-applier.ts",
-          "src/server/services/transactions/category-rule.service.ts",
           "src/server/services/transactions/constants.ts",
           "src/server/services/transactions/csv-confirm.service.ts",
           "src/server/services/transactions/csv-format-detector.service.ts",
@@ -2278,18 +2161,12 @@
           "src/server/services/transactions/_types.ts"
         ],
         "components": [
-          "src/components/csv-import/TransactionReviewTable.tsx",
-          "src/components/transactions/CategoryFilteredLedger.tsx",
-          "src/components/transactions/CategoryRuleDrawer.tsx",
-          "src/components/transactions/CategoryRulePrompt.tsx",
           "src/components/transactions/hooks/useCategoryEdit.ts",
           "src/components/transactions/ImportSessionHistory.tsx",
           "src/components/transactions/ImportValidationReview.tsx",
           "src/components/transactions/PreviewMatchesModal.tsx",
-          "src/components/transactions/ReimbursementSubRow.tsx",
           "src/components/transactions/RestoreTransactionButton.tsx",
           "src/components/transactions/TransactionFilters.tsx",
-          "src/components/transactions/TransactionLedgerTable.tsx",
           "src/components/transactions/TransactionRow.tsx",
           "src/components/transactions/TransactionSourceIndicator.tsx",
           "src/components/transactions/TransactionSummary.tsx",
@@ -2338,7 +2215,6 @@
         "tests": [
           "src/__tests__/unit/services/transactions/test-status.test.ts",
           "src/__tests__/unit/TransactionFilters.test.tsx",
-          "src/__tests__/unit/TransactionLedgerTable.test.tsx",
           "src/__tests__/unit/TransactionReviewTable.test.tsx",
           "src/__tests__/unit/TransactionRow.donation-badge.test.tsx",
           "src/__tests__/unit/TransactionRow.test.tsx",
@@ -2347,9 +2223,9 @@
         ]
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2445,34 +2321,6 @@
       "invariants": []
     },
     {
-      "id": "user-profile",
-      "domain": "user-profile",
-      "path": "spec/user-profile/",
-      "status": "unknown",
-      "phase": "unknown",
-      "docs": {
-        "context": "spec/user-profile/context.md",
-        "hld": "spec/user-profile/hld.md",
-        "lld": "spec/user-profile/lld.md"
-      },
-      "owns": {
-        "routers": [
-          "src/server/trpc/router/user-profile.ts"
-        ],
-        "services": [
-          "src/server/services/user-profile/user-profile.service.ts"
-        ],
-        "components": [],
-        "app": [],
-        "tests": []
-      },
-      "ownsConfidence": "low",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
-      "invariants": []
-    },
-    {
       "id": "user-profile.user-profile",
       "domain": "user-profile",
       "path": "spec/user-profile/user-profile/",
@@ -2494,9 +2342,9 @@
         "tests": []
       },
       "ownsConfidence": "low",
-      "needsReview": true,
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     }
   ]

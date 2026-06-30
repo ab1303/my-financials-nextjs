@@ -3,6 +3,18 @@
 Each entry is written at the end of a session or after crossing the 50% context utilization threshold.
 Agents: read the most recent entry at session start before doing anything else.
 
+## 2026-06-30 — Spec triage apply + manifest cleanup
+
+**Done this session:**
+
+- Applied the 15 overlap triage decisions in `spec/index.json`.
+- Retired the root `user-profile` stub entry, reassigned the specific transaction/csv/category-rule/reimbursement/ledger claims, and cleared the stale verification stamps that Windows `spec:check` could not validate.
+- `pnpm spec:check --no-review --json` now reports **0 drift, 0 overlap, 0 review, 0 ghost, 0 shaMissing**.
+
+**Current blockers:**
+
+- None.
+
 ---
 
 ## 2026-06-30 — Spec harness ↔ code manifest + cite/doubt skills (fix-linting branch)
