@@ -1,6 +1,6 @@
 {
   "schemaVersion": "0.1.0",
-  "generatedAt": "2026-06-30T03:43:50.623Z",
+  "generatedAt": "2026-06-30T04:25:18.815Z",
   "generatedFromSha": "568c61bc4aecb058bf50d45166346dd3ed9853ff",
   "notes": [
     "This file is the DRAFT machine-readable spec ↔ code manifest.",
@@ -27,12 +27,14 @@
       "none",
       "low",
       "medium",
-      "high"
+      "high",
+      "n/a-adr",
+      "n/a-planned"
     ]
   },
   "totals": {
     "features": 91,
-    "withOwnsMatches": 60,
+    "withOwnsMatches": 86,
     "overlaps": 0
   },
   "overlaps": [],
@@ -68,7 +70,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -94,7 +96,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -116,9 +118,9 @@
         "tests": []
       },
       "ownsConfidence": "none",
-      "needsReview": true,
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -168,9 +170,9 @@
         ]
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -195,7 +197,7 @@
       },
       "ownsConfidence": "low",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -259,7 +261,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -284,7 +286,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -302,13 +304,19 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "e2e/fixtures/auth.fixture.ts",
+          "e2e/global-setup.ts",
+          "e2e/global-teardown.ts"
+        ],
+        "tests": [
+          "playwright.config.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -323,15 +331,17 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/ai-import/embedding.service.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -355,7 +365,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -371,15 +381,20 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/user-profile/user-profile.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/settings/profile/_types.ts",
+          "src/app/(authorized)/settings/profile/_schema.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -399,10 +414,10 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "n/a-adr",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -426,7 +441,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -457,9 +472,9 @@
         ]
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -488,7 +503,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -514,7 +529,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -529,18 +544,28 @@
         "lld": "spec/assets/net-worth-dashboard/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/asset-dashboard.ts"
+        ],
+        "services": [
+          "src/server/services/asset-dashboard.service.ts",
+          "src/server/controllers/asset-dashboard.controller.ts"
+        ],
         "components": [],
         "app": [
-          "src/app/(authorized)/assets/NetWorthDashboardClient.tsx"
+          "src/app/(authorized)/assets/page.tsx",
+          "src/app/(authorized)/assets/NetWorthDashboardClient.tsx",
+          "src/app/(authorized)/assets/_components/NetWorthChart.tsx",
+          "src/app/(authorized)/assets/_components/AssetSummaryCards.tsx"
         ],
-        "tests": []
+        "tests": [
+          "src/__tests__/unit/dashboard-summary.test.ts"
+        ]
       },
-      "ownsConfidence": "low",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -566,7 +591,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -593,7 +618,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -622,7 +647,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -653,7 +678,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -679,7 +704,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -707,7 +732,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -733,7 +758,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -748,16 +773,26 @@
         "lld": "spec/banking/bank-account-management/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/bank-account.ts"
+        ],
+        "services": [
+          "src/server/services/bank-account.service.ts",
+          "src/server/controllers/bank-account.controller.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/account/bank-accounts/page.tsx",
+          "src/app/(authorized)/settings/banks/page.tsx",
+          "src/app/(authorized)/settings/banks/_components/BankAccountsSection.tsx",
+          "src/server/schema/bank-account.schema.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -771,16 +806,21 @@
         "lld": "spec/banking/bank-institution-ui/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/bank.ts"
+        ],
+        "services": [
+          "src/server/services/bank.service.ts",
+          "src/server/controllers/bank.controller.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -794,16 +834,27 @@
         "lld": "spec/banking/brokerage-hybrid/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/brokerage.ts"
+        ],
+        "services": [
+          "src/server/services/brokerage.service.ts",
+          "src/server/controllers/brokerage.controller.ts"
+        ],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/(authorized)/settings/brokerages/page.tsx",
+          "src/app/(authorized)/settings/brokerages/form.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/brokerage.service.test.ts",
+          "src/__tests__/unit/brokerage.controller.test.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -820,13 +871,15 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
+        "app": [
+          "src/server/schema/business.schema.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -841,15 +894,24 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/expense.service.ts"
+        ],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/api/cashflow/analytics/route.ts",
+          "src/app/(authorized)/cashflow/analytics/page.tsx",
+          "src/app/(authorized)/cashflow/analytics/_components/CashflowAnalyticsClient.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/cashflow-analytics.route.test.ts",
+          "src/__tests__/unit/AnalyticsFilters.test.tsx"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -872,10 +934,10 @@
         ],
         "tests": []
       },
-      "ownsConfidence": "low",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -893,12 +955,14 @@
         "services": [],
         "components": [],
         "app": [],
-        "tests": []
+        "tests": [
+          "e2e/cashflow-audit.spec.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -913,15 +977,20 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/income.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/cashflow/income/page.tsx",
+          "src/app/(authorized)/cashflow/expense/page.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -935,16 +1004,26 @@
         "lld": "spec/cashflow/categories/category-management/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/income-source.ts",
+          "src/server/trpc/router/expense-category.ts"
+        ],
         "services": [],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/(authorized)/settings/categories/_components/ExpenseCategories.tsx",
+          "src/app/(authorized)/settings/categories/_components/IncomeSources.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/routers/income-source.router.test.ts",
+          "src/__tests__/unit/routers/expense-category.router.test.ts",
+          "src/__tests__/unit/settings/CategoriesClient.test.tsx"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -958,16 +1037,23 @@
         "lld": "spec/cashflow/categories/drill-down/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/category-transactions.ts"
+        ],
         "services": [],
-        "components": [],
+        "components": [
+          "src/components/transactions/CategoryFilteredLedger.tsx"
+        ],
         "app": [],
-        "tests": []
+        "tests": [
+          "src/__tests__/integration/category-transactions.integration.test.ts",
+          "src/__tests__/unit/CategoryFilteredLedger.test.tsx"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -999,7 +1085,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1016,15 +1102,19 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/bank-account.service.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1063,9 +1153,9 @@
         "tests": []
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1080,15 +1170,22 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/transactions/donation-link.service.ts"
+        ],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/(authorized)/cashflow/donations/_components/LinkTransactionsDrawer.tsx"
+        ],
+        "tests": [
+          "src/__tests__/unit/donation-link.service.test.ts",
+          "src/__tests__/unit/LinkTransactionsDrawer.test.tsx"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1103,15 +1200,21 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/controllers/expense.controller.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/cashflow/expense/ExpenseTableServer.tsx",
+          "src/app/(authorized)/cashflow/expense/actions.ts",
+          "src/app/(authorized)/cashflow/expense/page.tsx"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1135,7 +1238,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1151,15 +1254,20 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/controllers/income.controller.ts"
+        ],
         "components": [],
-        "app": [],
+        "app": [
+          "src/app/(authorized)/cashflow/income/IncomeTableServer.tsx",
+          "src/app/(authorized)/cashflow/income/actions.ts"
+        ],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1192,7 +1300,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1221,7 +1329,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1241,14 +1349,18 @@
         "services": [],
         "components": [],
         "app": [
+          "src/app/(authorized)/cashflow/bank-interest/page.tsx",
+          "src/app/(authorized)/cashflow/bank-interest/BankInterestTableServer.tsx",
+          "src/app/(authorized)/cashflow/bank-interest/BankInterestTableClient.tsx",
+          "src/app/(authorized)/cashflow/bank-interest/BankInterestFilters.tsx",
           "src/app/(authorized)/cashflow/bank-interest/InterestCreditsTable.tsx"
         ],
         "tests": []
       },
-      "ownsConfidence": "low",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1269,13 +1381,14 @@
         "tests": [
           "src/__tests__/integration/bank-interest.getCleansingDebitCandidates.integration.test.ts",
           "src/__tests__/unit/server/trpc/bank-interest.getCleansingDebitCandidates.test.ts",
-          "src/__tests__/unit/services/bank-interest/getCleansingDebitCandidates.test.ts"
+          "src/__tests__/unit/services/bank-interest/getCleansingDebitCandidates.test.ts",
+          "src/__tests__/unit/server/services/bank-interest/interest-cleansing.scoring.test.ts"
         ]
       },
-      "ownsConfidence": "low",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1290,16 +1403,26 @@
         "lld": "spec/cashflow/interest/cleansing-debit-linking/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/bank-interest.ts"
+        ],
+        "services": [
+          "src/server/services/interest-cleansing/interest-cleansing.service.ts"
+        ],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/(authorized)/cashflow/bank-interest/_components/CleansingCandidatePicker.tsx",
+          "src/app/(authorized)/cashflow/bank-interest/_components/cleanse-drawer/useCleanseDonationState.ts"
+        ],
+        "tests": [
+          "src/__tests__/unit/interest-cleansing.service.test.ts",
+          "src/__tests__/integration/bank-interest.getCleansingDebitCandidates.integration.test.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1328,9 +1451,9 @@
         ]
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1344,16 +1467,20 @@
         "lld": "spec/cashflow/multi-account-transfer-integrity/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/transfer.ts"
+        ],
+        "services": [
+          "src/server/services/transactions/transfer.service.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1377,7 +1504,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1409,7 +1536,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1441,7 +1568,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1458,13 +1585,21 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVImportWizard.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVClassifyingStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVTransactionReviewTable.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/CSVResultsStep.tsx",
+          "src/app/(authorized)/cashflow/transactions/_components/csv/_types.ts"
+        ],
+        "tests": [
+          "src/__tests__/unit/CSVTransactionReviewTable.test.tsx"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1488,7 +1623,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1507,13 +1642,17 @@
         "routers": [],
         "services": [],
         "components": [],
-        "app": [],
-        "tests": []
+        "app": [
+          "src/app/(authorized)/cashflow/transactions/_components/transfer/OrphanResolutionPanel.tsx"
+        ],
+        "tests": [
+          "e2e/cashflow/orphan-resolution.spec.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1557,9 +1696,9 @@
         "tests": []
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1579,10 +1718,10 @@
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
+      "ownsConfidence": "n/a-planned",
+      "needsReview": false,
       "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1609,7 +1748,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1642,7 +1781,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1674,7 +1813,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1699,7 +1838,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1728,7 +1867,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1758,7 +1897,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1787,7 +1926,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1818,7 +1957,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1852,7 +1991,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1885,7 +2024,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1914,7 +2053,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -1941,9 +2080,9 @@
         "tests": []
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -1976,7 +2115,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2005,7 +2144,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2033,7 +2172,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2062,7 +2201,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2093,7 +2232,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2125,7 +2264,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2159,9 +2298,9 @@
         ]
       },
       "ownsConfidence": "medium",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2177,15 +2316,20 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
-        "components": [],
+        "services": [
+          "src/server/services/transactions/import-audit.service.ts"
+        ],
+        "components": [
+          "src/components/transactions/ImportSessionHistory.tsx",
+          "src/components/transactions/ImportValidationReview.tsx"
+        ],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2199,16 +2343,20 @@
         "lld": "spec/transactions/paginated-search/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/transaction-ledger/queries/searchDebitTransactions.ts"
+        ],
         "services": [],
         "components": [],
         "app": [],
-        "tests": []
+        "tests": [
+          "src/__tests__/unit/TransactionRow.test.tsx"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2232,7 +2380,7 @@
       },
       "ownsConfidence": "low",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2263,7 +2411,7 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2287,9 +2435,9 @@
         "tests": []
       },
       "ownsConfidence": "low",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2304,15 +2452,19 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/transactions/dedup.service.ts"
+        ],
         "components": [],
         "app": [],
-        "tests": []
+        "tests": [
+          "src/__tests__/unit/dedup.service.test.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2326,16 +2478,20 @@
         "lld": "spec/transactions/transaction-enrichment/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/transaction-ledger/queries/getUnlinkedZakatTransactions.ts"
+        ],
+        "services": [
+          "src/server/services/zakat/zakat.service.ts"
+        ],
         "components": [],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2374,7 +2530,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2477,7 +2633,7 @@
       },
       "ownsConfidence": "medium",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
@@ -2492,16 +2648,20 @@
         "lld": "spec/transactions/transfer-counterpart/lld.md"
       },
       "owns": {
-        "routers": [],
+        "routers": [
+          "src/server/trpc/router/transaction-ledger/shared.ts"
+        ],
         "services": [],
-        "components": [],
+        "components": [
+          "src/components/transactions/TransactionRow.tsx"
+        ],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2515,16 +2675,23 @@
         "lld": "spec/transactions/transfer-match-rules/lld.md"
       },
       "owns": {
-        "routers": [],
-        "services": [],
+        "routers": [
+          "src/server/trpc/router/transfer-rule.ts"
+        ],
+        "services": [
+          "src/server/services/transactions/transfer-rule.service.ts",
+          "src/server/services/transactions/transfer-rule-job.service.ts"
+        ],
         "components": [],
         "app": [],
-        "tests": []
+        "tests": [
+          "src/__tests__/unit/transfer-rule-job.test.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2539,15 +2706,19 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
+        "services": [
+          "src/server/services/transactions/transfer.service.ts"
+        ],
         "components": [],
         "app": [],
-        "tests": []
+        "tests": [
+          "e2e/cashflow/transfer-exclusion.spec.ts"
+        ]
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "medium",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2562,15 +2733,21 @@
       },
       "owns": {
         "routers": [],
-        "services": [],
-        "components": [],
+        "services": [
+          "src/server/services/transactions/void.service.ts",
+          "src/server/services/transactions/void-transfer.service.ts"
+        ],
+        "components": [
+          "src/components/transactions/VoidTransactionButton.tsx",
+          "src/components/transactions/RestoreTransactionButton.tsx"
+        ],
         "app": [],
         "tests": []
       },
-      "ownsConfidence": "none",
-      "needsReview": true,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
+      "lastVerifiedDate": "2026-06-30",
       "invariants": []
     },
     {
@@ -2596,7 +2773,7 @@
       },
       "ownsConfidence": "low",
       "needsReview": false,
-      "lastVerifiedSha": null,
+      "lastVerifiedSha": "c361465c5399b616369a01d65db7ac76b85cfa86",
       "lastVerifiedDate": "2026-06-30",
       "invariants": []
     }

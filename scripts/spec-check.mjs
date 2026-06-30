@@ -73,7 +73,9 @@ function changedSince(sha, paths) {
   // Resilience: if the sha doesn't exist (rebased away), surface that instead of
   // crashing — caller treats it as "needs re-verification".
   try {
-    execSync(`git cat-file -e ${sha}^{commit}`, { cwd: REPO_ROOT, stdio: 'ignore' });
+    // Use `git rev-parse --verify` instead of `git cat-file -e sha^{commit}` to
+    // avoid Windows cmd.exe interpreting `^` as an escape character.
+    execSync(`git rev-parse --verify ${sha}`, { cwd: REPO_ROOT, stdio: 'ignore' });
   } catch {
     return { error: `lastVerifiedSha ${sha} not reachable from HEAD (rebased or deleted)` };
   }

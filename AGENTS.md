@@ -36,7 +36,7 @@ For UI changes: describe the visual change or attach a screenshot.
 ## Session Lifecycle
 
 - **Start.** `.github/hooks/hooks.json` runs `bash .harness/init.sh` and injects active feature + last progress entry into your initial context. If the hook didn't fire, run it manually. Read the active feature's `spec/{domain}/{feature}/lld.md` before editing code. Announce: "Last session worked on X. Continuing from Y."
-- **End.** Walk `.harness/clean-state-checklist.md`. Update `verification[]` / `evidence[]` in `.harness/feature-status.json`. Append a new entry (newest first) to `.harness/progress.md`. A feature becomes `status: "done"` only when every `verification[].passing === true`.
+- **End.** Walk `.harness/clean-state-checklist.md`. Update `verification[]` / `evidence[]` in `.harness/feature-status.json`. Write the new handoff entry in `.harness/progress.md` (replace the current entry). If the outgoing entry is **fully complete**, move it to `.harness/progress-history.md` (newest first). If it is incomplete/parked, it is already gone — it never belonged in `progress.md` to begin with; incomplete work is simply the next session's entry. `progress.md` = single active workstream. A feature becomes `status: "done"` only when every `verification[].passing === true`.
 - **Context >50%.** Compact the active `lld.md` → write progress entry → start fresh session. Protocol: `.ai/instructions/compaction.md`.
 
 `plan.md` is session-only — never commit. Specs live under `spec/{domain}/{feature}/`. `spec/index.json` is the machine-readable ownership + drift manifest — consult it before touching any source file to see which feature claims it (`pnpm spec:check` flags drift and boundary overlaps).
