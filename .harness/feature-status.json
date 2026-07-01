@@ -78,6 +78,26 @@
       ]
     },
     {
+      "id": "harness.capsule-hydration",
+      "domain": "harness",
+      "status": "done",
+      "branch": "main",
+      "spec": "spec/harness/capsule-format/lld.md",
+      "blockers": [],
+      "notes": "Wired implement-from-spec SKILL.md (Step 1 + Step 4) to use capsule.md as primary context source. .md-only change — no production code.",
+      "completedAt": "2026-07-01",
+      "verification": [
+        { "id": "type-check", "description": "pnpm run type-check passes (zero errors)", "passing": true },
+        { "id": "lint", "description": "pnpm run lint passes (zero errors)", "passing": true },
+        { "id": "spec-check", "description": "pnpm spec:check — 106 capsules clean, exit 0", "passing": true }
+      ],
+      "evidence": [
+        { "id": "type-check", "sha": "HEAD", "command": "pnpm run type-check", "result": "exit 0, no output" },
+        { "id": "lint", "sha": "HEAD", "command": "pnpm run lint", "result": "exit 0, no output" },
+        { "id": "spec-check", "sha": "HEAD", "command": "pnpm spec:check", "result": "exit 0 — capsule staleness: 106 capsule(s) clean" }
+      ]
+    },
+    {
       "id": "harness.capsule-format",
       "domain": "harness",
       "status": "done",

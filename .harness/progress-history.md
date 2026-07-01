@@ -5,7 +5,27 @@ Read only for archaeology; do not use to orient a new session.
 
 ---
 
-## 2026-07-01 — Harness capsule-format — COMPLETE ✅ (committed)
+## 2026-07-01 — Capsule hydration in `implement-from-spec` — COMPLETE ✅ (committed)
+
+**Workstream:** `harness.capsule-hydration` — wire `implement-from-spec` SKILL.md to hydrate
+subagent prompts from `capsule.md` (Phase 3 downstream wiring of `harness.capsule-format`).
+
+### Final state
+
+| Item | Result |
+|---|---|
+| Step 1: capsule.md check added | ✅ |
+| Step 4a: capsule replaces context.md excerpt | ✅ |
+| Step 4b: Phase N section only (not full LLD) | ✅ |
+| `pnpm run type-check` | ✅ 0 errors |
+| `pnpm run lint` | ✅ 0 errors |
+| `pnpm spec:check` capsule section | ✅ 106/106 clean |
+
+**File changed:** `.agents/skills/implement-from-spec/SKILL.md` (Step 1 + Step 4a/b only)
+
+---
+
+
 
 **Workstream:** `harness.capsule-format` — ≤800-token `capsule.md` per feature, closes audit P-Q #6.
 

@@ -74,6 +74,17 @@ spec/{domain}/{feature}/lld.md
 If either file is missing, stop and tell the user to run the `spec-from-context`
 skill first.
 
+Also check for the capsule:
+
+```
+spec/{domain}/{feature}/capsule.md   ← primary context source if present
+```
+
+If `capsule.md` exists for this feature, use it as the **primary context source**
+in Step 4 (it replaces the `context.md` excerpt). Fall back to `context.md`
+sections only if no `capsule.md` exists. The capsule is always ≤800 tokens and
+provides: Purpose, owns[], consumes[], invariants, and declared interfaces.
+
 ---
 
 ## Step 2 — Detect the Implementation Agent
@@ -149,18 +160,28 @@ the source files" — provide the content directly.
 
 For every phase, assemble:
 
-### a) Only the relevant context excerpt
+### a) Capsule (primary context source)
 
-Include the minimum `context.md` sections needed to orient the phase:
+If `capsule.md` exists for this feature, paste it **in full** (≤800 tokens). It provides:
+
+- **Purpose** — one-line summary of what the feature does
+- **owns[]** — canonical list of files this feature owns
+- **consumes[]** — upstream dependencies the agent must not break
+- **invariants** — hard rules that must not be violated
+- **declared interfaces** — public API surface
+
+If no `capsule.md` exists, fall back to the minimum `context.md` sections needed
+to orient the phase:
 
 - problem statement
 - domain dependencies
 - scope boundary
 - any explicit phase notes for this slice
 
-### b) The specific LLD phase section (verbatim)
+### b) The specific LLD Phase N section (verbatim)
 
-Extract only the relevant `## Phase N` section, not the entire LLD.
+Extract **only** the `## Phase N` section relevant to this subagent.
+Do **not** paste the entire LLD — just the one section for the phase being delegated.
 
 ### c) Current file contents for files the phase will touch
 
