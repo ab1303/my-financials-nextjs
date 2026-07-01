@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.1.0",
-  "updatedAt": "2026-07-01T12:00:00Z",
+  "updatedAt": "2026-07-01T00:43:09.376Z",
   "rules": {
     "singleActiveFeature": true,
     "passingRequiresEvidence": true,
@@ -22,13 +22,41 @@
       "blockers": [],
       "notes": "Active branch — implementing category group CRUD and cashflow filter integration",
       "verification": [
-        { "id": "schema", "description": "Prisma migration created and applied (pnpm prisma migrate dev)", "passing": false },
-        { "id": "router", "description": "tRPC router for category group CRUD with input validation", "passing": false },
-        { "id": "ui-settings", "description": "Settings UI renders group CRUD with dark mode variants", "passing": false },
-        { "id": "ui-cashflow", "description": "Cashflow filters respect category groups", "passing": false },
-        { "id": "type-check", "description": "pnpm run type-check passes (zero errors)", "passing": false },
-        { "id": "lint", "description": "pnpm run lint passes (zero errors)", "passing": false },
-        { "id": "build", "description": "pnpm run build succeeds (user-confirmed run only)", "passing": false }
+        {
+          "id": "schema",
+          "description": "Prisma migration created and applied (pnpm prisma migrate dev)",
+          "passing": false
+        },
+        {
+          "id": "router",
+          "description": "tRPC router for category group CRUD with input validation",
+          "passing": false
+        },
+        {
+          "id": "ui-settings",
+          "description": "Settings UI renders group CRUD with dark mode variants",
+          "passing": false
+        },
+        {
+          "id": "ui-cashflow",
+          "description": "Cashflow filters respect category groups",
+          "passing": false
+        },
+        {
+          "id": "type-check",
+          "description": "pnpm run type-check passes (zero errors)",
+          "passing": false
+        },
+        {
+          "id": "lint",
+          "description": "pnpm run lint passes (zero errors)",
+          "passing": false
+        },
+        {
+          "id": "build",
+          "description": "pnpm run build succeeds (user-confirmed run only)",
+          "passing": false
+        }
       ],
       "evidence": []
     },
@@ -41,40 +69,178 @@
       "blockers": [],
       "notes": "All 3 pipeline steps complete. overlap-files: 94 → 0, overlap-parts: 223 → 0. Step 1: 13/13 applied (3 batches). Step 2: 3/3 applied. Step 3: 94+22+8+3+3 tasks applied across batches 5-16 (multiple discover --force rounds to clear stop_required residuals). Final SHA: cb49a9c.",
       "verification": [
-        { "id": "build-layout", "description": "scripts/harness/spec-remediation/ tree matches LLD § File layout exactly", "passing": true },
-        { "id": "discover-step1", "description": "discover.mjs --step 1 produces non-empty step1-tasks.json", "passing": true },
-        { "id": "discover-step2", "description": "discover.mjs --step 2 produces step2-tasks.json", "passing": true },
-        { "id": "discover-step3", "description": "discover.mjs --step 3 produces step3-tasks.json", "passing": true },
-        { "id": "apply-patch-rollback", "description": "apply-patch.mjs rolls back when overlap participations does not strictly decrease", "passing": true },
-        { "id": "apply-patch-happy-path", "description": "apply-patch.mjs dry-run reduces overlap and leaves disk unchanged", "passing": true },
-        { "id": "report-dashboard", "description": "report.mjs prints overlap totals + per-step queues + log tail + top participants", "passing": true },
-        { "id": "resumability", "description": "discover --force gate refuses overwrite when pending tasks exist; fresh shell reads state correctly", "passing": true },
-        { "id": "no-tier3-ops", "description": "Scripts contain zero git/pnpm/prisma calls (greppable)", "passing": true },
-        { "id": "manifest-registration", "description": "spec/index.json: harness.spec-remediation owns 13 files, ownsConfidence=high, lastVerifiedSha stamped", "passing": true },
-        { "id": "spec-check-clean", "description": "pnpm spec:check shows no new overlaps/ghosts introduced by registration", "passing": true },
-        { "id": "type-check", "description": "pnpm run type-check passes (zero errors)", "passing": true },
-        { "id": "pipeline-batch-1", "description": "Step-1 batch 1: dispatch 3 sub-agents → apply → verify overlap strictly decreases", "passing": true },
-        { "id": "pipeline-step-1-complete", "description": "All step-1 tasks applied (13 → 0 pending)", "passing": true },
-        { "id": "pipeline-step-2-complete", "description": "All step-2 tasks applied", "passing": true },
-        { "id": "pipeline-step-3-complete", "description": "All step-3 tasks applied; overlap count = 0", "passing": true }
+        {
+          "id": "build-layout",
+          "description": "scripts/harness/spec-remediation/ tree matches LLD § File layout exactly",
+          "passing": true
+        },
+        {
+          "id": "discover-step1",
+          "description": "discover.mjs --step 1 produces non-empty step1-tasks.json",
+          "passing": true
+        },
+        {
+          "id": "discover-step2",
+          "description": "discover.mjs --step 2 produces step2-tasks.json",
+          "passing": true
+        },
+        {
+          "id": "discover-step3",
+          "description": "discover.mjs --step 3 produces step3-tasks.json",
+          "passing": true
+        },
+        {
+          "id": "apply-patch-rollback",
+          "description": "apply-patch.mjs rolls back when overlap participations does not strictly decrease",
+          "passing": true
+        },
+        {
+          "id": "apply-patch-happy-path",
+          "description": "apply-patch.mjs dry-run reduces overlap and leaves disk unchanged",
+          "passing": true
+        },
+        {
+          "id": "report-dashboard",
+          "description": "report.mjs prints overlap totals + per-step queues + log tail + top participants",
+          "passing": true
+        },
+        {
+          "id": "resumability",
+          "description": "discover --force gate refuses overwrite when pending tasks exist; fresh shell reads state correctly",
+          "passing": true
+        },
+        {
+          "id": "no-tier3-ops",
+          "description": "Scripts contain zero git/pnpm/prisma calls (greppable)",
+          "passing": true
+        },
+        {
+          "id": "manifest-registration",
+          "description": "spec/index.json: harness.spec-remediation owns 13 files, ownsConfidence=high, lastVerifiedSha stamped",
+          "passing": true
+        },
+        {
+          "id": "spec-check-clean",
+          "description": "pnpm spec:check shows no new overlaps/ghosts introduced by registration",
+          "passing": true
+        },
+        {
+          "id": "type-check",
+          "description": "pnpm run type-check passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "pipeline-batch-1",
+          "description": "Step-1 batch 1: dispatch 3 sub-agents → apply → verify overlap strictly decreases",
+          "passing": true
+        },
+        {
+          "id": "pipeline-step-1-complete",
+          "description": "All step-1 tasks applied (13 → 0 pending)",
+          "passing": true
+        },
+        {
+          "id": "pipeline-step-2-complete",
+          "description": "All step-2 tasks applied",
+          "passing": true
+        },
+        {
+          "id": "pipeline-step-3-complete",
+          "description": "All step-3 tasks applied; overlap count = 0",
+          "passing": true
+        }
       ],
       "evidence": [
-        { "id": "build-layout", "sha": "a8f24ad", "note": "git ls-tree shows 13 files under scripts/harness/spec-remediation/ matching LLD layout" },
-        { "id": "discover-step1", "sha": "a8f24ad", "command": "node scripts/harness/spec-remediation/discover.mjs --step 1", "result": "wrote 13 task(s) to .harness/remediation/step1-tasks.json" },
-        { "id": "discover-step2", "sha": "a8f24ad", "command": "node scripts/harness/spec-remediation/discover.mjs --step 2", "result": "wrote 3 task(s) to .harness/remediation/step2-tasks.json" },
-        { "id": "discover-step3", "sha": "a8f24ad", "command": "node scripts/harness/spec-remediation/discover.mjs --step 3", "result": "wrote 94 task(s) to .harness/remediation/step3-tasks.json" },
-        { "id": "apply-patch-rollback", "sha": "uncommitted", "note": "Original gate (file-count) proved unsatisfiable for files with ≥3 claimants → batch-1 t001 rolled back from 94→94. Gate switched to overlapParticipations; rollback path remains: any non-decreasing participations count after a remove-files-from-owns op triggers rollback. Verified live during batch-1 (file rejected) and via idempotent no-op path in batches 2–3." },
-        { "id": "apply-patch-happy-path", "sha": "uncommitted", "note": "Batch-3 step1-t013 applied: files 83 → 80, parts 196 → 189 (2 ops), audit row + log entry written, atomic manifest write succeeded." },
-        { "id": "report-dashboard", "sha": "uncommitted", "note": "Now shows overlap-files=80 overlap-parts=189; step1 queue 13/13 applied; transactions.transactions participation 17 (was 37)." },
-        { "id": "resumability", "sha": "a8f24ad", "note": "Re-running discover --step 1 without --force exited 2 with 'exists with 13 pending/dispatched task(s)'" },
-        { "id": "no-tier3-ops", "sha": "a8f24ad", "command": "grep -r 'execSync|git|pnpm' scripts/harness/spec-remediation/*.mjs scripts/harness/spec-remediation/lib/*.mjs", "result": "no matches" },
-        { "id": "manifest-registration", "sha": "a8f24ad", "note": "spec/index.json updated; computeOverlaps reports harness.spec-remediation NOT participating in any overlap" },
-        { "id": "spec-check-clean", "sha": "95843a0", "command": "pnpm spec:check", "result": "drift=50 overlap=94 ghost=0 sha-missing=0 review=0 (overlap unchanged from before registration)" },
-        { "id": "type-check", "sha": "95843a0", "command": "pnpm run type-check", "result": "exit 0, no output" },
-        { "id": "pipeline-batch-1", "sha": "uncommitted", "command": "node scripts/harness/spec-remediation/apply-batch.mjs --batch 1", "result": "3/3 applied; parts 223 → 220; transactions.transactions 37 → 34" },
-        { "id": "pipeline-step-1-complete", "sha": "uncommitted", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 1: 13 total · applied=13 · pending=0; cumulative overlap-files 94 → 80 (−14), overlap-parts 223 → 189 (−34) across 3 batches (batch-2: 5/5, batch-3: 5/5 with 2 idempotent no-ops in batch-3 and 1 in batch-2)" },
-        { "id": "pipeline-step-2-complete", "sha": "cb49a9c", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 2: 3 total · applied=3 · pending=0" },
-        { "id": "pipeline-step-3-complete", "sha": "cb49a9c", "command": "node scripts/harness/spec-remediation/report.mjs", "result": "step 3: all tasks applied across batches 5-16 (6 discover rounds); final overlap-files=0 overlap-parts=0" }
+        {
+          "id": "build-layout",
+          "sha": "a8f24ad",
+          "note": "git ls-tree shows 13 files under scripts/harness/spec-remediation/ matching LLD layout"
+        },
+        {
+          "id": "discover-step1",
+          "sha": "a8f24ad",
+          "command": "node scripts/harness/spec-remediation/discover.mjs --step 1",
+          "result": "wrote 13 task(s) to .harness/remediation/step1-tasks.json"
+        },
+        {
+          "id": "discover-step2",
+          "sha": "a8f24ad",
+          "command": "node scripts/harness/spec-remediation/discover.mjs --step 2",
+          "result": "wrote 3 task(s) to .harness/remediation/step2-tasks.json"
+        },
+        {
+          "id": "discover-step3",
+          "sha": "a8f24ad",
+          "command": "node scripts/harness/spec-remediation/discover.mjs --step 3",
+          "result": "wrote 94 task(s) to .harness/remediation/step3-tasks.json"
+        },
+        {
+          "id": "apply-patch-rollback",
+          "sha": "uncommitted",
+          "note": "Original gate (file-count) proved unsatisfiable for files with ≥3 claimants → batch-1 t001 rolled back from 94→94. Gate switched to overlapParticipations; rollback path remains: any non-decreasing participations count after a remove-files-from-owns op triggers rollback. Verified live during batch-1 (file rejected) and via idempotent no-op path in batches 2–3."
+        },
+        {
+          "id": "apply-patch-happy-path",
+          "sha": "uncommitted",
+          "note": "Batch-3 step1-t013 applied: files 83 → 80, parts 196 → 189 (2 ops), audit row + log entry written, atomic manifest write succeeded."
+        },
+        {
+          "id": "report-dashboard",
+          "sha": "uncommitted",
+          "note": "Now shows overlap-files=80 overlap-parts=189; step1 queue 13/13 applied; transactions.transactions participation 17 (was 37)."
+        },
+        {
+          "id": "resumability",
+          "sha": "a8f24ad",
+          "note": "Re-running discover --step 1 without --force exited 2 with 'exists with 13 pending/dispatched task(s)'"
+        },
+        {
+          "id": "no-tier3-ops",
+          "sha": "a8f24ad",
+          "command": "grep -r 'execSync|git|pnpm' scripts/harness/spec-remediation/*.mjs scripts/harness/spec-remediation/lib/*.mjs",
+          "result": "no matches"
+        },
+        {
+          "id": "manifest-registration",
+          "sha": "a8f24ad",
+          "note": "spec/index.json updated; computeOverlaps reports harness.spec-remediation NOT participating in any overlap"
+        },
+        {
+          "id": "spec-check-clean",
+          "sha": "95843a0",
+          "command": "pnpm spec:check",
+          "result": "drift=50 overlap=94 ghost=0 sha-missing=0 review=0 (overlap unchanged from before registration)"
+        },
+        {
+          "id": "type-check",
+          "sha": "95843a0",
+          "command": "pnpm run type-check",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "pipeline-batch-1",
+          "sha": "uncommitted",
+          "command": "node scripts/harness/spec-remediation/apply-batch.mjs --batch 1",
+          "result": "3/3 applied; parts 223 → 220; transactions.transactions 37 → 34"
+        },
+        {
+          "id": "pipeline-step-1-complete",
+          "sha": "uncommitted",
+          "command": "node scripts/harness/spec-remediation/report.mjs",
+          "result": "step 1: 13 total · applied=13 · pending=0; cumulative overlap-files 94 → 80 (−14), overlap-parts 223 → 189 (−34) across 3 batches (batch-2: 5/5, batch-3: 5/5 with 2 idempotent no-ops in batch-3 and 1 in batch-2)"
+        },
+        {
+          "id": "pipeline-step-2-complete",
+          "sha": "cb49a9c",
+          "command": "node scripts/harness/spec-remediation/report.mjs",
+          "result": "step 2: 3 total · applied=3 · pending=0"
+        },
+        {
+          "id": "pipeline-step-3-complete",
+          "sha": "cb49a9c",
+          "command": "node scripts/harness/spec-remediation/report.mjs",
+          "result": "step 3: all tasks applied across batches 5-16 (6 discover rounds); final overlap-files=0 overlap-parts=0"
+        }
       ]
     },
     {
@@ -87,14 +253,41 @@
       "notes": "Wired implement-from-spec SKILL.md (Step 1 + Step 4) to use capsule.md as primary context source. .md-only change — no production code.",
       "completedAt": "2026-07-01",
       "verification": [
-        { "id": "type-check", "description": "pnpm run type-check passes (zero errors)", "passing": true },
-        { "id": "lint", "description": "pnpm run lint passes (zero errors)", "passing": true },
-        { "id": "spec-check", "description": "pnpm spec:check — 106 capsules clean, exit 0", "passing": true }
+        {
+          "id": "type-check",
+          "description": "pnpm run type-check passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "lint",
+          "description": "pnpm run lint passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "spec-check",
+          "description": "pnpm spec:check — 106 capsules clean, exit 0",
+          "passing": true
+        }
       ],
       "evidence": [
-        { "id": "type-check", "sha": "HEAD", "command": "pnpm run type-check", "result": "exit 0, no output" },
-        { "id": "lint", "sha": "HEAD", "command": "pnpm run lint", "result": "exit 0, no output" },
-        { "id": "spec-check", "sha": "HEAD", "command": "pnpm spec:check", "result": "exit 0 — capsule staleness: 106 capsule(s) clean" }
+        {
+          "id": "type-check",
+          "sha": "HEAD",
+          "command": "pnpm run type-check",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "lint",
+          "sha": "HEAD",
+          "command": "pnpm run lint",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "spec-check",
+          "sha": "HEAD",
+          "command": "pnpm spec:check",
+          "result": "exit 0 — capsule staleness: 106 capsule(s) clean"
+        }
       ]
     },
     {
@@ -107,25 +300,152 @@
       "notes": "95 capsule.md files generated across all features. @anthropic-ai/tokenizer installed (Claude-native BPE). Owns[] buckets capped at 5 entries + '…and N more' to stay within 800-token budget. 7 sub-features without context.md fall back to lld.md.",
       "completedAt": "2026-07-01",
       "verification": [
-        { "id": "generate", "description": "node scripts/harness/capsule-format/generate.mjs exits 0, 95 capsules, 0 over budget", "passing": true },
-        { "id": "idempotency", "description": "Re-running generate.mjs produces zero diff (check.mjs 95/95 clean)", "passing": true },
-        { "id": "spec-check", "description": "pnpm spec:check — capsule staleness 95/95 clean, 0 overlap, 0 ghost", "passing": true },
-        { "id": "type-check", "description": "pnpm run type-check passes (zero errors)", "passing": true },
-        { "id": "lint", "description": "pnpm run lint passes (zero errors)", "passing": true },
-        { "id": "manifest-registration", "description": "spec/index.json: harness.capsule-format owns 5 script files, ownsConfidence=high, 95 total features", "passing": true },
-        { "id": "hld-catalogue", "description": "spec/harness/hld.md: capsule-format in Catalogue, removed from Planned", "passing": true },
-        { "id": "audit-closed", "description": "docs/harness-audit.md P-Q #6 marked closed", "passing": true },
-        { "id": "build", "description": "pnpm run build succeeds (user-confirmed run only)", "passing": true }
+        {
+          "id": "generate",
+          "description": "node scripts/harness/capsule-format/generate.mjs exits 0, 95 capsules, 0 over budget",
+          "passing": true
+        },
+        {
+          "id": "idempotency",
+          "description": "Re-running generate.mjs produces zero diff (check.mjs 95/95 clean)",
+          "passing": true
+        },
+        {
+          "id": "spec-check",
+          "description": "pnpm spec:check — capsule staleness 95/95 clean, 0 overlap, 0 ghost",
+          "passing": true
+        },
+        {
+          "id": "type-check",
+          "description": "pnpm run type-check passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "lint",
+          "description": "pnpm run lint passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "manifest-registration",
+          "description": "spec/index.json: harness.capsule-format owns 5 script files, ownsConfidence=high, 95 total features",
+          "passing": true
+        },
+        {
+          "id": "hld-catalogue",
+          "description": "spec/harness/hld.md: capsule-format in Catalogue, removed from Planned",
+          "passing": true
+        },
+        {
+          "id": "audit-closed",
+          "description": "docs/harness-audit.md P-Q #6 marked closed",
+          "passing": true
+        },
+        {
+          "id": "build",
+          "description": "pnpm run build succeeds (user-confirmed run only)",
+          "passing": true
+        }
       ],
       "evidence": [
-        { "id": "generate", "sha": "HEAD", "command": "node scripts/harness/capsule-format/generate.mjs", "result": "Generated 95 capsules. 0 over budget. Max 621 tokens (transactions.transactions), median 249." },
-        { "id": "idempotency", "sha": "HEAD", "command": "node scripts/harness/capsule-format/check.mjs", "result": "✓ 95 capsule(s) clean, checked: 95" },
-        { "id": "spec-check", "sha": "HEAD", "command": "node scripts/harness/spec-manifest/spec-check.mjs", "result": "drift=43 overlap=0 ghost=0 sha-missing=0 review=0 | capsule staleness ✓ 95 capsule(s) clean" },
-        { "id": "type-check", "sha": "HEAD", "command": "pnpm run type-check", "result": "exit 0, no output" },
-        { "id": "lint", "sha": "HEAD", "command": "pnpm run lint", "result": "exit 0, no output" },
-        { "id": "build", "sha": "b447cd8", "command": "pnpm run build", "result": "exit 0, build successful (user-confirmed)" }
+        {
+          "id": "generate",
+          "sha": "HEAD",
+          "command": "node scripts/harness/capsule-format/generate.mjs",
+          "result": "Generated 95 capsules. 0 over budget. Max 621 tokens (transactions.transactions), median 249."
+        },
+        {
+          "id": "idempotency",
+          "sha": "HEAD",
+          "command": "node scripts/harness/capsule-format/check.mjs",
+          "result": "✓ 95 capsule(s) clean, checked: 95"
+        },
+        {
+          "id": "spec-check",
+          "sha": "HEAD",
+          "command": "node scripts/harness/spec-manifest/spec-check.mjs",
+          "result": "drift=43 overlap=0 ghost=0 sha-missing=0 review=0 | capsule staleness ✓ 95 capsule(s) clean"
+        },
+        {
+          "id": "type-check",
+          "sha": "HEAD",
+          "command": "pnpm run type-check",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "lint",
+          "sha": "HEAD",
+          "command": "pnpm run lint",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "build",
+          "sha": "b447cd8",
+          "command": "pnpm run build",
+          "result": "exit 0, build successful (user-confirmed)"
+        }
       ]
+    },
+    {
+      "id": "harness.session-close",
+      "domain": "harness",
+      "status": "done",
+      "branch": "main",
+      "spec": "spec/harness/session-close/",
+      "blockers": [],
+      "notes": "Implementing close.mjs — automates deterministic session-end ritual: runs Verification Gate, updates feature-status.json, rotates progress.md, stamps lastVerifiedSha. Never auto-commits.",
+      "verification": [
+        {
+          "id": "close-mjs-exists",
+          "description": "scripts/harness/session-close/close.mjs created and executable",
+          "passing": true
+        },
+        {
+          "id": "hooks-json",
+          "description": "sessionEnd hook added to .github/hooks/hooks.json",
+          "passing": true
+        },
+        {
+          "id": "agents-md",
+          "description": "AGENTS.md Session Lifecycle § End updated to reference close.mjs",
+          "passing": true
+        },
+        {
+          "id": "type-check",
+          "description": "pnpm run type-check passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "lint",
+          "description": "pnpm run lint passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "spec-check",
+          "description": "pnpm spec:check — no new drift/ghost/overlap introduced",
+          "passing": true
+        }
+      ],
+      "evidence": [
+        {
+          "id": "type-check",
+          "sha": "ecc4b8b",
+          "command": "pnpm run type-check",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "lint",
+          "sha": "ecc4b8b",
+          "command": "pnpm run lint",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "spec-check",
+          "sha": "ecc4b8b",
+          "command": "node scripts/harness/spec-manifest/spec-check.mjs",
+          "result": "drift=43 overlap=0 ghost=0 sha-missing=0 review=10"
+        }
+      ],
+      "completedAt": "2026-07-01"
     }
   ]
 }
-

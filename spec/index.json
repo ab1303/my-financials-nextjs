@@ -2706,8 +2706,8 @@
       "id": "harness.session-close",
       "domain": "harness",
       "path": "spec/harness/session-close/",
-      "status": "planned",
-      "phase": "design",
+      "status": "in-progress",
+      "phase": "build",
       "docs": {
         "context": "spec/harness/session-close/context.md",
         "lld": "spec/harness/session-close/lld.md"
@@ -2730,8 +2730,8 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": null,
-      "lastVerifiedDate": null,
+      "lastVerifiedSha": "ecc4b8b",
+      "lastVerifiedDate": "2026-07-01",
       "invariants": [
         "close.mjs never calls git commit — staging only (Hard Constraint).",
         "Running close.mjs twice with no intervening changes is idempotent.",
