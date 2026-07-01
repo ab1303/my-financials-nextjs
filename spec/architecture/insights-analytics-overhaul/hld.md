@@ -90,3 +90,42 @@ The initiative is executed in **eight independent phases**, each its own spec bu
 ```
 
 Phases 0a and 0b can be developed in parallel. Phase 1 depends on both. Phases 2–5 are independent after Phase 1. Phase 6 depends on Phase 3 (Expense Summary is its primary surface). Phase 7 depends on Phase 2 (forecast line lives in the Analytics Net Cashflow chart).
+
+## Build Order
+
+Deliver phases in the order below. Each row is a single reviewable PR = one deliverable. Later rows must not start until every phase in the "Prerequisites" column has merged to `main`.
+
+| Order | Deliverable | Phase(s) | Spec | Prerequisites | Parallelisable with |
+|---|---|---|---|---|---|
+| **1** | Foundations — period model + UI primitives | 0a + 0b | `spec/architecture/period-picker/` · `spec/architecture/insight-primitives/` | — | 0a ↔ 0b (internal) |
+| **2** | Server-side insights engine | 1 | `spec/cashflow/insights-engine/` | Order 1 | — |
+| **3** | Cashflow Analytics upgrade | 2 | `spec/cashflow/analytics-insights/` | Order 2 | Orders 4, 5, 6 |
+| **4** | Expense Summary report (new) | 3 | `spec/reports/expense-summary/` | Order 2 | Orders 3, 5, 6 |
+| **5** | Income Summary v2 | 4 | `spec/reports/income-summary-v2/` | Order 2 | Orders 3, 4, 6 |
+| **6** | Home dashboard narrative | 5 | `spec/home/dashboard-narrative/` | Order 2 | Orders 3, 4, 5 |
+| **7** | Recurring & subscriptions detection | 6 | `spec/cashflow/recurring-detection/` | Order 4 | Order 8 |
+| **8** | Forecasting & anomalies | 7 | `spec/cashflow/forecasting/` | Order 3 | Order 7 |
+
+### Why this order
+
+1. **Foundations first (Order 1).** Every later phase consumes `<PeriodPicker>`, `<Sparkline>`, `<TrendDelta>`, `<InsightCard>`, `<KpiTile>`. Building them once, in one PR, eliminates drift across surfaces.
+2. **Engine before surfaces (Order 2).** All four analytics surfaces call the same `insights.forPeriod` procedure. If surfaces ship before the engine, each invents its own ad-hoc "top mover" logic and they will disagree.
+3. **Analytics first among surfaces (Order 3).** It's the highest-traffic analytics surface and the one with the widest gap. It also produces the reference implementation for period-picker + insight-strip patterns that Orders 4–6 will copy.
+4. **Expense Summary before Income v2 and Home (Orders 4 → 5 → 6).** Expense Summary is entirely new (fills the biggest IA gap). Income v2 and Home are enhancements to existing surfaces and lower risk. Delivering them after Expense Summary means the Recurring section (Order 7) has a home to land in immediately.
+5. **Recurring after Expense Summary (Order 7).** The primary surface for recurring subscriptions is inside Expense Summary. Building recurring first would leave detected series with nowhere to render.
+6. **Forecasting last (Order 8).** Forecast line renders on the Net Cashflow chart owned by Order 3. Anomaly bands render on the Expense Category chart also owned by Order 3. Both consume recurring data from Order 7 for accurate baselines — hence last.
+
+### Sequential vs parallel
+
+- Orders 1 → 2 → 3 are strictly sequential (each unlocks the next).
+- Orders 3, 4, 5, 6 can be worked in parallel branches once Order 2 is merged, but each is a **separate PR**.
+- Orders 7 and 8 can run in parallel once their respective prerequisites are merged.
+
+### Recommended minimum viable release cuts
+
+- **MVR-1 (unlocks core value):** Orders 1 + 2 + 3 — Analytics page now has period comparison, insight strip, sparklines. This alone answers the original user complaint about "no insights are surfaced".
+- **MVR-2 (IA symmetry + narrative):** Add Orders 4 + 5 + 6 — new Expense Summary, Income v2, Home hero strip. Feature parity across surfaces.
+- **MVR-3 (advanced):** Add Orders 7 + 8 — subscriptions detection + forecasting. The "wow" phase.
+
+Ship at any MVR boundary; do not ship mid-order.
+
