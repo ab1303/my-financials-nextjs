@@ -199,6 +199,35 @@ These are features whose LLDs describe invariants more than implementations (cro
 - `.harness/progress.md` — this entry.
 
 ---
+## 2026-07-03 — category-groups — IN PROGRESS
+
+### Verification gate (auto-stamped by close.mjs @ 12aef13)
+
+| Check | Result |
+|---|---|
+| `pnpm run type-check` | ✅ exit 0, no output |
+| `pnpm run lint` | ✅ exit 0, no output |
+| `pnpm run build` | ✅ exit 0 |
+| `pnpm spec:check` | ✅ drift=44 overlap=0 ghost=0 sha-missing=0 review=10 |
+
+### What was done
+<!-- close.mjs: populated from feature-status.json notes field -->
+Audit synced to implementation state. Category group schema/router/settings CRUD is present, and cashflow grouping implementation is now complete through Phase E. Added `ExpenseGroupTrendChart` on analytics and wired estimated monthly group trend data from annual group mix.
+
+### Open verification items
+<!-- close.mjs: list verification[].passing===false, or "None — feature complete" -->
+None — feature complete
+
+### Next up
+<!-- Agent: replace this block with narrative + chosen workstream -->
+<!-- Planned features from feature-status.json with status:"planned" or "in-progress": -->
+- `harness.spec-remediation` (in-progress)
+
+### Next session starts at
+<!-- Agent: fill in the specific file + section or command to resume from -->
+`spec\harness\spec-remediation\lld.md` and `scripts\harness\spec-remediation\` pipeline state for remaining harness workstream.
+
+---
 ## No active workstream
 
 `harness.capsule-hydration` completed 2026-07-01 (committed). See `progress-history.md`.

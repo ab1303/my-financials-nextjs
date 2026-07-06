@@ -2780,8 +2780,8 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": "e9a8f1f195a97e42ae4d26f93abaf5bcda9f26c0",
-      "lastVerifiedDate": "2026-06-30",
+      "lastVerifiedSha": "61981de",
+      "lastVerifiedDate": "2026-07-06",
       "invariants": [
         "The harness must not bypass its own gates: apply-patch.mjs runs spec:check after each manifest edit and rolls back any change that introduces a finding.",
         "Tier 3 operations (git push, prisma db push, etc.) require explicit user confirmation per AGENTS.md, even from a harness script.",

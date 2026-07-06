@@ -8,6 +8,7 @@ import { CalendarYearPicker } from '@/components/CalendarYearPicker';
 import { CategoryGroupRollupPanel } from '@/components/ui/CategoryGroupRollupPanel';
 import { Label } from '@/components/ui/Label';
 import { SelectWrapper as Select } from '@/components/ui/Select';
+import { groupExpenseBreakdown } from '@/lib/category-group-utils';
 import type {
   CashflowAnalyticsData,
   MonthlyTrendPoint,
@@ -22,6 +23,7 @@ import AnalyticsDrillDownDrawer, {
 import { ChartSkeleton } from './ChartSkeleton';
 import { ExpenseCategoryChart } from './ExpenseCategoryChart';
 import { ExpenseGroupSummaryChart } from './ExpenseGroupSummaryChart';
+import { ExpenseGroupTrendChart } from './ExpenseGroupTrendChart';
 import { IncomeExpenseTrendChart } from './IncomeExpenseTrendChart';
 import { IncomeSourceChart } from './IncomeSourceChart';
 import { NetCashflowChart } from './NetCashflowChart';
@@ -160,6 +162,49 @@ export default function CashflowAnalyticsClient({
     () => data?.expenseCategories ?? [],
     [data?.expenseCategories],
   );
+  const expenseGroups = useMemo(
+    () => categoryGroups.filter((group) => group.scope === 'EXPENSE'),
+    [categoryGroups],
+  );
+  const estimatedExpenseGroupTrend = useMemo(() => {
+    if (!data?.monthlyTrend?.length || expenseGroups.length === 0) {
+      return [];
+    }
+
+    const annualGroupBreakdown = groupExpenseBreakdown(
+      filteredExpenseCategories,
+      expenseGroups,
+    );
+
+    if (annualGroupBreakdown.length === 0) {
+      return [];
+    }
+
+    return data.monthlyTrend.map((point) => {
+      let allocated = 0;
+
+      const groups = annualGroupBreakdown.map((group, index) => {
+        const estimatedAmount =
+          index === annualGroupBreakdown.length - 1
+            ? Math.max(0, Number((point.expenses - allocated).toFixed(2)))
+            : Number((point.expenses * (group.percentage / 100)).toFixed(2));
+
+        allocated += estimatedAmount;
+
+        return {
+          groupId: group.groupId,
+          groupName: group.groupName,
+          totalAmount: estimatedAmount,
+        };
+      });
+
+      return {
+        month: point.month,
+        year: point.year,
+        groups,
+      };
+    });
+  }, [data?.monthlyTrend, expenseGroups, filteredExpenseCategories]);
   const incomeBreakdown = useMemo<CategoryBreakdown[]>(() => {
     const normalize = (value: string) => value.trim().toLowerCase();
     const byLabel = new Map(
@@ -264,6 +309,13 @@ export default function CashflowAnalyticsClient({
           data={data?.monthlyTrend ?? []}
           onMonthClick={handleMonthClick}
         />
+      )}
+
+      {/* Estimated Group Trend Chart */}
+      {loading ? (
+        <ChartSkeleton height={320} />
+      ) : (
+        <ExpenseGroupTrendChart monthlyData={estimatedExpenseGroupTrend} />
       )}
 
       {/* Net Cashflow Chart */}

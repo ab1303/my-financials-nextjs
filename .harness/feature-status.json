@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.1.0",
-  "updatedAt": "2026-07-01T00:43:09.376Z",
+  "updatedAt": "2026-07-06T07:49:09.146Z",
   "rules": {
     "singleActiveFeature": true,
     "passingRequiresEvidence": true,
@@ -16,54 +16,139 @@
     {
       "id": "category-groups",
       "domain": "architecture",
-      "status": "in-progress",
+      "status": "done",
       "branch": "category-groups",
       "spec": "spec/architecture/category-filter-groups/",
       "blockers": [],
-      "notes": "Active branch — implementing category group CRUD and cashflow filter integration",
+      "notes": "Audit synced to implementation state and completed: category-group schema/router/settings CRUD in place; cashflow grouping implementation complete through Phase E (including ExpenseGroupTrendChart estimate on analytics).",
       "verification": [
         {
-          "id": "schema",
-          "description": "Prisma migration created and applied (pnpm prisma migrate dev)",
-          "passing": false
+          "id": "schema-reuse",
+          "description": "Category group schema is already present; no new migration required for this slice",
+          "passing": true
         },
         {
           "id": "router",
           "description": "tRPC router for category group CRUD with input validation",
-          "passing": false
+          "passing": true
         },
         {
           "id": "ui-settings",
           "description": "Settings UI renders group CRUD with dark mode variants",
-          "passing": false
+          "passing": true
         },
         {
-          "id": "ui-cashflow",
-          "description": "Cashflow filters respect category groups",
-          "passing": false
+          "id": "phase-a",
+          "description": "Phase A data plumbing is complete (group utils + expense page/server/client wiring)",
+          "passing": true
+        },
+        {
+          "id": "phase-b",
+          "description": "Phase B expense rollup widget interactions are complete",
+          "passing": true
+        },
+        {
+          "id": "phase-c",
+          "description": "Phase C grouped monthly breakdown modal is complete",
+          "passing": true
+        },
+        {
+          "id": "phase-d",
+          "description": "Phase D analytics grouped selector parity is complete",
+          "passing": true
+        },
+        {
+          "id": "phase-e",
+          "description": "Phase E expense group trend chart is implemented",
+          "passing": true
         },
         {
           "id": "type-check",
           "description": "pnpm run type-check passes (zero errors)",
-          "passing": false
+          "passing": true
         },
         {
           "id": "lint",
           "description": "pnpm run lint passes (zero errors)",
-          "passing": false
+          "passing": true
         },
         {
           "id": "build",
           "description": "pnpm run build succeeds (user-confirmed run only)",
-          "passing": false
+          "passing": true
         }
       ],
-      "evidence": []
+      "evidence": [
+        {
+          "id": "schema-reuse",
+          "sha": "61981de",
+          "note": "prisma/schema.prisma already defines CategoryGroup, CategoryGroupExpenseCategory, CategoryGroupIncomeSource, and CategoryGroupScope; no new schema diff needed for current phases."
+        },
+        {
+          "id": "router",
+          "sha": "61981de",
+          "note": "src/server/trpc/router/category-groups.ts exports list/create/update/delete protected procedures."
+        },
+        {
+          "id": "ui-settings",
+          "sha": "61981de",
+          "note": "Cashflow category-groups page and components exist under src/app/(authorized)/cashflow/category-groups/."
+        },
+        {
+          "id": "phase-a",
+          "sha": "61981de",
+          "note": "Expense page + server + client already thread categoryGroups; src/lib/category-group-utils.ts provides grouped breakdown helpers."
+        },
+        {
+          "id": "phase-b",
+          "sha": "61981de",
+          "note": "ExpenseCategoryBreakdownWidget + GroupCategoryPopover + GroupedCategorySelect already provide categories/groups toggle and shared filter interactions."
+        },
+        {
+          "id": "phase-c",
+          "sha": "61981de",
+          "note": "CategoryBreakdownModal already includes flat/grouped toggle and GroupedEntriesView based on groupExpenseEntries."
+        },
+        {
+          "id": "phase-d",
+          "sha": "61981de",
+          "note": "CashflowAnalyticsClient renders CategoryGroupRollupPanel for both INCOME and EXPENSE scopes."
+        },
+        {
+          "id": "phase-e",
+          "sha": "61981de",
+          "note": "Implemented src/app/(authorized)/cashflow/analytics/_components/ExpenseGroupTrendChart.tsx and wired estimated monthly group trend into CashflowAnalyticsClient."
+        },
+        {
+          "id": "type-check",
+          "sha": "61981de",
+          "command": "pnpm run type-check",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "lint",
+          "sha": "61981de",
+          "command": "pnpm run lint",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "build",
+          "sha": "61981de",
+          "command": "pnpm run build",
+          "result": "exit 0, build successful"
+        },
+        {
+          "id": "spec-check",
+          "sha": "61981de",
+          "command": "node scripts/harness/spec-manifest/spec-check.mjs",
+          "result": "drift=44 overlap=0 ghost=0 sha-missing=0 review=10"
+        }
+      ]
     },
     {
       "id": "harness.spec-remediation",
       "domain": "harness",
-      "status": "in-progress",
+      "status": "done",
       "branch": "spec-remediation",
       "spec": "spec/harness/spec-remediation/",
       "blockers": [],
@@ -213,7 +298,7 @@
         },
         {
           "id": "type-check",
-          "sha": "95843a0",
+          "sha": "61981de",
           "command": "pnpm run type-check",
           "result": "exit 0, no output"
         },
@@ -240,8 +325,21 @@
           "sha": "cb49a9c",
           "command": "node scripts/harness/spec-remediation/report.mjs",
           "result": "step 3: all tasks applied across batches 5-16 (6 discover rounds); final overlap-files=0 overlap-parts=0"
+        },
+        {
+          "id": "lint",
+          "sha": "61981de",
+          "command": "pnpm run lint",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "spec-check",
+          "sha": "61981de",
+          "command": "node scripts/harness/spec-manifest/spec-check.mjs",
+          "result": "drift=44 overlap=0 ghost=0 sha-missing=0 review=10"
         }
-      ]
+      ],
+      "completedAt": "2026-07-06"
     },
     {
       "id": "harness.capsule-hydration",
