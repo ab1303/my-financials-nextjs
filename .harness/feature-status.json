@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.1.0",
-  "updatedAt": "2026-07-06T07:49:09.146Z",
+  "updatedAt": "2026-07-06T12:31:07.887Z",
   "rules": {
     "singleActiveFeature": true,
     "passingRequiresEvidence": true,
@@ -476,6 +476,21 @@
           "result": "exit 0, no output"
         },
         {
+          "id": "manifest-registration",
+          "sha": "HEAD",
+          "note": "spec/index.json includes harness.capsule-format owns entries with ownsConfidence=high."
+        },
+        {
+          "id": "hld-catalogue",
+          "sha": "HEAD",
+          "note": "spec/harness/hld.md lists harness.capsule-format in the harness feature catalogue."
+        },
+        {
+          "id": "audit-closed",
+          "sha": "HEAD",
+          "note": "docs/harness-audit.md records audit P-Q #6 as closed."
+        },
+        {
           "id": "build",
           "sha": "b447cd8",
           "command": "pnpm run build",
@@ -541,9 +556,104 @@
           "sha": "ecc4b8b",
           "command": "node scripts/harness/spec-manifest/spec-check.mjs",
           "result": "drift=43 overlap=0 ghost=0 sha-missing=0 review=10"
+        },
+        {
+          "id": "close-mjs-exists",
+          "sha": "ecc4b8b",
+          "note": "scripts/harness/session-close/close.mjs exists and is runnable."
+        },
+        {
+          "id": "hooks-json",
+          "sha": "ecc4b8b",
+          "note": ".github/hooks/hooks.json includes a sessionEnd command invoking close.mjs."
+        },
+        {
+          "id": "agents-md",
+          "sha": "ecc4b8b",
+          "note": "AGENTS.md Session Lifecycle end section references scripts/harness/session-close/close.mjs."
         }
       ],
       "completedAt": "2026-07-01"
+    },
+    {
+      "id": "harness.pre-push-hook",
+      "domain": "harness",
+      "status": "done",
+      "branch": "main",
+      "spec": "spec/harness/pre-push-hook/",
+      "blockers": [],
+      "notes": "Implementing local Layer 2 pre-push enforcement: strict gate runner, hook installer/wiring, and feature-status contract checks.",
+      "verification": [
+        {
+          "id": "runner-ordering",
+          "description": "run-pre-push.mjs executes type-check, lint, spec-check:strict, then verify-feature-status in strict order with fail-fast behavior",
+          "passing": true
+        },
+        {
+          "id": "hook-wiring",
+          "description": "Pre-push hook invokes run-pre-push.mjs and installation is idempotent",
+          "passing": true
+        },
+        {
+          "id": "status-contract",
+          "description": "verify-feature-status.mjs enforces done-state, evidence, and single-active-feature invariants",
+          "passing": true
+        },
+        {
+          "id": "type-check",
+          "description": "pnpm run type-check passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "lint",
+          "description": "pnpm run lint passes (zero errors)",
+          "passing": true
+        },
+        {
+          "id": "spec-check",
+          "description": "pnpm run spec:check:strict passes (zero strict findings)",
+          "passing": true
+        }
+      ],
+      "evidence": [
+        {
+          "id": "type-check",
+          "sha": "239ce9c",
+          "command": "pnpm run type-check",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "lint",
+          "sha": "239ce9c",
+          "command": "pnpm run lint",
+          "result": "exit 0, no output"
+        },
+        {
+          "id": "spec-check",
+          "sha": "239ce9c",
+          "command": "node scripts/harness/spec-manifest/spec-check.mjs",
+          "result": "drift=44 overlap=0 ghost=0 sha-missing=0 review=10"
+        },
+        {
+          "id": "runner-ordering",
+          "sha": "239ce9c",
+          "command": "node scripts/harness/pre-push-hook/run-pre-push.mjs --dry-run",
+          "result": "impact-based ordering confirmed: type-check/lint gated; spec-check:strict and verify-feature-status always present; fail-fast path implemented."
+        },
+        {
+          "id": "hook-wiring",
+          "sha": "239ce9c",
+          "command": "node scripts/harness/pre-push-hook/install.mjs --dry-run",
+          "result": "ok=true dryRun=true hookPath=.husky/pre-push action=noop (idempotent); .husky/pre-push invokes run-pre-push.mjs."
+        },
+        {
+          "id": "status-contract",
+          "sha": "239ce9c",
+          "command": "node scripts/harness/pre-push-hook/verify-feature-status.mjs",
+          "result": "ok=true checkedFeatures=6; enforces singleActiveFeature, passingRequiresEvidence, and done-state verification invariants."
+        }
+      ],
+      "completedAt": "2026-07-06"
     }
   ]
 }

@@ -199,6 +199,36 @@ These are features whose LLDs describe invariants more than implementations (cro
 - `.harness/progress.md` — this entry.
 
 ---
+## 2026-07-06 — harness.pre-push-hook — IN PROGRESS
+
+### Verification gate (auto-stamped by close.mjs @ 239ce9c)
+
+| Check | Result |
+|---|---|
+| `pnpm run type-check` | ✅ exit 0, no output |
+| `pnpm run lint` | ✅ exit 0, no output |
+| `pnpm spec:check` | ✅ drift=44 overlap=0 ghost=0 sha-missing=0 review=10 |
+
+### What was done
+<!-- close.mjs: populated from feature-status.json notes field -->
+Implemented the pre-push harness under `scripts/harness/pre-push-hook/` with a fail-fast runner, idempotent installer, and feature-status contract validator. Wired `.husky/pre-push` and added `harness:pre-push:install` in `package.json`, then registered ownership/state in `spec/index.json`, `spec/harness/hld.md`, and `.harness/feature-status.json`. Added impact-based gating so `type-check` and `lint` are skipped when no quality-impacting paths changed, while `spec:check:strict` and feature-status verification always run.
+
+### Open verification items
+<!-- close.mjs: list verification[].passing===false, or "None — feature complete" -->
+- [ ] `runner-ordering`: run-pre-push.mjs executes type-check, lint, spec-check:strict, then verify-feature-status in strict order with fail-fast behavior
+- [ ] `hook-wiring`: Pre-push hook invokes run-pre-push.mjs and installation is idempotent
+- [ ] `status-contract`: verify-feature-status.mjs enforces done-state, evidence, and single-active-feature invariants
+
+### Next up
+<!-- Agent: replace this block with narrative + chosen workstream -->
+<!-- Planned features from feature-status.json with status:"planned" or "in-progress": -->
+Finish `harness.pre-push-hook` by marking `runner-ordering`, `hook-wiring`, and `status-contract` verification items as passing with evidence aligned to current scripts.
+
+### Next session starts at
+<!-- Agent: fill in the specific file + section or command to resume from -->
+Run `node scripts/harness/pre-push-hook/run-pre-push.mjs --dry-run`, then update `.harness/feature-status.json` verification/evidence for `harness.pre-push-hook` before re-running `node scripts/harness/session-close/close.mjs`.
+
+---
 ## 2026-07-03 — category-groups — IN PROGRESS
 
 ### Verification gate (auto-stamped by close.mjs @ 12aef13)

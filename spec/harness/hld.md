@@ -29,7 +29,7 @@ Symmetry between `spec/harness/` and `scripts/harness/`:
 spec/harness/<feature>/         ⟷    scripts/harness/<feature>/
 spec/harness/spec-remediation/  ⟷    scripts/harness/spec-remediation/
 spec/harness/capsule-format/    ⟷    scripts/harness/capsule-format/      (future)
-spec/harness/pre-push-hook/     ⟷    scripts/harness/pre-push-hook/       (future)
+spec/harness/pre-push-hook/     ⟷    scripts/harness/pre-push-hook/
 ```
 
 Rules:
@@ -93,10 +93,10 @@ That rule applies to harness features as strictly as to product features.
 | `harness.consumes-derivation` | `in-progress` | `spec/harness/consumes-derivation/` | Derives per-feature `consumes[]` from the TypeScript import graph; restores the consumption signal lost during overlap remediation. No LLM in the runtime loop. |
 | `harness.capsule-format` | `in-progress` | `spec/harness/capsule-format/` | Generates a deterministic ≤800-token `capsule.md` digest per feature for cheap-model context injection. Closes audit P-Q #6. |
 | `harness.session-close` | `in-progress` | `spec/harness/session-close/` | Automates the deterministic portion of the session-end ritual: runs Verification Gate, updates `feature-status.json`, rotates `progress.md`, stamps `lastVerifiedSha`. Never auto-commits. |
+| `harness.pre-push-hook` | `in-progress` | `spec/harness/pre-push-hook/` | Adds local Layer 2 enforcement before push by running type-check, lint, strict spec check, and harness feature-status contract checks. |
 
 **Planned (not yet implemented — on the audit priority queue):**
 
-- `harness.pre-push-hook` — local Layer 2 enforcement running `pnpm spec:check:strict` (audit P-Q #4).
 - `harness.weekly-corrective` — scheduled Layer 3 job opening drift triage issues (audit P-Q #10).
 - `harness.phase-encoding` — populate `phase` per feature (currently all `unknown`) (audit P-Q #9).
 

@@ -5,9 +5,9 @@ Agents: read this file at session start to know exactly what to work on next.
 
 ---
 
-## 2026-07-06 — category-groups — COMPLETE ✅
+## 2026-07-06 — harness.pre-push-hook — COMPLETE ✅
 
-### Verification gate (auto-stamped by close.mjs @ 61981de)
+### Verification gate (auto-stamped by close.mjs @ 239ce9c)
 
 | Check | Result |
 |---|---|
@@ -17,10 +17,7 @@ Agents: read this file at session start to know exactly what to work on next.
 
 ### What was done
 <!-- close.mjs: populated from feature-status.json notes field -->
-Completed an end-to-end harness/state audit for `category-groups` and reconciled spec, progress, and feature-status drift.
-Implemented Phase E by adding `ExpenseGroupTrendChart.tsx` and wiring estimated group-trend data in `CashflowAnalyticsClient.tsx`.
-Resolved type/lint iteration issues for the new chart, then re-ran verification gates to green.
-Drafted next-session harness planning artifacts in `spec/harness/pre-push-hook/{context.md,lld.md}`.
+Implemented `harness.pre-push-hook` end-to-end: pre-push runner, hook installer, feature-status contract validator, and Husky wiring. Added impact-based gating so type-check/lint run only when quality-impacting paths changed, while spec/status checks always run. Registered the feature in harness manifests and completed verification with evidence.
 
 ### Open verification items
 <!-- close.mjs: list verification[].passing===false, or "None — feature complete" -->
@@ -29,9 +26,8 @@ None — all verification items passing
 ### Next up
 <!-- Agent: replace this block with narrative + chosen workstream -->
 <!-- Planned features from feature-status.json with status:"planned" or "in-progress": -->
-Start `harness.pre-push-hook` implementation to add Layer 2 local enforcement before push.
-First action: register `harness.pre-push-hook` in `spec/index.json` and `spec/harness/hld.md`, then scaffold `scripts/harness/pre-push-hook/`.
+Start `harness.weekly-corrective` (Layer 3 scheduled drift triage) as the next highest-mileage harness feature.
 
 ### Next session starts at
 <!-- Agent: fill in the specific file + section or command to resume from -->
-Open `spec\harness\pre-push-hook\lld.md` and begin with Phase 1 (`run-pre-push.mjs`) plus Phase 3 (`verify-feature-status.mjs`).
+Open `spec/harness/hld.md` planned list, then scaffold `spec/harness/weekly-corrective/{context.md,lld.md}` and register `harness.weekly-corrective` in `.harness/feature-status.json`.

@@ -2703,6 +2703,44 @@
       ]
     },
     {
+      "id": "harness.pre-push-hook",
+      "domain": "harness",
+      "path": "spec/harness/pre-push-hook/",
+      "status": "in-progress",
+      "phase": "build",
+      "docs": {
+        "context": "spec/harness/pre-push-hook/context.md",
+        "lld": "spec/harness/pre-push-hook/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          "scripts/harness/pre-push-hook/run-pre-push.mjs",
+          "scripts/harness/pre-push-hook/verify-feature-status.mjs",
+          "scripts/harness/pre-push-hook/install.mjs"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "239ce9c",
+      "lastVerifiedDate": "2026-07-06",
+      "invariants": [
+        "run-pre-push.mjs executes gates in strict order and fails fast on first non-zero exit.",
+        "Local pre-push enforcement never performs Tier 3 operations (no auto-push, no destructive git).",
+        "Done features must have passing verification and matching evidence when passingRequiresEvidence=true."
+      ]
+    },
+    {
       "id": "harness.session-close",
       "domain": "harness",
       "path": "spec/harness/session-close/",
