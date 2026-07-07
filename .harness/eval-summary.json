@@ -1,0 +1,13 @@
+{
+  "count": 63,
+  "positive": 57,
+  "negative": 5,
+  "neutral": 1,
+  "rewardSum": 26.900000000000006,
+  "averageReward": 0.4269841269841271,
+  "byCategory": {
+    "evidence-recording": 51,
+    "verification-gates": 7,
+    "drift-response": 5
+  }
+}

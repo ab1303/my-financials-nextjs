@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.1.0",
-  "updatedAt": "2026-07-07T00:31:41.792Z",
+  "updatedAt": "2026-07-06T12:31:07.887Z",
   "rules": {
     "singleActiveFeature": true,
     "passingRequiresEvidence": true,
@@ -687,39 +687,20 @@
         {
           "id": "type-check",
           "description": "pnpm run type-check passes (zero errors)",
-          "passing": true
+          "passing": false
         },
         {
           "id": "lint",
           "description": "pnpm run lint passes (zero errors)",
-          "passing": true
+          "passing": false
         },
         {
           "id": "spec-check",
           "description": "pnpm spec:check passes with no new overlap/ghost findings",
-          "passing": true
+          "passing": false
         }
       ],
-      "evidence": [
-        {
-          "id": "type-check",
-          "sha": "e3b1b87",
-          "command": "pnpm run type-check",
-          "result": "exit 0, no output"
-        },
-        {
-          "id": "lint",
-          "sha": "e3b1b87",
-          "command": "pnpm run lint",
-          "result": "exit 0, no output"
-        },
-        {
-          "id": "spec-check",
-          "sha": "e3b1b87",
-          "command": "node scripts/harness/spec-manifest/spec-check.mjs",
-          "result": "drift=45 overlap=0 ghost=0 sha-missing=0 review=10"
-        }
-      ]
+      "evidence": []
     }
   ]
 }

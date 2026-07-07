@@ -18,6 +18,18 @@ scripts/harness/eval-rubric/                 ← Implementation
     eval-summary.mjs                         ← Human-readable report
 ```
 
+## Engineer quick map
+
+`run.mjs` orchestrates snapshot loading and evaluator execution, then writes:
+- `.harness/training-data.jsonl` (deterministic training events)
+- `.harness/eval-summary.json` (aggregated explainability view)
+- `.harness/eval-rubric/last-feature-status.json` (baseline snapshot)
+
+Contract tests for rubric behavior:
+- `src/__tests__/unit/harness/eval-rubric.contracts.test.ts`
+
+This test file is the executable anti-drift lock: evaluator rule changes must update expected outputs.
+
 **Bucket:** `services` (harness scripts)
 **Last verified:** TBD
 **Drift signal:** None (new feature)

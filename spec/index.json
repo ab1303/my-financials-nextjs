@@ -38,8 +38,8 @@
     ]
   },
   "totals": {
-    "features": 106,
-    "withOwnsMatches": 90,
+    "features": 107,
+    "withOwnsMatches": 91,
     "overlaps": 0
   },
   "overlaps": [],
@@ -2664,6 +2664,52 @@
         "Derivation is mechanical; no LLM in the runtime loop.",
         "consumes[] is a derived cache — never edit by hand without re-deriving.",
         "Idempotent: re-running derive.mjs on unchanged sources produces zero diff."
+      ]
+    },
+    {
+      "id": "harness.eval-rubric",
+      "domain": "harness",
+      "path": "spec/harness/eval-rubric/",
+      "status": "in-progress",
+      "phase": "build",
+      "docs": {
+        "context": "spec/harness/eval-rubric/context.md",
+        "lld": "spec/harness/eval-rubric/lld.md"
+      },
+      "owns": {
+        "routers": [],
+        "services": [
+          ".ai/instructions/eval-rubric.md",
+          "scripts/harness/eval-rubric/run.mjs",
+          "scripts/harness/eval-rubric/lib/result.mjs",
+          "scripts/harness/eval-rubric/evaluators/status-transitions.mjs",
+          "scripts/harness/eval-rubric/evaluators/evidence-recording.mjs",
+          "scripts/harness/eval-rubric/evaluators/verification-gates.mjs",
+          "scripts/harness/eval-rubric/evaluators/blocker-lifecycle.mjs",
+          "scripts/harness/eval-rubric/evaluators/drift-response.mjs",
+          "scripts/harness/eval-rubric/output-formatters/training-data.mjs",
+          "scripts/harness/eval-rubric/reporters/eval-summary.mjs"
+        ],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "consumes": {
+        "routers": [],
+        "services": [],
+        "components": [],
+        "app": [],
+        "tests": []
+      },
+      "ownsConfidence": "high",
+      "needsReview": false,
+      "lastVerifiedSha": "e3b1b87",
+      "lastVerifiedDate": "2026-07-07",
+      "invariants": [
+        "Eval execution is deterministic: same feature-status input produces byte-identical JSONL output.",
+        "No LLM in runtime eval loop; scoring is purely rule-based.",
+        "Reward values are normalized to [-1.0, 1.0] per eval item.",
+        "Eval results are advisory and must not auto-mutate feature status."
       ]
     },
     {

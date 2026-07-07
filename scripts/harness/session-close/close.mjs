@@ -74,6 +74,13 @@ function tailLines(str, n = 3) {
   return lines.slice(-n).join(' | ') || '(no output)';
 }
 
+function sanitizeCommitMessage(value) {
+  return String(value ?? '')
+    .replace(/\r?\n/g, ' ')
+    .replace(/"/g, "'")
+    .trim();
+}
+
 /** Run a single gate command, return { passing, tail, exitCode, rawOutput }. */
 function runGate(label, cmd, cmdArgs) {
   console.log(`\n▶ Running ${label}...`);
@@ -361,9 +368,35 @@ if (!DRY_RUN) {
 console.log(
   `\n💬 Review the <!-- narrative --> block in .harness/progress.md, then commit:\n`
 );
-console.log(
-  `   git commit -m "harness: session close ${isoDate} — ${feature.id} (${statusLabel})"\n`
+const commitStatus = (justCompleted || feature.status === 'done') ? 'done' : 'in-progress';
+const commitSubject = `harness: session close ${isoDate} — ${feature.id} (${commitStatus})`;
+const gateSummary = `Gates: type-check ${gateResults['type-check'].passing ? 'pass' : 'fail'}, lint ${gateResults['lint'].passing ? 'pass' : 'fail'}, spec:check ${gateResults['spec-check'].passing ? 'pass' : 'fail'} (${extractSpecCheckSummary(gateResults['spec-check'].rawOutput, gateResults['spec-check'].passing)})`;
+const failingIds = (feature.verification ?? [])
+  .filter(v => v?.passing !== true)
+  .map(v => v?.id)
+  .filter(Boolean);
+const openSummary = failingIds.length > 0
+  ? `Open verification items: ${failingIds.join(', ')}.`
+  : 'Open verification items: none.';
+const nextFeatures = statusData.features.filter(
+  f => (f.status === 'planned' || (f.status === 'in-progress' && f.id !== feature.id))
 );
+const nextSummary = nextFeatures.length > 0
+  ? `Next workstream candidates: ${nextFeatures.map(f => f.id).join(', ')}.`
+  : 'Next workstream candidates: none listed.';
+
+const commitMessages = [
+  sanitizeCommitMessage(commitSubject),
+  sanitizeCommitMessage(`Session close for ${feature.id} on ${isoDate}.`),
+  sanitizeCommitMessage(gateSummary),
+  sanitizeCommitMessage(feature.notes ?? 'No feature notes recorded.'),
+  sanitizeCommitMessage(openSummary),
+  sanitizeCommitMessage(nextSummary),
+  'Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>',
+];
+const commitCommand = `git commit ${commitMessages.map(m => `-m "${m}"`).join(' ')}`;
+
+console.log(`   ${commitCommand}\n`);
 
 // ── Exit code ────────────────────────────────────────────────────────────────
 

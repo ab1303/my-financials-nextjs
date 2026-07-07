@@ -85,22 +85,23 @@ under their own `lld.md`. Per the adopted ownership model (2026-06-30):
 
 That rule applies to harness features as strictly as to product features.
 
-## Catalogue of harness features
+## Catalogue of harness features (status-agnostic)
 
-| Feature | Status | Spec | Purpose |
-|---|---|---|---|
-| `harness.spec-remediation` | `in-progress` | `spec/harness/spec-remediation/` | Deterministic orchestrator-worker pipeline for remediating `spec:check` findings (overlaps now; drift later) using cheap LLM workers within a scripted loop. |
-| `harness.consumes-derivation` | `in-progress` | `spec/harness/consumes-derivation/` | Derives per-feature `consumes[]` from the TypeScript import graph; restores the consumption signal lost during overlap remediation. No LLM in the runtime loop. |
-| `harness.capsule-format` | `in-progress` | `spec/harness/capsule-format/` | Generates a deterministic ≤800-token `capsule.md` digest per feature for cheap-model context injection. Closes audit P-Q #6. |
-| `harness.session-close` | `in-progress` | `spec/harness/session-close/` | Automates the deterministic portion of the session-end ritual: runs Verification Gate, updates `feature-status.json`, rotates `progress.md`, stamps `lastVerifiedSha`. Never auto-commits. |
-| `harness.pre-push-hook` | `in-progress` | `spec/harness/pre-push-hook/` | Adds local Layer 2 enforcement before push by running type-check, lint, strict spec check, and harness feature-status contract checks. |
+> This table is intentionally **not** a progress tracker.
+> Lifecycle state must be read from the source of truth:
+> - `.harness/feature-status.json` (operational status)
+> - `spec/index.json` (manifest status/phase metadata)
 
-**Planned (not yet implemented — on the audit priority queue):**
+| Feature | Spec | Purpose |
+|---|---|---|
+| `harness.spec-remediation` | `spec/harness/spec-remediation/` | Deterministic orchestrator-worker pipeline for remediating `spec:check` findings (overlaps now; drift later) using cheap LLM workers within a scripted loop. |
+| `harness.consumes-derivation` | `spec/harness/consumes-derivation/` | Derives per-feature `consumes[]` from the TypeScript import graph; restores the consumption signal lost during overlap remediation. No LLM in the runtime loop. |
+| `harness.eval-rubric` | `spec/harness/eval-rubric/` | Scores harness decisions deterministically and emits JSONL training data from task traces (`feature-status.json` + spec-check evidence). |
+| `harness.capsule-format` | `spec/harness/capsule-format/` | Generates a deterministic ≤800-token `capsule.md` digest per feature for cheap-model context injection. Closes audit P-Q #6. |
+| `harness.session-close` | `spec/harness/session-close/` | Automates the deterministic portion of the session-end ritual: runs Verification Gate, updates `feature-status.json`, rotates `progress.md`, stamps `lastVerifiedSha`. Never auto-commits. |
+| `harness.pre-push-hook` | `spec/harness/pre-push-hook/` | Adds local Layer 2 enforcement before push by running type-check, lint, strict spec check, and harness feature-status contract checks. |
 
-- `harness.weekly-corrective` — scheduled Layer 3 job opening drift triage issues (audit P-Q #10).
-- `harness.phase-encoding` — populate `phase` per feature (currently all `unknown`) (audit P-Q #9).
-
-Each becomes a separate `spec/harness/<feature>/` slice when picked up.
+Planned and in-progress queue entries (for example `harness.weekly-corrective`, `harness.phase-encoding`) are tracked in the source-of-truth files above, not duplicated here.
 
 ## Cross-cutting invariants (apply to every harness feature)
 
