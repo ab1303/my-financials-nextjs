@@ -6,10 +6,11 @@
  * - Keep result object construction uniform across evaluators.
  */
 export function clampReward(value) {
-  if (Number.isNaN(value)) return 0;
-  if (value > 1) return 1;
-  if (value < -1) return -1;
-  return value;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  if (numeric > 1) return 1;
+  if (numeric < -1) return -1;
+  return numeric;
 }
 
 export function createEval({

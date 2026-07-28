@@ -13,8 +13,12 @@ import { createEval } from '../lib/result.mjs';
 
 const DRIFT_DECISIONS = ['drift:defer', 'drift:fixed', 'drift:escalate'];
 
+function evidenceItems(feature) {
+  return Array.isArray(feature?.evidence) ? feature.evidence : [];
+}
+
 function parseDriftCount(feature) {
-  const specCheckEvidence = (feature.evidence ?? []).find(item => item?.id === 'spec-check');
+  const specCheckEvidence = evidenceItems(feature).find(item => item?.id === 'spec-check');
   const result = typeof specCheckEvidence?.result === 'string' ? specCheckEvidence.result : '';
   const match = result.match(/drift=(\d+)/);
   return match ? Number(match[1]) : null;
@@ -26,12 +30,13 @@ export function evaluateDriftResponse(_beforeFeature, afterFeature) {
     return [];
   }
 
-  const notes = typeof afterFeature.notes === 'string' ? afterFeature.notes : '';
+  const notes = typeof afterFeature?.notes === 'string' ? afterFeature.notes : '';
   const documented = DRIFT_DECISIONS.some(token => notes.includes(token));
+  const featureId = afterFeature?.id ?? 'unknown';
 
   return [
     createEval({
-      featureId: afterFeature.id,
+      featureId,
       category: 'drift-response',
       decision: 'drift_response',
       reason: documented ? 'drift_decision_documented' : 'drift_response_missing',

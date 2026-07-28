@@ -2703,8 +2703,8 @@
       },
       "ownsConfidence": "high",
       "needsReview": false,
-      "lastVerifiedSha": "e3b1b87",
-      "lastVerifiedDate": "2026-07-07",
+      "lastVerifiedSha": "9435fb3",
+      "lastVerifiedDate": "2026-07-28",
       "invariants": [
         "Eval execution is deterministic: same feature-status input produces byte-identical JSONL output.",
         "No LLM in runtime eval loop; scoring is purely rule-based.",

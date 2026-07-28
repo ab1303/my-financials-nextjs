@@ -27,6 +27,12 @@ const FEATURE_STATUS_PATH = path.join(HARNESS_DIR, 'feature-status.json');
 const SNAPSHOT_PATH = path.join(EVAL_STATE_DIR, 'last-feature-status.json');
 const TRAINING_DATA_PATH = path.join(HARNESS_DIR, 'training-data.jsonl');
 const SUMMARY_PATH = path.join(HARNESS_DIR, 'eval-summary.json');
+const DEFAULT_OUTPUT_PATHS = {
+  evalStateDir: EVAL_STATE_DIR,
+  trainingDataPath: TRAINING_DATA_PATH,
+  summaryPath: SUMMARY_PATH,
+  snapshotPath: SNAPSHOT_PATH,
+};
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const JSON_OUT = process.argv.includes('--json');
@@ -42,6 +48,24 @@ function safeReadJson(filePath) {
   } catch {
     return null;
   }
+}
+
+function safeReadText(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+function writeTextIfChanged(filePath, contents) {
+  const existing = safeReadText(filePath);
+  if (existing === contents) {
+    return false;
+  }
+
+  fs.writeFileSync(filePath, contents, 'utf8');
+  return true;
 }
 
 function featureMap(features) {
@@ -72,26 +96,13 @@ function evaluateFeature(beforeFeature, afterFeature, statusUpdatedAt) {
   ];
 }
 
-function ensureStateDir() {
-  if (!fs.existsSync(EVAL_STATE_DIR)) {
-    fs.mkdirSync(EVAL_STATE_DIR, { recursive: true });
-  }
-}
-
-function main() {
-  if (!fs.existsSync(FEATURE_STATUS_PATH)) {
-    throw new Error('.harness/feature-status.json not found');
-  }
-
-  const current = readJson(FEATURE_STATUS_PATH);
+function buildEvalArtifacts(current, previous = null) {
   if (!Array.isArray(current.features)) {
     throw new Error('feature-status.json is malformed: expected features[]');
   }
 
-  const previous = safeReadJson(SNAPSHOT_PATH);
   const previousFeatures = Array.isArray(previous?.features) ? previous.features : [];
   const previousById = featureMap(previousFeatures);
-
   const orderedFeatures = [...current.features].sort(stableFeatureSort);
   const evalResults = [];
 
@@ -112,56 +123,132 @@ function main() {
   const summary = summarizeEvals(evalResults);
   const summaryText = formatSummary(summary);
 
-  if (!DRY_RUN) {
-    ensureStateDir();
-    fs.writeFileSync(TRAINING_DATA_PATH, `${jsonl}\n`, 'utf8');
-    fs.writeFileSync(SUMMARY_PATH, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
-    fs.writeFileSync(SNAPSHOT_PATH, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
+  return { evalResults, jsonl, summary, summaryText };
+}
+
+function ensureStateDir(paths = DEFAULT_OUTPUT_PATHS) {
+  if (!fs.existsSync(paths.evalStateDir)) {
+    fs.mkdirSync(paths.evalStateDir, { recursive: true });
   }
+}
+
+function buildExplainLines(evalResults) {
+  return [...evalResults]
+    .sort((a, b) => `${a.featureId}:${a.category}:${a.reason}`.localeCompare(`${b.featureId}:${b.category}:${b.reason}`))
+    .map(
+      result =>
+        `- [${result.category}] ${result.featureId} :: ${result.reason} => ${result.reward.toFixed(2)}`
+    )
+    .join('\n');
+}
+
+function parseTrainingDataJsonl(contents) {
+  return contents
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => JSON.parse(line));
+}
+
+function readCachedArtifacts() {
+  const summaryText = safeReadText(SUMMARY_PATH);
+  const trainingDataText = safeReadText(TRAINING_DATA_PATH);
+  if (!summaryText || !trainingDataText) {
+    return null;
+  }
+
+  try {
+    const summary = JSON.parse(summaryText);
+    const evalResults = parseTrainingDataJsonl(trainingDataText);
+    const jsonl = trainingDataText.replace(/\r?\n$/, '');
+
+    return {
+      evalResults,
+      jsonl,
+      summary,
+      summaryText: formatSummary(summary),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeEvalOutputs({ current, jsonl, summary, paths = DEFAULT_OUTPUT_PATHS }) {
+  ensureStateDir(paths);
+
+  return {
+    trainingData: writeTextIfChanged(paths.trainingDataPath, `${jsonl}\n`),
+    summary: writeTextIfChanged(paths.summaryPath, `${JSON.stringify(summary, null, 2)}\n`),
+    snapshot: writeTextIfChanged(paths.snapshotPath, `${JSON.stringify(current, null, 2)}\n`),
+  };
+}
+
+function runEvalRubric({ dryRun = false, jsonOut = false, explain = false } = {}) {
+  if (!fs.existsSync(FEATURE_STATUS_PATH)) {
+    throw new Error('.harness/feature-status.json not found');
+  }
+
+  const current = readJson(FEATURE_STATUS_PATH);
+  const previous = safeReadJson(SNAPSHOT_PATH);
+  const snapshotMatchesCurrent = previous != null && JSON.stringify(previous) === JSON.stringify(current);
+  const cachedArtifacts = !dryRun && snapshotMatchesCurrent ? readCachedArtifacts() : null;
+  const artifacts = cachedArtifacts ?? buildEvalArtifacts(current, previous);
+
+  if (!dryRun && !cachedArtifacts) {
+    writeEvalOutputs({ current, ...artifacts });
+  }
+
+  if (jsonOut) {
+    return {
+      ok: true,
+      dryRun,
+      outputs: {
+        trainingDataPath: '.harness/training-data.jsonl',
+        summaryPath: '.harness/eval-summary.json',
+        snapshotPath: '.harness/eval-rubric/last-feature-status.json',
+      },
+      summary: artifacts.summary,
+      explain: explain ? artifacts.evalResults : undefined,
+    };
+  }
+
+  let stdout = `${artifacts.summaryText}\n`;
+  if (explain) {
+    stdout += 'explain:\n';
+    stdout += `${buildExplainLines(artifacts.evalResults) || '- (none)'}\n`;
+  }
+  stdout += dryRun
+    ? 'dry-run: outputs were not written.\n'
+    : 'wrote .harness/training-data.jsonl and eval-rubric state.\n';
+
+  return { ok: true, dryRun, stdout, summary: artifacts.summary, evalResults: artifacts.evalResults };
+}
+
+function main() {
+  const result = runEvalRubric({ dryRun: DRY_RUN, jsonOut: JSON_OUT, explain: EXPLAIN });
 
   if (JSON_OUT) {
-    process.stdout.write(
-      `${JSON.stringify(
-        {
-          ok: true,
-          dryRun: DRY_RUN,
-          outputs: {
-            trainingDataPath: '.harness/training-data.jsonl',
-            summaryPath: '.harness/eval-summary.json',
-            snapshotPath: '.harness/eval-rubric/last-feature-status.json',
-          },
-          summary,
-          explain: EXPLAIN ? evalResults : undefined,
-        },
-        null,
-        2
-      )}\n`
-    );
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {
-    process.stdout.write(`${summaryText}\n`);
-    if (EXPLAIN) {
-      const explainLines = [...evalResults]
-        .sort((a, b) => `${a.featureId}:${a.category}:${a.reason}`.localeCompare(`${b.featureId}:${b.category}:${b.reason}`))
-        .map(
-          result =>
-            `- [${result.category}] ${result.featureId} :: ${result.reason} => ${result.reward.toFixed(2)}`
-        )
-        .join('\n');
-      process.stdout.write('explain:\n');
-      process.stdout.write(`${explainLines || '- (none)'}\n`);
-    }
-    if (DRY_RUN) {
-      process.stdout.write('dry-run: outputs were not written.\n');
-    } else {
-      process.stdout.write('wrote .harness/training-data.jsonl and eval-rubric state.\n');
-    }
+    process.stdout.write(result.stdout);
   }
 }
 
-try {
-  main();
-  process.exit(0);
-} catch (error) {
-  process.stderr.write(`eval-rubric failed: ${error instanceof Error ? error.message : String(error)}\n`);
-  process.exit(1);
+const IS_MAIN = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (IS_MAIN) {
+  try {
+    main();
+    process.exit(0);
+  } catch (error) {
+    process.stderr.write(`eval-rubric failed: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exit(1);
+  }
 }
+
+export {
+  buildEvalArtifacts,
+  buildExplainLines,
+  runEvalRubric,
+  writeEvalOutputs,
+};

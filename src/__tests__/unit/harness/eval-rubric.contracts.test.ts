@@ -1,3 +1,6 @@
+import * as fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
+
 import { describe, expect, it } from 'vitest';
 
 import { evaluateBlockerLifecycle } from '../../../../scripts/harness/eval-rubric/evaluators/blocker-lifecycle.mjs';
@@ -110,5 +113,71 @@ describe('eval-rubric contracts', () => {
     expect(summary.byReason['drift_response_missing']).toBe(1);
     expect(summary.byFeature['f1']).toBe(2);
     expect(summary.topNegativeReasons[0]).toMatchObject({ reason: 'drift_response_missing', count: 1 });
+  });
+
+  it('executes the full pipeline from the CLI in dry-run JSON mode', () => {
+    const result = spawnSync(process.execPath, ['scripts/harness/eval-rubric/run.mjs', '--dry-run', '--json'], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe('');
+
+    const payload = JSON.parse(result.stdout);
+    expect(payload.ok).toBe(true);
+    expect(payload.dryRun).toBe(true);
+    expect(payload.outputs).toMatchObject({
+      trainingDataPath: '.harness/training-data.jsonl',
+      summaryPath: '.harness/eval-summary.json',
+      snapshotPath: '.harness/eval-rubric/last-feature-status.json',
+    });
+    expect(payload.summary.count).toBeGreaterThan(0);
+  });
+
+  it('updates the training data outputs idempotently', () => {
+    const targetFiles = [
+      '.harness/training-data.jsonl',
+      '.harness/eval-summary.json',
+      '.harness/eval-rubric/last-feature-status.json',
+    ];
+    const backups = new Map(
+      targetFiles.map(filePath => [filePath, fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null])
+    );
+
+    const readCurrentFiles = () =>
+      new Map(targetFiles.map(filePath => [filePath, fs.readFileSync(filePath, 'utf8')]));
+
+    try {
+      const firstRun = spawnSync(process.execPath, ['scripts/harness/eval-rubric/run.mjs'], {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+      });
+      expect(firstRun.status).toBe(0);
+
+      const afterFirstRun = readCurrentFiles();
+
+      const secondRun = spawnSync(process.execPath, ['scripts/harness/eval-rubric/run.mjs'], {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+      });
+      expect(secondRun.status).toBe(0);
+
+      const afterSecondRun = readCurrentFiles();
+
+      expect(afterSecondRun.get('.harness/training-data.jsonl')).toBe(afterFirstRun.get('.harness/training-data.jsonl'));
+      expect(afterSecondRun.get('.harness/eval-summary.json')).toBe(afterFirstRun.get('.harness/eval-summary.json'));
+      expect(afterSecondRun.get('.harness/eval-rubric/last-feature-status.json')).toBe(
+        afterFirstRun.get('.harness/eval-rubric/last-feature-status.json')
+      );
+    } finally {
+      backups.forEach((contents, filePath) => {
+        if (contents == null) {
+          fs.rmSync(filePath, { force: true });
+        } else {
+          fs.writeFileSync(filePath, contents, 'utf8');
+        }
+      });
+    }
   });
 });

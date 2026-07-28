@@ -5,22 +5,19 @@ Agents: read this file at session start to know exactly what to work on next.
 
 ---
 
-## 2026-07-07 — harness.eval-rubric — IN PROGRESS
+## 2026-07-28 — harness.eval-rubric — IN PROGRESS
 
-### Verification gate (auto-stamped by close.mjs @ e3b1b87)
+### Verification gate (auto-stamped by close.mjs @ 9435fb3)
 
 | Check | Result |
 |---|---|
 | `pnpm run type-check` | ✅ exit 0, no output |
-| `pnpm run lint` | ✅ exit 0, no output |
+| `pnpm run lint` | ✅ exit 0,   1:1  warning  Run autofix to sort these imports!  simple-import-sort/imports | ✖ 1 problem (0 errors, 1 warning) |   0 errors and 1 warning potentially fixable with the `--fix` option. |
 | `pnpm spec:check` | ✅ drift=45 overlap=0 ghost=0 sha-missing=0 review=10 |
 
 ### What was done
 <!-- close.mjs: populated from feature-status.json notes field -->
-Implemented `harness.eval-rubric` end-to-end: rubric instruction doc, five evaluator modules, shared result helpers, JSONL formatter, summary reporter, and orchestrator CLI wiring.
-Added explainability support (`--explain`) and richer summary breakdowns by category/reason/feature to make scoring behavior inspectable.
-Added contract tests for evaluator behavior and deterministic output ordering, then refreshed session-close state and spec metadata stamping.
-Updated harness HLD to avoid duplicate status tracking and point status reads to source-of-truth files.
+Implemented the eval-rubric feature across Phase 1–4: the rubric doc now spells out deterministic scoring rules, the five evaluator modules are in place, JSONL training output and summary reporting are deterministic, and the orchestrator writes the eval artifacts from feature-status traces. I also ran the required verification gates and the final build. The feature snapshot still shows the rubric checklist items as open, so the harness state remains in-progress.
 
 ### Open verification items
 <!-- close.mjs: list verification[].passing===false, or "None — feature complete" -->
@@ -31,8 +28,9 @@ Updated harness HLD to avoid duplicate status tracking and point status reads to
 
 ### Next up
 <!-- Agent: replace this block with narrative + chosen workstream -->
-`harness.weekly-corrective` — start by scaffolding `spec/harness/weekly-corrective/{context.md,lld.md,capsule.md}` and registering the feature in `.harness/feature-status.json` + `spec/index.json`.
+<!-- Planned features from feature-status.json with status:"planned" or "in-progress": -->
+_No other planned or in-progress features._
 
 ### Next session starts at
 <!-- Agent: fill in the specific file + section or command to resume from -->
-Open `spec/harness/hld.md` (catalogue section), then create the weekly-corrective spec slice and run `pnpm run spec:check` after registration edits.
+No follow-on workstream is listed; if continuing eval-rubric, start from `.harness/feature-status.json` verification items.

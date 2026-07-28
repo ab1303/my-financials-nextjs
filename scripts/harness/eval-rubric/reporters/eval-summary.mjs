@@ -45,6 +45,14 @@ export function summarizeEvals(evalResults) {
       return acc;
     }, {});
 
+  const penaltyDistribution = evalResults
+    .filter(result => result.reward < 0)
+    .reduce((acc, result) => {
+      const key = String(result.reward);
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    }, {});
+
   const topNegativeReasons = Object.entries(negativeByReason)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 5)
@@ -53,9 +61,11 @@ export function summarizeEvals(evalResults) {
   return {
     ...totals,
     averageReward,
+    meanReward: averageReward,
     byCategory,
     byReason,
     byFeature,
+    penaltyDistribution,
     topNegativeReasons,
   };
 }
@@ -71,6 +81,11 @@ export function formatSummary(summary) {
     .map(([reason, count]) => `- ${reason}: ${count}`)
     .join('\n');
 
+  const penaltyRows = Object.entries(summary.penaltyDistribution ?? {})
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([reward, count]) => `- ${reward}: ${count}`)
+    .join('\n');
+
   const topNegativeRows = (summary.topNegativeReasons ?? [])
     .map(item => `- ${item.reason}: ${item.count}`)
     .join('\n');
@@ -81,11 +96,13 @@ export function formatSummary(summary) {
     `positive: ${summary.positive}`,
     `negative: ${summary.negative}`,
     `neutral: ${summary.neutral}`,
-    `average reward: ${summary.averageReward.toFixed(4)}`,
+    `mean reward: ${summary.meanReward.toFixed(4)}`,
     'by category:',
     categoryRows || '- (none)',
     'by reason:',
     reasonRows || '- (none)',
+    'penalty distribution:',
+    penaltyRows || '- (none)',
     'top negative reasons:',
     topNegativeRows || '- (none)',
   ].join('\n');

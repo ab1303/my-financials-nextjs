@@ -19,6 +19,7 @@ export function evaluateBlockerLifecycle(beforeFeature, afterFeature) {
   const afterBlockers = blockers(afterFeature);
   const beforeStatus = beforeFeature?.status ?? 'planned';
   const afterStatus = afterFeature?.status ?? 'planned';
+  const featureId = afterFeature?.id ?? beforeFeature?.id ?? 'unknown';
 
   if (beforeBlockers.length === 0 || afterBlockers.length > 0) {
     return [];
@@ -27,7 +28,7 @@ export function evaluateBlockerLifecycle(beforeFeature, afterFeature) {
   if (beforeStatus === 'blocked' && afterStatus === 'in-progress') {
     return [
       createEval({
-        featureId: afterFeature.id,
+        featureId,
         category: 'blocker-lifecycle',
         decision: 'blocker_resolution',
         reason: 'blocker_cleared_transition_correct',
@@ -41,7 +42,7 @@ export function evaluateBlockerLifecycle(beforeFeature, afterFeature) {
   if (beforeStatus === 'blocked' && afterStatus === 'blocked') {
     return [
       createEval({
-        featureId: afterFeature.id,
+        featureId,
         category: 'blocker-lifecycle',
         decision: 'blocker_resolution',
         reason: 'blocker_cleared_but_status_not_updated',

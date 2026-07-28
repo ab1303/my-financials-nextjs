@@ -10,8 +10,12 @@
  */
 import { createEval } from '../lib/result.mjs';
 
+function evidenceItems(feature) {
+  return Array.isArray(feature?.evidence) ? feature.evidence : [];
+}
+
 function hasPassingEvidence(feature, id, passMatcher) {
-  return (feature.evidence ?? []).some(item => {
+  return evidenceItems(feature).some(item => {
     if (item?.id !== id) return false;
     const result = typeof item.result === 'string' ? item.result.toLowerCase() : '';
     return passMatcher(result);
@@ -19,6 +23,7 @@ function hasPassingEvidence(feature, id, passMatcher) {
 }
 
 export function evaluateVerificationGates(_beforeFeature, afterFeature) {
+  const featureId = afterFeature?.id ?? 'unknown';
   const gatesPassing = {
     typeCheck: hasPassingEvidence(afterFeature, 'type-check', result => result.includes('exit 0')),
     lint: hasPassingEvidence(afterFeature, 'lint', result => result.includes('exit 0')),
@@ -29,7 +34,7 @@ export function evaluateVerificationGates(_beforeFeature, afterFeature) {
 
   return [
     createEval({
-      featureId: afterFeature.id,
+      featureId,
       category: 'verification-gates',
       decision: 'gate_confidence',
       reason: 'verification_gates_passed',

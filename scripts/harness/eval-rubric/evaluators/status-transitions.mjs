@@ -12,12 +12,16 @@
  */
 import { createEval } from '../lib/result.mjs';
 
+function verificationItems(feature) {
+  return Array.isArray(feature?.verification) ? feature.verification : [];
+}
+
 function passingCount(feature) {
-  return (feature.verification ?? []).filter(item => item?.passing === true).length;
+  return verificationItems(feature).filter(item => item?.passing === true).length;
 }
 
 function allPassing(feature) {
-  const verification = feature.verification ?? [];
+  const verification = verificationItems(feature);
   return verification.length > 0 && verification.every(item => item?.passing === true);
 }
 
@@ -25,28 +29,29 @@ export function evaluateStatusTransitions(beforeFeature, afterFeature) {
   const evals = [];
   const beforeStatus = beforeFeature?.status ?? 'planned';
   const afterStatus = afterFeature?.status ?? 'planned';
+  const featureId = afterFeature?.id ?? beforeFeature?.id ?? 'unknown';
 
   if (beforeStatus === 'in-progress' && afterStatus === 'done') {
     if (allPassing(afterFeature)) {
       evals.push(
         createEval({
-          featureId: afterFeature.id,
+          featureId,
           category: 'status-transitions',
           decision: 'status_transition',
           reason: 'correct_transition_all_gates_cleared',
           reward: 1.0,
-          evidence: { verificationCount: (afterFeature.verification ?? []).length },
+          evidence: { verificationCount: verificationItems(afterFeature).length },
           context: { beforeStatus, afterStatus },
         })
       );
     } else {
-      const failing = (afterFeature.verification ?? [])
+      const failing = verificationItems(afterFeature)
         .filter(item => item?.passing !== true)
-        .map(item => item.id)
+        .map(item => item?.id)
         .filter(Boolean);
       evals.push(
         createEval({
-          featureId: afterFeature.id,
+          featureId,
           category: 'status-transitions',
           decision: 'status_transition',
           reason: 'premature_transition',
@@ -63,7 +68,7 @@ export function evaluateStatusTransitions(beforeFeature, afterFeature) {
     if (delta > 0) {
       evals.push(
         createEval({
-          featureId: afterFeature.id,
+          featureId,
           category: 'status-transitions',
           decision: 'status_transition',
           reason: 'incremental_progress',

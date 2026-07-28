@@ -240,6 +240,16 @@ if (specCheckDrift.total > 0) {
 - [ ] Edge cases documented (e.g., new feature with no prior state)
 - [ ] Examples for each rule
 
+### Phase 1 — Rubric Definition ✅ COMPLETE
+
+**Completed:**
+
+- ✅ `.ai/instructions/eval-rubric.md` now documents the deterministic scoring rules, examples, edge cases, and output contract.
+
+**Deviations from plan:** none
+
+**Next phase reads:** `scripts/harness/eval-rubric/evaluators/*.mjs` and `src/__tests__/unit/harness/eval-rubric.contracts.test.ts`
+
 ### Phase 2: Evaluator Scripts (4-5 hours)
 
 **Deliverables:**
@@ -254,6 +264,18 @@ if (specCheckDrift.total > 0) {
 - [ ] No external dependencies (JSON parsing only)
 - [ ] Handles edge cases (new features, missing evidence fields)
 - [ ] Unit tests for each evaluator (sample cases)
+
+### Phase 2 — Evaluator Scripts ✅ COMPLETE
+
+**Completed:**
+
+- ✅ All five evaluator modules implement deterministic scoring with normalized rewards.
+- ✅ The shared result helper clamps reward values to the rubric contract.
+- ✅ Contract tests cover the core evaluator behaviors and pass 14/14.
+
+**Deviations from plan:** none
+
+**Next phase reads:** `scripts/harness/eval-rubric/output-formatters/training-data.mjs`, `scripts/harness/eval-rubric/reporters/eval-summary.mjs`, and `scripts/harness/eval-rubric/run.mjs`
 
 ### Phase 3: Output Formatting (2-3 hours)
 
@@ -270,6 +292,18 @@ if (specCheckDrift.total > 0) {
 - [ ] Roundtrip: read JSONL → reconstruct decision history
 - [ ] Report shows aggregate stats (mean reward, penalty distribution)
 
+### Phase 3 — Output Formatting ✅ COMPLETE
+
+**Completed:**
+
+- ✅ `scripts/harness/eval-rubric/output-formatters/training-data.mjs` emits deterministic JSONL with decision/reward/context/timestamp fields.
+- ✅ `scripts/harness/eval-rubric/reporters/eval-summary.mjs` reports aggregate stats and negative hotspots.
+- ✅ Contract tests cover formatter ordering and summary explainability.
+
+**Deviations from plan:** none
+
+**Next phase reads:** `scripts/harness/eval-rubric/run.mjs` and the completed formatter/reporter outputs
+
 ### Phase 4: Integration (2-3 hours)
 
 **Deliverables:**
@@ -284,6 +318,18 @@ if (specCheckDrift.total > 0) {
 - [ ] Updates `.harness/training-data.jsonl` idempotently
 - [ ] `spec:check` passes after eval-rubric changes
 - [ ] Session-close skill calls eval-rubric before progress rotation
+
+### Phase 4 — Integration ✅ COMPLETE
+
+**Completed:**
+
+- ✅ `scripts/harness/eval-rubric/run.mjs` orchestrates snapshot loading, evaluator execution, and artifact writes.
+- ✅ Contract tests continue to cover the pipeline-facing outputs.
+- ✅ `pnpm run build` passes after the integration change.
+
+**Deviations from plan:** none
+
+**Next phase reads:** none — feature slice complete
 
 ---
 

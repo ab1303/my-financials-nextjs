@@ -10,11 +10,18 @@
  */
 import { createEval } from '../lib/result.mjs';
 
+function verificationItems(feature) {
+  return Array.isArray(feature?.verification) ? feature.verification : [];
+}
+
+function evidenceItems(feature) {
+  return Array.isArray(feature?.evidence) ? feature.evidence : [];
+}
+
 export function evaluateEvidenceRecording(_beforeFeature, afterFeature) {
-  const verification = afterFeature.verification ?? [];
-  const evidenceIds = new Set(
-    (afterFeature.evidence ?? []).map(item => item?.id).filter(Boolean)
-  );
+  const verification = verificationItems(afterFeature);
+  const featureId = afterFeature?.id ?? 'unknown';
+  const evidenceIds = new Set(evidenceItems(afterFeature).map(item => item?.id).filter(Boolean));
 
   const evals = [];
   for (const item of verification) {
@@ -22,7 +29,7 @@ export function evaluateEvidenceRecording(_beforeFeature, afterFeature) {
     const hasEvidence = evidenceIds.has(item.id);
     evals.push(
       createEval({
-        featureId: afterFeature.id,
+        featureId,
         category: 'evidence-recording',
         decision: 'evidence_linkage',
         reason: hasEvidence ? 'evidence_recorded' : 'missing_evidence',
